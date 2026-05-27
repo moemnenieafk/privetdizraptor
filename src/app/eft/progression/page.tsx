@@ -1,4 +1,4 @@
-import { HubCard } from '@/components/HubCard';
+import { HubCard } from '@/components/ui/HubCard';
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

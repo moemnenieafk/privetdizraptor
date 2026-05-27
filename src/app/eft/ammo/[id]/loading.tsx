@@ -1,14 +1,9 @@
-import Footer from "@/components/footer";
-import Header from "@/components/header";
-
 export default function Loading() {
   return (
     <div className="min-h-screen bg-base flex flex-col">
-      <Header />
       <div className="flex-grow flex items-center justify-center">
         <div className="text-primary font-black animate-pulse tracking-widest uppercase italic">Синхронизация данных...</div>
       </div>
-      <Footer />
     </div>
   );
 }

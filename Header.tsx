@@ -20,7 +20,9 @@ export function Header() {
   const config = getHeaderConfig(pathname || '');
 
   return (
-    <header className="w-full bg-card-menu/80 backdrop-blur-xl border-b border-lines-hover sticky top-0 z-50 transition-colors duration-500">
+    // Корневой тег header получает класс темы (например, theme-eft), 
+    // который задает CSS-переменную --primary для всех вложенных компонентов
+    <header className={`w-full bg-card-menu/80 backdrop-blur-xl border-b border-lines-hover sticky top-0 z-50 transition-colors duration-500 theme-${gameId}`}>
       
       {/* ================= СТРОКА 1: Глобальная навигация ================= */}
       <div className="border-b border-lines-hover/50">

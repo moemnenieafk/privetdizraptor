@@ -1,8 +1,6 @@
 "use client";
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/header';
-import Footer from '@/components/footer';
 
 // Define the type for the data we expect from the API
 interface AmmoDetails {
@@ -88,17 +86,14 @@ export default async function AmmoIdPage({ params }: { params: { id: string } })
 
   if (!item) return (
     <div className="min-h-screen bg-base text-text-primary flex flex-col">
-      <Header />
       <div className="flex-grow flex items-center justify-center">
         <p className="text-text-muted font-black uppercase tracking-tighter">Патрон не найден</p>
       </div>
-      <Footer />
     </div>
   );
 
   return (
     <main className="min-h-screen bg-base text-text-primary flex flex-col">
-      <Header />
       
       <div className="flex-grow max-w-4xl mx-auto px-6 py-20 w-full">
         <BackButton />
@@ -162,7 +157,6 @@ export default async function AmmoIdPage({ params }: { params: { id: string } })
           </div>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }

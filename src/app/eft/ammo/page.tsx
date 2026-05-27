@@ -1,7 +1,5 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-import Header from '@/components/header';
-import Footer from '@/components/footer';
 import Link from 'next/link';
 
 // Добавлен аргумент (lang: ru) прямо в запрос к API для получения русских названий
@@ -138,7 +136,6 @@ export default function AmmoPage() {
 
   return (
     <main className="min-h-screen bg-[#050505] flex flex-col font-sans text-white">
-      <Header />
       
       <div className="flex-grow max-w-7xl mx-auto px-6 py-12 w-full">
         <h1 className="text-5xl font-medium uppercase tracking-tighter mb-2">Баллистика EFT</h1>
@@ -276,7 +273,6 @@ export default function AmmoPage() {
           </table>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }

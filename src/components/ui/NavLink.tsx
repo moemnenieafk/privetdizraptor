@@ -14,7 +14,7 @@ export function NavLink({ href, children, ...props }: NavLinkProps) {
   const isActive = pathname.startsWith(href);
 
   // Базовые классы для всех ссылок в навигации
-  const baseClasses = "text-[15px] uppercase font-bold transition-colors";
+  const baseClasses = "text-[15px] uppercase font-blender-medium tracking-wide transition-colors";
   // Классы для активного и неактивного состояния, используя дизайн-токены
   const activeClasses = "text-text-primary"; // Активная ссылка
   const inactiveClasses = "text-text-secondary hover:text-text-primary"; // Неактивная ссылка

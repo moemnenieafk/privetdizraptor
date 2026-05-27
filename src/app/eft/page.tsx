@@ -1,5 +1,4 @@
-import { ItemSearch } from '@/components/ItemSearch';
-import { HubCard } from '@/components/HubCard';
+import { HubCard } from '@/components/ui/HubCard';
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,13 +10,6 @@ export default function EftPage() {
   return (
     <div className="w-full max-w-[1100px] mx-auto py-10 px-4">
       
-
-      {/* СТРОКА ПОИСКА */}
-      <div className="mb-12 relative z-10"> {/* Added z-10 to ensure search results appear above other content */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
-        <ItemSearch />
-      </div>
-
 
       {/* ОСНОВНАЯ СЕТКА */}
       {/* auto-rows-[160px] гарантирует высоту "прямоугольников". Квадраты займут row-span-2 */}

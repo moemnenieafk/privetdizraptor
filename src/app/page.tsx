@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { GameCard } from "@/components/GameCard";
+import { GameCard } from "@/components/ui/GameCard";
 import { GAMES_DATA } from "../data/games";
-import { Carousel } from "@/components/Carousel";
-import Footer from "@/components/footer";
+import { Carousel } from "@/components/ui/Carousel";
+import Footer from "@/components/layout/Footer";
 import { fetchLatestYouTubeVideos, type YouTubeVideo } from "@/actions/youtube";
 
 // Актуальные видео с каналов Fullkamen и Battlestate Games
