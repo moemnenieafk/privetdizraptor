@@ -1,11 +1,12 @@
-# 🗺️ Архитектура Проекта ФУЛЛ КАМЕНЬ (ЦТА)
+# 🗺️ Архитектура Проекта (ctagg)
 
 Данный файл является картой путей проекта (Next.js 14 App Router) и используется для контроля роутинга, связей и релинков.
 
 ## 📂 Корень проекта
 ```text
-c:\Users\vadim\Desktop\fullkamengg\
+cta-project\
 ├── .env.local                 # Секретные ключи API (Twitch, YouTube и др.)
+├── scripts/                   # Скрипты для автоматизации (например, sync-docs.mjs)
 ├── next.config.mjs            # Конфигурация Next.js
 ├── tailwind.config.ts         # Конфиг Tailwind CSS (если используется поверх v4)
 ├── tsconfig.json              # Конфиг TypeScript
@@ -31,14 +32,15 @@ src/
 │   └── search-actions.ts      # Server Actions для поиска предметов EFT
 │
 ├── data/
-│   ├── games.ts               # Данные для карточек игр на главной странице
-│   └── headerConfig.ts        # Конфигурация хедера (меню, поиск, валюта, хлебные крошки) для разных игр
+│   ├── games.ts               # Данные для карточек игр на главной
+│   └── headerConfig.ts        # Конфигурация хедера (меню, поиск, валюта, хлебные крошки)
 │
 ├── hooks/
 │   └── useIntersectionObserver.ts # Хук для ленивой загрузки (видео в карточках)
 │
 ├── lib/
 │   ├── eft-api.ts             # Интеграция с tarkov.dev GraphQL
+│   └── search-engine.ts       # Движок поиска с поддержкой игрового сленга
 │
 ├── components/
 │   ├── layout/                # Глобальный каркас приложения
@@ -85,14 +87,36 @@ src/
     │
     ├── eft/                   # РАЗДЕЛ: ESCAPE FROM TARKOV (Специфичный роутинг)
     │   ├── layout.tsx         # Локальная обертка EFT (Хлебные крошки)
-    │   ├── page.tsx           # Хаб EFT (Сетка HubCard, импортируется в [gameId])
-    │   ├── achievements/
-    │   │   └── page.tsx       # Страница достижений (Сюжет, Престиж, Ивенты)
-    │   └── progression/
-│   │   └── page.tsx       # Хаб прогресса (Достижения, Трекер, Нужные предметы)
-│   ├── keepitems/
-│   │   └── page.tsx       # Нужные предметы (с интеграцией tarkov.dev)
-│   └── tracker/
-│       └── page.tsx       # Заглушка трекера предметов
+    │   ├── page.tsx           # Хаб EFT (импортируется в [gameId])
+    │   │
+    │   ├── items/             # Хаб "Предметы"
+    │   │   ├── page.tsx
+    │   │   └── ... (глубокая структура по категориям)
+    │   │
+    │   ├── quests/            # Хаб "Задания"
+    │   │   └── page.tsx
+    │   │
+    │   ├── progress/          # Хаб "Прогресс"
+    │   │   ├── page.tsx
+    │   │   ├── achievements/
+    │   │   │   └── page.tsx
+    │   │   ├── barter/
+    │   │   │   └── page.tsx
+    │   │   ├── hideout/
+    │   │   │   ├── page.tsx
+    │   │   │   └── modules/
+    │   │   │       └── page.tsx
+    │   │   ├── loadouts/
+    │   │   │   └── page.tsx
+    │   │   ├── tracker/
+    │   │   │   └── page.tsx
+    │   │   └── keepitems/
+    │   │       └── page.tsx
+    │   │
+    │   ├── gamesetting/       # Хаб "Кодекс"
+    │   │   └── page.tsx
+    │   │
+    │   └── videos/            # Хаб "Видео"
+    │       └── page.tsx
 ```
 *(Папка `public` опущена в этой карте для экономии места, так как ее структура описана в `README.md`)*
