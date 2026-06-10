@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import Link from "next/link";
 import type { Metadata } from 'next';
 
@@ -8,7 +9,10 @@ export const metadata: Metadata = {
 
 export default function TarkovSubPage() {
   return (
-    <div className="w-full max-w-6xl mx-auto py-10 px-4">
+    <main className="flex w-full flex-col items-center justify-start pt-[28px] pb-[56px] animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
+      <div className="w-full max-w-[1100px] px-4 xl:px-0 mx-auto">
+        <PageHeader pageId="eft-crafts" />
+        <div className="w-full max-w-6xl mx-auto py-10 px-4">
       {/* Навигация назад */}
       <div className="mb-8">
         <Link 
@@ -40,5 +44,7 @@ export default function TarkovSubPage() {
         </div>
       </div>
     </div>
+        </div>
+    </main>
   );
 }

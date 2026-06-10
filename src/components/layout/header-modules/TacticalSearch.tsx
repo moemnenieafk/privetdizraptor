@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { searchEftItemsAction } from '@/actions/search-actions';
 import { SearchItemCard, EftItem } from './SearchItemCard';
 import { SearchEmptyState } from './SearchEmptyState';
-import { usePlayerStore } from './usePlayerStore';
+import { usePlayerStore } from '@/store/usePlayerStore';
 
 // Хелпер: должна ли иконка сохранять свои оригинальные цвета (без CSS-маски)
 const isColoredIcon = (item: MenuItem, urlToUse?: string) => {
@@ -20,6 +20,19 @@ const isColoredIcon = (item: MenuItem, urlToUse?: string) => {
   return false;
 };
 
+// Хелпер: автосмена раскладки клавиатуры (QWERTY <-> ЙЦУКЕН)
+const switchLayout = (str: string) => {
+  const layoutMap: Record<string, string> = {
+    'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ',
+    'a': 'ф', 's': 'ы', 'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д', ';': 'ж', "'": 'э',
+    'z': 'я', 'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т', 'm': 'ь', ',': 'б', '.': 'ю',
+    'й': 'q', 'ц': 'w', 'у': 'e', 'к': 'r', 'е': 't', 'н': 'y', 'г': 'u', 'ш': 'i', 'щ': 'o', 'з': 'p', 'х': '[', 'ъ': ']',
+    'ф': 'a', 'ы': 's', 'в': 'd', 'а': 'f', 'п': 'g', 'р': 'h', 'о': 'j', 'л': 'k', 'д': 'l', 'ж': ';', 'э': "'",
+    'я': 'z', 'ч': 'x', 'с': 'c', 'м': 'v', 'и': 'b', 'т': 'n', 'ь': 'm', 'б': ',', 'ю': '.'
+  };
+  return str.toLowerCase().split('').map(char => layoutMap[char] || char).join('');
+};
+
 export function TacticalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -28,6 +41,7 @@ export function TacticalSearch() {
   const [isMac, setIsMac] = useState(false);
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   
   // Состояния для поиска предметов EFT
   const [itemResults, setItemResults] = useState<EftItem[]>([]);
@@ -48,14 +62,16 @@ export function TacticalSearch() {
 
     // Глобальный слушатель клавиатуры (CMD+Q / CTRL+Q для фокуса)
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'q') {
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'q' || e.key.toLowerCase() === 'й')) {
         e.preventDefault();
+        setQuery('');
         inputRef.current?.focus();
         setIsOpen(true);
       }
       // Закрытие по ESC
       if (e.key === 'Escape') {
         setIsOpen(false);
+        setQuery('');
         inputRef.current?.blur();
       }
     };
@@ -88,10 +104,16 @@ export function TacticalSearch() {
   };
   const allMenuItems = getAllMenuItems(config.menuItems);
 
+  const queryLower = query.toLowerCase();
+  const switchedQuery = switchLayout(queryLower);
+
   // Если запрос пуст — показываем только основные разделы. Иначе ищем по всем пунктам.
   const filteredResults = query.trim().length === 0
     ? config.menuItems
-    : allMenuItems.filter(item => item.label.toLowerCase().includes(query.toLowerCase()));
+    : allMenuItems.filter(item => {
+        const label = item.label.toLowerCase();
+        return label.includes(queryLower) || label.includes(switchedQuery);
+      });
 
   // Эффект для дебаунса и поиска предметов
   useEffect(() => {
@@ -99,9 +121,27 @@ export function TacticalSearch() {
       if (query.trim().length >= 2) {
         startTransition(async () => {
           try {
-            const data = await searchEftItemsAction(query);
-            // Защита от краша: проверяем, что data это массив
-            setItemResults(Array.isArray(data) ? (data as unknown as EftItem[]) : []);
+            const q = query.trim();
+            const sq = switchLayout(q);
+            
+            if (q === sq) {
+              const data = await searchEftItemsAction(q);
+              setItemResults(Array.isArray(data) ? (data as unknown as EftItem[]) : []);
+            } else {
+              // Если раскладка меняется, ищем сразу по двум вариантам параллельно
+              const [res1, res2] = await Promise.all([
+                searchEftItemsAction(q),
+                searchEftItemsAction(sq)
+              ]);
+              
+              const arr1 = Array.isArray(res1) ? (res1 as unknown as EftItem[]) : [];
+              const arr2 = Array.isArray(res2) ? (res2 as unknown as EftItem[]) : [];
+              
+              // Объединяем и удаляем дубликаты по id
+              const merged = [...arr1, ...arr2];
+              const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
+              setItemResults(unique);
+            }
           } catch (err) {
             console.error("Ошибка при поиске предметов:", err);
             setItemResults([]);
@@ -114,6 +154,46 @@ export function TacticalSearch() {
 
     return () => clearTimeout(timer);
   }, [query]);
+
+  // Сбрасываем выделение при обновлении результатов
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [query, itemResults]);
+
+  // Автоскролл к выбранному элементу
+  useEffect(() => {
+    if (selectedIndex >= 0) {
+      const elem = document.getElementById(`search-result-${selectedIndex}`);
+      if (elem) {
+        elem.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [selectedIndex]);
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isOpen) return;
+    const totalItems = filteredResults.length + Math.min(itemResults.length, 12);
+    if (totalItems === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev < totalItems - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : totalItems - 1));
+    } else if (e.key === 'Enter') {
+      if (selectedIndex >= 0) {
+        e.preventDefault();
+        const elem = document.getElementById(`search-result-${selectedIndex}`);
+        if (elem) {
+          // Находим первую ссылку внутри элемента (или кликаем сам элемент, если это ссылка)
+          const link = elem.tagName.toLowerCase() === 'a' ? elem : elem.querySelector('a');
+          link?.click();
+          setIsOpen(false);
+        }
+      }
+    }
+  };
 
   return (
     <div className="relative w-full max-w-[724px]" ref={dropdownRef}>
@@ -134,8 +214,10 @@ export function TacticalSearch() {
           onChange={(e) => {
             setQuery(e.target.value);
             setIsOpen(true);
+            setSelectedIndex(-1);
           }}
           onFocus={() => setIsOpen(true)}
+          onKeyDown={handleInputKeyDown}
           placeholder="ГЛОБАЛЬНЫЙ ТАКТИЧЕСКИЙ ПОИСК..."
           className="flex-1 h-full bg-transparent outline-none px-4 text-center uppercase font-blender-medium text-lg text-[#222225] placeholder:text-[#222225] focus:text-[var(--primary)] placeholder:group-focus-within:text-[var(--primary)]"
         />
@@ -163,12 +245,14 @@ export function TacticalSearch() {
                   </span>
                 </div>
                 <ul>
-                  {filteredResults.map((item) => (
-                    <li key={item.id}>
+              {filteredResults.map((item, index) => {
+                const isSelected = selectedIndex === index;
+                return (
+                <li key={item.id} id={`search-result-${index}`}>
                       <Link 
                         href={item.path || '#'}
                         onClick={() => { setIsOpen(false); setQuery(''); }}
-                      className="flex items-center justify-between px-4 py-2.5 hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] text-text-secondary hover:text-text-primary transition-colors group/item"
+                  className={`flex items-center justify-between px-4 py-2.5 transition-colors group/item ${isSelected ? 'bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-[var(--primary)]' : 'hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] text-text-secondary hover:text-text-primary'}`}
                       >
                         <div className="flex items-center gap-3">
                           {(() => {
@@ -193,7 +277,7 @@ export function TacticalSearch() {
                       <ArrowRight className="w-4 h-4 opacity-0 group-hover/item:opacity-100 group-hover/item:text-[var(--primary)] transition-all -translate-x-2 group-hover/item:translate-x-0" />
                       </Link>
                     </li>
-                  ))}
+              )})}
                 </ul>
               </div>
             )}
@@ -209,9 +293,19 @@ export function TacticalSearch() {
                 <div className="px-4 pb-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-[28px] mt-4 justify-items-center">
                     {/* Выводим до 12 карточек с помощью нового компонента */}
-                    {itemResults.slice(0, 12).map((item) => (
-                      <SearchItemCard key={item.id} item={item} />
-                    ))}
+                {itemResults.slice(0, 12).map((item, idx) => {
+                  const globalIndex = filteredResults.length + idx;
+                  const isSelected = selectedIndex === globalIndex;
+                  return (
+                    <div 
+                      key={item.id} 
+                      id={`search-result-${globalIndex}`}
+                      className={`transition-all duration-200 rounded-lg ${isSelected ? 'ring-2 ring-[var(--primary)] scale-[1.03] shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_40%,transparent)]' : ''}`}
+                    >
+                      <SearchItemCard item={item} />
+                    </div>
+                  );
+                })}
                   </div>
                 </div>
               </div>

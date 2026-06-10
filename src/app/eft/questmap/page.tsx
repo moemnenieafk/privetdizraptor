@@ -1,71 +1,64 @@
 "use client";
 
+import { PageHeader } from '@/components/ui/PageHeader';
 import Image from "next/image";
 import { useRef, useState, MouseEvent, useEffect, useMemo } from "react";
+import { Maximize, Minimize, Search, X } from "lucide-react";
 import { praporQuests } from "./prapor";
 import { therapistQuests } from "./therapist";
 import { skierQuests } from "./skier";
-import { peacekeeperQuests } from "./peacekeeper";
-import { mechanicQuests } from "./mechanic";
-import { ragmanQuests } from "./ragman";
-import { jaegerQuests } from "./jaeger";
-import { fenceQuests } from "./fence";
-import { refQuests } from "./ref";
-import { btrQuests } from "./btrdriver";
-import { lightkeeperQuests } from "./lightkeeper";
-
-const tradersConfig = [
-  { id: 'prapor', name: 'Прапор', quests: praporQuests, x: 0 },
-  { id: 'therapist', name: 'Терапевт', quests: therapistQuests, x: 2500 },
-  { id: 'skier', name: 'Лыжник', quests: skierQuests, x: 5000 },
-  { id: 'peacekeeper', name: 'Миротворец', quests: peacekeeperQuests, x: 7500 },
-  { id: 'mechanic', name: 'Механик', quests: mechanicQuests, x: 10500 },
-  { id: 'ragman', name: 'Барахольщик', quests: ragmanQuests, x: 13500 },
-  { id: 'jaeger', name: 'Егерь', quests: jaegerQuests, x: 17000 },
-  
-  { id: 'lightkeeper', name: 'Смотритель маяка', quests: lightkeeperQuests, x: 21000 },
-  { id: 'btrdriver', name: 'Водитель БТР', quests: btrQuests, x: 22000 },
-  { id: 'ref', name: 'Реф', quests: refQuests, x: 23000 },
-  { id: 'fence', name: 'Скупщик', quests: fenceQuests, x: 24000 },
-];
-
 export default function QuestsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [position, setPosition] = useState({ x: 100, y: 150 });
   const [startMouse, setStartMouse] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(0.6);
-  const [completedQuests, setCompletedQuests] = useState<Record<string, boolean>>({});
-  
   const [searchQuery, setSearchQuery] = useState("");
   const [onlyKappa, setOnlyKappa] = useState(false);
+  const [completedQuests, setCompletedQuests] = useState<Record<string, boolean>>({});
+
+  const tradersConfig = [
+    { id: 'prapor', name: 'Прапор', x: 0, quests: praporQuests },
+    { id: 'therapist', name: 'Терапевт', x: 300, quests: therapistQuests },
+    { id: 'skier', name: 'Лыжник', x: 600, quests: skierQuests },
+  ];
 
   const stats = useMemo(() => {
-    let total = 0;
-    let completed = 0;
-    tradersConfig.forEach(trader => {
-      trader.quests.forEach(quest => {
-        total++;
-        if (completedQuests[quest.id]) {
-          completed++;
-        }
-      });
-    });
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, percent };
+    const allQuests = tradersConfig.flatMap(t => t.quests);
+    const total = allQuests.length;
+    const completed = allQuests.filter(q => completedQuests[q.id]).length;
+    return {
+      total,
+      completed,
+      percent: total > 0 ? Math.round((completed / total) * 100) : 0
+    };
   }, [completedQuests]);
 
-  // Функция автоматического скролла и приближения к квесту
-  const scrollToQuest = (titleQuery: string) => {
-    if (!titleQuery.trim()) return;
+  const handleMouseDown = (e: MouseEvent) => {
+    setIsDragging(true);
+    setStartMouse({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
 
-    let foundQuest: any = null;
-    let foundTrader: any = null;
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - startMouse.x,
+      y: e.clientY - startMouse.y
+    });
+  };
+
+  const toggleQuest = (id: string) => {
+    setCompletedQuests(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const scrollToQuest = (query: string) => {
+    if (!query) return;
+    let foundQuest = null;
+    let foundTrader = null;
 
     for (const trader of tradersConfig) {
-      const quest = trader.quests.find(q => 
-        q.title.toLowerCase().includes(titleQuery.toLowerCase())
-      );
+      const quest = trader.quests.find(q => q.title.toLowerCase().includes(query.toLowerCase()));
       if (quest) {
         foundQuest = quest;
         foundTrader = trader;
@@ -74,101 +67,80 @@ export default function QuestsPage() {
     }
 
     if (foundQuest && foundTrader) {
-      // Глобальные координаты относительно начала координат внутри p-[500px]
       const questGlobalX = foundTrader.x + foundQuest.x;
-      const questGlobalY = 250 + foundQuest.y; // 250px — это отступ сетки квестов под торговцем
+      const questGlobalY = 120 + foundQuest.y;
 
       const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
+      const containerHeight = isFullscreen ? window.innerHeight : (containerRef.current?.clientHeight || window.innerHeight);
 
-      // Оптимальный зум для чтения карточки
       const targetScale = 0.85; 
       setScale(targetScale);
 
-      // Магия центрирования с учетом p-[500px] (сдвиг холста на 500px)
       setPosition({
         x: windowWidth / 2 - (questGlobalX + 500) * targetScale,
-        y: windowHeight / 2 - (questGlobalY + 500) * targetScale
+        y: containerHeight / 2 - (questGlobalY + 500) * targetScale
       });
     }
   };
 
-  const toggleQuest = (questId: string) => {
-    setCompletedQuests(prev => {
-      const isCurrentlyCompleted = prev[questId];
-      const nextState = { ...prev };
-
-      if (!isCurrentlyCompleted) {
-        nextState[questId] = true;
-        let currentQuestId: string | null | undefined = questId;
-        const currentTrader = tradersConfig.find(t => t.quests.some(q => q.id === questId));
-
-        if (currentTrader) {
-          while (currentQuestId) {
-            const currentQuest = currentTrader.quests.find(q => q.id === currentQuestId);
-            if (currentQuest && currentQuest.parentId) {
-              nextState[currentQuest.parentId] = true;
-              currentQuestId = currentQuest.parentId;
-            } else {
-              currentQuestId = null;
-            }
-          }
-        }
-      } else {
-        nextState[questId] = false;
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
       }
-      return nextState;
-    });
-  };
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const handleWheelRaw = (e: WheelEvent) => {
-      e.preventDefault();
-      const zoomSpeed = 0.1;
-      let newScale = scale;
-
-      if (e.deltaY < 0) {
-        newScale = Math.min(scale * (1 + zoomSpeed), 2);
-      } else {
-        newScale = Math.max(scale * (1 - zoomSpeed), 0.1);
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const zoomSpeed = 0.001;
+        const delta = -e.deltaY * zoomSpeed;
+        setScale(prev => Math.min(Math.max(prev + delta, 0.2), 1.5));
       }
-
-      if (newScale === scale) return;
-
-      const rect = container.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      const containerX = (mouseX - position.x) / scale;
-      const containerY = (mouseY - position.y) / scale;
-
-      setScale(newScale);
-      setPosition({
-        x: mouseX - containerX * newScale,
-        y: mouseY - containerY * newScale
-      });
     };
 
-    container.addEventListener("wheel", handleWheelRaw as any, { passive: false });
-    return () => container.removeEventListener("wheel", handleWheelRaw as any);
-  }, [scale, position]);
-
-  const handleMouseDown = (e: MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input') || (e.target as HTMLElement).closest('.control-panel')) return;
-    setIsDragging(true);
-    setStartMouse({ x: e.clientX - position.x, y: e.clientY - position.y });
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
-    setPosition({ x: e.clientX - startMouse.x, y: e.clientY - startMouse.y });
-  };
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, []);
 
   const renderConnector = (x1: number, y1: number, x2: number, y2: number, isCurrentDone: boolean, id: string, isDimmed: boolean) => {
-    x1 = Math.round(x1);
+    const x1_val = Math.round(x1);
+    const y1_val = Math.round(y1);
+    const x2_val = Math.round(x2);
+    const y2_val = Math.round(y2);
+
+    let d = "";
+    if (Math.abs(x1_val - x2_val) < 50) {
+      d = `M ${x1_val} ${y1_val} L ${x1_val} ${y2_val}`;
+    } else {
+      const midY = Math.round(y1_val + 20);
+      d = `M ${x1_val} ${y1_val} L ${x1_val} ${midY} L ${x2_val} ${midY} L ${x2_val} ${y2_val}`;
+    }
+    
+    return (
+      <path
+        key={`line-${id}`}
+        d={d}
+        fill="none"
+        stroke={isCurrentDone ? 'var(--color-lines-hover)' : 'var(--color-primary)'}
+        strokeWidth="2"
+        className={!isCurrentDone ? 'line-ants' : ''}
+        style={{ 
+          transition: 'stroke 0.4s ease, opacity 0.3s ease',
+          opacity: isDimmed ? 0.1 : (isCurrentDone ? 0.5 : 1) 
+        }}
+      />
+    );
+  };
+
+  /* x1 = Math.round(x1);
     y1 = Math.round(y1);
     x2 = Math.round(x2);
     y2 = Math.round(y2);
@@ -177,7 +149,7 @@ export default function QuestsPage() {
     if (Math.abs(x1 - x2) < 50) {
       d = `M ${x1} ${y1} L ${x1} ${y2}`;
     } else {
-      const midY = Math.round(y1 + 40);
+      const midY = Math.round(y1 + 20); // Сглаживание угла
       d = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
     }
     
@@ -186,222 +158,248 @@ export default function QuestsPage() {
         key={`line-${id}`}
         d={d}
         fill="none"
-        stroke={isCurrentDone ? 'rgba(255, 255, 255, 0.03)' : '#ff4d00'}
+        stroke={isCurrentDone ? 'var(--color-lines-hover)' : 'var(--color-primary)'}
         strokeWidth="2"
         className={!isCurrentDone ? 'line-ants' : ''}
         style={{ 
           transition: 'stroke 0.4s ease, opacity 0.3s ease',
-          opacity: isDimmed ? 0.1 : 1 
+          opacity: isDimmed ? 0.1 : (isCurrentDone ? 0.5 : 1) 
         }}
       />
-    );
-  };
+    ); 
+  }; */
 
   return (
-    <div className="w-full h-screen bg-base flex flex-col overflow-hidden select-none relative">
-      <style>{`
-        @keyframes ants { to { stroke-dashoffset: -12; } }
-        .line-ants { stroke-dasharray: 6, 6; animation: ants 0.8s linear infinite; }
-        html, body { overflow: hidden !important; height: 100% !important; }
-        ::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
-        * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
-      `}</style>
-
-      {/* КОМПАКТНАЯ ПАНЕЛЬ УПРАВЛЕНИЯ ФУНКЦИЯМИ */}
-      <div className="control-panel absolute top-6 left-6 z-50 bg-card-menu/95 border border-lines-hover backdrop-blur-md p-4 flex flex-col gap-3 w-[280px] shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-        <div className="flex items-center justify-between border-b border-lines-hover pb-2">
-          <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Прогресс квестов</span>
-          <span className="text-[11px] font-mono font-black text-text-primary">{stats.completed}/{stats.total} <span className="text-primary">({stats.percent}%)</span></span>
+    <main className={`flex w-full flex-col items-center justify-start ${isFullscreen ? '' : 'pt-[28px] pb-[56px]'} animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]`}>
+      
+      {!isFullscreen && (
+        <div className="w-full max-w-[1100px] px-4 xl:px-0 mx-auto">
+          <PageHeader pageId="eft-questmap" />
         </div>
+      )}
+
+      <div className={`w-full bg-base flex flex-col overflow-hidden select-none relative ${isFullscreen ? 'fixed inset-0 z-[100] h-screen' : 'h-[700px] max-w-[1100px] mx-auto border border-lines-hover rounded-xl shadow-lg mt-2'}`}>
         
-        {/* Интерактивный поиск с лупой внутри */}
-        <div className="relative flex items-center bg-base/40 border border-lines-hover focus-within:border-primary/50 transition-colors pr-2">
-          <input 
-            type="text"
-            placeholder="ПОИСК КВЕСТА..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                scrollToQuest(searchQuery);
-              }
-            }}
-            className="w-full bg-transparent px-3 py-2 text-[10px] font-black tracking-wider text-text-primary uppercase placeholder-text-muted focus:outline-none"
-          />
-          <div className="flex items-center gap-2">
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery("")} 
-                className="text-text-muted hover:text-text-primary text-[10px] font-bold px-1"
-              >
-                ✕
-              </button>
-            )}
-            <button 
-              onClick={() => scrollToQuest(searchQuery)}
-              className="text-text-muted hover:text-primary transition-colors p-1 flex items-center justify-center"
-              title="Найти на карте"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </button>
+        <style>{`
+          @keyframes ants { to { stroke-dashoffset: -12; } }
+          .line-ants { stroke-dasharray: 6, 6; animation: ants 0.8s linear infinite; }
+          ${isFullscreen ? `
+            html, body { overflow: hidden !important; height: 100% !important; }
+            ::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+            * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+          ` : ''}
+        `}</style>
+
+        {/* ПАНЕЛЬ УПРАВЛЕНИЯ ФУНКЦИЯМИ */}
+        <div className="flex-shrink-0 bg-card-menu border-b border-lines-hover p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between z-10 gap-4 sm:gap-0 shadow-md">
+          
+          {/* Левая часть: Поиск и Статистика */}
+          <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
+             {/* Статистика */}
+             <div className="flex flex-col hidden sm:flex">
+               <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Прогресс квестов</span>
+               <span className="text-lg font-blender-medium text-text-primary leading-none mt-1">
+                 {stats.completed} <span className="text-text-muted">/ {stats.total}</span>
+                 <span className="text-primary ml-2">({stats.percent}%)</span>
+               </span>
+             </div>
+
+             {/* Поиск */}
+             <div className="relative flex items-center bg-[#0D0D0F] border border-lines-hover rounded h-10 px-3 w-full sm:w-[300px] focus-within:border-primary/50 transition-colors">
+               <Search className="w-4 h-4 text-text-muted mr-2 shrink-0" />
+               <input 
+                 type="text"
+                 placeholder="ПОИСК КВЕСТА..."
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 onKeyDown={(e) => {
+                   if (e.key === 'Enter') {
+                     scrollToQuest(searchQuery);
+                   }
+                 }}
+                 className="w-full bg-transparent text-[12px] font-blender-medium tracking-wider text-text-primary uppercase placeholder:text-text-muted focus:outline-none"
+               />
+               {searchQuery && (
+                 <button onClick={() => setSearchQuery("")} className="text-text-muted hover:text-text-primary shrink-0 ml-2">
+                   <X className="w-4 h-4" />
+                 </button>
+               )}
+             </div>
+          </div>
+
+          {/* Правая часть: Фильтры и Фулскрин */}
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-end">
+             <button 
+               onClick={() => setOnlyKappa(!onlyKappa)}
+               className={`flex items-center justify-center gap-2 h-10 px-4 rounded border transition-all flex-1 sm:flex-none ${
+                 onlyKappa 
+                   ? 'border-primary/50 bg-primary/10 text-primary' 
+                   : 'border-lines-hover bg-[#0D0D0F] text-text-secondary hover:border-primary/30'
+               }`}
+             >
+               <div className={`w-5 h-5 icon-bg icon-eft-profile-kappa ${onlyKappa ? 'opacity-100' : 'opacity-50 grayscale'}`} />
+               <span className="text-[12px] font-blender-medium uppercase tracking-widest mt-0.5 whitespace-nowrap">Только Каппа</span>
+             </button>
+
+             <div className="hidden sm:block w-[1px] h-6 bg-lines-hover mx-2" />
+
+             <button 
+               onClick={() => setIsFullscreen(!isFullscreen)}
+               className="flex items-center justify-center w-10 h-10 rounded border border-lines-hover bg-[#0D0D0F] text-text-muted hover:text-primary hover:border-primary/50 transition-colors shrink-0"
+               title={isFullscreen ? "Выйти из полноэкранного режима (Esc)" : "На весь экран"}
+             >
+               {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+             </button>
           </div>
         </div>
 
-        {/* Переключатель Только КАППА */}
-        <button 
-          onClick={() => setOnlyKappa(!onlyKappa)}
-          className={`w-full py-2 text-[9px] font-black uppercase tracking-widest transition-all border ${
-            onlyKappa 
-              ? 'bg-primary text-black border-transparent shadow-[0_0_15px_rgba(230,142,37,0.3)]' 
-              : 'bg-transparent border-lines-hover text-text-secondary hover:text-text-primary hover:border-lines-hover'
-          }`}
-        >
-          {onlyKappa ? '✓ Только КАППА' : 'Фильтр: Все квесты'}
-        </button>
-      </div>
-
-      <div 
-        ref={containerRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={() => setIsDragging(false)}
-        onMouseLeave={() => setIsDragging(false)}
-        className={`flex-1 relative overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-      >
+        {/* ХОЛСТ С КАРТОЙ КВЕСТОВ */}
         <div 
+          ref={containerRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={() => setIsDragging(false)}
+          onMouseLeave={() => setIsDragging(false)}
+          className={`flex-1 relative overflow-hidden bg-[url('/images/grid-pattern.svg')] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           style={{ 
-            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-            transformOrigin: '0 0',
+            backgroundImage: `radial-gradient(circle, var(--color-lines-hover) 1px, transparent 1px)`,
+            backgroundSize: `${53 * scale}px ${53 * scale}px`,
+            backgroundPosition: `${position.x}px ${position.y}px`,
           }}
-          className="absolute top-0 left-0 p-[500px] min-w-max transition-transform duration-300 ease-out"
         >
-          {tradersConfig.map((trader) => (
-            <div 
-              key={trader.id} 
-              style={{
-                position: 'absolute',
-                left: `${trader.x}px`,
-                top: '0px'
-              }}
-              className="flex flex-col items-center w-[220px] relative"
-            >
-              <span className="text-text-primary font-black uppercase text-[10px] tracking-[0.2em] opacity-40 mb-4 whitespace-nowrap">
-                {trader.name}
-              </span>
-              
-              <div className="relative w-[150px] h-[150px] mb-[100px] border border-lines-hover bg-card-menu/20 select-none pointer-events-none">
-                <Image 
-                  src={`/images/traders/${trader.id}.png`} 
-                  alt={trader.name} 
-                  fill 
-                  className="object-cover opacity-80" 
-                  sizes="150px"
-                  draggable="false"
-                />
+          <div 
+            style={{ 
+              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+              transformOrigin: '0 0',
+            }}
+            className="absolute top-0 left-0 p-[500px] min-w-max transition-transform duration-300 ease-out"
+          >
+            {tradersConfig.map((trader) => (
+              <div 
+                key={trader.id} 
+                style={{
+                  position: 'absolute',
+                  left: `${trader.x}px`,
+                  top: '0px'
+                }}
+                className="flex flex-col items-center w-[220px] relative"
+              >
+                {/* Аватар торговца */}
+                <div className="relative w-32 h-32 mb-[120px] select-none pointer-events-none z-20">
+                  <div className="absolute inset-0 border-2 border-lines-hover bg-[#0D0D0F] rounded-lg overflow-hidden flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                    <Image 
+                      src={`/images/traders/${trader.id}.webp`} 
+                      alt={trader.name} 
+                      fill 
+                      className="object-cover" 
+                      sizes="128px"
+                      draggable="false"
+                    />
+                  </div>
+                  <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-base/80 backdrop-blur px-3 py-1 border border-lines-hover rounded text-text-primary font-blender-medium uppercase text-sm tracking-widest whitespace-nowrap shadow-md">
+                    {trader.name}
+                  </div>
 
-                <svg className="absolute pointer-events-none overflow-visible left-1/2 bottom-0 w-0 h-0">
-                  {trader.quests.map((quest) => {
-                    if (!quest.parentId) {
-                      const isCurrentDone = completedQuests[quest.id];
-                      
-                      const matchesSearch = searchQuery ? quest.title.toLowerCase().includes(searchQuery.toLowerCase()) : true;
-                      const matchesKappa = onlyKappa ? quest.kappa : true;
-                      const isDimmed = !matchesSearch || !matchesKappa;
-
-                      return renderConnector(
-                        0, 0,
-                        quest.x, 102, 
-                        isCurrentDone, 
-                        `start-${trader.id}-${quest.id}`,
-                        isDimmed
-                      );
-                    }
-                    return null;
-                  })}
-                </svg>
-              </div>
-
-              <div className="absolute top-[250px] left-1/2 -translate-x-1/2 w-0 h-0 overflow-visible">
-                <svg className="absolute pointer-events-none overflow-visible" style={{ zIndex: 0, left: 0, top: 0 }}>
-                  {trader.quests.map((quest) => {
-                    const questCenterX = quest.x; 
-                    const isCurrentDone = completedQuests[quest.id];
-                    
-                    if (quest.parentId) {
-                      const parent = trader.quests.find(q => q.id === quest.parentId);
-                      if (parent) {
+                  <svg className="absolute pointer-events-none overflow-visible left-1/2 bottom-0 w-0 h-0 z-0">
+                    {trader.quests.map((quest) => {
+                      if (!quest.parentId) {
+                        const isCurrentDone = completedQuests[quest.id];
                         const matchesSearch = searchQuery ? quest.title.toLowerCase().includes(searchQuery.toLowerCase()) : true;
                         const matchesKappa = onlyKappa ? quest.kappa : true;
                         const isDimmed = !matchesSearch || !matchesKappa;
 
                         return renderConnector(
-                          parent.x, parent.y + 114, 
-                          questCenterX, quest.y + 2,         
-                          isCurrentDone,
-                          quest.id,
+                          0, 0, 
+                          quest.x, 120 + quest.y, 
+                          isCurrentDone, 
+                          `start-${trader.id}-${quest.id}`,
                           isDimmed
                         );
                       }
+                      return null;
+                    })}
+                  </svg>
+                </div>
+
+                <div className="absolute top-[250px] left-1/2 -translate-x-1/2 w-0 h-0 overflow-visible">
+                  <svg className="absolute pointer-events-none overflow-visible" style={{ zIndex: 0, left: 0, top: 0 }}>
+                    {trader.quests.map((quest) => {
+                      const questCenterX = quest.x; 
+                      const isCurrentDone = completedQuests[quest.id];
+                      
+                      if (quest.parentId) {
+                        const parent = trader.quests.find(q => q.id === quest.parentId);
+                        if (parent) {
+                          const matchesSearch = searchQuery ? quest.title.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+                          const matchesKappa = onlyKappa ? quest.kappa : true;
+                          const isDimmed = !matchesSearch || !matchesKappa;
+
+                          return renderConnector(
+                            parent.x, parent.y + 80, 
+                            questCenterX, quest.y,         
+                            isCurrentDone,
+                            quest.id,
+                            isDimmed
+                          );
+                        }
+                      }
+                      return null;
+                    })}
+                  </svg>
+
+                  {trader.quests.map((quest) => {
+                    const isCompleted = completedQuests[quest.id];
+                    
+                    const matchesSearch = searchQuery ? quest.title.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+                    const matchesKappa = onlyKappa ? quest.kappa : true;
+
+                    let cardOpacity = "opacity-100";
+                    
+                    if (!matchesSearch || !matchesKappa) {
+                      cardOpacity = "opacity-20 grayscale";
+                    } else if (isCompleted) {
+                      cardOpacity = "opacity-60";
                     }
-                    return null;
-                  })}
-                </svg>
 
-                {trader.quests.map((quest) => {
-                  const isCompleted = completedQuests[quest.id];
-                  
-                  const matchesSearch = searchQuery ? quest.title.toLowerCase().includes(searchQuery.toLowerCase()) : true;
-                  const matchesKappa = onlyKappa ? quest.kappa : true;
-
-                  let cardOpacity = "opacity-100";
-                  
-                  if (!matchesSearch) {
-                    cardOpacity = "opacity-10";
-                  } else if (!matchesKappa) {
-                    cardOpacity = "opacity-20";
-                  } else if (isCompleted) {
-                    cardOpacity = "opacity-30";
-                  }
-
-                  return (
-                    <div 
-                      key={quest.id}
-                      style={{ 
-                        transform: `translate(calc(${quest.x}px - 50%), ${quest.y}px)`, 
-                        zIndex: 10 
-                      }}
-                      className={`absolute w-[220px] p-4 bg-card-menu/90 border backdrop-blur-md transition-all duration-300 ${cardOpacity} ${
-                        !isCompleted && matchesSearch && matchesKappa ? 'shadow-[0_10px_40px_rgba(0,0,0,0.6)] border-lines-hover' : ''
-                      } ${quest.kappa ? 'border-primary/30' : ''}`}
-                    >
-                      <div className="flex justify-between items-start gap-3 mb-4">
-                        <span className="text-[10px] font-black text-text-primary uppercase italic leading-tight tracking-tight">
-                          {quest.title}
-                        </span>
-                        {quest.kappa && <span className="text-[8px] bg-kamen-action text-black px-1.5 py-0.5 font-bold">KAPPA</span>}
-                      </div>
-
-                      <button 
-                        onClick={() => toggleQuest(quest.id)}
-                        className={`w-full py-2 text-[9px] font-black uppercase tracking-widest transition-all border ${
-                          isCompleted 
-                            ? 'bg-white/5 border-lines-hover text-text-muted' 
-                            : 'bg-transparent border-lines-hover text-text-secondary hover:border-primary hover:text-text-primary'
+                    return (
+                      <div 
+                        key={quest.id}
+                        style={{ 
+                          transform: `translate(calc(${quest.x}px - 50%), ${quest.y}px)`, 
+                          zIndex: isCompleted ? 5 : 10 
+                        }}
+                        className={`absolute w-[200px] p-3 bg-card-menu border rounded shadow-lg transition-all duration-300 ${cardOpacity} ${
+                          !isCompleted && matchesSearch && matchesKappa ? 'hover:border-primary/50 hover:shadow-[0_0_15px_rgba(230,142,37,0.2)] border-lines-hover' : 'border-lines-hover/50'
                         }`}
                       >
-                        {isCompleted ? 'ГОТОВО' : 'ВЫПОЛНИТЬ'}
-                      </button>
-                    </div>
-                  );
-                })}
+                        <div className="flex justify-between items-start gap-2 mb-3 h-[26px]">
+                          <span className={`text-[12px] font-blender-medium leading-none uppercase ${isCompleted ? 'text-text-muted line-through' : 'text-text-primary'}`}>
+                            {quest.title}
+                          </span>
+                          {quest.kappa && (
+                            <div className="w-[18px] h-[18px] shrink-0 icon-bg icon-eft-profile-kappa" title="Необходимо для получения Каппы" />
+                          )}
+                        </div>
+
+                        <button 
+                          onClick={() => toggleQuest(quest.id)}
+                          className={`w-full py-1.5 text-[10px] font-blender-medium uppercase tracking-widest transition-all rounded ${
+                            isCompleted 
+                              ? 'bg-lines-hover text-text-muted hover:bg-lines-hover/80 hover:text-text-primary' 
+                              : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:border-primary/50'
+                          }`}
+                        >
+                          {isCompleted ? 'ВЫПОЛНЕНО' : 'ОТМЕТИТЬ'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

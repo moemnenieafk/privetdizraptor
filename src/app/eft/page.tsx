@@ -1,133 +1,99 @@
+import { PageHeader } from '@/components/ui/PageHeader';
+import React from 'react';
 import { HubCard } from '@/components/ui/HubCard';
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "ЦТА | Центр Тактической Адаптации",
-  description: "Минимум шансов на ошибку. Максимальная тактическая готовность в любых условиях в Escape from Tarkov.",
-};
+// Данные для 6 главных карточек навигации
+const EFT_HUB_CARDS = [
+  {
+    id: 'maps',
+    title: 'Карты локаций',
+    description: 'Интерактивные топографические данные',
+    href: '/eft/maps',
+    iconPath: '/icons/eft/maps-icon.svg',
+    variant: 'square' as const,
+  },
+  {
+    id: 'questmap',
+    title: 'Карта заданий',
+    description: 'Интерактивный прогресс выполнения заданий',
+    href: '/eft/questmap',
+    iconPath: '/icons/eft/04-progression/quest-map.svg',
+    variant: 'rectangle' as const,
+  },
+  {
+    id: 'events',
+    title: 'События',
+    description: 'Уникальные внутриигровые события',
+    href: '/eft/quests/events',
+    iconPath: '/icons/eft/02-quests/ingame-events.svg',
+    variant: 'rectangle' as const,
+  },
+  {
+    id: 'price-slot',
+    title: 'Цена за слот',
+    description: 'Расчёт цены за слот в схроне или инвентаре',
+    href: '/eft/items/price-slot',
+    iconPath: '/icons/eft/03-items/price-per-slot.svg',
+    variant: 'rectangle' as const,
+  },
+  {
+    id: 'tracker',
+    title: 'Трекер предметов',
+    description: 'Интерактивное отслеживание предметов',
+    href: '/eft/progress/tracker',
+    iconPath: '/icons/eft/04-progression/items-tracker.svg',
+    variant: 'rectangle' as const,
+  },
+  {
+    id: 'needed',
+    title: 'Нужные предметы',
+    description: 'Предметы необходимые в заданиях',
+    href: '/eft/progress/needed',
+    iconPath: '/icons/eft/04-progression/items-needed.svg',
+    variant: 'rectangle' as const,
+  },
+  {
+    id: 'barter',
+    title: 'Прибыль бартера',
+    description: 'Расчёт прибыли бартера',
+    href: '/eft/progress/barter',
+    iconPath: '/icons/eft/04-progression/barter-profit.svg',
+    variant: 'rectangle' as const,
+  },
+  {
+    id: 'gamesetting',
+    title: 'Кодекс Таркова',
+    description: 'Информация о мире Таркова',
+    href: '/eft/gamesetting',
+    iconPath: '/icons/eft/codex-icon.svg',
+    variant: 'rectangle' as const,
+  },
+];
 
-export default function EftPage() {
+export default function EftHubPage() {
   return (
-    <div className="w-full max-w-[1132px] mx-auto py-10 px-4">
-      
-      {/* ОСНОВНАЯ СЕТКА */}
-      {/* auto-rows-[160px] гарантирует высоту "прямоугольников". Квадраты займут row-span-2 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[28px] md:auto-rows-[160px] justify-items-center animate-[fade-in-up_0.5s_both]">
+    <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-[28px] pb-[56px]">
+      <div className="w-full max-w-[1100px] px-4 xl:px-0">
+        <PageHeader pageId="eft" />
         
-        {/* КАРТЫ (Левый большой блок) */}
-        <HubCard
-          gameId="eft"
-          id="maps"
-          href="/eft/maps"
-          title="Карты"
-          description="Интерактивные топографические данные"
-          //badgeText="[Интерактив]"
-          variant="square"
-          index={0}
-        />
-
-        {/* КВЕСТЫ (Правый верхний, на 2 колонки) */}
-        <HubCard
-          gameId="eft"
-          id="quests"
-          href="/eft/quests"
-          title="Задания"
-          description="Подробные инструкции выполнения задач"
-          //badgeText="[!]"
-          index={1}
-        />
+        {/* Сетка карточек (3 колонки на десктопе) */}
+        <div className="tactical-grid">
+          {EFT_HUB_CARDS.map((card, index) => (
+            <HubCard
+              key={card.id}
+              gameId="eft"
+              id={card.id}
+              title={card.title}
+              description={card.description}
+              href={card.href}
+              iconPath={card.iconPath}
+              variant={card.variant}
+              index={index}
+            />
+          ))}
+        </div>
         
-        {/* СНАРЯЖЕНИЕ */}
-        <HubCard
-          gameId="eft"
-          id="gear"
-          href="/eft/gear"
-          title="Снаряжение"
-          description="Рекомендации по подбору экипировки"
-          index={2}
-        />
-        
-        {/* ПАТРОНЫ */}
-        <HubCard
-          gameId="eft"
-          id="ammo"
-          href="/eft/ammo"
-          title="Патроны"
-          description="Эффективность пробития боеприпасов"
-          index={3}
-        />
-
-        {/* СБОРКИ ОРУЖИЯ */}
-        <HubCard
-          gameId="eft"
-          id="weapons"
-          href="/eft/weapons"
-          title="СБОРКИ"
-          description="Рекомендуемые сборки оружия"
-          index={4}
-        />
-        
-        {/* КРАФТЫ */}
-        <HubCard
-          gameId="eft"
-          id="crafts"
-          href="/eft/crafts"
-          title="Крафты"
-          description="Выгодные крафты в убежище ЧВК"
-          index={5}
-        />
-
-        {/* БАРТЕРЫ */}
-        <HubCard
-          gameId="eft"
-          id="barters"
-          href="/eft/barters"
-          title="Бартеры"
-          description="Прибыльный обмен предметов у торговцев"
-          index={6}
-        />
-
-        {/* УБЕЖИЩЕ */}
-        <HubCard
-          gameId="eft"
-          id="hideout"
-          href="/eft/hideout"
-          title="Убежище"
-          description="Точный учет необходимых предметов"
-          index={7}
-        />
-
-        {/* СЮЖЕТ */}
-        <HubCard
-          gameId="eft"
-          id="lore"
-          href="/eft/lore"
-          title="СЮЖЕТ"
-          description="Подробная хронология событий и синопсис игры"
-          index={8}
-        />
-
-        {/* ПРОГРЕСС */}
-        <HubCard
-          gameId="eft"
-          id="progression"
-          href="/eft/progression"
-          title="Прогресс"
-          description="Интерактивные инструменты для отслеживания прогресса в игре"
-          index={9}
-        />
-
-        {/* ВИДЕО */}
-        <HubCard
-          gameId="eft"
-          id="videos"
-          href="/eft/videos"
-          title="ВИДЕО"
-          description="Актуальные видео по игре, гайды, новости"
-          index={10}
-        />
-
       </div>
-    </div>
+    </main>
   );
 }

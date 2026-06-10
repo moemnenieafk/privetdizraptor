@@ -56,7 +56,7 @@ export default function HomePage() {
       </div>
 
       {/* Уменьшен отступ сверху для телефонов (12px), чтобы оставить больше пространства */}
-      <main className="flex flex-grow w-full flex-col items-center overflow-x-hidden pt-[12px] sm:pt-[21px] md:pt-[32px] lg:pt-[42px] pb-8">
+      <main className="flex flex-grow w-full flex-col items-center overflow-x-hidden sm:pt-[21px] md:pt-[32px] lg:pt-[42px] pt-[28px] pb-[56px]">
         
         {/* Текстовый блок между логотипом и каруселью */}
         {/* Отступ снизу (mb) сделан минимальным, так как карусель уже имеет свой внутренний отступ сверху (py-[42px]) для теней */}

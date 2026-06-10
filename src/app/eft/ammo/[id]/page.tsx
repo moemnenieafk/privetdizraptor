@@ -81,8 +81,9 @@ async function getAmmoDetails(id: string): Promise<AmmoDetails | null> {
   }
 }
 
-export default async function AmmoIdPage({ params }: { params: { id: string } }) {
-  const item = await getAmmoDetails(params.id);
+export default async function AmmoIdPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const item = await getAmmoDetails(resolvedParams.id);
 
   if (!item) return (
     <div className="min-h-screen bg-base text-text-primary flex flex-col">
@@ -93,7 +94,7 @@ export default async function AmmoIdPage({ params }: { params: { id: string } })
   );
 
   return (
-    <main className="min-h-screen bg-base text-text-primary flex flex-col">
+    <main className="min-h-screen bg-base text-text-primary flex flex-col pt-[28px] pb-[56px]">
       
       <div className="flex-grow max-w-4xl mx-auto px-6 py-20 w-full">
         <BackButton />

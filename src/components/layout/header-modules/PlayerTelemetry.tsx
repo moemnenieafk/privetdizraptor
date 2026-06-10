@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { getHeaderConfig } from '@/data/headerConfig';
 import { ProfileSettingsModal, EDITIONS, EditionType } from './ProfileSettingsModal';
-import { usePlayerStore } from './usePlayerStore';
+import { usePlayerStore } from '@/store/usePlayerStore';
 import { ProfileDeleteModal } from './ProfileDeleteModal';
 
 // Функция вычисления группы иконки уровня (1-16)
@@ -84,7 +84,7 @@ export function PlayerTelemetry() {
               {/* Шапка меню (Закрывает меню при клике) */}
               <div className="flex h-[24px] w-full items-center gap-1.5 rounded-t-sm bg-[#222225] px-2 cursor-pointer" onClick={() => setIsProfileMenuOpen(false)}>
                 <div className="flex h-4 w-4 items-center justify-center shrink-0">
-                  <div className="h-full w-full icon-mask icon-eft-profile-account text-zinc-100" style={{ maskImage: 'url(/icons/eft/profile_pannel/account-centre.svg)', WebkitMaskImage: 'url(/icons/eft/profile_pannel/account-centre.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }} />
+                  <div className="h-full w-full icon-mask icon-eft-profile-btn-account text-zinc-100" />
                 </div>
                 <span className="text-[10px] font-blender-medium leading-[10px] text-zinc-100 uppercase mt-0.5">Ваши профили ЧВК</span>
               </div>
@@ -141,13 +141,14 @@ export function PlayerTelemetry() {
                           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] bg-[#161618] border border-[#222225] rounded-sm shadow-xl p-1 w-32 animate-[fade-in_0.1s_ease-out_both]">
                             <button 
                               className="flex items-center justify-center gap-2 px-2 py-2 hover:bg-[#C24339]/10 rounded-sm transition-colors group/delete w-full"
+                              disabled={profiles.length <= 1} // Отключаем, если профиль единственный
                               onClick={(e) => {
                                 e.stopPropagation();
                               setProfileToDelete(profile.id);
                                 setContextMenuProfileId(null);
                               }}
                             >
-                                <div className="w-3.5 h-3.5 icon-mask bg-[#9CA3AF] group-hover/delete:bg-[#C24339] transition-colors shrink-0" style={{ maskImage: 'url(/icons/eft/profile_pannel/BTN_remove-pmc-profile.svg)', WebkitMaskImage: 'url(/icons/eft/profile_pannel/BTN_remove-pmc-profile.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }} />
+                                <div className="w-3.5 h-3.5 icon-mask icon-eft-profile-btn-remove bg-[#9CA3AF] group-hover/delete:bg-[#C24339] transition-colors shrink-0" />
                                 <span className="text-xs font-blender-medium uppercase text-[#9CA3AF] group-hover/delete:text-[#C24339] transition-colors whitespace-nowrap mt-0.5">Удалить ЧВК</span>
                             </button>
                           </div>
@@ -166,7 +167,7 @@ export function PlayerTelemetry() {
                     disabled={profiles.length >= 5}
                     className={`flex h-7 w-full items-center justify-start gap-2 px-2 transition-colors group/btn ${profiles.length >= 5 ? 'opacity-50 cursor-not-allowed bg-black/20' : 'hover:bg-[#161618]'}`}>
                     <div className="flex h-3 w-3 items-center justify-center shrink-0">
-                      <div className="h-full w-full icon-mask bg-[#9CA3AF] transition-colors group-hover/btn:bg-[var(--primary)]" style={{ maskImage: 'url(/icons/eft/profile_pannel/BTN_add-pmc-profile.svg)', WebkitMaskImage: 'url(/icons/eft/profile_pannel/BTN_add-pmc-profile.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }} />
+                      <div className="h-full w-full icon-mask icon-eft-profile-btn-add bg-[#9CA3AF] transition-colors group-hover/btn:bg-[var(--primary)]" />
                     </div>
                     <span className="text-[13px] font-blender-medium uppercase leading-none text-[#9CA3AF] transition-colors group-hover/btn:text-[var(--primary)] mt-0.5">Добавить ЧВК</span>
                   </button>
@@ -178,7 +179,7 @@ export function PlayerTelemetry() {
                   </button>
                   <button className="flex h-7 w-full items-center justify-start gap-2 px-2 transition-colors hover:bg-[#161618] group/btn">
                     <div className="flex h-3 w-3 items-center justify-center shrink-0">
-                      <div className="h-full w-full icon-mask bg-[#9CA3AF] transition-colors group-hover/btn:bg-[var(--primary)]" style={{ maskImage: 'url(/icons/eft/profile_pannel/account-centre.svg)', WebkitMaskImage: 'url(/icons/eft/profile_pannel/account-centre.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }} />
+                      <div className="h-full w-full icon-mask icon-eft-profile-btn-account bg-[#9CA3AF] transition-colors group-hover/btn:bg-[var(--primary)]" />
                     </div>
                     <span className="text-[13px] font-blender-medium uppercase leading-none text-[#9CA3AF] transition-colors group-hover/btn:text-[var(--primary)] mt-0.5">Аккаунт Центр</span>
                   </button>

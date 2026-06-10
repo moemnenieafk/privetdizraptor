@@ -1,4 +1,5 @@
 "use client";
+import { PageHeader } from '@/components/ui/PageHeader';
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 
@@ -135,9 +136,10 @@ export default function AmmoPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#050505] flex flex-col font-sans text-white">
+    <main className="min-h-screen bg-[#050505] flex flex-col font-sans text-white pt-[28px] pb-[56px]">
       
       <div className="flex-grow max-w-7xl mx-auto px-6 py-12 w-full">
+        <PageHeader pageId="eft-ammo" />
         <h1 className="text-5xl font-medium uppercase tracking-tighter mb-2">Баллистика EFT</h1>
         <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-10">Сравнительные характеристики урона и бронепробития боеприпасов</p>
         

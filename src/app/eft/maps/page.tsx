@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/ui/PageHeader';
 import Link from "next/link";
 import { HEADER_DICTIONARY } from "@/data/headerConfig";
 
@@ -8,16 +9,10 @@ export default function MapsPage() {
   const maps = mapsItem?.children || [];
 
   return (
-    <div className="w-full max-w-[1132px] mx-auto py-10 px-4">
-      <div className="mb-8 border-b border-lines-hover pb-6 animate-[fade-in-up_0.4s_both]">
-        <h1 className="text-2xl font-blender-medium tracking-[0.3em] uppercase text-text-primary mb-2">
-          КАРТЫ <span className="text-primary">EFT</span>
-        </h1>
-        <p className="text-[10px] font-bold tracking-widest text-text-muted uppercase">
-          ВЫБЕРИТЕ ЛОКАЦИЮ ДЛЯ ПРОСМОТРА ИНТЕРАКТИВНОЙ КАРТЫ И ИНФОРМАЦИИ
-        </p>
-      </div>
-
+    <main className="flex w-full flex-col items-center justify-start pt-[28px] pb-[56px] animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
+      <div className="w-full max-w-[1100px] px-4 xl:px-0 mx-auto">
+        <PageHeader pageId="eft-maps" />
+        <div className="w-full max-w-[1132px] mx-auto py-10 px-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-[28px] justify-items-center">
         {maps.map((mapData, i) => (
           <Link
@@ -45,5 +40,7 @@ export default function MapsPage() {
         ))}
       </div>
     </div>
+        </div>
+    </main>
   );
 }

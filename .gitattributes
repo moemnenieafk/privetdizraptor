@@ -1,0 +1,28 @@
+# Устанавливаем поведение по умолчанию для всех файлов
+# Git будет пытаться угадать, является ли файл текстовым
+* text=auto
+
+# Явно указываем текстовые файлы, которые должны быть нормализованы
+# Git будет использовать LF (Unix-стиль) в репозитории
+*.js      text
+*.jsx     text
+*.ts      text
+*.tsx     text
+*.html    text
+*.css     text
+*.scss    text
+*.json    text
+*.md      text
+*.yml     text
+*.yaml    text
+
+# Указываем бинарные файлы, которые Git не должен изменять
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.woff    binary
+*.woff2   binary
+*.mp4     binary
+*.webm    binary

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import { type MenuItem } from '@/data/headerConfig';
-import { usePlayerStore } from './usePlayerStore';
+import { usePlayerStore } from '@/store/usePlayerStore';
 
 // Хелпер: должна ли иконка сохранять свои оригинальные цвета (без CSS-маски)
 const isColoredIcon = (item: MenuItem, urlToUse?: string) => {

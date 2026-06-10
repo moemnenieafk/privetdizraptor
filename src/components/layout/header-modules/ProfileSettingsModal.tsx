@@ -165,7 +165,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
           {/* ИМЯ ЧВК */}
           <div className="flex w-full flex-col items-start justify-start gap-2">
             <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Имя ЧВК</div>
-            <div className="flex h-10 w-full items-center justify-start gap-2 rounded border border-[#222225] bg-[#0D0D0F] px-2 py-3.5">
+            <div className={`flex h-10 w-full items-center justify-start gap-2 rounded border bg-[#0D0D0F] px-2 py-3.5 transition-all duration-300 ${nickname.length >= 15 ? 'border-[#C24339] shadow-[0_0_12px_rgba(194,67,57,0.3)]' : 'border-[#222225]'}`}>
               <div className="flex w-6 items-center justify-center">
                 <div className={`h-4 w-4 icon-mask ${activeEd.icon} ${activeEd.color}`} />
               </div>
@@ -173,6 +173,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                 type="text"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
+              maxLength={15}
                 className={`flex-1 w-full bg-transparent text-xl font-blender-medium leading-5 ${activeEd.color} outline-none ${activeEd.placeholder}`}
                 spellCheck={false}
               />
@@ -277,10 +278,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
             {/* Фракции */}
             <div className="flex flex-1 gap-1">
               <button onClick={() => setFaction('USEC')} className={`flex flex-1 flex-col items-center justify-center rounded border h-[56px] transition-all ${faction === 'USEC' ? 'border-sky-500 bg-gradient-to-t from-sky-500/20 to-transparent' : 'border-[#222225] bg-[#0D0D0F] hover:border-sky-500/50'}`}>
-                <img src="/icons/eft/profile_pannel/USEC-logo-sign.svg" alt="USEC" className={`h-10 w-10 object-contain transition-opacity ${faction === 'USEC' ? 'opacity-100' : 'opacity-40'}`} />
+                <img src="/icons/eft/profile-pannel/USEC-logo-sign.svg" alt="USEC" className={`h-10 w-10 object-contain transition-opacity ${faction === 'USEC' ? 'opacity-100' : 'opacity-40'}`} />
               </button>
               <button onClick={() => setFaction('BEAR')} className={`flex flex-1 flex-col items-center justify-center rounded border h-[56px] transition-all ${faction === 'BEAR' ? 'border-orange-700 bg-gradient-to-t from-orange-700/20 to-transparent' : 'border-[#222225] bg-[#0D0D0F] hover:border-orange-700/50'}`}>
-                <img src="/icons/eft/profile_pannel/BEAR-logo-sign.svg" alt="BEAR" className={`h-10 w-10 object-contain transition-opacity ${faction === 'BEAR' ? 'opacity-100' : 'opacity-40'}`} />
+                <img src="/icons/eft/profile-pannel/BEAR-logo-sign.svg" alt="BEAR" className={`h-10 w-10 object-contain transition-opacity ${faction === 'BEAR' ? 'opacity-100' : 'opacity-40'}`} />
               </button>
             </div>
             {/* Режимы */}

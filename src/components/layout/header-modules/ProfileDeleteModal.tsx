@@ -51,14 +51,14 @@ export function ProfileDeleteModal({ isOpen, onClose, onConfirm }: ProfileDelete
         {/* ШАПКА (#C24339) */}
         <div className="relative flex h-7 w-full items-center justify-start gap-1 rounded-t bg-[#C24339]">
           <div className="flex h-7 w-7 items-center justify-center p-1.5">
-            <div className="h-full w-full icon-mask bg-zinc-100" style={{ maskImage: 'url(/icons/eft/profile_pannel/BTN_remove-pmc-profile.svg)', WebkitMaskImage: 'url(/icons/eft/profile_pannel/BTN_remove-pmc-profile.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }} />
+            <div className="h-full w-full icon-mask icon-eft-profile-btn-remove bg-zinc-100" />
           </div>
           <div className="text-sm font-blender-medium leading-4 text-zinc-100">Подтверждение удаления профиля ЧВК</div>
           
           {/* Кнопка закрытия (#7E2C25) */}
           <button onClick={onClose} className="absolute right-0 top-0 flex h-7 w-7 items-center justify-center transition-opacity hover:opacity-80 focus:outline-none">
             <div className="flex h-3 w-4 items-center justify-center rounded-[1px] bg-[#7E2C25]">
-              <div className="h-2 w-2 icon-mask icon-eft-profile-btn-close text-zinc-100" />
+              <div className="h-2 w-2 icon-mask icon-eft-profile-btn-remove text-zinc-100" />
             </div>
           </button>
         </div>
