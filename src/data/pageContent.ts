@@ -90,4 +90,29 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     description: 'Дополнительные поручения и контракты от торговцев, необходимые для прокачки репутации.',
     iconClass: 'icon-eft-quests-side',
   },
+  'eft-items-loot-rate': {
+    title: 'Рейтинг предметов',
+    description: 'Актуальный рейтинг ценности лута. Узнайте, какие предметы стоит выносить из рейда в первую очередь для максимальной выгоды.',
+    iconClass: 'icon-eft-items-loot-tier',
+  },
+  'eft-items-gear': {
+    title: 'Снаряжение',
+    description: 'Обзор всей доступной экипировки: бронежилеты, шлемы, разгрузки и рюкзаки для защиты и выживания в рейде.',
+    iconClass: 'icon-eft-items-gear',
+  },
+  'eft-items-guns': {
+    title: 'Оружие',
+    description: 'Полный арсенал огнестрельного и холодного оружия, гранат, а также огромный выбор тактических модификаций.',
+    iconClass: 'icon-eft-items-guns',
+  },
+  'eft-items-equipment': {
+    title: 'Оборудование',
+    description: 'Медикаменты, инъекторы, ключи, контейнеры, провизия и прочее жизненно важное тактическое снаряжение.',
+    iconClass: 'icon-eft-items-equipment',
+  },
+  'eft-items-price-slot': {
+    title: 'Цена за слот',
+    description: 'Инструмент для оценки прибыльности предметов. Узнайте, что выгоднее всего класть в рюкзак во время рейда.',
+    iconClass: 'icon-eft-items-price-slot',
+  }
 };

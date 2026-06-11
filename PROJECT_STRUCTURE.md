@@ -6,7 +6,10 @@
 ```text
 cta-project\
 ├── .env.local                 # Секретные ключи API (Twitch, YouTube и др.)
-├── scripts/                   # Скрипты для автоматизации (например, sync-docs.mjs)
+├── scripts/                   # Скрипты для автоматизации
+│   ├── sync-docs.mjs          # Утилита синхронизации документации
+│   ├── ensure-page-headers.mjs# Внедрение <PageHeader>
+│   └── fix-warnings.mjs       # Исправление верстки старых страниц
 ├── next.config.mjs            # Конфигурация Next.js
 ├── tailwind.config.ts         # Конфиг Tailwind CSS (если используется поверх v4)
 ├── tsconfig.json              # Конфиг TypeScript
@@ -110,7 +113,8 @@ src/
     │   ├── progress/          # Хаб "Прогресс"
     │   │   ├── page.tsx
     │   │   ├── achievements/
-    │   │   │   └── page.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── AchievementsClient.tsx # Умный клиентский интерфейс достижений
     │   │   ├── barter/
     │   │   │   └── page.tsx
     │   │   ├── hideout/
