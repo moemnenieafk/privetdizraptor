@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search, Trophy, EyeOff, X, LayoutGrid, List } from 'lucide-react';
+import Image from 'next/image';
 
 export interface Achievement {
   id: string;
@@ -16,10 +17,10 @@ interface AchievementsClientProps {
 }
 
 function getRarity(percent: number) {
-  if (percent > 25) return { label: 'ОБЫЧНОЕ', color: 'text-text-muted', border: 'border-lines-hover' };
-  if (percent > 10) return { label: 'РЕДКОЕ', color: 'text-blue-400', border: 'border-blue-500/30' };
-  if (percent > 1) return { label: 'ЭПИЧЕСКОЕ', color: 'text-purple-400', border: 'border-purple-500/30' };
-  return { label: 'ЛЕГЕНДАРНОЕ', color: 'text-yellow-500', border: 'border-yellow-500/50' };
+  if (percent > 25) return { label: 'ОБЫЧНОЕ', rarityClass: 'rarity-common' };
+  if (percent > 10) return { label: 'РЕДКОЕ', rarityClass: 'rarity-rare' };
+  if (percent > 1) return { label: 'ЭПИЧЕСКОЕ', rarityClass: 'rarity-epic' };
+  return { label: 'ЛЕГЕНДАРНОЕ', rarityClass: 'rarity-legendary' };
 }
 
 export function AchievementsClient({ initialData }: AchievementsClientProps) {
@@ -122,14 +123,19 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           {processedData.map((ach) => {
             const rarity = getRarity(ach.playersCompletedPercent ?? 0);
             return (
-              <div key={ach.id} className={`bg-[#0D0D0F] border ${rarity.border} rounded p-5 flex flex-col relative overflow-hidden group hover:border-[var(--primary)] hover:shadow-[0_0_20px_rgba(230,142,37,0.1)] transition-all duration-300`}>
-                <div className="flex items-start justify-between mb-3 gap-4">
-                  <h3 className="font-blender-medium text-[18px] leading-none uppercase text-text-primary group-hover:text-[var(--primary)] transition-colors">{ach.name}</h3>
-                  {ach.hidden ? <span title="Скрытое достижение" className="shrink-0 flex items-center justify-center"><EyeOff className="w-4 h-4 text-text-muted" /></span> : <Trophy className={`w-4 h-4 shrink-0 ${rarity.color}`} />}
+              <div key={ach.id} className={`bg-[#0D0D0F] border-[var(--rarity-border)] rounded p-5 flex flex-col relative overflow-hidden group hover:border-[var(--primary)] hover:shadow-[0_0_20px_rgba(230,142,37,0.1)] transition-all duration-300 ${rarity.rarityClass}`}>
+                <div className="flex items-start justify-between mb-4 gap-4">
+                  <div className="flex items-center gap-2 mt-1">
+                    <h3 className="font-blender-medium text-[18px] leading-none uppercase text-text-primary group-hover:text-[var(--primary)] transition-colors">{ach.name}</h3>
+                    {ach.hidden ? <span title="Скрытое достижение" className="shrink-0 flex items-center justify-center"><EyeOff className="w-4 h-4 text-text-muted" /></span> : <Trophy className="w-4 h-4 shrink-0 text-[var(--rarity-color)]" />}
+                  </div>
+                  <div className="achievement-icon-grid rounded overflow-hidden border border-lines-hover bg-black/50 shadow-md">
+                    <Image src={`/images/achievements/${ach.id}.webp`} alt={ach.name} fill sizes="(max-width: 640px) 48px, (max-width: 1024px) 64px, 80px" className="object-cover group-hover:scale-110 transition-transform duration-300" />
+                  </div>
                 </div>
                 <p className="text-sm text-text-secondary mb-6 flex-grow">{ach.description}</p>
                 <div className="flex items-center justify-between pt-3 border-t border-lines-hover mt-auto">
-                  <span className={`text-[10px] font-black tracking-widest uppercase ${rarity.color}`}>{rarity.label}</span>
+                  <span className="text-[10px] font-black tracking-widest uppercase text-[var(--rarity-color)]">{rarity.label}</span>
                   <span className="text-xs font-mono text-text-muted">{(ach.playersCompletedPercent ?? 0).toFixed(1)}% игроков</span>
                 </div>
               </div>
@@ -141,7 +147,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           <table className="w-full text-sm">
               <thead className="bg-card-menu/50">
                   <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-[10px] font-black text-text-muted uppercase tracking-widest w-12"></th>
+                      <th scope="col" className="px-4 py-3 text-center text-[10px] font-black text-text-muted uppercase tracking-widest w-16">Иконка</th>
                       <th scope="col" className="px-4 py-3 text-left text-[10px] font-black text-text-muted uppercase tracking-widest">Название</th>
                       <th scope="col" className="px-4 py-3 text-left text-[10px] font-black text-text-muted uppercase tracking-widest hidden md:table-cell">Описание</th>
                       <th scope="col" className="px-4 py-3 text-right text-[10px] font-black text-text-muted uppercase tracking-widest w-32">Редкость</th>
@@ -153,18 +159,21 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                       return (
                           <tr key={ach.id} className="border-b border-lines-hover last:border-b-0 hover:bg-card-menu/30 transition-colors">
                               <td className="px-4 py-3 text-center">
-                                  {ach.hidden ? (
-                                      <span title="Скрытое достижение"><EyeOff className="w-4 h-4 text-text-muted mx-auto" /></span>
-                                  ) : (
-                                      <Trophy className={`w-4 h-4 mx-auto ${rarity.color}`} />
-                                  )}
+                                  <div className="achievement-icon-table rounded overflow-hidden border border-lines-hover bg-black/50">
+                                      <Image src={`/images/achievements/${ach.id}.webp`} alt={ach.name} fill sizes="(max-width: 768px) 32px, (max-width: 1024px) 40px, 48px" className="object-cover" />
+                                  </div>
                               </td>
-                              <td className="px-4 py-3 font-blender-medium text-text-primary">{ach.name}</td>
+                              <td className={`px-4 py-3 font-blender-medium text-text-primary ${rarity.rarityClass}`}>
+                                  <div className="flex items-center gap-2">
+                                      {ach.name}
+                                      {ach.hidden ? <span title="Скрытое достижение" className="shrink-0 flex items-center justify-center"><EyeOff className="w-3 h-3 text-text-muted" /></span> : <Trophy className="w-3 h-3 shrink-0 text-[var(--rarity-color)]" />}
+                                  </div>
+                              </td>
                               <td className="px-4 py-3 text-text-secondary hidden md:table-cell">{ach.description}</td>
-                              <td className="px-4 py-3 text-right">
+                              <td className={`px-4 py-3 text-right ${rarity.rarityClass}`}>
                                   <div className="flex flex-col items-end">
-                                      <span className={`font-mono text-xs ${rarity.color}`}>{(ach.playersCompletedPercent ?? 0).toFixed(1)}%</span>
-                                      <span className={`text-[10px] font-black tracking-widest uppercase ${rarity.color}`}>{rarity.label}</span>
+                                      <span className="font-mono text-xs text-[var(--rarity-color)]">{(ach.playersCompletedPercent ?? 0).toFixed(1)}%</span>
+                                      <span className="text-[10px] font-black tracking-widest uppercase text-[var(--rarity-color)]">{rarity.label}</span>
                                   </div>
                               </td>
                           </tr>
