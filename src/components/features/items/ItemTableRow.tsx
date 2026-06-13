@@ -3,6 +3,7 @@ import Image from "next/image";
 import { TarkovItem, ArmorMetrics, AmmoMetrics, WeaponMetrics, HeadsetMetrics } from "@/types/tarkov-items";
 import { Badge, getArmorClassColor } from "@/components/features/items/Badge";
 import { getTarkovBackgroundColor } from "@/lib/tarkov-colors";
+import { formatCompactNumber } from "@/lib/formatters";
 
 interface ItemTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   item: TarkovItem;
@@ -65,7 +66,13 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
       {/* Цена Барахолки */}
       <td className="p-3 text-right">
         <span className="whitespace-nowrap font-mono text-xs text-[var(--color-text-primary)] transition-colors group-hover:text-[var(--primary)]">
-          {item.fleaPrice ? `${item.fleaPrice.toLocaleString("ru-RU")} ₽` : "N/A"}
+          {item.fleaPrice ? (
+            <span title={`${item.fleaPrice.toLocaleString("ru-RU")} ₽`} className="cursor-help">
+              {formatCompactNumber(item.fleaPrice)} ₽
+            </span>
+          ) : (
+            "N/A"
+          )}
         </span>
       </td>
     </tr>

@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { ItemGridSize } from "./ItemGridSize";
 import { RarityBadge, type RarityTier } from "./RarityBadge";
 import { Badge, getArmorClassColor } from "@/components/features/items/Badge";
+import { formatCompactNumber } from "@/lib/formatters";
 
 export interface TableItem {
   id: string;
@@ -84,10 +85,14 @@ export const ItemsTable = memo(function ItemsTable({ items, className = "" }: It
                   </div>
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-xs text-[var(--color-nvg-green)]">
-                  {profitPerSlot.toLocaleString("ru-RU")} ₽
+                  <span title={`${profitPerSlot.toLocaleString("ru-RU")} ₽`} className="cursor-help border-b border-dotted border-[var(--color-nvg-green)]/30">
+                    {formatCompactNumber(profitPerSlot)} ₽
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-xs">
-                  {effectivePrice.toLocaleString("ru-RU")} ₽
+                  <span title={`${effectivePrice.toLocaleString("ru-RU")} ₽`} className="cursor-help border-b border-dotted border-[var(--color-text-muted)]/50">
+                    {formatCompactNumber(effectivePrice)} ₽
+                  </span>
                 </td>
               </tr>
             );

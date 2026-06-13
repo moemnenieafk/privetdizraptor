@@ -2,10 +2,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, X, LayoutGrid, List, ArrowDownUp, PackageX, Coins, ChevronUp, ChevronDown } from 'lucide-react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Search, X, LayoutGrid, List, ArrowDownUp, PackageX, Coins, ChevronUp, ChevronDown, Check, Bookmark } from 'lucide-react';
 import { Badge } from '@/components/ui/kit';
 import { Badge as SemanticBadge, getArmorClassColor } from '@/components/features/items/Badge';
 import { ItemTile } from '@/components/features/items/ItemTile';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { usePlayerStore } from '@/store/usePlayerStore';
 
 // 1. Типизация, основанная на GraphQL tarkov.dev
 export interface CategoryItem {
@@ -17,6 +20,7 @@ export interface CategoryItem {
   backgroundColor?: string;
   basePrice: number;
   image512pxLink: string;
+  types?: string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   properties?: any;
   sellFor: { price: number; vendor: { name: string; normalizedName?: string } }[];
@@ -71,21 +75,111 @@ function VendorIcon({ vendor }: { vendor: { name: string; normalizedName?: strin
 }
 
 export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategoryClientProps) {
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'vps', direction: 'desc' });
-  const [activeArmorClasses, setActiveArmorClasses] = useState<number[]>([1, 2, 3, 4, 5, 6]);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialView = searchParams.get('view');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(
+    (initialView === 'grid' || initialView === 'table') ? initialView : 'table'
+  );
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "");
+  
+  const initialDir = searchParams.get('dir');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ 
+    key: searchParams.get('sort') || 'vps', 
+    direction: (initialDir === 'asc' || initialDir === 'desc') ? initialDir : 'desc' 
+  });
+  
+  const initialArmor = searchParams.get('armor');
+  const [activeArmorClasses, setActiveArmorClasses] = useState<number[]>(
+    initialArmor ? initialArmor.split(',').map(Number).filter(n => !isNaN(n)) : [1, 2, 3, 4, 5, 6]
+  );
   const [isLoading, setIsLoading] = useState(true);
+  const [barterOnly, setBarterOnly] = useState(searchParams.get('barter') === 'true');
+  const [availableOnly, setAvailableOnly] = useState(searchParams.get('available') === 'true');
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Глобальный стейт профиля игрока
+  const profiles = usePlayerStore((state) => state.profiles);
+  const activeProfileId = usePlayerStore((state) => state.activeProfileId);
+  const activeProfile = profiles.find((p) => p.id === activeProfileId) || profiles[0];
+  const playerLevel = Number(activeProfile?.level) || 1;
 
   useEffect(() => {
     setIsLoading(false);
+
+    // Загружаем сохраненные настройки, только если пользователь зашел без параметров в URL
+    if (!window.location.search) {
+      try {
+        const savedStr = localStorage.getItem('cta_items_filters_v1');
+        if (savedStr) {
+          const saved = JSON.parse(savedStr);
+          if (saved.viewMode) setViewMode(saved.viewMode);
+          if (saved.sortConfig) setSortConfig(saved.sortConfig);
+          if (saved.activeArmorClasses) setActiveArmorClasses(saved.activeArmorClasses);
+          if (saved.barterOnly !== undefined) setBarterOnly(saved.barterOnly);
+          if (saved.availableOnly !== undefined) setAvailableOnly(saved.availableOnly);
+        }
+      } catch (e) {
+        console.error('Local storage access error', e);
+      }
+    }
   }, []);
+
+  // Синхронизация состояния фильтров с URL
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      
+      if (searchQuery) params.set('q', searchQuery);
+      else params.delete('q');
+      
+      if (sortConfig.key !== 'vps') params.set('sort', sortConfig.key);
+      else params.delete('sort');
+      
+      if (sortConfig.direction !== 'desc') params.set('dir', sortConfig.direction);
+      else params.delete('dir');
+      
+      if (barterOnly) params.set('barter', 'true');
+      else params.delete('barter');
+
+      if (availableOnly) params.set('available', 'true');
+      else params.delete('available');
+      
+      if (viewMode !== 'table') params.set('view', viewMode);
+      else params.delete('view');
+
+      if (activeArmorClasses.length > 0 && activeArmorClasses.length < 6) params.set('armor', [...activeArmorClasses].sort((a, b) => a - b).join(','));
+      else params.delete('armor');
+
+      const query = params.toString();
+      if (query !== searchParams.toString()) {
+        router.replace(`${pathname}${query ? `?${query}` : ''}`, { scroll: false });
+      }
+    }, 300); // 300ms debounce для ввода в поле поиска
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, sortConfig, barterOnly, availableOnly, viewMode, activeArmorClasses, pathname, router, searchParams]);
 
   const handleSort = (key: string) => {
     setSortConfig(current => ({
       key,
       direction: current.key === key && current.direction === 'desc' ? 'asc' : 'desc'
     }));
+  };
+
+  const handleSaveFilters = () => {
+    const filtersToSave = {
+      viewMode,
+      sortConfig,
+      activeArmorClasses,
+      barterOnly,
+      availableOnly
+    };
+    localStorage.setItem('cta_items_filters_v1', JSON.stringify(filtersToSave));
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
   };
 
   // 3. Вычисление, фильтрация и сортировка данных (Мемоизировано для производительности)
@@ -109,6 +203,8 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
           return false;
         }
       }
+
+      if (barterOnly && (!item.types || !item.types.includes("barter"))) return false;
 
       return true;
     });
@@ -226,10 +322,7 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
           {/* Опциональные фильтры брони */}
           {(categorySlug === 'armor' || categorySlug === 'helmets' || categorySlug === 'rigs') && (
             <div className="flex items-center gap-3 animate-[fade-in-up_0.3s_ease-out]">
-              <span className="font-blender-medium text-[10px] uppercase tracking-widest text-[var(--color-text-secondary)] hidden sm:inline-block">
-                Класс брони
-              </span>
-              <div className="flex flex-wrap items-center gap-1 border-lines-hover rounded p-1">
+                <div className="flex flex-wrap items-center gap-1 border-lines-hover rounded p-1">
                 {[1, 2, 3, 4, 5, 6].map((ac) => {
                   const isActive = activeArmorClasses.includes(ac);
                   return (
@@ -254,6 +347,36 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
           {(categorySlug === 'armor' || categorySlug === 'helmets' || categorySlug === 'rigs') && (
             <div className="w-[1px] h-6 bg-lines-hover mx-1 hidden lg:block" />
           )}
+
+          <label className="flex items-center gap-2 cursor-pointer group shrink-0">
+            <input 
+              type="checkbox" 
+              className="hidden peer"
+              checked={barterOnly}
+              onChange={(e) => setBarterOnly(e.target.checked)}
+            />
+            <div className="w-4 h-4 rounded border border-lines-hover bg-[#0D0D0F] peer-checked:bg-[var(--color-nvg-green)] peer-checked:border-[var(--color-nvg-green)] transition-colors flex items-center justify-center">
+              {barterOnly && <Check className="w-3 h-3 text-[var(--color-base)] stroke-[3]" />}
+            </div>
+            <span className="text-[10px] font-blender-medium uppercase tracking-widest text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors mt-0.5">
+              Только бартер
+            </span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer group shrink-0" title="Доступно на моем уровне (Барахолка с 15 ур.)">
+            <input 
+              type="checkbox" 
+              className="hidden peer"
+              checked={availableOnly}
+              onChange={(e) => setAvailableOnly(e.target.checked)}
+            />
+            <div className="w-4 h-4 rounded border border-lines-hover bg-[#0D0D0F] peer-checked:bg-[var(--primary)] peer-checked:border-[var(--primary)] transition-colors flex items-center justify-center">
+              {availableOnly && <Check className="w-3 h-3 text-[var(--color-base)] stroke-[3]" />}
+            </div>
+            <span className="text-[10px] font-blender-medium uppercase tracking-widest text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors mt-0.5">
+              Доступно мне
+            </span>
+          </label>
 
           {/* Сортировка */}
           <div className="flex items-center bg-[#0D0D0F] border border-lines-hover rounded h-10 px-3 grow sm:grow-0">
@@ -290,6 +413,20 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
               <List className="w-4 h-4" />
             </button>
           </div>
+
+          <div className="w-[1px] h-6 bg-lines-hover mx-1 hidden sm:block" />
+
+          <button
+            onClick={handleSaveFilters}
+            className={`h-10 w-10 shrink-0 flex items-center justify-center rounded transition-all duration-300 border outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] ${
+              isSaved 
+                ? 'bg-[var(--color-nvg-green)] border-[var(--color-nvg-green)] text-[var(--color-base)] shadow-[0_0_15px_color-mix(in_srgb,var(--color-nvg-green)_40%,transparent)]' 
+                : 'bg-[#0D0D0F] border-lines-hover text-text-muted hover:border-[var(--primary)] hover:text-[var(--primary)]'
+            }`}
+            title="Запомнить фильтры как стандартные"
+          >
+            {isSaved ? <Check className="w-4 h-4 stroke-[3]" /> : <Bookmark className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
@@ -311,6 +448,9 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
               onClick={() => {
                 setSearchQuery("");
                 setActiveArmorClasses([1, 2, 3, 4, 5, 6]);
+                setBarterOnly(false);
+                setAvailableOnly(false);
+                setSortConfig({ key: 'vps', direction: 'desc' });
               }}
               className="group relative inline-flex items-center justify-center overflow-hidden rounded border border-[var(--color-lines-hover)] bg-[var(--color-base)] px-8 py-2 transition-all duration-300 hover:border-[var(--primary)] hover:shadow-[0_0_15px_color-mix(in_srgb,var(--primary)_20%,transparent)]"
             >
@@ -447,11 +587,12 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
                 <tr key={item.id} className="border-b border-lines-hover last:border-0 hover:bg-card-menu/30 transition-colors group">
                   <td className="px-4 py-2 border-r border-lines-hover/50">
                     <div className="relative w-12 h-12 mx-auto bg-gradient-to-b from-[#2c2c2c] to-[#121212] border border-[#444] shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden flex items-center justify-center">
+                      <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={`/images/items/eft/${item.id}.webp`} 
                         alt={item.name} 
-                        className="absolute inset-0 w-full h-full object-contain p-1 group-hover:scale-110 transition-transform" 
+                        className="absolute inset-0 z-10 w-full h-full object-contain p-1 group-hover:scale-110 transition-transform" 
                         onError={(e) => {
                           if (!e.currentTarget.dataset.triedApi) {
                             e.currentTarget.dataset.triedApi = 'true';
@@ -588,6 +729,23 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Всплывающее уведомление (Toast) о сохранении фильтров */}
+      {isSaved && (
+        <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-[100] flex items-center gap-3 rounded border border-[var(--color-lines-hover)] bg-[color-mix(in_srgb,var(--color-card-menu)_90%,transparent)] p-3 shadow-[0_8px_30px_rgba(0,0,0,0.8)] animate-[fade-in-up_0.3s_ease-out_both] backdrop-blur-md">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[var(--color-nvg-green)] text-[var(--color-base)] shadow-[0_0_10px_color-mix(in_srgb,var(--color-nvg-green)_40%,transparent)]">
+            <Check className="h-5 w-5 stroke-[3]" />
+          </div>
+          <div className="flex flex-col justify-center">
+            <span className="font-blender-medium text-[13px] uppercase tracking-widest text-[var(--color-text-primary)] leading-none mb-1">
+              Настройки сохранены
+            </span>
+            <span className="font-blender-book text-xs text-[var(--color-text-secondary)] leading-none">
+              Текущие фильтры установлены по умолчанию
+            </span>
+          </div>
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { Info, Banknote, Package, ArrowLeft } from 'lucide-react';
 import { Badge, MetricCard, ProgressBar, SectionPanel } from '@/components/ui/kit';
-import { WeaponModule, ArmorModule, MedicalModule, ContainerModule } from './ItemModules';
+import { WeaponModule, ArmorModule, MedicalModule, ContainerModule, TraderModule } from './ItemModules';
 import Link from 'next/link';
 
 // 1. Строгая типизация данных из tarkov.dev
@@ -18,6 +18,10 @@ interface TarkovItem {
   image512pxLink: string;
   properties: any; // В реальном проекте здесь будет сложный Union Type
   sellFor: {
+    price: number;
+    vendor: { name: string; normalizedName: string };
+  }[];
+  buyFor?: {
     price: number;
     vendor: { name: string; normalizedName: string };
   }[];
@@ -38,6 +42,13 @@ async function getItemData(id: string): Promise<TarkovItem | null> {
         basePrice
         image512pxLink
         sellFor {
+          price
+          vendor {
+            name
+            normalizedName
+          }
+        }
+        buyFor {
           price
           vendor {
             name
@@ -185,6 +196,9 @@ export default async function ItemDetailsPage({ params }: { params: { id: string
                 />
               </div>
             </SectionPanel>
+
+            {/* Блок Торговли (Покупка/Продажа) */}
+            <TraderModule buyFor={item.buyFor} sellFor={item.sellFor} />
 
             {/* Описание предмета */}
             <SectionPanel title="Описание" icon={<Info className="w-4 h-4" />}>

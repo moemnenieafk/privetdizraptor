@@ -7,6 +7,7 @@ export interface EftItem {
   height: number;
   gridImageLink: string;
   lastLowPrice: number | null;
+  backgroundColor?: string;
 }
 
 /**
@@ -27,6 +28,7 @@ export async function getAllEftItems(): Promise<EftItem[]> {
         height
         gridImageLink
         lastLowPrice
+        backgroundColor
       }
     }
   `;

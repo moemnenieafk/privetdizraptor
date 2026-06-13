@@ -4,11 +4,15 @@ import React, { useState, useRef, useEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { DataViewToggle, type ViewMode } from "@/components/ui/DataViewToggle";
 import { ItemsTable } from "@/components/features/items/ItemsTable";
-import { ItemTile } from "@/components/features/items/ItemTile";
+import { ItemTile, type ItemTileProps } from "@/components/features/items/ItemTile";
 import { TarkovItem } from "@/types/tarkov-items";
 
+export type ViewSwitcherItem = TarkovItem & {
+  eco: ItemTileProps["item"]["eco"];
+};
+
 interface ItemsViewSwitcherProps {
-  items: TarkovItem[];
+  items: ViewSwitcherItem[];
   className?: string;
 }
 

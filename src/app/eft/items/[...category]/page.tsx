@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { HubCard } from '@/components/ui/HubCard';
 import { HEADER_DICTIONARY, MenuItem } from '@/data/headerConfig';
 import { ItemsCategoryClient, CategoryItem } from './ItemsCategoryClient';
+import { CategoryTabs, type CategoryTabConfig } from "@/components/features/items/CategoryTabs";
 
 interface Props {
   params: Promise<{ category: string[] }>;
@@ -25,6 +26,7 @@ function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null 
 async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
   // Расширенный маппинг наших URL-категорий на типы GraphQL tarkov.dev
   const typeMapping: Record<string, string> = {
+    'gear': 'armor, backpack, armorPlate, glasses, headphones, helmet, wearable, rig',
     'armor': 'armor',
     'backpacks': 'backpack',
     'components': 'armorPlate',
@@ -35,13 +37,14 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'rigs': 'rig',
     'visors': 'mods',
     'ammo': 'ammo',
+    'guns': 'gun, ammo, grenade, mods',
+    'firearms': 'gun',
     'ar': 'gun',
     'bolt': 'gun',
     'carbine': 'gun',
     'dmr': 'gun',
     'gl': 'gun',
     'grenades': 'grenade',
-    'guns': 'gun',
     'lmg': 'gun',
     'shotgun': 'gun',
     'sidearm': 'gun',
@@ -61,6 +64,7 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'receivers': 'mods',
     'sights': 'mods',
     'stocks': 'mods',
+    'equipment': 'meds, keys, container, provisions',
     'injury': 'meds',
     'injectors': 'injectors',
     'medkits': 'meds',
@@ -73,6 +77,7 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'secure': 'container',
     'drinks': 'provisions',
     'food': 'provisions',
+    'provisions': 'provisions',
   };
 
   const gqlType = typeMapping[slug];
@@ -89,6 +94,7 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
         basePrice
         image512pxLink
         types
+          backgroundColor
         properties {
           ... on ItemPropertiesHelmet {
             class
@@ -115,8 +121,8 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
             recoilModifier
           }
         }
-        sellFor { price, vendor { name, normalizedName } }
-        buyFor { price, vendor { name, normalizedName } }
+              sellFor { price, vendor { name, normalizedName } }
+              buyFor { price, vendor { name, normalizedName } }
       }
     }
   `;
@@ -147,7 +153,34 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
       items = items.filter((i: any) => i.name && i.name.toLowerCase().includes('аптечка'));
     }
 
-    return items;
+    // Маппинг данных (BFF) для добавления eco (экономики)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return items.map((item: any) => {
+      // Ищем лучшую цену продажи (максимальную)
+      const bestSell = item.sellFor?.reduce((prev: any, current: any) => 
+        (prev.price > current.price) ? prev : current
+      , { price: 0 });
+
+      // Ищем лучшую цену покупки (минимальную)
+      const validBuyFor = item.buyFor?.filter((b: any) => b.price > 0) || [];
+      const bestBuy = validBuyFor.length > 0 
+        ? validBuyFor.reduce((prev: any, current: any) => (prev.price < current.price) ? prev : current) 
+        : null;
+
+      const minPrice = bestBuy?.price || item.basePrice || 0;
+      const slots = (item.width || 1) * (item.height || 1);
+      const vps = slots > 0 ? Math.round((bestSell?.price || 0) / slots) : 0;
+
+      return {
+        ...item,
+        eco: {
+          bestSell: { price: bestSell?.price || 0, vendor: bestSell?.vendor },
+          bestBuy: bestBuy ? { vendor: bestBuy.vendor } : undefined,
+          minPrice,
+          vps
+        }
+      };
+    });
   } catch (error) {
     console.error('Fetch error in getCategoryItems:', error);
     return [];
@@ -174,8 +207,31 @@ export default async function ItemsDynamicPage({ params }: Props) {
 
   const hasChildren = currentNode.children && currentNode.children.length > 0;
 
-  // Если это конечная категория (нет детей), загружаем данные предметов
-  const itemsData = !hasChildren ? await getCategoryItems(slug) : [];
+  // --- ГЕНЕРАЦИЯ ВЛОЖЕННЫХ ТАБОВ ---
+  let subTabs: CategoryTabConfig[] = [];
+  const parentPath = currentPath.split('/').slice(0, -1).join('/');
+  const parentNode = findNodeByPath(eftMenu, parentPath);
+
+  if (hasChildren) {
+    // Если у текущего узла есть дети (например, /gear), показываем их как табы
+    subTabs = currentNode.children!.map(child => ({
+      id: child.id,
+      title: child.label,
+      href: child.path || '#',
+      iconPath: child.iconUrl || child.iconUrlBear || ''
+    }));
+  } else if (parentNode && parentNode.path && parentNode.path !== '/eft/items' && parentNode.children) {
+    // Если это конечная категория, показываем ее соседей (всю группу)
+    subTabs = parentNode.children.map(child => ({
+      id: child.id,
+      title: child.label,
+      href: child.path || '#',
+      iconPath: child.iconUrl || child.iconUrlBear || ''
+    }));
+  }
+
+  // Загружаем предметы в любом случае (в родительских категориях выводится вся группа)
+  const itemsData = await getCategoryItems(slug);
 
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-[28px] pb-[56px]">
@@ -187,26 +243,12 @@ export default async function ItemsDynamicPage({ params }: Props) {
           description={`Подробная информация и база предметов в категории «${currentNode.label}».`}
         />
 
-        {/* Рендер хаба (если есть вложенные пункты) или заглушка для таблицы */}
-        {hasChildren ? (
-          <div className="tactical-grid">
-            {currentNode.children!.map((child, index) => (
-              <HubCard 
-                key={child.id} 
-                gameId="eft" 
-                id={child.id}
-                title={child.label}
-                description={`Подробная информация и предметы в категории «${child.label}».`}
-                href={child.path || '#'}
-                iconPath={child.iconUrl || child.iconUrlBear || ''}
-                variant="rectangle"
-                index={index} 
-              />
-            ))}
-          </div>
-        ) : (
-          <ItemsCategoryClient initialData={itemsData} categorySlug={slug} />
+        {subTabs.length > 0 && (
+          <CategoryTabs tabs={subTabs} className="mb-8" />
         )}
+
+        {/* Всегда рендерим таблицу/сетку для текущей категории или группы */}
+        <ItemsCategoryClient initialData={itemsData} categorySlug={slug} />
       </div>
     </main>
   );

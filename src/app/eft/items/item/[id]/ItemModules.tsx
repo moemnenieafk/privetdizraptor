@@ -1,6 +1,7 @@
 import React from 'react';
-import { Crosshair, Shield, HeartPulse, Package } from 'lucide-react';
+import { Crosshair, Shield, HeartPulse, Package, ShoppingCart, Coins } from 'lucide-react';
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
+import { formatCompactNumber, getCurrencySymbol } from '@/lib/formatters';
 
 // --- МОДУЛЬ ОРУЖИЯ ---
 export function WeaponModule({ properties }: { properties: any }) {
@@ -16,6 +17,87 @@ export function WeaponModule({ properties }: { properties: any }) {
         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-lines-hover mt-4">
           <MetricCard label="Скорострельность" value={`${properties.fireRate || 0}`} subtext="выстр/мин" />
           <MetricCard label="Калибр" value={properties.caliber?.replace('Caliber', '') || 'Н/Д'} accent="primary" />
+        </div>
+      </div>
+    </SectionPanel>
+  );
+}
+
+// --- МОДУЛЬ ЭКОНОМИКИ И ТОРГОВЦЕВ ---
+export function TraderModule({ buyFor, sellFor }: { buyFor?: any[], sellFor?: any[] }) {
+  if (!buyFor?.length && !sellFor?.length) return null;
+
+  const renderOffer = (offer: any, type: 'buy' | 'sell', index: number) => {
+    const vendor = offer.vendor;
+    if (!vendor || vendor.name === '-') return null;
+
+    const currency = getCurrencySymbol(vendor.name);
+    const isFlea = vendor.normalizedName === 'flea-market' || vendor.name === 'Flea Market';
+    const priceFmt = formatCompactNumber(offer.price);
+
+    return (
+      <div key={`${vendor.name}-${index}`} className="flex items-center justify-between py-2.5 border-b border-[var(--color-lines-hover)] last:border-0 group hover:bg-[var(--color-card-menu)]/50 px-2 rounded-sm transition-colors">
+        <div className="flex items-center gap-2.5">
+          {isFlea ? (
+            <div className="w-7 h-7 flex items-center justify-center bg-yellow-500/10 text-yellow-500 rounded-[2px] border border-yellow-500/20 shadow-inner shrink-0">
+              <Coins className="w-4 h-4" />
+            </div>
+          ) : (
+            <img
+              src={`/images/traders/eft/${vendor.normalizedName || vendor.name.toLowerCase()}.webp`}
+              alt={vendor.name}
+              className="w-7 h-7 object-cover rounded-[2px] border border-[var(--color-lines-hover)]/50 shrink-0"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          )}
+          <div className="flex flex-col">
+            <span className="font-blender-medium text-[13px] text-[var(--color-text-primary)] uppercase tracking-wider leading-none">
+              {vendor.name}
+            </span>
+            {/* Имитация вывода уровня лояльности, так как в GraphQL buyFor пока не отдает этот ключ явно */}
+            {!isFlea && type === 'buy' && (
+              <span className="text-[10px] text-[var(--color-text-muted)] font-mono leading-none mt-1">УР. ДОСТУПА: 1+</span>
+            )}
+          </div>
+        </div>
+        <span title={`${offer.price.toLocaleString('ru-RU')} ${currency}`} className={`cursor-help font-mono text-sm font-bold ${type === 'buy' ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-nvg-green)]'}`}>
+          {priceFmt} {currency}
+        </span>
+      </div>
+    );
+  };
+
+  // Сортируем: для покупки показываем самые выгодные (дешевые), для продажи - самые дорогие
+  const sortedBuyFor = [...(buyFor || [])].sort((a, b) => a.price - b.price);
+  const sortedSellFor = [...(sellFor || [])].sort((a, b) => b.price - a.price);
+
+  return (
+    <SectionPanel title="Торговля и Рынок" icon={<ShoppingCart className="w-4 h-4" />}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        {/* Колонка "Где купить" */}
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between mb-3 border-b border-[var(--color-lines-hover)] pb-2">
+            <h4 className="text-xs font-blender-medium uppercase tracking-widest text-[var(--color-text-secondary)]">Покупка</h4>
+            <span className="text-[10px] font-mono text-[var(--color-text-muted)]">Мин. цена</span>
+          </div>
+          <div className="flex flex-col">
+            {sortedBuyFor.length > 0 ? sortedBuyFor.map((o, i) => renderOffer(o, 'buy', i)) : (
+              <div className="py-4 text-center text-[var(--color-text-muted)] font-mono text-xs opacity-50 border border-dashed border-[var(--color-lines-hover)] rounded">Нет предложений</div>
+            )}
+          </div>
+        </div>
+
+        {/* Колонка "Кому сдать" */}
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between mb-3 border-b border-[var(--color-lines-hover)] pb-2">
+            <h4 className="text-xs font-blender-medium uppercase tracking-widest text-[var(--color-text-secondary)]">Продажа</h4>
+            <span className="text-[10px] font-mono text-[var(--color-text-muted)]">Макс. выгода</span>
+          </div>
+          <div className="flex flex-col">
+            {sortedSellFor.length > 0 ? sortedSellFor.map((o, i) => renderOffer(o, 'sell', i)) : (
+              <div className="py-4 text-center text-[var(--color-text-muted)] font-mono text-xs opacity-50 border border-dashed border-[var(--color-lines-hover)] rounded">Нет предложений</div>
+            )}
+          </div>
         </div>
       </div>
     </SectionPanel>

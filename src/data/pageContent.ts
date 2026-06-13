@@ -255,6 +255,21 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     description: '',
     iconClass: 'icon-eft-eq-keys',
   },
+  'eft-items-equipment-keys-mechanical': {
+    title: 'Механические',
+    description: '',
+    iconClass: 'icon-eft-eq-mechkeys',
+  },
+  'eft-items-equipment-keys-mechanical-marked': {
+    title: 'Меченые ключи',
+    description: '',
+    iconClass: 'icon-eft-eq-markedkeys',
+  },
+  'eft-items-equipment-keys-mechanical-quest': {
+    title: 'Ключи для заданий',
+    description: '',
+    iconClass: 'icon-eft-eq-questkeys',
+  },
   'eft-items-equipment-provisions': {
     title: 'Провизия',
     description: '',
