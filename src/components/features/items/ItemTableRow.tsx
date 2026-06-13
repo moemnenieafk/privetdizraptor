@@ -1,12 +1,19 @@
-import { memo, forwardRef } from "react";
+﻿import { memo, forwardRef } from "react";
 import Image from "next/image";
-import { TarkovItem, ArmorMetrics, AmmoMetrics, WeaponMetrics, HeadsetMetrics } from "@/types/tarkov-items";
+import { TarkovItem } from "@/types/tarkov-items";
 import { Badge, getArmorClassColor } from "@/components/features/items/Badge";
 import { getTarkovBackgroundColor } from "@/lib/tarkov-colors";
 import { formatCompactNumber } from "@/lib/formatters";
 
 interface ItemTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
-  item: TarkovItem;
+  item: TarkovItem & {
+    eco?: {
+      bestSell: { price: number; vendor?: { name: string; normalizedName?: string } };
+      bestBuy?: { vendor?: { name: string; normalizedName?: string } };
+      minPrice: number;
+      vps: number;
+    };
+  };
 }
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -20,13 +27,18 @@ const CATEGORY_MAP: Record<string, string> = {
 };
 
 export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowProps>(function ItemTableRow({ item, ...props }, ref) {
+  const effectivePrice = item.fleaPrice ?? 0;
+  const buyPrice = item.eco?.minPrice ?? effectivePrice;
+  const sellPrice = item.eco?.bestSell?.price ?? 0;
+  const profitPerSlot = item.eco?.vps ?? Math.round(effectivePrice / ((item.gridWidth || 1) * (item.gridHeight || 1)));
+
   return (
-    <tr ref={ref} {...props} className="group border-b border-[var(--color-lines-hover)] transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--color-card-menu)_30%,transparent)]">
+    <tr ref={ref} {...props} className="group border-b border-lines-hover transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--color-card-menu)_30%,transparent)]">
       {/* Иконка и Название */}
       <td className="p-3">
         <div className="flex items-center gap-3">
           <div 
-            className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-[var(--color-lines-hover)] transition-colors duration-300 group-hover:border-[var(--primary)]"
+            className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-lines-hover transition-colors duration-300 group-hover:border-(--primary)"
             style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }}
           >
             <Image
@@ -39,10 +51,10 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
             />
           </div>
           <div className="flex min-w-0 flex-col">
-            <h3 className="truncate text-[16px] font-blender-medium uppercase tracking-widest text-[var(--color-text-primary)]" title={item.name}>
+            <h3 className="truncate text-[16px] font-blender-medium uppercase tracking-widest text-text-primary" title={item.name}>
               {item.shortName}
             </h3>
-            <span className="truncate text-xs text-[var(--color-text-secondary)] font-blender-book" title={item.name}>
+            <span className="truncate text-xs text-text-secondary font-blender-book" title={item.name}>
               {item.name}
             </span>
           </div>
@@ -50,25 +62,51 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
       </td>
 
       {/* Категория */}
-      <td className="p-3 hidden sm:table-cell">
-        <span className="rounded border border-[var(--color-lines-hover)] bg-[var(--color-base)] px-2 py-1 font-mono text-[10px] uppercase text-[var(--color-text-muted)]">
+      <td className="p-3 hidden md:table-cell">
+        <span className="rounded border border-lines-hover bg-(--color-base) px-2 py-1 font-mono text-[10px] uppercase text-text-muted">
           {CATEGORY_MAP[item.category] || item.category}
         </span>
       </td>
 
       {/* Метрики (Открытые и Скрытые) */}
-      <td className="p-3">
+      <td className="p-3 hidden xl:table-cell">
         <div className="flex flex-wrap items-center gap-2">
           <ItemMetrics item={item} />
         </div>
       </td>
 
-      {/* Цена Барахолки */}
+      {/* Покупка */}
       <td className="p-3 text-right">
-        <span className="whitespace-nowrap font-mono text-xs text-[var(--color-text-primary)] transition-colors group-hover:text-[var(--primary)]">
-          {item.fleaPrice ? (
-            <span title={`${item.fleaPrice.toLocaleString("ru-RU")} ₽`} className="cursor-help">
-              {formatCompactNumber(item.fleaPrice)} ₽
+        <span className="whitespace-nowrap font-mono text-xs text-text-primary">
+          {buyPrice > 0 ? (
+            <span title={`${buyPrice.toLocaleString("ru-RU")} ₽`} className="cursor-help border-b border-dotted border-text-muted/50">
+              {formatCompactNumber(buyPrice)} ₽
+            </span>
+          ) : (
+            <span className="text-text-muted">N/A</span>
+          )}
+        </span>
+      </td>
+
+      {/* Продажа */}
+      <td className="p-3 text-right">
+        <span className="whitespace-nowrap font-mono text-xs text-nvg-green">
+          {sellPrice > 0 ? (
+            <span title={`${sellPrice.toLocaleString("ru-RU")} ₽`} className="cursor-help border-b border-dotted border-nvg-green/30">
+              {formatCompactNumber(sellPrice)} ₽
+            </span>
+          ) : (
+            <span className="text-text-muted">N/A</span>
+          )}
+        </span>
+      </td>
+
+      {/* Выгода / Слот */}
+      <td className="p-3 text-right">
+        <span className="whitespace-nowrap font-mono text-xs text-text-primary transition-colors group-hover:text-(--primary)">
+          {profitPerSlot > 0 ? (
+            <span title={`${profitPerSlot.toLocaleString("ru-RU")} ₽`} className="cursor-help border-b border-dotted border-text-muted/50">
+              {formatCompactNumber(profitPerSlot)} ₽
             </span>
           ) : (
             "N/A"
@@ -88,7 +126,7 @@ const ItemMetrics = ({ item }: { item: TarkovItem }) => {
             color={getArmorClassColor(item.armorClass!)} 
             label={`Класс ${item.armorClass}`} 
             iconClass={`icon-eft-armor-class-${item.armorClass}`} 
-            iconSizeClass="w-[22px] h-[22px]" 
+            iconSizeClass="w-5.5 h-5.5" 
           />
           <Badge color="gray" label={`Прочн: ${item.durability}/${item.maxDurability}`} title="Максимальная прочность" />
           {item.effectiveDurability && <Badge color="gray" label={`Эфф: ${item.effectiveDurability}`} title="Эффективная прочность" />}

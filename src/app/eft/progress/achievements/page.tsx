@@ -1,4 +1,4 @@
-import { PageHeader } from '@/components/ui/PageHeader';
+﻿import { PageHeader } from '@/components/ui/PageHeader';
 import { AchievementsClient } from './AchievementsClient';
 
 async function getAchievements() {
@@ -34,8 +34,8 @@ export default async function AchievementsPage() {
   const achievements = await getAchievements();
 
   return (
-    <main className="flex w-full flex-col items-center justify-start pt-[28px] pb-[56px] animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
-      <div className="w-full max-w-[1100px] px-4 xl:px-0 mx-auto">
+    <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
+      <div className="w-full max-w-275 px-4 xl:px-0 mx-auto">
         <PageHeader pageId="eft-progress-achievements" />
         <AchievementsClient initialData={achievements} />
       </div>

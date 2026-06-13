@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -30,31 +30,31 @@ export interface ItemTileProps {
   categorySlug?: string;
 }
 
-export function ItemTile({ item, categorySlug }: ItemTileProps) {
+export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: ItemTileProps) {
   const sellCurrency = getCurrencySymbol(item.eco.bestSell.vendor?.name);
   const buyCurrency = getCurrencySymbol(item.eco.bestBuy?.vendor?.name);
 
   return (
-    <Link href={`/eft/items/item/${item.id}`} className="tactical-card-base group p-4 flex flex-col hover:border-[var(--primary)] cursor-pointer">
+    <Link href={`/eft/items/item/${item.id}`} className="tactical-card-base group p-4 flex flex-col hover:border-(--primary) cursor-pointer">
       {/* Хедер карточки */}
       <div className="flex justify-between items-start mb-4">
-        <Badge variant="default" className="group-hover:bg-primary/10 group-hover:text-[var(--primary)] group-hover:border-[var(--primary)] transition-colors">
+        <Badge variant="default" className="group-hover:bg-primary/10 group-hover:text-(--primary) group-hover:border-(--primary) transition-colors">
           {item.shortName}
         </Badge>
         <span className="font-mono text-[10px] text-text-muted">{item.width || 1}x{item.height || 1} Слот</span>
       </div>
       
       {/* Изображение */}
-      <div className="relative w-full h-24 mb-4 flex items-center justify-center bg-gradient-to-b from-[#2c2c2c] to-[#121212] border border-[#444] shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden">
+      <div className="relative w-full h-24 mb-4 flex items-center justify-center bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden">
         
         {/* Бейдж "Бартер" (поверх изображения) */}
         {item.types?.includes("barter") && (
           <div 
-            className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] bg-[var(--color-base)]/80 backdrop-blur-md border border-lines-hover/50 shadow-sm" 
+            className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-(--color-base)/80 backdrop-blur-md border border-lines-hover/50 shadow-sm" 
             title="Получение путем обмена (Бартер)"
           >
-            <span className="w-2.5 h-2.5 bg-[var(--color-nvg-green)] [mask-size:contain] [mask-position:center] [mask-repeat:no-repeat] icon-eft-prog-barter"></span>
-            <span className="text-[8px] font-blender-medium uppercase tracking-widest text-[var(--color-nvg-green)] mt-[1px] leading-none">Бартер</span>
+            <span className="w-2.5 h-2.5 bg-nvg-green [mask-size:contain] [mask-position:center] [mask-repeat:no-repeat] icon-eft-prog-barter"></span>
+            <span className="text-[8px] font-blender-medium uppercase tracking-widest text-nvg-green mt-px leading-none">Бартер</span>
           </div>
         )}
 
@@ -113,10 +113,10 @@ export function ItemTile({ item, categorySlug }: ItemTileProps) {
         <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="text-[10px] uppercase font-blender-medium tracking-widest text-[var(--color-text-muted)]">Продажа</span>
+              <span className="text-[10px] uppercase font-blender-medium tracking-widest text-text-muted">Продажа</span>
               {item.eco.bestSell.vendor && item.eco.bestSell.price > 0 && (
                 <div 
-                  className="flex items-center gap-1 px-1 rounded-sm border border-lines-hover/50 bg-[var(--color-base)]"
+                  className="flex items-center gap-1 px-1 rounded-sm border border-lines-hover/50 bg-(--color-base)"
                   title={`Лучший покупатель: ${item.eco.bestSell.vendor.name}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -126,25 +126,25 @@ export function ItemTile({ item, categorySlug }: ItemTileProps) {
                     className="w-3 h-3 rounded-[1px] object-cover opacity-80"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
-                  <span className="text-[8px] font-blender-medium uppercase tracking-widest text-text-secondary truncate max-w-[50px] leading-none mt-[1px]">
+                  <span className="text-[8px] font-blender-medium uppercase tracking-widest text-text-secondary truncate max-w-[50px] leading-none mt-px">
                     {item.eco.bestSell.vendor.name}
                   </span>
                 </div>
               )}
             </div>
             {item.eco.bestSell.price > 0 ? (
-              <span title={`${item.eco.bestSell.price.toLocaleString('ru-RU')} ${sellCurrency}`} className="cursor-help font-mono text-sm font-bold text-[var(--color-text-primary)]">
+              <span title={`${item.eco.bestSell.price.toLocaleString('ru-RU')} ${sellCurrency}`} className="cursor-help font-mono text-sm font-bold text-text-primary">
                 {formatCompactNumber(item.eco.bestSell.price)} {sellCurrency}
               </span>
             ) : (
-              <div className="flex items-center gap-1 text-[var(--color-text-muted)] opacity-50 pt-0.5"><PackageX className="w-3 h-3" /><span className="font-blender-medium text-[10px] uppercase tracking-widest">Нет</span></div>
+              <div className="flex items-center gap-1 text-text-muted opacity-50 pt-0.5"><PackageX className="w-3 h-3" /><span className="font-blender-medium text-[10px] uppercase tracking-widest">Нет</span></div>
             )}
           </div>
           <div className="flex flex-col items-end text-right">
             <div className="flex items-center justify-end gap-1.5 mb-0.5">
               {item.eco.bestBuy?.vendor && item.eco.minPrice > 0 && (
                 <div 
-                  className="flex items-center gap-1 px-1 rounded-sm border border-lines-hover/50 bg-[var(--color-base)]"
+                  className="flex items-center gap-1 px-1 rounded-sm border border-lines-hover/50 bg-(--color-base)"
                   title={`Лучшая цена покупки: ${item.eco.bestBuy.vendor.name}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -154,32 +154,32 @@ export function ItemTile({ item, categorySlug }: ItemTileProps) {
                     className="w-3 h-3 rounded-[1px] object-cover opacity-80"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
-                  <span className="text-[8px] font-blender-medium uppercase tracking-widest text-text-secondary truncate max-w-[50px] leading-none mt-[1px]">
+                  <span className="text-[8px] font-blender-medium uppercase tracking-widest text-text-secondary truncate max-w-[50px] leading-none mt-px">
                     {item.eco.bestBuy.vendor.name}
                   </span>
                 </div>
               )}
-              <span className="text-[10px] uppercase font-blender-medium tracking-widest text-[var(--color-text-muted)]">Покупка</span>
+              <span className="text-[10px] uppercase font-blender-medium tracking-widest text-text-muted">Покупка</span>
             </div>
             {item.eco.minPrice > 0 ? (
-              <span title={`${item.eco.minPrice.toLocaleString('ru-RU')} ${buyCurrency}`} className="cursor-help font-mono text-sm font-bold text-[var(--color-nvg-green)]">
+              <span title={`${item.eco.minPrice.toLocaleString('ru-RU')} ${buyCurrency}`} className="cursor-help font-mono text-sm font-bold text-nvg-green">
                 {formatCompactNumber(item.eco.minPrice)} {buyCurrency}
               </span>
             ) : (
-              <div className="flex items-center justify-end gap-1 text-[var(--color-text-muted)] opacity-50 pt-0.5"><PackageX className="w-3 h-3" /><span className="font-blender-medium text-[10px] uppercase tracking-widest">Нет</span></div>
+              <div className="flex items-center justify-end gap-1 text-text-muted opacity-50 pt-0.5"><PackageX className="w-3 h-3" /><span className="font-blender-medium text-[10px] uppercase tracking-widest">Нет</span></div>
             )}
           </div>
         </div>
         
         {/* Выгода на слот */}
         <div className="mt-1 flex items-center justify-between rounded bg-[color-mix(in_srgb,var(--color-card-menu)_40%,transparent)] px-2 py-1.5 border border-lines-hover/50">
-          <span className="text-[10px] uppercase font-blender-medium tracking-widest text-[var(--color-text-muted)]">Цена / Слот</span>
+          <span className="text-[10px] uppercase font-blender-medium tracking-widest text-text-muted">Цена / Слот</span>
           {item.eco.vps > 0 ? (
-            <span title={`${item.eco.vps.toLocaleString('ru-RU')} ₽`} className={`cursor-help font-mono text-xs font-bold ${item.eco.vps > 10000 ? 'text-[var(--color-nvg-green)]' : item.eco.vps > 5000 ? 'text-yellow-500' : 'text-[var(--color-text-primary)]'}`}>
+            <span title={`${item.eco.vps.toLocaleString('ru-RU')} ₽`} className={`cursor-help font-mono text-xs font-bold ${item.eco.vps > 10000 ? 'text-nvg-green' : item.eco.vps > 5000 ? 'text-yellow-500' : 'text-text-primary'}`}>
               {formatCompactNumber(item.eco.vps)} ₽
             </span>
           ) : (
-            <div className="flex items-center gap-1 text-[var(--color-text-muted)] opacity-50">
+            <div className="flex items-center gap-1 text-text-muted opacity-50">
               <PackageX className="w-3 h-3" />
               <span className="font-blender-medium text-[9px] uppercase tracking-widest">Нет</span>
             </div>
@@ -188,4 +188,4 @@ export function ItemTile({ item, categorySlug }: ItemTileProps) {
       </div>
     </Link>
   );
-}
+});

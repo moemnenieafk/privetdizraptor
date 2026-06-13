@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Tooltip } from './Tooltip';
 
 interface ItemGridSizeProps {
@@ -19,7 +19,7 @@ export function ItemGridSize({ width, height, maxWidth, maxHeight, className = '
     <Tooltip content={tooltip || `Размер: ${width}x${height}`} className={className}>
       <div className="flex items-center gap-2">
       <div
-        className="inline-grid gap-[1px] rounded bg-[var(--color-card-menu)] p-[2px] border border-[var(--color-lines-hover)] shadow-sm"
+        className="inline-grid gap-px rounded bg-card-menu p-[2px] border border-lines-hover shadow-sm"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
         {Array.from({ length: totalCells }).map((_, i) => {
@@ -32,14 +32,14 @@ export function ItemGridSize({ width, height, maxWidth, maxHeight, className = '
               key={i}
               className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[1px] transition-all duration-300 ${
                 isFilled 
-                  ? 'bg-gradient-to-b from-[#2c2c2c] to-[#121212] border border-[#444] shadow-[inset_0_0_6px_rgba(0,0,0,0.8)]' 
-                  : 'bg-[var(--color-base)] border border-[var(--color-lines-hover)] opacity-40'
+                  ? 'bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_6px_rgba(0,0,0,0.8)]' 
+                  : 'bg-(--color-base) border border-lines-hover opacity-40'
               }`}
             />
           );
         })}
       </div>
-      <span className="font-mono text-xs text-[var(--color-text-muted)]">
+      <span className="font-mono text-xs text-text-muted">
         {width}x{height}
       </span>
       </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 interface ProgressBarProps {
   label: string;
@@ -6,7 +6,7 @@ interface ProgressBarProps {
   max: number;
   suffix?: string;
   inverse?: boolean; // Если true, то чем больше значение — тем хуже (красный цвет). Например, отдача.
-  colorClass?: string; // Принудительный цвет бара, например 'bg-[var(--primary)]'
+  colorClass?: string; // Принудительный цвет бара, например 'bg-(--primary)'
 }
 
 export function ProgressBar({ label, value, max, suffix = '', inverse = false, colorClass = 'bg-stone-400' }: ProgressBarProps) {
@@ -28,7 +28,7 @@ export function ProgressBar({ label, value, max, suffix = '', inverse = false, c
           <span className="text-text-muted font-normal text-xs ml-1">/ {max}</span>
         </span>
       </div>
-      <div className="w-full bg-[#0D0D0F] rounded-full h-2 overflow-hidden border border-lines-hover">
+      <div className="w-full bg-(--color-base) rounded-full h-2 overflow-hidden border border-lines-hover">
         <div 
           className={`${finalColorClass} h-full rounded-full transition-all duration-700 ease-out`}
           style={{ width: `${percentage}%` }}

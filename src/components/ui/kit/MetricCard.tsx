@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 interface MetricCardProps {
   label: string;
@@ -10,8 +10,8 @@ interface MetricCardProps {
 
 const accentTextStyles = {
   default: 'text-text-primary',
-  primary: 'text-[var(--primary)]',
-  success: 'text-[var(--color-nvg-green)]',
+  primary: 'text-(--primary)',
+  success: 'text-nvg-green',
   warning: 'text-yellow-500',
   danger: 'text-red-500',
 };

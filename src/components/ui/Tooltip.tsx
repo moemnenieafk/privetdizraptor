@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 
 interface TooltipProps {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ export function Tooltip({ children, content, position = "top", className = "" }:
       <div
         className={`pointer-events-none absolute z-50 whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover/tooltip:opacity-100 group-focus-visible/tooltip:opacity-100 ${positionClasses[position]}`}
       >
-        <div className="scale-95 rounded border border-[var(--color-lines-hover)] bg-[var(--color-card-menu)] px-2.5 py-1 text-[10px] font-blender-medium uppercase tracking-widest text-[var(--color-text-primary)] shadow-lg transition-transform duration-300 ease-out group-hover/tooltip:scale-100">
+        <div className="scale-95 rounded border border-lines-hover bg-card-menu px-2.5 py-1 text-[10px] font-blender-medium uppercase tracking-widest text-text-primary shadow-lg transition-transform duration-300 ease-out group-hover/tooltip:scale-100">
           {content}
         </div>
       </div>

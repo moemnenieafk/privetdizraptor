@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import "./globals.css"; // Путь к вашим глобальным стилям и дизайн-токенам
+import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { Header } from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 
 export const metadata: Metadata = {
   title: "ЦТА Хаб",
@@ -15,22 +14,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // Указываем язык в соответствии с вашей локализацией
     <html lang="ru">
-      {/* antialiased делает шрифты (включая ваш BlenderPro) более гладкими */}
       <body className="antialiased min-h-screen flex flex-col bg-base">
-        <ThemeProvider>
-          {/* Глобальная тактическая шапка (теперь доступна на всех страницах!) */}
-          <Header />
-          
-          {/* Основной контент страницы (занимает всё свободное место) */}
-          <main className="flex-grow flex flex-col w-full">
-            {children}
-          </main>
-          
-          {/* Глобальный подвал */}
-          <Footer />
-        </ThemeProvider>
+        {/* Global dot matrix — fades from edges toward center */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-0"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(242,242,242,1) 1px, transparent 1px)',
+            backgroundSize: '53px 53px',
+            maskImage:
+              'linear-gradient(to right, rgba(0,0,0,0.07) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.07) 100%)',
+            WebkitMaskImage:
+              'linear-gradient(to right, rgba(0,0,0,0.07) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.07) 100%)',
+          }}
+        />
+        <div className="relative z-10 flex min-h-screen flex-col">
+          <ThemeProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+          </ThemeProvider>
+        </div>
       </body>
     </html>
   );

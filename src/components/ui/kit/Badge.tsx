@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'primary';
 
@@ -10,7 +10,7 @@ interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, string> = {
   default: 'bg-card-menu border-lines-hover text-text-muted',
-  primary: 'bg-primary/10 border-[var(--primary)] text-[var(--primary)]',
+  primary: 'bg-primary/10 border-(--primary) text-(--primary)',
   success: 'bg-green-500/10 border-green-500/30 text-green-400',
   warning: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400',
   danger: 'bg-red-500/10 border-red-500/30 text-red-400',

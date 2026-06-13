@@ -33,6 +33,22 @@
   --color-accent-frago: #00CDAB;
   --color-accent-abi: #a34132;
   --color-nvg-green: #689963; /* NVG Green: Успех, крафты, убежище */
+  --color-online: #6B9963;   /* Online status indicator */
+
+  /* Danger / destructive states */
+  --color-danger: #C24339;
+  --color-danger-dim: #7E2C25;
+
+  /* Game mode indicators */
+  --color-mode-pvp: #9A8866;
+  --color-mode-pve: #0095E2;
+
+  /* EFT Edition accents */
+  --color-edition-tue: #51C6DB;  /* The Unheard Edition */
+  --color-edition-eod: #CB8A00;  /* Edge of Darkness Edition */
+  --color-edition-pfe: #9A8866;  /* Prepare for Escape Edition */
+  --color-edition-lb:  #9CA3AF;  /* Left Behind Edition */
+  --color-edition-std: #52525B;  /* Standard Edition */
 
   --color-primary: var(--primary);
   
@@ -330,11 +346,17 @@
     color: var(--color-base) !important;
   }
 
-  /* Инверсия цвета для иконок внутри (SVG и маски) */
+  /* Инверсия цвета для иконок внутри (SVG, маски и img-портреты) */
   .tactical-menu-item:hover svg,
   .tactical-menu-item.active svg,
   .tactical-menu-item:hover .icon-mask,
   .tactical-menu-item.active .icon-mask {
     color: var(--color-base) !important;
+  }
+
+  .tactical-menu-item:hover img,
+  .tactical-menu-item.active img {
+    filter: brightness(0);
+    transition: filter 0.2s ease-out;
   }
 }

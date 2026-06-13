@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import React from "react";
 import { Tooltip } from "./Tooltip";
 
@@ -53,10 +53,10 @@ export function HubCard({
       <Link
         href={href}
         title={iconTooltip || title}
-        className={`group w-fit shrink-0 px-3 h-8 border rounded inline-flex justify-center items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] transition-all duration-300 hover:scale-105 active:scale-95 animate-[fade-in-up_0.5s_ease-out_both] ${
+        className={`group w-fit shrink-0 px-3 h-8 border rounded inline-flex justify-center items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-(--primary) transition-all duration-300 hover:scale-105 active:scale-95 animate-[fade-in-up_0.5s_ease-out_both] ${
           isActive 
-            ? "border-[var(--primary)] bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-[var(--primary)] shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_40%,transparent)]" 
-            : "bg-card-menu border-lines-hover hover:border-[var(--primary)] hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]"
+            ? "border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary) shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_40%,transparent)]" 
+            : "bg-card-menu border-lines-hover hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]"
         }`}
         style={{ animationDelay: `${index * 50}ms` }}
       >
@@ -68,7 +68,7 @@ export function HubCard({
             ) : (
               <div 
                 className={`w-full h-full transition-colors duration-300 ${
-                  isActive ? "bg-[var(--primary)] opacity-100" : "bg-text-primary opacity-80 group-hover:opacity-100 group-hover:bg-[var(--primary)]"
+                  isActive ? "bg-(--primary) opacity-100" : "bg-text-primary opacity-80 group-hover:opacity-100 group-hover:bg-(--primary)"
                 }`}
                 style={{
                   WebkitMaskImage: `url(${resolvedIconUrl})`,
@@ -85,7 +85,7 @@ export function HubCard({
           </div>
         </div>
         <div className={`text-center justify-start text-xs font-blender-medium uppercase leading-4 tracking-widest transition-colors ${
-          isActive ? "text-[var(--primary)]" : "text-text-primary group-hover:text-[var(--primary)]"
+          isActive ? "text-(--primary)" : "text-text-primary group-hover:text-(--primary)"
         }`}>
           {title}
         </div>

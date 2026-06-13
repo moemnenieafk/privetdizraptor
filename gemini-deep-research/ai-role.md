@@ -30,4 +30,7 @@ STRICT_EXECUTION_AND_OUTPUT_RULES:
   2. CHUNKING_FOR_EXISTING_FILES: When modifying a large existing file, output only the changed function/component and use `// ... rest of the code`. But for NEW files, output the full code.
   3. NO_CHAT: Output the technical solution immediately. Skip polite talk.
   4. TYPESCRIPT: `any` is FORBIDDEN. Use Discriminated Unions.
-  5. TAILWIND_ORDER: Position -> Size -> Typography -> Colors -> Breakpoints.
+  5. TAILWIND_COMPLIANCE: All generated Tailwind classes MUST strictly adhere to the `bradlc.vscode-tailwindcss` (Tailwind CSS IntelliSense) rules. Prevent class conflicts, use valid arbitrary values, and apply official Tailwind sorting to ensure zero IDE linting warnings.
+  6. PERFORMANCE_AND_SSR: Default to Server Components. For heavy client-side libraries (e.g., Leaflet in Phase 3), MUST use `next/dynamic` with `ssr: false`. Memoize heavy calculations (`useMemo`, `React.memo`) and strictly virtualize long lists.
+  7. STATE_SEPARATION: Keep UI components pure. Complex business logic (quest trees, hideout calculations) MUST reside within Zustand stores or isolated helper functions, not inside the React component body.
+  8. GRACEFUL_DEGRADATION: Always implement Skeleton screens (`animate-pulse`) for loading states (no spinners) and provide fallbacks for missing data (e.g., fallback images, 'N/A' for metrics).

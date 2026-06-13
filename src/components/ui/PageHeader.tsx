@@ -1,4 +1,4 @@
-import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
+﻿import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
 
 interface PageHeaderProps {
   pageId?: string;
@@ -17,12 +17,12 @@ export function PageHeader({ pageId, title, description, iconClass }: PageHeader
 
   return (
     <div className="flex items-center gap-5 mb-12">
-      {/* Добавлен text-[var(--color-base)] для инверсии цвета иконки */}
-      <div className="flex-shrink-0 flex items-center justify-center w-[53px] h-[53px] rounded bg-[var(--primary)] text-[var(--color-base)]">
+      {/* Добавлен text-(--color-base) для инверсии цвета иконки */}
+      <div className="flex-shrink-0 flex items-center justify-center w-[53px] h-[53px] rounded bg-(--primary) text-(--color-base)">
         <div className={`w-7 h-7 icon-mask ${finalIcon}`}></div>
       </div>
       <div>
-        <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-[var(--color-text-primary)]">{finalTitle}</h1>
+        <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">{finalTitle}</h1>
         {finalDesc && <p className="mt-2 text-sm text-text-secondary max-w-2xl">{finalDesc}</p>}
       </div>
     </div>

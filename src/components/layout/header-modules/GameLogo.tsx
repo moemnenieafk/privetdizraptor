@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
@@ -27,12 +27,12 @@ export function GameLogo({ gameId }: GameLogoProps) {
   return (
     <div 
       ref={dropdownRef}
-      className="relative flex h-14 w-[160px] cursor-pointer items-center justify-center rounded border border-[#222225] bg-black/20 transition-colors duration-300 hover:border-[var(--primary)] group"
+      className="relative flex h-14 w-[160px] cursor-pointer items-center justify-center rounded border border-lines-hover bg-black/20 transition-colors duration-300 hover:border-(--primary) group"
       onClick={() => setIsOpen(!isOpen)}
     >
       {/* Шаг 2: Текущий логотип-маска */}
       <div 
-        className="h-8 w-24 bg-zinc-600 transition-colors duration-300 group-hover:bg-[var(--primary)]"
+        className="h-8 w-24 bg-zinc-600 transition-colors duration-300 group-hover:bg-(--primary)"
         style={{
           maskImage: `url(/games/${currentGameId}/${currentGameId}-logo.svg)`,
           WebkitMaskImage: `url(/games/${currentGameId}/${currentGameId}-logo.svg)`,
@@ -47,17 +47,17 @@ export function GameLogo({ gameId }: GameLogoProps) {
 
       {/* Шаг 3: Выпадающее меню со списком доступных игр */}
       <div 
-        className={`absolute left-0 top-[calc(100%+8px)] z-50 flex w-[160px] flex-col overflow-hidden rounded border border-[#222225] bg-[#161618] shadow-lg transition-all duration-200 ${isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
+        className={`absolute left-0 top-[calc(100%+8px)] z-50 flex w-[160px] flex-col overflow-hidden rounded border border-lines-hover bg-card-menu shadow-lg transition-all duration-200 ${isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
       >
         {activeGames.map((game) => (
           <Link 
             key={game.id} 
             href={`/${game.id}`}
             onClick={() => setIsOpen(false)}
-            className="group/item flex h-12 w-full items-center justify-center border-b border-[#222225] bg-transparent transition-colors last:border-0 hover:bg-black/20"
+            className="group/item flex h-12 w-full items-center justify-center border-b border-lines-hover bg-transparent transition-colors last:border-0 hover:bg-black/20"
           >
             <div 
-              className="h-6 w-20 bg-zinc-600 transition-colors duration-300 group-hover/item:bg-[var(--primary)]"
+              className="h-6 w-20 bg-zinc-600 transition-colors duration-300 group-hover/item:bg-(--primary)"
               style={{
                 maskImage: `url(/games/${game.id}/${game.id}-logo.svg)`,
                 WebkitMaskImage: `url(/games/${game.id}/${game.id}-logo.svg)`,

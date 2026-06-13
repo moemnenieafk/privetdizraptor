@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { PageHeader } from '@/components/ui/PageHeader';
 import Image from "next/image";
@@ -170,15 +170,15 @@ export default function QuestsPage() {
   }; */
 
   return (
-    <main className={`flex w-full flex-col items-center justify-start ${isFullscreen ? '' : 'pt-[28px] pb-[56px]'} animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]`}>
+    <main className={`flex w-full flex-col items-center justify-start ${isFullscreen ? '' : 'pt-7 pb-14'} animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]`}>
       
       {!isFullscreen && (
-        <div className="w-full max-w-[1100px] px-4 xl:px-0 mx-auto">
+        <div className="w-full max-w-275 px-4 xl:px-0 mx-auto">
           <PageHeader pageId="eft-questmap" />
         </div>
       )}
 
-      <div className={`w-full bg-base flex flex-col overflow-hidden select-none relative ${isFullscreen ? 'fixed inset-0 z-[100] h-screen' : 'h-[700px] max-w-[1100px] mx-auto border border-lines-hover rounded-xl shadow-lg mt-2'}`}>
+      <div className={`w-full bg-base flex flex-col overflow-hidden select-none relative ${isFullscreen ? 'fixed inset-0 z-100 h-screen' : 'h-175 max-w-275 mx-auto border border-lines-hover rounded-xl shadow-lg mt-2'}`}>
         
         <style>{`
           @keyframes ants { to { stroke-dashoffset: -12; } }
@@ -205,7 +205,7 @@ export default function QuestsPage() {
              </div>
 
              {/* Поиск */}
-             <div className="relative flex items-center bg-[#0D0D0F] border border-lines-hover rounded h-10 px-3 w-full sm:w-[300px] focus-within:border-primary/50 transition-colors">
+             <div className="relative flex items-center bg-(--color-base) border border-lines-hover rounded h-10 px-3 w-full sm:w-[300px] focus-within:border-primary/50 transition-colors">
                <Search className="w-4 h-4 text-text-muted mr-2 shrink-0" />
                <input 
                  type="text"
@@ -234,7 +234,7 @@ export default function QuestsPage() {
                className={`flex items-center justify-center gap-2 h-10 px-4 rounded border transition-all flex-1 sm:flex-none ${
                  onlyKappa 
                    ? 'border-primary/50 bg-primary/10 text-primary' 
-                   : 'border-lines-hover bg-[#0D0D0F] text-text-secondary hover:border-primary/30'
+                   : 'border-lines-hover bg-(--color-base) text-text-secondary hover:border-primary/30'
                }`}
              >
                <div className={`w-5 h-5 icon-bg icon-eft-profile-kappa ${onlyKappa ? 'opacity-100' : 'opacity-50 grayscale'}`} />
@@ -245,7 +245,7 @@ export default function QuestsPage() {
 
              <button 
                onClick={() => setIsFullscreen(!isFullscreen)}
-               className="flex items-center justify-center w-10 h-10 rounded border border-lines-hover bg-[#0D0D0F] text-text-muted hover:text-primary hover:border-primary/50 transition-colors shrink-0"
+               className="flex items-center justify-center w-10 h-10 rounded border border-lines-hover bg-(--color-base) text-text-muted hover:text-primary hover:border-primary/50 transition-colors shrink-0"
                title={isFullscreen ? "Выйти из полноэкранного режима (Esc)" : "На весь экран"}
              >
                {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
@@ -286,7 +286,7 @@ export default function QuestsPage() {
               >
                 {/* Аватар торговца */}
                 <div className="relative w-32 h-32 mb-[120px] select-none pointer-events-none z-20">
-                  <div className="absolute inset-0 border-2 border-lines-hover bg-[#0D0D0F] rounded-lg overflow-hidden flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                  <div className="absolute inset-0 border-2 border-lines-hover bg-(--color-base) rounded-lg overflow-hidden flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                     <Image 
                       src={`/images/traders/${trader.id}.webp`} 
                       alt={trader.name} 

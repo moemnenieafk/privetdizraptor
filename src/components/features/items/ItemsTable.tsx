@@ -1,4 +1,4 @@
-import { memo, useRef } from "react";
+﻿import { memo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TarkovItem } from "@/types/tarkov-items";
 import { ItemTableRow } from "@/components/features/items/ItemTableRow";
@@ -26,29 +26,35 @@ export const ItemsTable = memo(function ItemsTable({ items }: ItemsTableProps) {
   return (
     <div 
       ref={parentRef}
-      className="w-full max-h-[calc(100vh-220px)] overflow-auto rounded-lg border border-[var(--color-lines-hover)] bg-[color-mix(in_srgb,var(--color-card-menu)_20%,transparent)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--color-lines-hover)] hover:[&::-webkit-scrollbar-thumb]:bg-[var(--color-text-muted)]"
+      className="w-full max-h-[calc(100vh-220px)] overflow-auto rounded-lg border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_20%,transparent)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-lines-hover hover:[&::-webkit-scrollbar-thumb]:bg-text-muted"
     >
       <table className="w-full table-fixed border-collapse text-left relative font-blender-book">
-        <thead className="sticky top-0 z-20 bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] backdrop-blur-md shadow-md ring-1 ring-[var(--color-lines-hover)]">
+        <thead className="sticky top-0 z-20 bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] backdrop-blur-md shadow-md ring-1 ring-lines-hover">
           <tr>
-            <th className="w-[45%] p-3 text-[10px] font-blender-medium uppercase tracking-widest text-[var(--color-text-muted)] sm:w-[35%] lg:w-[30%]">
+            <th className="w-[35%] p-3 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted lg:w-[30%]">
               Предмет
             </th>
-            <th className="hidden p-3 text-[10px] font-blender-medium uppercase tracking-widest text-[var(--color-text-muted)] sm:table-cell sm:w-[15%]">
+            <th className="hidden p-3 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted md:table-cell md:w-[15%]">
               Категория
             </th>
-            <th className="p-3 text-[10px] font-blender-medium uppercase tracking-widest text-[var(--color-text-muted)] sm:w-auto">
+            <th className="hidden p-3 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted xl:table-cell xl:w-[20%]">
               Характеристики
             </th>
-            <th className="w-[25%] p-3 text-right text-[10px] font-blender-medium uppercase tracking-widest text-[var(--color-text-muted)] sm:w-[20%] lg:w-[15%]" title="Наименьшая цена на барахолке или по бартеру у торговца">
-              Лучшая цена
+            <th className="w-[20%] p-3 text-right text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:w-[15%] lg:w-[10%]">
+              Покупка
+            </th>
+            <th className="w-[20%] p-3 text-right text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:w-[15%] lg:w-[10%]">
+              Продажа
+            </th>
+            <th className="w-[25%] p-3 text-right text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:w-[20%] lg:w-[15%]">
+              Выгода/Слот
             </th>
           </tr>
         </thead>
         <tbody>
           {paddingTop > 0 && (
             <tr>
-              <td style={{ height: `${paddingTop}px` }} colSpan={4} />
+              <td style={{ height: `${paddingTop}px` }} colSpan={6} />
             </tr>
           )}
           
@@ -66,7 +72,7 @@ export const ItemsTable = memo(function ItemsTable({ items }: ItemsTableProps) {
 
           {paddingBottom > 0 && (
             <tr>
-              <td style={{ height: `${paddingBottom}px` }} colSpan={4} />
+              <td style={{ height: `${paddingBottom}px` }} colSpan={6} />
             </tr>
           )}
         </tbody>

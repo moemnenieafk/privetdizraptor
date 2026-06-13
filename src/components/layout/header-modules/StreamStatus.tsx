@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -36,11 +36,11 @@ export default function StreamStatus() {
     border: 'border border-neutral-500',
     bg: 'bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,_rgba(107,153,99,0.20)_0%,_rgba(107,153,99,0)_100%)]',
     boxShadow: 'shadow-[0_0_4px_rgba(107,153,99,0.17),0_0_8px_rgba(107,153,99,0.21)]',
-    dot: 'bg-[#6B9963]',
+    dot: 'bg-online',
     text: 'СТРИМ ОНЛАЙН',
     // Комбинация внешнего свечения и внутреннего блика из Figma
     glow: 'shadow-[0_0_6px_2px_rgba(107,153,99,0.61),0_0_19px_2px_rgba(107,153,99,1),inset_0_1px_1px_rgba(255,255,255,0.35)]',
-    textColor: 'text-[#6B9963]',
+    textColor: 'text-online',
   };
 
   // Настройки для ОФФЛАЙН 
@@ -48,10 +48,10 @@ export default function StreamStatus() {
     border: 'border border-neutral-800',
     bg: 'bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,_rgba(194,67,57,0.20)_0%,_rgba(194,67,57,0)_100%)]',
     boxShadow: '',
-    dot: 'bg-[#C24339]',
+    dot: 'bg-danger',
     text: 'СТРИМ ОФФЛАЙН',
     glow: '',
-    textColor: 'text-[#C24339]'
+    textColor: 'text-danger'
   };
 
   const s = isLive ? liveStyles : offlineStyles;
@@ -90,7 +90,7 @@ export default function StreamStatus() {
         <div className="flex items-center justify-center gap-2 z-10">
           <div className="relative flex h-1 w-1 shrink-0 items-center justify-center">
             {isLive && (
-              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#6B9963] opacity-75" />
+              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-online opacity-75" />
             )}
             <span className={`relative inline-flex rounded-full h-1 w-1 ${s.dot} ${s.glow}`} />
           </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -15,7 +15,7 @@ export const SearchItemCard = ({ item, onSelect }: SearchItemCardProps) => {
   return (
     <Link href={`/eft/items/item/${item.id}`} onClick={onSelect}>
       <div className="flex items-center gap-3 rounded p-2 transition-colors duration-200 hover:bg-card-menu">
-        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border border-[#444] bg-gradient-to-b from-[#2c2c2c] to-[#121212] shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] overflow-hidden">
+        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border border-lines-hover bg-linear-to-b from-lines-hover to-(--color-base) shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] overflow-hidden">
           {/* Цветная подложка редкости */}
           <div 
             className="absolute inset-0 pointer-events-none" 

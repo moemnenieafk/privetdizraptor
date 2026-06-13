@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -48,8 +48,8 @@ export function ItemsViewSwitcher({ items, className = "" }: ItemsViewSwitcherPr
 
   if (!items.length) {
     return (
-      <div className={`flex flex-col items-center justify-center rounded-lg border border-[var(--color-lines-hover)] bg-[color-mix(in_srgb,var(--color-card-menu)_20%,transparent)] p-12 text-center ${className}`}>
-        <span className="font-blender-medium text-lg uppercase tracking-widest text-[var(--color-text-muted)]">
+      <div className={`flex flex-col items-center justify-center rounded-lg border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_20%,transparent)] p-12 text-center ${className}`}>
+        <span className="font-blender-medium text-lg uppercase tracking-widest text-text-muted">
           Предметы не найдены
         </span>
       </div>
@@ -65,9 +65,9 @@ export function ItemsViewSwitcher({ items, className = "" }: ItemsViewSwitcherPr
 
   return (
     <div className={`flex flex-col gap-6 ${className}`}>
-      <div className="sticky top-[72px] z-40 flex items-center justify-between rounded border border-[var(--color-lines-hover)] bg-[color-mix(in_srgb,var(--color-card-menu)_80%,transparent)] p-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300">
-        <span className="font-blender-medium text-sm uppercase tracking-widest text-[var(--color-text-primary)]">
-          Найдено предметов: <span className="text-[var(--primary)]">{items.length}</span>
+      <div className="sticky top-[72px] z-40 flex items-center justify-between rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_80%,transparent)] p-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300">
+        <span className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">
+          Найдено предметов: <span className="text-(--primary)">{items.length}</span>
         </span>
         <DataViewToggle view={view} onChange={setView} />
       </div>
@@ -77,7 +77,7 @@ export function ItemsViewSwitcher({ items, className = "" }: ItemsViewSwitcherPr
       ) : (
         <div 
           ref={parentRef}
-          className="w-full max-h-[calc(100vh-220px)] overflow-auto rounded-lg border border-[var(--color-lines-hover)] bg-[color-mix(in_srgb,var(--color-card-menu)_10%,transparent)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--color-lines-hover)] hover:[&::-webkit-scrollbar-thumb]:bg-[var(--color-text-muted)]"
+          className="w-full max-h-[calc(100vh-220px)] overflow-auto rounded-lg border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_10%,transparent)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-lines-hover hover:[&::-webkit-scrollbar-thumb]:bg-text-muted"
         >
           <div 
             style={{ 

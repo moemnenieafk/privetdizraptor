@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -83,7 +83,7 @@ export default function KeepItemsPage() {
   const filteredItems = items.filter(item => activeCategory === "all" || item.category === activeCategory);
 
   return (
-    <div className="w-full max-w-[1100px] mx-auto py-10 px-4 selection:bg-primary selection:text-black">
+    <div className="w-full max-w-275 mx-auto py-10 px-4 selection:bg-primary selection:text-black">
       
       {/* Шапка */}
       <div className="mb-8 border-b border-lines-hover pb-6 animate-[fade-in-up_0.4s_both]">
@@ -136,7 +136,7 @@ export default function KeepItemsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[28px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-7">
           {filteredItems.map((item, i) => {
             // Подбираем стили для плашки редкости
             let rarityStyle = "border-white/5 bg-white/[0.02] text-white/40"; // ОБЫЧНОЕ

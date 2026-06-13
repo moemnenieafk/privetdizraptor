@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 
 interface TacticalCardProps {
@@ -18,7 +18,7 @@ export function TacticalCard({
   withScale = true,
   onClick,
 }: TacticalCardProps) {
-  const containerClasses = `group relative overflow-hidden rounded border border-[var(--color-lines-hover)] bg-[var(--color-base)] p-5 transition-all duration-300 ease-out hover:border-[var(--primary)] hover:bg-[color-mix(in_srgb,var(--color-card-menu)_50%,transparent)] ${
+  const containerClasses = `group relative overflow-hidden rounded border border-lines-hover bg-(--color-base) p-5 transition-all duration-300 ease-out hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--color-card-menu)_50%,transparent)] ${
     withGlow ? "hover:shadow-[0_0_15px_color-mix(in_srgb,var(--primary)_40%,transparent)]" : ""
   } ${onClick || href ? "cursor-pointer" : ""} ${className}`;
 

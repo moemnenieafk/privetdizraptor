@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 
 interface PlaceholderPageProps {
@@ -37,7 +37,7 @@ export function PlaceholderPage({ themeClass, logoSrc, logoAlt, description, bgI
       )}
 
       {/* 3. Градиентная маска для читаемости текста и плавного слияния с цветом base */}
-      <div className="absolute inset-0 bg-gradient-to-b from-base/50 via-base/80 to-base z-0 pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-b from-base/50 via-base/80 to-base z-0 pointer-events-none" />
 
       {/* Фоновое свечение в акцентном цвете темы */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[400px] md:h-[400px] bg-primary/15 rounded-full blur-[80px] md:blur-[100px] pointer-events-none transition-all duration-700 z-0"></div>

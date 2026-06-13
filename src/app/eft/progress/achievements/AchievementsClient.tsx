@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from 'react';
 import { Search, Trophy, EyeOff, X, LayoutGrid, List } from 'lucide-react';
@@ -57,7 +57,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
       
       {/* ТАКТИЧЕСКАЯ ПАНЕЛЬ УПРАВЛЕНИЯ */}
       <div className="bg-card-menu border border-lines-hover p-4 rounded flex flex-col sm:flex-row gap-4 items-center justify-between shadow-lg">
-        <div className="relative flex items-center bg-[#0D0D0F] border border-lines-hover rounded h-10 px-3 w-full sm:flex-1 focus-within:border-[var(--primary)] transition-colors">
+        <div className="relative flex items-center bg-(--color-base) border border-lines-hover rounded h-10 px-3 w-full sm:flex-1 focus-within:border-(--primary) transition-colors">
           <Search className="w-4 h-4 text-text-muted mr-2 shrink-0" />
           <input 
             type="text"
@@ -77,7 +77,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           <select 
             value={filterType} 
             onChange={(e) => setFilterType(e.target.value as any)}
-            className="flex-1 sm:flex-none bg-[#0D0D0F] text-text-secondary text-[12px] font-blender-medium uppercase tracking-wider border border-lines-hover rounded h-10 px-3 focus:outline-none focus:border-[var(--primary)] cursor-pointer"
+            className="flex-1 sm:flex-none bg-(--color-base) text-text-secondary text-[12px] font-blender-medium uppercase tracking-wider border border-lines-hover rounded h-10 px-3 focus:outline-none focus:border-(--primary) cursor-pointer"
           >
             <option value="all">Все типы</option>
             <option value="visible">Открытые</option>
@@ -86,7 +86,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           <select 
             value={sortOrder} 
             onChange={(e) => setSortOrder(e.target.value as any)}
-            className="flex-1 sm:flex-none bg-[#0D0D0F] text-text-secondary text-[12px] font-blender-medium uppercase tracking-wider border border-lines-hover rounded h-10 px-3 focus:outline-none focus:border-[var(--primary)] cursor-pointer"
+            className="flex-1 sm:flex-none bg-(--color-base) text-text-secondary text-[12px] font-blender-medium uppercase tracking-wider border border-lines-hover rounded h-10 px-3 focus:outline-none focus:border-(--primary) cursor-pointer"
           >
             <option value="rare">Сначала редкие</option>
             <option value="common">Сначала частые</option>
@@ -94,7 +94,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
 
           <div className="hidden sm:block w-[1px] h-6 bg-lines-hover mx-2" />
 
-          <div className="flex items-center gap-1 bg-[#0D0D0F] border border-lines-hover rounded p-1">
+          <div className="flex items-center gap-1 bg-(--color-base) border border-lines-hover rounded p-1">
             <button
                 onClick={() => setViewMode('grid')}
                 className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
@@ -123,11 +123,11 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           {processedData.map((ach) => {
             const rarity = getRarity(ach.playersCompletedPercent ?? 0);
             return (
-              <div key={ach.id} className={`bg-[#0D0D0F] border-[var(--rarity-border)] rounded p-5 flex flex-col relative overflow-hidden group hover:border-[var(--primary)] hover:shadow-[0_0_20px_rgba(230,142,37,0.1)] transition-all duration-300 ${rarity.rarityClass}`}>
+              <div key={ach.id} className={`bg-(--color-base) border-(--rarity-border) rounded p-5 flex flex-col relative overflow-hidden group hover:border-(--primary) hover:shadow-[0_0_20px_rgba(230,142,37,0.1)] transition-all duration-300 ${rarity.rarityClass}`}>
                 <div className="flex items-start justify-between mb-4 gap-4">
                   <div className="flex items-center gap-2 mt-1">
-                    <h3 className="font-blender-medium text-[18px] leading-none uppercase text-text-primary group-hover:text-[var(--primary)] transition-colors">{ach.name}</h3>
-                    {ach.hidden ? <span title="Скрытое достижение" className="shrink-0 flex items-center justify-center"><EyeOff className="w-4 h-4 text-text-muted" /></span> : <Trophy className="w-4 h-4 shrink-0 text-[var(--rarity-color)]" />}
+                    <h3 className="font-blender-medium text-[18px] leading-none uppercase text-text-primary group-hover:text-(--primary) transition-colors">{ach.name}</h3>
+                    {ach.hidden ? <span title="Скрытое достижение" className="shrink-0 flex items-center justify-center"><EyeOff className="w-4 h-4 text-text-muted" /></span> : <Trophy className="w-4 h-4 shrink-0 text-(--rarity-color)" />}
                   </div>
                   <div className="achievement-icon-grid rounded overflow-hidden border border-lines-hover bg-black/50 shadow-md">
                     <Image src={`/images/achievements/${ach.id}.webp`} alt={ach.name} fill sizes="(max-width: 640px) 48px, (max-width: 1024px) 64px, 80px" className="object-cover group-hover:scale-110 transition-transform duration-300" />
@@ -135,7 +135,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                 </div>
                 <p className="text-sm text-text-secondary mb-6 flex-grow">{ach.description}</p>
                 <div className="flex items-center justify-between pt-3 border-t border-lines-hover mt-auto">
-                  <span className="text-[10px] font-black tracking-widest uppercase text-[var(--rarity-color)]">{rarity.label}</span>
+                  <span className="text-[10px] font-black tracking-widest uppercase text-(--rarity-color)">{rarity.label}</span>
                   <span className="text-xs font-mono text-text-muted">{(ach.playersCompletedPercent ?? 0).toFixed(1)}% игроков</span>
                 </div>
               </div>
@@ -166,14 +166,14 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                               <td className={`px-4 py-3 font-blender-medium text-text-primary ${rarity.rarityClass}`}>
                                   <div className="flex items-center gap-2">
                                       {ach.name}
-                                      {ach.hidden ? <span title="Скрытое достижение" className="shrink-0 flex items-center justify-center"><EyeOff className="w-3 h-3 text-text-muted" /></span> : <Trophy className="w-3 h-3 shrink-0 text-[var(--rarity-color)]" />}
+                                      {ach.hidden ? <span title="Скрытое достижение" className="shrink-0 flex items-center justify-center"><EyeOff className="w-3 h-3 text-text-muted" /></span> : <Trophy className="w-3 h-3 shrink-0 text-(--rarity-color)" />}
                                   </div>
                               </td>
                               <td className="px-4 py-3 text-text-secondary hidden md:table-cell">{ach.description}</td>
                               <td className={`px-4 py-3 text-right ${rarity.rarityClass}`}>
                                   <div className="flex flex-col items-end">
-                                      <span className="font-mono text-xs text-[var(--rarity-color)]">{(ach.playersCompletedPercent ?? 0).toFixed(1)}%</span>
-                                      <span className="text-[10px] font-black tracking-widest uppercase text-[var(--rarity-color)]">{rarity.label}</span>
+                                      <span className="font-mono text-xs text-(--rarity-color)">{(ach.playersCompletedPercent ?? 0).toFixed(1)}%</span>
+                                      <span className="text-[10px] font-black tracking-widest uppercase text-(--rarity-color)">{rarity.label}</span>
                                   </div>
                               </td>
                           </tr>

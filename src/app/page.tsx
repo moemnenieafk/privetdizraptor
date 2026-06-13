@@ -1,8 +1,6 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import { GameCard } from "@/components/ui/GameCard";
 import { GAMES_DATA } from "../data/games";
 import { Carousel } from "@/components/ui/Carousel";
@@ -44,11 +42,11 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-base">
       {/* Тактический экран предзагрузки */}
-      <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-base transition-all duration-700 ease-in-out ${isLoading ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
+      <div className={`fixed inset-0 z-100 flex flex-col items-center justify-center bg-base transition-all duration-700 ease-in-out ${isLoading ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
         <div className="flex gap-3 mb-6">
-          <div className="w-3 h-3 bg-[var(--primary)] animate-pulse" style={{ animationDelay: '0ms' }} />
-          <div className="w-3 h-3 bg-[var(--primary)] animate-pulse" style={{ animationDelay: '200ms' }} />
-          <div className="w-3 h-3 bg-[var(--primary)] animate-pulse" style={{ animationDelay: '400ms' }} />
+          <div className="w-3 h-3 bg-(--primary) animate-pulse" style={{ animationDelay: '0ms' }} />
+          <div className="w-3 h-3 bg-(--primary) animate-pulse" style={{ animationDelay: '200ms' }} />
+          <div className="w-3 h-3 bg-(--primary) animate-pulse" style={{ animationDelay: '400ms' }} />
         </div>
         <div className="font-blender-medium text-text-secondary text-[12px] tracking-[0.4em] uppercase animate-pulse">
           Синхронизация
@@ -62,16 +60,16 @@ export default function HomePage() {
         {/* Отступ снизу (mb) сделан минимальным, так как карусель уже имеет свой внутренний отступ сверху (py-[42px]) для теней */}
         <div className="text-center z-10 px-4 mb-[clamp(10px,1vw,14px)] shrink-0 flex flex-col items-center w-full">
           {/* Обертка для заголовка и декоративных линий */}
-          <div className="flex items-center justify-center w-full gap-[16px] lg:gap-[28px] mb-[8px] sm:mb-[10px] md:mb-[12px] lg:mb-[14px]">
+          <div className="flex items-center justify-center w-full gap-4 lg:gap-7 mb-2 sm:mb-[10px] md:mb-3 lg:mb-[14px]">
             {/* Левая декоративная линия (ПК: 2 колонки 160px + gap 28px = 348px) */}
-            <div className="hidden md:block h-[1px] w-[160px] lg:w-[348px] bg-gradient-to-l from-lines-hover to-transparent shrink-0" />
+            <div className="hidden md:block h-[1px] w-[160px] lg:w-[348px] bg-linear-to-l from-lines-hover to-transparent shrink-0" />
             
             <h3 className="hub-heading text-text-primary tracking-widest font-blender-medium uppercase shrink-0">
               ВЫБЕРИ ИГРУ
             </h3>
             
             {/* Правая декоративная линия */}
-            <div className="hidden md:block h-[1px] w-[160px] lg:w-[348px] bg-gradient-to-r from-lines-hover to-transparent shrink-0" />
+            <div className="hidden md:block h-[1px] w-[160px] lg:w-[348px] bg-linear-to-r from-lines-hover to-transparent shrink-0" />
           </div>
           {/* Ограничиваем ширину на мобилках (max-w-[280px]), чтобы текст красиво переносился и не прилипал к краям экрана */}
           <p className="hub-description text-text-secondary mx-auto leading-relaxed">
@@ -93,14 +91,14 @@ export default function HomePage() {
           {/* Обертка для заголовка и декоративных линий */}
           <div className="flex items-center justify-center w-full gap-4 md:gap-7 mb-2 sm:mb-3 md:mb-4">
             {/* Левая декоративная линия */}
-            <div className="hidden md:block h-[1px] flex-1 max-w-[160px] lg:max-w-[348px] bg-gradient-to-l from-lines-hover to-transparent" />
+            <div className="hidden md:block h-[1px] flex-1 max-w-[160px] lg:max-w-[348px] bg-linear-to-l from-lines-hover to-transparent" />
             
             <h3 className="text-text-primary tracking-widest font-blender-medium uppercase shrink-0 text-xl sm:text-2xl md:text-3xl lg:text-[32px]">
               СМОТРИ ВИДЕО
             </h3>
             
             {/* Правая декоративная линия */}
-            <div className="hidden md:block h-[1px] flex-1 max-w-[160px] lg:max-w-[348px] bg-gradient-to-r from-lines-hover to-transparent" />
+            <div className="hidden md:block h-[1px] flex-1 max-w-[160px] lg:max-w-[348px] bg-linear-to-r from-lines-hover to-transparent" />
           </div>
           <p className="text-text-secondary mx-auto leading-relaxed text-xs sm:text-sm md:text-base max-w-[280px] sm:max-w-md md:max-w-lg lg:max-w-2xl text-balance">
             Познавательные и интересные видео на тему многопользовательских боевых симуляторов в опасных условиях.
@@ -156,7 +154,7 @@ function LiteYouTube({ video }: { video: YouTubeVideo }) {
           height="100%"
           src={`${video.url}?autoplay=1`}
           title={video.title}
-          frameBorder="0"
+          style={{ border: 'none' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
           className="absolute inset-0"

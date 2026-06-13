@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useClickOutside } from '@/hooks/useClickOutside';
@@ -8,11 +8,11 @@ import { ProfileResetModal } from './ProfileResetModal';
 export type EditionType = 'Standard' | 'LB' | 'PFE' | 'EOD' | 'TUE';
 
 export const EDITIONS: Record<EditionType, { id: EditionType, name: string, sub: string, color: string, border: string, bgAlpha: string, icon: string, placeholder: string }> = {
-  TUE: { id: 'TUE', name: 'The Unheard', sub: 'ultimate edition', color: 'text-[#5FCAFF]', border: 'border-[#5FCAFF]', bgAlpha: 'bg-[#5FCAFF]/10', icon: 'icon-eft-profile-tue', placeholder: 'placeholder:text-[#5FCAFF]/50' },
-  EOD: { id: 'EOD', name: 'Edge of Darkness', sub: 'limited edition', color: 'text-[#E68E25]', border: 'border-[#E68E25]', bgAlpha: 'bg-[#E68E25]/10', icon: 'icon-eft-profile-eod', placeholder: 'placeholder:text-[#E68E25]/50' },
-  PFE: { id: 'PFE', name: 'Prepare for Escape', sub: 'extended edition', color: 'text-[#8A795D]', border: 'border-[#8A795D]', bgAlpha: 'bg-[#8A795D]/10', icon: 'icon-eft-profile-pfe', placeholder: 'placeholder:text-[#8A795D]/50' },
-  LB: { id: 'LB', name: 'Left Behind', sub: 'early access edition', color: 'text-[#6B7280]', border: 'border-[#6B7280]', bgAlpha: 'bg-[#6B7280]/10', icon: 'icon-eft-profile-lb', placeholder: 'placeholder:text-[#6B7280]/50' },
-  Standard: { id: 'Standard', name: 'Standard', sub: 'basic edition', color: 'text-[#374151]', border: 'border-[#374151]', bgAlpha: 'bg-[#374151]/10', icon: 'icon-eft-profile-s', placeholder: 'placeholder:text-[#374151]/50' }
+  TUE: { id: 'TUE', name: 'The Unheard', sub: 'ultimate edition', color: 'text-edition-tue', border: 'border-edition-tue', bgAlpha: 'bg-edition-tue/10', icon: 'icon-eft-profile-tue', placeholder: 'placeholder:text-edition-tue/50' },
+  EOD: { id: 'EOD', name: 'Edge of Darkness', sub: 'limited edition', color: 'text-edition-eod', border: 'border-edition-eod', bgAlpha: 'bg-edition-eod/10', icon: 'icon-eft-profile-eod', placeholder: 'placeholder:text-edition-eod/50' },
+  PFE: { id: 'PFE', name: 'Prepare for Escape', sub: 'extended edition', color: 'text-edition-pfe', border: 'border-edition-pfe', bgAlpha: 'bg-edition-pfe/10', icon: 'icon-eft-profile-pfe', placeholder: 'placeholder:text-edition-pfe/50' },
+  LB: { id: 'LB', name: 'Left Behind', sub: 'early access edition', color: 'text-edition-lb', border: 'border-edition-lb', bgAlpha: 'bg-edition-lb/10', icon: 'icon-eft-profile-lb', placeholder: 'placeholder:text-edition-lb/50' },
+  Standard: { id: 'Standard', name: 'Standard', sub: 'basic edition', color: 'text-edition-std', border: 'border-edition-std', bgAlpha: 'bg-edition-std/10', icon: 'icon-eft-profile-s', placeholder: 'placeholder:text-edition-std/50' }
 };
 
 interface ProfileSettingsModalProps {
@@ -139,7 +139,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
   return (
     // Оверлей модального окна
     <div 
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
     >
       
       {/* Контейнер модалки (348px) */}
@@ -149,27 +149,27 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
       >
         
         {/* ШАПКА */}
-        <div className="relative flex h-7 w-full items-center justify-start gap-1 rounded-t bg-[#222225]">
+        <div className="relative flex h-7 w-full items-center justify-start gap-1 rounded-t bg-lines-hover">
           <div className="flex h-7 w-7 items-center justify-center p-1.5">
-            <div className="h-full w-full icon-mask icon-eft-profile-settings text-[#9CA3AF]" />
+            <div className="h-full w-full icon-mask icon-eft-profile-settings text-text-secondary" />
           </div>
           <div className="text-sm font-blender-medium leading-4 text-zinc-100">Настройки профиля ЧВК</div>
           
           {/* Кнопка закрытия */}
           <button onClick={onClose} className="absolute right-0 top-0 h-7 w-7 flex items-center justify-center transition-opacity hover:opacity-80">
-            <div className="flex h-3 w-4 items-center justify-center rounded-[1px] bg-[#7E2C25]">
+            <div className="flex h-3 w-4 items-center justify-center rounded-[1px] bg-danger-dim">
               <div className="h-2 w-2 icon-mask icon-eft-profile-btn-close text-zinc-100" />
             </div>
           </button>
         </div>
 
         {/* ТЕЛО МОДАЛКИ */}
-        <div className="flex w-full flex-col items-center justify-center gap-7 overflow-hidden rounded-b border border-[#222225] bg-[#161618] p-7">
+        <div className="flex w-full flex-col items-center justify-center gap-7 overflow-hidden rounded-b border border-lines-hover bg-card-menu p-7">
           
           {/* ИМЯ ЧВК */}
           <div className="flex w-full flex-col items-start justify-start gap-2">
             <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Имя ЧВК</div>
-            <div className={`flex h-10 w-full items-center justify-start gap-2 rounded border bg-[#0D0D0F] px-2 py-3.5 transition-all duration-300 ${nickname.length >= 15 ? 'border-[#C24339] shadow-[0_0_12px_rgba(194,67,57,0.3)]' : 'border-[#222225]'}`}>
+            <div className={`flex h-10 w-full items-center justify-start gap-2 rounded border bg-(--color-base) px-2 py-3.5 transition-all duration-300 ${nickname.length >= 15 ? 'border-danger shadow-[0_0_12px_rgba(194,67,57,0.3)]' : 'border-lines-hover'}`}>
               <div className="flex w-6 items-center justify-center">
                 <div className={`h-4 w-4 icon-mask ${activeEd.icon} ${activeEd.color}`} />
               </div>
@@ -188,7 +188,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
           <div className="flex w-full items-start justify-start gap-7">
             <div className="flex flex-1 flex-col items-start justify-start gap-2">
               <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Уровень ЧВК</div>
-              <div className="flex h-10 w-full items-center justify-between rounded border border-[#222225] bg-[#0D0D0F] px-2 py-1">
+              <div className="flex h-10 w-full items-center justify-between rounded border border-lines-hover bg-(--color-base) px-2 py-1">
                 <img className="h-7 w-7 object-contain" src={`/icons/eft/lvl-icons/player-level-group-${getLevelGroup(Number(level) || 1)}.webp`} alt={`Level ${level}`} />
                 <input 
                   type="text"
@@ -204,10 +204,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                   placeholder="1"
                 />
                 <div className="flex flex-col items-center justify-center gap-[2px]">
-                  <button onClick={() => handleLevelChange(1)} className="flex h-3 w-4 items-center justify-center text-[#52525B] hover:text-[var(--primary)] transition-colors focus:outline-none">
+                  <button onClick={() => handleLevelChange(1)} className="flex h-3 w-4 items-center justify-center text-text-muted hover:text-(--primary) transition-colors focus:outline-none">
                     <ChevronUp className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handleLevelChange(-1)} className="flex h-3 w-4 items-center justify-center text-[#52525B] hover:text-[var(--primary)] transition-colors focus:outline-none">
+                  <button onClick={() => handleLevelChange(-1)} className="flex h-3 w-4 items-center justify-center text-text-muted hover:text-(--primary) transition-colors focus:outline-none">
                     <ChevronDown className="h-4 w-4" />
                   </button>
                 </div>
@@ -215,10 +215,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
             </div>
             <div className="flex flex-1 flex-col items-start justify-start gap-2">
               <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Престиж</div>
-              <div className="flex h-10 w-full items-center justify-between rounded border border-[#222225] bg-[#0D0D0F] px-2 py-1">
+              <div className="flex h-10 w-full items-center justify-between rounded border border-lines-hover bg-(--color-base) px-2 py-1">
                 {!prestige || prestige === '0' ? (
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center">
-                    <div className="h-4 w-4 icon-mask icon-eft-prog-prestige text-[#222225]" />
+                    <div className="h-4 w-4 icon-mask icon-eft-prog-prestige text-lines-hover" />
                   </div>
                 ) : (
                   <img className="h-7 w-7 shrink-0 object-contain" src={`/icons/eft/prestige/prestige-${prestige}.webp`} alt={`Prestige ${prestige}`} />
@@ -236,10 +236,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                   placeholder="НЕТ ПРЕСТИЖА"
                 />
                 <div className="flex flex-col items-center justify-center gap-[2px]">
-                  <button onClick={() => handlePrestigeChange(1)} className="flex h-3 w-4 items-center justify-center text-[#52525B] hover:text-[var(--primary)] transition-colors focus:outline-none">
+                  <button onClick={() => handlePrestigeChange(1)} className="flex h-3 w-4 items-center justify-center text-text-muted hover:text-(--primary) transition-colors focus:outline-none">
                     <ChevronUp className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handlePrestigeChange(-1)} className="flex h-3 w-4 items-center justify-center text-[#52525B] hover:text-[var(--primary)] transition-colors focus:outline-none">
+                  <button onClick={() => handlePrestigeChange(-1)} className="flex h-3 w-4 items-center justify-center text-text-muted hover:text-(--primary) transition-colors focus:outline-none">
                     <ChevronDown className="h-4 w-4" />
                   </button>
                 </div>
@@ -267,7 +267,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                     key={ed.id}
                     onClick={() => setEdition(ed.id)}
                     className={`flex h-10 w-12 items-center justify-center rounded border transition-colors ${
-                      isActive ? `${ed.border} ${ed.bgAlpha}` : 'border-transparent bg-[#222225] hover:border-text-secondary'
+                      isActive ? `${ed.border} ${ed.bgAlpha}` : 'border-transparent bg-lines-hover hover:border-text-secondary'
                     }`}
                   >
                     <div className={`h-4 w-6 icon-mask ${ed.icon} ${isActive ? ed.color : 'text-text-secondary opacity-50'}`} />
@@ -281,27 +281,27 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
           <div className="flex w-full items-start justify-between gap-2">
             {/* Фракции */}
             <div className="flex flex-1 gap-1">
-              <button onClick={() => setFaction('USEC')} className={`flex flex-1 flex-col items-center justify-center rounded border h-[56px] transition-all ${faction === 'USEC' ? 'border-sky-500 bg-gradient-to-t from-sky-500/20 to-transparent' : 'border-[#222225] bg-[#0D0D0F] hover:border-sky-500/50'}`}>
+              <button onClick={() => setFaction('USEC')} className={`flex flex-1 flex-col items-center justify-center rounded border h-[56px] transition-all ${faction === 'USEC' ? 'border-sky-500 bg-linear-to-t from-sky-500/20 to-transparent' : 'border-lines-hover bg-(--color-base) hover:border-sky-500/50'}`}>
                 <img src="/icons/eft/profile-pannel/USEC-logo-sign.svg" alt="USEC" className={`h-10 w-10 object-contain transition-opacity ${faction === 'USEC' ? 'opacity-100' : 'opacity-40'}`} />
               </button>
-              <button onClick={() => setFaction('BEAR')} className={`flex flex-1 flex-col items-center justify-center rounded border h-[56px] transition-all ${faction === 'BEAR' ? 'border-orange-700 bg-gradient-to-t from-orange-700/20 to-transparent' : 'border-[#222225] bg-[#0D0D0F] hover:border-orange-700/50'}`}>
+              <button onClick={() => setFaction('BEAR')} className={`flex flex-1 flex-col items-center justify-center rounded border h-[56px] transition-all ${faction === 'BEAR' ? 'border-orange-700 bg-linear-to-t from-orange-700/20 to-transparent' : 'border-lines-hover bg-(--color-base) hover:border-orange-700/50'}`}>
                 <img src="/icons/eft/profile-pannel/BEAR-logo-sign.svg" alt="BEAR" className={`h-10 w-10 object-contain transition-opacity ${faction === 'BEAR' ? 'opacity-100' : 'opacity-40'}`} />
               </button>
             </div>
             {/* Режимы */}
             <div className="flex flex-1 gap-1">
-              <button onClick={() => setMode('PVP')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-[56px] transition-all ${mode === 'PVP' ? 'border-[#8A795D] bg-[#8A795D]/10' : 'border-[#222225] bg-[#0D0D0F] hover:border-[#8A795D]/50'}`}>
+              <button onClick={() => setMode('PVP')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-[56px] transition-all ${mode === 'PVP' ? 'border-edition-pfe bg-edition-pfe/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-pfe/50'}`}>
                 <div className={`w-5 h-5 icon-bg icon-eft-profile-pvp transition-opacity ${mode === 'PVP' ? 'opacity-100' : 'opacity-40'}`} />
                 <div className="flex flex-col items-start justify-center">
-                  <div className={`text-[8px] font-blender-medium uppercase tracking-tight ${mode === 'PVP' ? 'text-[#8A795D]' : 'text-text-secondary opacity-40'}`}>Режим</div>
-                  <div className={`text-sm font-blender-medium leading-none mt-[2px] ${mode === 'PVP' ? 'text-[#8A795D]' : 'text-text-secondary opacity-40'}`}>PVP</div>
+                  <div className={`text-[8px] font-blender-medium uppercase tracking-tight ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>Режим</div>
+                  <div className={`text-sm font-blender-medium leading-none mt-[2px] ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>PVP</div>
                 </div>
               </button>
-              <button onClick={() => setMode('PVE')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-[56px] transition-all ${mode === 'PVE' ? 'border-[#5FCAFF] bg-[#5FCAFF]/10' : 'border-[#222225] bg-[#0D0D0F] hover:border-[#5FCAFF]/50'}`}>
+              <button onClick={() => setMode('PVE')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-[56px] transition-all ${mode === 'PVE' ? 'border-edition-tue bg-edition-tue/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-tue/50'}`}>
                 <div className={`w-5 h-5 icon-bg icon-eft-profile-pve transition-opacity ${mode === 'PVE' ? 'opacity-100' : 'opacity-40'}`} />
                 <div className="flex flex-col items-start justify-center">
-                  <div className={`text-[8px] font-blender-medium uppercase tracking-tight ${mode === 'PVE' ? 'text-[#5FCAFF]' : 'text-text-secondary opacity-40'}`}>Режим</div>
-                  <div className={`text-sm font-blender-medium leading-none mt-[2px] ${mode === 'PVE' ? 'text-[#5FCAFF]' : 'text-text-secondary opacity-40'}`}>PVE</div>
+                  <div className={`text-[8px] font-blender-medium uppercase tracking-tight ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>Режим</div>
+                  <div className={`text-sm font-blender-medium leading-none mt-[2px] ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>PVE</div>
                 </div>
               </button>
             </div>
@@ -314,10 +314,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               
               {/* Аватарки торговцев */}
               {TRADERS.map((t) => (
-                <div key={`avatar-${t.id}`} className="group/avatar relative flex h-[24px] w-full items-center justify-center rounded-[2px] cursor-help">
+                <div key={`avatar-${t.id}`} className="group/avatar relative flex h-[24px] w-full items-center justify-center rounded-xs cursor-help">
                   <div className={`w-6 h-6 icon-bg ${t.icon}`} />
                   {/* Всплывающая подсказка */}
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-[#0D0D0F] border border-[#222225] rounded shadow-lg text-[9px] font-blender-medium uppercase whitespace-nowrap text-text-secondary opacity-0 group-hover/avatar:opacity-100 pointer-events-none transition-opacity z-50">
+                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-(--color-base) border border-lines-hover rounded shadow-lg text-[9px] font-blender-medium uppercase whitespace-nowrap text-text-secondary opacity-0 group-hover/avatar:opacity-100 pointer-events-none transition-opacity z-50">
                     {t.name}
                   </div>
                 </div>
@@ -326,7 +326,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               {/* Уровень КОРОНА (IV) */}
               {TRADERS.map((t) => (
                 <button key={`rep-4-${t.id}`} onClick={() => setTraderLevels({ ...traderLevels, [t.id]: 4 })} className="w-full focus:outline-none group/btn">
-                  <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-4 transition-colors ${traderLevels[t.id] >= 4 ? 'text-[var(--primary)]' : 'text-[#222225] group-hover/btn:text-[var(--primary)]/50'}`} />
+                  <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-4 transition-colors ${traderLevels[t.id] >= 4 ? 'text-(--primary)' : 'text-lines-hover group-hover/btn:text-(--primary)/50'}`} />
                 </button>
               ))}
 
@@ -336,7 +336,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                   <div key={`rep-3-${t.id}`} className="w-full h-[20px]" />
                 ) : (
                   <button key={`rep-3-${t.id}`} onClick={() => setTraderLevels({ ...traderLevels, [t.id]: 3 })} className="w-full focus:outline-none group/btn">
-                    <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-3 transition-colors ${traderLevels[t.id] >= 3 ? 'text-zinc-100' : 'text-[#222225] group-hover/btn:text-[#52525B]'}`} />
+                    <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-3 transition-colors ${traderLevels[t.id] >= 3 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
                   </button>
                 )
               )}
@@ -347,7 +347,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                   <div key={`rep-2-${t.id}`} className="w-full h-[20px]" />
                 ) : (
                   <button key={`rep-2-${t.id}`} onClick={() => setTraderLevels({ ...traderLevels, [t.id]: 2 })} className="w-full focus:outline-none group/btn">
-                    <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-2 transition-colors ${traderLevels[t.id] >= 2 ? 'text-zinc-100' : 'text-[#222225] group-hover/btn:text-[#52525B]'}`} />
+                    <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-2 transition-colors ${traderLevels[t.id] >= 2 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
                   </button>
                 )
               )}
@@ -355,7 +355,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               {/* Уровень I */}
               {TRADERS.map((t) => (
                 <button key={`rep-1-${t.id}`} onClick={() => setTraderLevels({ ...traderLevels, [t.id]: 1 })} className="w-full focus:outline-none group/btn">
-                  <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-1 transition-colors ${traderLevels[t.id] >= 1 ? 'text-zinc-100' : 'text-[#222225] group-hover/btn:text-[#52525B]'}`} />
+                  <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-1 transition-colors ${traderLevels[t.id] >= 1 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
                 </button>
               ))}
             </div>
@@ -365,28 +365,28 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
           <button 
             onClick={handleAutoDetect}
             disabled={isAutoDetecting}
-            className="group relative flex h-8 w-full cursor-pointer items-center justify-center overflow-hidden rounded border border-[#222225] bg-[#0D0D0F] transition-colors hover:border-[var(--primary)] disabled:opacity-50 disabled:cursor-wait"
+            className="group relative flex h-8 w-full cursor-pointer items-center justify-center overflow-hidden rounded border border-lines-hover bg-(--color-base) transition-colors hover:border-(--primary) disabled:opacity-50 disabled:cursor-wait"
           >
             <div className="absolute left-0 top-0 h-full w-2 opacity-50 transition-colors bg-[repeating-linear-gradient(-45deg,#52525B,#52525B_3px,transparent_3px,transparent_6px)] group-hover:bg-[repeating-linear-gradient(-45deg,var(--primary),var(--primary)_3px,transparent_3px,transparent_6px)]" />
             <div className="absolute right-0 top-0 h-full w-2 opacity-50 transition-colors bg-[repeating-linear-gradient(-45deg,#52525B,#52525B_3px,transparent_3px,transparent_6px)] group-hover:bg-[repeating-linear-gradient(-45deg,var(--primary),var(--primary)_3px,transparent_3px,transparent_6px)]" />
             
             {isAutoDetecting ? (
               <div className="flex items-center gap-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--primary)]" />
-                <span className="text-[10px] font-blender-medium uppercase tracking-wide text-[var(--primary)]">Синхронизация с API...</span>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-(--primary)" />
+                <span className="text-[10px] font-blender-medium uppercase tracking-wide text-(--primary)">Синхронизация с API...</span>
               </div>
             ) : (
-              <span className="text-[10px] font-blender-medium uppercase tracking-wide text-text-secondary transition-colors group-hover:text-[var(--primary)]">Автоматическое определение профиля игрока</span>
+              <span className="text-[10px] font-blender-medium uppercase tracking-wide text-text-secondary transition-colors group-hover:text-(--primary)">Автоматическое определение профиля игрока</span>
             )}
           </button>
 
           {/* КНОПКА СБРОСА ПРОГРЕССА */}
           <div className="flex w-full items-start justify-center gap-2 opacity-60 transition-opacity hover:opacity-100">
-            <button onClick={() => setIsResetModalOpen(true)} className="flex h-7 flex-1 items-center justify-center gap-2 rounded border border-[#C24339] bg-[#C24339]/10 transition-colors hover:bg-[#C24339]/20 focus:outline-none">
-              <div className="h-3 w-3 icon-mask icon-eft-profile-reset text-[#C24339]" />
-              <span className="text-xs font-blender-medium leading-3 text-[#C24339]">СБРОС ПРОГРЕССА</span>
+            <button onClick={() => setIsResetModalOpen(true)} className="flex h-7 flex-1 items-center justify-center gap-2 rounded border border-danger bg-danger/10 transition-colors hover:bg-danger/20 focus:outline-none">
+              <div className="h-3 w-3 icon-mask icon-eft-profile-reset text-danger" />
+              <span className="text-xs font-blender-medium leading-3 text-danger">СБРОС ПРОГРЕССА</span>
             </button>
-            <div className="flex-1 text-[8px] font-blender-medium leading-[9px] text-[#C24339]">
+            <div className="flex-1 text-[8px] font-blender-medium leading-[9px] text-danger">
               Внимание! После нажатия данной кнопки будет произведен полный сброс прогресса вашего ЧВК в игре!
             </div>
           </div>

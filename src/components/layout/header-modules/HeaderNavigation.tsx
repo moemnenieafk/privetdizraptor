@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
@@ -13,7 +13,6 @@ const isColoredIcon = (item: MenuItem, urlToUse?: string) => {
   if (item.coloredIcon) return true;
   const targetUrl = urlToUse || item.iconUrl;
   if (targetUrl?.endsWith('.webp')) return true;
-  if (targetUrl?.includes('/02-quests/')) return true;
   if (targetUrl?.includes('/gun-modes/')) return true;
   return false;
 };
@@ -118,7 +117,7 @@ function SubNavItem({ child, faction }: { child: MenuItem; faction: string }) {
 
       {/* Вылет меню 3-го уровня с умным позиционированием и дизайн-токенами */}
       {child.children && (
-        <div className={`absolute ${flyLeft ? 'right-[calc(100%+4px)] origin-top-right' : 'left-[calc(100%+4px)] origin-top-left'} top-[-4px] z-50 flex w-[200px] flex-col rounded border border-[var(--color-lines-hover)] bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] py-1.5 shadow-2xl backdrop-blur-md transition-all duration-300 ease-out ${isOpen ? 'visible scale-100 opacity-100' : 'invisible pointer-events-none scale-95 opacity-0'}`}>
+        <div className={`absolute ${flyLeft ? 'right-[calc(100%+4px)] origin-top-right' : 'left-[calc(100%+4px)] origin-top-left'} top-[-4px] z-50 flex w-[200px] flex-col rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] py-1.5 shadow-2xl backdrop-blur-md transition-all duration-300 ease-out ${isOpen ? 'visible scale-100 opacity-100' : 'invisible pointer-events-none scale-95 opacity-0'}`}>
           {/* Невидимый мост для курсора */}
           <div className={`absolute ${flyLeft ? '-right-4' : '-left-4'} top-0 h-full w-4 bg-transparent`} />
 
@@ -183,7 +182,7 @@ function NavItem({ item, pathname, faction }: { item: MenuItem; pathname: string
       </Link>
 
       {item.children && (
-        <div className={`absolute left-0 top-[calc(100%+8px)] z-50 flex w-[200px] flex-col rounded border border-[var(--color-lines-hover)] bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] py-1.5 shadow-2xl backdrop-blur-md origin-top transition-all duration-300 ease-out ${isOpen ? 'visible translate-y-0 scale-100 opacity-100' : 'invisible -translate-y-2 scale-95 opacity-0 pointer-events-none'}`}>
+        <div className={`absolute left-0 top-[calc(100%+8px)] z-50 flex w-[200px] flex-col rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] py-1.5 shadow-2xl backdrop-blur-md origin-top transition-all duration-300 ease-out ${isOpen ? 'visible translate-y-0 scale-100 opacity-100' : 'invisible -translate-y-2 scale-95 opacity-0 pointer-events-none'}`}>
           <div className="absolute -top-4 left-0 h-4 w-full bg-transparent" />
           {item.children.map((child) => (
             <SubNavItem key={child.id} child={child} faction={faction} />

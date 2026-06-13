@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useMemo } from "react";
 import Link from "next/link";
@@ -122,7 +122,7 @@ export function GameCard({ game, isLoading, index }: GameCardProps) {
       )}
 
       {/* Слой 3: Декоративный градиент */}
-      <div className="absolute inset-0 bg-gradient-to-t from-base/90 via-base/40 to-transparent pointer-events-none z-20" />
+      <div className="absolute inset-0 bg-linear-to-t from-base/90 via-base/40 to-transparent pointer-events-none z-20" />
 
       {/* Слой 3.5: Неоновая подсветка при наведении */}
       {!game.isInactive && (
@@ -155,7 +155,7 @@ export function GameCard({ game, isLoading, index }: GameCardProps) {
               className={`flex-shrink-0 transition-colors duration-300 ${
                 game.isInactive
                   ? "bg-text-muted opacity-30" // Серый цвет для неактивного
-                  : "bg-text-primary group-hover:bg-[var(--primary)]" // Белый по умолчанию -> Акцентный цвет темы при ховере
+                  : "bg-text-primary group-hover:bg-(--primary)" // Белый по умолчанию -> Акцентный цвет темы при ховере
               }`}
               style={{
                 width: game.logo.width,
@@ -199,7 +199,7 @@ export function GameCard({ game, isLoading, index }: GameCardProps) {
           )}
         </div>
         <div className={`absolute left-0 w-full text-center top-[524px] font-blender-medium text-[10px] xl:text-[12px] tracking-wider uppercase ${
-          game.isInactive ? "text-text-muted" : "text-text-secondary group-hover:text-[var(--primary)] transition-colors duration-300"
+          game.isInactive ? "text-text-muted" : "text-text-secondary group-hover:text-(--primary) transition-colors duration-300"
         }`}>
           {game.isInactive ? "ТЕХНИЧЕСКИЕ РАБОТЫ" : game.subtitle}
         </div>

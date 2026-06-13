@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -52,7 +52,7 @@ export function Header() {
     <>
       <header
         className={`sticky top-0 z-50 flex w-full flex-col px-4 transition-all duration-300 ease-out theme-${gameId} ${
-          isScrolled ? "bg-[color-mix(in_srgb,var(--color-base)_90%,transparent)] py-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md" : "bg-[var(--color-base)] pb-[clamp(12px,1.09vw,21px)] pt-[clamp(12px,1.09vw,21px)]"
+          isScrolled ? "bg-[color-mix(in_srgb,var(--color-base)_90%,transparent)] py-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md" : "bg-(--color-base) pb-[clamp(12px,1.09vw,21px)] pt-[clamp(12px,1.09vw,21px)]"
         }`}
       >
       
@@ -68,14 +68,14 @@ export function Header() {
 
         {/* 2. Навигация (Скрывается при скролле) */}
         {features.showNavigation && (
-          <div className={`hidden xl:flex xl:col-span-4 justify-start order-3 xl:order-2 transition-all duration-300 ease-out z-[60] ${isScrolled ? 'absolute opacity-0 invisible pointer-events-none -translate-y-2' : 'relative opacity-100 translate-y-0'}`}>
+          <div className={`hidden xl:flex xl:col-span-4 justify-start order-3 xl:order-2 transition-all duration-300 ease-out z-60 ${isScrolled ? 'absolute opacity-0 invisible pointer-events-none -translate-y-2' : 'relative opacity-100 translate-y-0'}`}>
             <HeaderNavigation menuItems={menuItems} />
           </div>
         )}
 
         {/* 3. Телеметрия, Стрим и Бургер-меню (Скрываются при скролле, оставляя Бургер) */}
         {features.showUserControls && (
-          <div className="col-span-1 md:col-start-4 xl:col-start-6 flex items-center justify-end gap-4 order-2 xl:order-3 relative">
+          <div className="col-span-1 md:col-start-4 xl:col-start-6 flex items-center justify-end gap-4 order-2 xl:order-3 relative z-60">
             <div className={`flex items-center gap-4 transition-all duration-300 ease-out ${isScrolled ? 'absolute opacity-0 invisible pointer-events-none right-12' : 'relative opacity-100 right-0'}`}>
               <PlayerTelemetry />
               <StreamStatus />
@@ -93,7 +93,7 @@ export function Header() {
 
         {/* 5. Глобальный Поиск (Центрируется, меняет порядок при скролле для объединения в один ряд) */}
         {features.showSearch && (
-          <div className={`col-span-2 md:col-span-2 xl:col-span-4 flex justify-center w-full transition-all duration-300 relative z-[50] ${isScrolled ? 'order-2' : 'order-5'}`}>
+          <div className={`col-span-2 md:col-span-2 xl:col-span-4 flex justify-center w-full transition-all duration-300 relative z-50 ${isScrolled ? 'order-2' : 'order-5'}`}>
             <TacticalSearch />
           </div>
         )}
