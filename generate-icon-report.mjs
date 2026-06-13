@@ -46,6 +46,8 @@ async function main() {
   let report = `=== ПОЛНЫЙ ОТЧЕТ ПО ИКОНКАМ ПРОЕКТА ===\n`;
   report += `Всего физических иконок в базе (public/icons): ${iconFiles.length}\n\n`;
 
+  let newCssEntries = [];
+
   for (const icon of iconFiles) {
     const relativePath = '/icons/' + path.relative(ICONS_DIR, icon).replace(/\\/g, '/');
     const filename = path.basename(icon);
@@ -58,6 +60,17 @@ async function main() {
     const classMatch = new RegExp(`\\.([a-zA-Z0-9_-]+)\\s*\\{[^}]*?${escapedFilename}`, 'i').exec(iconsCss);
     if (classMatch) {
       cssClass = `.${classMatch[1]}`;
+      
+      const classUsages = sources.filter(src => src.content.includes(classMatch[1]) && !src.path.endsWith('icons.css'));
+      const combinedUsages = [...usages, ...classUsages];
+      usages = combinedUsages.filter((v, i, a) => a.findIndex(t => (t.path === v.path)) === i);
+    } else if (filename.toLowerCase().endsWith('.svg')) {
+      const cleanName = path.basename(filename, '.svg').replace(/[^a-zA-Z0-9_-]/g, '-').toLowerCase();
+      const gamePrefix = relativePath.includes('/eft/') ? 'eft-' : '';
+      const autoClass = `icon-${gamePrefix}${cleanName}`;
+      cssClass = `.${autoClass} (Автоматически добавлено)`;
+      const cssUrl = encodeURI(relativePath).replace(/#/g, '%23');
+      newCssEntries.push(`  .${autoClass} { mask-image: url('${cssUrl}'); -webkit-mask-image: url('${cssUrl}'); }`);
     }
 
     // Поиск раздела в headerConfig.ts
@@ -79,6 +92,13 @@ async function main() {
 
   await fs.writeFile(OUTPUT_FILE, report, 'utf-8');
   console.log(`✅ Отчет успешно сгенерирован: ${OUTPUT_FILE}`);
+
+  if (newCssEntries.length > 0) {
+    const cssPath = path.join(SRC_DIR, 'styles', 'icons.css');
+    const cssAppend = `\n  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */\n${newCssEntries.join('\n')}\n`;
+    await fs.appendFile(cssPath, cssAppend, 'utf-8');
+    console.log(`✅ В src/styles/icons.css автоматически проброшено ${newCssEntries.length} новых SVG-масок.`);
+  }
 }
 
 main();

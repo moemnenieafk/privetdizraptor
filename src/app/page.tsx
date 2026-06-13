@@ -56,7 +56,7 @@ export default function HomePage() {
       </div>
 
       {/* Уменьшен отступ сверху для телефонов (12px), чтобы оставить больше пространства */}
-      <main className="flex flex-grow w-full flex-col items-center overflow-x-hidden sm:pt-[21px] md:pt-[32px] lg:pt-[42px] pt-[28px] pb-[56px]">
+      <main className="relative flex min-h-[calc(100vh-60px)] w-full flex-col items-center justify-center overflow-hidden pb-12 animate-[fade-in_0.5s_ease-out_both]">
         
         {/* Текстовый блок между логотипом и каруселью */}
         {/* Отступ снизу (mb) сделан минимальным, так как карусель уже имеет свой внутренний отступ сверху (py-[42px]) для теней */}
@@ -80,7 +80,7 @@ export default function HomePage() {
         </div>
 
         {/* Контейнер карусели */}
-        <div className="w-full flex flex-col justify-start min-h-0">
+        <div className="w-full z-10 justify-start min-h-0">
           <Carousel>
             {GAMES_DATA.map((game, index) => (
               <GameCard key={game.id} game={game} isLoading={isLoading} index={index} />
@@ -89,27 +89,27 @@ export default function HomePage() {
         </div>
 
         {/* Второй текстовый блок под каруселью */}
-        <div className="text-center z-10 px-4 mt-12 lg:mt-[56px] mb-0 sm:mb-2 lg:mb-4 shrink-0 flex flex-col items-center w-full">
+        <div className="text-center z-10 px-4 mt-10 md:mt-14 lg:mt-20 mb-4 sm:mb-6 shrink-0 flex flex-col items-center w-full max-w-[1920px] mx-auto">
           {/* Обертка для заголовка и декоративных линий */}
-          <div className="flex items-center justify-center w-full gap-[16px] lg:gap-[28px] mb-[8px] sm:mb-[10px] md:mb-[12px] lg:mb-[14px]">
+          <div className="flex items-center justify-center w-full gap-4 md:gap-7 mb-2 sm:mb-3 md:mb-4">
             {/* Левая декоративная линия */}
-            <div className="hidden md:block h-[1px] w-[160px] lg:w-[348px] bg-gradient-to-l from-lines-hover to-transparent shrink-0" />
+            <div className="hidden md:block h-[1px] flex-1 max-w-[160px] lg:max-w-[348px] bg-gradient-to-l from-lines-hover to-transparent" />
             
-            <h3 className="hub-heading text-text-primary tracking-widest font-blender-medium uppercase shrink-0">
+            <h3 className="text-text-primary tracking-widest font-blender-medium uppercase shrink-0 text-xl sm:text-2xl md:text-3xl lg:text-[32px]">
               СМОТРИ ВИДЕО
             </h3>
             
             {/* Правая декоративная линия */}
-            <div className="hidden md:block h-[1px] w-[160px] lg:w-[348px] bg-gradient-to-r from-lines-hover to-transparent shrink-0" />
+            <div className="hidden md:block h-[1px] flex-1 max-w-[160px] lg:max-w-[348px] bg-gradient-to-r from-lines-hover to-transparent" />
           </div>
-          <p className="hub-description text-text-secondary mx-auto leading-relaxed">
+          <p className="text-text-secondary mx-auto leading-relaxed text-xs sm:text-sm md:text-base max-w-[280px] sm:max-w-md md:max-w-lg lg:max-w-2xl text-balance">
             Познавательные и интересные видео на тему многопользовательских боевых симуляторов в опасных условиях.
           </p>
         </div>
 
         {/* Контейнер карточек с видео */}
-        <div className="w-full mt-6 md:mt-10 overflow-x-auto touch-pan-x snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <div className="flex gap-[16px] lg:gap-[28px] w-max mx-auto px-4 lg:px-8 pb-12">
+        <div className="w-full px-4 md:px-8">
+          <div className="flex gap-4 md:gap-6 lg:gap-7 w-full max-w-[1850px] mx-auto overflow-x-auto touch-pan-x snap-x snap-mandatory pb-8 md:pb-12 justify-start min-[1900px]:justify-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {videos.map((video) => (
               <LiteYouTube key={video.id} video={video} />
             ))}
@@ -130,7 +130,7 @@ function LiteYouTube({ video }: { video: YouTubeVideo }) {
 
   return (
     <div
-      className="w-[280px] h-[158px] lg:w-[347px] lg:h-[196px] shrink-0 relative rounded-xl overflow-hidden border border-lines-hover bg-black transition-all duration-300 hover:border-primary/50 hover:shadow-[0_8px_30px_rgba(230,142,37,0.15)] snap-center group cursor-pointer"
+      className="w-[280px] h-[158px] sm:w-[320px] sm:h-[180px] lg:w-[348px] lg:h-[196px] shrink-0 relative rounded-xl overflow-hidden border border-lines-hover bg-black transition-all duration-300 hover:border-primary/50 hover:shadow-[0_8px_30px_rgba(230,142,37,0.15)] snap-center group cursor-pointer"
       onClick={() => setIsPlaying(true)}
     >
       {!isPlaying ? (

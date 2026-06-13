@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 interface NewbieModalProps {
   isOpen: boolean;
@@ -10,6 +11,9 @@ interface NewbieModalProps {
 export default function NewbieModal({ isOpen, onClose }: NewbieModalProps) {
   const [isRendered, setIsRendered] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(modalRef, onClose, isVisible);
 
   // Управление задержкой размонтирования для плавных анимаций
   useEffect(() => {
@@ -48,32 +52,48 @@ export default function NewbieModal({ isOpen, onClose }: NewbieModalProps) {
   return (
     // Полупрозрачный фон (Backdrop)
     <div 
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-base/80 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-      onClick={onClose} // Закрытие по клику на фон
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
     >
       {/* Панель модального окна */}
       <div
-        className={`relative w-full max-w-lg p-6 m-4 bg-card-menu border border-lines-hover rounded-lg shadow-lg transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}
-        onClick={(e) => e.stopPropagation()} // Предотвращаем закрытие при клике внутри окна
+        ref={modalRef}
+        className={`flex w-[400px] flex-col shadow-2xl transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}
       >
-        {/* Кнопка "Закрыть" */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-text-secondary hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
-          aria-label="Закрыть модальное окно"
-        >
-          <div className="icon-mask icon-eft-profile-btn-close w-6 h-6" />
-        </button>
+        {/* ШАПКА */}
+        <div className="relative flex h-7 w-full items-center justify-start gap-1 rounded-t bg-[#222225]">
+          <div className="flex h-7 w-7 items-center justify-center p-1.5">
+            <div className="h-full w-full icon-mask icon-eft-lore-tarkov text-[#9CA3AF]" />
+          </div>
+          <div className="text-sm font-blender-medium uppercase leading-4 text-zinc-100">Гайд для новичков</div>
+          
+          {/* Кнопка закрытия */}
+          <button onClick={onClose} className="absolute right-0 top-0 flex h-7 w-7 items-center justify-center transition-opacity hover:opacity-80 focus:outline-none">
+            <div className="flex h-3 w-4 items-center justify-center rounded-[1px] bg-[#7E2C25]">
+              <div className="h-2 w-2 icon-mask icon-eft-profile-btn-close text-zinc-100" />
+            </div>
+          </button>
+        </div>
 
-        <h2 className="text-2xl font-blender-medium text-primary uppercase mb-4">Гайд для новичков</h2>
-        <div className="space-y-4 text-text-secondary">
-          <p>Добро пожаловать в Центр Тактической Адаптации! Этот раздел поможет вам освоиться в мире Escape from Tarkov.</p>
-          <p>Здесь вы найдете информацию о ключевых механиках, советы по выживанию и ссылки на полезные ресурсы.</p>
-          <ul className="list-disc list-inside space-y-2 pl-2">
-            <li><a href="/eft/quests" onClick={onClose} className="text-primary/80 hover:text-primary underline">Первые квесты</a></li>
-            <li><a href="/eft/keepitems" onClick={onClose} className="text-primary/80 hover:text-primary underline">Что оставлять в схроне</a></li>
-            <li><a href="/eft/maps" onClick={onClose} className="text-primary/80 hover:text-primary underline">Изучение карт</a></li>
-          </ul>
+        {/* ТЕЛО МОДАЛКИ */}
+        <div className="flex w-full flex-col overflow-hidden rounded-b border border-[#222225] bg-[#161618] p-7">
+          <div className="flex flex-col gap-4 text-sm font-blender-medium leading-4 text-text-secondary">
+            <p>Добро пожаловать в Центр Тактической Адаптации! Этот раздел поможет вам освоиться в мире Escape from Tarkov.</p>
+            <p>Здесь вы найдете информацию о ключевых механиках, советы по выживанию и ссылки на полезные ресурсы.</p>
+            <div className="flex flex-col gap-3 pt-2">
+              <a href="/eft/quests" onClick={onClose} className="group flex items-center gap-2 text-text-primary transition-colors hover:text-[var(--primary)]">
+                <div className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] opacity-50 transition-opacity group-hover:opacity-100" />
+                Первые квесты
+              </a>
+              <a href="/eft/keepitems" onClick={onClose} className="group flex items-center gap-2 text-text-primary transition-colors hover:text-[var(--primary)]">
+                <div className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] opacity-50 transition-opacity group-hover:opacity-100" />
+                Что оставлять в схроне
+              </a>
+              <a href="/eft/maps" onClick={onClose} className="group flex items-center gap-2 text-text-primary transition-colors hover:text-[var(--primary)]">
+                <div className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] opacity-50 transition-opacity group-hover:opacity-100" />
+                Изучение карт
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,0 +1,874 @@
+[
+  {
+    "id": "6512ea46f7a078264a4376e4",
+    "name": "PMC's Best Friend",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6512eb3ddfb0ae1ee75a0376",
+    "name": "Traveler",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6512f16bde333c33d5127cbc",
+    "name": "Killer of Killers",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6512f1e3be73cc7f07358ed5",
+    "name": "Art of Style",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6513eb6e0dc723592b0f9095",
+    "name": "Call Your Brother",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6513ed89cf2f1c285e606068",
+    "name": "Silence of the Sawmill",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6513ee11a3dd9b6aa7159b4a",
+    "name": "Deal to Make",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6513eec00dc723592b0f90cc",
+    "name": "Grouse Hunting",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6513efa1b49e3253755f47eb",
+    "name": "Sanatorium Orderly",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6513f0a10dc723592b0f90cf",
+    "name": "Funny Graveyard Keeper",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6513f1feec10ff011f17c7ea",
+    "name": "Now There Are Three of Them!",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6513f28cb49e3253755f47f3",
+    "name": "The Blind Watcher",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "65140ab8ec10ff011f17cc10",
+    "name": "What Not To Wear",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65140b55cf2f1c285e606414",
+    "name": "Hammer and Scythe",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65140bbec31fcb0e163577b9",
+    "name": "King of the Sawmill",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65140c00b1c08b0feb216d50",
+    "name": "This Is a Tarkov Showdown",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65141032a3dd9b6aa7159ed3",
+    "name": "Another Cold Case",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "651411f1cf2f1c285e606423",
+    "name": "Who Called the Doctor?",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "651412b8c31fcb0e163577c5",
+    "name": "Old Dog With Old tricks",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6514134eec10ff011f17cc26",
+    "name": "I Hear the Voice of Darkness",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "651413e9c31fcb0e163577c9",
+    "name": "Now That's a Good Shot",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6514143d59647d2cb3213c93",
+    "name": "Master of ULTRA",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "651415feb49e3253755f4b68",
+    "name": "Long Live the King!",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6514174fb1c08b0feb216d73",
+    "name": "Chris's Heir",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "651417d6ec10ff011f17cc31",
+    "name": "John's Heir",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6514184ec31fcb0e163577d2",
+    "name": "Killer7",
+    "description": "Убить 7 ЧВК в одном рейде, играя за ЧВК",
+    "hidden": true,
+    "percentage": "1.44%",
+    "rarity": "Редкие"
+  },
+  {
+    "id": "651419eea3dd9b6aa7159ee5",
+    "name": "Blind Fury",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65141a3059647d2cb3213c9e",
+    "name": "Make a Notch",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65141ab70dc723592b0f9482",
+    "name": "Drunken Master",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "65141b9859647d2cb3213ca2",
+    "name": "U-SUCC",
+    "description": "Убить 50 ЧВК USEC",
+    "hidden": false,
+    "percentage": "19.82%",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65141bdfcf2f1c285e606446",
+    "name": "BEAR With Me",
+    "description": "Убить 50 ЧВК BEAR",
+    "hidden": false,
+    "percentage": "15.44%",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65141c30ec10ff011f17cc3b",
+    "name": "Welcome to Tarkov",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "65141c80ec10ff011f17cc3e",
+    "name": "First Time Always Hurts",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "65141cd2cf2f1c285e606449",
+    "name": "Ready for Anything",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65141dd6303df252af1c72c9",
+    "name": "PMC",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65141e37cf2f1c285e606361",
+    "name": "That's What She Said",
+    "description": "Впервые осмотреть офис на локации Завод, играя за ЧВК",
+    "hidden": true,
+    "percentage": "46.57%",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "65141eb5c31fcb0e163577dd",
+    "name": "Lost",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6514321bec10ff011f17ccac",
+    "name": "Firefly",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6527d2e2c656a951ad1528c3",
+    "name": "Smoke the Peace Pipe",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6527d3aac656a951ad1528ce",
+    "name": "The Red Book",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6527ee4a647c29201011defe",
+    "name": "You Are Not My Brother",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6529097eccf6aa5f8737b3d0",
+    "name": "Snowball",
+    "description": "Убить всех боссов за одну жизнь, играя за ЧВК",
+    "hidden": false,
+    "percentage": "0.14%",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "655b49bc91aa9e07687ae47c",
+    "name": "Justice",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "655b4a576689c676ce57acb6",
+    "name": "True Crime",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "660fe21454670811e304c045",
+    "name": "Maslenitsa",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6634c8886e083a141f4aa3f4",
+    "name": "Cardinal Richelieu",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6634ca69ee506a5c3e61be56",
+    "name": "INVOLVED IN PEACE",
+    "description": "Завершить цепочку заданий, выбрав сторону Миротворца в событии «Загадочное в Таркове»",
+    "hidden": true,
+    "percentage": "0.12%",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6634cae870af846d2868dada",
+    "name": "Local Strong Man",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "664f1f8768508d74604bf556",
+    "name": "The Kappa Path",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "664f23e44702fd5db50ee732",
+    "name": "Jack of All Trades",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "66742c003a67b164a300fcbf",
+    "name": "A Key to Salvation",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "668bf47c781d446fdc083711",
+    "name": "High Competition",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "66b493bc2d8cd3b5e90a3648",
+    "name": "Marathon",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "66c328aca91e7d66fa1b0b7b",
+    "name": "Vagabond",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "66c328de9dc78468f4040f35",
+    "name": "Time To Clean My Karma",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "66c32996b4c0c017a3319cc3",
+    "name": "Samsara Wheel Spins Again",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "66e2a7e5919bad697104f4b3",
+    "name": "Highway to the Danger Zone",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "670feb95a4e71050310cc14b",
+    "name": "Complete Remission",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "670febed5ee0fc738a0965a4",
+    "name": "Fatal Outcome",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "675709bef4e2a2ce0f058f56",
+    "name": "All-Wheel Drive",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "675998a894008342eb04e47f",
+    "name": "Khorovod",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "676091c0f457869a94017a23",
+    "name": "Prestigious",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "676094451fec2f7426093be6",
+    "name": "More Prestigious",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "67a0e57117e34930e50075f3",
+    "name": "In Search of an Exit",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "67a0e57b972c11a3f50773b2",
+    "name": "Dungeon Master",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "67c838a4c566b0028f0f2d07",
+    "name": "All on Red",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "67fce0c2f18dc20eae02240b",
+    "name": "Star Called Sun",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6842c25bd02bc07d70054019",
+    "name": "Keeping Up the Pace",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6842c27a38482d35ac0bd847",
+    "name": "Higher and Higher",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "685d3d6b81d993fda109cdb8",
+    "name": "One Last Ride",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "685d6539127e4806240f3bcd",
+    "name": "Through to the End",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68936a7a672ffe94a509446b",
+    "name": "Targrad Tales",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68d3fe84757f8967ec09099b",
+    "name": "Five Plus",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "68d3ff840531ed76e808866c",
+    "name": "No Limit to Perfection",
+    "description": "Earn the Prestige level",
+    "hidden": true,
+    "percentage": "60.02%",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "68dfdeb7958a19b62b0ae460",
+    "name": "Going Light",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68e8f02ff3a1196d1a05f2cb",
+    "name": "Survivor",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68e8f042b8efa2bbeb009d89",
+    "name": "Fallen",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68e8f04eb841bc8ac305350a",
+    "name": "Debtor",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68e8f0575eb7e5ce5000ba0a",
+    "name": "Savior",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68f76335c3f68167b8029c18",
+    "name": "Survivor (PVE ZONE)",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68f76344bc0e8927900279f0",
+    "name": "Fallen (PVE ZONE)",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68f76353c152253a5b01a612",
+    "name": "Debtor (PVE ZONE)",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "68f7635e006f73031b0336fa",
+    "name": "Savior (PVE ZONE)",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "691212088e10a4e1fb0f48c4",
+    "name": "Man of His Word",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "691213563d597b2ef80a21cf",
+    "name": "Just Business",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "691213956b60607135006811",
+    "name": "Pathfinder",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "691213c8680e04c5da0571eb",
+    "name": "Inferno",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "691213f0dbcdbbc54402fe00",
+    "name": "Trail of Breadcrumbs",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6912145e52ddd29bf002d343",
+    "name": "Through Another's Eyes",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "69121487d2f0e6de2f0561ef",
+    "name": "Pay Your Debt",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "691214c93d597b2ef80a2206",
+    "name": "Theseus",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "691214eafc9b2bc7f3042a57",
+    "name": "This Is All (Not) Coincidence",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "69121515e329984a340f00b4",
+    "name": "Enough of Your Games!",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6912153f761a11e52408fbd2",
+    "name": "Easy Way",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6912156f3d597b2ef80a2209",
+    "name": "U-Turn",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6912159adf87c6a94a0b9f34",
+    "name": "Will It Blow?",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "691215e8680e04c5da057e57",
+    "name": "Little Triumphs",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "691216216cd39d8e1d09173b",
+    "name": "I Am Speed",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6912163e680e04c5da057e5b",
+    "name": "Better Served",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6912168c52ddd29bf002d37a",
+    "name": "When the Light Fades",
+    "description": "Секретное описание или новое событие",
+    "hidden": true,
+    "percentage": "Н/Д",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "693a83434cb1cf587c0a63f9",
+    "name": "Whiteout",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6984ab58ee0ae2c0d5075f33",
+    "name": "Duck Hunt",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "69de1be5d378f8aef8008409",
+    "name": "Habet, hoc habet!",
+    "description": "Помочь Лыжнику сорвать новый сезон на Арене в событии «Casus Belli»",
+    "hidden": false,
+    "percentage": "0.12%",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "69de1c2be33584b09a098e93",
+    "name": "Morituri te salutant",
+    "description": "Помочь Рефу спасти новый сезон на Арене в событии «Casus Belli»",
+    "hidden": false,
+    "percentage": "0.33%",
+    "rarity": "Легендарные"
+  },
+  {
+    "id": "6a0344563743e4b101070b92",
+    "name": "Cracks in the Ice",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6a03447fb2e3003f8706a400",
+    "name": "Part of the Ship, Part of the Crew",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6a04f93d7a6a2b325906bb5c",
+    "name": "Awaiting Departure",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6a11d9028fd274eb6207c0bc",
+    "name": "I’m on a Boat",
+    "description": "Секретное описание или новое событие",
+    "hidden": false,
+    "percentage": "Н/Д",
+    "rarity": "Обычные"
+  },
+  {
+    "id": "6a11d98a1e4337ff1d0a6dbe",
+    "name": "Who Dares Wins",
+    "description": "Убить 60 бойцов из отряда The Wedge, играя за ЧВК",
+    "hidden": false,
+    "percentage": "0.14%",
+    "rarity": "Редкие"
+  }
+]

@@ -8,6 +8,7 @@ export interface MenuItem {
   iconClass?: string;
   coloredIcon?: boolean;
   children?: MenuItem[];
+  subItems?: MenuItem[]; //Для вложенных меню
 }
 
 export interface HeaderConfig {
@@ -153,6 +154,10 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       'bitcoin-farm': 'Биткоин Ферма',
       vents: 'Вентиляция',
       workbench: 'Верстак',
+      prestige: 'Престиж',
+      groundzero: 'ЭПИЦЕНТР',
+      icebreaker: 'ЛЕДОКОЛ',
+      'end-of-line': 'КОНЕЦ ПУТИ',
     },
     menuItems: [
       // ВЕТКА 1: КАРТЫ (Полностью структурированная)
@@ -211,17 +216,17 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             path: '/eft/quests/side-quests',
             iconUrl: '/icons/eft/02-quests/side-quests.svg',
             children: [
-              { id: 's-prapor', label: 'Прапор', path: '/eft/quests/prapor', iconUrl: '/icons/eft/02-quests/prapor_16x16.webp' },
-              { id: 's-therapist', label: 'Терапевт', path: '/eft/quests/therapist', iconUrl: '/icons/eft/02-quests/therapist_16x16.webp' },
-              { id: 's-fence', label: 'Скупщик', path: '/eft/quests/fence', iconUrl: '/icons/eft/02-quests/fence_16x16.webp' },
-              { id: 's-skier', label: 'Лыжник', path: '/eft/quests/skier', iconUrl: '/icons/eft/02-quests/skier_16x16.webp' },
-              { id: 's-peacekeeper', label: 'Миротворец', path: '/eft/quests/peacekeeper', iconUrl: '/icons/eft/02-quests/peacekeeper_16x16.webp' },
-              { id: 's-mechanic', label: 'Механик', path: '/eft/quests/mechanic', iconUrl: '/icons/eft/02-quests/mechanic_16x16.webp' },
-              { id: 's-ragman', label: 'Барахольщик', path: '/eft/quests/ragman', iconUrl: '/icons/eft/02-quests/ragman_16x16.webp' },
-              { id: 's-jaeger', label: 'Егерь', path: '/eft/quests/jaeger', iconUrl: '/icons/eft/02-quests/jaeger_16x16.webp' },
-              { id: 's-ref', label: 'Реф', path: '/eft/quests/ref', iconUrl: '/icons/eft/02-quests/ref_16x16.webp' },
-              { id: 's-lightkeeper', label: 'Смотритель Маяка', path: '/eft/quests/lightkeeper', iconUrl: '/icons/eft/02-quests/lightkeeper_16x16.webp' },
-              { id: 's-btr', label: 'Водитель БТР', path: '/eft/quests/btr-driver', iconUrl: '/icons/eft/02-quests/btrdriver_16x16.webp' }
+              { id: 's-prapor', label: 'Прапор', path: '/eft/quests/prapor', iconUrl: '/images/traders/eft/prapor.webp' },
+              { id: 's-therapist', label: 'Терапевт', path: '/eft/quests/therapist', iconUrl: '/images/traders/eft/therapist.webp' },
+              { id: 's-fence', label: 'Скупщик', path: '/eft/quests/fence', iconUrl: '/images/traders/eft/fence.webp' },
+              { id: 's-skier', label: 'Лыжник', path: '/eft/quests/skier', iconUrl: '/images/traders/eft/skier.webp' },
+              { id: 's-peacekeeper', label: 'Миротворец', path: '/eft/quests/peacekeeper', iconUrl: '/images/traders/eft/peacekeeper.webp' },
+              { id: 's-mechanic', label: 'Механик', path: '/eft/quests/mechanic', iconUrl: '/images/traders/eft/mechanic.webp' },
+              { id: 's-ragman', label: 'Барахольщик', path: '/eft/quests/ragman', iconUrl: '/images/traders/eft/ragman.webp' },
+              { id: 's-jaeger', label: 'Егерь', path: '/eft/quests/jaeger', iconUrl: '/images/traders/eft/jaeger.webp' },
+              { id: 's-ref', label: 'Реф', path: '/eft/quests/ref', iconUrl: '/images/traders/eft/ref.webp' },
+              { id: 's-lightkeeper', label: 'Смотритель Маяка', path: '/eft/quests/lightkeeper', iconUrl: '/images/traders/eft/lightkeeper.webp' },
+              { id: 's-btr', label: 'Водитель БТР', path: '/eft/quests/btr-driver', iconUrl: '/images/traders/eft/btrdriver.webp' }
             ]
           },
           {
@@ -290,7 +295,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
                     id: 'i-guns-mods-vitalparts',
                     label: 'Критические',
                     path: '/eft/items/guns/mods/vitalparts',
-                    iconUrl: '/icons/eft/03-items/guns/gun-modes/gear-mods.svg',
+                    iconUrl: '/icons/eft/03-items/guns/gun-modes/vital-parts.svg',
                     children: [
                       { id: 'i-mods-crit-gasblocks', label: 'Газовые трубки', path: '/eft/items/guns/mods/vitalparts/gasblocks', iconUrl: '/icons/eft/03-items/guns/gun-modes/gas-blocks.svg' },
                       { id: 'i-mods-crit-receivers', label: 'Крышки и ресиверы', path: '/eft/items/guns/mods/vitalparts/receivers', iconUrl: '/icons/eft/03-items/guns/gun-modes/receivers-slides.svg' },
@@ -317,7 +322,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
                     id: 'i-guns-mods-elements',
                     label: 'Элементы',
                     path: '/eft/items/guns/mods/elements',
-                    iconUrl: '/icons/eft/03-items/guns/gun-modes/vital-parts.svg',
+                    iconUrl: '/icons/eft/03-items/guns/gun-modes/gear-mods.svg',
                     children: [
                       { id: 'i-mods-elem-mounts', label: 'Крепления', path: '/eft/items/guns/mods/elements/mounts', iconUrl: '/icons/eft/03-items/guns/gun-modes/mounts.svg' },
                       { id: 'i-mods-elem-magazines', label: 'Магазины', path: '/eft/items/guns/mods/elements/magazines', iconUrl: '/icons/eft/03-items/guns/gun-modes/magazines.svg' },

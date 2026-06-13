@@ -17,7 +17,7 @@ export default function TarkovSubPage() {
       <div className="mb-8">
         <Link 
           href="/tarkov" 
-          className="text-kamen-action font-mono text-xs uppercase tracking-widest hover:opacity-70 transition-opacity"
+          className="text-[var(--primary)] font-mono text-xs uppercase tracking-widest hover:opacity-70 transition-opacity"
         >
           ← НАЗАД В ХАБ
         </Link>
@@ -34,11 +34,11 @@ export default function TarkovSubPage() {
           <h1 className="text-5xl font-black text-white uppercase tracking-tighter mb-4">
             РАЗДЕЛ В РАЗРАБОТКЕ
           </h1>
-          <div className="h-1 w-20 bg-kamen-action mb-8" />
-          <p className="text-kamen-slate font-mono text-sm uppercase tracking-widest leading-relaxed max-w-2xl">
+          <div className="h-1 w-20 bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] mb-8" />
+          <p className="text-text-muted font-mono text-sm uppercase tracking-widest leading-relaxed max-w-2xl">
             СИСТЕМА ФОРМИРУЕТСЯ
           </p>
-          <p className="text-kamen-slate font-mono text-sm uppercase tracking-widest leading-relaxed max-w-2xl">
+          <p className="text-text-muted font-mono text-sm uppercase tracking-widest leading-relaxed max-w-2xl">
             ЗДЕСЬ БУДЕТ ЛАКОНИЧНЫЙ И ПОЛЕЗНЫЙ ИНСТРУМЕНТАРИЙ ДЛЯ КОМФОРТНОЙ ИГРЫ
           </p>
         </div>

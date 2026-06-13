@@ -12,7 +12,7 @@ export default function MapsPage() {
     <main className="flex w-full flex-col items-center justify-start pt-[28px] pb-[56px] animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
       <div className="w-full max-w-[1100px] px-4 xl:px-0 mx-auto">
         <PageHeader pageId="eft-maps" />
-        <div className="w-full max-w-[1132px] mx-auto py-10 px-4">
+        <div className="w-full max-w-[1100px] mx-auto">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-[28px] justify-items-center">
         {maps.map((mapData, i) => (
           <Link

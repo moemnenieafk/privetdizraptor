@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
-import { Command, ArrowRight, Loader2 } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState, useTransition, useMemo } from 'react';
+import { Command, ArrowRight, Loader2, History, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { getHeaderConfig, type MenuItem } from '@/data/headerConfig';
 import Link from 'next/link';
 import { searchEftItemsAction } from '@/actions/search-actions';
-import { SearchItemCard, EftItem } from './SearchItemCard';
+import { SearchItemCard } from './SearchItemCard';
+import type { TarkovItem } from '@/types/tarkov-items';
 import { SearchEmptyState } from './SearchEmptyState';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 // Хелпер: должна ли иконка сохранять свои оригинальные цвета (без CSS-маски)
 const isColoredIcon = (item: MenuItem, urlToUse?: string) => {
@@ -37,21 +39,24 @@ export function TacticalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
   
   const [isMac, setIsMac] = useState(false);
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   
   // Состояния для поиска предметов EFT
-  const [itemResults, setItemResults] = useState<EftItem[]>([]);
+  const [itemResults, setItemResults] = useState<TarkovItem[]>([]);
   const [isPending, startTransition] = useTransition();
 
   // Подключаем хранилище для определения фракции (влияет на иконки оружия)
-  const profiles = usePlayerStore((state) => state.profiles);
-  const activeProfileId = usePlayerStore((state) => state.activeProfileId);
-  const activeProfile = profiles.find((p) => p.id === activeProfileId) || profiles[0];
-  const faction = activeProfile?.faction || 'BEAR';
+  // Оптимизировано: возвращаем только примитив (строку), чтобы избежать ререндеров при смене XP или имени
+  const faction = usePlayerStore((state) => {
+    const profile = state.profiles.find((p) => p.id === state.activeProfileId) || state.profiles[0];
+    return profile?.faction || 'BEAR';
+  });
 
   // Получаем динамический конфиг для текущего раздела
   const config = getHeaderConfig(pathname || '');
@@ -80,43 +85,51 @@ export function TacticalSearch() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Закрытие дропдауна при клике мимо него
+  // Инициализация истории поиска из localStorage
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    try {
+      const stored = localStorage.getItem('cta_recent_searches');
+      if (stored) setRecentSearches(JSON.parse(stored));
+    } catch (e) {}
   }, []);
 
-  // Рекурсивно собираем плоский массив абсолютно ВСЕХ пунктов меню (на любую глубину)
-  const getAllMenuItems = (items: MenuItem[]): MenuItem[] => {
-    let result: MenuItem[] = [];
-    for (const item of items) {
-      result.push(item);
-      if (item.children) {
-        result = result.concat(getAllMenuItems(item.children));
-      }
-    }
-    return result;
-  };
-  const allMenuItems = getAllMenuItems(config.menuItems);
+  // Закрытие дропдауна при клике мимо него
+  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
 
-  const queryLower = query.toLowerCase();
-  const switchedQuery = switchLayout(queryLower);
+  // Рекурсивно собираем плоский массив абсолютно ВСЕХ пунктов меню (на любую глубину)
+  const allMenuItems = useMemo(() => {
+    if (!isOpen) return []; // Вычисляем только при открытом поиске
+    const getItems = (items: MenuItem[]): MenuItem[] => {
+      let result: MenuItem[] = [];
+      for (const item of items) {
+        result.push(item);
+        if (item.children) {
+          result = result.concat(getItems(item.children));
+        }
+      }
+      return result;
+    };
+    return getItems(config.menuItems);
+  }, [config.menuItems, isOpen]);
 
   // Если запрос пуст — показываем только основные разделы. Иначе ищем по всем пунктам.
-  const filteredResults = query.trim().length === 0
-    ? config.menuItems
-    : allMenuItems.filter(item => {
-        const label = item.label.toLowerCase();
-        return label.includes(queryLower) || label.includes(switchedQuery);
-      });
+  const filteredResults = useMemo(() => {
+    if (!isOpen) return [];
+    if (query.trim().length === 0) return config.menuItems;
+    
+    const queryLower = query.toLowerCase();
+    const switchedQuery = switchLayout(queryLower);
+    
+    return allMenuItems.filter(item => {
+      const label = item.label.toLowerCase();
+      return label.includes(queryLower) || label.includes(switchedQuery);
+    });
+  }, [query, allMenuItems, config.menuItems, isOpen]);
 
   // Эффект для дебаунса и поиска предметов
   useEffect(() => {
+    if (!isOpen) return; // Не запускаем сетевые запросы, если поиск не в фокусе
+    
     const timer = setTimeout(() => {
       if (query.trim().length >= 2) {
         startTransition(async () => {
@@ -126,7 +139,7 @@ export function TacticalSearch() {
             
             if (q === sq) {
               const data = await searchEftItemsAction(q);
-              setItemResults(Array.isArray(data) ? (data as unknown as EftItem[]) : []);
+              setItemResults(Array.isArray(data) ? (data as unknown as TarkovItem[]) : []);
             } else {
               // Если раскладка меняется, ищем сразу по двум вариантам параллельно
               const [res1, res2] = await Promise.all([
@@ -134,8 +147,8 @@ export function TacticalSearch() {
                 searchEftItemsAction(sq)
               ]);
               
-              const arr1 = Array.isArray(res1) ? (res1 as unknown as EftItem[]) : [];
-              const arr2 = Array.isArray(res2) ? (res2 as unknown as EftItem[]) : [];
+              const arr1 = Array.isArray(res1) ? (res1 as unknown as TarkovItem[]) : [];
+              const arr2 = Array.isArray(res2) ? (res2 as unknown as TarkovItem[]) : [];
               
               // Объединяем и удаляем дубликаты по id
               const merged = [...arr1, ...arr2];
@@ -153,7 +166,7 @@ export function TacticalSearch() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, isOpen]);
 
   // Сбрасываем выделение при обновлении результатов
   useEffect(() => {
@@ -170,6 +183,27 @@ export function TacticalSearch() {
     }
   }, [selectedIndex]);
 
+  // Хелперы для работы с историей запросов
+  const saveSearch = (term: string) => {
+    const q = term.trim();
+    if (!q) return;
+    const updated = [q, ...recentSearches.filter(s => s !== q)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('cta_recent_searches', JSON.stringify(updated));
+  };
+
+  const removeSearch = (term: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = recentSearches.filter(s => s !== term);
+    setRecentSearches(updated);
+    localStorage.setItem('cta_recent_searches', JSON.stringify(updated));
+  };
+
+  const clearSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('cta_recent_searches');
+  };
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen) return;
     const totalItems = filteredResults.length + Math.min(itemResults.length, 12);
@@ -184,13 +218,24 @@ export function TacticalSearch() {
     } else if (e.key === 'Enter') {
       if (selectedIndex >= 0) {
         e.preventDefault();
-        const elem = document.getElementById(`search-result-${selectedIndex}`);
-        if (elem) {
-          // Находим первую ссылку внутри элемента (или кликаем сам элемент, если это ссылка)
-          const link = elem.tagName.toLowerCase() === 'a' ? elem : elem.querySelector('a');
-          link?.click();
-          setIsOpen(false);
+        
+        saveSearch(query);
+        
+        if (selectedIndex < filteredResults.length) {
+          // Переход по разделу хаба
+          const targetPath = filteredResults[selectedIndex].path || '#';
+          router.push(targetPath);
+        } else {
+          // Переход по предмету EFT
+          const itemIndex = selectedIndex - filteredResults.length;
+          const targetItem = itemResults[itemIndex];
+          if (targetItem) {
+            router.push(`/eft/items/${targetItem.id}`);
+          }
         }
+        
+        setIsOpen(false);
+        inputRef.current?.blur();
       }
     }
   };
@@ -236,6 +281,38 @@ export function TacticalSearch() {
           
           <div className="max-h-[450px] overflow-y-auto">
             
+            {/* СЕКЦИЯ: ПОСЛЕДНИЕ ЗАПРОСЫ */}
+            {query.trim().length === 0 && recentSearches.length > 0 && (
+              <div className="py-2 border-b border-lines-hover/50">
+                <div className="px-4 py-1.5 flex justify-between items-center bg-base/50 mb-1">
+                  <span className="text-[10px] font-blender-medium tracking-widest uppercase text-text-muted">
+                    Последние запросы
+                  </span>
+                  <button onClick={clearSearches} className="text-[10px] font-blender-medium tracking-widest uppercase text-text-secondary hover:text-[#C24339] transition-colors focus:outline-none">
+                    Очистить
+                  </button>
+                </div>
+                <ul>
+                  {recentSearches.map((term, index) => (
+                    <li key={`recent-${index}`}>
+                      <button
+                        onClick={() => { setQuery(term); inputRef.current?.focus(); }}
+                        className="w-full flex items-center justify-between px-4 py-2.5 transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] text-text-secondary hover:text-text-primary group/recent focus:outline-none"
+                      >
+                        <div className="flex items-center gap-3">
+                          <History className="w-4 h-4 opacity-40 group-hover/recent:text-[var(--primary)] group-hover/recent:opacity-100 transition-colors" />
+                          <span className="font-blender-medium uppercase tracking-wider text-sm">{term}</span>
+                        </div>
+                        <div role="button" onClick={(e) => removeSearch(term, e)} className="p-1 opacity-0 group-hover/recent:opacity-100 hover:text-[#C24339] transition-all">
+                          <X className="w-4 h-4" />
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
             {/* СЕКЦИЯ: РАЗДЕЛЫ ХАБА (Навигация) */}
             {filteredResults.length > 0 && (
               <div className="py-2">
@@ -251,7 +328,7 @@ export function TacticalSearch() {
                 <li key={item.id} id={`search-result-${index}`}>
                       <Link 
                         href={item.path || '#'}
-                        onClick={() => { setIsOpen(false); setQuery(''); }}
+                        onClick={() => { saveSearch(query); setIsOpen(false); setQuery(''); }}
                   className={`flex items-center justify-between px-4 py-2.5 transition-colors group/item ${isSelected ? 'bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-[var(--primary)]' : 'hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] text-text-secondary hover:text-text-primary'}`}
                       >
                         <div className="flex items-center gap-3">
@@ -302,7 +379,7 @@ export function TacticalSearch() {
                       id={`search-result-${globalIndex}`}
                       className={`transition-all duration-200 rounded-lg ${isSelected ? 'ring-2 ring-[var(--primary)] scale-[1.03] shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_40%,transparent)]' : ''}`}
                     >
-                      <SearchItemCard item={item} />
+                      <SearchItemCard item={item} onSelect={() => { saveSearch(query); setIsOpen(false); }} />
                     </div>
                   );
                 })}

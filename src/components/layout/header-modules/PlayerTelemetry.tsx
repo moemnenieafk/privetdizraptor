@@ -6,6 +6,7 @@ import { getHeaderConfig } from '@/data/headerConfig';
 import { ProfileSettingsModal, EDITIONS, EditionType } from './ProfileSettingsModal';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { ProfileDeleteModal } from './ProfileDeleteModal';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 // Функция вычисления группы иконки уровня (1-16)
 const getLevelGroup = (level: number) => {
@@ -39,16 +40,10 @@ export function PlayerTelemetry() {
   const telemetryRef = useRef<HTMLDivElement>(null);
 
   // Закрытие выпадающего меню при клике вне его области
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (telemetryRef.current && !telemetryRef.current.contains(event.target as Node)) {
-        setIsProfileMenuOpen(false);
-        setContextMenuProfileId(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickOutside(telemetryRef, () => {
+    setIsProfileMenuOpen(false);
+    setContextMenuProfileId(null);
+  }, isProfileMenuOpen || contextMenuProfileId !== null);
 
   const levelGroup = getLevelGroup(Number(activeProfile?.level) || 1);
   const activeEd = EDITIONS[activeProfile?.edition || 'Standard'];

@@ -1,4 +1,3 @@
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 export default function EftLayout({
   children,
@@ -19,7 +18,6 @@ export default function EftLayout({
       `}</style>
 
       <div className="flex-grow">
-        <Breadcrumbs />
         {children}
       </div>
     </div>

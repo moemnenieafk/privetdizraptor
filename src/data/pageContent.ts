@@ -100,15 +100,185 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     description: 'Обзор всей доступной экипировки: бронежилеты, шлемы, разгрузки и рюкзаки для защиты и выживания в рейде.',
     iconClass: 'icon-eft-items-gear',
   },
+  'eft-items-gear-headphones': {
+    title: 'Наушники',
+    description: '',
+    iconClass: 'icon-eft-gear-headphones',
+  },
+  'eft-items-gear-helmets': {
+    title: 'Шлемы',
+    description: '',
+    iconClass: 'icon-eft-gear-helmets',
+  },
+  'eft-items-gear-masks': {
+    title: 'Маски',
+    description: '',
+    iconClass: 'icon-eft-gear-masks',
+  },
+  'eft-items-gear-visors': {
+    title: 'Очки и Визоры',
+    description: '',
+    iconClass: 'icon-eft-gear-visors',
+  },
+  'eft-items-gear-armor': {
+    title: 'Бронежилеты',
+    description: '',
+    iconClass: 'icon-eft-gear-armor',
+  },
+  'eft-items-gear-rigs': {
+    title: 'Разгрузки',
+    description: '',
+    iconClass: 'icon-eft-gear-rigs',
+  },
+  'eft-items-gear-backpacks': {
+    title: 'Рюкзаки',
+    description: '',
+    iconClass: 'icon-eft-gear-backpacks',
+  },  
+  'eft-items-gear-components': {
+    title: 'Компоненты',
+    description: '',
+    iconClass: 'icon-eft-gear-comps',
+  },
   'eft-items-guns': {
     title: 'Оружие',
     description: 'Полный арсенал огнестрельного и холодного оружия, гранат, а также огромный выбор тактических модификаций.',
     iconClass: 'icon-eft-items-guns',
   },
+  'eft-items-guns-ammo': {
+    title: 'Боеприпасы',
+    description: '',
+    iconClass: 'icon-eft-guns-ammo',
+  },
+  'eft-items-guns-grenades': {
+    title: 'Гранаты',
+    description: '',
+    iconClass: 'icon-eft-guns-grenades',
+  },
+  'eft-items-guns-firearms': {
+    title: 'Огнестрельное',
+    description: '',
+    iconClass: 'icon-eft-items-guns',
+  },
+  'eft-items-guns-firearms-gl': {
+    title: 'Гранатометы',
+    description: '',
+    iconClass: 'icon-eft-guns-gl-bear',
+  },
+  'eft-items-guns-firearms-bolt': {
+    title: 'Болтовые винтовки',
+    description: '',
+    iconClass: 'icon-eft-guns-bolt-bear',
+  },
+  'eft-items-guns-firearms-dmr': {
+    title: 'Пехотные винтовки',
+    description: '',
+    iconClass: 'icon-eft-guns-dmr-bear',
+  },
+  'eft-items-guns-firearms-ar': {
+    title: 'Штурмовые винтовки',
+    description: '',
+    iconClass: 'icon-eft-guns-ar-bear',
+  },
+  'eft-items-guns-firearms-carbine': {
+    title: 'Карабины',
+    description: '',
+    iconClass: 'icon-eft-guns-carbine-bear',
+  },
+  'eft-items-guns-firearms-lmg': {
+    title: 'Пулеметы',
+    description: '',
+    iconClass: 'icon-eft-guns-lmg-bear',
+  },
+  'eft-items-guns-firearms-shotgun': {
+    title: 'Дробовики',
+    description: '',
+    iconClass: 'icon-eft-guns-shotgun-bear',
+  },
+  'eft-items-guns-firearms-smg': {
+    title: 'Пистолеты-Пулеметы',
+    description: '',
+    iconClass: 'icon-eft-guns-smg-bear',
+  },
+  'eft-items-guns-firearms-sidearm': {
+    title: 'Пистолеты',
+    description: '',
+    iconClass: 'icon-eft-guns-sidearm-bear',
+  },
+  'eft-items-guns-mods': {
+    title: 'Моды',
+    description: '',
+    iconClass: 'icon-eft-guns-mods',
+  },
+  'eft-items-guns-melee': {
+    title: 'Холодное оружие',
+    description: '',
+    iconClass: 'icon-eft-guns-knifes',
+  },
+  'eft-items-guns-special': {
+    title: 'Специальное оружие',
+    description: '',
+    iconClass: 'icon-eft-guns-special',
+  },  
+  'eft-items-guns-mods-vitalparts': {
+    title: 'Критические',
+    description: '',
+    iconClass: 'icon-eft-guns-parts-vital',
+  },
+  'eft-items-guns-mods-functional': {
+    title: 'Функциональные',
+    description: '',
+    iconClass: 'icon-eft-guns-parts-functional',
+  },
+  'eft-items-guns-mods-elements': {
+    title: 'Элементы',
+    description: '',
+    iconClass: 'icon-eft-guns-parts-gearmods',
+  },
   'eft-items-equipment': {
     title: 'Оборудование',
     description: 'Медикаменты, инъекторы, ключи, контейнеры, провизия и прочее жизненно важное тактическое снаряжение.',
     iconClass: 'icon-eft-items-equipment',
+  },
+  'eft-items-equipment-meds': {
+    title: 'Медикаменты',
+    description: '',
+    iconClass: 'icon-eft-eq-meds',
+  },
+  'eft-items-equipment-containers': {
+    title: 'Контейнеры',
+    description: '',
+    iconClass: 'icon-eft-eq-containers',
+  },
+  'eft-items-equipment-keys': {
+    title: 'Ключи',
+    description: '',
+    iconClass: 'icon-eft-eq-keys',
+  },
+  'eft-items-equipment-provisions': {
+    title: 'Провизия',
+    description: '',
+    iconClass: 'icon-eft-eq-provisions',
+  },
+  'eft-items-equipment-info':{
+    title: 'Инфопредметы',
+    description: '',
+    iconClass: 'icon-eft-eq-infoitems',
+  },
+  'eft-items-equipment-special': {
+    title: 'Спецоборудование',
+    description: '',
+    iconClass: 'icon-eft-eq-special',
+  },
+  'eft-items-equipment-provisions-food': {
+    title: 'Еда',
+    description: '',
+    iconClass: 'icon-eft-eq-food',
+  },
+  'eft-items-equipment-provisions-drinks': {
+    title: 'Напитки',
+    description: '',
+    iconClass: 'icon-eft-eq-drinks',
   },
   'eft-items-price-slot': {
     title: 'Цена за слот',

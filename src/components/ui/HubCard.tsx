@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React from "react";
+import { Tooltip } from "./Tooltip";
 
 interface HubCardProps {
   gameId: string;         // ID родительской игры (например, 'eft')
@@ -11,6 +12,7 @@ interface HubCardProps {
   variant?: 'square' | 'rectangle'; // Адаптивный вид карточки
   index?: number;         // Индекс для каскадной анимации
   iconPath?: string;      // Явный путь к иконке (опционально)
+  iconTooltip?: string;   // Текст тултипа для иконки
 }
 
 export function HubCard({
@@ -23,6 +25,7 @@ export function HubCard({
   variant = 'rectangle',
   index = 0,
   iconPath,
+  iconTooltip,
 }: HubCardProps) {
   const isSquare = variant === 'square';
 
@@ -48,27 +51,35 @@ export function HubCard({
       className={`group relative flex flex-col bg-card-menu border border-lines-hover rounded-lg overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all duration-300 hover:border-primary/50 hover:shadow-[0_8px_30px_color-mix(in_srgb,var(--primary)_15%,transparent)] hover:-translate-y-1 animate-[fade-in-up_0.6s_ease-out_both] ${dimensions}`}
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      {/* Иконка карточки (с отступом 21px в правом верхнем углу) */}
-      <div className="absolute top-[21px] right-[21px] w-[32px] h-[32px] transition-transform duration-300 group-hover:scale-110">
-        {isColoredIcon(resolvedIconUrl) ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={resolvedIconUrl} alt="" className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity" />
-        ) : (
-          /* Используем CSS-маску для автоматического перекрашивания SVG в цвет текущей темы */
-          <div 
-            className="w-full h-full bg-text-primary opacity-80 group-hover:opacity-100 group-hover:bg-primary transition-colors duration-300"
-            style={{
-              WebkitMaskImage: `url(${resolvedIconUrl})`,
-              WebkitMaskSize: 'contain',
-              WebkitMaskPosition: 'center',
-              WebkitMaskRepeat: 'no-repeat',
-              maskImage: `url(${resolvedIconUrl})`,
-              maskSize: 'contain',
-              maskPosition: 'center',
-              maskRepeat: 'no-repeat',
-            }}
-          />
-        )}
+      {/* Иконка карточки с тултипом (с отступом 21px в правом верхнем углу) */}
+      <div className="absolute top-[21px] right-[21px] z-10 w-[32px] h-[32px]">
+        <Tooltip 
+          content={iconTooltip || title} 
+          position="left" 
+          className="w-full h-full flex items-center justify-center"
+        >
+          <div className="w-full h-full transition-transform duration-300 group-hover:scale-110">
+            {isColoredIcon(resolvedIconUrl) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={resolvedIconUrl} alt="" className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity" />
+            ) : (
+              /* Используем CSS-маску для автоматического перекрашивания SVG в цвет текущей темы */
+              <div 
+                className="w-full h-full bg-text-primary opacity-80 group-hover:opacity-100 group-hover:bg-primary transition-colors duration-300"
+                style={{
+                  WebkitMaskImage: `url(${resolvedIconUrl})`,
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskPosition: 'center',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskImage: `url(${resolvedIconUrl})`,
+                  maskSize: 'contain',
+                  maskPosition: 'center',
+                  maskRepeat: 'no-repeat',
+                }}
+              />
+            )}
+          </div>
+        </Tooltip>
       </div>
 
       {/* Бейдж (смещен влево, чтобы не перекрывать иконку) */}

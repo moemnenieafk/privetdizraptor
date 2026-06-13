@@ -62,11 +62,11 @@ export const Carousel: React.FC<CarouselProps> = ({ children, options }) => {
   }, [emblaApi]);
 
   return (
-    <div className="relative w-full max-w-full md:max-w-[1100px] mx-auto">
-      {/* Убрали overflow-hidden, чтобы карточки растекались по ширине на весь экран */}
+    <div className="relative w-full">
       <div className="embla w-full">
-        {/* Добавили overflow-visible и py-[42px] (84px в сумме) для достижения высоты карусели 648px */}
-        <div className="embla__viewport cursor-grab active:cursor-grabbing w-full overflow-visible py-[42px]" ref={emblaRef}>
+        {/* Вьюпорт должен быть на всю ширину экрана (w-full) с overflow-hidden, чтобы внутренний алгоритм 
+            Embla правильно рассчитал количество клонируемых слайдов (loop) для краев больших мониторов */}
+        <div className="embla__viewport cursor-grab active:cursor-grabbing w-full overflow-hidden py-[42px]" ref={emblaRef}>
           <div className="embla__container flex" style={{ backfaceVisibility: "hidden" }}>
             {React.Children.map(children, (child) => (
               <div className="embla__slide flex-[0_0_80vw] sm:flex-[0_0_348px] min-w-0 mr-[16px] sm:mr-[28px] flex justify-center">

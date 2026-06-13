@@ -1,4 +1,4 @@
-# 🗺️ Архитектура Проекта (ctagg)
+# 🗺️ Архитектура Проекта "Центр Тактической Адаптации" (CTA)
 
 Данный файл является картой путей проекта (Next.js 14 App Router) и используется для контроля роутинга, связей и релинков.
 
@@ -7,6 +7,7 @@
 cta-project\
 ├── .env.local                 # Секретные ключи API (Twitch, YouTube и др.)
 ├── scripts/                   # Скрипты для автоматизации
+│   ├── cleanup-obsolete-dirs.mjs # Утилита удаления устаревших папок
 │   ├── sync-docs.mjs          # Утилита синхронизации документации
 │   ├── ensure-page-headers.mjs# Внедрение <PageHeader>
 │   └── fix-warnings.mjs       # Исправление верстки старых страниц
@@ -30,6 +31,11 @@ public/
 ## 📂 Исходный код (src)
 ```text
 src/
+├── types/
+│   └── tarkov-items.ts        # Строгие типы предметов (Discriminated Unions)
+│   ├── tarkov-quests.ts       # Типы для квестов и трекера (Фаза 3)
+│   └── tarkov-maps.ts         # Типы маркеров для интерактивных карт (Фаза 3)
+│
 ├── actions/
 │   └── youtube.ts             # Server Actions для работы с API YouTube
 │   └── search-actions.ts      # Server Actions для поиска предметов EFT
@@ -45,6 +51,7 @@ src/
 │
 ├── hooks/
 │   └── useIntersectionObserver.ts # Хук для ленивой загрузки (видео в карточках)
+│   └── useQuestProgress.ts        # Хук для связи Zustand стейта квестов с UI
 │
 ├── lib/
 │   ├── eft-api.ts             # Интеграция с tarkov.dev GraphQL
@@ -52,8 +59,22 @@ src/
 │
 ├── store/
 │   └── usePlayerStore.ts      # Zustand-хранилище профилей (Глобальный стейт)
+│   └── useQuestStore.ts       # Zustand-хранилище для трекера заданий (Фаза 3)
 │
 ├── components/
+│   ├── features/              # Фиче-компоненты (Сложная бизнес-логика)
+│   │   └── items/             # Модуль каталога предметов
+│   │       ├── ItemTile.tsx
+│   │       ├── ItemTableRow.tsx
+│   │       ├── ItemsTable.tsx
+│   │       ├── ItemsFilterPanel.tsx
+│   │       └── ItemsViewSwitcher.tsx
+│   │   ├── quests/            # Интеллектуальный Трекер Заданий (Фаза 3.1)
+│   │   │   └── QuestCard/     # Композитный паттерн (Root, Header, Objectives)
+│   │   ├── map/               # Интерактивная Тактическая Доска (Фаза 3.2)
+│   │   │   └── InteractiveMap.tsx # Имплементация Leaflet.js / Canvas
+│   │   ├── hideout/           # Трекер Убежища (Фаза 3.3)
+│   │   └── barter/            # Калькулятор бартера (Фаза 3.3)
 │   ├── layout/                # Глобальный каркас приложения
 │   │   ├── Header.tsx         # Умная шапка сайта (2 строки)
 │   │   ├── header-modules/    # Микро-модули для сборки Хедера
@@ -74,6 +95,7 @@ src/
 │   ├── ui/                    # Переиспользуемые "глупые" компоненты (Dumb components)
 │   │   ├── NavLink.tsx        # Ссылка с подсветкой активного состояния
 │   │   ├── HubCard.tsx        # Карточка для внутренних хабов
+│   │   ├── Badge.tsx          # Семантический бейдж для метрик
 │   │   ├── GameCard.tsx       # Карточка игры для главной страницы
 │   │   ├── Breadcrumbs.tsx    # Хлебные крошки (EFT Хаб / Прогресс)
 │   │   ├── PageHeader.tsx     # Стандартизированный заголовок страницы
@@ -104,8 +126,9 @@ src/
     │   ├── page.tsx           # Хаб EFT (импортируется в [gameId])
     │   │
     │   ├── items/             # Хаб "Предметы"
-    │   │   ├── page.tsx
-    │   │   └── ... (глубокая структура по категориям)
+│   │   ├── page.tsx           # Обзорная страница категорий
+│   │   └── [...category]/     # Catch-all роут (Динамическая генерация хабов)
+│   │       └── page.tsx
     │   │
     │   ├── quests/            # Хаб "Задания"
     │   │   └── page.tsx

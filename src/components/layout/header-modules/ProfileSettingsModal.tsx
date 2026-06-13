@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import { ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { ProfileResetModal } from './ProfileResetModal';
 
@@ -59,6 +60,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
   const [isVisible, setIsVisible] = useState(false);
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Закрытие при клике вне модалки, если не открыто вложенное окно сброса
+  useClickOutside(modalRef, onClose, isVisible && !isResetModalOpen);
 
   // Эффект задержки для плавного появления/исчезновения
   useEffect(() => {
@@ -135,13 +140,12 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
     // Оверлей модального окна
     <div 
       className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-      onClick={onClose}
     >
       
       {/* Контейнер модалки (348px) */}
       <div 
+        ref={modalRef}
         className={`flex w-[348px] flex-col items-start justify-start shadow-2xl transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}
-        onClick={(e) => e.stopPropagation()}
       >
         
         {/* ШАПКА */}

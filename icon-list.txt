@@ -1,36 +1,41 @@
 === ПОЛНЫЙ ОТЧЕТ ПО ИКОНКАМ ПРОЕКТА ===
-Всего физических иконок в базе (public/icons): 256
+Всего физических иконок в базе (public/icons): 255
 
 ----------------------------------------
 ИКОНКА: account_billing_icon.svg
 ПУТЬ:   public/icons/account_center/account_billing_icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-account_billing_icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: account_linking_icon.svg
 ПУТЬ:   public/icons/account_center/account_linking_icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-account_linking_icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: account_profile_icon.svg
 ПУТЬ:   public/icons/account_center/account_profile_icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-account_profile_icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: account_prostatus_icon.svg
 ПУТЬ:   public/icons/account_center/account_prostatus_icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-account_prostatus_icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: account_security_icon.svg
 ПУТЬ:   public/icons/account_center/account_security_icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-account_security_icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: customs-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/customs-map-icon.svg
@@ -42,10 +47,11 @@
 ----------------------------------------
 ИКОНКА: end-of-line-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/end-of-line-map-icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-end-of-line-map-icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: КОНЕЦ ПУТИ
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: factory-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/factory-map-icon.svg
@@ -159,24 +165,6 @@
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
-ИКОНКА: btrdriver_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/btrdriver_16x16.webp
-КЛАСС CSS: .icon-eft-quests-btrdriver
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Водитель БТР
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
-----------------------------------------
-ИКОНКА: fence_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/fence_16x16.webp
-КЛАСС CSS: .icon-eft-quests-fence
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Скупщик
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
-----------------------------------------
 ИКОНКА: ingame-events.svg
 ПУТЬ:   public/icons/eft/02-quests/ingame-events.svg
 КЛАСС CSS: .icon-eft-quests-events
@@ -184,24 +172,6 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/page.tsx
   - /src/app/eft/quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
-----------------------------------------
-ИКОНКА: jaeger_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/jaeger_16x16.webp
-КЛАСС CSS: .icon-eft-quests-jaeger
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Егерь
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
-----------------------------------------
-ИКОНКА: lightkeeper_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/lightkeeper_16x16.webp
-КЛАСС CSS: .icon-eft-quests-lightkeeper
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Смотритель Маяка
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -213,33 +183,7 @@
   - /src/app/eft/quests/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-----------------------------------------
-ИКОНКА: mechanic_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/mechanic_16x16.webp
-КЛАСС CSS: .icon-eft-quests-mechanic
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Механик
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
-----------------------------------------
-ИКОНКА: peacekeeper_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/peacekeeper_16x16.webp
-КЛАСС CSS: .icon-eft-quests-peacekeeper
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Миротворец
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
-----------------------------------------
-ИКОНКА: prapor_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/prapor_16x16.webp
-КЛАСС CSS: .icon-eft-quests-prapor
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Побочные
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: quest-eliminate.svg
 ПУТЬ:   public/icons/eft/02-quests/quest-eliminate.svg
@@ -290,24 +234,6 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
 ----------------------------------------
-ИКОНКА: ragman_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/ragman_16x16.webp
-КЛАСС CSS: .icon-eft-quests-ragman
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Барахольщик
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
-----------------------------------------
-ИКОНКА: ref_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/ref_16x16.webp
-КЛАСС CSS: .icon-eft-quests-ref
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Реф
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
-----------------------------------------
 ИКОНКА: side-quests.svg
 ПУТЬ:   public/icons/eft/02-quests/side-quests.svg
 КЛАСС CSS: .icon-eft-quests-side
@@ -316,15 +242,7 @@
   - /src/app/eft/quests/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-----------------------------------------
-ИКОНКА: skier_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/skier_16x16.webp
-КЛАСС CSS: .icon-eft-quests-skier
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Лыжник
-ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
-  - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: story-accidental-witness.svg
 ПУТЬ:   public/icons/eft/02-quests/story-accidental-witness.svg
@@ -416,13 +334,25 @@
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
-ИКОНКА: therapist_16x16.webp
-ПУТЬ:   public/icons/eft/02-quests/therapist_16x16.webp
-КЛАСС CSS: .icon-eft-quests-therapist
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Терапевт
+ИКОНКА: currency-dollar.svg
+ПУТЬ:   public/icons/eft/03-items/currency-dollar.svg
+КЛАСС CSS: .icon-eft-currency-dollar
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/side-quests/page.tsx
-  - /src/data/headerConfig.ts
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: currency-euro.svg
+ПУТЬ:   public/icons/eft/03-items/currency-euro.svg
+КЛАСС CSS: .icon-eft-currency-euro
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: currency-ruble.svg
+ПУТЬ:   public/icons/eft/03-items/currency-ruble.svg
+КЛАСС CSS: .icon-eft-currency-ruble
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: cases.svg
@@ -448,6 +378,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: infoitems.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/infoitems.svg
@@ -456,6 +387,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: key-cards.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/keys/key-cards.svg
@@ -496,6 +428,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: injectors.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/meds/injectors.svg
@@ -536,6 +469,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: drinks.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/provisions/drinks.svg
@@ -544,6 +478,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: food.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/provisions/food.svg
@@ -552,6 +487,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: provisions.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/provisions.svg
@@ -560,6 +496,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: special-equipment.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/special-equipment.svg
@@ -568,6 +505,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: equipment.svg
 ПУТЬ:   public/icons/eft/03-items/equipment.svg
@@ -577,6 +515,56 @@
   - /src/app/eft/items/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
+----------------------------------------
+ИКОНКА: armor-class-1.svg
+ПУТЬ:   public/icons/eft/03-items/gear/armor-class-1.svg
+КЛАСС CSS: .icon-eft-armor-class-1
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: armor-class-2.svg
+ПУТЬ:   public/icons/eft/03-items/gear/armor-class-2.svg
+КЛАСС CSS: .icon-eft-armor-class-2
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: armor-class-3.svg
+ПУТЬ:   public/icons/eft/03-items/gear/armor-class-3.svg
+КЛАСС CSS: .icon-eft-armor-class-3
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: armor-class-4.svg
+ПУТЬ:   public/icons/eft/03-items/gear/armor-class-4.svg
+КЛАСС CSS: .icon-eft-armor-class-4
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: armor-class-5.svg
+ПУТЬ:   public/icons/eft/03-items/gear/armor-class-5.svg
+КЛАСС CSS: .icon-eft-armor-class-5
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: armor-class-6.svg
+ПУТЬ:   public/icons/eft/03-items/gear/armor-class-6.svg
+КЛАСС CSS: .icon-eft-armor-class-6
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: armor-class-7.svg
+ПУТЬ:   public/icons/eft/03-items/gear/armor-class-7.svg
+КЛАСС CSS: .icon-eft-armor-class-7
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: cat-armor.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-armor.svg
@@ -585,6 +573,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-backpacks.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-backpacks.svg
@@ -593,6 +582,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-gearcomps.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-gearcomps.svg
@@ -601,6 +591,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-headphones.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-headphones.svg
@@ -609,6 +600,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-helmets.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-helmets.svg
@@ -617,6 +609,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-masks.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-masks.svg
@@ -625,6 +618,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-tactical-rigs.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-tactical-rigs.svg
@@ -633,6 +627,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-visors.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-visors.svg
@@ -641,6 +636,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: gear.svg
 ПУТЬ:   public/icons/eft/03-items/gear.svg
@@ -650,6 +646,7 @@
   - /src/app/eft/items/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-ammo.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-ammo.svg
@@ -658,6 +655,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-grenades.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-grenades.svg
@@ -666,6 +664,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-gunmods.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-gunmods.svg
@@ -674,6 +673,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-knifes.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-knifes.svg
@@ -682,6 +682,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-special-weapon.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-special-weapon.svg
@@ -690,6 +691,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: auxiliary-parts.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-modes/auxiliary-parts.svg
@@ -738,6 +740,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: gas-blocks.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-modes/gas-blocks.svg
@@ -750,10 +753,11 @@
 ИКОНКА: gear-mods.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-modes/gear-mods.svg
 КЛАСС CSS: .icon-eft-guns-parts-gearmods
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Моды
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Элементы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: handguards.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-modes/handguards.svg
@@ -830,10 +834,11 @@
 ИКОНКА: vital-parts.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-modes/vital-parts.svg
 КЛАСС CSS: .icon-eft-guns-parts-vital
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Элементы
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Моды
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: ar-bear.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/ar-bear.svg
@@ -842,6 +847,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: ar-usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/ar-usec.svg
@@ -858,6 +864,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: bolt-action-riffle-usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/bolt-action-riffle-usec.svg
@@ -874,6 +881,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: carbine-usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/carbine-usec.svg
@@ -890,6 +898,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: dmr-usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/dmr-usec.svg
@@ -906,6 +915,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: gl-usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/gl-usec.svg
@@ -922,6 +932,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: lmg-usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/lmg-usec.svg
@@ -938,6 +949,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: shotgun-usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/shotgun-usec.svg
@@ -954,6 +966,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: sidearm-usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/sidearm-usec.svg
@@ -970,6 +983,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: smg_usec.svg
 ПУТЬ:   public/icons/eft/03-items/guns/gun-types/smg_usec.svg
@@ -987,6 +1001,7 @@
   - /src/app/eft/items/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: loot-tier.svg
 ПУТЬ:   public/icons/eft/03-items/loot-tier.svg
@@ -997,6 +1012,8 @@
   - /src/app/eft/page (like menu).tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/components/ui/PageHeader.tsx
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: price-per-slot.svg
 ПУТЬ:   public/icons/eft/03-items/price-per-slot.svg
@@ -1007,6 +1024,7 @@
   - /src/app/eft/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: achievments.svg
 ПУТЬ:   public/icons/eft/04-progression/achievments.svg
@@ -1016,6 +1034,7 @@
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: building-materials.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/building-materials.svg
@@ -1107,6 +1126,7 @@
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: bitcoin-profit.svg
 ПУТЬ:   public/icons/eft/04-progression/bitcoin-profit.svg
@@ -1125,6 +1145,7 @@
   - /src/app/eft/progress/hideout/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: add-gun-loadout.svg
 ПУТЬ:   public/icons/eft/04-progression/gun-loadouts/add-gun-loadout.svg
@@ -1162,171 +1183,193 @@
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: air_filtering_unit.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-air_filtering_unit
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Воздушный фильтратор
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: bitcoin_farm.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/bitcoin_farm.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-bitcoin_farm
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Биткоин ферма
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: booze_generator.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/booze_generator.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-booze_generator
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Самогонный аппарат
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: cultist_circle.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/cultist_circle.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-cultist_circle
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Круг сектантов
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: defective_wall.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/defective_wall.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-defective_wall
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Убежище ЧВК
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: gear_rack.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/gear_rack.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-gear_rack
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Стенд со снаряжением
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: generator.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/generator.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-booze_generator
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Генератор
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: gym.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/gym.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-gym
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Тренажерный зал
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: hall_of_fame.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/hall_of_fame.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-hall_of_fame
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Уголок боевой славы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: heating.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/heating.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-heating
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Обогрев
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: illumitation.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/illumitation.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-illumitation
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: intelligence_centre.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/intelligence_centre.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-intelligence_centre
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Разведцентр
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: lavatory.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/lavatory.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-lavatory
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Санузел
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: med_station.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/med_station.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-med_station
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Медблок
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: nutrition_unit.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/nutrition_unit.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-nutrition_unit
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Пищеблок
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: rest_space.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/rest_space.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-rest_space
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Зона отдыха
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: scav_case.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/scav_case.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-scav_case
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Ящик диких
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: security.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/security.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-security
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Безопасность
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: shooting_range.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/shooting_range.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-shooting_range
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Тир
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: solar_power.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/solar_power.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-solar_power
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Солнечная батарея
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: stash.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/stash.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-stash
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Склад
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: vents.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/vents.svg
@@ -1341,27 +1384,30 @@
 ----------------------------------------
 ИКОНКА: water_collector.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/water_collector.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-water_collector
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Водосборник
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: weapon_rack.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/weapon_rack.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-weapon_rack
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Оружейный стенд
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: workbench.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/workbench.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-workbench
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Верстак
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: hideout-modules.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules.svg
@@ -1372,6 +1418,7 @@
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: items-needed.svg
 ПУТЬ:   public/icons/eft/04-progression/items-needed.svg
@@ -1401,6 +1448,7 @@
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: quest-map.svg
 ПУТЬ:   public/icons/eft/04-progression/quest-map.svg
@@ -1411,6 +1459,7 @@
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: audiotapes.svg
 ПУТЬ:   public/icons/eft/05-gamesetting/audiotapes.svg
@@ -1481,6 +1530,8 @@
   - /src/app/eft/gamesetting/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/NewbieModal.tsx
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: theory-riddles.svg
 ПУТЬ:   public/icons/eft/05-gamesetting/theory-riddles.svg
@@ -1553,47 +1604,49 @@
 ----------------------------------------
 ИКОНКА: codex-icon.svg
 ПУТЬ:   public/icons/eft/codex-icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-codex-icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Кодекс
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/page (like menu).tsx
   - /src/app/eft/page.tsx
   - /src/data/headerConfig.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: ctrl-q-icon.svg
 ПУТЬ:   public/icons/eft/ctrl-q-icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-ctrl-q-icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/TacticalSearch.tsx
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: EOD - icon.svg
 ПУТЬ:   public/icons/eft/edition/EOD - icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-eod---icon (Автоматически добавлено)
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
 ИКОНКА: LB - icon.svg
 ПУТЬ:   public/icons/eft/edition/LB - icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-lb---icon (Автоматически добавлено)
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
 ИКОНКА: PFE - icon.svg
 ПУТЬ:   public/icons/eft/edition/PFE - icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-pfe---icon (Автоматически добавлено)
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
 ИКОНКА: S - icon.svg
 ПУТЬ:   public/icons/eft/edition/S - icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-s---icon (Автоматически добавлено)
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
 ИКОНКА: TUE - icon.svg
 ПУТЬ:   public/icons/eft/edition/TUE - icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-tue---icon (Автоматически добавлено)
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
@@ -1702,6 +1755,7 @@
   - /src/app/eft/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: prestige-1.webp
 ПУТЬ:   public/icons/eft/prestige/prestige-1.webp
@@ -1745,6 +1799,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: BEAR-logo-sign.svg
 ПУТЬ:   public/icons/eft/profile-pannel/BEAR-logo-sign.svg
@@ -1767,6 +1822,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: BTN_add-pmc-profile.svg
 ПУТЬ:   public/icons/eft/profile-pannel/BTN_add-pmc-profile.svg
@@ -1774,6 +1830,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: BTN_close-window.svg
 ПУТЬ:   public/icons/eft/profile-pannel/BTN_close-window.svg
@@ -1781,6 +1838,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/NewbieModal.tsx
+  - /src/components/layout/header-modules/ProfileResetModal.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: BTN_remove-pmc-profile.svg
 ПУТЬ:   public/icons/eft/profile-pannel/BTN_remove-pmc-profile.svg
@@ -1788,6 +1848,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/ProfileDeleteModal.tsx
 ----------------------------------------
 ИКОНКА: EOD_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/EOD_icon.svg
@@ -1795,6 +1857,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: I-lvl-rep.svg
 ПУТЬ:   public/icons/eft/profile-pannel/I-lvl-rep.svg
@@ -1802,6 +1865,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: II-lvl-rep.svg
 ПУТЬ:   public/icons/eft/profile-pannel/II-lvl-rep.svg
@@ -1809,6 +1873,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: III-lvl-rep.svg
 ПУТЬ:   public/icons/eft/profile-pannel/III-lvl-rep.svg
@@ -1816,6 +1881,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: IV-Crown.svg
 ПУТЬ:   public/icons/eft/profile-pannel/IV-Crown.svg
@@ -1823,6 +1889,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: kappa_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/kappa_icon.svg
@@ -1830,6 +1897,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/app/eft/questmap/page.tsx
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: LB_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/LB_icon.svg
@@ -1837,6 +1906,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: lightkeeper_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/lightkeeper_icon.svg
@@ -1844,6 +1914,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: login-icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/login-icon.svg
@@ -1851,6 +1922,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: logout-icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/logout-icon.svg
@@ -1858,6 +1930,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: loot-mark-unheard.svg
 ПУТЬ:   public/icons/eft/profile-pannel/loot-mark-unheard.svg
@@ -1872,6 +1945,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: profile-reset-icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/profile-reset-icon.svg
@@ -1879,6 +1953,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileResetModal.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: profile-settings-icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/profile-settings-icon.svg
@@ -1886,6 +1962,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: PVE_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/PVE_icon.svg
@@ -1893,6 +1971,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: PVP_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/PVP_icon.svg
@@ -1900,6 +1980,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: S_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/S_icon.svg
@@ -1907,6 +1989,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: TUE_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/TUE_icon.svg
@@ -1914,6 +1998,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: USEC-logo-sign.svg
 ПУТЬ:   public/icons/eft/profile-pannel/USEC-logo-sign.svg
@@ -1936,6 +2021,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/ProfileDeleteModal.tsx
+  - /src/components/layout/header-modules/ProfileResetModal.tsx
 ----------------------------------------
 ИКОНКА: progress-icon.svg
 ПУТЬ:   public/icons/eft/progress-icon.svg
@@ -1945,6 +2032,7 @@
   - /src/app/eft/page (like menu).tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: quests-icon.svg
 ПУТЬ:   public/icons/eft/quests-icon.svg
@@ -1954,41 +2042,49 @@
   - /src/app/eft/page (like menu).tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: search-icon.svg
 ПУТЬ:   public/icons/eft/search-icon.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-search-icon
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/TacticalSearch.tsx
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: soldier-animation-end-frame.svg
 ПУТЬ:   public/icons/eft/soldier-animation-end-frame.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-soldier-animation-end-frame
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/NewbieButton.tsx
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: soldier-animation-start-frame.svg
 ПУТЬ:   public/icons/eft/soldier-animation-start-frame.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-soldier-animation-start-frame
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/NewbieButton.tsx
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: tarkov-city-bg-default.svg
 ПУТЬ:   public/icons/eft/tarkov-city-bg-default.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-tarkov-city-bg-default
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/NewbieButton.tsx
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: tarkov-city-bg-hover.svg
 ПУТЬ:   public/icons/eft/tarkov-city-bg-hover.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-eft-tarkov-city-bg-hover
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/NewbieButton.tsx
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: USEC-faction-icon.svg
 ПУТЬ:   public/icons/eft/USEC-faction-icon.svg
@@ -2005,17 +2101,20 @@
   - /src/app/eft/page (like menu).tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: hexagon-left.svg
 ПУТЬ:   public/icons/hexagon-left.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-hexagon-left
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/StreamStatus.tsx
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: hexagon-right.svg
 ПУТЬ:   public/icons/hexagon-right.svg
-КЛАСС CSS: Не назначен
+КЛАСС CSS: .icon-hexagon-right
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/StreamStatus.tsx
+  - /src/styles/icons.css

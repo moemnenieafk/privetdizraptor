@@ -26,17 +26,17 @@
   .icon-eft-maps-woods { mask-image: url('/icons/eft/01-maps/woods-map-icon.svg'); -webkit-mask-image: url('/icons/eft/01-maps/woods-map-icon.svg'); }
 
   /* === EFT Квесты и Торговцы (02-quests) === */
-  .icon-eft-quests-btrdriver { background-image: url('/icons/eft/02-quests/btrdriver_16x16.webp'); }
-  .icon-eft-quests-fence { background-image: url('/icons/eft/02-quests/fence_16x16.webp'); }
-  .icon-eft-quests-jaeger { background-image: url('/icons/eft/02-quests/jaeger_16x16.webp'); }
-  .icon-eft-quests-lightkeeper { background-image: url('/icons/eft/02-quests/lightkeeper_16x16.webp'); }
-  .icon-eft-quests-mechanic { background-image: url('/icons/eft/02-quests/mechanic_16x16.webp'); }
-  .icon-eft-quests-peacekeeper { background-image: url('/icons/eft/02-quests/peacekeeper_16x16.webp'); }
-  .icon-eft-quests-prapor { background-image: url('/icons/eft/02-quests/prapor_16x16.webp'); }
-  .icon-eft-quests-ragman { background-image: url('/icons/eft/02-quests/ragman_16x16.webp'); }
-  .icon-eft-quests-ref { background-image: url('/icons/eft/02-quests/ref_16x16.webp'); }
-  .icon-eft-quests-skier { background-image: url('/icons/eft/02-quests/skier_16x16.webp'); }
-  .icon-eft-quests-therapist { background-image: url('/icons/eft/02-quests/therapist_16x16.webp'); }
+  .icon-eft-quests-btrdriver { background-image: url('/images/traders/eft/btrdriver.webp'); }
+  .icon-eft-quests-fence { background-image: url('/images/traders/eft/fence.webp'); }
+  .icon-eft-quests-jaeger { background-image: url('/images/traders/eft/jaeger.webp'); }
+  .icon-eft-quests-lightkeeper { background-image: url('/images/traders/eft/lightkeeper.webp'); }
+  .icon-eft-quests-mechanic { background-image: url('/images/traders/eft/mechanic.webp'); }
+  .icon-eft-quests-peacekeeper { background-image: url('/images/traders/eft/peacekeeper.webp'); }
+  .icon-eft-quests-prapor { background-image: url('/images/traders/eft/prapor.webp'); }
+  .icon-eft-quests-ragman { background-image: url('/images/traders/eft/ragman.webp'); }
+  .icon-eft-quests-ref { background-image: url('/images/traders/eft/ref.webp'); }
+  .icon-eft-quests-skier { background-image: url('/images/traders/eft/skier.webp'); }
+  .icon-eft-quests-therapist { background-image: url('/images/traders/eft/therapist.webp'); }
   
   .icon-eft-quests-events { mask-image: url('/icons/eft/02-quests/ingame-events.svg'); -webkit-mask-image: url('/icons/eft/02-quests/ingame-events.svg'); }
   .icon-eft-quests-lore { mask-image: url('/icons/eft/02-quests/lore-quests.svg'); -webkit-mask-image: url('/icons/eft/02-quests/lore-quests.svg'); }
@@ -219,3 +219,66 @@
   .icon-eft-profile-usec-logo { mask-image: url('/icons/eft/profile-pannel/USEC-logo-sign.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/USEC-logo-sign.svg'); }
   .icon-eft-profile-usec-label { mask-image: url('/icons/eft/profile-pannel/USEC_label_icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/USEC_label_icon.svg'); }
   .icon-eft-profile-warning { mask-image: url('/icons/eft/profile-pannel/warning-attention-icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/warning-attention-icon.svg'); }
+
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-account_billing_icon { mask-image: url('/icons/account_center/account_billing_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_billing_icon.svg'); }
+  .icon-account_linking_icon { mask-image: url('/icons/account_center/account_linking_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_linking_icon.svg'); }
+  .icon-account_profile_icon { mask-image: url('/icons/account_center/account_profile_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_profile_icon.svg'); }
+  .icon-account_prostatus_icon { mask-image: url('/icons/account_center/account_prostatus_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_prostatus_icon.svg'); }
+  .icon-account_security_icon { mask-image: url('/icons/account_center/account_security_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_security_icon.svg'); }
+  .icon-eft-end-of-line-map-icon { mask-image: url('/icons/eft/01-maps/end-of-line-map-icon.svg'); -webkit-mask-image: url('/icons/eft/01-maps/end-of-line-map-icon.svg'); }
+  .icon-eft-currency-dollar { mask-image: url('/icons/eft/03-items/currency-dollar.svg'); -webkit-mask-image: url('/icons/eft/03-items/currency-dollar.svg'); }
+  .icon-eft-currency-euro { mask-image: url('/icons/eft/03-items/currency-euro.svg'); -webkit-mask-image: url('/icons/eft/03-items/currency-euro.svg'); }
+  .icon-eft-currency-ruble { mask-image: url('/icons/eft/03-items/currency-ruble.svg'); -webkit-mask-image: url('/icons/eft/03-items/currency-ruble.svg'); }
+  .icon-eft-armor-class-1 { mask-image: url('/icons/eft/03-items/gear/armor-class-1.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-1.svg'); }
+  .icon-eft-armor-class-2 { mask-image: url('/icons/eft/03-items/gear/armor-class-2.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-2.svg'); }
+  .icon-eft-armor-class-3 { mask-image: url('/icons/eft/03-items/gear/armor-class-3.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-3.svg'); }
+  .icon-eft-armor-class-4 { mask-image: url('/icons/eft/03-items/gear/armor-class-4.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-4.svg'); }
+  .icon-eft-armor-class-5 { mask-image: url('/icons/eft/03-items/gear/armor-class-5.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-5.svg'); }
+  .icon-eft-armor-class-6 { mask-image: url('/icons/eft/03-items/gear/armor-class-6.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-6.svg'); }
+  .icon-eft-armor-class-7 { mask-image: url('/icons/eft/03-items/gear/armor-class-7.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-7.svg'); }
+  .icon-eft-air_filtering_unit { mask-image: url('/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg'); }
+  .icon-eft-bitcoin_farm { mask-image: url('/icons/eft/04-progression/hideout-modules/bitcoin_farm.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/bitcoin_farm.svg'); }
+  .icon-eft-booze_generator { mask-image: url('/icons/eft/04-progression/hideout-modules/booze_generator.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/booze_generator.svg'); }
+  .icon-eft-cultist_circle { mask-image: url('/icons/eft/04-progression/hideout-modules/cultist_circle.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/cultist_circle.svg'); }
+  .icon-eft-defective_wall { mask-image: url('/icons/eft/04-progression/hideout-modules/defective_wall.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/defective_wall.svg'); }
+  .icon-eft-gear_rack { mask-image: url('/icons/eft/04-progression/hideout-modules/gear_rack.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/gear_rack.svg'); }
+  .icon-eft-generator { mask-image: url('/icons/eft/04-progression/hideout-modules/generator.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/generator.svg'); }
+  .icon-eft-gym { mask-image: url('/icons/eft/04-progression/hideout-modules/gym.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/gym.svg'); }
+  .icon-eft-hall_of_fame { mask-image: url('/icons/eft/04-progression/hideout-modules/hall_of_fame.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/hall_of_fame.svg'); }
+  .icon-eft-heating { mask-image: url('/icons/eft/04-progression/hideout-modules/heating.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/heating.svg'); }
+  .icon-eft-illumitation { mask-image: url('/icons/eft/04-progression/hideout-modules/illumitation.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/illumitation.svg'); }
+  .icon-eft-intelligence_centre { mask-image: url('/icons/eft/04-progression/hideout-modules/intelligence_centre.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/intelligence_centre.svg'); }
+  .icon-eft-lavatory { mask-image: url('/icons/eft/04-progression/hideout-modules/lavatory.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/lavatory.svg'); }
+  .icon-eft-med_station { mask-image: url('/icons/eft/04-progression/hideout-modules/med_station.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/med_station.svg'); }
+  .icon-eft-nutrition_unit { mask-image: url('/icons/eft/04-progression/hideout-modules/nutrition_unit.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/nutrition_unit.svg'); }
+  .icon-eft-rest_space { mask-image: url('/icons/eft/04-progression/hideout-modules/rest_space.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/rest_space.svg'); }
+  .icon-eft-scav_case { mask-image: url('/icons/eft/04-progression/hideout-modules/scav_case.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/scav_case.svg'); }
+  .icon-eft-security { mask-image: url('/icons/eft/04-progression/hideout-modules/security.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/security.svg'); }
+  .icon-eft-shooting_range { mask-image: url('/icons/eft/04-progression/hideout-modules/shooting_range.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/shooting_range.svg'); }
+  .icon-eft-solar_power { mask-image: url('/icons/eft/04-progression/hideout-modules/solar_power.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/solar_power.svg'); }
+  .icon-eft-stash { mask-image: url('/icons/eft/04-progression/hideout-modules/stash.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/stash.svg'); }
+  .icon-eft-water_collector { mask-image: url('/icons/eft/04-progression/hideout-modules/water_collector.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/water_collector.svg'); }
+  .icon-eft-weapon_rack { mask-image: url('/icons/eft/04-progression/hideout-modules/weapon_rack.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/weapon_rack.svg'); }
+  .icon-eft-workbench { mask-image: url('/icons/eft/04-progression/hideout-modules/workbench.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/workbench.svg'); }
+  .icon-eft-codex-icon { mask-image: url('/icons/eft/codex-icon.svg'); -webkit-mask-image: url('/icons/eft/codex-icon.svg'); }
+  .icon-eft-ctrl-q-icon { mask-image: url('/icons/eft/ctrl-q-icon.svg'); -webkit-mask-image: url('/icons/eft/ctrl-q-icon.svg'); }
+  .icon-eft-eod---icon { mask-image: url('/icons/eft/edition/EOD%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/EOD%20-%20icon.svg'); }
+  .icon-eft-lb---icon { mask-image: url('/icons/eft/edition/LB%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/LB%20-%20icon.svg'); }
+  .icon-eft-pfe---icon { mask-image: url('/icons/eft/edition/PFE%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/PFE%20-%20icon.svg'); }
+  .icon-eft-s---icon { mask-image: url('/icons/eft/edition/S%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/S%20-%20icon.svg'); }
+  .icon-eft-tue---icon { mask-image: url('/icons/eft/edition/TUE%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/TUE%20-%20icon.svg'); }
+  .icon-eft-search-icon { mask-image: url('/icons/eft/search-icon.svg'); -webkit-mask-image: url('/icons/eft/search-icon.svg'); }
+  .icon-eft-soldier-animation-end-frame { mask-image: url('/icons/eft/soldier-animation-end-frame.svg'); -webkit-mask-image: url('/icons/eft/soldier-animation-end-frame.svg'); }
+  .icon-eft-soldier-animation-start-frame { mask-image: url('/icons/eft/soldier-animation-start-frame.svg'); -webkit-mask-image: url('/icons/eft/soldier-animation-start-frame.svg'); }
+  .icon-eft-tarkov-city-bg-default { mask-image: url('/icons/eft/tarkov-city-bg-default.svg'); -webkit-mask-image: url('/icons/eft/tarkov-city-bg-default.svg'); }
+  .icon-eft-tarkov-city-bg-hover { mask-image: url('/icons/eft/tarkov-city-bg-hover.svg'); -webkit-mask-image: url('/icons/eft/tarkov-city-bg-hover.svg'); }
+  .icon-hexagon-left { mask-image: url('/icons/hexagon-left.svg'); -webkit-mask-image: url('/icons/hexagon-left.svg'); }
+  .icon-hexagon-right { mask-image: url('/icons/hexagon-right.svg'); -webkit-mask-image: url('/icons/hexagon-right.svg'); }
+
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-eft-eod---icon { mask-image: url('/icons/eft/edition/EOD%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/EOD%20-%20icon.svg'); }
+  .icon-eft-lb---icon { mask-image: url('/icons/eft/edition/LB%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/LB%20-%20icon.svg'); }
+  .icon-eft-pfe---icon { mask-image: url('/icons/eft/edition/PFE%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/PFE%20-%20icon.svg'); }
+  .icon-eft-s---icon { mask-image: url('/icons/eft/edition/S%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/S%20-%20icon.svg'); }
+  .icon-eft-tue---icon { mask-image: url('/icons/eft/edition/TUE%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/TUE%20-%20icon.svg'); }

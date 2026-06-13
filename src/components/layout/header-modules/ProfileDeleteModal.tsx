@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 interface ProfileDeleteModalProps {
   isOpen: boolean;
@@ -12,6 +13,9 @@ export function ProfileDeleteModal({ isOpen, onClose, onConfirm }: ProfileDelete
   // Состояния для плавной анимации
   const [isRendered, setIsRendered] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(modalRef, onClose, isVisible);
 
   useEffect(() => {
     if (isOpen) {
@@ -40,12 +44,11 @@ export function ProfileDeleteModal({ isOpen, onClose, onConfirm }: ProfileDelete
     // Оверлей
     <div 
       className={`fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-      onClick={onClose}
     >
       {/* Контейнер модалки */}
       <div 
+        ref={modalRef}
         className={`flex w-[348px] flex-col shadow-[0_0_40px_rgba(194,67,57,0.15)] transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}
-        onClick={(e) => e.stopPropagation()}
       >
         
         {/* ШАПКА (#C24339) */}

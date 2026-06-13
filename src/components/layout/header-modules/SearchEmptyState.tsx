@@ -1,9 +1,20 @@
+import { PackageX } from "lucide-react";
+
 export function SearchEmptyState() {
   return (
-    <div className="w-full h-[160px] bg-transparent border border-lines-hover rounded flex items-center justify-center p-4">
-      <span className="text-text-muted text-xs font-blender-medium uppercase text-center">
-        НИЧЕГО НЕ НАЙДЕНО. ПОВТОРИТЕ ВВОД ИЛИ НАЧНИТЕ ПОИСК ЗАНОВО.
-      </span>
+    <div className="relative flex w-full h-[240px] flex-col items-center justify-center overflow-hidden rounded border border-[var(--color-lines-hover)] bg-[var(--color-card-menu)]/30 shadow-inner animate-[fade-in-up_0.3s_ease-out]">
+      <div className="pointer-events-none absolute inset-0 opacity-10 bg-hazard-pattern animate-hazard" />
+      <div className="relative z-10 flex flex-col items-center text-center px-4">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-lines-hover)] bg-[var(--color-base)] shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+          <PackageX className="h-6 w-6 text-[var(--color-text-muted)]" />
+        </div>
+        <h3 className="mb-1 font-blender-medium text-lg uppercase tracking-widest text-[var(--color-text-primary)]">
+          Данные не найдены
+        </h3>
+        <p className="max-w-xs font-mono text-[10px] text-[var(--color-text-muted)]">
+          По вашему запросу нет совпадений. Попробуйте изменить параметры поиска или использовать игровой сленг.
+        </p>
+      </div>
     </div>
   );
 }

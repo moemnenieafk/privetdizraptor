@@ -8,17 +8,6 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        kamen: {
-          dark: 'var(--kamen-dark)',
-          stone: 'var(--kamen-stone)',
-          slate: 'var(--kamen-slate)',
-          action: 'var(--kamen-action)',
-          danger: 'var(--kamen-danger)',
-          heading: 'var(--kamen-heading)',
-          icon: 'var(--kamen-icon)',
-        },
-      },
     },
   },
   plugins: [],

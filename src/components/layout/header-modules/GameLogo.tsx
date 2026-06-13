@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { GAMES_DATA } from '@/data/games';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 interface GameLogoProps {
   gameId?: string; // Сделано опциональным, так как используется usePathname для fallback'а
@@ -21,15 +22,7 @@ export function GameLogo({ gameId }: GameLogoProps) {
   const activeGames = GAMES_DATA.filter((game) => !game.isInactive);
 
   // Логика закрытия выпадающего списка при клике вне его области (click outside)
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
 
   return (
     <div 

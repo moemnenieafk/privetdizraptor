@@ -22,7 +22,6 @@
 }
 
 @theme {
-  --color-base: #0D0D0F;
   --color-card-menu: #161618;
   --color-lines-hover: #222225;
   
@@ -51,6 +50,7 @@
 }
 
 :root {
+  --color-base: #0D0D0F;
   --primary: #E68E25;
   --shadow-neon: var(--shadow-neon-eft);
 }
@@ -313,3 +313,28 @@
     background-repeat: no-repeat;
     background-position: center;
   }}
+
+  @layer components {
+  /* Единый стиль для пунктов навигации (100% заливка при наведении/активности) */
+  .tactical-menu-item {
+    @apply transition-colors duration-300 ease-out cursor-pointer;
+    color: var(--color-text-secondary);
+    background-color: transparent;
+  }
+  
+  .tactical-menu-item:hover,
+  .tactical-menu-item:focus,
+  .tactical-menu-item[data-active="true"],
+  .tactical-menu-item.active {
+    background-color: var(--primary) !important;
+    color: var(--color-base) !important;
+  }
+
+  /* Инверсия цвета для иконок внутри (SVG и маски) */
+  .tactical-menu-item:hover svg,
+  .tactical-menu-item.active svg,
+  .tactical-menu-item:hover .icon-mask,
+  .tactical-menu-item.active .icon-mask {
+    color: var(--color-base) !important;
+  }
+}

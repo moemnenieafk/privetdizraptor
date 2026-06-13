@@ -8,7 +8,7 @@ import { getHeaderConfig } from '@/data/headerConfig';
 
 export function Breadcrumbs() {
   const pathname = usePathname();
-  const segments = pathname.split('/').filter(Boolean); // /eft/progression -> ['eft', 'progression']
+  const segments = (pathname || '').split('/').filter(Boolean); // Защита от null при SSR роутинге
 
   // Подтягиваем словарь крошек из конфига текущей игры
   const config = getHeaderConfig(pathname || '');
@@ -20,7 +20,7 @@ export function Breadcrumbs() {
   }
 
   return (
-    <nav aria-label="Breadcrumb" className="w-full max-w-[1100px] mx-auto px-4 pt-6 pb-2">
+    <nav aria-label="Breadcrumb" className="flex w-full items-center">
       {/* flex-wrap позволяет переносить крошки на новую строку, а text-[10px] sm:text-xs делает их аккуратнее на телефонах */}
       <ol className="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs font-blender-medium uppercase tracking-wider">
         {segments.map((segment, index) => {
