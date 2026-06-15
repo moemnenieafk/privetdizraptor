@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { notFound } from 'next/navigation';
 import { HEADER_DICTIONARY, MenuItem } from '@/data/headerConfig';
@@ -115,7 +116,9 @@ export default async function ItemsHubPage() {
           <CategoryTabs tabs={topLevelTabs} className="mb-8" />
         )}
 
-        <ItemsCategoryClient initialData={itemsData} categorySlug="barter" gpCoinBarters={{}} />
+        <Suspense>
+          <ItemsCategoryClient initialData={itemsData} categorySlug="barter" gpCoinBarters={{}} />
+        </Suspense>
       </div>
     </main>
   );

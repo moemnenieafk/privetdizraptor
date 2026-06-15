@@ -24,7 +24,7 @@ export function Header() {
   const isHomePage = pathname === '/';
   const showFeatures = !isHomePage;
   const [isNewbieModalOpen, setIsNewbieModalOpen] = useState(false);
-  const isScrolled = useScrollHeader(40);
+  const isScrolled = useScrollHeader();
 
   return (
     <>

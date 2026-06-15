@@ -1,4 +1,5 @@
-﻿import { PageHeader } from '@/components/ui/PageHeader';
+﻿import { Suspense } from 'react';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { notFound } from 'next/navigation';
 import { HEADER_DICTIONARY, MenuItem } from '@/data/headerConfig';
 import { ItemsCategoryClient, CategoryItem } from './ItemsCategoryClient';
@@ -388,7 +389,9 @@ export default async function ItemsDynamicPage({ params }: Props) {
         )}
 
         {/* Всегда рендерим таблицу/сетку для текущей категории или группы */}
-        <ItemsCategoryClient initialData={itemsData} categorySlug={slug} gpCoinBarters={gpCoinBarters} />
+        <Suspense>
+          <ItemsCategoryClient initialData={itemsData} categorySlug={slug} gpCoinBarters={gpCoinBarters} />
+        </Suspense>
       </div>
     </main>
   );
