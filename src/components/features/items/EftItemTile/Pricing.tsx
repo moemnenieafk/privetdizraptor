@@ -1,8 +1,9 @@
 "use client";
 
-import { Coins, PackageX } from 'lucide-react';
-import { formatCompactNumber, getCurrencySymbol } from '@/lib/formatters';
+import { PackageX } from 'lucide-react';
+import { formatCurrencyDisplay } from '@/lib/formatters';
 import { useEftItemTile } from './context';
+import { usePlayerStore } from '@/store/usePlayerStore';
 import type { EftPriceEntry, EftVendor } from './types';
 
 function VendorAvatar({ vendor }: { vendor?: EftVendor }) {
@@ -19,37 +20,117 @@ function VendorAvatar({ vendor }: { vendor?: EftVendor }) {
   );
 }
 
+function LoyaltyBadge({
+  loyaltyLevel,
+  vendorName,
+}: {
+  loyaltyLevel: number;
+  vendorName?: string;
+}) {
+  const profiles = usePlayerStore((s) => s.profiles);
+  const activeId  = usePlayerStore((s) => s.activeProfileId);
+  const profile   = profiles.find((p) => p.id === activeId);
+  const key       = vendorName?.toLowerCase() ?? '';
+  const playerLvl = profile ? (profile.traderLevels[key] ?? 0) : 0;
+  const met       = playerLvl >= loyaltyLevel;
+  const cls       = `icon-eft-profile-rep-${loyaltyLevel}`;
+
+  return (
+    <span
+      className={`${cls} h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat ${
+        met ? 'bg-nvg-green' : 'bg-danger'
+      }`}
+      title={`Уровень лояльности ${loyaltyLevel}`}
+    />
+  );
+}
+
+function LevelBadge({ required }: { required: number }) {
+  const profiles = usePlayerStore((s) => s.profiles);
+  const activeId  = usePlayerStore((s) => s.activeProfileId);
+  const profile   = profiles.find((p) => p.id === activeId);
+  const playerLvl = profile ? parseInt(profile.level, 10) : 0;
+  const met       = playerLvl >= required;
+  const color     = met ? 'var(--color-nvg-green)' : 'var(--color-danger)';
+
+  return (
+    <span
+      title={`Требуемый уровень игрока: ${required}`}
+      className="inline-flex h-4 w-4 shrink-0 items-center justify-center"
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+        <polygon
+          points="8,1.5 14,4.75 14,11.25 8,14.5 2,11.25 2,4.75"
+          fill="none"
+          stroke={color}
+          strokeWidth="1.5"
+        />
+        <text
+          x="8"
+          y="10.5"
+          textAnchor="middle"
+          fontSize="6"
+          fill={color}
+          fontFamily="var(--font-blender-medium)"
+        >
+          {required}
+        </text>
+      </svg>
+    </span>
+  );
+}
+
+function QuestUnlockIcon() {
+  return (
+    <span
+      className="icon-eft-quests h-4 w-4 shrink-0 bg-danger mask-contain mask-center mask-no-repeat"
+      title="Требуется задание"
+    />
+  );
+}
+
 function PriceCell({
   entry,
   isFlea = false,
   accent = false,
+  showQuestUnlock = false,
+  levelRequired,
 }: {
   entry?: EftPriceEntry;
   isFlea?: boolean;
   accent?: boolean;
+  showQuestUnlock?: boolean;
+  levelRequired?: number;
 }) {
   if (!entry || entry.price <= 0) {
     return (
       <div className="flex items-center gap-1">
-        <PackageX className="h-3.5 w-3.5 text-text-muted/50" />
-        <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted/60">НЕТ</span>
+        <PackageX className="h-3.5 w-3.5 text-red-600" />
+        <span className="font-blender-medium text-[9px] uppercase tracking-widest text-red-600">НЕТ</span>
       </div>
     );
   }
 
-  const symbol = getCurrencySymbol(entry.currency);
-  const display = entry.currency === 'USD'
-    ? `${symbol}${formatCompactNumber(entry.price)}`
-    : `${formatCompactNumber(entry.price)} ₽`;
+  const display  = formatCurrencyDisplay(entry.price, entry.currency);
+  const titleRUB = (entry.priceRUB ?? entry.price).toLocaleString('ru-RU') + ' ₽';
 
   return (
     <div className="flex items-center gap-1.5">
-      {isFlea
-        ? <Coins className="h-3.5 w-3.5 shrink-0 text-yellow-500/70" />
-        : <VendorAvatar vendor={entry.vendor} />
-      }
+      {isFlea ? (
+        <span className="icon-eft-currency-ruble h-3.5 w-3.5 shrink-0 bg-yellow-500/70 mask-contain mask-center mask-no-repeat" />
+      ) : (
+        <VendorAvatar vendor={entry.vendor} />
+      )}
+      {!isFlea && levelRequired != null && <LevelBadge required={levelRequired} />}
+      {!isFlea && levelRequired == null && entry.loyaltyLevel != null && (
+        <LoyaltyBadge
+          loyaltyLevel={entry.loyaltyLevel}
+          vendorName={entry.vendor?.normalizedName ?? entry.vendor?.name}
+        />
+      )}
+      {!isFlea && showQuestUnlock && <QuestUnlockIcon />}
       <span
-        title={`${entry.price.toLocaleString('ru-RU')} ₽`}
+        title={titleRUB}
         className={`cursor-help font-blender-medium ${
           accent ? 'text-sm text-(--primary)' : 'text-[11px] text-text-secondary'
         }`}
@@ -60,84 +141,72 @@ function PriceCell({
   );
 }
 
-function VpsCell({ price, slots }: { price?: number; slots: number }) {
+function VpsCell({ price, priceRUB, slots }: { price?: number; priceRUB?: number; slots: number }) {
   if (!price || price <= 0) {
     return (
       <div className="flex items-center gap-1">
-        <PackageX className="h-3 w-3 text-text-muted/40" />
+        <PackageX className="h-3 w-3 text-danger/40" />
         <span className="font-blender-medium text-[9px] text-text-muted/50">—</span>
       </div>
     );
   }
-  const vps = Math.floor(price / slots);
+  const vps = Math.floor((priceRUB ?? price) / slots);
+  const iconColor = vps > 10000 ? 'bg-nvg-green' : 'bg-text-secondary';
   return (
-    <span
-      title={`${vps.toLocaleString('ru-RU')} ₽ / слот`}
-      className={`cursor-help font-blender-medium text-xs ${
-        vps > 10000 ? 'text-nvg-green' : vps > 5000 ? 'text-yellow-500' : 'text-text-primary'
-      }`}
-    >
-      {formatCompactNumber(vps)} ₽
-    </span>
+    <div className="flex items-center gap-1">
+      <span className={`icon-eft-items-price-slot h-4 w-4 shrink-0 ${iconColor} mask-contain mask-center mask-no-repeat`} />
+      <span
+        title={`${vps.toLocaleString('ru-RU')} ₽ / слот`}
+        className={`cursor-help font-blender-medium text-xs ${
+          vps > 10000 ? 'text-nvg-green' : vps > 5000 ? 'text-yellow-500' : 'text-text-primary'
+        }`}
+      >
+        {formatCurrencyDisplay(vps)}
+      </span>
+    </div>
   );
 }
 
 export function EftPricing() {
   const { item } = useEftItemTile();
-  const { pricing } = item;
+  const { pricing, indicators, minPlayerLevel } = item;
   const slots = item.width * item.height;
+  const hasQuestUnlock = indicators?.quest?.type === 'unlock_trade';
 
   return (
-    <div className="mt-auto flex flex-col gap-0 border-t border-lines-hover pt-3">
+    <div className="mt-auto flex flex-col gap-0 pt-3">
 
       {/* ── Покупка ── */}
-      <div className="mb-1 grid grid-cols-2 gap-2">
-        <span className="font-blender-medium text-[8px] uppercase tracking-widest text-text-muted/60">Покупка</span>
-        <span className="text-right font-blender-medium text-[8px] uppercase tracking-widest text-text-muted/60">Барахолка</span>
+      <div className="mb-1 flex w-full items-center gap-2">
+        <span className="font-blender-medium text-[10px] uppercase leading-none tracking-wide text-zinc-600 opacity-50">ПОКУПКА</span>
+        <div className="h-px flex-1 bg-neutral-800" />
+        <span className="font-blender-medium text-[10px] uppercase leading-none tracking-wide text-zinc-600 opacity-50">БАРАХОЛКА</span>
       </div>
       <div className="mb-2.5 grid grid-cols-2 gap-2">
-        <PriceCell entry={pricing.traderBuy} />
+        <PriceCell entry={pricing.traderBuy} showQuestUnlock={hasQuestUnlock} />
         <div className="flex justify-end">
           <PriceCell entry={pricing.fleaBuy} isFlea accent />
         </div>
       </div>
 
       {/* ── Продажа ── */}
-      <div className="mb-1 grid grid-cols-2 gap-2">
-        <span className="font-blender-medium text-[8px] uppercase tracking-widest text-text-muted/60">Продажа</span>
-        <span className="text-right font-blender-medium text-[8px] uppercase tracking-widest text-text-muted/60">Барахолка</span>
+      <div className="mb-1 flex w-full items-center gap-2">
+        <span className="font-blender-medium text-[10px] uppercase leading-none tracking-wide text-zinc-600 opacity-50">ПРОДАЖА</span>
+        <div className="h-px flex-1 bg-neutral-800" />
+        <span className="font-blender-medium text-[10px] uppercase leading-none tracking-wide text-zinc-600 opacity-50">БАРАХОЛКА</span>
       </div>
       <div className="mb-2 grid grid-cols-2 gap-2">
-        <PriceCell entry={pricing.traderSell} />
+        <PriceCell entry={pricing.traderSell} levelRequired={minPlayerLevel} />
         <div className="flex justify-end">
           <PriceCell entry={pricing.fleaSell} isFlea accent />
         </div>
       </div>
 
       {/* ── Цена / Слот ── */}
-      <div className="grid grid-cols-2 gap-2 rounded-xs border border-lines-hover/50 bg-[color-mix(in_srgb,var(--color-card-menu)_40%,transparent)] px-2 py-1.5">
-        <div className="flex items-center gap-1.5">
-          {/* Mini slot grid */}
-          <div
-            className="inline-grid gap-px p-px rounded-xs border border-lines-hover/30 bg-(--color-base) shrink-0"
-            style={{ gridTemplateColumns: `repeat(${item.width}, 3px)` }}
-          >
-            {Array.from({ length: slots }).map((_, i) => (
-              <div key={i} className="h-0.75 w-0.75 bg-text-muted/50" />
-            ))}
-          </div>
-          <VpsCell price={pricing.traderSell?.price} slots={slots} />
-        </div>
-        <div className="flex items-center justify-end gap-1.5">
-          <div
-            className="inline-grid gap-px p-px rounded-xs border border-lines-hover/30 bg-(--color-base) shrink-0"
-            style={{ gridTemplateColumns: `repeat(${item.width}, 3px)` }}
-          >
-            {Array.from({ length: slots }).map((_, i) => (
-              <div key={i} className="h-0.75 w-0.75 bg-text-muted/50" />
-            ))}
-          </div>
-          <VpsCell price={pricing.fleaSell?.price} slots={slots} />
+      <div className="grid grid-cols-2 gap-2 pt-1">
+        <VpsCell price={pricing.traderSell?.price} priceRUB={pricing.traderSell?.priceRUB} slots={slots} />
+        <div className="flex items-center justify-end">
+          <VpsCell price={pricing.fleaSell?.price} priceRUB={pricing.fleaSell?.priceRUB} slots={slots} />
         </div>
       </div>
     </div>

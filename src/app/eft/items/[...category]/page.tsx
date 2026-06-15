@@ -33,13 +33,14 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'glasses': 'glasses',
     'headphones': 'headphones',
     'helmets': 'helmet',
-    'masks': 'wearable',
     'rigs': 'rig',
     'visors': 'mods',
     // Контейнеры (перенесены под gear)
     'containers': 'container',
     'cases': 'container',
-    'secure': 'container',
+    'secure': 'noFlea',
+    'secure-containers': 'noFlea',
+    'storage-containers': 'container',
     // Оружие (новая плоская структура)
     'weapons': 'gun',
     'ar': 'gun',
@@ -89,6 +90,7 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'medical-supplies': 'barter',
     'energy-elements': 'barter',
     'others': 'barter',
+    'specialequipment': 'barter',
     // Медикаменты
     'meds': 'meds',
     'injury': 'meds',
@@ -103,9 +105,8 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'provisions': 'provisions',
     'drinks': 'provisions',
     'food': 'provisions',
-    // Инфо предметы и спецоборудование
-    'info': 'common',
-    'specialequipment': 'common',
+    // Агрегированная категория: Очки, ПНВ/Тепловизоры (glasses), Визоры (mods+armorType)
+    'eyewear': 'glasses, mods',
     // Легаси slugs (обратная совместимость)
     'guns': 'gun, ammo, grenade, mods',
     'firearms': 'gun',
@@ -114,12 +115,24 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'quest': 'keys',
   };
 
+  // Категории, фильтруемые по bsgCategoryId (нет в ItemType enum)
+  const bsgCategoryMapping: Record<string, string> = {
+    'info': '5448ecbe4bdc2d60728b4568',
+    'info-items': '5448ecbe4bdc2d60728b4568',
+    'masks': '5a341c4686f77469e155819e',
+    'facecovers': '5a341c4686f77469e155819e',
+  };
+
   const gqlType = typeMapping[slug];
+  const bsgCategoryId = bsgCategoryMapping[slug];
+
   const typeFilter = gqlType ? `types: [${gqlType}]` : '';
+  const bsgFilter = bsgCategoryId ? `bsgCategoryId: "${bsgCategoryId}"` : '';
+  const activeFilter = bsgFilter || typeFilter;
 
   const query = `
     query {
-      items(${typeFilter ? typeFilter + ',' : ''} lang: ru) {
+      items(${activeFilter ? activeFilter + ',' : ''} lang: ru) {
         id
         normalizedName
         name
@@ -132,6 +145,7 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
         types
         backgroundColor
         properties {
+          __typename
           ... on ItemPropertiesHelmet {
             class
             durability
@@ -156,6 +170,10 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
             durability
             blindnessProtection
             ergoPenalty
+          }
+          ... on ItemPropertiesNightVision {
+            nvgIntensity: intensity
+            noiseIntensity
           }
           ... on ItemPropertiesArmorAttachment {
             class
@@ -238,19 +256,38 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     const json = await res.json();
     
     if (json.errors) {
-      console.error('GraphQL Errors:', json.errors);
+      console.error('GraphQL Errors:', JSON.stringify(json.errors, null, 2));
       return [];
     }
 
     let items = json.data?.items || [];
 
     // Фолбэк-фильтрация на сервере для специфичных категорий (например, Кейсы)
-    if (slug === 'cases') {
+    if (slug === 'secure' || slug === 'secure-containers') {
+      // Настоящие защищённые контейнеры (Alpha/Beta/Gamma/Kappa…): types = ['noFlea'] only, без 'container'
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      items = items.filter((i: any) => i.types.includes('container') || (i.name && (i.name.toLowerCase().includes('кейс') || i.name.toLowerCase().includes('ящик'))));
+      items = items.filter((i: any) =>
+        i.properties?.__typename === 'ItemPropertiesContainer' &&
+        !i.types?.includes('container')
+      );
+    } else if (slug === 'storage-containers') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      items = items.filter((i: any) => !i.types?.includes('markedOnly'));
+    } else if (slug === 'cases') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      items = items.filter((i: any) => /кейс/i.test(i.name ?? ''));
     } else if (slug === 'medkits') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       items = items.filter((i: any) => i.name && i.name.toLowerCase().includes('аптечка'));
+    } else if (slug === 'eyewear') {
+      // Из mods оставляем: визоры (armorType), ПНВ-устройства (nvgIntensity или имя)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      items = items.filter((i: any) =>
+        !i.types?.includes('mods') ||
+        i.properties?.armorType != null ||
+        i.properties?.nvgIntensity != null ||
+        /прибор ночного видения/i.test(i.name ?? '')
+      );
     }
 
     // Маппинг данных (BFF) для добавления eco (экономики)
@@ -378,10 +415,11 @@ export default async function ItemsDynamicPage({ params }: Props) {
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
         
-        <PageHeader 
+        <PageHeader
           pageId={`eft-items-${resolvedParams.category.join('-')}`}
           title={currentNode.label}
           description={`Подробная информация и база предметов в категории «${currentNode.label}».`}
+          count={itemsData.length}
         />
 
         {subTabs.length > 0 && (

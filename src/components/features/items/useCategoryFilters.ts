@@ -18,7 +18,6 @@ interface SavedFilters {
   priceMin?: string;
   priceMax?: string;
   caliberFilter?: string;
-  armorTypeFilter?: string;
   cantBuyTrader?: boolean;
   cantBuyFlea?: boolean;
   cantSellTrader?: boolean;

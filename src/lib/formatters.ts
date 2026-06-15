@@ -26,10 +26,24 @@ export function formatCompactNumber(value: number | string | null | undefined): 
   return numericValue.toLocaleString("ru-RU");
 }
 
-export function getCurrencySymbol(vendorOrCurrency?: string): string {
-  if (!vendorOrCurrency) return "₽";
-  const lower = vendorOrCurrency.toLowerCase();
-  if (lower === "usd" || lower === "peacekeeper" || lower === "миротворец") return "$";
-  if (lower === "eur" || lower === "euro") return "€";
-  return "₽";
+export function formatEftPrice(price: number): string {
+  if (price < 100_000) {
+    return new Intl.NumberFormat('ru-RU').format(price);
+  }
+  return formatCompactNumber(price);
+}
+
+export type EftCurrency = 'RUB' | 'USD' | 'EUR';
+
+export function getCurrencySymbol(currency?: EftCurrency): string {
+  if (currency === 'USD') return '$';
+  if (currency === 'EUR') return '€';
+  return '₽';
+}
+
+export function formatCurrencyDisplay(price: number, currency?: EftCurrency): string {
+  const formatted = formatEftPrice(price);
+  if (currency === 'USD') return `$${formatted}`;
+  if (currency === 'EUR') return `€${formatted}`;
+  return `${formatted} ₽`;
 }

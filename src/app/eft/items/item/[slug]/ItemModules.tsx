@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { Crosshair, Shield, HeartPulse, Package, ShoppingCart, Coins, ArrowLeftRight, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
-import { formatCompactNumber, getCurrencySymbol } from '@/lib/formatters';
+import { formatCompactNumber } from '@/lib/formatters';
 import { VendorImage } from './ItemImage';
 
 // === ТИПЫ СВОЙСТВ ПРЕДМЕТОВ ===
@@ -107,7 +107,7 @@ function isWeaponProps(p: NonNullable<ItemProperties>): p is WeaponProperties {
 }
 
 function isArmorProps(p: NonNullable<ItemProperties>): p is ArmorProperties {
-  return 'class' in p && !('headZones' in p);
+  return 'class' in p && !('headZones' in p) && !('grids' in p);
 }
 
 function isMedKitProps(p: NonNullable<ItemProperties>): p is MedKitProperties {
@@ -146,6 +146,7 @@ function isBackpackProps(p: NonNullable<ItemProperties>): p is BackpackPropertie
 
 export interface VendorOffer {
   price: number;
+  priceRUB?: number;
   vendor: {
     name: string;
     normalizedName: string;
@@ -599,7 +600,7 @@ export function TraderModule({ buyFor, sellFor }: { buyFor?: VendorOffer[]; sell
     const { vendor } = offer;
     if (!vendor || vendor.name === '-') return null;
 
-    const currency = getCurrencySymbol(vendor.name);
+    const currency = vendor.normalizedName === 'peacekeeper' ? '$' : '₽';
     const isFlea = vendor.normalizedName === 'flea-market' || vendor.name === 'Flea Market';
     const priceFmt = formatCompactNumber(offer.price);
 
@@ -641,8 +642,9 @@ export function TraderModule({ buyFor, sellFor }: { buyFor?: VendorOffer[]; sell
     );
   };
 
-  const sortedBuyFor = [...(buyFor ?? [])].sort((a, b) => a.price - b.price);
-  const sortedSellFor = [...(sellFor ?? [])].sort((a, b) => b.price - a.price);
+  const rubVal = (o: VendorOffer) => o.priceRUB ?? o.price;
+  const sortedBuyFor = [...(buyFor ?? [])].sort((a, b) => rubVal(a) - rubVal(b));
+  const sortedSellFor = [...(sellFor ?? [])].sort((a, b) => rubVal(b) - rubVal(a));
 
   return (
     <SectionPanel title="Торговля и Рынок" icon={<ShoppingCart className="w-4 h-4" />}>

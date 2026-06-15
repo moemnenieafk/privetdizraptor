@@ -5,9 +5,10 @@ interface PageHeaderProps {
   title?: string;
   description?: string;
   iconClass?: string;
+  count?: number;
 }
 
-export function PageHeader({ pageId, title, description, iconClass }: PageHeaderProps) {
+export function PageHeader({ pageId, title, description, iconClass, count }: PageHeaderProps) {
   const content = pageId ? PAGE_CONTENT_DICTIONARY[pageId] : null;
 
   // Приоритет: Данные из словаря -> Явно переданные пропсы -> Дефолтные значения
@@ -22,7 +23,14 @@ export function PageHeader({ pageId, title, description, iconClass }: PageHeader
         <div className={`w-7 h-7 icon-mask ${finalIcon}`}></div>
       </div>
       <div>
-        <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">{finalTitle}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">{finalTitle}</h1>
+          {count != null && count > 0 && (
+            <span className="px-2 py-0.5 bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] border border-(--primary)/40 rounded font-blender-medium text-sm text-(--primary) leading-snug">
+              {count}
+            </span>
+          )}
+        </div>
         {finalDesc && <p className="mt-2 text-sm text-text-secondary max-w-2xl">{finalDesc}</p>}
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Info, Banknote, ArrowLeft } from 'lucide-react';
+import { BreadcrumbsSetter } from '@/components/features/items/BreadcrumbsSetter';
 import { Badge, MetricCard, SectionPanel } from '@/components/ui/kit';
 import {
   WeaponModule,
@@ -63,10 +64,12 @@ async function getItemData(slug: string): Promise<TarkovItem | null> {
         image512pxLink
         sellFor {
           price
+          priceRUB
           vendor { name normalizedName }
         }
         buyFor {
           price
+          priceRUB
           vendor { name normalizedName }
         }
         barters: bartersFor {
@@ -186,6 +189,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
+      <BreadcrumbsSetter name={item.name} types={item.types} />
       <div className="w-full max-w-275 px-4 mx-auto xl:px-0">
 
         <div className="mb-6">

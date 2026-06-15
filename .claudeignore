@@ -1,0 +1,11 @@
+node_modules/
+vendor/
+.git/
+.next/
+dist/
+build/
+target/
+*.log
+logs/
+tests/fixtures/
+seed_data/

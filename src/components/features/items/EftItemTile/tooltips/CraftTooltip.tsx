@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCompactNumber } from '@/lib/formatters';
+import { formatCompactNumber, formatCurrencyDisplay } from '@/lib/formatters';
 import type { EftCraftData } from '../types';
 import { calcEftProfitLevel } from '../types';
 
@@ -69,12 +69,18 @@ export function EftCraftTooltip({ data, style }: EftCraftTooltipProps) {
 
       <div className="flex flex-col gap-1">
         {([
-          { label: 'ДЛИТЕЛЬНОСТЬ', value: data.durationLabel,                             colored: false },
-          { label: 'ПОКУПКА',      value: `${formatCompactNumber(data.buyPrice)} ₽`,      colored: false },
+          { label: 'ДЛИТЕЛЬНОСТЬ', value: data.durationLabel,                               colored: false },
+          {
+            label: 'ПОКУПКА',
+            value: data.buyCurrency === 'USD' && data.buyPriceNative != null
+              ? `${formatCurrencyDisplay(data.buyPriceNative, 'USD')} · ${formatCompactNumber(data.buyPrice)} ₽`
+              : `${formatCompactNumber(data.buyPrice)} ₽`,
+            colored: false,
+          },
           { label: 'ОБОРОТ / Ч',   value: `${formatCompactNumber(data.turnoverPerHour)} ₽`, colored: false },
-          { label: 'ПРИБЫЛЬ',      value: `${formatCompactNumber(data.profit)} ₽`,        colored: true },
-          { label: 'ПРИБЫЛЬ / Ч',  value: `${formatCompactNumber(data.profitPerHour)} ₽`, colored: true },
-        ] as const).map(({ label, value, colored }) => (
+          { label: 'ПРИБЫЛЬ',      value: `${formatCompactNumber(data.profit)} ₽`,          colored: true },
+          { label: 'ПРИБЫЛЬ / Ч',  value: `${formatCompactNumber(data.profitPerHour)} ₽`,  colored: true },
+        ]).map(({ label, value, colored }) => (
           <div key={label} className="flex items-baseline justify-between gap-2">
             <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
               {label}

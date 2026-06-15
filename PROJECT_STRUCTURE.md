@@ -1,6 +1,6 @@
 # 🗺️ Архитектура Проекта CTA — Карта файлов
 
-> Актуально на: **2026-06-15** · Версия: **4.1.0**  
+> Актуально на: **2026-06-15** · Версия: **4.2.0**  
 > Next.js 14 App Router · FSD-lite · Tailwind CSS v4 · Zustand
 
 ---
@@ -94,10 +94,12 @@ hooks/
 ### Либы (`src/lib/`)
 ```
 lib/
-├── eft-api.ts          # GraphQL-хелперы tarkov.dev
-├── formatters.ts       # formatCompactNumber, getCurrencySymbol
-├── search-engine.ts    # Движок поиска со сленгом (скоринг, fuzzy)
-└── tarkov-colors.ts    # getTarkovBackgroundColor — маппинг backgroundColor → CSS
+├── eft-api.ts               # GraphQL-хелперы tarkov.dev
+├── eyewear-filter-config.ts # Логика субтипов Eyewear (визоры / ПНВ / очки)
+├── formatters.ts            # formatCompactNumber, getCurrencySymbol
+├── item-indicators.util.ts  # getDynamicTopIndicator + calculateContainerCapacity
+├── search-engine.ts         # Движок поиска со сленгом (скоринг, fuzzy)
+└── tarkov-colors.ts         # getTarkovBackgroundColor — маппинг backgroundColor → CSS
 ```
 
 ### Хранилища (`src/store/`)
@@ -153,6 +155,7 @@ features/
 │   ├── Badge.tsx                 # Семантический бейдж предметов (урон, пробитие...)
 │   ├── CategoryControlBar.tsx    # Единая полоска фильтров категорийной страницы
 │   ├── CategoryTabs.tsx          # Табы навигации по подкатегориям
+│   ├── EyewearSubtypeBar.tsx     # Субтип-бар для Eyewear (очки / ПНВ / визоры)
 │   ├── ItemTableRow.tsx          # Строка таблицы (legacy, для Items hub)
 │   ├── ItemTile.tsx              # Тайл предмета (legacy, используется в barter)
 │   ├── ItemsFilterPanel.tsx      # ⚠️ Orphaned — не используется в страницах
@@ -231,8 +234,8 @@ app/
     │   ├── page.tsx         # Items hub (barter items + CategoryTabs верхнего уровня)
     │   │
     │   ├── [...category]/
-    │   │   ├── page.tsx             # SSR: загрузка данных + GP-бартеры параллельно
-    │   │   └── ItemsCategoryClient.tsx  # Весь интерактив: grid/table, фильтры, virtualizer
+    │   │   ├── page.tsx             # SSR: typeMapping → GraphQL types; серверная фильтрация (secure→noFlea+__typename, cases, eyewear, medkits…); GP-бартеры параллельно
+    │   │   └── ItemsCategoryClient.tsx  # Весь интерактив: grid/table, фильтры, virtualizer; CONTAINER_SLUGS = {cases, secure, secure-containers, storage-containers}
     │   │
     │   ├── item/[slug]/
     │   │   ├── page.tsx         # SSR детальной страницы предмета

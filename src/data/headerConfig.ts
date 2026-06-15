@@ -29,6 +29,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       helmets: 'Шлемы',
       masks: 'Маски',
       visors: 'Очки и Визоры',
+      eyewear: 'Очки и Визоры',
       armor: 'Бронежилеты',
       rigs: 'Разгрузки',
       backpacks: 'Рюкзаки',
@@ -316,7 +317,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
               { id: 'i-gear-headphones', label: 'Наушники', path: '/eft/items/gear/headphones', iconUrl: '/icons/eft/03-items/gear/cat-headphones.svg' },
               { id: 'i-gear-helmets', label: 'Шлемы', path: '/eft/items/gear/helmets', iconUrl: '/icons/eft/03-items/gear/cat-helmets.svg' },
               { id: 'i-gear-masks', label: 'Маски', path: '/eft/items/gear/masks', iconUrl: '/icons/eft/03-items/gear/cat-masks.svg' },
-              { id: 'i-gear-visors', label: 'Очки и Визоры', path: '/eft/items/gear/visors', iconUrl: '/icons/eft/03-items/gear/cat-visors.svg' },
+              { id: 'i-gear-eyewear', label: 'Очки и Визоры', path: '/eft/items/gear/eyewear', iconUrl: '/icons/eft/03-items/gear/cat-visors.svg' },
               { id: 'i-gear-armor', label: 'Бронежилеты', path: '/eft/items/gear/armor', iconUrl: '/icons/eft/03-items/gear/cat-armor.svg' },
               { id: 'i-gear-rigs', label: 'Разгрузки', path: '/eft/items/gear/rigs', iconUrl: '/icons/eft/03-items/gear/cat-tactical-rigs.svg' },
               { id: 'i-gear-backpacks', label: 'Рюкзаки', path: '/eft/items/gear/backpacks', iconUrl: '/icons/eft/03-items/gear/cat-backpacks.svg' },
@@ -469,8 +470,6 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/progress',
         iconUrl: '/icons/eft/progress-icon.svg',
         children: [
-          { id: 'p-achievements', label: 'Достижения', path: '/eft/progress/achievements', iconUrl: '/icons/eft/04-progression/achievments.svg' },
-          { id: 'p-prestige', label: 'Престиж', path: '/eft/progress/prestige', iconUrl: '/icons/eft/04-progression/prestige.svg' },
           {
             id: 'p-hideout',
             label: 'Убежище ЧВК',

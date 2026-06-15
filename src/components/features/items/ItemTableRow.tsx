@@ -54,7 +54,7 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
             />
           </div>
           <div className="flex min-w-0 flex-col">
-            <h3 className="truncate text-[16px] font-blender-medium uppercase tracking-widest text-text-primary group-hover:text-(--primary) transition-colors" title={item.name}>
+            <h3 className="truncate text-sm font-blender-medium uppercase tracking-widest text-text-primary transition-colors group-hover:text-(--primary) md:text-base" title={item.name}>
               {item.shortName}
             </h3>
             <span className="truncate text-xs text-text-secondary font-blender-book" title={item.name}>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 
 export const metadata: Metadata = {
   title: "ЦТА Хаб",
@@ -42,6 +43,7 @@ export default function RootLayout({
             <ConditionalLayout>
               {children}
             </ConditionalLayout>
+            <ScrollToTop />
           </ThemeProvider>
         </div>
       </body>

@@ -54,7 +54,7 @@ export const ItemsFilterPanel = ({
   return (
     <div className="flex w-full flex-col gap-4 py-3">
       {/* Строка 1: Поиск + Сортировка */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {/* Поиск */}
         <div className="relative flex items-center">
           <span className="absolute left-3 text-text-muted">

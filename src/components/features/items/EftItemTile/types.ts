@@ -1,5 +1,19 @@
 export type EftProfitLevel = 'neutral' | 'profitable' | 'unprofitable';
 
+export type EftTopStat =
+  | { kind: 'capacity';   value: number }
+  | { kind: 'durability'; current: number; max: number }
+  | { kind: 'hearing';    value: number }
+  | { kind: 'weight';     value: number }
+  | { kind: 'uses';       value: number }
+  | { kind: 'custom';     label: string; value: string | number }
+  | { kind: 'hidden' };
+
+export interface EftAmmoOverlay {
+  damage:      number;
+  penetration: number;
+}
+
 export function calcEftProfitLevel(profit: number): EftProfitLevel {
   if (profit > 500) return 'profitable';
   if (profit < -500) return 'unprofitable';
@@ -11,10 +25,15 @@ export interface EftVendor {
   normalizedName?: string;
 }
 
+import type { EftCurrency } from '@/lib/formatters';
+export type { EftCurrency };
+
 export interface EftPriceEntry {
   price: number;
-  currency?: string;
+  priceRUB?: number;
+  currency?: EftCurrency;
   vendor?: EftVendor;
+  loyaltyLevel?: number;
 }
 
 export interface EftCraftIngredient {
@@ -30,6 +49,8 @@ export interface EftCraftData {
   ingredients: EftCraftIngredient[];
   durationLabel: string;
   buyPrice: number;
+  buyPriceNative?: number;
+  buyCurrency?: EftCurrency;
   turnoverPerHour: number;
   profit: number;
   profitPerHour: number;
@@ -46,6 +67,8 @@ export interface EftBarterData {
   trader: EftVendor;
   items: EftBarterItem[];
   buyPrice: number;
+  buyPriceNative?: number;
+  buyCurrency?: EftCurrency;
   savings: number;
   profit: number;
   commission: number;
@@ -103,4 +126,8 @@ export interface EftItemData {
     craft?: EftCraftData;
     quest?: EftQuestData;
   };
+  topStat?:        EftTopStat;
+  armorClass?:     number;
+  ammoOverlay?:    EftAmmoOverlay;
+  minPlayerLevel?: number;
 }

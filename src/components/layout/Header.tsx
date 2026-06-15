@@ -38,25 +38,12 @@ export function Header() {
         {/* ═══ ROW 1 — всегда видима ═══ */}
         <div
           className={`flex items-center gap-7 px-4 xl:px-0 max-w-275 mx-auto transition-[padding] duration-300 ease-out ${
-            isScrolled ? 'py-3' : 'py-[clamp(12px,1.09vw,21px)]'
+            isScrolled ? 'py-5.25' : 'py-[clamp(12px,1.09vw,21px)]'
           } ${isHomePage ? 'justify-center' : ''}`}
         >
-          {/* Логотип + хлебные крошки (появляются под логотипом при скролле) */}
-          <div className="shrink-0 flex flex-col justify-center">
+          {/* Логотип */}
+          <div className="shrink-0">
             <PlatformLogo />
-            {showFeatures && (
-              <div
-                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
-                  isScrolled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="pt-1">
-                    <Breadcrumbs />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Навигация — только xl+, flex-1 */}
@@ -74,6 +61,21 @@ export function Header() {
             </div>
           )}
         </div>
+
+        {/* ═══ BREADCRUMB ROW — появляется при скролле ═══ */}
+        {showFeatures && (
+          <div
+            className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${
+              isScrolled ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="px-4 xl:px-0 max-w-275 mx-auto pb-5.25">
+                <Breadcrumbs />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ═══ ROW 2 — схлопывается при скролле ═══ */}
         {showFeatures && (

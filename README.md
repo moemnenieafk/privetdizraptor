@@ -1,6 +1,6 @@
 # 🛡️ Технический Паспорт — Centre Tactical Adaptation (CTA)
 
-> **Версия:** 4.1.0 · **Дата:** 2026-06-15  
+> **Версия:** 4.2.0 · **Дата:** 2026-06-15  
 > Официальное руководство по дизайн-системе NIGHTFALL. Синхронизировано с макетами Figma.  
 > Предназначено для разработчиков и AI-ассистентов.
 
@@ -23,7 +23,7 @@
 - **Стилизация:** Tailwind CSS v4 — токены через `@theme` в `globals.css`
 - **Глобальный стейт:** Zustand (`src/store/`)
 - **Типизация:** TypeScript strict — `any` запрещён, Discriminated Unions
-- **GraphQL:** tarkov.dev public API (fetch + ISR кэш 1ч)
+- **GraphQL:** tarkov.dev public API (fetch + ISR кэш 1ч). Защищённые контейнеры: `types:[noFlea]` + `__typename` фильтр — НЕ `types:[container]`.
 - **Шрифты:**
   - `BlenderPro-Book` (Regular, 400) — `font-blender-book`
   - `BlenderPro-Medium` (Medium, 500) — `font-blender-medium`

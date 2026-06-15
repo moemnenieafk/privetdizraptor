@@ -5,6 +5,28 @@
 
 ---
 
+## [4.2.0] - 2026-06-15 — Контейнеры: правильная типизация и индикаторы вместимости
+
+### 🚀 Добавлено (Added)
+- **`calculateContainerCapacity(item)`** в `item-indicators.util.ts` — вычисляет суммарную вместимость контейнера через `item.grids.reduce(w*h)`. Возвращает `null` если `grids` пуст или отсутствует.
+- **`IndicatorItem`** — расширен полями `grids?: Array<{ width, height }>` и `name?: string | null`.
+- **Индикаторы верхней плитки** для `cases`, `secure-containers`, `storage-containers`: приоритет `grids`-расчёт → fallback `properties.capacity`.
+- **`__typename`** добавлен в блок `properties {}` GraphQL-запроса в `page.tsx` — позволяет серверу отличать `ItemPropertiesContainer` от других типов.
+
+### 🐛 Исправлено (Fixed)
+- **Защищённые контейнеры (Alpha, Beta, Gamma, Delta, Epsilon, Theta, Zeta, Kappa)** не отображались в разделе `/eft/items/gear/containers/secure`. Причина: в tarkov.dev API защищённые контейнеры имеют `types: ['noFlea']` — без `'container'`. Запрос `types: [container]` их не возвращал.
+- **Решение:** slug `secure` / `secure-containers` → запрос `types: [noFlea]`, серверный фильтр: `properties.__typename === 'ItemPropertiesContainer' && !types.includes('container')`. Исключает THICC-кейсы и термосумки у которых `types: ['container', 'noFlea']`.
+- **CONTAINER_SLUGS** обновлён в `item-indicators.util.ts` и `ItemsCategoryClient.tsx` — добавлены `'secure-containers'` и `'storage-containers'`.
+- **typeMapping** в `page.tsx` — `'secure'` и `'secure-containers'` → `'noFlea'`; `'storage-containers'` → `'container'`.
+- **Серверная фильтрация кейсов** — slug `cases` исключает `markedOnly`-предметы (THICC-кейсы из мечёных комнат).
+
+### 🔬 Технические детали (API)
+- `securedContainer` — не является валидным значением `ItemType` enum в tarkov.dev GraphQL.
+- `markedOnly` — валидный тип, но идентифицирует предметы из мечёных комнат (SICC, оружейные кейсы), а НЕ защищённые контейнеры тела.
+- Единственный надёжный способ выделить Alpha/Kappa: `types = ['noFlea']` + `properties.__typename = 'ItemPropertiesContainer'` + `!types.includes('container')`.
+
+---
+
 ## [4.1.0] - 2026-06-15 — Фикс sticky-фильтров и очистка
 
 ### 🐛 Исправлено (Fixed)

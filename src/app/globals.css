@@ -360,3 +360,18 @@
     transition: filter 0.2s ease-out;
   }
 }
+
+@utility mask-contain {
+  mask-size: contain;
+  -webkit-mask-size: contain;
+}
+
+@utility mask-center {
+  mask-position: center;
+  -webkit-mask-position: center;
+}
+
+@utility mask-no-repeat {
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}

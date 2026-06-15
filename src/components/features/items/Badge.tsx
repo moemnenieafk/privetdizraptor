@@ -2,7 +2,7 @@
 
 export interface BadgeProps {
   color: BadgeColor;
-  label: string;
+  label?: string;
   title?: string;
   isStrike?: boolean;
   iconClass?: string;
@@ -35,9 +35,11 @@ export const Badge = ({ color, label, title, isStrike, iconClass, iconSizeClass,
       className={`flex items-center justify-center gap-1 rounded px-1.5 py-0.5 whitespace-nowrap ${colorStyles[color]} ${className || ''}`}
     >
       {iconClass && <span className={`${iconSizeClass || 'w-3 h-3'} shrink-0 bg-current mask-contain mask-no-repeat mask-center ${iconClass}`} />}
-      <span className={`font-blender-medium text-[12px] ${isStrike ? "opacity-50 line-through" : ""}`}>
-        {label}
-      </span>
+      {label && (
+        <span className={`font-blender-medium text-[12px] ${isStrike ? "opacity-50 line-through" : ""}`}>
+          {label}
+        </span>
+      )}
     </div>
   );
 };
