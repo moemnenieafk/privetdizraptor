@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import Image from "next/image";
 
 interface PlaceholderPageProps {
@@ -64,7 +64,7 @@ export function PlaceholderPage({ themeClass, logoSrc, logoAlt, description, bgI
 
         <Link 
           href="/" 
-          className="px-6 py-3 md:px-8 bg-card-menu border border-lines-hover text-text-secondary hover:text-primary hover:border-primary transition-all uppercase tracking-widest text-[10px] sm:text-xs font-bold rounded-sm shadow-[0_0_15px_rgba(0,0,0,0.5)] outline-none focus-visible:ring-2 focus-visible:ring-primary animate-[fade-in-up_1s_both]"
+          className="px-6 py-3 md:px-8 bg-card-menu border border-lines-hover text-text-secondary hover:text-primary hover:border-primary transition-all uppercase tracking-widest text-[10px] sm:text-xs rounded-sm shadow-[0_0_15px_rgba(0,0,0,0.5)] outline-none focus-visible:ring-2 focus-visible:ring-primary animate-[fade-in-up_1s_both]"
           style={{ animationDelay: '300ms' }}
         >
           Вернуться в хаб

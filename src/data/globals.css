@@ -35,6 +35,12 @@
   /* Шрифты */
   --font-blender-book: 'BlenderPro-Book', sans-serif;
   --font-blender-medium: 'BlenderPro-Medium', sans-serif;
+
+  /* Запрет Bold — в проекте разрешены только Book (400) и Medium (500) */
+  --font-weight-semibold: 500;
+  --font-weight-bold: 500;
+  --font-weight-extrabold: 500;
+  --font-weight-black: 500;
 }
 
 @layer base {
@@ -47,6 +53,7 @@
     background-color: var(--color-base);
     color: var(--color-text-primary);
     font-family: var(--font-blender-book);
+    scrollbar-gutter: stable;
   }
 
   /* --- 3. ИГРОВЫЕ АКЦЕНТЫ (Раздел 3) --- */
@@ -60,7 +67,42 @@
 }
 
 @layer components {
-  /* --- 4. ТАКТИЧЕСКАЯ СЕТКА (Раздел 4: Геометрия) --- */
+  /* --- 4. ФОНОВЫЕ СЛОИ --- */
+  .bg-dot-gutter {
+    background-image: radial-gradient(circle, rgba(242, 242, 242, 1) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 2%,
+      black calc(50% - 580px),
+      transparent calc(50% - 540px),
+      transparent calc(50% + 540px),
+      black calc(50% + 580px),
+      black 98%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 2%,
+      black calc(50% - 580px),
+      transparent calc(50% - 540px),
+      transparent calc(50% + 540px),
+      black calc(50% + 580px),
+      black 98%,
+      transparent 100%
+    );
+    opacity: 0.06;
+  }
+
+  @media (max-width: 1200px) {
+    .bg-dot-gutter {
+      display: none;
+    }
+  }
+
+  /* --- 5. ТАКТИЧЕСКАЯ СЕТКА (Раздел 4: Геометрия) --- */
   .tactical-grid {
     display: grid;
     /* На FullHD это создаст строгие колонки по 160px */

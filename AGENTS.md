@@ -6,33 +6,36 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # CTA Project — Agent Context
 
-**Project:** Centre Tactical Adaptation — Hardcore Extraction Shooter Portal (EFT hub).
-**Stack:** Next.js 16 (App Router) · Tailwind CSS v4 · Zustand · TypeScript strict · Apollo GraphQL.
-**Data source:** tarkov.dev public GraphQL API.
+**Project:** Centre Tactical Adaptation — Hardcore Extraction Shooter Portal (EFT hub + multi-game).  
+**Version:** 4.1.0  
+**Stack:** Next.js 14 (App Router) · Tailwind CSS v4 · Zustand · TypeScript strict · tarkov.dev GraphQL (raw fetch, no Apollo).  
+**Data source:** `https://api.tarkov.dev/graphql` — public GraphQL API, ISR cache 1h.
 
 ## Architecture (FSD-lite)
 - `src/components/ui/` — dumb atoms, Server Components, props only
 - `src/components/features/` — smart, `'use client'`, Zustand allowed
 - `src/components/layout/` — Header, Footer, modals
-- `src/store/` — Zustand stores only
+- `src/store/` — Zustand stores only (`usePlayerStore`)
 - `src/hooks/` — custom hooks (`use` prefix, `'use client'` directive)
 - `src/actions/` — Next.js Server Actions
+- `src/data/` — static dictionaries, headerConfig, pageContent, slang
+- `src/lib/` — formatters, search-engine, tarkov-colors, eft-api
 - `src/app/eft/` — all EFT game routes
+
+## Key Components (v4.1.0)
+- `CategoryControlBar` — items filter bar (search, sort, armor class, barter, advanced filters)
+- `EftItemTile/` — composable tile (Root/Header/Media/Name/Pricing + tooltips)
+- `ItemsCategoryClient` — unified Grid/Table client with `@tanstack/react-virtual`
+- `useCategoryFilters` — hook for filter state (localStorage persistence)
+- `CategoryTabs` — subcategory tab navigation
 
 ## Non-negotiable Rules
 - `any` is FORBIDDEN — use discriminated unions or `string | number`
-- No raw HEX — only NIGHTFALL design tokens via `bg-(--color-token)` syntax
+- No raw HEX — only NIGHTFALL design tokens via `bg-(--color-token)` syntax (NOT `[var(--token)]`)
 - No `bg-gradient-to-*` — use `bg-linear-to-*` (Tailwind v4)
 - No arbitrary px if canonical scale exists: `h-15` not `h-[60px]`
+- No `font-mono` — use `font-blender-medium text-xs` for numbers/prices/stats
 - Tailwind class order: Position → Size → Typography → Colors → Breakpoints
 - Loading states: `animate-pulse` skeletons, never spinners
 - Heavy libs (Leaflet, Canvas): `next/dynamic` with `ssr: false`
-
-## Current Priority (Phase 2)
-Items database, item detail pages, trader modules, barter/craft.
-Phase 3 (Maps, Quest Tracker) is paused.
-
-## Key Files to Read First
-- `CLAUDE.md` — roles, execution rules, design token quick-ref
-- `DESIGN_SYSTEM.md` — full NIGHTFALL spec
-- `PROJECT_STRUCTURE.md` — routing and file paths
+- Sticky panels: sticky wrapper must contain ALL related content (control bar + expanded panel together)

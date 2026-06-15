@@ -39,7 +39,7 @@ Consult before planning architecture or styling:
 ## 6. DESIGN SYSTEM (NIGHTFALL) — QUICK RULES
 - Colors: ONLY design tokens, never raw HEX. Use `bg-(--color-base)` syntax, NOT `bg-[var(--token)]`.
 - `var(--primary)` for active/hover states.
-- Typography: body = `font-blender-book`, headers = `font-blender-medium uppercase tracking-widest`, numbers/prices = `font-mono text-xs`.
+- Typography: body = `font-blender-book`, headers = `font-blender-medium uppercase tracking-widest`, numbers/prices/stats = `font-blender-medium text-xs` (NOT font-mono — banned project-wide).
 - Tailwind v4: `bg-linear-to-b` NOT `bg-gradient-to-b`, `rounded-xs` NOT `rounded-[2px]`, `stroke-3` NOT `stroke-[3]`.
 - Canonical px: if N divisible by 4 → use scale class (`h-15` not `h-[60px]`).
 
@@ -47,3 +47,4 @@ Consult before planning architecture or styling:
 → Tailwind v4 fix checklist: `/tw-fix`
 → New component scaffold: `/scaffold`
 → Code refactor rules: `/refactor`
+→ tarkov.dev GraphQL exact schema + field names: `/tarkov-api`

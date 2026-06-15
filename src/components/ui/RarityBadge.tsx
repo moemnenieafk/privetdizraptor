@@ -32,7 +32,7 @@ export function RarityBadge({ rarity, label, className = "" }: RarityBadgeProps)
 
   return (
     <span
-      className={`inline-flex items-center justify-center rounded border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest ${config.classes} ${className}`}
+      className={`inline-flex items-center justify-center rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest ${config.classes} ${className}`}
     >
       {label || config.label}
     </span>

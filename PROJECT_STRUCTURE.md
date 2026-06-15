@@ -1,164 +1,294 @@
-# 🗺️ Архитектура Проекта "Центр Тактической Адаптации" (CTA)
+# 🗺️ Архитектура Проекта CTA — Карта файлов
 
-Данный файл является картой путей проекта (Next.js 14 App Router) и используется для контроля роутинга, связей и релинков.
+> Актуально на: **2026-06-15** · Версия: **4.1.0**  
+> Next.js 14 App Router · FSD-lite · Tailwind CSS v4 · Zustand
 
-## 📂 Корень проекта
-```text
-cta-project\
-├── .env.local                 # Секретные ключи API (Twitch, YouTube и др.)
-├── scripts/                   # Скрипты для автоматизации
-│   ├── cleanup-obsolete-dirs.mjs # Утилита удаления устаревших папок
-│   ├── sync-docs.mjs          # Утилита синхронизации документации
-│   ├── ensure-page-headers.mjs# Внедрение <PageHeader>
-│   └── fix-warnings.mjs       # Исправление верстки старых страниц
-├── next.config.mjs            # Конфигурация Next.js
-├── tailwind.config.ts         # Конфиг Tailwind CSS (если используется поверх v4)
-├── tsconfig.json              # Конфиг TypeScript
-├── package.json               # Зависимости и скрипты
-├── README.md                  # Технический паспорт дизайн-системы
-├── CHANGELOG.md               # История версий и изменений
-└── PROJECT_STRUCTURE.md       # (Текущий файл) Карта файлов и директорий
+---
+
+## 📂 Корень
+
+```
+cta-project/
+├── .env.local              # Ключи API (Twitch, YouTube) — в .gitignore
+├── next.config.mjs         # Конфигурация Next.js
+├── tsconfig.json           # TypeScript strict
+├── package.json
+├── postcss.config.mjs
+├── CLAUDE.md               # Директивы для AI-ассистента
+├── AGENTS.md               # Контекст проекта для агентов
+├── CHANGELOG.md            # История версий
+├── DESIGN_SYSTEM.md        # NIGHTFALL дизайн-система
+├── MVPMANIFEST.md          # Дорожная карта и AI-манифест
+├── PROJECT_STRUCTURE.md    # (этот файл)
+└── README.md               # Технический паспорт проекта
 ```
 
-## 📂 Статические файлы (public)
-```text
+---
+
+## 📂 public/
+
+```
 public/
-├── icons/                 # Огромная структурированная база системных и внутриигровых иконок
-├── fonts/                 # Локальные шрифты (BlenderPro)
-└── games/                 # Ассеты для хаба (обложки, видео, логотипы игр)
+├── fonts/
+│   ├── BlenderPro-Book.woff / .woff2
+│   └── BlenderPro-Medium.woff / .woff2
+├── icons/
+│   └── eft/
+│       ├── 01-maps/        # Иконки локаций
+│       ├── 02-quests/      # Иконки заданий
+│       ├── 03-items/       # Иконки предметов
+│       ├── 04-progression/ # Иконки прогресса
+│       ├── 05-gamesetting/ # Иконки кодекса
+│       ├── 06-videos/      # Иконки видео
+│       ├── edition/        # Иконки изданий игры
+│       ├── traders/        # Аватарки торговцев (.webp)
+│       └── profile-pannel/ # Иконки панели профиля
+├── images/
+│   ├── items/eft/          # Изображения предметов ({id}.webp)
+│   └── traders/eft/        # Аватарки торговцев ({normalizedName}.webp)
+└── games/
+    ├── eft/
+    │   ├── bg.webp / bg-hover.webp / bg-inactive.webp
+    │   ├── eft-logo.svg
+    │   └── video-loop.mp4 / .webm
+    ├── abi/ frago/ gzw/ actmat/ arcraiders/ marathon/ wardogs/
+    │   └── (аналогичная структура)
+    └── placeholder.webp
 ```
 
-## 📂 Исходный код (src)
-```text
-src/
-├── types/
-│   └── tarkov-items.ts        # Строгие типы предметов (Discriminated Unions)
-│   ├── tarkov-quests.ts       # Типы для квестов и трекера (Фаза 3)
-│   └── tarkov-maps.ts         # Типы маркеров для интерактивных карт (Фаза 3)
-│
-├── actions/
-│   └── youtube.ts             # Server Actions для работы с API YouTube
-│   └── search-actions.ts      # Server Actions для поиска предметов EFT
-│
-├── data/
-│   ├── games.ts               # Данные для карточек игр на главной
-│   ├── headerConfig.ts        # Конфигурация хедера (сборка меню, поиск, валюта)
-│   ├── slang.ts               # Словарь игрового сленга для поиска
-│   ├── pageContent.ts         # Словарь контента (заголовки, описания) для страниц
-│   └── navigation/            # Модули навигации для разных игр
-│       ├── eft.ts             # Дерево меню для EFT (300+ строк)
-│       └── other-games.ts     # Дерево меню для остальных игр
-│
-├── hooks/
-│   └── useIntersectionObserver.ts # Хук для ленивой загрузки (видео в карточках)
-│   └── useQuestProgress.ts        # Хук для связи Zustand стейта квестов с UI
-│
-├── lib/
-│   ├── eft-api.ts             # Интеграция с tarkov.dev GraphQL
-│   └── search-engine.ts       # Движок поиска с поддержкой игрового сленга
-│
-├── store/
-│   └── usePlayerStore.ts      # Zustand-хранилище профилей (Глобальный стейт)
-│   └── useQuestStore.ts       # Zustand-хранилище для трекера заданий (Фаза 3)
-│
-├── components/
-│   ├── features/              # Фиче-компоненты (Сложная бизнес-логика)
-│   │   └── items/             # Модуль каталога предметов
-│   │       ├── ItemTile.tsx
-│   │       ├── ItemTableRow.tsx
-│   │       ├── ItemsTable.tsx
-│   │       ├── ItemsFilterPanel.tsx
-│   │       └── ItemsViewSwitcher.tsx
-│   │   ├── quests/            # Интеллектуальный Трекер Заданий (Фаза 3.1)
-│   │   │   └── QuestCard/     # Композитный паттерн (Root, Header, Objectives)
-│   │   ├── map/               # Интерактивная Тактическая Доска (Фаза 3.2)
-│   │   │   └── InteractiveMap.tsx # Имплементация Leaflet.js / Canvas
-│   │   ├── hideout/           # Трекер Убежища (Фаза 3.3)
-│   │   └── barter/            # Калькулятор бартера (Фаза 3.3)
-│   ├── layout/                # Глобальный каркас приложения
-│   │   ├── Header.tsx         # Умная шапка сайта (2 строки)
-│   │   ├── header-modules/    # Микро-модули для сборки Хедера
-│   │   │   ├── PlatformLogo.tsx
-│   │   │   ├── HeaderNavigation.tsx
-│   │   │   ├── GameLogo.tsx   # Интерактивный GameSwitcher
-│   │   │   ├── TacticalSearch.tsx     # Глобальный поиск
-│   │   │   ├── SearchItemCard.tsx     # Карточка предмета в поиске
-│   │   │   ├── SearchEmptyState.tsx   # Состояние "Ничего не найдено"
-│   │   │   ├── PlayerTelemetry.tsx    # Панель телеметрии и профиля
-│   │   │   ├── ProfileSettingsModal.tsx # Настройки профиля ЧВК
-│   │   │   ├── ProfileResetModal.tsx    # Модалка сброса прогресса
-│   │   │   ├── ProfileDeleteModal.tsx   # Модалка удаления ЧВК
-│   │   │   ├── StreamStatus.tsx
-│   │   │   ├── NewbieButton.tsx
-│   │   │   └── NewbieModal.tsx
-│   │   └── Footer.tsx         # Подвал сайта
-│   ├── ui/                    # Переиспользуемые "глупые" компоненты (Dumb components)
-│   │   ├── NavLink.tsx        # Ссылка с подсветкой активного состояния
-│   │   ├── HubCard.tsx        # Карточка для внутренних хабов
-│   │   ├── Badge.tsx          # Семантический бейдж для метрик
-│   │   ├── GameCard.tsx       # Карточка игры для главной страницы
-│   │   ├── Breadcrumbs.tsx    # Хлебные крошки (EFT Хаб / Прогресс)
-│   │   ├── PageHeader.tsx     # Стандартизированный заголовок страницы
-│   │   └── Carousel.tsx       # Свайп-карусель
-│   ├── providers/             # Провайдеры контекста
-│   │   └── ThemeProvider.tsx  # Управление глобальной темой (классы theme-*)
-│   ├── ColorPaletteDevTool.tsx# Инструмент разработчика для настройки палитры "на лету"
-│   └── PlaceholderPage.tsx    # Универсальная страница-заглушка "В разработке"
-│
-├── styles/
-│   └── icons.css              # Вынесенные CSS-классы для иконок
-│
-└── app/                       # РОУТИНГ (App Router)
-    ├── globals.css            # Глобальные стили, шрифты, токены темы и анимации
-    ├── layout.tsx             # Корневой Layout (влияет на весь сайт, включает ThemeProvider и Header)
-    ├── template.tsx           # Глобальная анимация fade-in при переходах
-    ├── page.tsx               # ГЛАВНАЯ СТРАНИЦА (Карусель игр)
-    │
-    ├── api/                   # API ROUTES
-    │   └── twitch-status/
-    │       └── route.ts       # Эндпоинт для проверки статуса Twitch
-    │
-    ├── [gameId]/              # ДИНАМИЧЕСКИЙ РОУТИНГ (FSD)
-    │   └── page.tsx           # Универсальный обработчик хабов (заменяет статические папки)
-    │
-    ├── eft/                   # РАЗДЕЛ: ESCAPE FROM TARKOV (Специфичный роутинг)
-    │   ├── layout.tsx         # Локальная обертка EFT (Хлебные крошки)
-    │   ├── page.tsx           # Хаб EFT (импортируется в [gameId])
-    │   │
-    │   ├── items/             # Хаб "Предметы"
-│   │   ├── page.tsx           # Обзорная страница категорий
-│   │   └── [...category]/     # Catch-all роут (Динамическая генерация хабов)
-│   │       └── page.tsx
-│   │   └── item/
-│   │       └── [id]/
-│   │           ├── page.tsx        # Детальная страница конкретного предмета
-│   │           └── ItemModules.tsx # Функциональные UI-модули предмета (Характеристики, Экономика, Торговля)
-    │   │
-    │   ├── quests/            # Хаб "Задания"
-    │   │   └── page.tsx
-    │   │
-    │   ├── progress/          # Хаб "Прогресс"
-    │   │   ├── page.tsx
-    │   │   ├── achievements/
-│   │   │   │   ├── page.tsx
-│   │   │   │   └── AchievementsClient.tsx # Умный клиентский интерфейс достижений
-    │   │   ├── barter/
-    │   │   │   └── page.tsx
-    │   │   ├── hideout/
-    │   │   │   ├── page.tsx
-    │   │   │   └── modules/
-    │   │   │       └── page.tsx
-    │   │   ├── loadouts/
-    │   │   │   └── page.tsx
-    │   │   ├── tracker/
-    │   │   │   └── page.tsx
-    │   │   └── keepitems/
-    │   │       └── page.tsx
-    │   │
-    │   ├── gamesetting/       # Хаб "Кодекс"
-    │   │   └── page.tsx
-    │   │
-    │   └── videos/            # Хаб "Видео"
-    │       └── page.tsx
+---
+
+## 📂 src/
+
+### Типы (`src/types/`)
 ```
-*(Папка `public` опущена в этой карте для экономии места, так как ее структура описана в `README.md`)*
+types/
+└── tarkov-items.ts     # Discriminated Unions для всех типов предметов EFT
+```
+
+### Server Actions (`src/actions/`)
+```
+actions/
+├── search-actions.ts   # GraphQL поиск предметов EFT (для TacticalSearch)
+└── youtube.ts          # Подгрузка видео с YouTube канала (ISR 1ч)
+```
+
+### Данные (`src/data/`)
+```
+data/
+├── games.ts            # GAMES_DATA — карточки игр на главной
+├── globals.css         # Глобальные стили, @theme токены, анимации, иконки
+├── headerConfig.ts     # HEADER_DICTIONARY — вся навигация (меню, поиск, валюта)
+├── pageContent.ts      # PAGE_CONTENT — заголовки и описания страниц
+└── slang.ts            # SLANG_MAP — словарь игрового сленга для поиска
+```
+
+### Хуки (`src/hooks/`)
+```
+hooks/
+├── useScrollHeader.ts          # Определение скролла с гистерезисом (50px/20px)
+├── useIntersectionObserver.ts  # Ленивая загрузка видео в GameCard
+└── useMediaQuery.ts            # Адаптивные брейкпоинты на клиенте
+```
+
+### Либы (`src/lib/`)
+```
+lib/
+├── eft-api.ts          # GraphQL-хелперы tarkov.dev
+├── formatters.ts       # formatCompactNumber, getCurrencySymbol
+├── search-engine.ts    # Движок поиска со сленгом (скоринг, fuzzy)
+└── tarkov-colors.ts    # getTarkovBackgroundColor — маппинг backgroundColor → CSS
+```
+
+### Хранилища (`src/store/`)
+```
+store/
+└── usePlayerStore.ts   # Zustand: профили ЧВК, уровни, репутация, фракция
+```
+
+---
+
+## 📂 src/components/
+
+### `ui/` — Переиспользуемые атомы (Server Components, props only)
+
+```
+ui/
+├── kit/
+│   ├── Badge.tsx         # Семантический бейдж (цвет, текст, иконка)
+│   ├── MetricCard.tsx    # Карточка одной метрики (число + лейбл)
+│   └── ProgressBar.tsx   # Прогресс-бар с цветовым кодированием
+├── Breadcrumbs.tsx       # Хлебные крошки (авто по pathname)
+├── Carousel.tsx          # Embla Carousel (свайп, адаптив)
+├── GameCard.tsx          # Большая карточка игры (видео-ховер, маски)
+├── HubCard.tsx           # Карточка внутреннего хаба (square / rect)
+├── ItemGridSize.tsx      # Переключатель размера сетки предметов
+├── NavLink.tsx           # Ссылка с подсветкой активного состояния
+├── PageHeader.tsx        # Стандартизированный заголовок страницы (из pageContent)
+└── RarityBadge.tsx       # Бейдж редкости (Обычное / Редкое / Эпическое / Легенда)
+```
+
+### `features/` — Умные компоненты с бизнес-логикой
+
+```
+features/
+├── items/
+│   │
+│   ├── EftItemTile/              ← Composable tile (Compound Component паттерн)
+│   │   ├── index.ts              # Re-export: { EftItemTile }
+│   │   ├── types.ts              # EftItemData интерфейс
+│   │   ├── context.ts            # React Context для данных тайла
+│   │   ├── EftItemTile.tsx       # Root — обёртка карточки, Link, фон
+│   │   ├── Header.tsx            # Верхняя строка (shortName + stat)
+│   │   ├── Indicator.tsx         # Индикатор (размер ячейки, редкость)
+│   │   ├── Media.tsx             # Область изображения предмета
+│   │   ├── Name.tsx              # Блок названия
+│   │   ├── Pricing.tsx           # Блок цен (trader / flea buy / sell)
+│   │   └── tooltips/
+│   │       ├── BarterTooltip.tsx # Тултип бартерного рецепта
+│   │       ├── CraftTooltip.tsx  # Тултип крафта в убежище
+│   │       └── QuestTooltip.tsx  # Тултип квестового использования
+│   │
+│   ├── ArmorFilterPanel.tsx      # Слайдеры диапазона класса брони (1–6)
+│   ├── Badge.tsx                 # Семантический бейдж предметов (урон, пробитие...)
+│   ├── CategoryControlBar.tsx    # Единая полоска фильтров категорийной страницы
+│   ├── CategoryTabs.tsx          # Табы навигации по подкатегориям
+│   ├── ItemTableRow.tsx          # Строка таблицы (legacy, для Items hub)
+│   ├── ItemTile.tsx              # Тайл предмета (legacy, используется в barter)
+│   ├── ItemsFilterPanel.tsx      # ⚠️ Orphaned — не используется в страницах
+│   ├── ItemsTable.tsx            # Таблица предметов (legacy)
+│   ├── ItemsViewSwitcher.tsx     # Переключатель Grid / Table (legacy)
+│   ├── useCategoryFilters.ts     # Хук всего стейта фильтров категории
+│   └── useItemsFilter.ts         # Хук фильтров (legacy, для Items hub)
+│
+├── telemetry/
+│   ├── TacticalTelemetryCard.tsx # Карточка телеметрии (метрики матча)
+│   └── TelemetryDetailsClient.tsx # Детали телеметрии (клиентский)
+│
+└── page.tsx                       # Hub-страница features (placeholder)
+```
+
+### `layout/` — Каркас приложения
+
+```
+layout/
+├── ConditionalLayout.tsx          # Показывает/скрывает Header+Footer по маршруту
+├── Footer.tsx
+├── Header.tsx                     # Умная 2-строчная шапка (scroll-aware, theme-aware)
+└── header-modules/
+    ├── BurgerMenu.tsx             # Мобильное меню
+    ├── GameLogo.tsx               # GameSwitcher (выпадающий список игр)
+    ├── HeaderNavigation.tsx       # Рекурсивное меню (5+ уровней)
+    ├── NewbieButton.tsx           # Кнопка "Я НОВИЧОК" с hazard-анимацией
+    ├── NewbieModal.tsx            # Модалка для новичков
+    ├── PlatformLogo.tsx           # Логотип CTA платформы
+    ├── PlayerTelemetry.tsx        # Панель телеметрии и профиля ЧВК
+    ├── ProfileDeleteModal.tsx     # Подтверждение удаления профиля
+    ├── ProfileResetModal.tsx      # Подтверждение сброса прогресса
+    ├── ProfileSettingsModal.tsx   # Настройки профиля ЧВК
+    ├── SearchEmptyState.tsx       # Состояние "ничего не найдено"
+    ├── SearchItemCard.tsx         # Карточка предмета в глобальном поиске
+    ├── StreamStatus.tsx           # Статус Twitch-стрима
+    └── TacticalSearch.tsx         # Command Palette (CTRL+Q)
+```
+
+---
+
+## 📂 src/app/ — Роутинг (App Router)
+
+```
+app/
+├── layout.tsx              # Корневой Layout (ThemeProvider, Header, Footer)
+├── template.tsx            # Анимация fade-in при переходах
+├── page.tsx                # Главная (карусель игр)
+├── not-found.tsx           # 404 страница
+│
+├── [gameId]/
+│   └── page.tsx            # Динамический хаб игры (из GAMES_DATA)
+│
+├── account/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── AccountCenter.tsx   # Персональный кабинет ЧВК
+│   └── AccountHeader.tsx   # Шапка аккаунта
+│
+├── api/
+│   └── twitch-status/
+│       └── route.ts        # Эндпоинт Twitch OAuth (кэш токена в памяти)
+│
+└── eft/
+    ├── layout.tsx           # EFT-обёртка (Breadcrumbs)
+    ├── page.tsx             # EFT хаб
+    │
+    ├── barters/
+    │   ├── BartersClient.tsx  # Клиент бартерных рецептов
+    │   └── page.tsx
+    │
+    ├── gamesetting/
+    │   └── page.tsx         # Кодекс EFT
+    │
+    ├── items/
+    │   ├── page.tsx         # Items hub (barter items + CategoryTabs верхнего уровня)
+    │   │
+    │   ├── [...category]/
+    │   │   ├── page.tsx             # SSR: загрузка данных + GP-бартеры параллельно
+    │   │   └── ItemsCategoryClient.tsx  # Весь интерактив: grid/table, фильтры, virtualizer
+    │   │
+    │   ├── item/[slug]/
+    │   │   ├── page.tsx         # SSR детальной страницы предмета
+    │   │   ├── ItemImage.tsx    # Компонент изображения предмета
+    │   │   └── ItemModules.tsx  # Модули характеристик (Weapon/Armor/Medical...)
+    │   │
+    │   └── loot-rate/
+    │       ├── LootRateClient.tsx  # Клиент статистики лут-рейта
+    │       └── page.tsx
+    │
+    ├── maps/
+    │   └── page.tsx         # Карты локаций (placeholder)
+    │
+    ├── progress/
+    │   ├── page.tsx
+    │   ├── achievements/
+    │   │   ├── AchievementsClient.tsx  # Фильтр, сортировка, Grid/Table
+    │   │   └── page.tsx               # RSC: данные из tarkov.dev
+    │   ├── barter/page.tsx
+    │   ├── hideout/
+    │   │   ├── modules/page.tsx
+    │   │   └── page.tsx
+    │   └── loadouts/page.tsx
+    │
+    ├── questmap/
+    │   ├── page.tsx          # Интерактивная карта квестов (react-flow / vis.js)
+    │   ├── prapor.ts         # Данные квестов Прапора
+    │   ├── skier.ts
+    │   ├── therapist.ts
+    │   ├── fence.ts
+    │   ├── mechanic.ts
+    │   ├── peacekeeper.ts
+    │   ├── ragman.ts
+    │   ├── jaeger.ts
+    │   ├── lightkeeper.ts
+    │   ├── ref.ts
+    │   └── btrdriver.ts
+    │
+    ├── quests/
+    │   ├── page.tsx
+    │   ├── lore-quests/page.tsx
+    │   └── side-quests/page.tsx
+    │
+    └── videos/
+        └── page.tsx
+```
+
+---
+
+## Принципы архитектуры
+
+| Слой | Правило |
+|------|---------|
+| `ui/` | Server Component, только props, никакого состояния |
+| `features/` | `"use client"`, Zustand разрешён, GraphQL разрешён |
+| `layout/` | `"use client"`, управляет shell-ом приложения |
+| `store/` | Только Zustand-сторы |
+| `actions/` | Next.js Server Actions |
+| `app/` | Роутинг, SSR-загрузка данных, передача в Client через props |

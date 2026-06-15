@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -90,7 +90,7 @@ export default function KeepItemsPage() {
         <h1 className="text-2xl font-blender-medium tracking-[0.3em] uppercase text-text-primary mb-2">
           НУЖНЫЕ ПРЕДМЕТЫ <span className="text-primary">EFT</span>
         </h1>
-        <p className="text-[10px] font-bold tracking-widest text-text-muted uppercase">
+        <p className="text-[10px] tracking-widest text-text-muted uppercase">
           Списки лута, который необходимо сохранить для выполнения заданий (Каппа) и постройки убежища
         </p>
       </div>
@@ -173,7 +173,7 @@ export default function KeepItemsPage() {
                 </div>
                 {/* Мета-информация */}
                 <div className="flex items-center justify-between border-t border-lines-hover pt-4 mt-4">
-                  <span className={`text-[10px] font-black tracking-[0.2em] px-2 py-0.5 border rounded-sm ${rarityStyle}`}>
+                  <span className={`text-[10px] tracking-[0.2em] px-2 py-0.5 border rounded-sm ${rarityStyle}`}>
                     {item.rarity}
                   </span>
                   <span className="text-xs font-mono text-text-muted">

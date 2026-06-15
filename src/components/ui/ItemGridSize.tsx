@@ -1,47 +1,53 @@
-﻿import React from 'react';
 import { Tooltip } from './Tooltip';
 
 interface ItemGridSizeProps {
   width: number;
   height: number;
-  maxWidth?: number;
-  maxHeight?: number;
+  // footprint: item inventory size (filled amber cells)
+  // container: storage capacity grid (empty dark cells)
+  variant?: 'footprint' | 'container';
+  showLabel?: boolean;
   className?: string;
-  tooltip?: string;
 }
 
-export function ItemGridSize({ width, height, maxWidth, maxHeight, className = '', tooltip }: ItemGridSizeProps) {
-  const cols = maxWidth !== undefined ? Math.max(maxWidth, width) : width;
-  const rows = maxHeight !== undefined ? Math.max(maxHeight, height) : height;
-  const totalCells = cols * rows;
+export function ItemGridSize({
+  width,
+  height,
+  variant = 'footprint',
+  showLabel = true,
+  className = '',
+}: ItemGridSizeProps) {
+  const slots = width * height;
+  const isFootprint = variant === 'footprint';
+  const tooltipText = `${width}×${height} — ${slots} ${slots === 1 ? 'слот' : slots < 5 ? 'слота' : 'слотов'}`;
 
   return (
-    <Tooltip content={tooltip || `Размер: ${width}x${height}`} className={className}>
-      <div className="flex items-center gap-2">
-      <div
-        className="inline-grid gap-px rounded bg-card-menu p-[2px] border border-lines-hover shadow-sm"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-      >
-        {Array.from({ length: totalCells }).map((_, i) => {
-          const x = i % cols;
-          const y = Math.floor(i / cols);
-          const isFilled = x < width && y < height;
-          
-          return (
+    <Tooltip content={tooltipText} className={className}>
+      <div className="inline-flex items-center gap-1.5">
+        <div
+          className={`inline-grid gap-px p-0.5 rounded-xs border ${
+            isFootprint
+              ? 'bg-(--color-base) border-lines-hover/40'
+              : 'bg-card-menu border-lines-hover/40'
+          }`}
+          style={{ gridTemplateColumns: `repeat(${width}, 3px)` }}
+        >
+          {Array.from({ length: slots }).map((_, i) => (
             <div
               key={i}
-              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[1px] transition-all duration-300 ${
-                isFilled 
-                  ? 'bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_6px_rgba(0,0,0,0.8)]' 
-                  : 'bg-(--color-base) border border-lines-hover opacity-40'
+              className={`h-0.75 w-0.75 ${
+                isFootprint
+                  ? 'bg-(--primary)'
+                  : 'bg-(--color-base)'
               }`}
             />
-          );
-        })}
-      </div>
-      <span className="font-mono text-xs text-text-muted">
-        {width}x{height}
-      </span>
+          ))}
+        </div>
+        {showLabel && (
+          <span className="font-blender-medium text-xs text-text-muted">
+            {width}×{height}
+          </span>
+        )}
       </div>
     </Tooltip>
   );

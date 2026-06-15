@@ -45,8 +45,8 @@
 
 ### Акценты и Темы (Dynamic Accents)
 Цвет интерактива зависит от выбранной игры (роута) и хранится в `var(--primary)`.
-*   **Как применять:** `text-[var(--primary)]`, `border-[var(--primary)]`.
-*   **Прозрачность акцента:** Для фонов кнопок или плашек используй `bg-primary/20` (поддерживается Tailwind v4).
+*   **Как применять (Tailwind v4):** `text-(--primary)`, `border-(--primary)`, `bg-(--primary)`.
+*   **Прозрачность акцента:** `bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]`.
 *   **Системные:** `text-[var(--color-nvg-green)]` (`#689963`) — для отображения "Успеха", "Выполнено", "Доход", "Прибыль".
 
 ### Редкость предметов (Loot Rarity)
@@ -64,7 +64,7 @@
 
 *   **Основной текст:** `font-blender-book` (Regular, 400).
 *   **Заголовки (H1-H6):** `font-blender-medium` (Medium, 500). Всегда в верхнем регистре (`uppercase`), с трекингом `tracking-widest` (или `tracking-wider`).
-*   **Цифры и Код:** Для отображения процентов, стоимости барахолки, времени или урона используй `font-mono text-xs`.
+*   **Числа, цены, статы:** `font-blender-medium text-xs` — ⛔ `font-mono` **ЗАПРЕЩЁН** в этом проекте.
 
 ---
 
@@ -75,7 +75,7 @@
 ### 5.1. Тактическая карточка (Tactical Card)
 Базовый кирпичик интерфейса.
 ```tsx
-<div className="relative p-5 overflow-hidden rounded border border-lines-hover bg-[var(--color-base)] transition-colors duration-300 group hover:border-[var(--primary)] hover:bg-card-menu/50">
+<div className="relative overflow-hidden rounded border border-lines-hover bg-(--color-base) p-5 transition-colors duration-300 group hover:border-(--primary) hover:bg-card-menu/50">
    {/* Опциональное свечение: hover:shadow-[0_0_15px_color-mix(in_srgb,var(--primary)_40%,transparent)] */}
    <div className="transition-transform duration-300 ease-out group-hover:scale-105">
       {/* Контент (Изображение предмета) */}

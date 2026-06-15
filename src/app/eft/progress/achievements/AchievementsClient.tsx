@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useMemo } from 'react';
 import { Search, Trophy, EyeOff, X, LayoutGrid, List } from 'lucide-react';
@@ -135,7 +135,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                 </div>
                 <p className="text-sm text-text-secondary mb-6 flex-grow">{ach.description}</p>
                 <div className="flex items-center justify-between pt-3 border-t border-lines-hover mt-auto">
-                  <span className="text-[10px] font-black tracking-widest uppercase text-(--rarity-color)">{rarity.label}</span>
+                  <span className="text-[10px] tracking-widest uppercase text-(--rarity-color)">{rarity.label}</span>
                   <span className="text-xs font-mono text-text-muted">{(ach.playersCompletedPercent ?? 0).toFixed(1)}% игроков</span>
                 </div>
               </div>
@@ -147,10 +147,10 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           <table className="w-full text-sm">
               <thead className="bg-card-menu/50">
                   <tr>
-                      <th scope="col" className="px-4 py-3 text-center text-[10px] font-black text-text-muted uppercase tracking-widest w-16">Иконка</th>
-                      <th scope="col" className="px-4 py-3 text-left text-[10px] font-black text-text-muted uppercase tracking-widest">Название</th>
-                      <th scope="col" className="px-4 py-3 text-left text-[10px] font-black text-text-muted uppercase tracking-widest hidden md:table-cell">Описание</th>
-                      <th scope="col" className="px-4 py-3 text-right text-[10px] font-black text-text-muted uppercase tracking-widest w-32">Редкость</th>
+                      <th scope="col" className="px-4 py-3 text-center text-[10px] text-text-muted uppercase tracking-widest w-16">Иконка</th>
+                      <th scope="col" className="px-4 py-3 text-left text-[10px] text-text-muted uppercase tracking-widest">Название</th>
+                      <th scope="col" className="px-4 py-3 text-left text-[10px] text-text-muted uppercase tracking-widest hidden md:table-cell">Описание</th>
+                      <th scope="col" className="px-4 py-3 text-right text-[10px] text-text-muted uppercase tracking-widest w-32">Редкость</th>
                   </tr>
               </thead>
               <tbody>
@@ -173,7 +173,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                               <td className={`px-4 py-3 text-right ${rarity.rarityClass}`}>
                                   <div className="flex flex-col items-end">
                                       <span className="font-mono text-xs text-(--rarity-color)">{(ach.playersCompletedPercent ?? 0).toFixed(1)}%</span>
-                                      <span className="text-[10px] font-black tracking-widest uppercase text-(--rarity-color)">{rarity.label}</span>
+                                      <span className="text-[10px] tracking-widest uppercase text-(--rarity-color)">{rarity.label}</span>
                                   </div>
                               </td>
                           </tr>

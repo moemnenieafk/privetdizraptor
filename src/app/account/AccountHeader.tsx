@@ -39,7 +39,7 @@ export function AccountHeader() {
           {isPro && (
             <div className="flex items-center gap-1 rounded border border-tactical-amber/30 bg-tactical-amber/10 px-1.5 py-0.5">
               <div className="h-3 w-3 icon-mask icon-account_prostatus_icon bg-tactical-amber" />
-              <span className="font-mono text-[9px] font-bold tracking-wider text-tactical-amber">PRO</span>
+              <span className="font-mono text-[9px] tracking-wider text-tactical-amber">PRO</span>
             </div>
           )}
         </div>

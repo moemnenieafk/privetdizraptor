@@ -1,16 +1,20 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
-import { PackageX } from "lucide-react";
+import { PackageX, Coins } from "lucide-react";
 import { Badge } from "@/components/ui/kit";
 import { Badge as SemanticBadge, getArmorClassColor } from "@/components/features/items/Badge";
+import { ItemGridSize } from "@/components/ui/ItemGridSize";
 import { getTarkovBackgroundColor } from "@/lib/tarkov-colors";
-import { formatCompactNumber, getCurrencySymbol } from "@/lib/formatters";
+import { formatCompactNumber } from "@/lib/formatters";
+
+interface Vendor { name: string; normalizedName?: string }
 
 export interface ItemTileProps {
   item: {
     id: string;
+    normalizedName: string;
     name: string;
     shortName: string;
     width?: number;
@@ -21,55 +25,96 @@ export interface ItemTileProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     properties?: any;
     eco: {
-      bestSell: { price: number; vendor?: { name: string; normalizedName?: string } };
-      bestBuy?: { vendor?: { name: string; normalizedName?: string } };
+      bestSell: { price: number; vendor?: Vendor };
+      bestBuy?: { price?: number; priceRUB?: number; currency?: string; vendor?: Vendor };
       minPrice: number;
       vps: number;
+      // Extended — available when rendered from ItemsCategoryClient
+      fleaSell?: { price: number; vendor: Vendor };
+      bestTraderSell?: { price: number; vendor: Vendor };
+      fleaBuy?: { price: number; vendor: Vendor };
     };
   };
   categorySlug?: string;
 }
 
+function VendorAvatar({ vendor }: { vendor?: Vendor }) {
+  if (!vendor || vendor.name === '-') return <span className="h-4 w-4 shrink-0" />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img
+    src={`/images/traders/eft/${vendor.normalizedName || vendor.name.toLowerCase()}.webp`}
+    alt={vendor.name}
+    title={vendor.name}
+    className="h-4 w-4 shrink-0 rounded-xs object-cover opacity-80"
+    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+  />;
+}
+
 export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: ItemTileProps) {
-  const sellCurrency = getCurrencySymbol(item.eco.bestSell.vendor?.name);
-  const buyCurrency = getCurrencySymbol(item.eco.bestBuy?.vendor?.name);
+  const { eco } = item;
+  const w = item.width || 1;
+  const h = item.height || 1;
+
+  // Determine sell prices
+  const traderSell = eco.bestTraderSell ?? (
+    eco.bestSell.vendor?.name !== 'Flea Market' ? eco.bestSell : undefined
+  );
+  const fleaSell = eco.fleaSell ?? (
+    eco.bestSell.vendor?.name === 'Flea Market' || eco.bestSell.vendor?.normalizedName === 'flea-market'
+      ? eco.bestSell
+      : undefined
+  );
+  const bestSellPrice = fleaSell?.price || eco.bestSell.price || 0;
+  const traderSellPrice = traderSell?.price || 0;
+
+  // Buy price
+  const buyPrice = eco.minPrice || 0;
+  const buyIsFlea = eco.fleaBuy != null || eco.bestBuy?.vendor?.normalizedName === 'flea-market';
 
   return (
-    <Link href={`/eft/items/item/${item.id}`} className="tactical-card-base group p-4 flex flex-col hover:border-(--primary) cursor-pointer">
-      {/* Хедер карточки */}
-      <div className="flex justify-between items-start mb-4">
-        <Badge variant="default" className="group-hover:bg-primary/10 group-hover:text-(--primary) group-hover:border-(--primary) transition-colors">
+    <Link
+      href={`/eft/items/item/${item.normalizedName}`}
+      className="group flex flex-col cursor-pointer rounded-lg border border-lines-hover bg-card-menu p-4 transition-all duration-300 ease-out hover:border-(--primary) hover:scale-[1.02]"
+    >
+      {/* Хедер: shortName + ItemGridSize */}
+      <div className="mb-4 flex items-start justify-between gap-2">
+        <Badge
+          variant="default"
+          className="shrink-0 group-hover:border-(--primary) group-hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] group-hover:text-(--primary) transition-colors"
+        >
           {item.shortName}
         </Badge>
-        <span className="font-mono text-[10px] text-text-muted">{item.width || 1}x{item.height || 1} Слот</span>
+        <div className="shrink-0">
+          <ItemGridSize width={w} height={h} showLabel />
+        </div>
       </div>
-      
+
       {/* Изображение */}
-      <div className="relative w-full h-24 mb-4 flex items-center justify-center bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden">
-        
-        {/* Бейдж "Бартер" (поверх изображения) */}
+      <div className="relative mb-4 flex h-24 w-full items-center justify-center overflow-hidden rounded-sm border border-lines-hover bg-linear-to-b from-lines-hover to-(--color-base) shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]">
+
+        {/* Бейдж "Бартер" */}
         {item.types?.includes("barter") && (
-          <div 
-            className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-(--color-base)/80 backdrop-blur-md border border-lines-hover/50 shadow-sm" 
+          <div
+            className="absolute right-1.5 top-1.5 z-20 flex items-center gap-1 rounded-xs border border-lines-hover/50 bg-(--color-base)/80 px-1.5 py-0.5 shadow-sm backdrop-blur-md"
             title="Получение путем обмена (Бартер)"
           >
-            <span className="w-2.5 h-2.5 bg-nvg-green [mask-size:contain] [mask-position:center] [mask-repeat:no-repeat] icon-eft-prog-barter"></span>
-            <span className="text-[8px] font-blender-medium uppercase tracking-widest text-nvg-green mt-px leading-none">Бартер</span>
+            <span className="icon-eft-prog-barter h-2.5 w-2.5 bg-nvg-green mask-contain mask-center mask-no-repeat" />
+            <span className="mt-px font-blender-medium text-[8px] uppercase leading-none tracking-widest text-nvg-green">Бартер</span>
           </div>
         )}
 
         {/* Цветная подложка редкости */}
-        <div 
-          className="absolute inset-0 pointer-events-none" 
-          style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} 
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }}
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img 
-          src={`/images/items/eft/${item.id}.webp`} 
-          alt={item.name} 
+        <img
+          src={`/images/items/eft/${item.id}.webp`}
+          alt={item.name}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 z-10 w-full h-full p-2 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300" 
+          className="absolute inset-0 z-10 h-full w-full object-contain p-2 drop-shadow-lg transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
             if (!e.currentTarget.dataset.triedApi) {
               e.currentTarget.dataset.triedApi = 'true';
@@ -81,108 +126,108 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
           }}
         />
       </div>
-      
+
       {/* Название */}
-      <h3 className="font-blender-medium text-[16px] uppercase text-text-primary leading-tight mb-3 truncate" title={item.name}>
+      <h3
+        className="mb-3 truncate font-blender-medium text-base uppercase leading-tight text-text-primary"
+        title={item.name}
+      >
         {item.name}
       </h3>
 
       {/* Специфичные характеристики (Патроны) */}
       {categorySlug === 'ammo' && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="mb-3 flex flex-wrap gap-1.5">
           <SemanticBadge color="red" label={`Урон: ${item.properties?.damage || 0}`} />
           <SemanticBadge color="emerald" label={`Проб: ${item.properties?.penetrationPower || 0}`} />
         </div>
       )}
-      
+
       {/* Специфичные характеристики (Броня, Шлемы, Разгрузки) */}
       {(categorySlug === 'armor' || categorySlug === 'helmets' || categorySlug === 'rigs') && item.properties?.class && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          <SemanticBadge 
-            color={getArmorClassColor(item.properties.class)} 
-            label={`Класс ${item.properties.class}`} 
-            iconClass={`icon-eft-armor-class-${item.properties.class}`} 
-            iconSizeClass="w-[22px] h-[22px]" 
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          <SemanticBadge
+            color={getArmorClassColor(item.properties.class)}
+            label={`Класс ${item.properties.class}`}
+            iconClass={`icon-eft-armor-class-${item.properties.class}`}
+            iconSizeClass="w-[22px] h-[22px]"
           />
-          {item.properties.durability && <SemanticBadge color="gray" label={`Прочность: ${item.properties.durability}`} />}
+          {item.properties.durability && (
+            <SemanticBadge color="gray" label={`${item.properties.durability} HP`} />
+          )}
         </div>
       )}
 
-      {/* Экономика */}
-      <div className="mt-auto flex flex-col gap-2 pt-3 border-t border-lines-hover">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="text-[10px] uppercase font-blender-medium tracking-widest text-text-muted">Продажа</span>
-              {item.eco.bestSell.vendor && item.eco.bestSell.price > 0 && (
-                <div 
-                  className="flex items-center gap-1 px-1 rounded-sm border border-lines-hover/50 bg-(--color-base)"
-                  title={`Лучший покупатель: ${item.eco.bestSell.vendor.name}`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={`/images/traders/eft/${item.eco.bestSell.vendor.normalizedName || item.eco.bestSell.vendor.name.toLowerCase()}.webp`}
-                    alt={item.eco.bestSell.vendor.name}
-                    className="w-3 h-3 rounded-[1px] object-cover opacity-80"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                  <span className="text-[8px] font-blender-medium uppercase tracking-widest text-text-secondary truncate max-w-[50px] leading-none mt-px">
-                    {item.eco.bestSell.vendor.name}
-                  </span>
-                </div>
-              )}
-            </div>
-            {item.eco.bestSell.price > 0 ? (
-              <span title={`${item.eco.bestSell.price.toLocaleString('ru-RU')} ${sellCurrency}`} className="cursor-help font-mono text-sm font-bold text-text-primary">
-                {formatCompactNumber(item.eco.bestSell.price)} {sellCurrency}
-              </span>
-            ) : (
-              <div className="flex items-center gap-1 text-text-muted opacity-50 pt-0.5"><PackageX className="w-3 h-3" /><span className="font-blender-medium text-[10px] uppercase tracking-widest">Нет</span></div>
-            )}
-          </div>
-          <div className="flex flex-col items-end text-right">
-            <div className="flex items-center justify-end gap-1.5 mb-0.5">
-              {item.eco.bestBuy?.vendor && item.eco.minPrice > 0 && (
-                <div 
-                  className="flex items-center gap-1 px-1 rounded-sm border border-lines-hover/50 bg-(--color-base)"
-                  title={`Лучшая цена покупки: ${item.eco.bestBuy.vendor.name}`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={`/images/traders/eft/${item.eco.bestBuy.vendor.normalizedName || item.eco.bestBuy.vendor.name.toLowerCase()}.webp`}
-                    alt={item.eco.bestBuy.vendor.name}
-                    className="w-3 h-3 rounded-[1px] object-cover opacity-80"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                  <span className="text-[8px] font-blender-medium uppercase tracking-widest text-text-secondary truncate max-w-[50px] leading-none mt-px">
-                    {item.eco.bestBuy.vendor.name}
-                  </span>
-                </div>
-              )}
-              <span className="text-[10px] uppercase font-blender-medium tracking-widest text-text-muted">Покупка</span>
-            </div>
-            {item.eco.minPrice > 0 ? (
-              <span title={`${item.eco.minPrice.toLocaleString('ru-RU')} ${buyCurrency}`} className="cursor-help font-mono text-sm font-bold text-nvg-green">
-                {formatCompactNumber(item.eco.minPrice)} {buyCurrency}
-              </span>
-            ) : (
-              <div className="flex items-center justify-end gap-1 text-text-muted opacity-50 pt-0.5"><PackageX className="w-3 h-3" /><span className="font-blender-medium text-[10px] uppercase tracking-widest">Нет</span></div>
-            )}
-          </div>
-        </div>
-        
-        {/* Выгода на слот */}
-        <div className="mt-1 flex items-center justify-between rounded bg-[color-mix(in_srgb,var(--color-card-menu)_40%,transparent)] px-2 py-1.5 border border-lines-hover/50">
-          <span className="text-[10px] uppercase font-blender-medium tracking-widest text-text-muted">Цена / Слот</span>
-          {item.eco.vps > 0 ? (
-            <span title={`${item.eco.vps.toLocaleString('ru-RU')} ₽`} className={`cursor-help font-mono text-xs font-bold ${item.eco.vps > 10000 ? 'text-nvg-green' : item.eco.vps > 5000 ? 'text-yellow-500' : 'text-text-primary'}`}>
-              {formatCompactNumber(item.eco.vps)} ₽
+      {/* ─── Экономика (3 строки) ─── */}
+      <div className="mt-auto flex flex-col gap-1 border-t border-lines-hover pt-3">
+
+        {/* Строка 1: Продать */}
+        <div className="flex items-center gap-2">
+          <VendorAvatar vendor={traderSell?.vendor} />
+          {/* Trader sell (small, muted) */}
+          {traderSellPrice > 0 && fleaSell && (
+            <span className="font-blender-medium text-[10px] text-text-muted">
+              {formatCompactNumber(traderSellPrice)} ₽
+            </span>
+          )}
+          {/* Best/Flea sell (large, prominent) */}
+          {bestSellPrice > 0 ? (
+            <span
+              title={`${bestSellPrice.toLocaleString('ru-RU')} ₽`}
+              className="ml-auto cursor-help font-blender-medium text-sm text-(--primary)"
+            >
+              {formatCompactNumber(bestSellPrice)} ₽
             </span>
           ) : (
-            <div className="flex items-center gap-1 text-text-muted opacity-50">
-              <PackageX className="w-3 h-3" />
+            <span className="ml-auto flex items-center gap-1 text-text-muted/50">
+              <PackageX className="h-3 w-3" />
+              <span className="font-blender-medium text-[10px] uppercase tracking-widest">Нет</span>
+            </span>
+          )}
+        </div>
+
+        {/* Строка 2: Купить */}
+        <div className="flex items-center gap-2">
+          {buyIsFlea
+            ? <Coins className="h-4 w-4 shrink-0 text-yellow-500/70" />
+            : <VendorAvatar vendor={eco.bestBuy?.vendor} />
+          }
+          {buyPrice > 0 ? (() => {
+            const isUSD = eco.bestBuy?.currency === 'USD' && eco.bestBuy?.price;
+            return (
+              <span
+                title={`${buyPrice.toLocaleString('ru-RU')} ₽`}
+                className="cursor-help font-blender-medium text-[11px] text-nvg-green"
+              >
+                {isUSD ? `$${formatCompactNumber(eco.bestBuy!.price!)}` : `${formatCompactNumber(buyPrice)} ₽`}
+              </span>
+            );
+          })() : (
+            <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted/60">
+              Нельзя купить
+            </span>
+          )}
+        </div>
+
+        {/* Строка 3: Цена / Слот */}
+        <div className="mt-0.5 flex items-center justify-between rounded border border-lines-hover/50 bg-[color-mix(in_srgb,var(--color-card-menu)_40%,transparent)] px-2 py-1.5">
+          <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+            Цена / Слот
+          </span>
+          {eco.vps > 0 ? (
+            <span
+              title={`${eco.vps.toLocaleString('ru-RU')} ₽`}
+              className={`cursor-help font-blender-medium text-xs ${
+                eco.vps > 10000 ? 'text-nvg-green' : eco.vps > 5000 ? 'text-yellow-500' : 'text-text-primary'
+              }`}
+            >
+              {formatCompactNumber(eco.vps)} ₽
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-text-muted/50">
+              <PackageX className="h-3 w-3" />
               <span className="font-blender-medium text-[9px] uppercase tracking-widest">Нет</span>
-            </div>
+            </span>
           )}
         </div>
       </div>

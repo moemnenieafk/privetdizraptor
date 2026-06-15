@@ -14,11 +14,13 @@ export function formatCompactNumber(value: number | string | null | undefined): 
   const absValue = Math.abs(numericValue);
 
   if (absValue >= 1_000_000) {
-    return (numericValue / 1_000_000).toLocaleString("ru-RU", { maximumFractionDigits: 2 }) + "КК";
+    const truncated = Math.trunc(numericValue / 100_000) / 10;
+    return truncated.toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + "КК";
   }
 
   if (absValue >= 1_000) {
-    return (numericValue / 1_000).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + "К";
+    const truncated = Math.trunc(numericValue / 100) / 10;
+    return truncated.toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + "К";
   }
 
   return numericValue.toLocaleString("ru-RU");

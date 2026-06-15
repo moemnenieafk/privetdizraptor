@@ -16,17 +16,25 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className="antialiased min-h-screen flex flex-col bg-base">
-        {/* Global dot matrix — fades from edges toward center */}
+        {/* BG Layer 1: dot matrix — confined to side gutters, invisible over content */}
+        <div aria-hidden className="bg-dot-gutter pointer-events-none fixed inset-0 z-0" />
+
+        {/* BG Layer 2: primary colour ambient bloom from top — reacts to game theme */}
         <div
           aria-hidden
           className="pointer-events-none fixed inset-0 z-0"
           style={{
-            backgroundImage: 'radial-gradient(circle, rgba(242,242,242,1) 1px, transparent 1px)',
-            backgroundSize: '53px 53px',
-            maskImage:
-              'linear-gradient(to right, rgba(0,0,0,0.07) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.07) 100%)',
-            WebkitMaskImage:
-              'linear-gradient(to right, rgba(0,0,0,0.07) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.07) 100%)',
+            background: 'radial-gradient(ellipse 80% 38% at 50% 0%, var(--primary) 0%, transparent 100%)',
+            opacity: 0.04,
+          }}
+        />
+
+        {/* BG Layer 3: corner vignette — frames the display, deepens extreme edges */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-0"
+          style={{
+            background: 'radial-gradient(ellipse 145% 145% at 50% 50%, transparent 52%, rgba(0,0,0,0.42) 100%)',
           }}
         />
         <div className="relative z-10 flex min-h-screen flex-col">

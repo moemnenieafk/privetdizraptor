@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Search, ChevronDown, Check } from "lucide-react";
 import { ItemCategoryType } from "@/types/tarkov-items";
@@ -52,12 +52,12 @@ export const ItemsFilterPanel = ({
   setAvailableOnly,
 }: ItemsFilterPanelProps) => {
   return (
-    <div className="sticky top-[72px] z-40 flex w-full flex-col gap-5 rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_80%,transparent)] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300">
-      {/* Верхняя строка: Поиск и Сортировка */}
-      <div className="flex w-full flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex w-full flex-col gap-4 py-3">
+      {/* Строка 1: Поиск + Сортировка */}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
         {/* Поиск */}
-        <div className="relative flex w-full shrink-0 items-center md:w-72">
-          <span title="Поиск" className="absolute left-3 text-text-muted">
+        <div className="relative flex items-center">
+          <span className="absolute left-3 text-text-muted">
             <Search className="h-4 w-4" />
           </span>
           <input
@@ -69,31 +69,30 @@ export const ItemsFilterPanel = ({
           />
         </div>
 
-      {/* Кастомная сортировка */}
-      <div className="relative flex w-full items-center md:w-48">
-        <select
-          value={sortBy}
-          onChange={(e) => onSortChange(e.target.value as SortOption)}
-          className="flex h-10 w-full cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu px-3 pr-8 font-blender-book text-sm text-text-primary transition-colors duration-300 focus:border-(--primary) focus:outline-none"
-        >
-          <option value="none">Сортировка</option>
-          <option value="name_asc">По имени (А-Я)</option>
-          <option value="name_desc">По имени (Я-А)</option>
-          <option value="price_asc">По цене (возр.)</option>
-          <option value="price_desc">По цене (убыв.)</option>
-          <option value="vps_desc">Цена/Слот (убыв.)</option>
-        </select>
-        <span className="pointer-events-none absolute right-3 text-text-muted">
-          <ChevronDown className="h-4 w-4" />
-        </span>
-      </div>
+        {/* Сортировка */}
+        <div className="relative flex items-center">
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value as SortOption)}
+            className="flex h-10 w-full cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu px-3 pr-8 font-blender-book text-sm text-text-primary transition-colors duration-300 focus:border-(--primary) focus:outline-none"
+          >
+            <option value="none">Сортировка</option>
+            <option value="name_asc">По имени (А-Я)</option>
+            <option value="name_desc">По имени (Я-А)</option>
+            <option value="price_asc">По цене (возр.)</option>
+            <option value="price_desc">По цене (убыв.)</option>
+            <option value="vps_desc">Цена/Слот (убыв.)</option>
+          </select>
+          <span className="pointer-events-none absolute right-3 text-text-muted">
+            <ChevronDown className="h-4 w-4" />
+          </span>
+        </div>
       </div>
 
-      {/* Нижняя строка: Фильтр по категориям */}
-      <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-full flex-wrap gap-2">
-          {CATEGORIES.map(({ value, label }) => (
-            <button
+      {/* Строка 2: Категории + Переключатели */}
+      <div className="flex w-full flex-wrap items-center gap-2">
+        {CATEGORIES.map(({ value, label }) => (
+          <button
             key={value}
             type="button"
             onClick={() => onCategoryChange(value)}
@@ -104,41 +103,51 @@ export const ItemsFilterPanel = ({
             }`}
           >
             {label}
-            </button>
-          ))}
-        </div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0 mt-4 lg:mt-0">
-        <label className="flex items-center gap-2 cursor-pointer group w-fit shrink-0">
-          <input 
-            type="checkbox" 
-            className="hidden peer"
-            checked={barterOnly}
-            onChange={(e) => setBarterOnly(e.target.checked)}
+          </button>
+        ))}
+
+        {/* Разделитель */}
+        <div className="mx-1 h-5 w-px bg-lines-hover" />
+
+        {/* Бартер — иконка-переключатель */}
+        <button
+          type="button"
+          onClick={() => setBarterOnly(!barterOnly)}
+          title="Только бартерные предметы"
+          className={`flex items-center gap-1.5 rounded border px-3 py-1.5 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-300 ${
+            barterOnly
+              ? "border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary)"
+              : "border-lines-hover bg-card-menu text-text-muted hover:border-text-secondary hover:text-text-primary"
+          }`}
+        >
+          <span
+            className={`icon-eft-prog-barter h-4 w-4 shrink-0 mask-center mask-no-repeat mask-contain ${
+              barterOnly ? "bg-(--primary)" : "bg-current"
+            }`}
           />
-          <div className="w-4 h-4 rounded border border-lines-hover bg-card-menu peer-checked:bg-nvg-green peer-checked:border-nvg-green transition-colors flex items-center justify-center">
-            {barterOnly && <Check className="w-3 h-3 text-(--color-base) stroke-3" />}
-          </div>
-          <span className="text-sm font-blender-book text-text-secondary group-hover:text-text-primary transition-colors mt-0.5">
-            Только бартерные предметы
-          </span>
-        </label>
+          Бартер
+        </button>
+
+        {/* Доступно мне */}
         {setAvailableOnly && (
-          <label className="flex items-center gap-2 cursor-pointer group w-fit shrink-0" title="Оставить только те предметы, которые вы можете купить на текущем уровне">
-            <input 
-              type="checkbox" 
+          <label
+            className="flex cursor-pointer items-center gap-2 rounded border border-lines-hover bg-card-menu px-3 py-1.5 transition-colors duration-300 hover:border-text-secondary group"
+            title="Оставить только те предметы, которые вы можете купить на текущем уровне"
+          >
+            <input
+              type="checkbox"
               className="hidden peer"
               checked={availableOnly || false}
               onChange={(e) => setAvailableOnly(e.target.checked)}
             />
-            <div className="w-4 h-4 rounded border border-lines-hover bg-card-menu peer-checked:bg-(--primary) peer-checked:border-(--primary) transition-colors flex items-center justify-center">
-              {availableOnly && <Check className="w-3 h-3 text-(--color-base) stroke-3" />}
+            <div className="flex h-4 w-4 items-center justify-center rounded border border-lines-hover bg-card-menu peer-checked:border-(--primary) peer-checked:bg-(--primary) transition-colors">
+              {availableOnly && <Check className="h-3 w-3 stroke-3 text-(--color-base)" />}
             </div>
-            <span className="text-sm font-blender-book text-text-secondary group-hover:text-text-primary transition-colors mt-0.5">
+            <span className="font-blender-medium text-xs uppercase tracking-wider text-text-muted group-hover:text-text-primary transition-colors">
               Доступно мне
             </span>
           </label>
         )}
-      </div>
       </div>
 
       <ArmorFilterPanel

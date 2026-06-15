@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 interface ProgressBarProps {
   label: string;
@@ -23,7 +23,7 @@ export function ProgressBar({ label, value, max, suffix = '', inverse = false, c
         <span className="text-[12px] font-blender-medium uppercase tracking-wider text-text-secondary">
           {label}
         </span>
-        <span className="text-sm font-mono font-bold text-text-primary">
+        <span className="text-sm font-blender-medium text-text-primary">
           {value}{suffix}
           <span className="text-text-muted font-normal text-xs ml-1">/ {max}</span>
         </span>

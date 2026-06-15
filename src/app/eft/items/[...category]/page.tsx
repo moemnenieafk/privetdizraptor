@@ -1,7 +1,5 @@
 ﻿import { PageHeader } from '@/components/ui/PageHeader';
-import React from 'react';
 import { notFound } from 'next/navigation';
-import { HubCard } from '@/components/ui/HubCard';
 import { HEADER_DICTIONARY, MenuItem } from '@/data/headerConfig';
 import { ItemsCategoryClient, CategoryItem } from './ItemsCategoryClient';
 import { CategoryTabs, type CategoryTabConfig } from "@/components/features/items/CategoryTabs";
@@ -26,6 +24,7 @@ function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null 
 async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
   // Расширенный маппинг наших URL-категорий на типы GraphQL tarkov.dev
   const typeMapping: Record<string, string> = {
+    // Снаряжение
     'gear': 'armor, backpack, armorPlate, glasses, headphones, helmet, wearable, rig',
     'armor': 'armor',
     'backpacks': 'backpack',
@@ -36,9 +35,12 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'masks': 'wearable',
     'rigs': 'rig',
     'visors': 'mods',
-    'ammo': 'ammo',
-    'guns': 'gun, ammo, grenade, mods',
-    'firearms': 'gun',
+    // Контейнеры (перенесены под gear)
+    'containers': 'container',
+    'cases': 'container',
+    'secure': 'container',
+    // Оружие (новая плоская структура)
+    'weapons': 'gun',
     'ar': 'gun',
     'bolt': 'gun',
     'carbine': 'gun',
@@ -46,9 +48,16 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'gl': 'gun',
     'grenades': 'grenade',
     'lmg': 'gun',
+    'melee': 'gun',
     'shotgun': 'gun',
     'sidearm': 'gun',
     'smg': 'gun',
+    'special': 'gun',
+    // Моды (перенесены на верхний уровень)
+    'mods': 'mods',
+    'vitalparts': 'mods',
+    'functional': 'mods',
+    'elements': 'mods',
     'auxiliary': 'mods',
     'barrels': 'mods',
     'bipods': 'mods',
@@ -64,20 +73,44 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'receivers': 'mods',
     'sights': 'mods',
     'stocks': 'mods',
-    'equipment': 'meds, keys, container, provisions',
+    // Боеприпасы
+    'ammo': 'ammo',
+    'rounds': 'ammo',
+    'ammo-boxes': 'ammo',
+    // Бартер-предметы
+    'barter': 'barter',
+    'valuables': 'barter',
+    'electronics': 'barter',
+    'tools': 'barter',
+    'flammable-materials': 'barter',
+    'building-materials': 'barter',
+    'household-materials': 'barter',
+    'medical-supplies': 'barter',
+    'energy-elements': 'barter',
+    'others': 'barter',
+    // Медикаменты
+    'meds': 'meds',
     'injury': 'meds',
     'injectors': 'injectors',
     'medkits': 'meds',
-    'meds': 'meds',
     'pills': 'meds',
-    'keycards': 'keys',
+    // Ключи
     'keys': 'keys',
     'mechanical': 'keys',
-    'cases': 'container',
-    'secure': 'container',
+    'keycards': 'keys',
+    // Провизия
+    'provisions': 'provisions',
     'drinks': 'provisions',
     'food': 'provisions',
-    'provisions': 'provisions',
+    // Инфо предметы и спецоборудование
+    'info': 'common',
+    'specialequipment': 'common',
+    // Легаси slugs (обратная совместимость)
+    'guns': 'gun, ammo, grenade, mods',
+    'firearms': 'gun',
+    'equipment': 'meds, keys, container, provisions',
+    'marked': 'keys',
+    'quest': 'keys',
   };
 
   const gqlType = typeMapping[slug];
@@ -87,27 +120,69 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     query {
       items(${typeFilter ? typeFilter + ',' : ''} lang: ru) {
         id
+        normalizedName
         name
         shortName
         width
         height
+        weight
         basePrice
         image512pxLink
         types
-          backgroundColor
+        backgroundColor
         properties {
           ... on ItemPropertiesHelmet {
             class
             durability
             deafening
             blocksHeadset
+            blindnessProtection
+            ergoPenalty
+            speedPenalty
+            turnPenalty
+            armorType
           }
           ... on ItemPropertiesArmor {
             class
             durability
+            ergoPenalty
+            speedPenalty
+            turnPenalty
+            armorType
+          }
+          ... on ItemPropertiesGlasses {
+            class
+            durability
+            blindnessProtection
+            ergoPenalty
+          }
+          ... on ItemPropertiesArmorAttachment {
+            class
+            durability
+            blindnessProtection
+            ergoPenalty
+            speedPenalty
+            turnPenalty
+            armorType
+          }
+          ... on ItemPropertiesChestRig {
+            class
+            durability
+            capacity
+            ergoPenalty
+            speedPenalty
+            turnPenalty
+            armorType
+          }
+          ... on ItemPropertiesBackpack {
+            capacity
+            ergoPenalty
+            speedPenalty
+            turnPenalty
           }
           ... on ItemPropertiesHeadphone {
             ambientVolume
+            distanceModifier
           }
           ... on ItemPropertiesAmmo {
             caliber
@@ -116,13 +191,37 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
             armorDamage
             fragmentationChance
           }
+          ... on ItemPropertiesWeapon {
+            caliber
+            ergonomics
+            recoilVertical
+            recoilHorizontal
+            fireRate
+            sightingRange
+          }
           ... on ItemPropertiesWeaponMod {
             ergonomics
             recoilModifier
+            accuracyModifier
+          }
+          ... on ItemPropertiesScope {
+            ergonomics
+            recoilModifier
+            zoomLevels
+            sightingRange
+          }
+          ... on ItemPropertiesGrenade {
+            type
+            fragments
+            fuse
+            maxExplosionDistance
+          }
+          ... on ItemPropertiesContainer {
+            capacity
           }
         }
-              sellFor { price, vendor { name, normalizedName } }
-              buyFor { price, vendor { name, normalizedName } }
+        sellFor { price priceRUB currency vendor { name normalizedName } }
+        buyFor { price priceRUB currency vendor { name normalizedName } }
       }
     }
   `;
@@ -161,13 +260,14 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
         (prev.price > current.price) ? prev : current
       , { price: 0 });
 
-      // Ищем лучшую цену покупки (минимальную)
-      const validBuyFor = item.buyFor?.filter((b: any) => b.price > 0) || [];
-      const bestBuy = validBuyFor.length > 0 
-        ? validBuyFor.reduce((prev: any, current: any) => (prev.price < current.price) ? prev : current) 
+      // Ищем лучшую цену покупки (минимальную) — сравниваем по priceRUB для корректного сравнения валют
+      const rubVal = (p: any) => p.priceRUB ?? p.price;
+      const validBuyFor = item.buyFor?.filter((b: any) => rubVal(b) > 0) || [];
+      const bestBuy = validBuyFor.length > 0
+        ? validBuyFor.reduce((prev: any, current: any) => rubVal(current) < rubVal(prev) ? current : prev)
         : null;
 
-      const minPrice = bestBuy?.price || item.basePrice || 0;
+      const minPrice = bestBuy ? rubVal(bestBuy) : (item.basePrice || 0);
       const slots = (item.width || 1) * (item.height || 1);
       const vps = slots > 0 ? Math.round((bestSell?.price || 0) / slots) : 0;
 
@@ -184,6 +284,43 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
   } catch (error) {
     console.error('Fetch error in getCategoryItems:', error);
     return [];
+  }
+}
+
+// Загружаем бартеры Рефа (Забора) за ГП монеты: item.id → кол-во ГП монет
+async function getGpCoinBarters(): Promise<Record<string, number>> {
+  const query = `
+    query {
+      barters {
+        trader { normalizedName }
+        requiredItems { item { shortName } count }
+        rewardItems { item { id } count }
+      }
+    }
+  `;
+  try {
+    const res = await fetch('https://api.tarkov.dev/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ query }),
+      next: { revalidate: 3600 },
+    });
+    const json = await res.json();
+    const result: Record<string, number> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const barter of (json.data?.barters || []) as any[]) {
+      if (barter.trader?.normalizedName !== 'fence') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const gpReq = barter.requiredItems?.find((r: any) => r.item?.shortName === 'GP');
+      if (!gpReq) continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const reward of (barter.rewardItems || []) as any[]) {
+        if (reward.item?.id) result[reward.item.id] = gpReq.count || 1;
+      }
+    }
+    return result;
+  } catch {
+    return {};
   }
 }
 
@@ -230,11 +367,14 @@ export default async function ItemsDynamicPage({ params }: Props) {
     }));
   }
 
-  // Загружаем предметы в любом случае (в родительских категориях выводится вся группа)
-  const itemsData = await getCategoryItems(slug);
+  // Загружаем предметы и GP-бартеры параллельно
+  const [itemsData, gpCoinBarters] = await Promise.all([
+    getCategoryItems(slug),
+    getGpCoinBarters(),
+  ]);
 
   return (
-    <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
+    <main className="flex w-full flex-col items-center justify-start pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
         
         <PageHeader 
@@ -248,7 +388,7 @@ export default async function ItemsDynamicPage({ params }: Props) {
         )}
 
         {/* Всегда рендерим таблицу/сетку для текущей категории или группы */}
-        <ItemsCategoryClient initialData={itemsData} categorySlug={slug} />
+        <ItemsCategoryClient initialData={itemsData} categorySlug={slug} gpCoinBarters={gpCoinBarters} />
       </div>
     </main>
   );

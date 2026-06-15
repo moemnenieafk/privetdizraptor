@@ -4,8 +4,14 @@ import { Badge, MetricCard, SectionPanel } from '@/components/ui/kit';
 import {
   WeaponModule,
   ArmorModule,
-  MedicalModule,
+  MedKitModule,
+  MedicalItemModule,
   ContainerModule,
+  AmmoModule,
+  GrenadeModule,
+  HeadsetModule,
+  HelmetModule,
+  BackpackModule,
   TraderModule,
   BarterModule,
   CraftModule,
@@ -14,14 +20,16 @@ import {
   type BarterOffer,
   type CraftRecipe,
 } from './ItemModules';
+import { ItemImage } from './ItemImage';
 import Link from 'next/link';
 import { formatCompactNumber } from '@/lib/formatters';
 import { Tooltip } from '@/components/ui/Tooltip';
 
-// === ТИПИЗАЦИЯ ДАННЫХ TARKOV.DEV ===
+// === ТИПИЗАЦИЯ ===
 
 interface TarkovItem {
   id: string;
+  normalizedName: string;
   name: string;
   shortName: string;
   description: string;
@@ -37,13 +45,14 @@ interface TarkovItem {
   crafts: CraftRecipe[];
 }
 
-// === СЕРВЕРНЫЙ ЗАПРОС К GRAPHQL (BFF PATTERN) ===
+// === GQL ===
 
-async function getItemData(id: string): Promise<TarkovItem | null> {
+async function getItemData(slug: string): Promise<TarkovItem | null> {
   const query = `
-    query GetItem($id: ID!) {
-      item(id: $id) {
+    query {
+      item(normalizedName: "${slug}", lang: ru) {
         id
+        normalizedName
         name
         shortName
         description
@@ -60,7 +69,7 @@ async function getItemData(id: string): Promise<TarkovItem | null> {
           price
           vendor { name normalizedName }
         }
-        barters {
+        barters: bartersFor {
           id
           trader { name normalizedName }
           level
@@ -69,7 +78,7 @@ async function getItemData(id: string): Promise<TarkovItem | null> {
             count
           }
         }
-        crafts {
+        crafts: craftsFor {
           id
           station { name normalizedName }
           level
@@ -92,15 +101,58 @@ async function getItemData(id: string): Promise<TarkovItem | null> {
             durability
             speedPenalty
             turnPenalty
+            ergoPenalty
             material { name }
           }
-          ... on ItemPropertiesMedical {
+          ... on ItemPropertiesMedKit {
+            hitpoints
             useTime
+            maxHealPerUse
+            cures
+          }
+          ... on ItemPropertiesMedicalItem {
             uses
-            hpCost
+            useTime
+            cures
           }
           ... on ItemPropertiesContainer {
             grids { width height }
+          }
+          ... on ItemPropertiesAmmo {
+            caliber
+            damage
+            penetrationPower
+            armorDamage
+            fragmentationChance
+            initialSpeed
+          }
+          ... on ItemPropertiesGrenade {
+            type
+            fuse
+            minExplosionDistance
+            maxExplosionDistance
+            fragments
+          }
+          ... on ItemPropertiesHeadphone {
+            distanceModifier
+            ambientVolume
+          }
+          ... on ItemPropertiesHelmet {
+            class
+            durability
+            deafening
+            headZones
+            material { name }
+            blocksHeadset
+            speedPenalty
+            turnPenalty
+            ergoPenalty
+          }
+          ... on ItemPropertiesBackpack {
+            grids { width height }
+            speedPenalty
+            turnPenalty
+            ergoPenalty
           }
         }
       }
@@ -110,18 +162,19 @@ async function getItemData(id: string): Promise<TarkovItem | null> {
   const res = await fetch('https://api.tarkov.dev/graphql', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ query, variables: { id } }),
+    body: JSON.stringify({ query }),
     next: { revalidate: 3600 },
   });
 
-  const json = await res.json() as { data?: { item: TarkovItem | null } };
+  const json = await res.json() as { data?: { item: TarkovItem } };
   return json.data?.item ?? null;
 }
 
-// === СТРАНИЦА ПРЕДМЕТА ===
+// === СТРАНИЦА ===
 
-export default async function ItemDetailsPage({ params }: { params: { id: string } }) {
-  const item = await getItemData(params.id);
+export default async function ItemDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const item = await getItemData(slug);
 
   if (!item) notFound();
 
@@ -135,7 +188,6 @@ export default async function ItemDetailsPage({ params }: { params: { id: string
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
       <div className="w-full max-w-275 px-4 mx-auto xl:px-0">
 
-        {/* Кнопка "Назад" */}
         <div className="mb-6">
           <Link
             href="/eft/items"
@@ -145,7 +197,6 @@ export default async function ItemDetailsPage({ params }: { params: { id: string
           </Link>
         </div>
 
-        {/* Хедер предмета */}
         <div className="mb-6 pb-6 border-b border-lines-hover">
           <h1 className="mb-2 text-3xl uppercase leading-none tracking-widest font-blender-medium text-text-primary lg:text-4xl">
             {item.name}
@@ -158,40 +209,33 @@ export default async function ItemDetailsPage({ params }: { params: { id: string
           </div>
         </div>
 
-        {/* Основной Grid (Tactical Layout) */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
 
-          {/* Левая колонка: Визуал + специфичные модули (4/12) */}
           <div className="flex flex-col gap-6 lg:col-span-4">
             <div className="relative flex min-h-75 items-center justify-center overflow-hidden rounded border border-lines-hover bg-card-menu p-4 group">
               <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle,var(--color-text-muted)_1px,transparent_1px)] bg-size-[20px_20px]" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/images/items/eft/${item.id}.webp`}
-                alt={item.name}
+              <ItemImage
+                id={item.id}
+                image512pxLink={item.image512pxLink}
+                name={item.name}
                 className="z-10 w-64 h-64 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-105"
-                onError={(e) => {
-                  if (!e.currentTarget.dataset.triedApi) {
-                    e.currentTarget.dataset.triedApi = 'true';
-                    e.currentTarget.src = item.image512pxLink || '/images/placeholder.webp';
-                  } else if (!e.currentTarget.dataset.triedPlaceholder) {
-                    e.currentTarget.dataset.triedPlaceholder = 'true';
-                    e.currentTarget.src = '/images/placeholder.webp';
-                  }
-                }}
               />
             </div>
 
             <WeaponModule properties={item.properties} />
             <ArmorModule properties={item.properties} />
-            <MedicalModule properties={item.properties} />
+            <MedKitModule properties={item.properties} />
+            <MedicalItemModule properties={item.properties} />
             <ContainerModule properties={item.properties} itemWidth={item.width} itemHeight={item.height} />
+            <AmmoModule properties={item.properties} />
+            <GrenadeModule properties={item.properties} />
+            <HeadsetModule properties={item.properties} />
+            <HelmetModule properties={item.properties} />
+            <BackpackModule properties={item.properties} itemWidth={item.width} itemHeight={item.height} />
           </div>
 
-          {/* Правая колонка: Экономика + торговля + бартер + крафт (8/12) */}
           <div className="flex flex-col gap-6 lg:col-span-8">
 
-            {/* Экономический блок */}
             <SectionPanel title="Тактическая Экономика" icon={<Banknote className="w-4 h-4" />}>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <Tooltip content={`${item.basePrice.toLocaleString('ru-RU')} ₽`} className="block w-full cursor-help">
@@ -221,16 +265,10 @@ export default async function ItemDetailsPage({ params }: { params: { id: string
               </div>
             </SectionPanel>
 
-            {/* Торговля */}
             <TraderModule buyFor={item.buyFor} sellFor={item.sellFor} />
-
-            {/* Бартер */}
             <BarterModule barters={item.barters} />
-
-            {/* Крафт */}
             <CraftModule crafts={item.crafts} />
 
-            {/* Описание */}
             <SectionPanel title="Описание" icon={<Info className="w-4 h-4" />}>
               <p className="text-sm leading-relaxed font-blender-book text-text-secondary">
                 {item.description || 'Описание отсутствует в базе данных.'}

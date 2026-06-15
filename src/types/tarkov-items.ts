@@ -2,6 +2,7 @@ export type ItemCategoryType = 'armor' | 'weapon' | 'ammo' | 'meds' | 'container
 
 export interface BaseItemMetadata {
   id: string;
+  normalizedName: string;
   name: string;
   shortName: string;
   iconLink: string;

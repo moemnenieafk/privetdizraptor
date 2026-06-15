@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, X, LayoutGrid, List, ArrowDownUp, Check, Bookmark } from 'lucide-react';
+import { Search, X, LayoutGrid, List, ChevronDown, Check, Save, SlidersHorizontal } from 'lucide-react';
 import type { SortConfig } from './useCategoryFilters';
 
 interface CategoryControlBarProps {
@@ -12,6 +12,8 @@ interface CategoryControlBarProps {
   availableOnly: boolean;
   viewMode: 'grid' | 'table';
   isSaved: boolean;
+  showAdvanced: boolean;
+  activeAdvancedCount: number;
   onSearchChange: (q: string) => void;
   onDropdownSort: (key: string) => void;
   onArmorClassToggle: (ac: number) => void;
@@ -19,9 +21,10 @@ interface CategoryControlBarProps {
   onAvailableOnlyChange: (v: boolean) => void;
   onViewModeChange: (mode: 'grid' | 'table') => void;
   onSaveFilters: () => void;
+  onToggleAdvanced: () => void;
 }
 
-const ARMOR_CATEGORIES = ['armor', 'helmets', 'rigs'] as const;
+const ARMOR_CATEGORIES = ['armor', 'helmets', 'rigs', 'components'] as const;
 
 export function CategoryControlBar({
   categorySlug,
@@ -32,6 +35,8 @@ export function CategoryControlBar({
   availableOnly,
   viewMode,
   isSaved,
+  showAdvanced,
+  activeAdvancedCount,
   onSearchChange,
   onDropdownSort,
   onArmorClassToggle,
@@ -39,133 +44,170 @@ export function CategoryControlBar({
   onAvailableOnlyChange,
   onViewModeChange,
   onSaveFilters,
+  onToggleAdvanced,
 }: CategoryControlBarProps) {
   const showArmorFilter = ARMOR_CATEGORIES.includes(categorySlug as typeof ARMOR_CATEGORIES[number]);
 
   return (
-    <div className="bg-card-menu border border-lines-hover p-4 rounded flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between shadow-lg w-full">
+    <div className="flex w-full items-center gap-2 py-3">
 
-      {/* Поиск */}
-      <div className="relative flex items-center bg-(--color-base) border border-lines-hover rounded h-10 px-3 w-full xl:w-80 focus-within:border-(--primary) transition-colors shrink-0">
-        <Search className="w-4 h-4 text-text-muted mr-2 shrink-0" />
+      {/* Поиск — тянется на всё свободное место */}
+      <div className="relative flex h-10 min-w-36 flex-1 items-center rounded border border-lines-hover bg-(--color-base) px-3 transition-colors focus-within:border-(--primary)">
+        <Search className="mr-2 h-4 w-4 shrink-0 text-text-muted" />
         <input
           type="text"
           placeholder="ФИЛЬТР ПРЕДМЕТОВ..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-transparent text-[12px] font-blender-medium uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
+          className="w-full bg-transparent font-blender-medium text-[12px] uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
         />
         {searchQuery && (
-          <button onClick={() => onSearchChange('')} className="text-text-muted hover:text-(--primary) shrink-0 ml-2">
-            <X className="w-4 h-4" />
+          <button onClick={() => onSearchChange('')} className="ml-2 shrink-0 text-text-muted hover:text-(--primary)">
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      {/* Контролы */}
-      <div className="flex flex-wrap items-center justify-start xl:justify-end gap-3 w-full xl:w-auto">
-
-        {/* Фильтр класса брони */}
-        {showArmorFilter && (
-          <>
-            <div className="flex items-center gap-3 animate-[fade-in-up_0.3s_ease-out]">
-              <div className="flex flex-wrap items-center gap-1 border-lines-hover rounded p-1">
-                {[1, 2, 3, 4, 5, 6].map((ac) => {
-                  const isActive = activeArmorClasses.includes(ac);
-                  return (
-                    <button
-                      key={ac}
-                      onClick={() => onArmorClassToggle(ac)}
-                      title={`Показать/Скрыть класс брони ${ac}`}
-                      className={`flex h-7 w-7 items-center justify-center rounded transition-all duration-300 ${
-                        isActive
-                          ? 'bg-(--primary) text-(--color-base) drop-shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_40%,transparent)]'
-                          : 'bg-transparent text-text-muted hover:bg-[color-mix(in_srgb,var(--color-card-menu)_50%,transparent)] hover:text-text-primary'
-                      }`}
-                    >
-                      <span className={`h-5 w-5 bg-current [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] icon-eft-armor-class-${ac}`} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="w-px h-6 bg-lines-hover mx-1 hidden lg:block" />
-          </>
-        )}
-
-        {/* Только бартер */}
-        <label className="flex items-center gap-2 cursor-pointer group shrink-0">
-          <input type="checkbox" className="hidden peer" checked={barterOnly} onChange={(e) => onBarterOnlyChange(e.target.checked)} />
-          <div className="w-4 h-4 rounded border border-lines-hover bg-(--color-base) peer-checked:bg-nvg-green peer-checked:border-nvg-green transition-colors flex items-center justify-center">
-            {barterOnly && <Check className="w-3 h-3 text-(--color-base) stroke-3" />}
-          </div>
-          <span className="text-[10px] font-blender-medium uppercase tracking-widest text-text-secondary group-hover:text-text-primary transition-colors mt-0.5">
-            Только бартер
-          </span>
-        </label>
-
-        {/* Доступно мне */}
-        <label className="flex items-center gap-2 cursor-pointer group shrink-0" title="Доступно на моем уровне (Барахолка с 15 ур.)">
-          <input type="checkbox" className="hidden peer" checked={availableOnly} onChange={(e) => onAvailableOnlyChange(e.target.checked)} />
-          <div className="w-4 h-4 rounded border border-lines-hover bg-(--color-base) peer-checked:bg-(--primary) peer-checked:border-(--primary) transition-colors flex items-center justify-center">
-            {availableOnly && <Check className="w-3 h-3 text-(--color-base) stroke-3" />}
-          </div>
-          <span className="text-[10px] font-blender-medium uppercase tracking-widest text-text-secondary group-hover:text-text-primary transition-colors mt-0.5">
-            Доступно мне
-          </span>
-        </label>
-
-        {/* Сортировка */}
-        <div className="flex items-center bg-(--color-base) border border-lines-hover rounded h-10 px-3 grow sm:grow-0">
-          <ArrowDownUp className="w-4 h-4 text-text-muted mr-2 shrink-0" />
-          <select
-            value={sortConfig.key}
-            onChange={(e) => onDropdownSort(e.target.value)}
-            className="bg-transparent text-text-secondary text-[12px] font-blender-medium uppercase tracking-wider focus:outline-none cursor-pointer w-full"
-          >
-            <option value="vps">По выгоде (VPS)</option>
-            <option value="sellTrader">Продажа (Торговец)</option>
-            <option value="sellFlea">Продажа (Барахолка)</option>
-            <option value="buyMin">Покупка (Мин. цена)</option>
-            <option value="name">По алфавиту</option>
-          </select>
-        </div>
-
-        <div className="w-px h-6 bg-lines-hover mx-1 hidden sm:block" />
-
-        {/* Переключатель вид */}
-        <div className="flex items-center gap-1 bg-(--color-base) border border-lines-hover rounded p-1 shrink-0">
-          <button
-            onClick={() => onViewModeChange('grid')}
-            className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${viewMode === 'grid' ? 'bg-(--primary) text-(--color-base) shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_40%,transparent)]' : 'text-text-muted hover:text-text-primary hover:bg-[color-mix(in_srgb,var(--color-card-menu)_50%,transparent)]'}`}
-            title="Сетка"
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onViewModeChange('table')}
-            className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${viewMode === 'table' ? 'bg-(--primary) text-(--color-base) shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_40%,transparent)]' : 'text-text-muted hover:text-text-primary hover:bg-[color-mix(in_srgb,var(--color-card-menu)_50%,transparent)]'}`}
-            title="Список"
-          >
-            <List className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="w-px h-6 bg-lines-hover mx-1 hidden sm:block" />
-
-        {/* Сохранить фильтры */}
-        <button
-          onClick={onSaveFilters}
-          className={`h-10 w-10 shrink-0 flex items-center justify-center rounded transition-all duration-300 border outline-none focus-visible:ring-2 focus-visible:ring-(--primary) ${
-            isSaved
-              ? 'bg-nvg-green border-nvg-green text-(--color-base) shadow-[0_0_15px_color-mix(in_srgb,var(--color-nvg-green)_40%,transparent)]'
-              : 'bg-(--color-base) border-lines-hover text-text-muted hover:border-(--primary) hover:text-(--primary)'
-          }`}
-          title="Запомнить фильтры как стандартные"
+      {/* Сортировка */}
+      <div className="relative shrink-0">
+        <select
+          value={sortConfig.key}
+          onChange={(e) => onDropdownSort(e.target.value)}
+          className="h-10 w-48 cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-[11px] uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
         >
-          {isSaved ? <Check className="w-4 h-4 stroke-3" /> : <Bookmark className="w-4 h-4" />}
+          <option value="vps">По выгоде (VPS)</option>
+          <option value="sellTrader">Продажа (Торговец)</option>
+          <option value="sellFlea">Продажа (Барахолка)</option>
+          <option value="buyMin">Покупка (Мин. цена)</option>
+          <option value="name">По алфавиту</option>
+        </select>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
+          <ChevronDown className="h-4 w-4" />
+        </span>
+      </div>
+
+      <div className="h-6 w-px shrink-0 bg-lines-hover" />
+
+      {/* Класс брони (только armor / helmets / rigs) */}
+      {showArmorFilter && (
+        <>
+          <div className="flex shrink-0 animate-[fade-in-up_0.3s_ease-out] items-center gap-1">
+            {[1, 2, 3, 4, 5, 6].map((ac) => {
+              const isActive = activeArmorClasses.includes(ac);
+              return (
+                <button
+                  key={ac}
+                  onClick={() => onArmorClassToggle(ac)}
+                  title={`Класс брони ${ac}`}
+                  className={`flex h-7 w-7 items-center justify-center rounded transition-all duration-300 ${
+                    isActive
+                      ? 'bg-(--primary) text-(--color-base) drop-shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_40%,transparent)]'
+                      : 'border border-lines-hover bg-card-menu text-text-muted hover:bg-[color-mix(in_srgb,var(--color-card-menu)_50%,transparent)] hover:text-text-primary'
+                  }`}
+                >
+                  <span className={`h-5 w-5 bg-current mask-contain mask-no-repeat mask-center icon-eft-armor-class-${ac}`} />
+                </button>
+              );
+            })}
+          </div>
+          <div className="h-6 w-px shrink-0 bg-lines-hover" />
+        </>
+      )}
+
+      {/* Бартер */}
+      <button
+        type="button"
+        onClick={() => onBarterOnlyChange(!barterOnly)}
+        title="Только бартерные предметы"
+        className={`flex h-10 shrink-0 items-center gap-1.5 rounded border px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-300 ${
+          barterOnly
+            ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary)'
+            : 'border-lines-hover bg-card-menu text-text-muted hover:border-text-secondary hover:text-text-primary'
+        }`}
+      >
+        <span
+          className={`icon-eft-prog-barter h-4 w-4 shrink-0 mask-contain mask-no-repeat mask-center ${
+            barterOnly ? 'bg-(--primary)' : 'bg-current'
+          }`}
+        />
+        <span className="hidden sm:block">Бартер</span>
+      </button>
+
+      {/* Доступно мне */}
+      <button
+        type="button"
+        onClick={() => onAvailableOnlyChange(!availableOnly)}
+        title="Доступно на моём уровне (Барахолка с 15 ур.)"
+        className={`flex h-10 shrink-0 items-center gap-1.5 rounded border px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-300 ${
+          availableOnly
+            ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary)'
+            : 'border-lines-hover bg-card-menu text-text-muted hover:border-text-secondary hover:text-text-primary'
+        }`}
+      >
+        <span className="hidden lg:block">Доступно мне</span>
+        <span className="lg:hidden">Уров.</span>
+      </button>
+
+      {/* Расширенные фильтры */}
+      <button
+        type="button"
+        onClick={onToggleAdvanced}
+        title="Расширенные фильтры"
+        className={`relative flex h-10 shrink-0 items-center gap-1.5 rounded border px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-300 ${
+          showAdvanced || activeAdvancedCount > 0
+            ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary)'
+            : 'border-lines-hover bg-card-menu text-text-muted hover:border-text-secondary hover:text-text-primary'
+        }`}
+      >
+        <SlidersHorizontal className="h-4 w-4 shrink-0" />
+        <span className="hidden md:block">Фильтры</span>
+        {activeAdvancedCount > 0 && (
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-(--primary) text-[9px] font-blender-medium text-(--color-base)">
+            {activeAdvancedCount}
+          </span>
+        )}
+      </button>
+
+      <div className="h-6 w-px shrink-0 bg-lines-hover" />
+
+      {/* Переключатель вида */}
+      <div className="flex shrink-0 items-center gap-px rounded border border-lines-hover bg-(--color-base) p-1">
+        <button
+          onClick={() => onViewModeChange('grid')}
+          className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${
+            viewMode === 'grid'
+              ? 'bg-(--primary) text-(--color-base) shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_40%,transparent)]'
+              : 'text-text-muted hover:bg-[color-mix(in_srgb,var(--color-card-menu)_50%,transparent)] hover:text-text-primary'
+          }`}
+          title="Сетка"
+        >
+          <LayoutGrid className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onViewModeChange('table')}
+          className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${
+            viewMode === 'table'
+              ? 'bg-(--primary) text-(--color-base) shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_40%,transparent)]'
+              : 'text-text-muted hover:bg-[color-mix(in_srgb,var(--color-card-menu)_50%,transparent)] hover:text-text-primary'
+          }`}
+          title="Список"
+        >
+          <List className="h-4 w-4" />
         </button>
       </div>
+
+      {/* Сохранить фильтры — дискета */}
+      <button
+        onClick={onSaveFilters}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded border outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-(--primary) ${
+          isSaved
+            ? 'border-nvg-green bg-nvg-green text-(--color-base) shadow-[0_0_15px_color-mix(in_srgb,var(--color-nvg-green)_40%,transparent)]'
+            : 'border-lines-hover bg-(--color-base) text-text-muted hover:border-(--primary) hover:text-(--primary)'
+        }`}
+        title="Сохранить текущие фильтры"
+      >
+        {isSaved ? <Check className="h-4 w-4 stroke-3" /> : <Save className="h-4 w-4" />}
+      </button>
     </div>
   );
 }

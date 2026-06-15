@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { PageHeader } from '@/components/ui/PageHeader';
 import Image from "next/image";
@@ -197,7 +197,7 @@ export default function QuestsPage() {
           <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
              {/* Статистика */}
              <div className="flex flex-col hidden sm:flex">
-               <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">Прогресс квестов</span>
+               <span className="text-[10px] text-text-muted uppercase tracking-widest">Прогресс квестов</span>
                <span className="text-lg font-blender-medium text-text-primary leading-none mt-1">
                  {stats.completed} <span className="text-text-muted">/ {stats.total}</span>
                  <span className="text-primary ml-2">({stats.percent}%)</span>

@@ -1,6 +1,8 @@
-# 🛡️ Технический Паспорт Проекта "Центр Тактической Адаптации" CTA
+# 🛡️ Технический Паспорт — Centre Tactical Adaptation (CTA)
 
-Этот документ является официальным руководством по дизайн-системе проекта, синхронизированным с макетами в Figma. Он предназначен для разработчиков и AI-ассистентов для поддержания визуальной и технической целостности интерфейса.
+> **Версия:** 4.1.0 · **Дата:** 2026-06-15  
+> Официальное руководство по дизайн-системе NIGHTFALL. Синхронизировано с макетами Figma.  
+> Предназначено для разработчиков и AI-ассистентов.
 
 ---
 
@@ -17,12 +19,16 @@
 
 ## 1. Стек технологий
 
-- **Фреймворк:** Next.js 14+ (App Router)
-- **Стилизация:** Tailwind CSS v4 (с конфигурацией темы через `@theme` в `globals.css`)
+- **Фреймворк:** Next.js 14+ (App Router) — дефолт Server Components, `"use client"` только для интерактивных узлов
+- **Стилизация:** Tailwind CSS v4 — токены через `@theme` в `globals.css`
+- **Глобальный стейт:** Zustand (`src/store/`)
+- **Типизация:** TypeScript strict — `any` запрещён, Discriminated Unions
+- **GraphQL:** tarkov.dev public API (fetch + ISR кэш 1ч)
 - **Шрифты:**
-  - `BlenderPro-Book` (Regular, 400)
-  - `BlenderPro-Medium` (Medium, 500)
-  - **Форматы:** `.woff2` (приоритет), `.woff` (fallback)
+  - `BlenderPro-Book` (Regular, 400) — `font-blender-book`
+  - `BlenderPro-Medium` (Medium, 500) — `font-blender-medium`
+  - Форматы: `.woff2` (приоритет), `.woff` (fallback)
+  - ⛔ `font-mono` — **ЗАПРЕЩЁН** в проекте. Числа и цены: `font-blender-medium text-xs`
 
 ---
 
@@ -55,7 +61,13 @@
 - **WDG (Тематический):** Золотой (`#E3BD74`). Активируется классом `.theme-wdg` или `.theme-wardogs`.
 ---
 
-> 💡 **Важно про Tailwind CSS:** При стилизации интерактивных элементов, меняющих цвет в зависимости от темы игры (text, bg, border), используйте `[var(--primary)]` вместо стандартного `primary` (например, `text-[var(--primary)]`), чтобы избежать жесткой привязки к дефолтному янтарному HEX-коду конфигурации. Для прозрачности используйте функцию: `bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]`.
+> **Tailwind v4 — критичные правила синтаксиса:**
+> - Токены: `bg-(--color-base)`, `text-(--primary)`, `border-(--primary)` — НЕ `[var(...)]`
+> - Градиент: `bg-linear-to-b` — НЕ `bg-gradient-to-b`
+> - Прозрачный акцент: `bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]`
+> - Скругления: `rounded-xs` — НЕ `rounded-[2px]`
+> - Обводка: `stroke-3` — НЕ `stroke-[3]`
+> - Если N кратно 4 → используй scale-класс (`h-15` = 60px, не `h-[60px]`)
 
 ## 4. Геометрия и сетка
 

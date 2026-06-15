@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -85,7 +85,7 @@ export default function TelemetryDetailsClient({ id }: TelemetryDetailsClientPro
             <MetricRow 
               label="K/D Ratio" 
               value={!isNaN(Number(metrics.kdRatio)) ? Number(metrics.kdRatio).toFixed(2) : metrics.kdRatio} 
-              valueClassName="font-bold text-text-primary" 
+              valueClassName="text-text-primary" 
             />
             <MetricRow label="Всего рейдов" value={metrics.raidsTotal} />
             <MetricRow label="Выживаний" value={metrics.survived} valueClassName="text-nvg-green" />

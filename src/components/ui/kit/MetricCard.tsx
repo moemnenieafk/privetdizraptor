@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 interface MetricCardProps {
   label: string;
@@ -19,10 +19,10 @@ const accentTextStyles = {
 export function MetricCard({ label, value, subtext, accent = 'default', className = '' }: MetricCardProps) {
   return (
     <div className={`bg-card-menu/40 p-3 rounded-md border border-lines-hover flex flex-col justify-between ${className}`}>
-      <div className="text-[11px] font-black tracking-widest uppercase text-text-muted mb-1 leading-tight">
+      <div className="text-[11px] tracking-widest uppercase text-text-muted mb-1 leading-tight">
         {label}
       </div>
-      <div className={`font-mono text-lg font-bold tracking-tight ${accentTextStyles[accent]}`}>
+      <div className={`font-blender-medium text-lg tracking-tight ${accentTextStyles[accent]}`}>
         {value}
       </div>
       {subtext && (

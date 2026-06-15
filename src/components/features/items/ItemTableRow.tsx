@@ -1,9 +1,12 @@
 ﻿import { memo, forwardRef } from "react";
+import Link from "next/link";
 import Image from "next/image";
+import { MinusCircle } from "lucide-react";
 import { TarkovItem } from "@/types/tarkov-items";
 import { Badge, getArmorClassColor } from "@/components/features/items/Badge";
 import { getTarkovBackgroundColor } from "@/lib/tarkov-colors";
 import { formatCompactNumber } from "@/lib/formatters";
+import { ItemGridSize } from "@/components/ui/ItemGridSize";
 
 interface ItemTableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   item: TarkovItem & {
@@ -36,8 +39,8 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
     <tr ref={ref} {...props} className="group border-b border-lines-hover transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--color-card-menu)_30%,transparent)]">
       {/* Иконка и Название */}
       <td className="p-3">
-        <div className="flex items-center gap-3">
-          <div 
+        <Link href={`/eft/items/item/${item.normalizedName}`} className="flex items-center gap-3">
+          <div
             className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-lines-hover transition-colors duration-300 group-hover:border-(--primary)"
             style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }}
           >
@@ -51,19 +54,19 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
             />
           </div>
           <div className="flex min-w-0 flex-col">
-            <h3 className="truncate text-[16px] font-blender-medium uppercase tracking-widest text-text-primary" title={item.name}>
+            <h3 className="truncate text-[16px] font-blender-medium uppercase tracking-widest text-text-primary group-hover:text-(--primary) transition-colors" title={item.name}>
               {item.shortName}
             </h3>
             <span className="truncate text-xs text-text-secondary font-blender-book" title={item.name}>
               {item.name}
             </span>
           </div>
-        </div>
+        </Link>
       </td>
 
       {/* Категория */}
       <td className="p-3 hidden md:table-cell">
-        <span className="rounded border border-lines-hover bg-(--color-base) px-2 py-1 font-mono text-[10px] uppercase text-text-muted">
+        <span className="rounded border border-lines-hover bg-(--color-base) px-2 py-1 font-blender-medium text-[10px] uppercase text-text-muted">
           {CATEGORY_MAP[item.category] || item.category}
         </span>
       </td>
@@ -75,41 +78,52 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
         </div>
       </td>
 
+      {/* Размер */}
+      <td className="p-3 hidden lg:table-cell">
+        <ItemGridSize width={item.gridWidth || 1} height={item.gridHeight || 1} />
+      </td>
+
       {/* Покупка */}
       <td className="p-3 text-right">
-        <span className="whitespace-nowrap font-mono text-xs text-text-primary">
+        <span className="whitespace-nowrap font-blender-medium text-xs text-text-primary">
           {buyPrice > 0 ? (
             <span title={`${buyPrice.toLocaleString("ru-RU")} ₽`} className="cursor-help border-b border-dotted border-text-muted/50">
               {formatCompactNumber(buyPrice)} ₽
             </span>
           ) : (
-            <span className="text-text-muted">N/A</span>
+            <span className="inline-flex items-center gap-1 text-[11px] text-text-muted">
+              <MinusCircle className="h-3.5 w-3.5 shrink-0" />
+              Нет в продаже
+            </span>
           )}
         </span>
       </td>
 
       {/* Продажа */}
       <td className="p-3 text-right">
-        <span className="whitespace-nowrap font-mono text-xs text-nvg-green">
+        <span className="whitespace-nowrap font-blender-medium text-xs text-nvg-green">
           {sellPrice > 0 ? (
             <span title={`${sellPrice.toLocaleString("ru-RU")} ₽`} className="cursor-help border-b border-dotted border-nvg-green/30">
               {formatCompactNumber(sellPrice)} ₽
             </span>
           ) : (
-            <span className="text-text-muted">N/A</span>
+            <span className="inline-flex items-center gap-1 text-[11px] text-text-muted">
+              <MinusCircle className="h-3.5 w-3.5 shrink-0" />
+              Недоступно
+            </span>
           )}
         </span>
       </td>
 
       {/* Выгода / Слот */}
       <td className="p-3 text-right">
-        <span className="whitespace-nowrap font-mono text-xs text-text-primary transition-colors group-hover:text-(--primary)">
+        <span className="whitespace-nowrap font-blender-medium text-xs text-text-primary transition-colors group-hover:text-(--primary)">
           {profitPerSlot > 0 ? (
             <span title={`${profitPerSlot.toLocaleString("ru-RU")} ₽`} className="cursor-help border-b border-dotted border-text-muted/50">
               {formatCompactNumber(profitPerSlot)} ₽
             </span>
           ) : (
-            "N/A"
+            <span className="text-[11px] text-text-muted">—</span>
           )}
         </span>
       </td>

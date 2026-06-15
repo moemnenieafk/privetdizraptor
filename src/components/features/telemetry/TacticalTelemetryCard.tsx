@@ -17,7 +17,7 @@ export async function TacticalTelemetryCard({ data }: TacticalTelemetryCardProps
   return (
     <article className="relative flex w-full max-w-md flex-col p-4 bg-zinc-950 border border-zinc-800 text-zinc-200 shadow-md">
       <header className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-2">
-        <h2 className="text-lg font-bold uppercase tracking-widest text-zinc-100">
+        <h2 className="text-lg uppercase tracking-widest text-zinc-100">
           {data.designation}
         </h2>
         <span className="font-mono text-xs text-zinc-500">
@@ -29,7 +29,7 @@ export async function TacticalTelemetryCard({ data }: TacticalTelemetryCardProps
         <div className="flex items-center justify-between">
           <span className="text-zinc-500">STATUS</span>
           <span
-            className={`font-bold ${
+            className={`font-blender-medium ${
               data.status === 'ACTIVE'
                 ? 'text-lime-400'
                 : data.status === 'OFFLINE'

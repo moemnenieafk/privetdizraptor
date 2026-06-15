@@ -97,9 +97,9 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       melee: 'Холодное',
       special: 'Специальное',
       crafts: 'Крафты',
-      barter: 'Прибыль бартера',
+      barter: 'Предметы для Бартера',
       barters: 'Бартеры',
-      weapons: 'Сборки',
+      weapons: 'Оружие',
       hideout: 'Убежище ЧВК',
       gamesetting: 'Кодекс',
       lore: 'История мира',
@@ -183,6 +183,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       'medical-supplies': 'Медматериалы',
       'energy-elements': 'Элементы Питания',
       others: 'Другие',
+      rounds: 'Патроны',
+      'ammo-boxes': 'Пачки патронов',
       my: 'Мои сборки',
       find: 'Найти сборку',
       add: 'Создать сборку',
@@ -283,10 +285,28 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       {
         id: 'items',
         label: 'Предметы',
-        path: '/eft/items', // Уже ведет на /eft/items, но теперь это будет наш хаб
+        path: '/eft/items',
         iconUrl: '/icons/eft/03-items/loot-tier.svg',
         children: [
-          { id: 'i-loot-rate', label: 'Рейтинг предметов', path: '/eft/items/loot-rate', iconUrl: '/icons/eft/03-items/loot-tier.svg' },
+          // 1. БАРТЕР
+          {
+            id: 'i-barter',
+            label: 'Предметы для Бартера',
+            path: '/eft/items/barter',
+            iconUrl: '/icons/eft/04-progression/barter-profit.svg',
+            children: [
+              { id: 'i-barter-others', label: 'Другие', path: '/eft/items/barter/others', iconUrl: '/icons/eft/04-progression/barter-profit/others.svg' },
+              { id: 'i-barter-flammable', label: 'Г.С.М.', path: '/eft/items/barter/flammable-materials', iconUrl: '/icons/eft/04-progression/barter-profit/flammable-materials.svg' },
+              { id: 'i-barter-tools', label: 'Инструменты', path: '/eft/items/barter/tools', iconUrl: '/icons/eft/04-progression/barter-profit/tools.svg' },
+              { id: 'i-barter-medical', label: 'Медматериалы', path: '/eft/items/barter/medical-supplies', iconUrl: '/icons/eft/04-progression/barter-profit/medical-supplies.svg' },
+              { id: 'i-barter-building', label: 'Стройматериалы', path: '/eft/items/barter/building-materials', iconUrl: '/icons/eft/04-progression/barter-profit/building-materials.svg' },
+              { id: 'i-barter-household', label: 'Хозтовары', path: '/eft/items/barter/household-materials', iconUrl: '/icons/eft/04-progression/barter-profit/household-materials.svg' },
+              { id: 'i-barter-valuables', label: 'Ценности', path: '/eft/items/barter/valuables', iconUrl: '/icons/eft/04-progression/barter-profit/valuables.svg' },
+              { id: 'i-barter-electronics', label: 'Электроника', path: '/eft/items/barter/electronics', iconUrl: '/icons/eft/04-progression/barter-profit/electronics.svg' },
+              { id: 'i-barter-energy', label: 'Элементы питания', path: '/eft/items/barter/energy-elements', iconUrl: '/icons/eft/04-progression/barter-profit/energy-elements.svg' },
+            ]
+          },
+          // 2. СНАРЯЖЕНИЕ
           {
             id: 'i-gear',
             label: 'Снаряжение',
@@ -300,147 +320,147 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
               { id: 'i-gear-armor', label: 'Бронежилеты', path: '/eft/items/gear/armor', iconUrl: '/icons/eft/03-items/gear/cat-armor.svg' },
               { id: 'i-gear-rigs', label: 'Разгрузки', path: '/eft/items/gear/rigs', iconUrl: '/icons/eft/03-items/gear/cat-tactical-rigs.svg' },
               { id: 'i-gear-backpacks', label: 'Рюкзаки', path: '/eft/items/gear/backpacks', iconUrl: '/icons/eft/03-items/gear/cat-backpacks.svg' },
+              {
+                id: 'i-gear-containers',
+                label: 'Контейнеры',
+                path: '/eft/items/gear/containers',
+                iconUrl: '/icons/eft/03-items/equipment/containers.svg',
+                children: [
+                  { id: 'i-cont-cases', label: 'Кейсы', path: '/eft/items/gear/containers/cases', iconUrl: '/icons/eft/03-items/equipment/containers/cases.svg' },
+                  { id: 'i-cont-secure', label: 'Защищенные', path: '/eft/items/gear/containers/secure', iconUrl: '/icons/eft/03-items/equipment/containers/secure-containers.svg' }
+                ]
+              },
               { id: 'i-gear-components', label: 'Компоненты', path: '/eft/items/gear/components', iconUrl: '/icons/eft/03-items/gear/cat-gearcomps.svg' }
             ]
           },
+          // 3. МОДЫ
           {
-            id: 'i-guns',
+            id: 'i-mods',
+            label: 'Моды',
+            path: '/eft/items/mods',
+            iconUrl: '/icons/eft/03-items/guns/cat-gunmods.svg',
+            children: [
+              {
+                id: 'i-mods-vitalparts',
+                label: 'Критические',
+                path: '/eft/items/mods/vitalparts',
+                iconUrl: '/icons/eft/03-items/guns/gun-modes/vital-parts.svg',
+                children: [
+                  { id: 'i-mods-crit-gasblocks', label: 'Газовые трубки', path: '/eft/items/mods/vitalparts/gasblocks', iconUrl: '/icons/eft/03-items/guns/gun-modes/gas-blocks.svg' },
+                  { id: 'i-mods-crit-receivers', label: 'Крышки и ресиверы', path: '/eft/items/mods/vitalparts/receivers', iconUrl: '/icons/eft/03-items/guns/gun-modes/receivers-slides.svg' },
+                  { id: 'i-mods-crit-pistolgrips', label: 'Рукоятки', path: '/eft/items/mods/vitalparts/pistolgrips', iconUrl: '/icons/eft/03-items/guns/gun-modes/pistol-grips.svg' },
+                  { id: 'i-mods-crit-barrels', label: 'Стволы', path: '/eft/items/mods/vitalparts/barrels', iconUrl: '/icons/eft/03-items/guns/gun-modes/barrels.svg' },
+                  { id: 'i-mods-crit-handguards', label: 'Цевья', path: '/eft/items/mods/vitalparts/handguards', iconUrl: '/icons/eft/03-items/guns/gun-modes/handguards.svg' }
+                ]
+              },
+              {
+                id: 'i-mods-functional',
+                label: 'Функциональные',
+                path: '/eft/items/mods/functional',
+                iconUrl: '/icons/eft/03-items/guns/gun-modes/functional-mods.svg',
+                children: [
+                  { id: 'i-mods-func-aux', label: 'Вспом. части', path: '/eft/items/mods/functional/auxiliary', iconUrl: '/icons/eft/03-items/guns/gun-modes/auxiliary-parts.svg' },
+                  { id: 'i-mods-func-muzzle', label: 'Дульные устройства', path: '/eft/items/mods/functional/muzzle', iconUrl: '/icons/eft/03-items/guns/gun-modes/muzzle-devices.svg' },
+                  { id: 'i-mods-func-sights', label: 'Прицелы', path: '/eft/items/mods/functional/sights', iconUrl: '/icons/eft/03-items/guns/gun-modes/sights.svg' },
+                  { id: 'i-mods-func-laser', label: 'Фонарики и ЛЦУ', path: '/eft/items/mods/functional/laser', iconUrl: '/icons/eft/03-items/guns/gun-modes/light-laser-device.svg' },
+                  { id: 'i-mods-func-bipods', label: 'Сошки', path: '/eft/items/mods/functional/bipods', iconUrl: '/icons/eft/03-items/guns/gun-modes/bipods.svg' },
+                  { id: 'i-mods-func-foregrips', label: 'Такт. рукоятки', path: '/eft/items/mods/functional/foregrips', iconUrl: '/icons/eft/03-items/guns/gun-modes/foregrips.svg' }
+                ]
+              },
+              {
+                id: 'i-mods-elements',
+                label: 'Элементы',
+                path: '/eft/items/mods/elements',
+                iconUrl: '/icons/eft/03-items/guns/gun-modes/gear-mods.svg',
+                children: [
+                  { id: 'i-mods-elem-mounts', label: 'Крепления', path: '/eft/items/mods/elements/mounts', iconUrl: '/icons/eft/03-items/guns/gun-modes/mounts.svg' },
+                  { id: 'i-mods-elem-magazines', label: 'Магазины', path: '/eft/items/mods/elements/magazines', iconUrl: '/icons/eft/03-items/guns/gun-modes/magazines.svg' },
+                  { id: 'i-mods-elem-stocks', label: 'Приклады и Ложе', path: '/eft/items/mods/elements/stocks', iconUrl: '/icons/eft/03-items/guns/gun-modes/stocks-chassis.svg' },
+                  { id: 'i-mods-elem-handles', label: 'Рукоятки заряжания', path: '/eft/items/mods/elements/charginghandles', iconUrl: '/icons/eft/03-items/guns/gun-modes/charging-handles.svg' }
+                ]
+              }
+            ]
+          },
+          // 4. ОРУЖИЕ (плоская структура)
+          {
+            id: 'i-weapons',
             label: 'Оружие',
-            path: '/eft/items/guns',
+            path: '/eft/items/weapons',
             iconUrl: '/icons/eft/03-items/guns.svg',
             children: [
-              { id: 'i-guns-ammo', label: 'Боеприпасы', path: '/eft/items/guns/ammo', iconUrl: '/icons/eft/03-items/guns/cat-ammo.svg' },
-              { id: 'i-guns-grenades', label: 'Гранаты', path: '/eft/items/guns/grenades', iconUrl: '/icons/eft/03-items/guns/cat-grenades.svg' },
-              {
-                id: 'i-guns-firearms',
-                label: 'Огнестрельное',
-                path: '/eft/items/guns/firearms',
-                iconUrl: '/icons/eft/03-items/guns.svg',
-                children: [
-                  { id: 'i-guns-gl', label: 'Гранатометы', path: '/eft/items/guns/firearms/gl', iconUrlBear: '/icons/eft/03-items/guns/gun-types/gl-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/gl-usec.svg' },
-                  { id: 'i-guns-bolt', label: 'Болтовые винтовки', path: '/eft/items/guns/firearms/bolt', iconUrlBear: '/icons/eft/03-items/guns/gun-types/bolt-action-riffle-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/bolt-action-riffle-usec.svg' },
-                  { id: 'i-guns-dmr', label: 'Пехотные винтовки', path: '/eft/items/guns/firearms/dmr', iconUrlBear: '/icons/eft/03-items/guns/gun-types/dmr-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/dmr-usec.svg' },
-                  { id: 'i-guns-ar', label: 'Штурмовые винтовки', path: '/eft/items/guns/firearms/ar', iconUrlBear: '/icons/eft/03-items/guns/gun-types/ar-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/ar-usec.svg' },
-                  { id: 'i-guns-carbine', label: 'Карабины', path: '/eft/items/guns/firearms/carbine', iconUrlBear: '/icons/eft/03-items/guns/gun-types/carbine-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/carbine-usec.svg' },
-                  { id: 'i-guns-lmg', label: 'Пулеметы', path: '/eft/items/guns/firearms/lmg', iconUrlBear: '/icons/eft/03-items/guns/gun-types/lmg-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/lmg-usec.svg' },
-                  { id: 'i-guns-shotgun', label: 'Дробовики', path: '/eft/items/guns/firearms/shotgun', iconUrlBear: '/icons/eft/03-items/guns/gun-types/shotgun-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/shotgun-usec.svg' },
-                  { id: 'i-guns-smg', label: 'Пистолеты-Пулеметы', path: '/eft/items/guns/firearms/smg', iconUrlBear: '/icons/eft/03-items/guns/gun-types/smg-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/smg_usec.svg' },
-                  { id: 'i-guns-sidearm', label: 'Пистолеты', path: '/eft/items/guns/firearms/sidearm', iconUrlBear: '/icons/eft/03-items/guns/gun-types/sidearm-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/sidearm-usec.svg' }
-                ]
-              },
-              {
-                id: 'i-guns-mods',
-                label: 'Моды',
-                path: '/eft/items/guns/mods',
-                iconUrl: '/icons/eft/03-items/guns/cat-gunmods.svg',
-                children: [
-                  {
-                    id: 'i-guns-mods-vitalparts',
-                    label: 'Критические',
-                    path: '/eft/items/guns/mods/vitalparts',
-                    iconUrl: '/icons/eft/03-items/guns/gun-modes/vital-parts.svg',
-                    children: [
-                      { id: 'i-mods-crit-gasblocks', label: 'Газовые трубки', path: '/eft/items/guns/mods/vitalparts/gasblocks', iconUrl: '/icons/eft/03-items/guns/gun-modes/gas-blocks.svg' },
-                      { id: 'i-mods-crit-receivers', label: 'Крышки и ресиверы', path: '/eft/items/guns/mods/vitalparts/receivers', iconUrl: '/icons/eft/03-items/guns/gun-modes/receivers-slides.svg' },
-                      { id: 'i-mods-crit-pistolgrips', label: 'Рукоятки', path: '/eft/items/guns/mods/vitalparts/pistol-grips', iconUrl: '/icons/eft/03-items/guns/gun-modes/pistol-grips.svg' },
-                      { id: 'i-mods-crit-barrels', label: 'Стволы', path: '/eft/items/guns/mods/vitalparts/barrels', iconUrl: '/icons/eft/03-items/guns/gun-modes/barrels.svg' },
-                      { id: 'i-mods-crit-handguards', label: 'Цевья', path: '/eft/items/guns/mods/vitalparts/handguards', iconUrl: '/icons/eft/03-items/guns/gun-modes/handguards.svg' }
-                    ]
-                  },
-                  {
-                    id: 'i-guns-mods-functional',
-                    label: 'Функциональные',
-                    path: '/eft/items/guns/mods/functional',
-                    iconUrl: '/icons/eft/03-items/guns/gun-modes/functional-mods.svg',
-                    children: [
-                      { id: 'i-mods-func-aux', label: 'Вспом. части', path: '/eft/items/guns/mods/functional/auxiliary', iconUrl: '/icons/eft/03-items/guns/gun-modes/auxiliary-parts.svg' },
-                      { id: 'i-mods-func-muzzle', label: 'Дульные устройства', path: '/eft/items/guns/mods/functional/muzzle', iconUrl: '/icons/eft/03-items/guns/gun-modes/muzzle-devices.svg' },
-                      { id: 'i-mods-func-sights', label: 'Прицелы', path: '/eft/items/guns/mods/functional/sights', iconUrl: '/icons/eft/03-items/guns/gun-modes/sights.svg' },
-                      { id: 'i-mods-func-laser', label: 'Фонарики и ЛЦУ', path: '/eft/items/guns/mods/functional/laser', iconUrl: '/icons/eft/03-items/guns/gun-modes/light-laser-device.svg' },
-                      { id: 'i-mods-func-bipods', label: 'Сошки', path: '/eft/items/guns/mods/functional/bipods', iconUrl: '/icons/eft/03-items/guns/gun-modes/bipods.svg' },
-                      { id: 'i-mods-func-foregrips', label: 'Такт. рукоятки', path: '/eft/items/guns/mods/functional/foregrips', iconUrl: '/icons/eft/03-items/guns/gun-modes/foregrips.svg' }
-                    ]
-                  },
-                  {
-                    id: 'i-guns-mods-elements',
-                    label: 'Элементы',
-                    path: '/eft/items/guns/mods/elements',
-                    iconUrl: '/icons/eft/03-items/guns/gun-modes/gear-mods.svg',
-                    children: [
-                      { id: 'i-mods-elem-mounts', label: 'Крепления', path: '/eft/items/guns/mods/elements/mounts', iconUrl: '/icons/eft/03-items/guns/gun-modes/mounts.svg' },
-                      { id: 'i-mods-elem-magazines', label: 'Магазины', path: '/eft/items/guns/mods/elements/magazines', iconUrl: '/icons/eft/03-items/guns/gun-modes/magazines.svg' },
-                      { id: 'i-mods-elem-stocks', label: 'Приклады и Ложе', path: '/eft/items/guns/mods/elements/stocks', iconUrl: '/icons/eft/03-items/guns/gun-modes/stocks-chassis.svg' },
-                      { id: 'i-mods-elem-handles', label: 'Рукоятки заряжания', path: '/eft/items/guns/mods/elements/charging-handles', iconUrl: '/icons/eft/03-items/guns/gun-modes/charging-handles.svg' }
-                    ]
-                  }
-                ]
-              },
-              { id: 'i-guns-melee', label: 'Холодное', path: '/eft/items/guns/melee', iconUrl: '/icons/eft/03-items/guns/cat-knifes.svg' },
-              { id: 'i-guns-special', label: 'Специальное', path: '/eft/items/guns/special', iconUrl: '/icons/eft/03-items/guns/cat-special-weapon.svg' }
+              { id: 'i-weapons-gl', label: 'Гранатометы', path: '/eft/items/weapons/gl', iconUrlBear: '/icons/eft/03-items/guns/gun-types/gl-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/gl-usec.svg' },
+              { id: 'i-weapons-bolt', label: 'Болтовые винтовки', path: '/eft/items/weapons/bolt', iconUrlBear: '/icons/eft/03-items/guns/gun-types/bolt-action-riffle-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/bolt-action-riffle-usec.svg' },
+              { id: 'i-weapons-dmr', label: 'Пехотные винтовки', path: '/eft/items/weapons/dmr', iconUrlBear: '/icons/eft/03-items/guns/gun-types/dmr-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/dmr-usec.svg' },
+              { id: 'i-weapons-ar', label: 'Штурмовые винтовки', path: '/eft/items/weapons/ar', iconUrlBear: '/icons/eft/03-items/guns/gun-types/ar-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/ar-usec.svg' },
+              { id: 'i-weapons-carbine', label: 'Карабины', path: '/eft/items/weapons/carbine', iconUrlBear: '/icons/eft/03-items/guns/gun-types/carbine-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/carbine-usec.svg' },
+              { id: 'i-weapons-lmg', label: 'Пулеметы', path: '/eft/items/weapons/lmg', iconUrlBear: '/icons/eft/03-items/guns/gun-types/lmg-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/lmg-usec.svg' },
+              { id: 'i-weapons-shotgun', label: 'Дробовики', path: '/eft/items/weapons/shotgun', iconUrlBear: '/icons/eft/03-items/guns/gun-types/shotgun-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/shotgun-usec.svg' },
+              { id: 'i-weapons-smg', label: 'Пистолеты-Пулеметы', path: '/eft/items/weapons/smg', iconUrlBear: '/icons/eft/03-items/guns/gun-types/smg-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/smg_usec.svg' },
+              { id: 'i-weapons-sidearm', label: 'Пистолеты', path: '/eft/items/weapons/sidearm', iconUrlBear: '/icons/eft/03-items/guns/gun-types/sidearm-bear.svg', iconUrlUsec: '/icons/eft/03-items/guns/gun-types/sidearm-usec.svg' },
+              { id: 'i-weapons-melee', label: 'Холодное оружие', path: '/eft/items/weapons/melee', iconUrl: '/icons/eft/03-items/guns/cat-knifes.svg' },
+              { id: 'i-weapons-grenades', label: 'Гранаты', path: '/eft/items/weapons/grenades', iconUrl: '/icons/eft/03-items/guns/cat-grenades.svg' },
+              { id: 'i-weapons-special', label: 'Специальное', path: '/eft/items/weapons/special', iconUrl: '/icons/eft/03-items/guns/cat-special-weapon.svg' },
             ]
           },
+          // 5. БОЕПРИПАСЫ
           {
-            id: 'i-equipment',
-            label: 'Оборудование',
-            path: '/eft/items/equipment',
-            iconUrl: '/icons/eft/03-items/equipment.svg',
+            id: 'i-ammo',
+            label: 'Боеприпасы',
+            path: '/eft/items/ammo',
+            iconUrl: '/icons/eft/03-items/guns/cat-ammo.svg',
+            children: [
+              { id: 'i-ammo-rounds', label: 'Патроны', path: '/eft/items/ammo/rounds', iconUrl: '/icons/eft/03-items/guns/cat-ammo.svg' },
+              { id: 'i-ammo-boxes', label: 'Пачки патронов', path: '/eft/items/ammo/ammo-boxes', iconUrl: '/icons/eft/03-items/guns/cat-ammo.svg' },
+            ]
+          },
+          // 6. ПРОВИЗИЯ
+          {
+            id: 'i-provisions',
+            label: 'Провизия',
+            path: '/eft/items/provisions',
+            iconUrl: '/icons/eft/03-items/equipment/provisions.svg',
+            children: [
+              { id: 'i-prov-food', label: 'Еда', path: '/eft/items/provisions/food', iconUrl: '/icons/eft/03-items/equipment/provisions/food.svg' },
+              { id: 'i-prov-drinks', label: 'Напитки', path: '/eft/items/provisions/drinks', iconUrl: '/icons/eft/03-items/equipment/provisions/drinks.svg' }
+            ]
+          },
+          // 7. МЕДИКАМЕНТЫ
+          {
+            id: 'i-meds',
+            label: 'Медикаменты',
+            path: '/eft/items/meds',
+            iconUrl: '/icons/eft/03-items/equipment/meds.svg',
+            children: [
+              { id: 'i-meds-medkits', label: 'Аптечки', path: '/eft/items/meds/medkits', iconUrl: '/icons/eft/03-items/equipment/meds/medkits.svg' },
+              { id: 'i-meds-injectors', label: 'Инъекторы', path: '/eft/items/meds/injectors', iconUrl: '/icons/eft/03-items/equipment/meds/injectors.svg' },
+              { id: 'i-meds-injury', label: 'Обработка ранений', path: '/eft/items/meds/injury', iconUrl: '/icons/eft/03-items/equipment/meds/injury-treatment.svg' },
+              { id: 'i-meds-pills', label: 'Таблетки', path: '/eft/items/meds/pills', iconUrl: '/icons/eft/03-items/equipment/meds/pills.svg' }
+            ]
+          },
+          // 8. КЛЮЧИ
+          {
+            id: 'i-keys',
+            label: 'Ключи',
+            path: '/eft/items/keys',
+            iconUrl: '/icons/eft/03-items/equipment/keys.svg',
             children: [
               {
-                id: 'i-eq-meds',
-                label: 'Медикаменты',
-                path: '/eft/items/equipment/meds',
-                iconUrl: '/icons/eft/03-items/equipment/meds.svg',
+                id: 'i-keys-mech',
+                label: 'Механические ключи',
+                path: '/eft/items/keys/mechanical',
+                iconUrl: '/icons/eft/03-items/equipment/keys/mechanical-keys.svg',
                 children: [
-                  { id: 'i-meds-medkits', label: 'Аптечки', path: '/eft/items/equipment/meds/medkits', iconUrl: '/icons/eft/03-items/equipment/meds/medkits.svg' },
-                  { id: 'i-meds-injectors', label: 'Инъекторы', path: '/eft/items/equipment/meds/injectors', iconUrl: '/icons/eft/03-items/equipment/meds/injectors.svg' },
-                  { id: 'i-meds-injury', label: 'Обработка ранений', path: '/eft/items/equipment/meds/injury', iconUrl: '/icons/eft/03-items/equipment/meds/injury-treatment.svg' },
-                  { id: 'i-meds-pills', label: 'Таблетки', path: '/eft/items/equipment/meds/pills', iconUrl: '/icons/eft/03-items/equipment/meds/pills.svg' }
+                  { id: 'i-keys-marked', label: 'Меченые Ключи', path: '/eft/items/keys/mechanical/marked', iconUrl: '/icons/eft/03-items/equipment/keys/mechanical-keys/marked-keys.svg' },
+                  { id: 'i-keys-quest', label: 'Ключи для Заданий', path: '/eft/items/keys/mechanical/quest', iconUrl: '/icons/eft/03-items/equipment/keys/mechanical-keys/quest-keys.svg' }
                 ]
               },
-              { id: 'i-eq-info', label: 'Инфопредметы', path: '/eft/items/equipment/info', iconUrl: '/icons/eft/03-items/equipment/infoitems.svg' },
-              {
-                id: 'i-eq-keys',
-                label: 'Ключи',
-                path: '/eft/items/equipment/keys',
-                iconUrl: '/icons/eft/03-items/equipment/keys.svg',
-                children: [
-                  {
-                    id: 'i-keys-mech',
-                    label: 'Механические ключи',
-                    path: '/eft/items/equipment/keys/mechanical',
-                    iconUrl: '/icons/eft/03-items/equipment/keys/mechanical-keys.svg',
-                    children: [
-                      { id: 'i-keys-marked', label: 'Меченые Ключи', path: '/eft/items/equipment/keys/mechanical/marked', iconUrl: '/icons/eft/03-items/equipment/keys/mechanical-keys/marked-keys.svg' },
-                      { id: 'i-keys-quest', label: 'Ключи для Заданий', path: '/eft/items/equipment/keys/mechanical/quest', iconUrl: '/icons/eft/03-items/equipment/keys/mechanical-keys/quest-keys.svg' }
-                    ]
-                  },
-                  { id: 'i-keys-cards', label: 'Ключ-карты', path: '/eft/items/equipment/keys/keycards', iconUrl: '/icons/eft/03-items/equipment/keys/key-cards.svg' }
-                ]
-              },
-              {
-                id: 'i-eq-containers',
-                label: 'Контейнеры',
-                path: '/eft/items/equipment/containers',
-                iconUrl: '/icons/eft/03-items/equipment/containers.svg',
-                children: [
-                  { id: 'i-cont-cases', label: 'Кейсы', path: '/eft/items/equipment/containers/cases', iconUrl: '/icons/eft/03-items/equipment/containers/cases.svg' },
-                  { id: 'i-cont-secure', label: 'Защищенные', path: '/eft/items/equipment/containers/secure', iconUrl: '/icons/eft/03-items/equipment/containers/secure-containers.svg' }
-                ]
-              },
-              {
-                id: 'i-eq-provisions',
-                label: 'Провизия',
-                path: '/eft/items/equipment/provisions',
-                iconUrl: '/icons/eft/03-items/equipment/provisions.svg',
-                children: [
-                  { id: 'i-prov-food', label: 'Еда', path: '/eft/items/equipment/provisions/food', iconUrl: '/icons/eft/03-items/equipment/provisions/food.svg' },
-                  { id: 'i-prov-drinks', label: 'Напитки', path: '/eft/items/equipment/provisions/drinks', iconUrl: '/icons/eft/03-items/equipment/provisions/drinks.svg' }
-                ]
-              },
-              { id: 'i-eq-special', label: 'Спецоборудование', path: '/eft/items/equipment/special', iconUrl: '/icons/eft/03-items/equipment/special-equipment.svg' }
+              { id: 'i-keys-cards', label: 'Ключ-карты', path: '/eft/items/keys/keycards', iconUrl: '/icons/eft/03-items/equipment/keys/key-cards.svg' }
             ]
           },
-          { id: 'i-price-slot', label: 'Цена за слот', path: '/eft/items/price-slot', iconUrl: '/icons/eft/03-items/price-per-slot.svg' }
+          // 9. ИНФО ПРЕДМЕТЫ
+          { id: 'i-info', label: 'Инфо предметы', path: '/eft/items/info', iconUrl: '/icons/eft/03-items/equipment/infoitems.svg' },
+          // 10. СПЕЦОБОРУДОВАНИЕ
+          { id: 'i-specialequipment', label: 'Спецоборудование', path: '/eft/items/specialequipment', iconUrl: '/icons/eft/03-items/equipment/special-equipment.svg' },
         ]
       },
       {
@@ -524,7 +544,9 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           },
           { id: 'p-tracker', label: 'Трекер предметов', path: '/eft/progress/tracker', iconUrl: '/icons/eft/04-progression/items-tracker.svg' },
           { id: 'p-needed', label: 'Нужные предметы', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
-          { id: 'p-questmap', label: 'Карта заданий', path: '/eft/questmap', iconUrl: '/icons/eft/04-progression/quest-map.svg' }
+          { id: 'p-questmap', label: 'Карта заданий', path: '/eft/questmap', iconUrl: '/icons/eft/04-progression/quest-map.svg' },
+          { id: 'p-loot-rate', label: 'Рейтинг предметов', path: '/eft/items/loot-rate', iconUrl: '/icons/eft/03-items/loot-tier.svg' },
+          { id: 'p-price-slot', label: 'Цена за слот', path: '/eft/items/price-slot', iconUrl: '/icons/eft/03-items/price-per-slot.svg' }
         ]
       },
       { 

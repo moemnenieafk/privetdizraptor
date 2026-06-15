@@ -53,12 +53,11 @@ export function HubCard({
       <Link
         href={href}
         title={iconTooltip || title}
-        className={`group w-fit shrink-0 px-3 h-8 border rounded inline-flex justify-center items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-(--primary) transition-all duration-300 hover:scale-105 active:scale-95 animate-[fade-in-up_0.5s_ease-out_both] ${
+        className={`group w-fit shrink-0 px-3 h-8 border rounded inline-flex justify-center items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-(--primary) transition-all duration-200 hover:scale-105 active:scale-95 ${
           isActive 
             ? "border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary) shadow-[0_0_10px_color-mix(in_srgb,var(--primary)_40%,transparent)]" 
             : "bg-card-menu border-lines-hover hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]"
         }`}
-        style={{ animationDelay: `${index * 50}ms` }}
       >
         <div className="flex justify-start items-center overflow-hidden shrink-0">
           <div className="w-4 h-4 transition-transform duration-300">

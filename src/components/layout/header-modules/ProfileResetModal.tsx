@@ -52,7 +52,7 @@ export function ProfileResetModal({ isOpen, onClose, onConfirm }: ProfileResetMo
             <div className="flex flex-col gap-4 text-left text-sm font-blender-medium leading-4 text-text-secondary">
               <p>Вы действительно хотите осуществить сброс прогресса профиля игрока?</p>
               <p>
-                Вы подтверждаете, что абсолютно <span className="font-bold text-zinc-100">ВЕСЬ</span> прогресс завершенных заданий, найденных предметов, построенных модулей убежища, уровень ЧВК, уровни торговцев будут сброшены по умолчанию.
+                Вы подтверждаете, что абсолютно <span className="text-zinc-100">ВЕСЬ</span> прогресс завершенных заданий, найденных предметов, построенных модулей убежища, уровень ЧВК, уровни торговцев будут сброшены по умолчанию.
               </p>
               <p className="text-text-muted">Выполняется автоматически после вайпа</p>
             </div>

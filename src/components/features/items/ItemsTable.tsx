@@ -40,6 +40,9 @@ export const ItemsTable = memo(function ItemsTable({ items }: ItemsTableProps) {
             <th className="hidden p-3 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted xl:table-cell xl:w-[20%]">
               Характеристики
             </th>
+            <th className="hidden p-3 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted lg:table-cell lg:w-[8%]">
+              Размер
+            </th>
             <th className="w-[20%] p-3 text-right text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:w-[15%] lg:w-[10%]">
               Покупка
             </th>
@@ -54,7 +57,7 @@ export const ItemsTable = memo(function ItemsTable({ items }: ItemsTableProps) {
         <tbody>
           {paddingTop > 0 && (
             <tr>
-              <td style={{ height: `${paddingTop}px` }} colSpan={6} />
+              <td style={{ height: `${paddingTop}px` }} colSpan={7} />
             </tr>
           )}
           
@@ -72,7 +75,7 @@ export const ItemsTable = memo(function ItemsTable({ items }: ItemsTableProps) {
 
           {paddingBottom > 0 && (
             <tr>
-              <td style={{ height: `${paddingBottom}px` }} colSpan={6} />
+              <td style={{ height: `${paddingBottom}px` }} colSpan={7} />
             </tr>
           )}
         </tbody>

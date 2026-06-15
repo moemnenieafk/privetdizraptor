@@ -410,7 +410,7 @@ function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
             <>
               <div className="flex h-5 items-center gap-1 rounded border border-tactical-amber/30 bg-tactical-amber/10 px-1.5">
                 <div className="h-3 w-3 icon-mask icon-account_prostatus_icon bg-tactical-amber" />
-                <span className="font-mono text-[9px] font-bold tracking-wider text-tactical-amber">PRO</span>
+                <span className="font-mono text-[9px] tracking-wider text-tactical-amber">PRO</span>
               </div>
               <span className="font-blender-book text-sm text-tactical-amber">
                 Полный доступ ко всем функциям
@@ -584,7 +584,7 @@ function ProStatusPanel() {
             PRO
           </span>
           <div className="flex h-5 items-center rounded border border-tactical-amber/40 bg-tactical-amber/10 px-2">
-            <span className="font-mono text-[9px] font-bold tracking-widest text-tactical-amber">
+            <span className="font-mono text-[9px] tracking-widest text-tactical-amber">
               Активен
             </span>
           </div>

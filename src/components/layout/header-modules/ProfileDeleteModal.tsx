@@ -52,7 +52,7 @@ export function ProfileDeleteModal({ isOpen, onClose, onConfirm }: ProfileDelete
             <div className="flex flex-col gap-4 text-left text-sm font-blender-medium leading-4 text-text-secondary">
               <p>Вы действительно хотите удалить выбранный профиль ЧВК?</p>
               <p>
-                Вы подтверждаете, что данный профиль будет <span className="font-bold text-zinc-100">БЕЗВОЗВРАТНО</span> удален. Вы навсегда потеряете все настроенные параметры: уровень ЧВК, престиж, уровни отношений с торговцами, выбранную фракцию и издание.
+                Вы подтверждаете, что данный профиль будет <span className="text-zinc-100">БЕЗВОЗВРАТНО</span> удален. Вы навсегда потеряете все настроенные параметры: уровень ЧВК, престиж, уровни отношений с торговцами, выбранную фракцию и издание.
               </p>
               <p className="text-text-muted">Это действие нельзя отменить</p>
             </div>

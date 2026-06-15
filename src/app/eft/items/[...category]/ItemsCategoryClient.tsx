@@ -1,37 +1,48 @@
 "use client";
 
-import React, { useMemo, useRef, memo, forwardRef } from 'react';
+import React, { useMemo, useRef, useState, memo, forwardRef } from 'react';
 import Link from 'next/link';
-import { PackageX, Coins, ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { PackageX, Coins, ChevronUp, ChevronDown, Check, X } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Badge as SemanticBadge, getArmorClassColor } from '@/components/features/items/Badge';
-import { ItemTile } from '@/components/features/items/ItemTile';
+import { EftItemTile } from '@/components/features/items/EftItemTile';
+import type { EftItemData } from '@/components/features/items/EftItemTile';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { useCategoryFilters } from '@/components/features/items/useCategoryFilters';
 import { CategoryControlBar } from '@/components/features/items/CategoryControlBar';
+import { formatCompactNumber } from '@/lib/formatters';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CategoryItem {
   id: string;
+  normalizedName: string;
   name: string;
   shortName: string;
   width: number;
   height: number;
+  weight?: number;
   backgroundColor?: string;
   basePrice: number;
   image512pxLink: string;
   types?: string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   properties?: any;
-  sellFor: { price: number; vendor: { name: string; normalizedName?: string } }[];
-  buyFor: { price: number; vendor: { name: string; normalizedName?: string } }[];
+  sellFor: { price: number; priceRUB?: number; currency?: string; vendor: { name: string; normalizedName?: string } }[];
+  buyFor: { price: number; priceRUB?: number; currency?: string; vendor: { name: string; normalizedName?: string } }[];
 }
 
 interface ItemsCategoryClientProps {
   initialData: CategoryItem[];
   categorySlug?: string;
+  gpCoinBarters?: Record<string, number>;
 }
+
+// ─── Slug groups ──────────────────────────────────────────────────────────────
+
+const GUN_SLUGS = new Set(['firearms', 'ar', 'bolt', 'carbine', 'dmr', 'gl', 'lmg', 'shotgun', 'sidearm', 'smg', 'guns']);
+const CONTAINER_SLUGS = new Set(['cases', 'secure']);
+const ERGO_RECOIL_MOD_SLUGS = new Set(['muzzle', 'foregrips', 'stocks', 'handguards', 'barrels', 'bipods', 'charginghandles', 'gasblocks', 'receivers', 'magazines', 'mounts', 'laser', 'auxiliary']);
 
 // ─── Economics helper ─────────────────────────────────────────────────────────
 
@@ -39,30 +50,48 @@ function getEconomics(item: CategoryItem) {
   const slots = item.width * item.height || 1;
   const isFlea = (v: { vendor: { name: string; normalizedName?: string } }) =>
     v.vendor.name === 'Flea Market' || v.vendor.normalizedName === 'flea-market';
+  const rubVal = (p: { price: number; priceRUB?: number }) => p.priceRUB ?? p.price;
 
   const fleaBuy = item.buyFor?.find(isFlea);
   const fleaSell = item.sellFor?.find(isFlea);
   const traderSells = item.sellFor?.filter(s => !isFlea(s)) || [];
   const bestTraderSell = traderSells.length
-    ? traderSells.reduce((max, curr) => curr.price > max.price ? curr : max, traderSells[0])
+    ? traderSells.reduce((max, curr) => rubVal(curr) > rubVal(max) ? curr : max, traderSells[0])
     : { price: 0, vendor: { name: '-' } };
   const bestSell = item.sellFor?.length
-    ? item.sellFor.reduce((max, curr) => curr.price > max.price ? curr : max, item.sellFor[0])
+    ? item.sellFor.reduce((max, curr) => rubVal(curr) > rubVal(max) ? curr : max, item.sellFor[0])
     : { price: 0, vendor: { name: '-' } };
-  const bestBuy = item.buyFor?.length
-    ? item.buyFor.reduce((min, curr) => curr.price < min.price ? curr : min, item.buyFor[0])
-    : { price: 0, vendor: { name: '-' } };
+  const validBuy = (item.buyFor || []).filter(b => rubVal(b) > 0);
+  const bestBuy = validBuy.length
+    ? validBuy.reduce((min, curr) => rubVal(curr) < rubVal(min) ? curr : min, validBuy[0])
+    : undefined;
 
   return {
     slots,
     bestSell,
     bestBuy,
-    vps: slots > 0 ? Math.floor(bestSell.price / slots) : 0,
+    vps: slots > 0 ? Math.floor(rubVal(bestSell) / slots) : 0,
     fleaBuy,
     fleaSell,
     bestTraderSell,
-    minPrice: bestBuy.price || 0,
+    minPrice: bestBuy ? rubVal(bestBuy) : 0,
   };
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const ARMOR_TYPE_RU: Record<string, string> = { Soft: 'Мягкая', Plate: 'Пластина' };
+
+function formatZoomLevels(zoomLevels?: number[][]): string {
+  if (!zoomLevels?.length) return '—';
+  return zoomLevels
+    .map(g => g.length === 1 ? `${g[0]}x` : `${g[0]}-${g[g.length - 1]}x`)
+    .join(' / ');
+}
+
+function fmt(val?: number | null): string {
+  if (val === null || val === undefined || val === 0) return '—';
+  return String(val);
 }
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
@@ -79,7 +108,88 @@ function VendorIcon({ vendor }: { vendor: { name: string; normalizedName?: strin
 
 type ProcessedItem = CategoryItem & { eco: ReturnType<typeof getEconomics> };
 
-function renderPrice(price?: number, vendor?: { name: string; normalizedName?: string }, highlightGreen = false) {
+// ─── EftItemTile adapters ─────────────────────────────────────────────────────
+
+const rubVal = (p: { price: number; priceRUB?: number }) => p.priceRUB ?? p.price;
+const isFleaVendor = (v: { name: string; normalizedName?: string }) =>
+  v.name === 'Flea Market' || v.normalizedName === 'flea-market';
+
+function toEftItem(item: ProcessedItem): EftItemData {
+  const traderBuy = (item.buyFor ?? []).find(b => !isFleaVendor(b.vendor) && rubVal(b) > 0);
+  return {
+    id: item.id,
+    normalizedName: item.normalizedName,
+    name: item.name,
+    shortName: item.shortName,
+    width: item.width,
+    height: item.height,
+    backgroundColor: item.backgroundColor,
+    image512pxLink: item.image512pxLink,
+    pricing: {
+      traderBuy: traderBuy
+        ? { price: rubVal(traderBuy), currency: traderBuy.currency, vendor: traderBuy.vendor }
+        : undefined,
+      fleaBuy: item.eco.fleaBuy
+        ? { price: rubVal(item.eco.fleaBuy), vendor: item.eco.fleaBuy.vendor }
+        : undefined,
+      traderSell: item.eco.bestTraderSell.price > 0
+        ? { price: item.eco.bestTraderSell.price, vendor: item.eco.bestTraderSell.vendor }
+        : undefined,
+      fleaSell: item.eco.fleaSell
+        ? { price: rubVal(item.eco.fleaSell), vendor: item.eco.fleaSell.vendor }
+        : undefined,
+    },
+  };
+}
+
+function getHeaderStat(item: ProcessedItem, slug: string): string | undefined {
+  const p = item.properties || {};
+  if (slug === 'ammo') return p.caliber?.replace('Caliber', '').trim() || undefined;
+  if (['armor', 'helmets', 'rigs', 'components'].includes(slug) && p.durability) return `${p.durability} HP`;
+  if (GUN_SLUGS.has(slug)) return p.caliber?.replace('Caliber', '').trim() || undefined;
+  if (item.weight) return `${item.weight} кг`;
+  return undefined;
+}
+
+function MediaBadges({ item, slug }: { item: ProcessedItem; slug: string }) {
+  const p = item.properties || {};
+  if (slug === 'ammo') {
+    return (
+      <>
+        {p.damage > 0 && (
+          <div className="absolute left-1.5 top-1.5 z-20 rounded-xs bg-red-900/85 px-1.5 py-0.5 backdrop-blur-sm">
+            <span className="font-blender-medium text-[9px] uppercase tracking-widest text-red-300">УРН {p.damage}</span>
+          </div>
+        )}
+        {p.penetrationPower > 0 && (
+          <div className="absolute bottom-1.5 right-1.5 z-20 rounded-xs bg-emerald-900/85 px-1.5 py-0.5 backdrop-blur-sm">
+            <span className="font-blender-medium text-[9px] uppercase tracking-widest text-emerald-300">ПРБ {p.penetrationPower}</span>
+          </div>
+        )}
+      </>
+    );
+  }
+  if (['armor', 'helmets', 'rigs'].includes(slug) && p.class) {
+    return (
+      <div className="absolute left-1.5 top-1.5 z-20">
+        <SemanticBadge
+          color={getArmorClassColor(p.class)}
+          label={`КЛ ${p.class}`}
+          iconClass={`icon-eft-armor-class-${p.class}`}
+          iconSizeClass="w-4 h-4"
+        />
+      </div>
+    );
+  }
+  return null;
+}
+
+function renderPrice(
+  price?: number,
+  vendor?: { name: string; normalizedName?: string },
+  highlightGreen = false,
+  isBestSell = false,
+) {
   if (!price || price <= 0) {
     return (
       <div className="flex items-center justify-end gap-1 text-text-muted opacity-50" title="Недоступно / Нет в продаже">
@@ -88,12 +198,212 @@ function renderPrice(price?: number, vendor?: { name: string; normalizedName?: s
       </div>
     );
   }
+  const colorClass = isBestSell
+    ? 'text-(--primary)'
+    : highlightGreen
+    ? 'text-nvg-green'
+    : 'text-text-primary';
+  const sizeClass = isBestSell ? 'text-[13px]' : 'text-xs';
   return (
     <div className="flex items-center justify-end gap-1.5">
-      <span className={`font-mono font-bold ${highlightGreen ? 'text-nvg-green' : 'text-text-primary'}`}>
-        {price.toLocaleString('ru-RU')} ₽
+      <span
+        title={`${price.toLocaleString('ru-RU')} ₽`}
+        className={`cursor-help font-blender-medium ${sizeClass} ${colorClass}`}
+      >
+        {formatCompactNumber(price)} ₽
       </span>
       {vendor && <VendorIcon vendor={vendor} />}
+    </div>
+  );
+}
+
+/** Buy price с поддержкой USD (Миротворец) */
+function renderBuyPrice(eco: ReturnType<typeof getEconomics>) {
+  const { minPrice, bestBuy } = eco;
+  if (!minPrice || !bestBuy) {
+    return (
+      <div className="flex items-center justify-end gap-1 text-text-muted opacity-50" title="Недоступно / Нет в продаже">
+        <PackageX className="w-3 h-3" />
+        <span className="font-blender-medium text-[9px] uppercase tracking-widest">Нет</span>
+      </div>
+    );
+  }
+  const isUSD = bestBuy.currency === 'USD';
+  const displayText = isUSD
+    ? `$${formatCompactNumber(bestBuy.price)}`
+    : `${formatCompactNumber(minPrice)} ₽`;
+  const tooltip = `${minPrice.toLocaleString('ru-RU')} ₽`;
+  return (
+    <div className="flex items-center justify-end gap-1.5">
+      <span title={tooltip} className={`cursor-help font-blender-medium text-xs text-nvg-green${isUSD ? ' opacity-90' : ''}`}>
+        {displayText}
+      </span>
+      <VendorIcon vendor={bestBuy.vendor} />
+    </div>
+  );
+}
+
+/** Compact penalty cell — shows penalties only if non-zero */
+function PenaltyCell({ ergo, speed, turn }: { ergo?: number | null; speed?: number | null; turn?: number | null }) {
+  const rows: { label: string; val: number }[] = [];
+  if (ergo) rows.push({ label: 'Эрго', val: ergo });
+  if (speed) rows.push({ label: 'Скор', val: speed });
+  if (turn) rows.push({ label: 'Повор', val: turn });
+  if (!rows.length) return <span className="text-text-muted text-xs">—</span>;
+  return (
+    <div className="flex flex-col gap-px">
+      {rows.map(({ label, val }) => (
+        <span key={label} className="font-blender-medium text-[10px] text-red-400">
+          {label}: {val < 0 ? val : `-${val}`}%
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ─── Advanced filters panel ───────────────────────────────────────────────────
+
+interface AdvancedFiltersPanelProps {
+  categorySlug: string;
+  priceMin: string;
+  priceMax: string;
+  caliberFilter: string;
+  armorTypeFilter: string;
+  availableCalibers: string[];
+  cantBuyTrader: boolean;
+  cantBuyFlea: boolean;
+  cantSellTrader: boolean;
+  cantSellFlea: boolean;
+  onPriceMinChange: (v: string) => void;
+  onPriceMaxChange: (v: string) => void;
+  onCaliberChange: (v: string) => void;
+  onArmorTypeChange: (v: string) => void;
+  onCantBuyTraderChange: (v: boolean) => void;
+  onCantBuyFleaChange: (v: boolean) => void;
+  onCantSellTraderChange: (v: boolean) => void;
+  onCantSellFleaChange: (v: boolean) => void;
+  onReset: () => void;
+}
+
+const ARMOR_TYPE_OPTIONS = [
+  { value: '', label: 'Все' },
+  { value: 'Soft', label: 'Мягкая' },
+  { value: 'Plate', label: 'Пластина' },
+] as const;
+
+function AdvancedFiltersPanel({
+  categorySlug,
+  priceMin, priceMax, caliberFilter, armorTypeFilter,
+  availableCalibers,
+  cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea,
+  onPriceMinChange, onPriceMaxChange, onCaliberChange, onArmorTypeChange,
+  onCantBuyTraderChange, onCantBuyFleaChange, onCantSellTraderChange, onCantSellFleaChange,
+  onReset,
+}: AdvancedFiltersPanelProps) {
+  const showCaliber = categorySlug === 'ammo' || GUN_SLUGS.has(categorySlug);
+  const showArmorType = ['armor', 'helmets', 'rigs', 'components'].includes(categorySlug);
+  const hasActiveFilters = !!(priceMin || priceMax || caliberFilter || armorTypeFilter
+    || cantBuyTrader || cantBuyFlea || cantSellTrader || cantSellFlea);
+  const inputClass = 'h-10 w-full rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-[12px] uppercase tracking-wider text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none';
+
+  const AVAILABILITY_FILTERS = [
+    { flag: cantBuyTrader, set: onCantBuyTraderChange, label: '✗ Купить у торговца' },
+    { flag: cantBuyFlea,   set: onCantBuyFleaChange,   label: '✗ Купить на барахолке' },
+    { flag: cantSellTrader,set: onCantSellTraderChange, label: '✗ Продать торговцу' },
+    { flag: cantSellFlea,  set: onCantSellFleaChange,  label: '✗ Продать на барахолке' },
+  ] as const;
+
+  return (
+    <div className="animate-[fade-in-up_0.2s_ease-out_both] border-t border-lines-hover/50 pt-3">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+
+        {/* Цена от */}
+        <input
+          type="number"
+          min={0}
+          value={priceMin}
+          onChange={(e) => onPriceMinChange(e.target.value)}
+          placeholder="Цена от, ₽"
+          className={inputClass}
+        />
+
+        {/* Цена до */}
+        <input
+          type="number"
+          min={0}
+          value={priceMax}
+          onChange={(e) => onPriceMaxChange(e.target.value)}
+          placeholder="Цена до, ₽"
+          className={inputClass}
+        />
+
+        {/* Калибр */}
+        {showCaliber && availableCalibers.length > 0 && (
+          <div className="relative">
+            <select
+              value={caliberFilter}
+              onChange={(e) => onCaliberChange(e.target.value)}
+              className="h-10 w-full cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-[12px] uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
+            >
+              <option value="">Все калибры</option>
+              {availableCalibers.map(c => (
+                <option key={c} value={c}>{c.replace('Caliber', '').trim()}</option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">▾</span>
+          </div>
+        )}
+
+        {/* Тип брони */}
+        {showArmorType && (
+          <div className="flex items-center gap-1">
+            {ARMOR_TYPE_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => onArmorTypeChange(value)}
+                className={`h-10 flex-1 rounded border font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
+                  armorTypeFilter === value
+                    ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary)'
+                    : 'border-lines-hover bg-card-menu text-text-muted hover:border-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Доступность — переключатели */}
+        <div className="col-span-full flex flex-wrap gap-1.5">
+          {AVAILABILITY_FILTERS.map(({ flag, set, label }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => set(!flag)}
+              className={`h-8 rounded border px-3 font-blender-medium text-[11px] uppercase tracking-wider transition-colors duration-200 ${
+                flag
+                  ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-(--primary)'
+                  : 'border-lines-hover/50 bg-card-menu text-text-muted hover:border-text-secondary hover:text-text-secondary'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Сбросить расширенные */}
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="flex h-10 items-center gap-1.5 rounded border border-lines-hover/50 bg-card-menu px-3 font-blender-medium text-xs uppercase tracking-wider text-text-muted transition-colors hover:border-red-500/50 hover:text-red-400"
+          >
+            <X className="h-4 w-4 shrink-0" />
+            Сбросить
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -102,11 +412,21 @@ function renderPrice(price?: number, vendor?: { name: string; normalizedName?: s
 
 const CategoryTableRow = memo(forwardRef<
   HTMLTableRowElement,
-  { item: ProcessedItem; categorySlug?: string } & React.HTMLAttributes<HTMLTableRowElement>
->(function CategoryTableRow({ item, categorySlug, ...props }, ref) {
+  { item: ProcessedItem; categorySlug?: string; gpCount?: number } & React.HTMLAttributes<HTMLTableRowElement>
+>(function CategoryTableRow({ item, categorySlug, gpCount, ...props }, ref) {
+  const slug = categorySlug || '';
+  const p = item.properties || {};
+
+  // Подсветка лучшей цены продажи (amber)
+  const tSell = item.eco.bestTraderSell?.price || 0;
+  const fSell = item.eco.fleaSell?.price || 0;
+  const bestSellIsTrader = tSell > 0 && tSell >= fSell;
+  const bestSellIsFlea   = fSell > tSell && fSell > 0;
+
   return (
-    <tr ref={ref} {...props} className="border-b border-lines-hover last:border-0 hover:bg-card-menu/30 transition-colors group">
-      <td className="px-4 py-2 border-r border-lines-hover/50">
+    <tr ref={ref} {...props} className="border-b border-lines-hover/40 last:border-0 hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)] transition-colors group">
+      {/* ─── Визуал (fixed) ─── */}
+      <td className="px-3 py-2 border-r border-lines-hover/50">
         <div className="relative w-12 h-12 mx-auto bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -128,79 +448,303 @@ const CategoryTableRow = memo(forwardRef<
           />
         </div>
       </td>
-      <td className="px-4 py-3 w-[160px] max-w-[160px] sm:w-[220px] sm:max-w-[220px] md:w-[280px] md:max-w-[280px] lg:w-[320px] lg:max-w-[320px] xl:w-[400px] xl:max-w-[400px]">
-        <Link href={`/eft/items/item/${item.id}`} className="flex min-w-0 w-full flex-col overflow-hidden transition-colors group-hover:text-(--primary)">
-          <span className="block w-full truncate font-blender-medium text-base uppercase leading-none" title={item.name}>{item.name}</span>
-          <span className="mt-1 block w-full truncate font-mono text-xs text-text-secondary" title={item.shortName}>{item.shortName}</span>
+
+      {/* ─── Название (fixed) ─── */}
+      <td className="px-3 py-2 w-40 max-w-40 sm:w-55 sm:max-w-55 md:w-65 md:max-w-65 lg:w-75 lg:max-w-75 xl:w-64 xl:max-w-64">
+        <Link href={`/eft/items/item/${item.normalizedName}`} className="flex min-w-0 w-full flex-col overflow-hidden transition-colors group-hover:text-(--primary)">
+          <span className="block w-full truncate font-blender-medium text-[13px] uppercase leading-none" title={item.name}>{item.name}</span>
+          <span className="mt-1 block w-full truncate font-blender-book text-xs text-text-secondary" title={item.shortName}>{item.shortName}</span>
         </Link>
       </td>
 
-      {categorySlug === 'headphones' ? (
+      {/* ─── Dynamic columns ─── */}
+      {slug === 'headphones' ? (
         <>
-          <td className="px-4 py-3 text-center">
-            <SemanticBadge color="gray" label={item.properties?.ambientVolume ? `${item.properties.ambientVolume} dB` : 'Н/Д'} className="w-fit mx-auto" />
+          <td className="px-3 py-2 text-center">
+            {p.distanceModifier != null
+              ? <SemanticBadge color="emerald" label={`+${Math.round((p.distanceModifier - 1) * 100)}%`} title="Множитель дистанции слуха" className="w-fit mx-auto" />
+              : <SemanticBadge color="gray" label={p.ambientVolume ? `${p.ambientVolume} dB` : 'Н/Д'} className="w-fit mx-auto" />}
           </td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.fleaBuy?.price, item.eco.fleaBuy?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.minPrice, item.eco.bestBuy?.vendor, true)}</td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaBuy?.price, item.eco.fleaBuy?.vendor)}</td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader)}</td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
         </>
-      ) : categorySlug === 'helmets' ? (
+      ) : slug === 'helmets' ? (
         <>
-          <td className="px-4 py-3 text-center">
+          <td className="px-3 py-2 text-center">
             <SemanticBadge
-              color={getArmorClassColor(item.properties?.class || 0)}
-              label={`Класс ${item.properties?.class || '?'}`}
-              iconClass={item.properties?.class ? `icon-eft-armor-class-${item.properties.class}` : undefined}
+              color={getArmorClassColor(p.class || 0)}
+              label={`Класс ${p.class || '?'}`}
+              iconClass={p.class ? `icon-eft-armor-class-${p.class}` : undefined}
               iconSizeClass="w-[22px] h-[22px]"
               className="w-fit mx-auto"
             />
           </td>
-          <td className="px-4 py-3 text-center text-text-secondary text-[10px] font-blender-medium uppercase">{item.properties?.deafening || 'Н/Д'}</td>
-          <td className="px-4 py-3 text-center">
-            {(item.properties?.blocksEarpiece || item.properties?.blocksHeadset)
+          <td className="px-3 py-2 text-center text-text-secondary text-[10px] font-blender-medium uppercase">{p.deafening || 'Н/Д'}</td>
+          <td className="px-3 py-2 text-center">
+            {p.blocksHeadset
               ? <SemanticBadge color="red" label="Блок." title="Блокирует наушники" className="w-fit mx-auto" />
               : <span className="text-nvg-green font-blender-medium text-xs uppercase opacity-80">Нет</span>}
           </td>
-          <td className="px-4 py-3 text-center"><span className="font-mono text-text-primary">{item.properties?.durability || 'Н/Д'}</span></td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.minPrice, item.eco.bestBuy?.vendor, true)}</td>
+          <td className="px-3 py-2 text-center"><span className="font-blender-medium text-xs text-text-primary">{p.durability || 'Н/Д'}</span></td>
+          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} /></td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
         </>
-      ) : categorySlug === 'ammo' ? (
+      ) : slug === 'armor' ? (
         <>
-          <td className="px-4 py-3 text-center text-text-secondary font-mono text-[10px]">{item.properties?.caliber?.replace('Caliber', '') || '—'}</td>
-          <td className="px-4 py-3"><SemanticBadge color="red" label={item.properties?.damage?.toString() || '—'} className="w-fit mx-auto" /></td>
-          <td className="px-4 py-3"><SemanticBadge color="emerald" label={item.properties?.penetrationPower?.toString() || '—'} className="w-fit mx-auto" /></td>
-          <td className="px-4 py-3"><SemanticBadge color="gray" label={item.properties?.armorDamage ? `${item.properties.armorDamage}%` : '—'} className="w-fit mx-auto" /></td>
-          <td className="px-4 py-3">
+          <td className="px-3 py-2 text-center">
+            <SemanticBadge
+              color={getArmorClassColor(p.class || 0)}
+              label={`Класс ${p.class || '?'}`}
+              iconClass={p.class ? `icon-eft-armor-class-${p.class}` : undefined}
+              iconSizeClass="w-[22px] h-[22px]"
+              className="w-fit mx-auto"
+            />
+          </td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">
+              {ARMOR_TYPE_RU[p.armorType] || p.armorType || '—'}
+            </span>
+          </td>
+          <td className="px-3 py-2 text-center"><span className="font-blender-medium text-xs text-text-primary">{fmt(p.durability)}</span></td>
+          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} /></td>
+          <td className="px-3 py-2 text-center">
+            {item.weight != null
+              ? <span className="font-blender-medium text-xs text-text-secondary">{item.weight} кг</span>
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+        </>
+      ) : slug === 'components' ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            <SemanticBadge
+              color={getArmorClassColor(p.class || 0)}
+              label={`Класс ${p.class || '?'}`}
+              iconClass={p.class ? `icon-eft-armor-class-${p.class}` : undefined}
+              iconSizeClass="w-[22px] h-[22px]"
+              className="w-fit mx-auto"
+            />
+          </td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">
+              {ARMOR_TYPE_RU[p.armorType] || p.armorType || '—'}
+            </span>
+          </td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-text-primary">{fmt(p.durability)}</span>
+          </td>
+          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} /></td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+        </>
+      ) : slug === 'glasses' ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            {p.class
+              ? <SemanticBadge color={getArmorClassColor(p.class)} label={`Класс ${p.class}`} iconClass={`icon-eft-armor-class-${p.class}`} iconSizeClass="w-[22px] h-[22px]" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs font-blender-medium">Нет</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.blindnessProtection != null
+              ? <SemanticBadge color="emerald" label={`${Math.round((p.blindnessProtection || 0) * 100)}%`} title="Защита от слепящих эффектов" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2">
+            <PenaltyCell ergo={p.ergoPenalty} />
+          </td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+        </>
+      ) : slug === 'rigs' ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            {p.class
+              ? <SemanticBadge color={getArmorClassColor(p.class)} label={`Класс ${p.class}`} iconClass={`icon-eft-armor-class-${p.class}`} iconSizeClass="w-[22px] h-[22px]" className="w-fit mx-auto" />
+              : <SemanticBadge color="gray" label="Без брони" className="w-fit mx-auto" />}
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.capacity != null
+              ? <SemanticBadge color="emerald" label={`${p.capacity} слот.`} title="Внутренняя вместимость" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-text-primary">{p.class ? fmt(p.durability) : '—'}</span>
+          </td>
+          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} /></td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+        </>
+      ) : slug === 'backpacks' ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            {p.capacity != null
+              ? <SemanticBadge color="emerald" label={`${p.capacity} слот.`} title="Внутренняя вместимость" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            {item.weight != null
+              ? <span className="font-blender-medium text-xs text-text-secondary">{item.weight} кг</span>
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            {(p.capacity && item.weight)
+              ? <SemanticBadge color="amber" label={`${(p.capacity / item.weight).toFixed(1)} сл/кг`} title="Слотов на кг веса" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+          <td className="px-3 py-2 text-right">
+            {(p.capacity && item.eco.minPrice)
+              ? <span title={`${Math.round(item.eco.minPrice / p.capacity).toLocaleString('ru-RU')} ₽ за внутренний слот`} className="cursor-help font-blender-medium text-xs text-text-muted">
+                  {formatCompactNumber(Math.round(item.eco.minPrice / p.capacity))} ₽
+                </span>
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+        </>
+      ) : CONTAINER_SLUGS.has(slug) ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            {p.capacity != null
+              ? <SemanticBadge color="emerald" label={`${p.capacity} слот.`} title="Внутренняя вместимость" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-text-muted">{item.width}×{item.height}</span>
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.capacity
+              ? <SemanticBadge color="amber" label={`${(p.capacity / (item.width * item.height)).toFixed(1)}x`} title="Соотношение внутр. слотов к занятым" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+          <td className="px-3 py-2 text-right">
+            {(p.capacity && item.eco.minPrice)
+              ? <span title={`${Math.round(item.eco.minPrice / p.capacity).toLocaleString('ru-RU')} ₽ за внутренний слот`} className="cursor-help font-blender-medium text-xs text-text-muted">
+                  {formatCompactNumber(Math.round(item.eco.minPrice / p.capacity))} ₽
+                </span>
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+        </>
+      ) : GUN_SLUGS.has(slug) ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">
+              {p.caliber?.replace('Caliber', '') || '—'}
+            </span>
+          </td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-nvg-green">{p.ergonomics != null ? p.ergonomics : '—'}</span>
+          </td>
+          <td className="px-3 py-2 text-center">
+            {(p.recoilVertical || p.recoilHorizontal)
+              ? <span className="font-blender-medium text-xs text-text-secondary">{p.recoilVertical}/{p.recoilHorizontal}</span>
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.fireRate ? <SemanticBadge color="amber" label={`${p.fireRate} rpm`} className="w-fit mx-auto" /> : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-text-muted">{item.width}×{item.height}</span>
+          </td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+        </>
+      ) : slug === 'ammo' ? (
+        <>
+          <td className="px-3 py-2 text-center text-text-secondary font-blender-medium text-[10px]">{p.caliber?.replace('Caliber', '') || '—'}</td>
+          <td className="px-3 py-2"><SemanticBadge color="red" label={p.damage?.toString() || '—'} className="w-fit mx-auto" /></td>
+          <td className="px-3 py-2"><SemanticBadge color="emerald" label={p.penetrationPower?.toString() || '—'} className="w-fit mx-auto" /></td>
+          <td className="px-3 py-2"><SemanticBadge color="gray" label={p.armorDamage ? `${p.armorDamage}%` : '—'} className="w-fit mx-auto" /></td>
+          <td className="px-3 py-2">
             {(() => {
-              const frag = Number(item.properties?.fragmentationChance) || 0;
-              const pen = Number(item.properties?.penetrationPower) || 0;
+              const frag = Number(p.fragmentationChance) || 0;
+              const pen = Number(p.penetrationPower) || 0;
               const isBlocked = pen < 20;
               return <SemanticBadge color={isBlocked ? "gray" : "amber"} label={isBlocked ? "Блок." : `${Math.round(frag * 100)}%`} isStrike={isBlocked} title={isBlocked ? "Фрагментация невозможна из-за пробития < 20" : "Шанс фрагментации"} className="w-fit mx-auto" />;
             })()}
           </td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.minPrice, item.eco.bestBuy?.vendor, true)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
         </>
-      ) : ['pistolgrips', 'muzzle', 'sights', 'auxiliary', 'foregrips', 'stocks', 'handguards'].includes(categorySlug || '') ? (
+      ) : slug === 'grenades' ? (
         <>
-          <td className="px-4 py-3 text-center font-mono text-nvg-green">{item.properties?.ergonomics ? `+${item.properties.ergonomics}` : '—'}</td>
-          <td className="px-4 py-3 text-center font-mono text-text-secondary">{item.properties?.recoilModifier ? `${(item.properties.recoilModifier * 100).toFixed(1)}%` : '—'}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.minPrice, item.eco.bestBuy?.vendor, true)}</td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">{p.type || '—'}</span>
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.fragments != null
+              ? <SemanticBadge color="red" label={`${p.fragments} осколк.`} title="Количество осколков" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.fuse != null
+              ? <SemanticBadge color="amber" label={`${p.fuse} с`} title="Время задержки взрыва" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.maxExplosionDistance != null
+              ? <SemanticBadge color="gray" label={`${p.maxExplosionDistance} м`} title="Максимальный радиус взрыва" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+        </>
+      ) : slug === 'sights' ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-nvg-green">{p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : p.ergonomics) : '—'}</span>
+          </td>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-text-primary">{formatZoomLevels(p.zoomLevels)}</span>
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.sightingRange
+              ? <SemanticBadge color="gray" label={`${p.sightingRange} м`} title="Прицельная дальность" className="w-fit mx-auto" />
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader)}</td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+        </>
+      ) : slug === 'pistolgrips' ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-nvg-green">{p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : p.ergonomics) : '—'}</span>
+          </td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader)}</td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+        </>
+      ) : ERGO_RECOIL_MOD_SLUGS.has(slug) ? (
+        <>
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-nvg-green">{p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : p.ergonomics) : '—'}</span>
+          </td>
+          <td className="px-3 py-2 text-center">
+            {p.recoilModifier != null
+              ? <span className={`font-blender-medium text-xs ${p.recoilModifier < 0 ? 'text-nvg-green' : 'text-red-400'}`}>
+                  {p.recoilModifier > 0 ? `+${(p.recoilModifier * 100).toFixed(1)}` : `${(p.recoilModifier * 100).toFixed(1)}`}%
+                </span>
+              : <span className="text-text-muted text-xs">—</span>}
+          </td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader)}</td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
         </>
       ) : (
+        /* default — all other categories */
         <>
-          <td className="px-4 py-3 text-center"><span className="text-xs text-text-muted font-mono">{item.width}x{item.height}</span></td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor)}</td>
-          <td className="px-4 py-3 text-right">{renderPrice(item.eco.minPrice, item.eco.bestBuy?.vendor, true)}</td>
-          <td className="px-4 py-3 text-right">
+          <td className="px-3 py-2 text-center">
+            <span className="font-blender-medium text-xs text-text-muted">{item.width}×{item.height}</span>
+          </td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader)}</td>
+          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
+          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
+          <td className="px-3 py-2 text-right">
             {item.eco.vps > 0 ? (
-              <span className={`font-mono font-bold ${item.eco.vps > 10000 ? 'text-nvg-green' : item.eco.vps > 5000 ? 'text-yellow-500' : 'text-text-primary'}`}>
-                {item.eco.vps.toLocaleString('ru-RU')} ₽
+              <span
+                title={`${item.eco.vps.toLocaleString('ru-RU')} ₽`}
+                className={`cursor-help font-blender-medium text-xs ${item.eco.vps > 10000 ? 'text-nvg-green' : item.eco.vps > 5000 ? 'text-yellow-500' : 'text-text-primary'}`}
+              >
+                {formatCompactNumber(item.eco.vps)} ₽
               </span>
             ) : (
               <div className="flex items-center justify-end gap-1 text-text-muted opacity-50">
@@ -210,13 +754,23 @@ const CategoryTableRow = memo(forwardRef<
           </td>
         </>
       )}
+
+      {/* ─── GP Монеты — универсальная последняя колонка ─── */}
+      <td className="px-3 py-2 text-center w-14">
+        {gpCount ? (
+          <div className="flex flex-col items-center gap-px" title={`Купить у Рефа за ${gpCount} ГП монет`}>
+            <span className="font-blender-medium text-xs text-(--primary)">{gpCount}</span>
+            <span className="font-blender-medium text-[8px] uppercase tracking-widest text-text-muted">ГП</span>
+          </div>
+        ) : <span className="text-text-muted/40 text-[10px]">—</span>}
+      </td>
     </tr>
   );
 }));
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategoryClientProps) {
+export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }: ItemsCategoryClientProps) {
   const {
     viewMode, setViewMode,
     searchQuery, setSearchQuery,
@@ -226,14 +780,38 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
     barterOnly, setBarterOnly,
     availableOnly, setAvailableOnly,
     isSaved,
+    priceMin, setPriceMin,
+    priceMax, setPriceMax,
+    caliberFilter, setCaliberFilter,
+    armorTypeFilter, setArmorTypeFilter,
+    cantBuyTrader, setCantBuyTrader,
+    cantBuyFlea, setCantBuyFlea,
+    cantSellTrader, setCantSellTrader,
+    cantSellFlea, setCantSellFlea,
     handleColumnSort,
     handleDropdownSort,
     toggleArmorClass,
     handleSaveFilters,
     resetFilters,
+    resetAdvancedFilters,
   } = useCategoryFilters();
 
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const slug = categorySlug || '';
+
+  const availableCalibers = useMemo(() => {
+    if (slug !== 'ammo' && !GUN_SLUGS.has(slug)) return [];
+    const cals = new Set<string>();
+    initialData.forEach(item => { if (item.properties?.caliber) cals.add(item.properties.caliber); });
+    return Array.from(cals).sort();
+  }, [initialData, slug]);
+
+  const activeAdvancedCount = [
+    priceMin, priceMax, caliberFilter, armorTypeFilter,
+    cantBuyTrader ? '1' : '', cantBuyFlea ? '1' : '',
+    cantSellTrader ? '1' : '', cantSellFlea ? '1' : '',
+  ].filter(Boolean).length;
 
   const processedItems = useMemo(() => {
     let data = initialData.map(item => ({ ...item, eco: getEconomics(item) }));
@@ -243,39 +821,65 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
         const q = searchQuery.toLowerCase();
         if (!(item.name?.toLowerCase().includes(q) || item.shortName?.toLowerCase().includes(q))) return false;
       }
-      if ((categorySlug === 'armor' || categorySlug === 'helmets' || categorySlug === 'rigs')) {
+      if (['armor', 'helmets', 'rigs', 'components'].includes(slug)) {
         const itemClass = Number(item.properties?.class) || 0;
         if (itemClass > 0 && !activeArmorClasses.includes(itemClass)) return false;
       }
       if (barterOnly && (!item.types || !item.types.includes('barter'))) return false;
+      // Advanced filters
+      const pMin = priceMin !== '' ? Number(priceMin) : null;
+      const pMax = priceMax !== '' ? Number(priceMax) : null;
+      if (pMin !== null && item.eco.minPrice < pMin) return false;
+      if (pMax !== null && pMax > 0 && item.eco.minPrice > pMax) return false;
+      if (caliberFilter && item.properties?.caliber !== caliberFilter) return false;
+      if (armorTypeFilter && item.properties?.armorType !== armorTypeFilter) return false;
+      // Фильтры доступности
+      const isFlVendor = (v: { name: string; normalizedName?: string }) =>
+        v.name === 'Flea Market' || v.normalizedName === 'flea-market';
+      if (cantBuyTrader && item.buyFor?.some(b => !isFlVendor(b.vendor) && (b.priceRUB ?? b.price) > 0)) return false;
+      if (cantBuyFlea && (item.eco.fleaBuy?.price || 0) > 0) return false;
+      if (cantSellTrader && (item.eco.bestTraderSell?.price || 0) > 0) return false;
+      if (cantSellFlea && (item.eco.fleaSell?.price || 0) > 0) return false;
       return true;
     });
 
     data.sort((a, b) => {
       let aValue: string | number = 0;
       let bValue: string | number = 0;
+      const p = (x: typeof a) => x.properties || {};
 
       switch (sortConfig.key) {
-        case 'name':          aValue = a.name || ''; bValue = b.name || ''; break;
-        case 'sellTrader':    aValue = a.eco.bestTraderSell.price; bValue = b.eco.bestTraderSell.price; break;
-        case 'sellFlea':      aValue = a.eco.fleaSell?.price || 0; bValue = b.eco.fleaSell?.price || 0; break;
-        case 'buyFlea':       aValue = a.eco.fleaBuy?.price || 0; bValue = b.eco.fleaBuy?.price || 0; break;
-        case 'buyMin':        aValue = a.eco.minPrice; bValue = b.eco.minPrice; break;
-        case 'vps':           aValue = a.eco.vps; bValue = b.eco.vps; break;
-        case 'size':          aValue = a.eco.slots; bValue = b.eco.slots; break;
-        case 'ambientVolume': aValue = a.properties?.ambientVolume || 0; bValue = b.properties?.ambientVolume || 0; break;
-        case 'class':         aValue = Number(a.properties?.class) || 0; bValue = Number(b.properties?.class) || 0; break;
-        case 'durability':    aValue = Number(a.properties?.durability) || 0; bValue = Number(b.properties?.durability) || 0; break;
-        case 'damage':        aValue = Number(a.properties?.damage) || 0; bValue = Number(b.properties?.damage) || 0; break;
-        case 'penetration':   aValue = Number(a.properties?.penetrationPower) || 0; bValue = Number(b.properties?.penetrationPower) || 0; break;
-        case 'armorDamage':   aValue = Number(a.properties?.armorDamage) || 0; bValue = Number(b.properties?.armorDamage) || 0; break;
-        case 'fragmentation': aValue = Number(a.properties?.fragmentationChance) || 0; bValue = Number(b.properties?.fragmentationChance) || 0; break;
-        case 'ergonomics':    aValue = Number(a.properties?.ergonomics) || 0; bValue = Number(b.properties?.ergonomics) || 0; break;
-        case 'recoil':        aValue = Number(a.properties?.recoilModifier) || 0; bValue = Number(b.properties?.recoilModifier) || 0; break;
-        case 'deafening':     aValue = a.properties?.deafening || ''; bValue = b.properties?.deafening || ''; break;
-        case 'blocksHeadset': aValue = (a.properties?.blocksEarpiece || a.properties?.blocksHeadset) ? 1 : 0; bValue = (b.properties?.blocksEarpiece || b.properties?.blocksHeadset) ? 1 : 0; break;
-        case 'caliber':       aValue = a.properties?.caliber || ''; bValue = b.properties?.caliber || ''; break;
-        default:              aValue = a.eco.vps; bValue = b.eco.vps; break;
+        case 'name':              aValue = a.name || ''; bValue = b.name || ''; break;
+        case 'sellTrader':        aValue = a.eco.bestTraderSell.price; bValue = b.eco.bestTraderSell.price; break;
+        case 'sellFlea':          aValue = a.eco.fleaSell?.price || 0; bValue = b.eco.fleaSell?.price || 0; break;
+        case 'buyFlea':           aValue = a.eco.fleaBuy?.price || 0; bValue = b.eco.fleaBuy?.price || 0; break;
+        case 'buyMin':            aValue = a.eco.minPrice; bValue = b.eco.minPrice; break;
+        case 'vps':               aValue = a.eco.vps; bValue = b.eco.vps; break;
+        case 'size':              aValue = a.eco.slots; bValue = b.eco.slots; break;
+        case 'class':             aValue = Number(p(a).class) || 0; bValue = Number(p(b).class) || 0; break;
+        case 'durability':        aValue = Number(p(a).durability) || 0; bValue = Number(p(b).durability) || 0; break;
+        case 'ergoPenalty':       aValue = Number(p(a).ergoPenalty) || 0; bValue = Number(p(b).ergoPenalty) || 0; break;
+        case 'speedPenalty':      aValue = Number(p(a).speedPenalty) || 0; bValue = Number(p(b).speedPenalty) || 0; break;
+        case 'capacity':          aValue = Number(p(a).capacity) || 0; bValue = Number(p(b).capacity) || 0; break;
+        case 'weight':            aValue = a.weight ?? 0; bValue = b.weight ?? 0; break;
+        case 'blindnessProtection': aValue = Number(p(a).blindnessProtection) || 0; bValue = Number(p(b).blindnessProtection) || 0; break;
+        case 'ambientVolume':     aValue = p(a).ambientVolume || 0; bValue = p(b).ambientVolume || 0; break;
+        case 'deafening':         aValue = p(a).deafening || ''; bValue = p(b).deafening || ''; break;
+        case 'blocksHeadset':     aValue = p(a).blocksHeadset ? 1 : 0; bValue = p(b).blocksHeadset ? 1 : 0; break;
+        case 'caliber':           aValue = p(a).caliber || ''; bValue = p(b).caliber || ''; break;
+        case 'damage':            aValue = Number(p(a).damage) || 0; bValue = Number(p(b).damage) || 0; break;
+        case 'penetration':       aValue = Number(p(a).penetrationPower) || 0; bValue = Number(p(b).penetrationPower) || 0; break;
+        case 'armorDamage':       aValue = Number(p(a).armorDamage) || 0; bValue = Number(p(b).armorDamage) || 0; break;
+        case 'fragmentation':     aValue = Number(p(a).fragmentationChance) || 0; bValue = Number(p(b).fragmentationChance) || 0; break;
+        case 'ergonomics':        aValue = Number(p(a).ergonomics) || 0; bValue = Number(p(b).ergonomics) || 0; break;
+        case 'recoil':            aValue = Number(p(a).recoilModifier) || 0; bValue = Number(p(b).recoilModifier) || 0; break;
+        case 'recoilVertical':    aValue = Number(p(a).recoilVertical) || 0; bValue = Number(p(b).recoilVertical) || 0; break;
+        case 'fireRate':          aValue = Number(p(a).fireRate) || 0; bValue = Number(p(b).fireRate) || 0; break;
+        case 'fragments':         aValue = Number(p(a).fragments) || 0; bValue = Number(p(b).fragments) || 0; break;
+        case 'fuse':              aValue = Number(p(a).fuse) || 0; bValue = Number(p(b).fuse) || 0; break;
+        case 'sightingRange':     aValue = Number(p(a).sightingRange) || 0; bValue = Number(p(b).sightingRange) || 0; break;
+        case 'gp':                aValue = (gpCoinBarters ?? {})[a.id] || 0; bValue = (gpCoinBarters ?? {})[b.id] || 0; break;
+        default:                  aValue = a.eco.vps; bValue = b.eco.vps; break;
       }
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -287,14 +891,14 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
     });
 
     return data;
-  }, [initialData, searchQuery, sortConfig, categorySlug, activeArmorClasses, barterOnly]);
+  }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, caliberFilter, armorTypeFilter, gpCoinBarters]);
 
   const renderSortableHeader = (label: string, sortKey: string, align: 'left' | 'center' | 'right' = 'left', customClass = '') => {
     const isActive = sortConfig.key === sortKey;
     return (
       <th
         scope="col"
-        className={`px-4 py-3 text-[10px] font-blender-medium uppercase tracking-widest cursor-pointer hover:bg-card-menu/80 transition-colors group select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${isActive ? 'text-(--primary) bg-card-menu/30' : 'text-text-muted'} ${customClass}`}
+        className={`px-3 py-2 text-[10px] font-blender-medium uppercase tracking-widest cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)] transition-colors group select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${isActive ? 'text-(--primary)' : 'text-text-muted'} ${customClass}`}
         onClick={() => handleColumnSort(sortKey)}
       >
         <div className={`flex items-center gap-1.5 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
@@ -321,37 +925,84 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
     ? tableVirtualizer.getTotalSize() - virtualTableRows[virtualTableRows.length - 1].end
     : 0;
 
+  // Dynamic colspan for skeleton/padding rows (+1 for GP column)
+  const dynamicColCount =
+    slug === 'headphones' ? 8 :
+    slug === 'helmets' ? 9 :
+    slug === 'armor' ? 10 :
+    slug === 'components' ? 8 :
+    slug === 'glasses' ? 7 :
+    slug === 'rigs' ? 8 :
+    slug === 'backpacks' ? 8 :
+    CONTAINER_SLUGS.has(slug) ? 8 :
+    GUN_SLUGS.has(slug) ? 10 :
+    slug === 'ammo' ? 9 :
+    slug === 'grenades' ? 9 :
+    slug === 'sights' ? 9 :
+    slug === 'pistolgrips' ? 7 :
+    ERGO_RECOIL_MOD_SLUGS.has(slug) ? 8 :
+    8; // default
+
   return (
     <div className="w-full flex flex-col gap-6">
 
-      <CategoryControlBar
-        categorySlug={categorySlug}
-        searchQuery={searchQuery}
-        sortConfig={sortConfig}
-        activeArmorClasses={activeArmorClasses}
-        barterOnly={barterOnly}
-        availableOnly={availableOnly}
-        viewMode={viewMode}
-        isSaved={isSaved}
-        onSearchChange={setSearchQuery}
-        onDropdownSort={handleDropdownSort}
-        onArmorClassToggle={toggleArmorClass}
-        onBarterOnlyChange={setBarterOnly}
-        onAvailableOnlyChange={setAvailableOnly}
-        onViewModeChange={setViewMode}
-        onSaveFilters={handleSaveFilters}
-      />
+      <div className={`sticky top-18 z-40 border-b border-lines-hover/20 bg-[color-mix(in_srgb,var(--color-base)_88%,transparent)] backdrop-blur-md transition-all duration-300${showAdvanced ? ' pb-3' : ''}`}>
+        <CategoryControlBar
+          categorySlug={categorySlug}
+          searchQuery={searchQuery}
+          sortConfig={sortConfig}
+          activeArmorClasses={activeArmorClasses}
+          barterOnly={barterOnly}
+          availableOnly={availableOnly}
+          viewMode={viewMode}
+          isSaved={isSaved}
+          showAdvanced={showAdvanced}
+          activeAdvancedCount={activeAdvancedCount}
+          onSearchChange={setSearchQuery}
+          onDropdownSort={handleDropdownSort}
+          onArmorClassToggle={toggleArmorClass}
+          onBarterOnlyChange={setBarterOnly}
+          onAvailableOnlyChange={setAvailableOnly}
+          onViewModeChange={setViewMode}
+          onSaveFilters={handleSaveFilters}
+          onToggleAdvanced={() => setShowAdvanced(v => !v)}
+        />
+
+        {showAdvanced && (
+          <AdvancedFiltersPanel
+            categorySlug={slug}
+            priceMin={priceMin}
+            priceMax={priceMax}
+            caliberFilter={caliberFilter}
+            armorTypeFilter={armorTypeFilter}
+            availableCalibers={availableCalibers}
+            cantBuyTrader={cantBuyTrader}
+            cantBuyFlea={cantBuyFlea}
+            cantSellTrader={cantSellTrader}
+            cantSellFlea={cantSellFlea}
+            onPriceMinChange={setPriceMin}
+            onPriceMaxChange={setPriceMax}
+            onCaliberChange={setCaliberFilter}
+            onArmorTypeChange={setArmorTypeFilter}
+            onCantBuyTraderChange={setCantBuyTrader}
+            onCantBuyFleaChange={setCantBuyFlea}
+            onCantSellTraderChange={setCantSellTrader}
+            onCantSellFleaChange={setCantSellFlea}
+            onReset={resetAdvancedFilters}
+          />
+        )}
+      </div>
 
       {/* Пустой стейт */}
       {!isLoading && processedItems.length === 0 && (
-        <div className="relative flex w-full h-[400px] flex-col items-center justify-center overflow-hidden rounded-lg border border-lines-hover bg-card-menu shadow-lg animate-[fade-in-up_0.5s_ease-out]">
+        <div className="relative flex w-full h-100 flex-col items-center justify-center overflow-hidden rounded-lg border border-lines-hover bg-card-menu shadow-lg animate-[fade-in-up_0.5s_ease-out]">
           <div className="pointer-events-none absolute inset-0 opacity-10 bg-hazard-pattern animate-hazard" />
           <div className="relative z-10 flex flex-col items-center text-center px-4">
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-lines-hover bg-(--color-base) shadow-[0_0_20px_rgba(0,0,0,0.5)]">
               <PackageX className="h-8 w-8 text-text-muted" />
             </div>
             <h3 className="mb-2 font-blender-medium text-xl uppercase tracking-widest text-text-primary">Данные не найдены</h3>
-            <p className="mb-8 max-w-md font-mono text-xs text-text-secondary">
+            <p className="mb-8 max-w-md font-blender-book text-xs text-text-secondary">
               База данных пуста или запрос не дал результатов. Попробуйте изменить параметры фильтрации или строку поиска.
             </p>
             <button
@@ -371,7 +1022,7 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
       {isLoading && viewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-[fade-in-up_0.3s_ease-out]">
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="tactical-card-base p-4 flex flex-col h-[250px] animate-pulse border-lines-hover">
+            <div key={i} className="tactical-card-base p-4 flex flex-col h-62.5 animate-pulse border-lines-hover">
               <div className="flex justify-between items-start mb-4">
                 <div className="h-5 w-24 bg-lines-hover/50 rounded" />
                 <div className="h-3 w-12 bg-lines-hover/30 rounded" />
@@ -388,31 +1039,19 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
 
       {/* Skeleton — таблица */}
       {isLoading && viewMode === 'table' && (
-        <div className="overflow-x-auto border border-lines-hover rounded-lg bg-card-menu/20 animate-[fade-in-up_0.3s_ease-out]">
+        <div className="overflow-x-auto animate-[fade-in-up_0.3s_ease-out]">
           <table className="w-full text-sm text-left whitespace-nowrap font-blender-book">
-            <thead className="bg-card-menu/50 border-b border-lines-hover">
-              <tr>
-                {[16, 40, undefined, undefined, undefined, undefined].map((w, i) => (
-                  <th key={i} className={`px-4 py-3 h-10${w ? ` w-${w}` : ''}${i === 1 ? ' border-r border-lines-hover/50' : ''}`} />
-                ))}
-              </tr>
+            <thead className="border-b border-lines-hover">
+              <tr>{Array.from({ length: dynamicColCount }).map((_, i) => <th key={i} className="px-3 py-2 h-10" />)}</tr>
             </thead>
             <tbody>
               {Array.from({ length: 15 }).map((_, i) => (
                 <tr key={i} className="border-b border-lines-hover last:border-0 animate-pulse">
-                  <td className="px-4 py-2 border-r border-lines-hover/50">
-                    <div className="w-12 h-12 bg-lines-hover/50 rounded-sm mx-auto" />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col gap-2">
-                      <div className="h-4 w-3/4 bg-lines-hover/50 rounded" />
-                      <div className="h-3 w-1/2 bg-lines-hover/30 rounded" />
-                    </div>
-                  </td>
-                  <td className="px-4 py-3"><div className="h-4 w-12 bg-lines-hover/50 rounded mx-auto" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-20 bg-lines-hover/50 rounded ml-auto" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-20 bg-lines-hover/50 rounded ml-auto" /></td>
-                  <td className="px-4 py-3"><div className="h-4 w-24 bg-lines-hover/50 rounded ml-auto" /></td>
+                  <td className="px-4 py-2 border-r border-lines-hover/50"><div className="w-12 h-12 bg-lines-hover/50 rounded-sm mx-auto" /></td>
+                  <td className="px-3 py-2"><div className="flex flex-col gap-2"><div className="h-4 w-3/4 bg-lines-hover/50 rounded" /><div className="h-3 w-1/2 bg-lines-hover/30 rounded" /></div></td>
+                  {Array.from({ length: dynamicColCount - 2 }).map((_, j) => (
+                    <td key={j} className="px-3 py-2"><div className="h-4 w-16 bg-lines-hover/50 rounded mx-auto" /></td>
+                  ))}
                 </tr>
               ))}
             </tbody>
@@ -422,38 +1061,138 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
 
       {/* Вид: сетка */}
       {!isLoading && viewMode === 'grid' && processedItems.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {processedItems.map((item) => (
-            <div key={item.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '0 300px' }}>
-              <ItemTile item={item} categorySlug={categorySlug} />
-            </div>
-          ))}
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4">
+          {processedItems.map((item) => {
+            const eftItem = toEftItem(item);
+            const stat = getHeaderStat(item, slug);
+            return (
+              <EftItemTile.Root key={item.id} item={eftItem} categorySlug={slug}>
+                <EftItemTile.Header stat={stat} />
+                <EftItemTile.Media>
+                  <MediaBadges item={item} slug={slug} />
+                </EftItemTile.Media>
+                <EftItemTile.Name />
+                <EftItemTile.Pricing />
+              </EftItemTile.Root>
+            );
+          })}
         </div>
       )}
 
       {/* Вид: таблица */}
       {!isLoading && viewMode === 'table' && processedItems.length > 0 && (
-        <div ref={tableContainerRef} className="overflow-auto max-h-[calc(100vh-260px)] border border-lines-hover rounded-lg bg-card-menu/20">
+        <div ref={tableContainerRef} className="overflow-auto max-h-[calc(100vh-260px)]">
           <table className="w-full text-sm text-left whitespace-nowrap font-blender-book">
-            <thead className="sticky top-0 z-10 bg-card-menu/95 backdrop-blur-sm border-b border-lines-hover">
+            <thead className="sticky top-0 z-10 bg-(--color-base) border-b border-lines-hover">
               <tr>
-                <th scope="col" className="px-4 py-3 text-[10px] font-blender-medium text-text-muted uppercase tracking-widest w-16 text-center border-r border-lines-hover/50">Визуал</th>
-                {renderSortableHeader('Предмет', 'name', 'left', 'w-[160px] max-w-[160px] sm:w-[220px] sm:max-w-[220px] md:w-[280px] md:max-w-[280px] lg:w-[320px] lg:max-w-[320px] xl:w-[400px] xl:max-w-[400px]')}
-                {categorySlug === 'headphones' ? (
-                  <>{renderSortableHeader('Дистанция', 'ambientVolume', 'center')}{renderSortableHeader('Покупка (Барахолка)', 'buyFlea', 'right')}{renderSortableHeader('Продажа (Торговец)', 'sellTrader', 'right')}{renderSortableHeader('Продажа (Барахолка)', 'sellFlea', 'right')}{renderSortableHeader('Мин. цена', 'buyMin', 'right')}</>
-                ) : categorySlug === 'helmets' ? (
-                  <>{renderSortableHeader('Класс', 'class', 'center')}{renderSortableHeader('Шум', 'deafening', 'center')}{renderSortableHeader('Наушники', 'blocksHeadset', 'center')}{renderSortableHeader('Прочн.', 'durability', 'center')}{renderSortableHeader('Продать (Торг.)', 'sellTrader', 'right')}{renderSortableHeader('Продать (Бар.)', 'sellFlea', 'right')}{renderSortableHeader('Купить (Мин.)', 'buyMin', 'right')}</>
-                ) : categorySlug === 'ammo' ? (
-                  <>{renderSortableHeader('Калибр', 'caliber', 'center')}{renderSortableHeader('Урон', 'damage', 'center')}{renderSortableHeader('Пробитие', 'penetration', 'center')}{renderSortableHeader('Урон броне', 'armorDamage', 'center')}{renderSortableHeader('Фрагм.', 'fragmentation', 'center')}{renderSortableHeader('Покупка', 'buyMin', 'right')}</>
-                ) : ['pistolgrips', 'muzzle', 'sights', 'auxiliary', 'foregrips', 'stocks', 'handguards'].includes(categorySlug || '') ? (
-                  <>{renderSortableHeader('Эргономика', 'ergonomics', 'center')}{renderSortableHeader('Отдача', 'recoil', 'center')}{renderSortableHeader('Продать (Торг.)', 'sellTrader', 'right')}{renderSortableHeader('Продать (Бар.)', 'sellFlea', 'right')}{renderSortableHeader('Мин. цена', 'buyMin', 'right')}</>
-                ) : (
-                  <>{renderSortableHeader('Размер', 'size', 'center', 'w-24')}{renderSortableHeader('Продать (Торг.)', 'sellTrader', 'right')}{renderSortableHeader('Продать (Бар.)', 'sellFlea', 'right')}{renderSortableHeader('Купить (Мин.)', 'buyMin', 'right')}{renderSortableHeader('Выгода / Слот', 'vps', 'right')}</>
-                )}
+                <th scope="col" className="px-3 py-2 text-[10px] font-blender-medium text-text-muted uppercase tracking-widest w-16 text-center border-r border-lines-hover/50">
+                  Визуал
+                </th>
+                {renderSortableHeader('Предмет', 'name', 'left', 'w-40 max-w-40 sm:w-55 sm:max-w-55 md:w-65 md:max-w-65 lg:w-75 lg:max-w-75 xl:w-64 xl:max-w-64')}
+
+                {slug === 'headphones' ? (<>
+                  {renderSortableHeader('Дистанция', 'ambientVolume', 'center')}
+                  {renderSortableHeader('Покупка (Бар.)', 'buyFlea', 'right')}
+                  {renderSortableHeader('Продать (Торг.)', 'sellTrader', 'right')}
+                  {renderSortableHeader('Продать (Бар.)', 'sellFlea', 'right')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'helmets' ? (<>
+                  {renderSortableHeader('Класс', 'class', 'center')}
+                  {renderSortableHeader('Шум', 'deafening', 'center')}
+                  {renderSortableHeader('Наушники', 'blocksHeadset', 'center')}
+                  {renderSortableHeader('Прочн.', 'durability', 'center')}
+                  {renderSortableHeader('Штрафы', 'ergoPenalty', 'left')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'armor' ? (<>
+                  {renderSortableHeader('Класс', 'class', 'center')}
+                  {renderSortableHeader('Тип', 'name', 'center')}
+                  {renderSortableHeader('Прочн.', 'durability', 'center')}
+                  {renderSortableHeader('Штрафы', 'ergoPenalty', 'left')}
+                  {renderSortableHeader('Вес', 'weight', 'center')}
+                  {renderSortableHeader('Продать', 'sellTrader', 'right')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'components' ? (<>
+                  {renderSortableHeader('Класс', 'class', 'center')}
+                  {renderSortableHeader('Тип', 'name', 'center')}
+                  {renderSortableHeader('Прочн.', 'durability', 'center')}
+                  {renderSortableHeader('Штрафы', 'ergoPenalty', 'left')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'glasses' ? (<>
+                  {renderSortableHeader('Класс', 'class', 'center')}
+                  {renderSortableHeader('Защита зрения', 'blindnessProtection', 'center')}
+                  {renderSortableHeader('Штрафы', 'ergoPenalty', 'left')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'rigs' ? (<>
+                  {renderSortableHeader('Класс', 'class', 'center')}
+                  {renderSortableHeader('Вместимость', 'capacity', 'center')}
+                  {renderSortableHeader('Прочн.', 'durability', 'center')}
+                  {renderSortableHeader('Штрафы', 'ergoPenalty', 'left')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'backpacks' ? (<>
+                  {renderSortableHeader('Слоты', 'capacity', 'center')}
+                  {renderSortableHeader('Вес', 'weight', 'center')}
+                  {renderSortableHeader('Слот/кг', 'capacity', 'center')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                  {renderSortableHeader('Цена/слот', 'buyMin', 'right')}
+                </>) : CONTAINER_SLUGS.has(slug) ? (<>
+                  {renderSortableHeader('Вместимость', 'capacity', 'center')}
+                  {renderSortableHeader('Размер', 'size', 'center')}
+                  {renderSortableHeader('Соотношение', 'capacity', 'center')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                  {renderSortableHeader('Цена/слот', 'buyMin', 'right')}
+                </>) : GUN_SLUGS.has(slug) ? (<>
+                  {renderSortableHeader('Калибр', 'caliber', 'center')}
+                  {renderSortableHeader('Эрго', 'ergonomics', 'center')}
+                  {renderSortableHeader('Отдача В/Г', 'recoilVertical', 'center')}
+                  {renderSortableHeader('RPM', 'fireRate', 'center')}
+                  {renderSortableHeader('Размер', 'size', 'center')}
+                  {renderSortableHeader('Продать', 'sellTrader', 'right')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'ammo' ? (<>
+                  {renderSortableHeader('Калибр', 'caliber', 'center')}
+                  {renderSortableHeader('Урон', 'damage', 'center')}
+                  {renderSortableHeader('Пробитие', 'penetration', 'center')}
+                  {renderSortableHeader('Урон броне', 'armorDamage', 'center')}
+                  {renderSortableHeader('Фрагм.', 'fragmentation', 'center')}
+                  {renderSortableHeader('Покупка', 'buyMin', 'right')}
+                </>) : slug === 'grenades' ? (<>
+                  {renderSortableHeader('Тип', 'name', 'center')}
+                  {renderSortableHeader('Осколки', 'fragments', 'center')}
+                  {renderSortableHeader('Взрыватель', 'fuse', 'center')}
+                  {renderSortableHeader('Радиус', 'name', 'center')}
+                  {renderSortableHeader('Продать', 'sellTrader', 'right')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'sights' ? (<>
+                  {renderSortableHeader('Эрго', 'ergonomics', 'center')}
+                  {renderSortableHeader('Увеличение', 'name', 'center')}
+                  {renderSortableHeader('Дальность', 'sightingRange', 'center')}
+                  {renderSortableHeader('Продать (Торг.)', 'sellTrader', 'right')}
+                  {renderSortableHeader('Продать (Бар.)', 'sellFlea', 'right')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : slug === 'pistolgrips' ? (<>
+                  {renderSortableHeader('Эрго', 'ergonomics', 'center')}
+                  {renderSortableHeader('Продать (Торг.)', 'sellTrader', 'right')}
+                  {renderSortableHeader('Продать (Бар.)', 'sellFlea', 'right')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : ERGO_RECOIL_MOD_SLUGS.has(slug) ? (<>
+                  {renderSortableHeader('Эрго', 'ergonomics', 'center')}
+                  {renderSortableHeader('Отдача', 'recoil', 'center')}
+                  {renderSortableHeader('Продать (Торг.)', 'sellTrader', 'right')}
+                  {renderSortableHeader('Продать (Бар.)', 'sellFlea', 'right')}
+                  {renderSortableHeader('Мин. цена', 'buyMin', 'right')}
+                </>) : (<>
+                  {renderSortableHeader('Размер', 'size', 'center', 'w-24')}
+                  {renderSortableHeader('Продать (Торг.)', 'sellTrader', 'right')}
+                  {renderSortableHeader('Продать (Бар.)', 'sellFlea', 'right')}
+                  {renderSortableHeader('Купить (Мин.)', 'buyMin', 'right')}
+                  {renderSortableHeader('Цена / Слот', 'vps', 'right')}
+                </>)}
+                {/* GP — универсальная последняя колонка */}
+                {renderSortableHeader('ГП Реф', 'gp', 'center', 'w-14')}
               </tr>
             </thead>
             <tbody>
-              {tablePaddingTop > 0 && <tr><td style={{ height: tablePaddingTop }} colSpan={10} /></tr>}
+              {tablePaddingTop > 0 && <tr><td style={{ height: tablePaddingTop }} colSpan={dynamicColCount} /></tr>}
               {virtualTableRows.map((virtualRow) => {
                 const item = processedItems[virtualRow.index];
                 return (
@@ -461,12 +1200,13 @@ export function ItemsCategoryClient({ initialData, categorySlug }: ItemsCategory
                     key={item.id}
                     item={item}
                     categorySlug={categorySlug}
+                    gpCount={gpCoinBarters?.[item.id]}
                     data-index={virtualRow.index}
                     ref={tableVirtualizer.measureElement}
                   />
                 );
               })}
-              {tablePaddingBottom > 0 && <tr><td style={{ height: tablePaddingBottom }} colSpan={10} /></tr>}
+              {tablePaddingBottom > 0 && <tr><td style={{ height: tablePaddingBottom }} colSpan={dynamicColCount} /></tr>}
             </tbody>
           </table>
         </div>

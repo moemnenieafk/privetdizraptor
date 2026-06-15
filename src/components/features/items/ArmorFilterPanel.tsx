@@ -22,7 +22,7 @@ export function ArmorFilterPanel({ filters, onChange, isVisible }: ArmorFilterPa
         <div className="flex flex-col gap-4 border-t border-lines-hover pt-4 md:flex-row md:items-center">
           <div className="flex w-full items-center gap-6 md:w-auto">
             <div className="flex w-full flex-col gap-2 md:w-32">
-              <span className="font-mono text-[10px] text-text-muted">Мин: {filters.minClass}</span>
+              <span className="font-blender-medium text-[10px] text-text-muted">Мин: {filters.minClass}</span>
               <input
                 type="range"
                 min="1"
@@ -35,7 +35,7 @@ export function ArmorFilterPanel({ filters, onChange, isVisible }: ArmorFilterPa
               />
             </div>
             <div className="flex w-full flex-col gap-2 md:w-32">
-              <span className="font-mono text-[10px] text-text-muted">Макс: {filters.maxClass}</span>
+              <span className="font-blender-medium text-[10px] text-text-muted">Макс: {filters.maxClass}</span>
               <input
                 type="range"
                 min="1"

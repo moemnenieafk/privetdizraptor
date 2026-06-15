@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -124,7 +124,7 @@ export function PlayerTelemetry() {
                           <div className="flex flex-col items-center justify-center">
                             <span className="text-base font-blender-medium leading-4 text-text-secondary">{profile.level}</span>
                             <div className="mt-px flex h-3 items-center justify-center rounded-[3px] border border-text-secondary px-1">
-                              <span className="text-[8px] font-bold uppercase leading-none tracking-wide text-text-secondary">{profile.faction}</span>
+                              <span className="text-[8px] uppercase leading-none tracking-wide text-text-secondary">{profile.faction}</span>
                             </div>
                           </div>
                         </div>
@@ -315,7 +315,7 @@ export function PlayerTelemetry() {
           {!isAuthenticated ? (
             <button onClick={() => setIsAuthenticated(true)} className="flex h-5 w-14 items-center justify-center gap-1 rounded-xs bg-text-secondary transition-colors hover:bg-(--primary) focus:outline-none">
               <div className="h-2.5 w-2.5 icon-mask icon-eft-profile-login text-lines-hover" />
-              <span className="text-[10px] font-blender-medium font-bold uppercase leading-none text-lines-hover">Войти</span>
+              <span className="text-[10px] font-blender-medium uppercase leading-none text-lines-hover">Войти</span>
             </button>
           ) : (
             <div className="flex items-center gap-1.5 px-2 cursor-pointer group transition-opacity">
@@ -345,7 +345,7 @@ export function PlayerTelemetry() {
                 
                 {/* Плашка фракции (через CSS-рамку, а не абсолютные слои) */}
                 <div className="mt-px flex h-3 items-center justify-center rounded-[3px] border border-text-secondary px-1 transition-colors group-hover:border-(--primary)">
-                  <span className="text-text-secondary text-[8px] font-bold uppercase tracking-wide leading-none transition-colors group-hover:text-(--primary)">
+                  <span className="text-text-secondary text-[8px] uppercase tracking-wide leading-none transition-colors group-hover:text-(--primary)">
                     {activeProfile?.faction}
                   </span>
                 </div>
