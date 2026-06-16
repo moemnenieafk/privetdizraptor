@@ -579,7 +579,9 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
               { id: 'gs-docs', label: 'Документы и записки', path: '/eft/gamesetting/docs-notes', iconUrl: '/icons/eft/05-gamesetting/docs-notes.svg' }
             ]
           },
-          { id: 'gs-theories', label: 'Теории и загадки', path: '/eft/gamesetting/theories', iconUrl: '/icons/eft/05-gamesetting/theory-riddles.svg' }
+          { id: 'gs-theories', label: 'Теории и загадки', path: '/eft/gamesetting/theories', iconUrl: '/icons/eft/05-gamesetting/theory-riddles.svg' },
+          { id: 'gs-achievements', label: 'Достижения', path: '/eft/progress/achievements', iconUrl: '/icons/eft/04-progression/achievments.svg' },
+          { id: 'gs-prestige', label: 'Престиж', path: '/eft/progress/prestige', iconUrl: '/icons/eft/04-progression/prestige.svg' }
         ]
       },
       { 

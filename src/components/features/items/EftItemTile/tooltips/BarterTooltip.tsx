@@ -32,7 +32,7 @@ export function EftBarterTooltip({ data, style }: EftBarterTooltipProps) {
 
   return (
     <div
-      className={`w-64 rounded-sm border ${BORDER[level]} bg-(--color-card-menu) p-3 shadow-xl`}
+      className={`w-64 rounded-sm border ${BORDER[level]} bg-card-menu p-3 shadow-xl`}
       style={style}
     >
       <div className="mb-2.5 flex items-center justify-between gap-2">

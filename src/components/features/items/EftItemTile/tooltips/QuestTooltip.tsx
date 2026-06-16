@@ -31,7 +31,7 @@ export function EftQuestTooltip({ data, style }: EftQuestTooltipProps) {
 
   return (
     <div
-      className={`w-64 rounded-sm border ${STATUS_BORDER[data.status]} bg-(--color-card-menu) p-3 shadow-xl`}
+      className={`w-64 rounded-sm border ${STATUS_BORDER[data.status]} bg-card-menu p-3 shadow-xl`}
       style={style}
     >
       {/* Header */}

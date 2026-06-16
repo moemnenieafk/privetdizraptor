@@ -19,7 +19,7 @@ export function PageHeader({ pageId, title, description, iconClass, count }: Pag
   return (
     <div className="flex items-center gap-5 mb-12">
       {/* Добавлен text-(--color-base) для инверсии цвета иконки */}
-      <div className="flex-shrink-0 flex items-center justify-center w-[53px] h-[53px] rounded bg-(--primary) text-(--color-base)">
+      <div className="shrink-0 flex items-center justify-center w-13.25 h-13.25 rounded bg-(--primary) text-(--color-base)">
         <div className={`w-7 h-7 icon-mask ${finalIcon}`}></div>
       </div>
       <div>

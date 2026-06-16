@@ -54,7 +54,6 @@ export function useCategoryFilters() {
   const [priceMin, setPriceMin] = useState(searchParams.get('pmin') || '');
   const [priceMax, setPriceMax] = useState(searchParams.get('pmax') || '');
   const [caliberFilter, setCaliberFilter] = useState(searchParams.get('cal') || '');
-  const [armorTypeFilter, setArmorTypeFilter] = useState(searchParams.get('atype') || '');
 
   // Advanced filters — доступность
   const [cantBuyTrader, setCantBuyTrader] = useState(searchParams.get('nbt') === 'true');
@@ -82,7 +81,6 @@ export function useCategoryFilters() {
           if (saved.priceMin) setPriceMin(saved.priceMin);
           if (saved.priceMax) setPriceMax(saved.priceMax);
           if (saved.caliberFilter) setCaliberFilter(saved.caliberFilter);
-          if (saved.armorTypeFilter) setArmorTypeFilter(saved.armorTypeFilter);
           if (saved.cantBuyTrader) setCantBuyTrader(saved.cantBuyTrader);
           if (saved.cantBuyFlea) setCantBuyFlea(saved.cantBuyFlea);
           if (saved.cantSellTrader) setCantSellTrader(saved.cantSellTrader);
@@ -110,7 +108,6 @@ export function useCategoryFilters() {
       if (priceMin) params.set('pmin', priceMin); else params.delete('pmin');
       if (priceMax) params.set('pmax', priceMax); else params.delete('pmax');
       if (caliberFilter) params.set('cal', caliberFilter); else params.delete('cal');
-      if (armorTypeFilter) params.set('atype', armorTypeFilter); else params.delete('atype');
       if (cantBuyTrader) params.set('nbt', 'true'); else params.delete('nbt');
       if (cantBuyFlea) params.set('nbf', 'true'); else params.delete('nbf');
       if (cantSellTrader) params.set('nst', 'true'); else params.delete('nst');
@@ -124,7 +121,7 @@ export function useCategoryFilters() {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, sortConfig, barterOnly, availableOnly, viewMode, activeArmorClasses,
-      priceMin, priceMax, caliberFilter, armorTypeFilter,
+      priceMin, priceMax, caliberFilter,
       cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea,
       pathname, router, searchParams]);
 
@@ -146,7 +143,7 @@ export function useCategoryFilters() {
   const handleSaveFilters = () => {
     localStorage.setItem('cta_items_filters_v1', JSON.stringify({
       viewMode, sortConfig, activeArmorClasses, barterOnly, availableOnly,
-      priceMin, priceMax, caliberFilter, armorTypeFilter,
+      priceMin, priceMax, caliberFilter,
       cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea,
     }));
     setIsSaved(true);
@@ -162,7 +159,7 @@ export function useCategoryFilters() {
     setPriceMin('');
     setPriceMax('');
     setCaliberFilter('');
-    setArmorTypeFilter('');
+
     setCantBuyTrader(false);
     setCantBuyFlea(false);
     setCantSellTrader(false);
@@ -173,7 +170,7 @@ export function useCategoryFilters() {
     setPriceMin('');
     setPriceMax('');
     setCaliberFilter('');
-    setArmorTypeFilter('');
+
     setCantBuyTrader(false);
     setCantBuyFlea(false);
     setCantSellTrader(false);
@@ -194,7 +191,6 @@ export function useCategoryFilters() {
     priceMin, setPriceMin,
     priceMax, setPriceMax,
     caliberFilter, setCaliberFilter,
-    armorTypeFilter, setArmorTypeFilter,
     // Advanced — доступность
     cantBuyTrader, setCantBuyTrader,
     cantBuyFlea, setCantBuyFlea,

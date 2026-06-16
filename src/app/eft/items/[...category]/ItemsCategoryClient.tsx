@@ -801,7 +801,6 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
     priceMin, setPriceMin,
     priceMax, setPriceMax,
     caliberFilter, setCaliberFilter,
-    armorTypeFilter, setArmorTypeFilter,
     cantBuyTrader, setCantBuyTrader,
     cantBuyFlea, setCantBuyFlea,
     cantSellTrader, setCantSellTrader,
@@ -827,7 +826,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
   }, [initialData, slug]);
 
   const activeAdvancedCount = [
-    priceMin, priceMax, caliberFilter, armorTypeFilter,
+    priceMin, priceMax, caliberFilter,
     cantBuyTrader ? '1' : '', cantBuyFlea ? '1' : '',
     cantSellTrader ? '1' : '', cantSellFlea ? '1' : '',
   ].filter(Boolean).length;
@@ -871,7 +870,6 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
       if (pMin !== null && item.eco.minPrice < pMin) return false;
       if (pMax !== null && pMax > 0 && item.eco.minPrice > pMax) return false;
       if (caliberFilter && item.properties?.caliber !== caliberFilter) return false;
-      if (armorTypeFilter && item.properties?.armorType !== armorTypeFilter) return false;
       // Фильтры доступности
       const isFlVendor = (v: { name: string; normalizedName?: string }) =>
         v.name === 'Flea Market' || v.normalizedName === 'flea-market';
@@ -937,7 +935,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
     });
 
     return data;
-  }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, caliberFilter, armorTypeFilter, gpCoinBarters, activeEyewearSubtype]);
+  }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, caliberFilter, gpCoinBarters, activeEyewearSubtype]);
 
   const renderSortableHeader = (label: string, sortKey: string, align: 'left' | 'center' | 'right' = 'left', customClass = '') => {
     const isActive = sortConfig.key === sortKey;
@@ -1021,7 +1019,6 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
             priceMin={priceMin}
             priceMax={priceMax}
             caliberFilter={caliberFilter}
-            armorTypeFilter={armorTypeFilter}
             availableCalibers={availableCalibers}
             cantBuyTrader={cantBuyTrader}
             cantBuyFlea={cantBuyFlea}
@@ -1030,7 +1027,6 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
             onPriceMinChange={setPriceMin}
             onPriceMaxChange={setPriceMax}
             onCaliberChange={setCaliberFilter}
-            onArmorTypeChange={setArmorTypeFilter}
             onCantBuyTraderChange={setCantBuyTrader}
             onCantBuyFleaChange={setCantBuyFlea}
             onCantSellTraderChange={setCantSellTrader}

@@ -242,12 +242,12 @@
 
   /* Утилита для тактических тултипов с анимацией появления */
   .tactical-tooltip {
-    @apply absolute -top-12 left-1/2 -translate-x-1/2 /* Позиционирование */
-           px-3 py-1.5 bg-[var(--color-card-menu)] border border-[var(--color-lines-hover)] rounded-md /* Внешний вид */
-           text-xs text-[var(--color-text-secondary)] group-hover:text-[var(--primary)] whitespace-nowrap /* Текст и цвет */
+    @apply absolute -top-12 left-1/2 -translate-x-1/2
+           px-3 py-1.5 bg-card-menu border border-lines-hover rounded-md
+           text-xs text-text-secondary group-hover:text-(--primary) whitespace-nowrap
            opacity-0 group-hover:opacity-100
            translate-y-2 group-hover:translate-y-0
-           transition-all duration-300 ease-in-out pointer-events-none; /* Анимация */
+           transition-all duration-300 ease-in-out pointer-events-none;
   }
 
   /* --- Анимация появления элементов при скролле --- */
@@ -286,7 +286,7 @@
 
   .hub-description {
     @apply text-[12px] sm:text-[13px] md:text-[14px] lg:text-[16px] 
-           max-w-[280px] sm:max-w-[380px] md:max-w-[480px] lg:max-w-[600px] transition-all duration-300;
+           max-w-70 sm:max-w-95 md:max-w-120 lg:max-w-150 transition-all duration-300;
   }
 
   /* --- Анимация предупреждающих полосок (Hazard Stripes) --- */
