@@ -22,12 +22,12 @@
 }
 
 @theme {
-  --color-card-menu: #161618;
-  --color-lines-hover: #222225;
+  --color-card-menu: #242426;
+  --color-lines-hover: #313135;
   
   --color-text-primary: #F2F2F2;
-  --color-text-secondary: #9CA3AF;
-  --color-text-muted: #52525B;
+  --color-text-secondary: #9696A1;
+  --color-text-muted: #54545C;
 
   --color-tactical-amber: #E68E25;
   --color-accent-frago: #00CDAB;
@@ -66,7 +66,7 @@
 }
 
 :root {
-  --color-base: #0D0D0F;
+  --color-base: #141416;
   --primary: #E68E25;
   --shadow-neon: var(--shadow-neon-eft);
 }

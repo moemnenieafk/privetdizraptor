@@ -22,12 +22,12 @@
 /* --- 2. ДИЗАЙН-ТОКЕНЫ TAILWIND V4 --- */
 @theme {
   /* Основная палитра Figma (Раздел 2) */
-  --color-base: #0D0D0F;
-  --color-card-menu: #161618;
-  --color-lines-hover: #222225;
+  --color-base: #141416;
+  --color-card-menu: #242426;
+  --color-lines-hover: #313135;
   --color-text-primary: #F2F2F2;
-  --color-text-secondary: #9CA3AF;
-  --color-text-muted: #52525B;
+  --color-text-secondary: #9696A1;
+  --color-text-muted: #54545C;
 
   /* Динамический акцент (связывается с var(--primary) на корне) */
   --color-primary: var(--primary);
