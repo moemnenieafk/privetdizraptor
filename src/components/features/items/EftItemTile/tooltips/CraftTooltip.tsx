@@ -48,7 +48,7 @@ export function EftCraftTooltip({ data, style }: EftCraftTooltipProps) {
       <div className="mb-2.5 flex flex-col gap-1.5">
         {data.ingredients.map((ing) => (
           <div key={ing.id} className="flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            { }
             <img
               src={ing.iconLink || `/images/items/eft/${ing.id}.webp`}
               alt={ing.name}

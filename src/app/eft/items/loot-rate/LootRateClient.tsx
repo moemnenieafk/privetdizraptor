@@ -61,7 +61,7 @@ function VendorIcon({ vendor }: { vendor?: { name: string; normalizedName?: stri
   if (!vendor || vendor.name === '-') return null;
   if (vendor.name === 'Flea Market' || vendor.normalizedName === 'flea-market')
     return <Coins className="h-3.5 w-3.5 shrink-0 text-yellow-500/70" />;
-  // eslint-disable-next-line @next/next/no-img-element
+   
   return <img src={`/images/traders/eft/${vendor.normalizedName}.webp`} alt={vendor.name} title={vendor.name} className="h-3.5 w-3.5 shrink-0 rounded-xs object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />;
 }
 
@@ -258,7 +258,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
                     {/* Изображение */}
                     <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-lines-hover/50">
                       <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       <img
                         src={`/images/items/eft/${item.id}.webp`}
                         alt={item.shortName}

@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { useEftItemTile } from './context';
+import { EftIndicator } from './Indicator';
 
 export function EftMedia({ children }: { children?: ReactNode }) {
   const { item } = useEftItemTile();
@@ -20,7 +21,7 @@ export function EftMedia({ children }: { children?: ReactNode }) {
         <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]" />
 
         {/* Item image */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        { }
         <img
           src={`/images/items/eft/${item.id}.webp`}
           alt={item.name}
@@ -40,15 +41,15 @@ export function EftMedia({ children }: { children?: ReactNode }) {
         />
       </div>
 
-      {/* Ammo overlay: damage (top-left) + penetration (bottom-right) — outside clip */}
+      {/* Ammo overlay: damage (left) + penetration (right) — vertically centered */}
       {item.ammoOverlay && (
         <>
-          <div className="absolute top-2 left-2 z-20 flex h-6 w-6 items-center justify-center rounded bg-red-500/20 outline-1 -outline-offset-1 outline-red-500/30 backdrop-blur-sm">
+          <div className="absolute left-2 top-1/2 z-20 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded bg-red-500/20 outline-1 -outline-offset-1 outline-red-500/30 backdrop-blur-sm">
             <span className="font-blender-medium text-[10px] leading-none text-red-500">
               {item.ammoOverlay.damage}
             </span>
           </div>
-          <div className="absolute bottom-2 right-2 z-20 flex h-6 w-6 items-center justify-center rounded bg-orange-400/20 outline-1 -outline-offset-1 outline-orange-400/30 backdrop-blur-sm">
+          <div className="absolute right-2 top-1/2 z-20 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded bg-orange-400/20 outline-1 -outline-offset-1 outline-orange-400/30 backdrop-blur-sm">
             <span className="font-blender-medium text-[10px] leading-none text-orange-400">
               {item.ammoOverlay.penetration}
             </span>
@@ -56,7 +57,12 @@ export function EftMedia({ children }: { children?: ReactNode }) {
         </>
       )}
 
-      {/* Zone A: corner indicators — passed as children, outside clip so tooltips aren't clipped */}
+      {/* Corner indicators — outside clip so tooltips aren't clipped */}
+      {item.indicators?.barter    && <EftIndicator type="barter"      data={item.indicators.barter}  position="top-left"     />}
+      {item.indicators?.craft     && <EftIndicator type="craft"       data={item.indicators.craft}   position="top-right"    />}
+      {item.armorClass   != null  && <EftIndicator type="armor-class" armorClass={item.armorClass}   position="bottom-left"  />}
+      {item.indicators?.quest     && <EftIndicator type="quest"       data={item.indicators.quest}   position="bottom-right" />}
+
       {children}
     </div>
   );

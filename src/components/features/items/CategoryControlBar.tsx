@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type ComponentType } from 'react';
-import { Search, X, LayoutGrid, List, ChevronDown, Check, Save, SlidersHorizontal, TrendingDown, ArrowDownAZ } from 'lucide-react';
+import { Search, X, LayoutGrid, List, ChevronDown, Check, Save, SlidersHorizontal, TrendingDown, ArrowDownAZ, Activity } from 'lucide-react';
 import type { SortConfig } from './useCategoryFilters';
 
 type SortOption = {
@@ -17,6 +17,7 @@ const SORT_OPTIONS: SortOption[] = [
   { key: 'sellFlea',   label: 'Продажа на Барахолке', iconClass: 'icon-eft-currency-ruble' },
   { key: 'buyMin',     label: 'Покупка (Мин. цена)', Icon: TrendingDown },
   { key: 'name',       label: 'По алфавиту',          Icon: ArrowDownAZ },
+  { key: 'indicator',  label: 'По показателю',         Icon: Activity },
 ];
 
 function SortDropdown({ value, onChange }: { value: string; onChange: (key: string) => void }) {

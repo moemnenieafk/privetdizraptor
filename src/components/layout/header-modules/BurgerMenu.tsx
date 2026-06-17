@@ -46,12 +46,11 @@ export function BurgerMenu({ menuItems = [] }: BurgerMenuProps) {
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-4">
           {menuItems.map((item, idx) => {
             const targetPath = item.path || '#';
-            const isActive = item.path ? pathname?.startsWith(item.path) : false;
             return (
-              <Link 
-                key={item.id || idx} 
+              <Link
+                key={item.id || idx}
                 href={targetPath}
-                className={`tactical-menu-item flex items-center rounded border p-3 hover:scale-[1.02] ${isActive ? "active border-(--primary) shadow-[0_0_15px_color-mix(in_srgb,var(--primary)_30%,transparent)]" : "border-lines-hover"}`}
+                className="tactical-menu-item flex items-center rounded border border-lines-hover p-3 hover:scale-[1.02]"
               >
                 <span className="font-blender-medium text-[15px] uppercase tracking-widest">{item.label}</span>
               </Link>

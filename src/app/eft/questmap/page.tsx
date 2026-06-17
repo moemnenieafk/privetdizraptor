@@ -7,6 +7,12 @@ import { Maximize, Minimize, Search, X } from "lucide-react";
 import { praporQuests } from "./prapor";
 import { therapistQuests } from "./therapist";
 import { skierQuests } from "./skier";
+const tradersConfig = [
+  { id: 'prapor', name: 'Прапор', x: 0, quests: praporQuests },
+  { id: 'therapist', name: 'Терапевт', x: 300, quests: therapistQuests },
+  { id: 'skier', name: 'Лыжник', x: 600, quests: skierQuests },
+];
+
 export default function QuestsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -17,12 +23,6 @@ export default function QuestsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [onlyKappa, setOnlyKappa] = useState(false);
   const [completedQuests, setCompletedQuests] = useState<Record<string, boolean>>({});
-
-  const tradersConfig = [
-    { id: 'prapor', name: 'Прапор', x: 0, quests: praporQuests },
-    { id: 'therapist', name: 'Терапевт', x: 300, quests: therapistQuests },
-    { id: 'skier', name: 'Лыжник', x: 600, quests: skierQuests },
-  ];
 
   const stats = useMemo(() => {
     const allQuests = tradersConfig.flatMap(t => t.quests);

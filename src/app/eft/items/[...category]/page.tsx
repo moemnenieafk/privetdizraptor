@@ -1,9 +1,9 @@
 ﻿import { Suspense } from 'react';
-import { PageHeader } from '@/components/ui/PageHeader';
 import { notFound } from 'next/navigation';
 import { HEADER_DICTIONARY, MenuItem } from '@/data/headerConfig';
 import { ItemsCategoryClient, CategoryItem } from './ItemsCategoryClient';
-import { CategoryTabs, type CategoryTabConfig } from "@/components/features/items/CategoryTabs";
+import { HubNav } from '@/components/features/items/HubNav';
+import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
 
 interface Props {
   params: Promise<{ category: string[] }>;
@@ -21,18 +21,271 @@ function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null 
   return null;
 }
 
+// Извлекает уникальные предметы из всех квест-заданий (тип giveItem)
+async function getQuestItems(): Promise<CategoryItem[]> {
+  const query = `
+    query {
+      tasks(lang: ru) {
+        objectives {
+          type
+          ... on TaskObjectiveItem {
+            items {
+              id
+              normalizedName
+              name
+              shortName
+              width
+              height
+              weight
+              basePrice
+              image512pxLink
+              types
+              bsgCategoryId
+              backgroundColor
+              sellFor { price priceRUB currency vendor { name normalizedName } }
+              buyFor  { price priceRUB currency vendor { name normalizedName } }
+            }
+            count
+            foundInRaid
+          }
+        }
+      }
+    }
+  `;
+
+  try {
+    const res = await fetch('https://api.tarkov.dev/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ query }),
+      next: { revalidate: 3600 },
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      console.error('GraphQL Errors in getQuestItems:', JSON.stringify(json.errors, null, 2));
+      return [];
+    }
+
+    const tasks: any[] = json.data?.tasks || [];  
+    const itemMap = new Map<string, any>();  
+
+    for (const task of tasks) {
+      for (const obj of (task.objectives || [])) {
+        if (obj.type === 'giveItem') {
+          for (const item of (obj.items || [])) {
+            if (item?.id && !itemMap.has(item.id)) {
+              itemMap.set(item.id, item);
+            }
+          }
+        }
+      }
+    }
+
+     
+    return Array.from(itemMap.values()).map((item: any) => {
+      const bestSell = item.sellFor?.reduce((prev: any, current: any) =>
+        (prev.price > current.price) ? prev : current
+      , { price: 0 });
+
+      const rubVal = (p: any) => p.priceRUB ?? p.price;  
+      const validBuyFor = item.buyFor?.filter((b: any) => rubVal(b) > 0) || [];  
+      const bestBuy = validBuyFor.length > 0
+        ? validBuyFor.reduce((prev: any, current: any) => rubVal(current) < rubVal(prev) ? current : prev)  
+        : null;
+
+      const minPrice = bestBuy ? rubVal(bestBuy) : (item.basePrice || 0);
+      const slots = (item.width || 1) * (item.height || 1);
+      const vps = slots > 0 ? Math.round((bestSell?.price || 0) / slots) : 0;
+
+      return {
+        ...item,
+        eco: {
+          bestSell: { price: bestSell?.price || 0, vendor: bestSell?.vendor },
+          bestBuy: bestBuy ? { vendor: bestBuy.vendor } : undefined,
+          minPrice,
+          vps,
+        },
+      };
+    });
+  } catch (error) {
+    console.error('Fetch error in getQuestItems:', error);
+    return [];
+  }
+}
+
+// ─── Shared eco mapping helper ────────────────────────────────────────────────
+
+ 
+function mapItemsToEco(items: any[]): CategoryItem[] {
+   
+  return items.map((item: any) => {
+     
+    const bestSell = item.sellFor?.reduce((prev: any, current: any) =>
+      (prev.price > current.price) ? prev : current
+    , { price: 0 });
+     
+    const rubVal = (p: any) => p.priceRUB ?? p.price;
+     
+    const validBuyFor = item.buyFor?.filter((b: any) => rubVal(b) > 0) || [];
+    const bestBuy = validBuyFor.length > 0
+       
+      ? validBuyFor.reduce((prev: any, current: any) => rubVal(current) < rubVal(prev) ? current : prev)
+      : null;
+    const minPrice = bestBuy ? rubVal(bestBuy) : (item.basePrice || 0);
+    const slots = (item.width || 1) * (item.height || 1);
+    const vps = slots > 0 ? Math.round((bestSell?.price || 0) / slots) : 0;
+    return {
+      ...item,
+      eco: {
+        bestSell: { price: bestSell?.price || 0, vendor: bestSell?.vendor },
+        bestBuy: bestBuy ? { vendor: bestBuy.vendor } : undefined,
+        minPrice,
+        vps,
+      },
+    };
+  });
+}
+
+// ─── Gear hub: поля GQL для параллельных запросов ─────────────────────────────
+
+const GEAR_GQL_FIELDS = `
+  id
+  normalizedName
+  name
+  shortName
+  width
+  height
+  weight
+  basePrice
+  image512pxLink
+  types
+  bsgCategoryId
+  backgroundColor
+  properties {
+    __typename
+    ... on ItemPropertiesHelmet {
+      class
+      durability
+      deafening
+      blocksHeadset
+      blindnessProtection
+      ergoPenalty
+      speedPenalty
+      turnPenalty
+      armorType
+    }
+    ... on ItemPropertiesArmor {
+      class
+      durability
+      ergoPenalty
+      speedPenalty
+      turnPenalty
+      armorType
+    }
+    ... on ItemPropertiesGlasses {
+      class
+      durability
+      blindnessProtection
+      ergoPenalty
+    }
+    ... on ItemPropertiesArmorAttachment {
+      class
+      durability
+      blindnessProtection
+      ergoPenalty
+      speedPenalty
+      turnPenalty
+      armorType
+    }
+    ... on ItemPropertiesChestRig {
+      class
+      durability
+      capacity
+      ergoPenalty
+      speedPenalty
+      turnPenalty
+      armorType
+    }
+    ... on ItemPropertiesBackpack {
+      capacity
+      ergoPenalty
+      speedPenalty
+      turnPenalty
+    }
+    ... on ItemPropertiesContainer {
+      capacity
+    }
+    ... on ItemPropertiesHeadphone {
+      ambientVolume
+      distanceModifier
+    }
+  }
+  sellFor { price priceRUB currency vendor { name normalizedName } }
+  buyFor { price priceRUB currency vendor { name normalizedName } }
+`;
+
+ 
+async function fetchGearItems(filterClause: string): Promise<any[]> {
+  try {
+    const res = await fetch('https://api.tarkov.dev/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        query: `query { items(${filterClause} lang: ru) { ${GEAR_GQL_FIELDS} } }`,
+      }),
+      next: { revalidate: 3600 },
+    });
+    const json = await res.json();
+    if (json.errors) return [];
+    return json.data?.items || [];
+  } catch {
+    return [];
+  }
+}
+
+// ─── Gear hub: BSG-категории Спецоборудования (wearable type overlap) ─────────
+
+const SPECIALEQUIPMENT_BSG_IDS = new Set([
+  '5a2c3a9486f774688b05e574', // NVG-устройства (ПНВ, GPNVG)
+  '5d21f59b6dbe99052b54ef83', // Тепловизоры (T-7)
+  '5b3f15d486f77432d0509248', // Нарукавные повязки
+  '5f4fbaaca5573a5ac31db429', // Компас
+]);
+
 // BFF Pattern: Серверный запрос к GraphQL с маппингом категорий
 async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
+  if (slug === 'quest-items') return getQuestItems();
+
+  // Снаряжение (gear hub): агрегирует 9 подразделов через 3 параллельных запроса.
+  // types-запрос покрывает 7 подразделов; маски и компоненты снаряжения —
+  // отдельные BSG-категории, недоступные через types[].
+  if (slug === 'gear') {
+    const [typeItems, maskItems, componentItems] = await Promise.all([
+      fetchGearItems('types: [armor, backpack, container, glasses, headphones, helmet, wearable, rig],'),
+      fetchGearItems('bsgCategoryId: "5a341c4686f77469e155819e",'), // Маски
+      fetchGearItems('bsgCategoryId: "57bef4c42459772e8d35a53b",'), // Компоненты снаряжения
+    ]);
+    const seen = new Set<string>();
+     
+    const merged = [...typeItems, ...maskItems, ...componentItems].filter((item: any) => {
+      if (!item.id || seen.has(item.id) || SPECIALEQUIPMENT_BSG_IDS.has(item.bsgCategoryId)) return false;
+      seen.add(item.id);
+      return true;
+    });
+    return mapItemsToEco(merged);
+  }
+
   // Расширенный маппинг наших URL-категорий на типы GraphQL tarkov.dev
   const typeMapping: Record<string, string> = {
     // Снаряжение
-    'gear': 'armor, backpack, armorPlate, glasses, headphones, helmet, wearable, rig',
+    'gear': 'armor, backpack, container, glasses, headphones, helmet, wearable, rig',
     'armor': 'armor',
     'backpacks': 'backpack',
-    'components': 'armorPlate',
     'glasses': 'glasses',
     'headphones': 'headphones',
-    'helmets': 'helmet',
+    'helmets': 'helmet, wearable',
     'rigs': 'rig',
     'visors': 'mods',
     // Контейнеры (перенесены под gear)
@@ -50,17 +303,19 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'gl': 'gun',
     'grenades': 'grenade',
     'lmg': 'gun',
-    'melee': 'gun',
+    // 'melee' → bsgCategoryMapping (wearable type, не gun)
     'shotgun': 'gun',
     'sidearm': 'gun',
     'smg': 'gun',
-    'special': 'gun',
+    'special': 'gun', // bsgMultiCategoryFilter сужает до двух BSG-категорий
+    // 'gl' → bsgCategoryMapping (RShG-2)
     // Моды (перенесены на верхний уровень)
     'mods': 'mods',
     'vitalparts': 'mods',
     'functional': 'mods',
     'elements': 'mods',
     'auxiliary': 'mods',
+    'auxiliary-parts': 'mods',
     'barrels': 'mods',
     'bipods': 'mods',
     'charginghandles': 'mods',
@@ -68,17 +323,21 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'gasblocks': 'mods',
     'handguards': 'mods',
     'laser': 'mods',
+    'launchers': 'mods',
+    'light-laser-devices': 'mods',
     'magazines': 'mods',
     'mounts': 'mods',
     'muzzle': 'mods',
     'pistolgrips': 'mods',
     'receivers': 'mods',
+    'receivers-slides': 'mods',
     'sights': 'mods',
     'stocks': 'mods',
     // Боеприпасы
-    'ammo': 'ammo',
+    // ammo = агрегат (одиночные + пачки), rounds = только одиночные (post-filter), ammo-boxes = только пачки
+    'ammo': 'ammo, ammoBox',
     'rounds': 'ammo',
-    'ammo-boxes': 'ammo',
+    'ammo-boxes': 'ammoBox',
     // Бартер-предметы
     'barter': 'barter',
     'valuables': 'barter',
@@ -90,7 +349,7 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'medical-supplies': 'barter',
     'energy-elements': 'barter',
     'others': 'barter',
-    'specialequipment': 'barter',
+    'specialequipment': 'mods, wearable',
     // Медикаменты
     'meds': 'meds',
     'injury': 'meds',
@@ -119,8 +378,119 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
   const bsgCategoryMapping: Record<string, string> = {
     'info': '5448ecbe4bdc2d60728b4568',
     'info-items': '5448ecbe4bdc2d60728b4568',
+    // Штурмовые винтовки: AK-серия, M4A1, HK 416, SCAR, AUG и др.
+    // BSG смешивает AR и карабины в одной категории → post-filter убирает "Карабин"-префикс
+    'ar': '5447b5f14bdc2d61278b4567',
+    // carbine: НЕ здесь — обрабатывается post-filter'ом через types:[gun] + bsgCategoryId
+    // Пистолеты-пулемёты: MP5, MP7, PP-19, KRISS Vector, ПП-91 и др.
+    'smg': '5447b5e04bdc2d62278b4567',
+    // Пистолеты: Glock, M9A3, TT, ПМ, Desert Eagle и др.
+    'sidearm': '5447b5cf4bdc2d65278b4567',
+    // Пулемёты: PKM, PKP, RPK-16, M60, RPD и др.
+    'lmg': '5447bed64bdc2d97278b4568',
+    // Дробовики: МП-133, МП-153, Mossberg 590A1, Remington 870, Saiga-12 и др.
+    'shotgun': '5447b6094bdc2dc3278b4567',
+    // Болтовые винтовки: СВ-98, ДВЛ-10, Мосина и др.
+    'bolt': '5447b6254bdc2dc3278b4568',
+    // Пехотные винтовки (DMR): ВСС, СВД, МК-18, SCAR-H, M1A и др.
+    'dmr': '5447b6194bdc2d67278b4567',
+    // Холодное оружие: ножи, топоры, сабли, штыки — тип wearable, не gun
+    'melee': '5447e1d04bdc2dff2f8b4567',
+    // Специальное оружие: РШГ-2 — вручную в Гранатомёты
+    'gl': '67446d4f04141c10630604e7',
     'masks': '5a341c4686f77469e155819e',
     'facecovers': '5a341c4686f77469e155819e',
+    // Компоненты снаряжения (gear-components): визоры, бронезабрало, мандибулы, доп.бронирование
+    'components': '57bef4c42459772e8d35a53b',
+    // Провизия — прямой запрос по BSG (обходим засорение медикаментами из типа `provisions`)
+    'food':   '5448e8d04bdc2ddf718b4569',
+    'drinks': '5448e8d64bdc2dce718b4568',
+    // Бартер-подкатегории
+    'others':              '590c745b86f7743cc433c5f2',
+    'valuables':           '57864a3d24597754843f8721',
+    'electronics':         '57864a66245977548f04a81f',
+    'tools':               '57864bb7245977548b3b66c2',
+    'household-materials': '57864c322459775490116fbf',
+    'building-materials':  '57864ada245977548638de91',
+    'medical-supplies':    '57864c8c245977548867e7f1',
+    'energy-elements':     '57864ee62459775490116fc1',
+    // Ключи-подкатегории
+    'mechanical': '5c99f98d86f7745c314214b3', // все механические (227)
+    'marked':     '5c99f98d86f7745c314214b3', // + post-filter normalizedName.includes('marked')
+    'quest':      '5c99f98d86f7745c314214b3', // + post-filter types.includes('noFlea')
+    'keycards':   '5c164d2286f774194c5e69fa', // лабораторные карты (29)
+    // Мод-подкатегории: types[] содержит только 'mods' — фильтр по bsgCategoryId обязателен
+    'gasblocks':        '56ea9461d2720b67698b456f',
+    'receivers':        '55818a304bdc2db5418b457d',
+    'receivers-slides': '55818a304bdc2db5418b457d',
+    'pistolgrips':      '55818a684bdc2ddd698b456d',
+    'barrels':          '555ef6e44bdc2de9068b457e',
+    'handguards':       '55818a104bdc2db9688b4569',
+    'auxiliary':        '5a74651486f7744e73386dd1',
+    'auxiliary-parts':  '5a74651486f7744e73386dd1',
+    'bipods':           '55818afb4bdc2dde698b456d',
+    'foregrips':        '55818af64bdc2d5b648b4570',
+    'mounts':           '55818b224bdc2dde698b456f',
+    'magazines':        '5448bc234bdc2d3c308b4569',
+    'stocks':           '55818a594bdc2db9688b456a',
+    'charginghandles':  '55818a6f4bdc2db9688b456b',
+    'launchers':        '55818b014bdc2ddc698b456b',
+  };
+
+  // Мод-категории с несколькими BSG-разделами: запрос types:[mods] + post-filter по bsgCategoryId
+  const bsgMultiCategoryFilter: Record<string, Set<string>> = {
+    // Хаб-категории (агрегируют дочерние BSG-разделы)
+    'vitalparts': new Set([
+      '56ea9461d2720b67698b456f', // gasblocks
+      '55818a304bdc2db5418b457d', // receivers
+      '55818a684bdc2ddd698b456d', // pistolgrips
+      '555ef6e44bdc2de9068b457e', // barrels
+      '55818a104bdc2db9688b4569', // handguards
+    ]),
+    'functional': new Set([
+      '5a74651486f7744e73386dd1', // auxiliary
+      '550aa4bf4bdc2dd6348b456b', // flash hiders
+      '550aa4cd4bdc2dd8348b456c', // suppressors
+      '550aa4dd4bdc2dc9348b4569', // chokes
+      '55818ad54bdc2ddc698b4569', // red dots / holo
+      '55818add4bdc2d5b648b456f', // hybrid scopes
+      '55818ac54bdc2d5b648b456e', // iron sights
+      '55818ae44bdc2dde698b456c', // riflescopes
+      '55818acf4bdc2dde698b456b', // reflex sights
+      '55818aeb4bdc2ddc698b456a', // thermal scopes
+      '55818b164bdc2ddc698b456c', // tactical devices
+      '55818b084bdc2d5b648b4571', // flashlights
+      '55818afb4bdc2dde698b456d', // bipods
+      '55818af64bdc2d5b648b4570', // foregrips
+    ]),
+    'elements': new Set([
+      '55818b224bdc2dde698b456f', // mounts
+      '5448bc234bdc2d3c308b4569', // magazines
+      '55818a594bdc2db9688b456a', // stocks
+      '55818a6f4bdc2db9688b456b', // charginghandles
+      '55818b014bdc2ddc698b456b', // launchers
+    ]),
+    // Бартер-категории с несколькими BSG-разделами
+    'flammable-materials': new Set(['57864e4c24597754843f8723', '5d650c3e815116009f6201d2']),
+    // Листовые мод-категории с несколькими BSG-разделами
+    'muzzle': new Set(['550aa4bf4bdc2dd6348b456b', '550aa4cd4bdc2dd8348b456c', '550aa4dd4bdc2dc9348b4569']),
+    'sights': new Set(['55818ad54bdc2ddc698b4569', '55818add4bdc2d5b648b456f', '55818ac54bdc2d5b648b456e', '55818ae44bdc2dde698b456c', '55818acf4bdc2dde698b456b', '55818aeb4bdc2ddc698b456a']),
+    'laser': new Set(['55818b164bdc2ddc698b456c', '55818b084bdc2d5b648b4571']),
+    'light-laser-devices': new Set(['55818b164bdc2ddc698b456c', '55818b084bdc2d5b648b4571']),
+    // Провизия-агрегат: тип provisions засорён медикаментами, оставляем только еду и напитки
+    'provisions': new Set(['5448e8d04bdc2ddf718b4569', '5448e8d64bdc2dce718b4568']),
+    // Специальное оружие: revolvers + Milkor | SP-81 + RSP-30/ROP-30 + FN40GL Mk2
+    'special': new Set([
+      '617f1ef5e8b54b0998387733', // RSh-12, MTs-255-12, Chiappa Rhino, Milkor M32A1
+      '5447bedf4bdc2d87278b4568', // SP-81, RSP-30, ROP-30, FN40GL Mk2 standalone
+    ]),
+    // Спецоборудование: ПНВ + тепловизоры + повязки + компас
+    'specialequipment': new Set([
+      '5a2c3a9486f774688b05e574', // NVG devices (PVS-14, GPNVG-18, PVS-31A)
+      '5d21f59b6dbe99052b54ef83', // Thermal devices (T-7)
+      '5b3f15d486f77432d0509248', // Armbands (повязки на плечо)
+      '5f4fbaaca5573a5ac31db429', // Compass (компас)
+    ]),
   };
 
   const gqlType = typeMapping[slug];
@@ -143,6 +513,7 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
         basePrice
         image512pxLink
         types
+        bsgCategoryId
         backgroundColor
         properties {
           __typename
@@ -238,6 +609,26 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
           ... on ItemPropertiesContainer {
             capacity
           }
+          ... on ItemPropertiesMedKit {
+            hitpoints
+            useTime
+            cures
+          }
+          ... on ItemPropertiesMedicalItem {
+            uses
+            useTime
+            cures
+          }
+          ... on ItemPropertiesPainkiller {
+            uses
+            useTime
+            cures
+          }
+          ... on ItemPropertiesSurgicalKit {
+            uses
+            useTime
+            cures
+          }
         }
         sellFor { price priceRUB currency vendor { name normalizedName } }
         buyFor { price priceRUB currency vendor { name normalizedName } }
@@ -265,60 +656,97 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     // Фолбэк-фильтрация на сервере для специфичных категорий (например, Кейсы)
     if (slug === 'secure' || slug === 'secure-containers') {
       // Настоящие защищённые контейнеры (Alpha/Beta/Gamma/Kappa…): types = ['noFlea'] only, без 'container'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       items = items.filter((i: any) =>
         i.properties?.__typename === 'ItemPropertiesContainer' &&
         !i.types?.includes('container')
       );
     } else if (slug === 'storage-containers') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       items = items.filter((i: any) => !i.types?.includes('markedOnly'));
     } else if (slug === 'cases') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       items = items.filter((i: any) => /кейс/i.test(i.name ?? ''));
     } else if (slug === 'medkits') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      items = items.filter((i: any) => i.name && i.name.toLowerCase().includes('аптечка'));
+       
+      items = items.filter((i: any) => i.properties?.__typename === 'ItemPropertiesMedKit');
+    } else if (slug === 'injury') {
+      // Обработка ранений: бинты/шины/жгуты (MedicalItem) + хирургические наборы (SurgicalKit)
+      // BSG category 5448f3ac4bdc2dce718b4569
+       
+      items = items.filter((i: any) =>
+        i.properties?.__typename === 'ItemPropertiesMedicalItem' ||
+        i.properties?.__typename === 'ItemPropertiesSurgicalKit'
+      );
+    } else if (slug === 'pills') {
+      // Только таблетки: ItemPropertiesPainkiller с именем "Таблетки …" (мази и шприцы — в других разделах)
+       
+      items = items.filter((i: any) =>
+        i.properties?.__typename === 'ItemPropertiesPainkiller' &&
+        /^таблетки/i.test(i.name ?? '')
+      );
+    } else if (slug === 'ar') {
+      // BSG смешивает AR и Карабины в одной категории 5447b5f14bdc2d61278b4567.
+      // Убираем «Карабин»-префиксные позиции (ADAR, TX-15, ВПО-136 и др.) — они идут в carbine.
+       
+      items = items.filter((i: any) => !/^Карабин/i.test(i.name ?? ''));
+    } else if (slug === 'carbine') {
+      // Карабины = «Карабин»-named из общей AR/Carbine BSG-категории
+      //           + полукарабинная категория (СВТ-40, СКС, АС «Вал», ВПО-101, СР-3М и др.)
+       
+      items = items.filter((i: any) =>
+        (i.bsgCategoryId === '5447b5f14bdc2d61278b4567' && /^Карабин/i.test(i.name ?? '')) ||
+        i.bsgCategoryId === '5447b5fc4bdc2d87278b4567'
+      );
+    } else if (slug === 'rounds') {
+      // Только одиночные патроны — исключаем пачки и гранаты (ammo+grenade dual-type)
+       
+      items = items.filter((i: any) => !i.types?.includes('ammoBox') && !i.types?.includes('grenade'));
+    } else if (slug === 'helmets') {
+      // Шлемы + крепёжные элементы шлема (бронезабрало, мандибулы, доп.бронирование) из gear-components
+      const helmetAttachPattern = /бронезабрало|мандибул|дополнительное бронирование/i;
+       
+      items = items.filter((i: any) =>
+        i.types?.includes('helmet') ||
+        (i.bsgCategoryId === '57bef4c42459772e8d35a53b' && helmetAttachPattern.test(i.name ?? ''))
+      );
+    } else if (slug === 'components') {
+      // Компоненты снаряжения (gear-components): из 47 предметов исключаем те, что идут в шлемы
+      const helmetAttachPattern = /бронезабрало|мандибул|дополнительное бронирование/i;
+       
+      items = items.filter((i: any) => !helmetAttachPattern.test(i.name ?? ''));
     } else if (slug === 'eyewear') {
       // Из mods оставляем: визоры (armorType), ПНВ-устройства (nvgIntensity или имя)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // Бронезабрало исключаем — они идут в шлемы
+       
       items = items.filter((i: any) =>
-        !i.types?.includes('mods') ||
-        i.properties?.armorType != null ||
-        i.properties?.nvgIntensity != null ||
-        /прибор ночного видения/i.test(i.name ?? '')
+        !/бронезабрало/i.test(i.name ?? '') &&
+        (
+          !i.types?.includes('mods') ||
+          i.properties?.armorType != null ||
+          i.properties?.nvgIntensity != null ||
+          /прибор ночного видения/i.test(i.name ?? '')
+        )
       );
+    } else if (slug === 'marked') {
+      // Меченые ключи: нет отдельного типа в API, идентифицируем по normalizedName
+       
+      items = items.filter((i: any) => i.normalizedName?.includes('marked'));
+    } else if (slug === 'quest') {
+      // Квестовые ключи: quest-тип для ключей отсутствует в API — используем noFlea
+      // (квест-ключи запрещены к торговле на барахолке)
+       
+      items = items.filter((i: any) => i.types?.includes('noFlea'));
     }
 
-    // Маппинг данных (BFF) для добавления eco (экономики)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return items.map((item: any) => {
-      // Ищем лучшую цену продажи (максимальную)
-      const bestSell = item.sellFor?.reduce((prev: any, current: any) => 
-        (prev.price > current.price) ? prev : current
-      , { price: 0 });
+    // Мод-подкатегории с несколькими BSG-разделами: запрос вернул все mods → фильтруем по bsgCategoryId
+    const bsgMultiSet = bsgMultiCategoryFilter[slug];
+    if (bsgMultiSet) {
+       
+      items = items.filter((i: any) => bsgMultiSet.has(i.bsgCategoryId));
+    }
 
-      // Ищем лучшую цену покупки (минимальную) — сравниваем по priceRUB для корректного сравнения валют
-      const rubVal = (p: any) => p.priceRUB ?? p.price;
-      const validBuyFor = item.buyFor?.filter((b: any) => rubVal(b) > 0) || [];
-      const bestBuy = validBuyFor.length > 0
-        ? validBuyFor.reduce((prev: any, current: any) => rubVal(current) < rubVal(prev) ? current : prev)
-        : null;
-
-      const minPrice = bestBuy ? rubVal(bestBuy) : (item.basePrice || 0);
-      const slots = (item.width || 1) * (item.height || 1);
-      const vps = slots > 0 ? Math.round((bestSell?.price || 0) / slots) : 0;
-
-      return {
-        ...item,
-        eco: {
-          bestSell: { price: bestSell?.price || 0, vendor: bestSell?.vendor },
-          bestBuy: bestBuy ? { vendor: bestBuy.vendor } : undefined,
-          minPrice,
-          vps
-        }
-      };
-    });
+    return mapItemsToEco(items);
   } catch (error) {
     console.error('Fetch error in getCategoryItems:', error);
     return [];
@@ -345,13 +773,13 @@ async function getGpCoinBarters(): Promise<Record<string, number>> {
     });
     const json = await res.json();
     const result: Record<string, number> = {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     for (const barter of (json.data?.barters || []) as any[]) {
       if (barter.trader?.normalizedName !== 'fence') continue;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const gpReq = barter.requiredItems?.find((r: any) => r.item?.shortName === 'GP');
       if (!gpReq) continue;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       for (const reward of (barter.rewardItems || []) as any[]) {
         if (reward.item?.id) result[reward.item.id] = gpReq.count || 1;
       }
@@ -382,30 +810,27 @@ export default async function ItemsDynamicPage({ params }: Props) {
 
   const hasChildren = currentNode.children && currentNode.children.length > 0;
 
-  // --- ГЕНЕРАЦИЯ ВЛОЖЕННЫХ ТАБОВ ---
-  let subTabs: CategoryTabConfig[] = [];
   const parentPath = currentPath.split('/').slice(0, -1).join('/');
   const parentNode = findNodeByPath(eftMenu, parentPath);
 
-  if (hasChildren) {
-    // Если у текущего узла есть дети (например, /gear), показываем их как табы
-    subTabs = currentNode.children!.map(child => ({
-      id: child.id,
-      title: child.label,
-      href: child.path || '#',
-      iconPath: child.iconUrl || child.iconUrlBear || ''
-    }));
-  } else if (parentNode && parentNode.path && parentNode.path !== '/eft/items' && parentNode.children) {
-    // Если это конечная категория, показываем ее соседей (всю группу)
-    subTabs = parentNode.children.map(child => ({
-      id: child.id,
-      title: child.label,
-      href: child.path || '#',
-      iconPath: child.iconUrl || child.iconUrlBear || ''
-    }));
-  }
+  const tabSource = hasChildren
+    ? currentNode.children!
+    : (parentNode && parentNode.path !== '/eft/items' && parentNode.children)
+      ? parentNode.children
+      : null;
 
-  // Загружаем предметы и GP-бартеры параллельно
+  const tabs = tabSource?.map(child => ({
+    id: child.id,
+    label: child.label,
+    menuTitle: child.menuTitle,
+    href: child.path || '#',
+    iconUrl: child.iconUrl || child.iconUrlBear || '',
+    preserveIconColor: child.path?.startsWith('/eft/items/mods/') ?? false,
+  }));
+
+  const pageId = `eft-items-${resolvedParams.category.join('-')}`;
+  const pageContent = PAGE_CONTENT_DICTIONARY[pageId];
+
   const [itemsData, gpCoinBarters] = await Promise.all([
     getCategoryItems(slug),
     getGpCoinBarters(),
@@ -414,19 +839,15 @@ export default async function ItemsDynamicPage({ params }: Props) {
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        
-        <PageHeader
-          pageId={`eft-items-${resolvedParams.category.join('-')}`}
-          title={currentNode.label}
-          description={`Подробная информация и база предметов в категории «${currentNode.label}».`}
+        <HubNav
+          iconClass={pageContent?.iconClass}
+          iconUrl={pageContent?.iconClass ? undefined : (currentNode.iconUrl || currentNode.iconUrlBear)}
+          title={pageContent?.title ?? currentNode.label}
+          description={pageContent?.description}
           count={itemsData.length}
+          tabs={tabs}
         />
 
-        {subTabs.length > 0 && (
-          <CategoryTabs tabs={subTabs} className="mb-8" />
-        )}
-
-        {/* Всегда рендерим таблицу/сетку для текущей категории или группы */}
         <Suspense>
           <ItemsCategoryClient initialData={itemsData} categorySlug={slug} gpCoinBarters={gpCoinBarters} />
         </Suspense>

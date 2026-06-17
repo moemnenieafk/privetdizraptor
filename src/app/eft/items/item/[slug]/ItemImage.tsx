@@ -7,10 +7,10 @@ interface ItemImageProps {
   className?: string;
 }
 
-// eslint-disable-next-line @next/next/no-img-element
+ 
 export function ItemImage({ id, image512pxLink, name, className = '' }: ItemImageProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
+     
     <img
       src={`/images/items/eft/${id}.webp`}
       alt={name}
@@ -36,7 +36,7 @@ interface VendorImageProps {
 
 export function VendorImage({ normalizedName, name, className = '' }: VendorImageProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
+     
     <img
       src={`/images/traders/eft/${normalizedName}.webp`}
       alt={name}

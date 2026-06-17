@@ -22,7 +22,7 @@ const TRADER_NAMES: Record<string, string> = {
 
 function TraderAvatar({ normalizedName, name, size = 24 }: { normalizedName: string; name: string; size?: number }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
+     
     <img
       src={`/images/traders/eft/${normalizedName}.webp`}
       alt={name}
@@ -40,7 +40,7 @@ function ItemThumb({ slot }: { slot: ProcessedBarterSlot }) {
       className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xs border border-lines-hover bg-card-menu"
       title={`${slot.item.name}\n${slot.count > 1 ? `×${slot.count} = ` : ''}${(slot.unitPrice * slot.count).toLocaleString('ru-RU')} ₽`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+      { }
       <img
         src={`/images/items/eft/${slot.item.id}.webp`}
         alt={slot.item.shortName}

@@ -42,7 +42,7 @@ export function EftBarterTooltip({ data, style }: EftBarterTooltipProps) {
             {LABELS[level]}
           </span>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        { }
         <img
           src={`/images/traders/eft/${data.trader.normalizedName ?? data.trader.name.toLowerCase()}.webp`}
           alt={data.trader.name}
@@ -54,7 +54,7 @@ export function EftBarterTooltip({ data, style }: EftBarterTooltipProps) {
       <div className="mb-2.5 flex flex-col gap-1.5">
         {data.items.map((itm) => (
           <div key={itm.id} className="flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+            { }
             <img
               src={itm.iconLink || `/images/items/eft/${itm.id}.webp`}
               alt={itm.name}

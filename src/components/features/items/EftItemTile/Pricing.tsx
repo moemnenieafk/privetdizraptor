@@ -9,7 +9,7 @@ import type { EftPriceEntry, EftVendor } from './types';
 function VendorAvatar({ vendor }: { vendor?: EftVendor }) {
   if (!vendor || vendor.name === '-') return <span className="h-4 w-4 shrink-0" />;
   return (
-    // eslint-disable-next-line @next/next/no-img-element
+     
     <img
       src={`/images/traders/eft/${vendor.normalizedName ?? vendor.name.toLowerCase()}.webp`}
       alt={vendor.name}
@@ -93,12 +93,14 @@ function PriceCell({
   entry,
   isFlea = false,
   accent = false,
+  profitable = false,
   showQuestUnlock = false,
   levelRequired,
 }: {
   entry?: EftPriceEntry;
   isFlea?: boolean;
   accent?: boolean;
+  profitable?: boolean;
   showQuestUnlock?: boolean;
   levelRequired?: number;
 }) {
@@ -132,7 +134,9 @@ function PriceCell({
       <span
         title={titleRUB}
         className={`cursor-help font-blender-medium ${
-          accent ? 'text-sm text-(--primary)' : 'text-[11px] text-text-secondary'
+          accent
+            ? `text-sm ${profitable ? 'text-success' : 'text-text-secondary'}`
+            : 'text-[11px] text-text-secondary'
         }`}
       >
         {display}
@@ -141,7 +145,7 @@ function PriceCell({
   );
 }
 
-function VpsCell({ price, priceRUB, slots }: { price?: number; priceRUB?: number; slots: number }) {
+function VpsCell({ price, priceRUB, slots, profitable = false }: { price?: number; priceRUB?: number; slots: number; profitable?: boolean }) {
   if (!price || price <= 0) {
     return (
       <div className="flex items-center gap-1">
@@ -151,15 +155,12 @@ function VpsCell({ price, priceRUB, slots }: { price?: number; priceRUB?: number
     );
   }
   const vps = Math.floor((priceRUB ?? price) / slots);
-  const iconColor = vps > 10000 ? 'bg-nvg-green' : 'bg-text-secondary';
   return (
     <div className="flex items-center gap-1">
-      <span className={`icon-eft-items-price-slot h-4 w-4 shrink-0 ${iconColor} mask-contain mask-center mask-no-repeat`} />
+      <span className={`icon-eft-items-price-slot h-4 w-4 shrink-0 ${profitable ? 'bg-nvg-green' : 'bg-text-secondary'} mask-contain mask-center mask-no-repeat`} />
       <span
         title={`${vps.toLocaleString('ru-RU')} ₽ / слот`}
-        className={`cursor-help font-blender-medium text-xs ${
-          vps > 10000 ? 'text-nvg-green' : vps > 5000 ? 'text-yellow-500' : 'text-text-primary'
-        }`}
+        className={`cursor-help font-blender-medium text-xs ${profitable ? 'text-nvg-green' : 'text-text-secondary'}`}
       >
         {formatCurrencyDisplay(vps)}
       </span>
@@ -173,6 +174,18 @@ export function EftPricing() {
   const slots = item.width * item.height;
   const hasQuestUnlock = indicators?.quest?.type === 'unlock_trade';
 
+  const fleaSellRUB  = pricing.fleaSell?.priceRUB   ?? pricing.fleaSell?.price   ?? 0;
+  const traderSellRUB = pricing.traderSell?.priceRUB ?? pricing.traderSell?.price ?? 0;
+  const fleaBuyRUB   = pricing.fleaBuy?.priceRUB    ?? pricing.fleaBuy?.price    ?? 0;
+  const traderBuyRUB = pricing.traderBuy?.priceRUB  ?? pricing.traderBuy?.price  ?? 0;
+
+  const fleaSellProfitable = fleaSellRUB > 0 && traderSellRUB > 0 && fleaSellRUB > traderSellRUB;
+  const fleaBuyProfitable  = fleaBuyRUB  > 0 && traderBuyRUB  > 0 && fleaBuyRUB  < traderBuyRUB;
+
+  const traderVPS = traderSellRUB > 0 ? Math.floor(traderSellRUB / slots) : 0;
+  const fleaVPS   = fleaSellRUB   > 0 ? Math.floor(fleaSellRUB   / slots) : 0;
+  const fleaVpsProfitable = fleaVPS > 0 && traderVPS > 0 && fleaVPS > traderVPS;
+
   return (
     <div className="mt-auto flex flex-col gap-0 pt-3">
 
@@ -185,7 +198,7 @@ export function EftPricing() {
       <div className="mb-2.5 grid grid-cols-2 gap-2">
         <PriceCell entry={pricing.traderBuy} showQuestUnlock={hasQuestUnlock} />
         <div className="flex justify-end">
-          <PriceCell entry={pricing.fleaBuy} isFlea accent />
+          <PriceCell entry={pricing.fleaBuy} isFlea accent profitable={fleaBuyProfitable} />
         </div>
       </div>
 
@@ -198,7 +211,7 @@ export function EftPricing() {
       <div className="mb-2 grid grid-cols-2 gap-2">
         <PriceCell entry={pricing.traderSell} levelRequired={minPlayerLevel} />
         <div className="flex justify-end">
-          <PriceCell entry={pricing.fleaSell} isFlea accent />
+          <PriceCell entry={pricing.fleaSell} isFlea accent profitable={fleaSellProfitable} />
         </div>
       </div>
 
@@ -206,7 +219,7 @@ export function EftPricing() {
       <div className="grid grid-cols-2 gap-2 pt-1">
         <VpsCell price={pricing.traderSell?.price} priceRUB={pricing.traderSell?.priceRUB} slots={slots} />
         <div className="flex items-center justify-end">
-          <VpsCell price={pricing.fleaSell?.price} priceRUB={pricing.fleaSell?.priceRUB} slots={slots} />
+          <VpsCell price={pricing.fleaSell?.price} priceRUB={pricing.fleaSell?.priceRUB} slots={slots} profitable={fleaVpsProfitable} />
         </div>
       </div>
     </div>

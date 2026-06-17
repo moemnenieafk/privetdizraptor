@@ -17,7 +17,7 @@ export default function EftLayout({
         }
       `}</style>
 
-      <div className="flex-grow">
+      <div className="grow">
         {children}
       </div>
     </div>

@@ -32,7 +32,7 @@ export const useItemsFilter = (initialItems: TarkovItem[]) => {
       if (!matchesCategory || !matchesSearch) return false;
 
       // Фильтр "Только для бартера" (ищет 'barter' в массиве типов GraphQL от tarkov.dev)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const itemTypes = (item as any).types as string[] | undefined;
       if (barterOnly && (!itemTypes || !itemTypes.includes("barter"))) return false;
 
@@ -46,7 +46,7 @@ export const useItemsFilter = (initialItems: TarkovItem[]) => {
       // Фильтр "Доступно мне" по уровню торговцев ЧВК и барахолке
       if (availableOnly) {
         // Ищем все предложения о покупке (buyFor - покупаем у торговцев)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const buyOffers = (item as any).buyFor as any[];
         if (!buyOffers || !Array.isArray(buyOffers) || buyOffers.length === 0) {
           return false; // Предмет вообще нельзя купить напрямую
@@ -104,7 +104,7 @@ export const useItemsFilter = (initialItems: TarkovItem[]) => {
     }
 
     return result;
-  }, [initialItems, searchQuery, activeCategory, sortBy]);
+  }, [initialItems, searchQuery, activeCategory, sortBy, barterOnly, armorFilters, availableOnly, playerLevel, traderLevels]);
 
   return {
     searchQuery,

@@ -23,11 +23,16 @@
 @theme {
   /* Основная палитра Figma (Раздел 2) */
   --color-base: #141416;
+  --color-darkbase: #0D0D0E;
   --color-card-menu: #242426;
   --color-lines-hover: #313135;
   --color-text-primary: #F2F2F2;
   --color-text-secondary: #9696A1;
   --color-text-muted: #54545C;
+
+  --color-success: #8DE736;
+  --color-failure: #E3433F;
+  --color-moderate: #FF7724;
 
   /* Динамический акцент (связывается с var(--primary) на корне) */
   --color-primary: var(--primary);

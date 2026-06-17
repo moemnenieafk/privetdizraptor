@@ -153,7 +153,7 @@ export default function KeepItemsPage() {
                 <div className="flex items-start gap-6">
                   {/* Иконка */}
                   <div className="relative w-[80px] h-[80px] border border-lines-hover bg-base rounded-md overflow-hidden flex-shrink-0 p-2 flex items-center justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    { }
                     <img 
                       src={item.image} 
                       alt={item.name} 

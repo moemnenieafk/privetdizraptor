@@ -62,7 +62,7 @@ export function HubCard({
         <div className="flex justify-start items-center overflow-hidden shrink-0">
           <div className="w-4 h-4 transition-transform duration-300">
             {isColoredIcon(resolvedIconUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
+               
               <img src={resolvedIconUrl} alt="" className={`w-full h-full object-contain transition-opacity ${isActive ? "opacity-100" : "opacity-80 group-hover:opacity-100"}`} />
             ) : (
               <div 
@@ -107,7 +107,7 @@ export function HubCard({
         >
           <div className="w-full h-full transition-transform duration-300 group-hover:scale-110">
             {isColoredIcon(resolvedIconUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
+               
               <img src={resolvedIconUrl} alt="" className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity" />
             ) : (
               /* Используем CSS-маску для автоматического перекрашивания SVG в цвет текущей темы */

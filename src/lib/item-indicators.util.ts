@@ -20,10 +20,12 @@ export interface IndicatorItem {
     // Weapon mod
     ergonomics?: number | null;
     recoilModifier?: number | null;
-    // Meds / Provisions (not currently in GQL query — safe null fallthrough)
+    // ItemPropertiesMedKit
+    hitpoints?: number | null;
+    // ItemPropertiesMedicalItem (pills, injectors, injury treatment)
     uses?: number | null;
     useTime?: number | null;
-    // Keys (not currently in GQL query — safe null fallthrough)
+    // Keys
     maxUses?: number | null;
   } | null;
 }
@@ -36,13 +38,20 @@ const RIG_SLUGS = new Set(['rigs']);
 const CONTAINER_SLUGS = new Set(['cases', 'secure', 'storage-containers', 'secure-containers']);
 const HEADPHONE_SLUGS = new Set(['headphones']);
 const AMMO_SLUGS = new Set(['ammo', 'rounds', 'ammo-boxes']);
-const GUN_SLUGS = new Set(['firearms', 'ar', 'bolt', 'carbine', 'dmr', 'gl', 'lmg', 'shotgun', 'sidearm', 'smg', 'guns']);
+const GUN_SLUGS = new Set(['weapons', 'firearms', 'ar', 'bolt', 'carbine', 'dmr', 'gl', 'lmg', 'shotgun', 'sidearm', 'smg', 'special', 'guns']);
+const MELEE_SLUGS = new Set(['melee']);
 const GRENADE_SLUGS = new Set(['grenades']);
 const MOD_SLUGS = new Set([
-  'mods', 'vitalparts', 'functional', 'elements', 'auxiliary',
+  'mods', 'vitalparts', 'functional', 'elements',
+  'auxiliary', 'auxiliary-parts',
   'barrels', 'bipods', 'charginghandles', 'foregrips', 'gasblocks',
-  'handguards', 'laser', 'magazines', 'mounts', 'muzzle',
-  'pistolgrips', 'receivers', 'sights', 'stocks',
+  'handguards',
+  'laser', 'light-laser-devices',
+  'launchers',
+  'magazines', 'mounts', 'muzzle',
+  'pistolgrips',
+  'receivers', 'receivers-slides',
+  'sights', 'stocks',
 ]);
 const MEDS_SLUGS = new Set(['meds', 'injury', 'injectors', 'medkits', 'pills']);
 const PROVISIONS_SLUGS = new Set(['provisions', 'drinks', 'food']);
@@ -171,6 +180,11 @@ export function getDynamicTopIndicator(item: IndicatorItem, slug: string): EftTo
     return { kind: 'hearing', value: calculateHearingRange(p) };
   }
 
+  // Melee → weight (no special properties in API)
+  if (MELEE_SLUGS.has(slug)) {
+    return item.weight != null ? { kind: 'weight', value: item.weight } : { kind: 'hidden' };
+  }
+
   // Guns → ergonomics (most universal build-relevant stat)
   if (GUN_SLUGS.has(slug) || types.includes('gun')) {
     return p.ergonomics != null
@@ -186,12 +200,19 @@ export function getDynamicTopIndicator(item: IndicatorItem, slug: string): EftTo
       : { kind: 'hidden' };
   }
 
-  // Meds / Provisions → uses count, else weight
-  if (
-    MEDS_SLUGS.has(slug) || PROVISIONS_SLUGS.has(slug) ||
-    types.includes('meds') || types.includes('provisions')
-  ) {
-    if (p.uses != null && p.uses > 1) return { kind: 'uses', value: p.uses };
+  // Meds: ItemPropertiesMedKit → hitpoints; ItemPropertiesMedicalItem → uses
+  if (MEDS_SLUGS.has(slug) || types.includes('meds')) {
+    if (p.hitpoints && p.hitpoints > 0) {
+      return { kind: 'custom', label: '', value: `${p.hitpoints} HP` };
+    }
+    if (p.uses && p.uses > 0) {
+      return { kind: 'custom', label: '', value: `${p.uses} Исп.` };
+    }
+    return item.weight != null ? { kind: 'weight', value: item.weight } : { kind: 'hidden' };
+  }
+
+  // Provisions: tarkov.dev has no ItemPropertiesFood — weight is the only available stat
+  if (PROVISIONS_SLUGS.has(slug) || types.includes('provisions')) {
     return item.weight != null ? { kind: 'weight', value: item.weight } : { kind: 'hidden' };
   }
 
@@ -215,4 +236,35 @@ export function getDynamicTopIndicator(item: IndicatorItem, slug: string): EftTo
 
   // Generic fallback
   return item.weight != null ? { kind: 'weight', value: item.weight } : { kind: 'hidden' };
+}
+
+// ─── Trader portrait helpers ───────────────────────────────────────────────────
+
+const TRADER_NAME_MAP: Record<string, string> = {
+  'прапор': 'prapor',
+  'терапевт': 'therapist',
+  'скупщик': 'skier',
+  'миротворец': 'peacekeeper',
+  'механик': 'mechanic',
+  'барыга': 'ragman',
+  'егерь': 'jaeger',
+  'забор': 'fence',
+  'маяк': 'lightkeeper',
+  'хранитель маяка': 'lightkeeper',
+  'ref': 'ref',
+  'btr driver': 'btrdriver',
+  'prapor': 'prapor',
+  'therapist': 'therapist',
+  'skier': 'skier',
+  'peacekeeper': 'peacekeeper',
+  'mechanic': 'mechanic',
+  'ragman': 'ragman',
+  'jaeger': 'jaeger',
+  'fence': 'fence',
+  'lightkeeper': 'lightkeeper',
+};
+
+export function getTraderPortraitPath(name: string): string | null {
+  const normalized = TRADER_NAME_MAP[name.toLowerCase()];
+  return normalized ? `/images/traders/eft/${normalized}.webp` : null;
 }

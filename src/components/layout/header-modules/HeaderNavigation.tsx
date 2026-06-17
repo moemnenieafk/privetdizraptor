@@ -17,20 +17,6 @@ const isColoredIcon = (item: MenuItem, urlToUse?: string) => {
   return false;
 };
 
-// Хелпер: проверка активности текущего пункта или любого из его вложенных детей
-const isItemActive = (item: MenuItem, pathname: string): boolean => {
-  if (item.path && item.path !== '#') {
-    // Точное совпадение роута или нахождение во вложенном роуте
-    if (pathname === item.path || pathname.startsWith(item.path + '/')) {
-      return true;
-    }
-  }
-  if (item.children && item.children.length > 0) {
-    return item.children.some(child => isItemActive(child, pathname));
-  }
-  return false;
-};
-
 interface HeaderNavigationProps {
   menuItems: MenuItem[];
 }
@@ -40,7 +26,6 @@ function SubNavItem({ child, faction }: { child: MenuItem; faction: string }) {
   const itemRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const [flyLeft, setFlyLeft] = useState(false);
-  const isActive = isItemActive(child, pathname || '');
 
   // Закрытие подменю при смене роута
   useEffect(() => {
@@ -92,12 +77,12 @@ function SubNavItem({ child, faction }: { child: MenuItem; faction: string }) {
       <Link
         href={child.path || '#'}
         onClick={handleInteraction}
-        className={`tactical-menu-item group/link flex h-9 w-full items-center justify-between px-3.5 ${isActive ? 'active' : ''}`}
+        className="tactical-menu-item group/link flex h-9 w-full items-center justify-between px-3.5"
       >
         <div className="flex items-center gap-2 overflow-hidden">
           {iconToUse && (
             isColoredIcon(child, iconToUse) ? (
-              // eslint-disable-next-line @next/next/no-img-element
+               
               <img src={iconToUse} alt="" className="h-4 w-4 flex-shrink-0 object-contain" />
             ) : (
               <div
@@ -133,7 +118,6 @@ function SubNavItem({ child, faction }: { child: MenuItem; faction: string }) {
 function NavItem({ item, pathname, faction }: { item: MenuItem; pathname: string; faction: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
-  const isActive = isItemActive(item, pathname || '');
 
   // Закрытие при клике вне области (особенно важно для планшетов)
   useClickOutside(navRef, () => setIsOpen(false), isOpen);
@@ -173,7 +157,7 @@ function NavItem({ item, pathname, faction }: { item: MenuItem; pathname: string
       <Link 
         href={item.path || '#'} 
         onClick={handleInteraction}
-        className={`tactical-menu-item group/main flex cursor-pointer items-center justify-start gap-1.5 rounded px-2 py-1.5 font-blender-medium text-[15px] uppercase tracking-wide leading-none ${isActive ? 'active' : ''}`}
+        className="tactical-menu-item group/main flex cursor-pointer items-center justify-start gap-1.5 rounded px-2 py-1.5 font-blender-medium text-[15px] uppercase tracking-wide leading-none"
       >
         <span className="pt-0.5">{item.label}</span>
         {item.children && (

@@ -22,7 +22,7 @@ export interface ItemTileProps {
     backgroundColor?: string;
     image512pxLink?: string;
     types?: string[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     properties?: any;
     eco: {
       bestSell: { price: number; vendor?: Vendor };
@@ -40,7 +40,7 @@ export interface ItemTileProps {
 
 function VendorAvatar({ vendor }: { vendor?: Vendor }) {
   if (!vendor || vendor.name === '-') return <span className="h-4 w-4 shrink-0" />;
-  // eslint-disable-next-line @next/next/no-img-element
+   
   return <img
     src={`/images/traders/eft/${vendor.normalizedName || vendor.name.toLowerCase()}.webp`}
     alt={vendor.name}
@@ -92,6 +92,20 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
       {/* Изображение */}
       <div className="relative mb-4 flex h-24 w-full items-center justify-center overflow-hidden rounded-sm border border-lines-hover bg-linear-to-b from-lines-hover to-(--color-base) shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]">
 
+        {/* Урон / Пробитие (патроны) */}
+        {categorySlug === 'ammo' && (
+          <>
+            <div className="absolute bottom-1.5 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+              <div className="rounded-xs bg-red-950/80 px-1.5 py-0.5 backdrop-blur-sm">
+                <span className="font-blender-medium text-xs text-red-400">{item.properties?.damage ?? 0}</span>
+              </div>
+              <div className="rounded-xs bg-emerald-950/80 px-1.5 py-0.5 backdrop-blur-sm">
+                <span className="font-blender-medium text-xs text-emerald-400">{item.properties?.penetrationPower ?? 0}</span>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Бейдж "Бартер" */}
         {item.types?.includes("barter") && (
           <div
@@ -108,7 +122,7 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }}
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        { }
         <img
           src={`/images/items/eft/${item.id}.webp`}
           alt={item.name}
@@ -134,14 +148,6 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
       >
         {item.name}
       </h3>
-
-      {/* Специфичные характеристики (Патроны) */}
-      {categorySlug === 'ammo' && (
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          <SemanticBadge color="red" label={`Урон: ${item.properties?.damage || 0}`} />
-          <SemanticBadge color="emerald" label={`Проб: ${item.properties?.penetrationPower || 0}`} />
-        </div>
-      )}
 
       {/* Специфичные характеристики (Броня, Шлемы, Разгрузки) */}
       {(categorySlug === 'armor' || categorySlug === 'helmets' || categorySlug === 'rigs') && item.properties?.class && (

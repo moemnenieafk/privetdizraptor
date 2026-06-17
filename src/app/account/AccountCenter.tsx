@@ -439,7 +439,7 @@ function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
               className="flex w-52 flex-col gap-3 rounded border border-lines-hover bg-(--color-base) p-4"
             >
               <div className="flex h-10 items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                { }
                 <img
                   src={game.logo}
                   alt={game.title}

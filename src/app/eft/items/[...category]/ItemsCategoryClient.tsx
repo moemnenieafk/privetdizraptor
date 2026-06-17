@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState, memo, forwardRef } from 'react';
+import React, { useMemo, useRef, useState, useEffect, memo, forwardRef } from 'react';
 import Link from 'next/link';
 import { PackageX, Coins, ChevronUp, ChevronDown, Check, X } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -14,6 +14,7 @@ import { formatCompactNumber } from '@/lib/formatters';
 import { getDynamicTopIndicator } from '@/lib/item-indicators.util';
 import { getEyewearSubtype, type EyewearSubtype } from '@/lib/eyewear-filter-config';
 import { EyewearSubtypeBar } from '@/components/features/items/EyewearSubtypeBar';
+import { useItemsStore } from '@/store/useItemsStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,11 @@ export interface CategoryItemProperties {
   fragments?: number | null;
   fuse?: number | null;
   maxExplosionDistance?: number | null;
+  // Meds
+  cures?: string[] | null;
+  hitpoints?: number | null;
+  uses?: number | null;
+  useTime?: number | null;
 }
 
 export interface CategoryItem {
@@ -87,7 +93,7 @@ interface ItemsCategoryClientProps {
 
 const GUN_SLUGS = new Set(['firearms', 'ar', 'bolt', 'carbine', 'dmr', 'gl', 'lmg', 'shotgun', 'sidearm', 'smg', 'guns']);
 const CONTAINER_SLUGS = new Set(['cases', 'secure', 'secure-containers', 'storage-containers']);
-const ERGO_RECOIL_MOD_SLUGS = new Set(['muzzle', 'foregrips', 'stocks', 'handguards', 'barrels', 'bipods', 'charginghandles', 'gasblocks', 'receivers', 'magazines', 'mounts', 'laser', 'auxiliary']);
+const ERGO_RECOIL_MOD_SLUGS = new Set(['muzzle', 'foregrips', 'stocks', 'handguards', 'barrels', 'bipods', 'charginghandles', 'gasblocks', 'receivers', 'receivers-slides', 'magazines', 'mounts', 'laser', 'light-laser-devices', 'auxiliary', 'auxiliary-parts', 'launchers']);
 
 // ─── Economics helper ─────────────────────────────────────────────────────────
 
@@ -148,7 +154,7 @@ function VendorIcon({ vendor }: { vendor: { name: string; normalizedName?: strin
     return <Coins className="w-4 h-4 text-yellow-500 shrink-0" />;
   }
   if (!vendor.normalizedName) return <span className="w-4 h-4 shrink-0" />;
-  // eslint-disable-next-line @next/next/no-img-element
+   
   return <img src={`/images/traders/eft/${vendor.normalizedName}.webp`} alt={vendor.name} className="w-4 h-4 object-cover rounded-sm shrink-0" title={vendor.name} />;
 }
 
@@ -180,6 +186,32 @@ function toEftItem(item: ProcessedItem, slug: string): EftItemData {
       ? { damage: p.damage ?? 0, penetration: p.penetrationPower ?? 0 }
       : undefined,
     topStat: getDynamicTopIndicator(item, slug),
+    ...(process.env.NODE_ENV === 'development' && item.normalizedName === '6b47-helmet' && {
+      indicators: {
+        barter: {
+          trader: { name: 'Ragman', normalizedName: 'ragman' },
+          items: [{ id: 'mock-tape', name: 'Синяя изолента', count: 3 }],
+          buyPrice: 45000, savings: 12000, profit: 8500, commission: 3500,
+        },
+        craft: {
+          stationLevel: 1,
+          ingredients: [
+            { id: 'mock-ara', name: 'Арамид', count: 2 },
+            { id: 'mock-scot', name: 'Скотч', count: 1 },
+          ],
+          durationLabel: '20 мин',
+          buyPrice: 35572, turnoverPerHour: 124260, profit: 4232, profitPerHour: 12697,
+        },
+        quest: {
+          type: 'task_progress' as const,
+          questName: 'Контр-компромат',
+          npcName: 'Скупщик',
+          description: 'Найти и передать предмет Скупщику',
+          progress: '0 / 3',
+          status: 'not_started' as const,
+        },
+      },
+    }),
     pricing: {
       traderBuy: traderBuy
         ? {
@@ -430,7 +462,7 @@ const CategoryTableRow = memo(forwardRef<
       <td className="px-3 py-2 border-r border-lines-hover/50">
         <div className="relative w-12 h-12 mx-auto bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <img
             src={`/images/items/eft/${item.id}.webp`}
             alt={item.name}
@@ -813,8 +845,11 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
     resetAdvancedFilters,
   } = useCategoryFilters();
 
+  const selectedTraders = useItemsStore((state) => state.selectedTraders);
+
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeEyewearSubtype, setActiveEyewearSubtype] = useState<EyewearSubtype | 'all'>('all');
+  const [visibleCount, setVisibleCount] = useState(100);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const slug = categorySlug || '';
 
@@ -877,6 +912,13 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
       if (cantBuyFlea && (item.eco.fleaBuy?.price || 0) > 0) return false;
       if (cantSellTrader && (item.eco.bestTraderSell?.price || 0) > 0) return false;
       if (cantSellFlea && (item.eco.fleaSell?.price || 0) > 0) return false;
+      // Фильтр по торговцам (мульти-выбор из HubNav)
+      if (selectedTraders.length > 0) {
+        const passesTrader =
+          item.buyFor?.some(o => selectedTraders.includes(o.vendor.normalizedName ?? '')) ||
+          item.sellFor?.some(o => selectedTraders.includes(o.vendor.normalizedName ?? ''));
+        if (!passesTrader) return false;
+      }
       // Доступно мне: есть покупка у торговца ИЛИ барахолка (барахолка ≥ 15 ур.)
       if (availableOnly) {
         const hasTraderBuy = item.buyFor?.some(b => !isFlVendor(b.vendor) && (b.priceRUB ?? b.price) > 0);
@@ -886,7 +928,10 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
       return true;
     });
 
-    data.sort((a, b) => {
+    // Для корневого роута (все предметы) не применяем сортировку по умолчанию —
+    // только если пользователь явно изменил ключ или направление
+    const shouldSort = slug !== '' || sortConfig.key !== 'vps' || sortConfig.direction !== 'desc';
+    if (shouldSort) data.sort((a, b) => {
       let aValue: string | number = 0;
       let bValue: string | number = 0;
       const p = (x: typeof a) => x.properties || {};
@@ -923,6 +968,20 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
         case 'fuse':              aValue = Number(p(a).fuse) || 0; bValue = Number(p(b).fuse) || 0; break;
         case 'sightingRange':     aValue = Number(p(a).sightingRange) || 0; bValue = Number(p(b).sightingRange) || 0; break;
         case 'gp':                aValue = (gpCoinBarters ?? {})[a.id] || 0; bValue = (gpCoinBarters ?? {})[b.id] || 0; break;
+        case 'indicator': {
+          const extractStatNum = (stat: ReturnType<typeof getDynamicTopIndicator>): number => {
+            if (stat.kind === 'hidden') return 0;
+            if (stat.kind === 'durability') return stat.current;
+            if (stat.kind === 'custom') {
+              const n = parseFloat(String(stat.value).replace(/[^0-9.\-]/g, ''));
+              return isNaN(n) ? 0 : Math.abs(n);
+            }
+            return stat.value;
+          };
+          aValue = extractStatNum(getDynamicTopIndicator(a, slug));
+          bValue = extractStatNum(getDynamicTopIndicator(b, slug));
+          break;
+        }
         default:                  aValue = a.eco.vps; bValue = b.eco.vps; break;
       }
 
@@ -935,7 +994,12 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
     });
 
     return data;
-  }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, caliberFilter, gpCoinBarters, activeEyewearSubtype]);
+  }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, caliberFilter, gpCoinBarters, activeEyewearSubtype, selectedTraders,
+      cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea, availableOnly, playerLevel]);
+
+  useEffect(() => { setVisibleCount(100); }, [processedItems]);
+  const handleShowMore = () => setVisibleCount(prev => prev + 100);
+  const displayedItems = processedItems.slice(0, visibleCount);
 
   const renderSortableHeader = (label: string, sortKey: string, align: 'left' | 'center' | 'right' = 'left', customClass = '') => {
     const isActive = sortConfig.key === sortKey;
@@ -1113,32 +1177,31 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
 
       {/* Вид: сетка */}
       {!isLoading && viewMode === 'grid' && processedItems.length > 0 && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4">
-          {processedItems.map((item) => {
-            const eftItem = toEftItem(item, slug);
-            return (
-              <EftItemTile.Root key={item.id} item={eftItem} categorySlug={slug}>
-                <EftItemTile.Header />
-                <EftItemTile.Media>
-                  {eftItem.indicators?.barter && (
-                    <EftItemTile.Indicator type="barter" data={eftItem.indicators.barter} position="top-left" />
-                  )}
-                  {eftItem.indicators?.craft && (
-                    <EftItemTile.Indicator type="craft" data={eftItem.indicators.craft} position="top-right" />
-                  )}
-                  {eftItem.indicators?.quest && (
-                    <EftItemTile.Indicator type="quest" data={eftItem.indicators.quest} position="bottom-right" />
-                  )}
-                  {eftItem.armorClass && (
-                    <EftItemTile.Indicator type="armor-class" armorClass={eftItem.armorClass} position="bottom-left" />
-                  )}
-                </EftItemTile.Media>
-                <EftItemTile.Name />
-                <EftItemTile.Pricing />
-              </EftItemTile.Root>
-            );
-          })}
-        </div>
+        <>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4">
+            {displayedItems.map((item) => {
+              const eftItem = toEftItem(item, slug);
+              return (
+                <EftItemTile.Root key={item.id} item={eftItem} categorySlug={slug}>
+                  <EftItemTile.Header />
+                  <EftItemTile.Media />
+                  <EftItemTile.Name />
+                  <EftItemTile.Pricing />
+                </EftItemTile.Root>
+              );
+            })}
+          </div>
+          {visibleCount < processedItems.length && (
+            <div className="flex justify-center w-full mt-8 mb-12">
+              <button
+                onClick={handleShowMore}
+                className="px-6 py-2.5 bg-zinc-900/80 border border-zinc-700 text-zinc-400 text-sm font-medium font-['Blender_Pro'] uppercase tracking-wider rounded hover:bg-zinc-800 hover:border-zinc-500 hover:text-gray-100 transition-all duration-200 active:scale-95"
+              >
+                Показать еще ({processedItems.length - visibleCount})
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Вид: таблица */}

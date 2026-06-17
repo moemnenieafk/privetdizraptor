@@ -77,7 +77,7 @@ async function fetchBarters(): Promise<ProcessedBarter[]> {
     const json = await res.json();
     if (json.errors) { console.error('Barters GQL errors:', json.errors); return []; }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const raw: RawBarter[] = json.data?.barters || [];
     const rubVal = (p: { price: number; priceRUB?: number }) => p.priceRUB ?? p.price;
     const isFlea = (v: { name: string; normalizedName?: string }) =>

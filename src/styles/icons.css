@@ -277,8 +277,27 @@
   .icon-hexagon-right { mask-image: url('/icons/hexagon-right.svg'); -webkit-mask-image: url('/icons/hexagon-right.svg'); }
 
   /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
-  .icon-eft-eod---icon { mask-image: url('/icons/eft/edition/EOD%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/EOD%20-%20icon.svg'); }
-  .icon-eft-lb---icon { mask-image: url('/icons/eft/edition/LB%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/LB%20-%20icon.svg'); }
-  .icon-eft-pfe---icon { mask-image: url('/icons/eft/edition/PFE%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/PFE%20-%20icon.svg'); }
-  .icon-eft-s---icon { mask-image: url('/icons/eft/edition/S%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/S%20-%20icon.svg'); }
-  .icon-eft-tue---icon { mask-image: url('/icons/eft/edition/TUE%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/TUE%20-%20icon.svg'); }
+  .icon-eft-bleeding-nomore { mask-image: url('/icons/eft/03-items/meds/bleeding-nomore.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/bleeding-nomore.svg'); }
+  .icon-eft-bleeding-stop { mask-image: url('/icons/eft/03-items/meds/bleeding-stop.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/bleeding-stop.svg'); }
+  .icon-eft-body-temperature { mask-image: url('/icons/eft/03-items/meds/body-temperature.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/body-temperature.svg'); }
+  .icon-eft-damage-incomming { mask-image: url('/icons/eft/03-items/meds/damage-incomming.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/damage-incomming.svg'); }
+  .icon-eft-energy { mask-image: url('/icons/eft/03-items/meds/energy.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/energy.svg'); }
+  .icon-eft-hand-tremor { mask-image: url('/icons/eft/03-items/meds/hand-tremor.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/hand-tremor.svg'); }
+  .icon-eft-heal-poison { mask-image: url('/icons/eft/03-items/meds/heal-poison.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/heal-poison.svg'); }
+  .icon-eft-heal-radiation { mask-image: url('/icons/eft/03-items/meds/heal-radiation.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/heal-radiation.svg'); }
+  .icon-eft-health-regeneration { mask-image: url('/icons/eft/03-items/meds/health-regeneration.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/health-regeneration.svg'); }
+  .icon-eft-hydration { mask-image: url('/icons/eft/03-items/meds/hydration.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/hydration.svg'); }
+  .icon-eft-skill-effect { mask-image: url('/icons/eft/03-items/meds/skill-effect.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/skill-effect.svg'); }
+  .icon-eft-stamin-recovery { mask-image: url('/icons/eft/03-items/meds/stamin-recovery.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/stamin-recovery.svg'); }
+  .icon-eft-stamina-max { mask-image: url('/icons/eft/03-items/meds/stamina-max.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/stamina-max.svg'); }
+  .icon-eft-takeof-contusion { mask-image: url('/icons/eft/03-items/meds/takeof-contusion.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/takeof-contusion.svg'); }
+  .icon-eft-takeof-pain { mask-image: url('/icons/eft/03-items/meds/takeof-pain.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/takeof-pain.svg'); }
+  .icon-eft-time-effect { mask-image: url('/icons/eft/03-items/meds/time-effect.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/time-effect.svg'); }
+  .icon-eft-weight-carry { mask-image: url('/icons/eft/03-items/meds/weight-carry.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/weight-carry.svg'); }
+  .icon-eft-questitems { mask-image: url('/icons/eft/03-items/questitems.svg'); -webkit-mask-image: url('/icons/eft/03-items/questitems.svg'); }
+  
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-eft-cat-ammo-package { mask-image: url('/icons/eft/03-items/guns/cat-ammo-package.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns/cat-ammo-package.svg'); }
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-eft-underbarrel-launchers { mask-image: url('/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg'); }
+  

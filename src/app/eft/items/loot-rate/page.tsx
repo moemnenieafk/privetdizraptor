@@ -33,7 +33,7 @@ async function fetchLootItems(): Promise<LootItem[]> {
     const isFlea = (v: { name: string; normalizedName?: string }) =>
       v.name === 'Flea Market' || v.normalizedName === 'flea-market';
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return (json.data?.items || []).map((raw: any): LootItem => {
       const slots = (raw.width || 1) * (raw.height || 1);
       const traderSells = (raw.sellFor || []).filter((s: { vendor: { name: string; normalizedName?: string } }) => !isFlea(s.vendor));

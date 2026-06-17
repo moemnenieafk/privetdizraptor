@@ -134,7 +134,7 @@ function LiteYouTube({ video }: { video: YouTubeVideo }) {
       {!isPlaying ? (
         <>
           {/* Стандартный img здесь лучше, чем next/image, так как не требует настройки внешних доменов в next.config */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          { }
           <img
             src={`https://i.ytimg.com/vi/${video.id}/hqdefault.webp`}
             alt={video.title}

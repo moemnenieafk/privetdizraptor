@@ -7,6 +7,8 @@ import { calcEftProfitLevel } from './types';
 import { EftCraftTooltip } from './tooltips/CraftTooltip';
 import { EftBarterTooltip } from './tooltips/BarterTooltip';
 import { EftQuestTooltip } from './tooltips/QuestTooltip';
+import { ProLockTooltip } from './tooltips/ProLockTooltip';
+import { usePlayerStore } from '@/store/usePlayerStore';
 
 export type EftIndicatorPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
@@ -33,7 +35,8 @@ const TOOLTIP_WIDTH = 256;
 const TOOLTIP_MAX_HEIGHT = 320;
 const GAP = 8;
 
-function getIconColor(props: EftIndicatorProps): string {
+function getIconColor(props: EftIndicatorProps, isPro: boolean): string {
+  if (!isPro) return 'bg-amber-500';
   if (props.type === 'craft') {
     const level = calcEftProfitLevel(props.data.profit);
     return level === 'profitable' ? 'bg-nvg-green' : level === 'unprofitable' ? 'bg-red-400' : 'bg-amber-500';
@@ -60,26 +63,31 @@ export function EftIndicator(props: EftIndicatorProps) {
   const isArmorClass = props.type === 'armor-class';
   const position = props.position ?? (isArmorClass ? 'bottom-left' : 'top-right');
 
+  const edition = usePlayerStore(s =>
+    s.profiles.find(p => p.id === s.activeProfileId)?.edition ?? 'Standard'
+  );
+  const isPro = edition === 'TUE' || edition === 'EOD';
+
   const [visible, setVisible] = useState(false);
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
-  // Debounce hide so scale/transition jitter doesn't close the tooltip prematurely
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => { setMounted(true); }, []);
+
+  // ESC to close
   useEffect(() => {
-    setMounted(true);
-    return () => {
-      if (hideTimer.current !== null) clearTimeout(hideTimer.current);
-    };
-  }, []);
+    if (!visible) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setVisible(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [visible]);
 
-  const handleMouseEnter = useCallback(() => {
-    if (hideTimer.current !== null) {
-      clearTimeout(hideTimer.current);
-      hideTimer.current = null;
-    }
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (isArmorClass || !ref.current) return;
+    if (visible) { setVisible(false); return; }
     const rect = ref.current.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -90,13 +98,9 @@ export function EftIndicator(props: EftIndicatorProps) {
     const top  = Math.max(GAP, Math.min(rect.top, vh - TOOLTIP_MAX_HEIGHT - GAP));
     setTooltipStyle({ position: 'fixed', top, left, zIndex: 9999 });
     setVisible(true);
-  }, [isArmorClass]);
+  }, [isArmorClass, visible]);
 
-  const handleMouseLeave = useCallback(() => {
-    hideTimer.current = setTimeout(() => setVisible(false), 80);
-  }, []);
-
-  if (props.type === 'armor-class') {
+  if (isArmorClass) {
     const cls = `icon-eft-armor-class-${props.armorClass}`;
     return (
       <div className={`absolute z-20 flex h-6 w-6 items-center justify-center ${POSITION_CLASSES[position]}`}>
@@ -105,28 +109,34 @@ export function EftIndicator(props: EftIndicatorProps) {
     );
   }
 
-  // After the armor-class early return, TS narrows props.type to 'barter' | 'craft' | 'quest'
   const narrowedProps = props as Extract<EftIndicatorProps, { type: 'barter' | 'craft' | 'quest' }>;
   const iconClass = ICON_CLASS[narrowedProps.type];
-  const iconColor = getIconColor(props);
-  const tooltip = renderTooltip(props, tooltipStyle);
+  const iconColor = getIconColor(props, isPro);
+  const tooltip = isPro
+    ? renderTooltip(props, tooltipStyle)
+    : <ProLockTooltip style={tooltipStyle} />;
 
   return (
     <>
       <div
         ref={ref}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={`absolute z-20 flex h-6 w-6 cursor-default items-center justify-center rounded-xs border border-lines-hover/50 bg-(--color-base)/80 backdrop-blur-sm ${POSITION_CLASSES[position]}`}
+        onClick={handleClick}
+        className={`absolute z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-xs border border-lines-hover/50 bg-(--color-base)/80 backdrop-blur-sm ${POSITION_CLASSES[position]}`}
         title={props.type}
       >
         <span className={`${iconClass} h-4 w-4 ${iconColor} mask-contain mask-center mask-no-repeat`} />
       </div>
 
       {mounted && visible && tooltip && createPortal(
-        <div className="pointer-events-none">
-          {tooltip}
-        </div>,
+        <>
+          <div
+            className="fixed inset-0 z-9998"
+            onClick={() => setVisible(false)}
+          />
+          <div style={{ zIndex: 9999, position: 'relative' }}>
+            {tooltip}
+          </div>
+        </>,
         document.body
       )}
     </>

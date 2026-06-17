@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
-import { PageHeader } from '@/components/ui/PageHeader';
 import { notFound } from 'next/navigation';
 import { HEADER_DICTIONARY, MenuItem } from '@/data/headerConfig';
 import { ItemsCategoryClient, CategoryItem } from './[...category]/ItemsCategoryClient';
-import { CategoryTabs, type CategoryTabConfig } from '@/components/features/items/CategoryTabs';
+import { HubNav } from '@/components/features/items/HubNav';
+import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
 
 function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null {
   for (const item of items) {
@@ -16,10 +16,10 @@ function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null 
   return null;
 }
 
-async function getBarterItems(): Promise<CategoryItem[]> {
+async function getAllItems(): Promise<CategoryItem[]> {
   const query = `
     query {
-      items(types: [barter], lang: ru) {
+      items(lang: ru) {
         id
         normalizedName
         name
@@ -32,10 +32,36 @@ async function getBarterItems(): Promise<CategoryItem[]> {
         types
         backgroundColor
         properties {
+          __typename
           ... on ItemPropertiesWeaponMod {
             ergonomics
             recoilModifier
             accuracyModifier
+          }
+          ... on ItemPropertiesAmmo {
+            caliber
+            damage
+            penetrationPower
+            armorDamage
+          }
+          ... on ItemPropertiesWeapon {
+            caliber
+            ergonomics
+            recoilVertical
+            recoilHorizontal
+          }
+          ... on ItemPropertiesArmor {
+            class
+            durability
+            armorType
+          }
+          ... on ItemPropertiesHelmet {
+            class
+            durability
+            armorType
+          }
+          ... on ItemPropertiesContainer {
+            capacity
           }
         }
         sellFor { price priceRUB currency vendor { name normalizedName } }
@@ -55,20 +81,20 @@ async function getBarterItems(): Promise<CategoryItem[]> {
     const json = await res.json();
     if (json.errors) return [];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     return (json.data?.items || []).map((item: any) => {
       const bestSell = item.sellFor?.reduce(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (prev: any, current: any) => (prev.price > current.price ? prev : current),
         { price: 0 }
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const rubVal = (p: any) => p.priceRUB ?? p.price;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const validBuyFor = item.buyFor?.filter((b: any) => rubVal(b) > 0) || [];
       const bestBuy =
         validBuyFor.length > 0
-          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ?  
             validBuyFor.reduce((prev: any, current: any) =>
               rubVal(current) < rubVal(prev) ? current : prev
             )
@@ -98,26 +124,30 @@ export default async function ItemsHubPage() {
 
   if (!itemsNode) notFound();
 
-  const topLevelTabs: CategoryTabConfig[] = (itemsNode.children || []).map((child) => ({
-    id: child.id,
-    title: child.label,
-    href: child.path || '#',
-    iconPath: child.iconUrl || child.iconUrlBear || '',
-  }));
+  const pageContent = PAGE_CONTENT_DICTIONARY['eft-items'];
+  const itemsData = await getAllItems();
 
-  const itemsData = await getBarterItems();
+  const tabs = (itemsNode.children || []).map((child) => ({
+    id: child.id,
+    label: child.label,
+    menuTitle: child.menuTitle,
+    href: child.path || '#',
+    iconUrl: child.iconUrl || child.iconUrlBear || '',
+  }));
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <PageHeader pageId="eft-items" />
-
-        {topLevelTabs.length > 0 && (
-          <CategoryTabs tabs={topLevelTabs} className="mb-8" />
-        )}
+        <HubNav
+          iconClass={pageContent?.iconClass}
+          title={pageContent?.title ?? itemsNode.label}
+          description={pageContent?.description}
+          count={itemsData.length}
+          tabs={tabs}
+        />
 
         <Suspense>
-          <ItemsCategoryClient initialData={itemsData} categorySlug="barter" gpCoinBarters={{}} />
+          <ItemsCategoryClient initialData={itemsData} categorySlug="" gpCoinBarters={{}} />
         </Suspense>
       </div>
     </main>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { EftQuestData, EftQuestStatus } from '../types';
+import { getTraderPortraitPath } from '@/lib/item-indicators.util';
 
 const STATUS_LABEL: Record<EftQuestStatus, string> = {
   not_started: 'ЗАДАНИЕ НЕ ВЫПОЛНЕНО',
@@ -27,7 +28,12 @@ interface EftQuestTooltipProps {
 
 export function EftQuestTooltip({ data, style }: EftQuestTooltipProps) {
   const isTaskProgress = data.type === 'task_progress';
-  const headerLabel = isTaskProgress ? 'ТРЕБУЕТСЯ ПО ЗАДАНИЮ' : 'ПОБОЧНОЕ ЗАДАНИЕ';
+  const headerLabel = isTaskProgress ? 'ЛЮБИМОЕ ЗАДАНИЕ' : 'ТРЕБУЕТСЯ ПО ЗАДАНИЮ';
+
+  const npcPortraitSrc = data.npcImageLink ?? getTraderPortraitPath(data.npcName) ?? undefined;
+  const traderPortraitSrc = data.type === 'unlock_trade'
+    ? (data.traderImageLink ?? getTraderPortraitPath(data.traderName) ?? undefined)
+    : undefined;
 
   return (
     <div
@@ -43,13 +49,15 @@ export function EftQuestTooltip({ data, style }: EftQuestTooltipProps) {
           </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {data.npcImageLink && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.npcImageLink} alt={data.npcName} className="h-5 w-5 rounded-xs object-cover" />
+          {npcPortraitSrc && (
+             
+            <img src={npcPortraitSrc} alt={data.npcName} className="h-5 w-5 rounded-xs object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           )}
-          {data.type === 'unlock_trade' && data.traderImageLink && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.traderImageLink} alt={data.traderName} className="h-5 w-5 rounded-xs object-cover" />
+          {traderPortraitSrc && (
+             
+            <img src={traderPortraitSrc} alt={data.type === 'unlock_trade' ? data.traderName : ''} className="h-5 w-5 rounded-xs object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           )}
         </div>
       </div>
@@ -57,7 +65,7 @@ export function EftQuestTooltip({ data, style }: EftQuestTooltipProps) {
       {/* Quest card */}
       <div className="mb-2.5 flex items-center gap-2 rounded-xs border border-lines-hover/30 bg-(--color-base) p-1.5">
         {data.questImageLink && (
-          // eslint-disable-next-line @next/next/no-img-element
+           
           <img
             src={data.questImageLink}
             alt={data.questName}

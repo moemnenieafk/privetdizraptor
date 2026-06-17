@@ -84,7 +84,7 @@ export function Header() {
               isScrolled ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'
             }`}
           >
-            <div className="overflow-hidden">
+            <div className={isScrolled ? 'overflow-hidden' : 'overflow-visible'}>
               <div className="px-4 xl:px-0 max-w-275 mx-auto">
                 {/* Смена игры | Поиск | Кнопка «Я новичок» */}
                 <div className="flex items-center gap-7 pb-3">

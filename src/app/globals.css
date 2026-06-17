@@ -42,6 +42,9 @@
   /* Game mode indicators */
   --color-mode-pvp: #9A8866;
   --color-mode-pve: #0095E2;
+  --color-success: #8DE736;
+  --color-failure: #E3433F;
+  --color-moderate: #FF7724;
 
   /* EFT Edition accents */
   --color-edition-tue: #51C6DB;  /* The Unheard Edition */
@@ -67,6 +70,7 @@
 
 :root {
   --color-base: #141416;
+  --color-darkbase: #0D0D0E;
   --primary: #E68E25;
   --shadow-neon: var(--shadow-neon-eft);
 }
@@ -339,23 +343,18 @@
   }
   
   .tactical-menu-item:hover,
-  .tactical-menu-item:focus,
-  .tactical-menu-item[data-active="true"],
-  .tactical-menu-item.active {
+  .tactical-menu-item:focus {
     background-color: var(--primary) !important;
     color: var(--color-base) !important;
   }
 
   /* Инверсия цвета для иконок внутри (SVG, маски и img-портреты) */
   .tactical-menu-item:hover svg,
-  .tactical-menu-item.active svg,
-  .tactical-menu-item:hover .icon-mask,
-  .tactical-menu-item.active .icon-mask {
+  .tactical-menu-item:hover .icon-mask {
     color: var(--color-base) !important;
   }
 
-  .tactical-menu-item:hover img,
-  .tactical-menu-item.active img {
+  .tactical-menu-item:hover img {
     filter: brightness(0);
     transition: filter 0.2s ease-out;
   }

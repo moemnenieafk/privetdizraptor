@@ -1,6 +1,7 @@
 export interface MenuItem {
   id: string;
   label: string;
+  menuTitle?: string;
   path?: string;
   iconUrl?: string;
   iconUrlBear?: string;
@@ -8,7 +9,7 @@ export interface MenuItem {
   iconClass?: string;
   coloredIcon?: boolean;
   children?: MenuItem[];
-  subItems?: MenuItem[]; //Для вложенных меню
+  subItems?: MenuItem[];
 }
 
 export interface HeaderConfig {
@@ -99,6 +100,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       special: 'Специальное',
       crafts: 'Крафты',
       barter: 'Предметы для Бартера',
+      'quest-items': 'Предметы для Заданий',
       barters: 'Бартеры',
       weapons: 'Оружие',
       hideout: 'Убежище ЧВК',
@@ -122,6 +124,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       magazines: 'Магазины',
       stocks: 'Приклады и Ложе',
       charginghandles: 'Рукоятки заряжания',
+      launchers: 'Подствольные устройства',
       medkits: 'Аптечки',
       injectors: 'Инъекторы',
       injury: 'Обработка ранений',
@@ -293,6 +296,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           {
             id: 'i-barter',
             label: 'Предметы для Бартера',
+            menuTitle: 'Для Бартера',
             path: '/eft/items/barter',
             iconUrl: '/icons/eft/04-progression/barter-profit.svg',
             children: [
@@ -377,7 +381,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
                   { id: 'i-mods-elem-mounts', label: 'Крепления', path: '/eft/items/mods/elements/mounts', iconUrl: '/icons/eft/03-items/guns/gun-modes/mounts.svg' },
                   { id: 'i-mods-elem-magazines', label: 'Магазины', path: '/eft/items/mods/elements/magazines', iconUrl: '/icons/eft/03-items/guns/gun-modes/magazines.svg' },
                   { id: 'i-mods-elem-stocks', label: 'Приклады и Ложе', path: '/eft/items/mods/elements/stocks', iconUrl: '/icons/eft/03-items/guns/gun-modes/stocks-chassis.svg' },
-                  { id: 'i-mods-elem-handles', label: 'Рукоятки заряжания', path: '/eft/items/mods/elements/charginghandles', iconUrl: '/icons/eft/03-items/guns/gun-modes/charging-handles.svg' }
+                  { id: 'i-mods-elem-handles', label: 'Рукоятки заряжания', path: '/eft/items/mods/elements/charginghandles', iconUrl: '/icons/eft/03-items/guns/gun-modes/charging-handles.svg' },
+                  { id: 'i-mods-elem-launchers', label: 'Подствольные устройства', path: '/eft/items/mods/elements/launchers', iconUrl: '/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg', iconClass: 'icon-eft-underbarrel-launchers' }
                 ]
               }
             ]
@@ -411,7 +416,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             iconUrl: '/icons/eft/03-items/guns/cat-ammo.svg',
             children: [
               { id: 'i-ammo-rounds', label: 'Патроны', path: '/eft/items/ammo/rounds', iconUrl: '/icons/eft/03-items/guns/cat-ammo.svg' },
-              { id: 'i-ammo-boxes', label: 'Пачки патронов', path: '/eft/items/ammo/ammo-boxes', iconUrl: '/icons/eft/03-items/guns/cat-ammo.svg' },
+              { id: 'i-ammo-boxes', label: 'Пачки патронов', path: '/eft/items/ammo/ammo-boxes', iconUrl: '/icons/eft/03-items/guns/cat-ammo-package.svg' },
             ]
           },
           // 6. ПРОВИЗИЯ
@@ -458,9 +463,11 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
               { id: 'i-keys-cards', label: 'Ключ-карты', path: '/eft/items/keys/keycards', iconUrl: '/icons/eft/03-items/equipment/keys/key-cards.svg' }
             ]
           },
-          // 9. ИНФО ПРЕДМЕТЫ
+          // 9. ПРЕДМЕТЫ ДЛЯ ЗАДАНИЙ
+          { id: 'i-questitems', label: 'Предметы для Заданий', menuTitle: 'Для Заданий', path: '/eft/items/quest-items', iconUrl: '/icons/eft/03-items/questitems.svg', iconClass: 'icon-eft-questitems' },
+          // 10. ИНФО ПРЕДМЕТЫ
           { id: 'i-info', label: 'Инфо предметы', path: '/eft/items/info', iconUrl: '/icons/eft/03-items/equipment/infoitems.svg' },
-          // 10. СПЕЦОБОРУДОВАНИЕ
+          // 11. СПЕЦОБОРУДОВАНИЕ
           { id: 'i-specialequipment', label: 'Спецоборудование', path: '/eft/items/specialequipment', iconUrl: '/icons/eft/03-items/equipment/special-equipment.svg' },
         ]
       },
@@ -476,39 +483,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             path: '/eft/progress/hideout',
             iconUrl: '/icons/eft/04-progression/hideout-modules.svg',
             children: [
-              { 
-                id: 'p-hideout-modules', 
-                label: 'Модули убежища', 
-                path: '/eft/progress/hideout/modules', 
-                iconUrl: '/icons/eft/04-progression/hideout-modules.svg',
-                children: [
-                  { id: 'p-hideout-mod-defective-wall', label: 'Аварийная стена', path: '/eft/progress/hideout/modules/defective-wall', iconUrl: '/icons/eft/04-progression/hideout-modules/defective_wall.svg' },
-                  { id: 'p-hideout-mod-security', label: 'Безопасность', path: '/eft/progress/hideout/modules/security', iconUrl: '/icons/eft/04-progression/hideout-modules/security.svg' },
-                  { id: 'p-hideout-mod-bitcoin-farm', label: 'Биткоин ферма', path: '/eft/progress/hideout/modules/bitcoin-farm', iconUrl: '/icons/eft/04-progression/hideout-modules/bitcoin_farm.svg' },
-                  { id: 'p-hideout-mod-vents', label: 'Вентиляция', path: '/eft/progress/hideout/modules/vents', iconUrl: '/icons/eft/04-progression/hideout-modules/vents.svg' },
-                  { id: 'p-hideout-mod-workbench', label: 'Верстак', path: '/eft/progress/hideout/modules/workbench', iconUrl: '/icons/eft/04-progression/hideout-modules/workbench.svg' },
-                  { id: 'p-hideout-mod-air-filtering-unit', label: 'Воздушный фильтратор', path: '/eft/progress/hideout/modules/air-filtering-unit', iconUrl: '/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg' },
-                  { id: 'p-hideout-mod-water-collector', label: 'Водосборник', path: '/eft/progress/hideout/modules/water-collector', iconUrl: '/icons/eft/04-progression/hideout-modules/water_collector.svg' },
-                  { id: 'p-hideout-mod-generator', label: 'Генератор', path: '/eft/progress/hideout/modules/generator', iconUrl: '/icons/eft/04-progression/hideout-modules/generator.svg' },
-                  { id: 'p-hideout-mod-rest-space', label: 'Зона отдыха', path: '/eft/progress/hideout/modules/rest-space', iconUrl: '/icons/eft/04-progression/hideout-modules/rest_space.svg' },
-                  { id: 'p-hideout-mod-cultist-circle', label: 'Круг сектантов', path: '/eft/progress/hideout/modules/cultist-circle', iconUrl: '/icons/eft/04-progression/hideout-modules/cultist_circle.svg' },
-                  { id: 'p-hideout-mod-med-station', label: 'Медблок', path: '/eft/progress/hideout/modules/med-station', iconUrl: '/icons/eft/04-progression/hideout-modules/med_station.svg' },
-                  { id: 'p-hideout-mod-heating', label: 'Обогрев', path: '/eft/progress/hideout/modules/heating', iconUrl: '/icons/eft/04-progression/hideout-modules/heating.svg' },
-                  { id: 'p-hideout-mod-weapon-rack', label: 'Оружейный стенд', path: '/eft/progress/hideout/modules/weapon-rack', iconUrl: '/icons/eft/04-progression/hideout-modules/weapon_rack.svg' },
-                  { id: 'p-hideout-mod-illumination', label: 'Освещение', path: '/eft/progress/hideout/modules/illumination', iconUrl: '/icons/eft/04-progression/hideout-modules/illumination.svg' },
-                  { id: 'p-hideout-mod-nutrition-unit', label: 'Пищеблок', path: '/eft/progress/hideout/modules/nutrition-unit', iconUrl: '/icons/eft/04-progression/hideout-modules/nutrition_unit.svg' },
-                  { id: 'p-hideout-mod-intelligence-centre', label: 'Разведцентр', path: '/eft/progress/hideout/modules/intelligence-centre', iconUrl: '/icons/eft/04-progression/hideout-modules/intelligence_centre.svg' },
-                  { id: 'p-hideout-mod-booze-generator', label: 'Самогонный аппарат', path: '/eft/progress/hideout/modules/booze-generator', iconUrl: '/icons/eft/04-progression/hideout-modules/booze_generator.svg' },
-                  { id: 'p-hideout-mod-lavatory', label: 'Санузел', path: '/eft/progress/hideout/modules/lavatory', iconUrl: '/icons/eft/04-progression/hideout-modules/lavatory.svg' },
-                  { id: 'p-hideout-mod-stash', label: 'Склад', path: '/eft/progress/hideout/modules/stash', iconUrl: '/icons/eft/04-progression/hideout-modules/stash.svg' },
-                  { id: 'p-hideout-mod-solar-power', label: 'Солнечная батарея', path: '/eft/progress/hideout/modules/solar-power', iconUrl: '/icons/eft/04-progression/hideout-modules/solar_power.svg' },
-                  { id: 'p-hideout-mod-gear-rack', label: 'Стенд со снаряжением', path: '/eft/progress/hideout/modules/gear-rack', iconUrl: '/icons/eft/04-progression/hideout-modules/gear_rack.svg' },
-                  { id: 'p-hideout-mod-shooting-range', label: 'Тир', path: '/eft/progress/hideout/modules/shooting-range', iconUrl: '/icons/eft/04-progression/hideout-modules/shooting_range.svg' },
-                  { id: 'p-hideout-mod-gym', label: 'Тренажерный зал', path: '/eft/progress/hideout/modules/gym', iconUrl: '/icons/eft/04-progression/hideout-modules/gym.svg' },
-                  { id: 'p-hideout-mod-hall-of-fame', label: 'Уголок боевой славы', path: '/eft/progress/hideout/modules/hall-of-fame', iconUrl: '/icons/eft/04-progression/hideout-modules/hall_of_fame.svg' },
-                  { id: 'p-hideout-mod-scav-case', label: 'Ящик диких', path: '/eft/progress/hideout/modules/scav-case', iconUrl: '/icons/eft/04-progression/hideout-modules/scav_case.svg' },
-                ]
-              },
+              { id: 'p-hideout-modules', label: 'Модули убежища', path: '/eft/progress/hideout/modules', iconUrl: '/icons/eft/04-progression/hideout-modules.svg' },
               { id: 'p-hideout-craft', label: 'Прибыль убежища', path: '/eft/progress/hideout/craft-profit', iconUrl: '/icons/eft/04-progression/craft-profit.svg' },
               { id: 'p-hideout-btc', label: 'Прибыль Bitcoin', path: '/eft/progress/hideout/bitcoin-profit', iconUrl: '/icons/eft/04-progression/bitcoin-profit.svg' }
             ]
@@ -518,17 +493,6 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             label: 'Прибыль бартера',
             path: '/eft/progress/barter',
             iconUrl: '/icons/eft/04-progression/barter-profit.svg',
-            children: [
-              { id: 'p-barter-valuables', label: 'Ценности', path: '/eft/progress/barter/valuables', iconUrl: '/icons/eft/04-progression/barter-profit/valuables.svg' },
-              { id: 'p-barter-electronics', label: 'Электроника', path: '/eft/progress/barter/electronics', iconUrl: '/icons/eft/04-progression/barter-profit/electronics.svg' },
-              { id: 'p-barter-tools', label: 'Инструменты', path: '/eft/progress/barter/tools', iconUrl: '/icons/eft/04-progression/barter-profit/tools.svg' },
-              { id: 'p-barter-flammable', label: 'Г.С.М.', path: '/eft/progress/barter/flammable-materials', iconUrl: '/icons/eft/04-progression/barter-profit/flammable-materials.svg' },
-              { id: 'p-barter-building', label: 'Стройматериалы', path: '/eft/progress/barter/building-materials', iconUrl: '/icons/eft/04-progression/barter-profit/building-materials.svg' },
-              { id: 'p-barter-household', label: 'Хозтовары', path: '/eft/progress/barter/household-materials', iconUrl: '/icons/eft/04-progression/barter-profit/household-materials.svg' },
-              { id: 'p-barter-medical', label: 'Медматериалы', path: '/eft/progress/barter/medical-supplies', iconUrl: '/icons/eft/04-progression/barter-profit/medical-supplies.svg' },
-              { id: 'p-barter-energy', label: 'Элементы питания', path: '/eft/progress/barter/energy-elements', iconUrl: '/icons/eft/04-progression/barter-profit/energy-elements.svg' },
-              { id: 'p-barter-others', label: 'Другие', path: '/eft/progress/barter/others', iconUrl: '/icons/eft/04-progression/barter-profit/others.svg' }
-            ]
           },
           {
             id: 'p-loadouts',
