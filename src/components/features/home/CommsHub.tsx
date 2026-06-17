@@ -46,7 +46,7 @@ export function CommsHub({ videos }: CommsHubProps) {
       </p>
 
       {/* Main container */}
-      <div className="max-w-480 mx-auto border border-lines-hover">
+      <div className="max-w-275 mx-auto border border-lines-hover rounded-xs overflow-hidden">
         {/* Header bar */}
         <div className="border-b border-lines-hover px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2">

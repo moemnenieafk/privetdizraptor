@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { TaskRaw } from '@/types/quest';
@@ -9,6 +9,12 @@ const TRADER_SLUG: Record<string, string> = {
   'btr-driver': 'btrdriver',
 };
 const traderImg = (n: string) => `/images/traders/eft/${TRADER_SLUG[n] ?? n}.webp`;
+
+interface MapEntry {
+  id: string;
+  name: string;
+  normalizedName: string;
+}
 
 interface Props {
   tasks: TaskRaw[];
@@ -24,6 +30,13 @@ interface Props {
   onToggleFullscreen: () => void;
   searchOpen: boolean;
   onSearchOpen: () => void;
+  // UX-8
+  onExport: () => void;
+  onImport: (file: File) => void;
+  // UX-10
+  maps: MapEntry[];
+  selectedMaps: Set<string>;
+  onMap: (id: string) => void;
 }
 
 export function QuestFilterBar({
@@ -40,8 +53,14 @@ export function QuestFilterBar({
   onToggleFullscreen,
   searchOpen,
   onSearchOpen,
+  onExport,
+  onImport,
+  maps,
+  selectedMaps,
+  onMap,
 }: Props) {
   const resetProgress = useQuestStore((s) => s.resetProgress);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
 
   const completedSet = useMemo(() => new Set(completedQuests), [completedQuests]);
 
@@ -79,6 +98,9 @@ export function QuestFilterBar({
     active
       ? 'bg-(--primary)/15 text-(--primary) border border-(--primary)/40'
       : 'bg-(--color-darkbase) text-text-muted border border-lines-hover hover:text-(--color-text-primary) hover:border-(--color-lines-active)';
+
+  const btnCls =
+    'px-3 h-7 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest border border-lines-hover text-text-muted hover:text-(--primary) hover:border-(--primary)/50 transition-colors duration-150';
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 border-b border-(--color-lines-hover) bg-card-menu flex-wrap shrink-0">
@@ -130,6 +152,34 @@ export function QuestFilterBar({
         ))}
       </div>
 
+      {/* Map chips (UX-10) */}
+      {maps.length > 0 && (
+        <>
+          <div className="w-px h-4 bg-lines-hover shrink-0" />
+          <div className="flex items-center gap-1 flex-wrap">
+            {maps.map((map) => (
+              <button
+                key={map.id}
+                onClick={() => onMap(map.id)}
+                className={`flex items-center gap-1 px-2 h-6 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest transition-colors duration-150 ${toggleCls(selectedMaps.has(map.id))}`}
+              >
+                <img
+                  src={`/images/maps/eft/${map.normalizedName}.webp`}
+                  alt={map.name}
+                  width={16}
+                  height={16}
+                  className="rounded-xs shrink-0"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+                {map.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       {/* Search button */}
       <div className="w-px h-4 bg-lines-hover shrink-0" />
       <button
@@ -143,8 +193,34 @@ export function QuestFilterBar({
 
       {/* Right controls */}
       <div className="ml-auto flex items-center gap-2 shrink-0">
+        {/* UX-8: Export / Import */}
+        <button onClick={onExport} className={btnCls} title="Экспорт прогресса в JSON">
+          Экспорт
+        </button>
+        <button onClick={() => fileInputRef.current?.click()} className={btnCls} title="Импорт прогресса из JSON">
+          Импорт
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.currentTarget.files?.[0];
+            if (file) {
+              onImport(file);
+              e.currentTarget.value = '';
+            }
+          }}
+        />
+
+        <div className="w-px h-4 bg-lines-hover" />
+
         <button
-          onClick={() => { resetProgress(); onReset(); }}
+          onClick={() => {
+            resetProgress();
+            onReset();
+          }}
           className="px-3 h-7 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest text-(--color-danger)/70 border border-(--color-danger)/20 hover:bg-(--color-danger)/10 hover:text-(--color-danger) transition-colors duration-150"
         >
           Сбросить прогресс

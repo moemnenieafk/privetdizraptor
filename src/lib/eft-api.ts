@@ -90,9 +90,7 @@ const QUEST_MAP_QUERY = `
         }
         ... on TaskObjectiveShoot {
           target
-          times
-          shotType
-          distance
+          distance { value compareMethod }
         }
         ... on TaskObjectivePlayerLevel {
           playerLevel
@@ -104,8 +102,8 @@ const QUEST_MAP_QUERY = `
         ... on TaskObjectiveMark {
           markerItem { id name shortName image512pxLink }
         }
-        ... on TaskObjectiveLocation {
-          map { id name normalizedName }
+        ... on TaskObjectiveBasic {
+          maps { id name normalizedName }
         }
       }
       finishRewards {

@@ -1,7 +1,35 @@
-# Игнорируем сырые дампы SPT, они забьют контекст
-/Aki_Data/Server/database/templates/*.json
-/public/maps/raw_tiles/*
+# 1. Блокируем директории с медиа, документами и макетами
+public/
+docs/
+design-ui-ux-figma/
+.vscode/
+.backup_static_routes/
 
-# Но ОБЯЗАТЕЛЬНО оставляем схемы и типы TypeScript!
-!/src/types/spt-schemas.ts
-!/src/db/schema.ts
+# 2. Глобально отключаем все медиафайлы во всех папках (чтобы не было '135 images')
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.webp
+**/*.svg
+**/*.mp4
+**/*.webm
+**/*.ico
+**/*.gif
+
+# 3. Глобально отключаем все текстовые документы (чтобы не было '24 docs')
+**/*.md
+**/*.txt
+**/*.md
+**/*.mdx
+**/*.txt
+**/*.csv
+**/*.rtf
+docs/
+README*
+
+# 4. Разрешаем индексировать критически важные конфиги проекта
+!package.json
+!tsconfig.json
+!tailwind.config.ts
+!next.config.ts
+!eslint.config.js

@@ -17,6 +17,13 @@ const FALLBACK_VIDEOS: YouTubeVideo[] = [
   { id: "5F_IeCq5_8o", url: "https://www.youtube.com/embed/5F_IeCq5_8o", title: "Tarkov Patch", publishedAt: "" },
 ];
 
+const FEATURE_CARDS = [
+  { icon: "icon-eft-items-loot-tier", label: "БАЗА ДАННЫХ", sub: "ПРЕДМЕТЫ · EFT", href: "/eft/items" },
+  { icon: "icon-eft-prog-quest-map", label: "КВЕСТ-КАРТА", sub: "ДЕРЕВО КВЕСТОВ", href: "/eft/progress/quests" },
+  { icon: "icon-eft-prog-barter", label: "БАРТЕР", sub: "ТОРГОВЫЙ СТОЛ", href: "/eft/barter" },
+  { icon: "icon-eft-items-tracker", label: "ТРЕКЕР", sub: "АКТИВНЫЕ ЗАДАНИЯ", href: "/eft/progress/tracker" },
+] as const;
+
 interface HomeClientProps {
   supplySection?: React.ReactNode;
   tacticalSection?: React.ReactNode;
@@ -36,9 +43,9 @@ export function HomeClient({ supplySection, tacticalSection }: HomeClientProps) 
     <div className="relative flex min-h-screen w-full flex-col items-center overflow-hidden animate-[fade-in_0.5s_ease-out_both]">
       {isBooting && <TerminalBoot onComplete={() => setIsBooting(false)} />}
 
-      {/* ─── HERO SECTION ──────────────────────────────────────────────────── */}
+      {/* ─── HERO ──────────────────────────────────────────────────── */}
       <section className="flex flex-col items-center justify-center min-h-[calc(100vh-60px)] w-full px-4 text-center">
-        <div className="flex flex-col items-center gap-5">
+        <div className="flex flex-col items-center gap-5 w-full max-w-2xl">
           <div className="w-px h-10 bg-(--primary) opacity-30" />
 
           <p className="font-blender-medium text-[10px] tracking-[0.45em] uppercase text-text-muted">
@@ -53,7 +60,7 @@ export function HomeClient({ supplySection, tacticalSection }: HomeClientProps) 
             // АГРЕГАЦИЯ РАЗВЕДДАННЫХ. ЭКОНОМИЧЕСКИЙ АНАЛИЗ. МАРШРУТИЗАЦИЯ
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 mt-3">
+          <div className="flex flex-col sm:flex-row gap-3 mt-1">
             <Link
               href="/eft"
               className="border border-(--primary) px-7 py-2.5 font-blender-medium text-[11px] tracking-[0.3em] uppercase text-(--primary) hover:bg-(--primary) hover:text-base transition-none"
@@ -68,17 +75,32 @@ export function HomeClient({ supplySection, tacticalSection }: HomeClientProps) 
             </Link>
           </div>
 
+          {/* ─── FEATURE PREVIEW ─────────────────────────────────── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full mt-1">
+            {FEATURE_CARDS.map((card) => (
+              <Link
+                key={card.href}
+                href={card.href}
+                className="flex items-center gap-2.5 px-3 py-2.5 border border-lines-hover bg-card-menu/40 rounded-xs hover:border-(--primary)/40 hover:bg-(--primary)/5 group"
+              >
+                <span className={`icon-bg ${card.icon} w-4 h-4 shrink-0 text-text-muted group-hover:text-(--primary)`} />
+                <div className="flex flex-col min-w-0 text-left">
+                  <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-secondary group-hover:text-(--primary) truncate">
+                    {card.label}
+                  </span>
+                  <span className="font-blender-medium text-[8px] uppercase tracking-widest text-text-muted truncate">
+                    {card.sub}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
           <div className="w-px h-10 bg-(--primary) opacity-30" />
         </div>
       </section>
 
-      {/* ─── SUPPLY GRID ───────────────────────────────────────────────────── */}
-      {supplySection}
-
-      {/* ─── TACTICAL CARTOGRAPHY ──────────────────────────────────────────── */}
-      {tacticalSection}
-
-      {/* ─── GAME CAROUSEL ─────────────────────────────────────────────────── */}
+      {/* ─── GAME CAROUSEL ─────────────────────────────────────────── */}
       <section className="w-full pb-16">
         <div className="text-center px-4 mb-[clamp(10px,1vw,14px)] flex flex-col items-center w-full">
           <div className="flex items-center justify-center w-full gap-4 lg:gap-7 mb-2 sm:mb-2.5 md:mb-3 lg:mb-3.5">
@@ -92,7 +114,6 @@ export function HomeClient({ supplySection, tacticalSection }: HomeClientProps) 
             Минимум шансов на ошибку. Максимальная тактическая готовность в любых условиях.
           </p>
         </div>
-
         <div className="w-full z-10 justify-start min-h-0">
           <Carousel>
             {GAMES_DATA.map((game, index) => (
@@ -102,7 +123,13 @@ export function HomeClient({ supplySection, tacticalSection }: HomeClientProps) 
         </div>
       </section>
 
-      {/* ─── COMMS HUB ─────────────────────────────────────────────────────── */}
+      {/* ─── SUPPLY GRID ───────────────────────────────────────────── */}
+      {supplySection}
+
+      {/* ─── TACTICAL CARTOGRAPHY ──────────────────────────────────── */}
+      {tacticalSection}
+
+      {/* ─── COMMS HUB ─────────────────────────────────────────────── */}
       <CommsHub videos={videos} />
     </div>
   );

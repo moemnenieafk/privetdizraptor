@@ -1,14 +1,7 @@
-import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { getQuestMapTasks } from '@/lib/eft-api';
-
-const QuestMapClient = dynamic(() => import('./QuestMapClient'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-[calc(100vh-280px)] animate-pulse rounded-xl bg-(--color-card-menu)" />
-  ),
-});
+import QuestMapDynamic from './QuestMapDynamic';
 
 export default async function QuestsMapPage() {
   const tasks = await getQuestMapTasks();
@@ -23,7 +16,7 @@ export default async function QuestsMapPage() {
           <div className="w-full h-[calc(100vh-280px)] animate-pulse rounded-xl bg-(--color-card-menu) mx-auto max-w-275 px-4 xl:px-0" />
         }
       >
-        <QuestMapClient initialTasks={tasks} />
+        <QuestMapDynamic initialTasks={tasks} />
       </Suspense>
     </main>
   );

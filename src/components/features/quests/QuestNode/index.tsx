@@ -45,7 +45,7 @@ function getOpacityCls(
 }
 
 function QuestNodeComponent({ data }: NodeProps<QuestNodeData>) {
-  const { task, status, lockReason, levelGap, dimmed, freshlyUnlocked, traderLevels, chainRole, onToggle, onSelect, onHover } = data;
+  const { task, status, lockReason, levelGap, dimmed, freshlyUnlocked, traderLevels, chainRole, pinned, onToggle, onPin, onSelect, onHover } = data;
 
   const taskItemProgress = useQuestStore((s) => s.itemProgress[task.id]);
 
@@ -92,6 +92,17 @@ function QuestNodeComponent({ data }: NodeProps<QuestNodeData>) {
           </div>
         )}
 
+        {/* Pin Badge (UX-9) */}
+        {pinned && status !== 'completed' && (
+          <button
+            className="nodrag absolute -top-2 right-1 z-10 w-4 h-4 flex items-center justify-center rounded-xs bg-(--primary) text-(--color-base) hover:bg-(--primary)/70 transition-colors duration-150"
+            onClick={(e) => { e.stopPropagation(); onPin(task.id); }}
+            title="Снять закладку"
+          >
+            <span className="icon-bg icon-eft-bookmark w-2.5 h-2.5" />
+          </button>
+        )}
+
         <div className="flex items-center gap-1.5">
           <img
             src={traderImg(task.trader.normalizedName)}
@@ -117,16 +128,27 @@ function QuestNodeComponent({ data }: NodeProps<QuestNodeData>) {
           {task.name}
         </span>
 
-        <button
-          className={`nodrag h-6 w-full text-[9px] font-blender-medium uppercase tracking-wider rounded-xs mt-1 transition-colors duration-150 ${STATUS_BTN[status]}`}
-          disabled={status === 'locked'}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (status !== 'locked') onToggle(task.id);
-          }}
-        >
-          {BTN_LABEL[status]}
-        </button>
+        <div className="flex items-center gap-1 mt-1">
+          <button
+            className={`nodrag h-6 flex-1 text-[9px] font-blender-medium uppercase tracking-wider rounded-xs transition-colors duration-150 ${STATUS_BTN[status]}`}
+            disabled={status === 'locked'}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (status !== 'locked') onToggle(task.id);
+            }}
+          >
+            {BTN_LABEL[status]}
+          </button>
+          {status !== 'completed' && !pinned && (
+            <button
+              className="nodrag h-6 w-6 flex items-center justify-center rounded-xs border border-lines-hover text-text-muted hover:border-(--primary)/50 hover:text-(--primary) transition-colors duration-150 shrink-0"
+              onClick={(e) => { e.stopPropagation(); onPin(task.id); }}
+              title="Закрепить квест"
+            >
+              <span className="icon-bg icon-eft-bookmark w-2.5 h-2.5" />
+            </button>
+          )}
+        </div>
 
         {/* Mini progress bar — item objectives */}
         {hasItemObjectives && (

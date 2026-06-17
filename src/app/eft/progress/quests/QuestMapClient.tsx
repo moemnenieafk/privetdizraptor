@@ -11,22 +11,24 @@ import ReactFlow, {
   type ReactFlowInstance,
 } from 'reactflow';
 import { graphlib, layout } from '@dagrejs/dagre';
-import { Maximize2, Minimize2 } from 'lucide-react';
 import 'reactflow/dist/style.css';
 import type { TaskRaw, QuestNodeStatus, QuestLockReason } from '@/types/quest';
 import { QuestNode } from '@/components/features/quests/QuestNode';
 import { QuestFilterBar } from '@/components/features/quests/QuestFilterBar';
 import { QuestDrawer } from '@/components/features/quests/QuestDrawer';
 import { QuestSearch } from '@/components/features/quests/QuestSearch';
-import { useQuestStore } from '@/store/useQuestStore';
+import { useQuestStore, exportProgress, importProgress } from '@/store/useQuestStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
 interface Props {
   initialTasks: TaskRaw[];
 }
 
-const NODE_WIDTH = 220;
+const NODE_WIDTH  = 220;
 const NODE_HEIGHT = 90;
+
+const TRADER_SLUG: Record<string, string> = { 'btr-driver': 'btrdriver' };
+const traderImg = (n: string) => `/images/traders/eft/${TRADER_SLUG[n] ?? n}.webp`;
 
 const nodeTypes = { questNode: QuestNode };
 
@@ -44,24 +46,16 @@ function computeStatusMap(
       continue;
     }
     const prereqsOk = task.taskRequirements.every((r) => completedSet.has(r.task.id));
-    const levelOk = playerLevel >= task.minPlayerLevel;
+    const levelOk   = playerLevel >= task.minPlayerLevel;
 
     if (prereqsOk && levelOk) {
       map.set(task.id, { status: 'active' });
     } else if (!prereqsOk && !levelOk) {
-      map.set(task.id, {
-        status: 'locked',
-        lockReason: 'both',
-        levelGap: task.minPlayerLevel - playerLevel,
-      });
+      map.set(task.id, { status: 'locked', lockReason: 'both', levelGap: task.minPlayerLevel - playerLevel });
     } else if (!prereqsOk) {
       map.set(task.id, { status: 'locked', lockReason: 'prereq' });
     } else {
-      map.set(task.id, {
-        status: 'locked',
-        lockReason: 'level',
-        levelGap: task.minPlayerLevel - playerLevel,
-      });
+      map.set(task.id, { status: 'locked', lockReason: 'level', levelGap: task.minPlayerLevel - playerLevel });
     }
   }
   return map;
@@ -72,14 +66,22 @@ function computeFilteredIds(
   filterKappa: boolean,
   filterLK: boolean,
   selectedTraders: Set<string>,
+  selectedMaps: Set<string>,
 ): Set<string> | null {
-  if (!filterKappa && !filterLK && selectedTraders.size === 0) return null;
+  if (!filterKappa && !filterLK && selectedTraders.size === 0 && selectedMaps.size === 0) return null;
   return new Set(
     tasks
       .filter((t) => {
         if (filterKappa && !t.kappaRequired) return false;
         if (filterLK && !t.lightkeeperRequired) return false;
         if (selectedTraders.size > 0 && !selectedTraders.has(t.trader.normalizedName)) return false;
+        if (selectedMaps.size > 0) {
+          const taskMapIds = t.objectives
+            .filter((o) => o.__typename === 'TaskObjectiveBasic' && o.maps?.length)
+            .flatMap((o) => (o.maps ?? []).map((m) => m.id));
+          // Квесты без локации-objectives не скрываем (они не привязаны к карте)
+          if (taskMapIds.length > 0 && !taskMapIds.some((id) => selectedMaps.has(id))) return false;
+        }
         return true;
       })
       .map((t) => t.id),
@@ -108,9 +110,7 @@ function applyChainHighlight(
 
   const edges = layoutResult.edges.map((edge) => {
     const inChain = chainSet.has(edge.source) && chainSet.has(edge.target);
-    if (inChain) {
-      return { ...edge, animated: false, style: { stroke: 'var(--primary)', opacity: 1 } };
-    }
+    if (inChain) return { ...edge, animated: false, style: { stroke: 'var(--primary)', opacity: 1 } };
     return { ...edge, animated: false, style: { ...edge.style, opacity: 0.05 } };
   });
 
@@ -124,6 +124,7 @@ function buildLayout(
   freshlyUnlocked: Set<string>,
   traderLevels: Record<string, number>,
   onToggle: (id: string) => void,
+  onPin: (id: string) => void,
   onSelect: (task: TaskRaw) => void,
   onHover: (id: string | null) => void,
 ): { nodes: Node[]; edges: Edge[] } {
@@ -131,9 +132,7 @@ function buildLayout(
   g.setGraph({ rankdir: 'LR', nodesep: 60, ranksep: 120 });
   g.setDefaultEdgeLabel(() => ({}));
 
-  for (const task of tasks) {
-    g.setNode(task.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
-  }
+  for (const task of tasks) g.setNode(task.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   for (const task of tasks) {
     for (const req of task.taskRequirements) {
       if (g.hasNode(req.task.id)) g.setEdge(req.task.id, task.id);
@@ -143,7 +142,7 @@ function buildLayout(
   layout(g);
 
   const nodes: Node[] = tasks.map((task) => {
-    const pos = g.node(task.id);
+    const pos   = g.node(task.id);
     const entry = statusMap.get(task.id) ?? { status: 'locked' as QuestNodeStatus };
     return {
       id: task.id,
@@ -158,6 +157,7 @@ function buildLayout(
         freshlyUnlocked: freshlyUnlocked.has(task.id),
         traderLevels,
         onToggle,
+        onPin,
         onSelect,
         onHover,
       },
@@ -174,7 +174,7 @@ function buildLayout(
         src === 'completed'
           ? { animated: false, style: { stroke: 'var(--color-lines-hover)', opacity: 0.4 } }
           : src === 'active'
-          ? { animated: true, style: { stroke: 'var(--primary)', opacity: 1 } }
+          ? { animated: true,  style: { stroke: 'var(--primary)', opacity: 1 } }
           : { animated: false, style: { stroke: 'var(--color-lines-hover)', opacity: 0.15 } };
       edges.push({
         id: `${req.task.id}->${task.id}`,
@@ -190,19 +190,24 @@ function buildLayout(
 }
 
 export default function QuestMapClient({ initialTasks }: Props) {
-  const [selectedTask, setSelectedTask] = useState<TaskRaw | null>(null);
-  const [filterKappa, setFilterKappa]   = useState(false);
-  const [filterLK, setFilterLK]         = useState(false);
+  const [selectedTask, setSelectedTask]   = useState<TaskRaw | null>(null);
+  const [filterKappa, setFilterKappa]     = useState(false);
+  const [filterLK, setFilterLK]           = useState(false);
   const [selectedTraders, setSelectedTraders] = useState<Set<string>>(new Set());
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+  const [selectedMaps, setSelectedMaps]   = useState<Set<string>>(new Set());
+  const [isFullscreen, setIsFullscreen]   = useState(false);
+  const [rfInstance, setRfInstance]       = useState<ReactFlowInstance | null>(null);
   const [freshlyUnlocked, setFreshlyUnlocked] = useState<Set<string>>(new Set());
   const [unlockedCount, setUnlockedCount] = useState(0);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen]       = useState(false);
+  const [hoveredId, setHoveredId]         = useState<string | null>(null);
 
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const toggleQuest     = useQuestStore((s) => s.toggleQuest);
+  const itemProgress    = useQuestStore((s) => s.itemProgress);
+  const loadProgress    = useQuestStore((s) => s.loadProgress);
+  const pinnedQuests    = useQuestStore((s) => s.pinnedQuests);
+  const togglePin       = useQuestStore((s) => s.togglePin);
 
   const profiles      = usePlayerStore((s) => s.profiles);
   const activeId      = usePlayerStore((s) => s.activeProfileId);
@@ -227,7 +232,7 @@ export default function QuestMapClient({ initialTasks }: Props) {
     function getAncestors(id: string): Set<string> {
       if (map.has(id)) return map.get(id)!;
       const result = new Set<string>();
-      const task = initialTasks.find((t) => t.id === id);
+      const task   = initialTasks.find((t) => t.id === id);
       if (!task) { map.set(id, result); return result; }
       for (const req of task.taskRequirements) {
         result.add(req.task.id);
@@ -256,6 +261,18 @@ export default function QuestMapClient({ initialTasks }: Props) {
     return map;
   }, [initialTasks, childrenMap]);
 
+  const maps = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; normalizedName: string }>();
+    for (const task of initialTasks) {
+      for (const obj of task.objectives) {
+        if (obj.__typename === 'TaskObjectiveBasic' && obj.maps?.length) {
+          for (const m of obj.maps) seen.set(m.id, m as { id: string; name: string; normalizedName: string });
+        }
+      }
+    }
+    return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [initialTasks]);
+
   const handleHover = useCallback((id: string | null) => setHoveredId(id), []);
 
   const handleToggle = useCallback((taskId: string) => {
@@ -265,11 +282,11 @@ export default function QuestMapClient({ initialTasks }: Props) {
     if (!wasCompleted) {
       const candidateIds = childrenMap.get(taskId) ?? [];
       const newCompleted = new Set([...completedQuests, taskId]);
-      const newlyActive = candidateIds.filter((childId) => {
+      const newlyActive  = candidateIds.filter((childId) => {
         const childTask = initialTasks.find((t) => t.id === childId);
         if (!childTask) return false;
         const allPrereqsDone = childTask.taskRequirements.every((r) => newCompleted.has(r.task.id));
-        const levelOk = playerLevel >= childTask.minPlayerLevel;
+        const levelOk        = playerLevel >= childTask.minPlayerLevel;
         return allPrereqsDone && levelOk;
       });
 
@@ -294,16 +311,57 @@ export default function QuestMapClient({ initialTasks }: Props) {
     }
   }, [completedQuests, toggleQuest, childrenMap, initialTasks, playerLevel, rfInstance]);
 
+  const handleExport = useCallback(() => {
+    const json = exportProgress(completedQuests, itemProgress);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `cta-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [completedQuests, itemProgress]);
+
+  const handleImport = useCallback((file: File) => {
+    if (!window.confirm('Заменить текущий прогресс данными из файла?')) return;
+    const reader    = new FileReader();
+    reader.onload   = (e) => {
+      const result = importProgress(e.target?.result as string);
+      if (result) loadProgress(result.completedQuests, result.itemProgress);
+    };
+    reader.readAsText(file);
+  }, [loadProgress]);
+
+  const handleMap = (id: string) =>
+    setSelectedMaps((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
   const rawLayoutResult = useMemo(() => {
     const completedSet = new Set(completedQuests);
     const statusMap    = computeStatusMap(initialTasks, completedSet, playerLevel);
-    const filteredIds  = computeFilteredIds(initialTasks, filterKappa, filterLK, selectedTraders);
-    return buildLayout(initialTasks, statusMap, filteredIds, freshlyUnlocked, traderLevels, handleToggle, setSelectedTask, handleHover);
-  }, [completedQuests, playerLevel, initialTasks, filterKappa, filterLK, selectedTraders, freshlyUnlocked, traderLevels, handleToggle, handleHover]);
+    const filteredIds  = computeFilteredIds(initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps);
+    return buildLayout(initialTasks, statusMap, filteredIds, freshlyUnlocked, traderLevels, handleToggle, togglePin, setSelectedTask, handleHover);
+  }, [completedQuests, playerLevel, initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, freshlyUnlocked, traderLevels, handleToggle, togglePin, handleHover]);
+
+  // Post-process: inject `pinned` without re-running dagre layout
+  const withPins = useMemo(() => {
+    const pinnedSet = new Set(pinnedQuests);
+    return {
+      ...rawLayoutResult,
+      nodes: rawLayoutResult.nodes.map((n) => ({
+        ...n,
+        data: { ...n.data, pinned: pinnedSet.has(n.id) },
+      })),
+    };
+  }, [rawLayoutResult, pinnedQuests]);
 
   const { nodes, edges } = useMemo(
-    () => applyChainHighlight(rawLayoutResult, hoveredId, ancestorMap, descendantMap),
-    [rawLayoutResult, hoveredId, ancestorMap, descendantMap],
+    () => applyChainHighlight(withPins, hoveredId, ancestorMap, descendantMap),
+    [withPins, hoveredId, ancestorMap, descendantMap],
   );
 
   const handleTrader = (name: string) =>
@@ -318,6 +376,7 @@ export default function QuestMapClient({ initialTasks }: Props) {
     setFilterKappa(false);
     setFilterLK(false);
     setSelectedTraders(new Set());
+    setSelectedMaps(new Set());
   };
 
   const handleInit = useCallback((instance: ReactFlowInstance) => {
@@ -326,9 +385,7 @@ export default function QuestMapClient({ initialTasks }: Props) {
   }, []);
 
   useEffect(() => {
-    if (rfInstance) {
-      setTimeout(() => rfInstance.fitView({ padding: 0.08, duration: 400 }), 80);
-    }
+    if (rfInstance) setTimeout(() => rfInstance.fitView({ padding: 0.08, duration: 400 }), 80);
   }, [isFullscreen, rfInstance]);
 
   useEffect(() => {
@@ -360,18 +417,13 @@ export default function QuestMapClient({ initialTasks }: Props) {
   const { kappaTotal, kappaCompleted } = useMemo(() => {
     const completedSet = new Set(completedQuests);
     return {
-      kappaTotal: initialTasks.filter((t) => t.kappaRequired).length,
+      kappaTotal:     initialTasks.filter((t) => t.kappaRequired).length,
       kappaCompleted: initialTasks.filter((t) => t.kappaRequired && completedSet.has(t.id)).length,
     };
   }, [initialTasks, completedQuests]);
 
-  const containerCls = isFullscreen
-    ? 'fixed inset-0 z-50 flex flex-col bg-(--color-base)'
-    : 'flex flex-col w-full';
-
-  const containerStyle = isFullscreen
-    ? undefined
-    : { height: 'calc(100dvh - 164px)', minHeight: 520 };
+  const containerCls   = isFullscreen ? 'fixed inset-0 z-50 flex flex-col bg-(--color-base)' : 'flex flex-col w-full';
+  const containerStyle = isFullscreen ? undefined : { height: 'calc(100dvh - 164px)', minHeight: 520 };
 
   return (
     <div className={containerCls} style={containerStyle}>
@@ -389,7 +441,54 @@ export default function QuestMapClient({ initialTasks }: Props) {
         onToggleFullscreen={() => setIsFullscreen((v) => !v)}
         searchOpen={searchOpen}
         onSearchOpen={() => setSearchOpen((v) => !v)}
+        onExport={handleExport}
+        onImport={handleImport}
+        maps={maps}
+        selectedMaps={selectedMaps}
+        onMap={handleMap}
       />
+
+      {/* Pinned quests widget (UX-9) */}
+      {pinnedQuests.length > 0 && (
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-lines-hover bg-card-menu/60 overflow-x-auto shrink-0">
+          <span className="text-[9px] font-blender-medium uppercase tracking-widest text-text-muted shrink-0 mr-1">
+            Закреплено:
+          </span>
+          {pinnedQuests.map((id) => {
+            const task = initialTasks.find((t) => t.id === id);
+            if (!task) return null;
+            return (
+              <div key={id} className="flex items-center gap-1 shrink-0">
+                <button
+                  className="flex items-center gap-1.5 max-w-36 px-2 py-1 rounded-xs border border-lines-hover bg-card-menu text-text-muted hover:border-(--primary)/40 hover:text-text-primary transition-colors duration-150"
+                  onClick={() => {
+                    const node = rfInstance?.getNode(id);
+                    if (node) rfInstance?.setCenter(node.position.x + 110, node.position.y + 44, { zoom: 1.4, duration: 500 });
+                  }}
+                >
+                  <img
+                    src={traderImg(task.trader.normalizedName)}
+                    alt={task.trader.name}
+                    width={14}
+                    height={14}
+                    className="rounded-[1px] shrink-0"
+                  />
+                  <span className="text-[10px] font-blender-medium uppercase tracking-widest truncate">
+                    {task.name}
+                  </span>
+                </button>
+                <button
+                  onClick={() => togglePin(id)}
+                  className="text-[10px] leading-none text-text-muted hover:text-(--primary) transition-colors duration-150"
+                  aria-label="Снять закладку"
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="relative flex-1 min-h-0">
         <QuestSearch

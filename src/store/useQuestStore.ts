@@ -13,6 +13,15 @@ interface QuestStore {
   incrementItem: (questId: string, objectiveId: string, max: number) => void;
   decrementItem: (questId: string, objectiveId: string) => void;
   resetItemProgress: (questId: string) => void;
+
+  // UX-8: Progress persistence
+  loadProgress: (completedQuests: string[], itemProgress: Record<string, Record<string, number>>) => void;
+
+  // UX-9: Pins & Notes
+  pinnedQuests: string[];
+  togglePin: (id: string) => void;
+  questNotes: Record<string, string>;
+  setNote: (id: string, note: string) => void;
 }
 
 export const useQuestStore = create<QuestStore>()(
@@ -28,7 +37,6 @@ export const useQuestStore = create<QuestStore>()(
       resetProgress: () => set({ completedQuests: [], itemProgress: {} }),
 
       itemProgress: {},
-
       setItemCount: (questId, objectiveId, count) =>
         set((s) => ({
           itemProgress: {
@@ -36,7 +44,6 @@ export const useQuestStore = create<QuestStore>()(
             [questId]: { ...(s.itemProgress[questId] ?? {}), [objectiveId]: Math.max(0, count) },
           },
         })),
-
       incrementItem: (questId, objectiveId, max) =>
         set((s) => {
           const current = s.itemProgress[questId]?.[objectiveId] ?? 0;
@@ -47,7 +54,6 @@ export const useQuestStore = create<QuestStore>()(
             },
           };
         }),
-
       decrementItem: (questId, objectiveId) =>
         set((s) => {
           const current = s.itemProgress[questId]?.[objectiveId] ?? 0;
@@ -58,24 +64,41 @@ export const useQuestStore = create<QuestStore>()(
             },
           };
         }),
-
       resetItemProgress: (questId) =>
         set((s) => {
           const { [questId]: _removed, ...rest } = s.itemProgress;
           return { itemProgress: rest };
         }),
+
+      loadProgress: (completedQuests, itemProgress) => set({ completedQuests, itemProgress }),
+
+      pinnedQuests: [],
+      togglePin: (id) =>
+        set((s) => ({
+          pinnedQuests: s.pinnedQuests.includes(id)
+            ? s.pinnedQuests.filter((q) => q !== id)
+            : [...s.pinnedQuests, id],
+        })),
+
+      questNotes: {},
+      setNote: (id, note) =>
+        set((s) => ({
+          questNotes: { ...s.questNotes, [id]: note },
+        })),
     }),
     {
       name: 'cta-quest-progress',
       partialize: (s) => ({
         completedQuests: s.completedQuests,
         itemProgress: s.itemProgress,
+        pinnedQuests: s.pinnedQuests,
+        questNotes: s.questNotes,
       }),
     },
   ),
 );
 
-// Bridge API for /eft/progress/items — агрегирует все нужные предметы из активных квестов
+// Bridge API for /eft/progress/tracker
 export function getActiveItemRequirements(
   tasks: TaskRaw[],
   completedQuests: string[],
@@ -105,4 +128,31 @@ export function getActiveItemRequirements(
           foundInRaid: o.foundInRaid,
         })),
     );
+}
+
+// UX-8: Export/Import helpers
+export function exportProgress(
+  completedQuests: string[],
+  itemProgress: Record<string, Record<string, number>>,
+): string {
+  return JSON.stringify({ version: 1, completedQuests, itemProgress }, null, 2);
+}
+
+export function importProgress(json: string): {
+  completedQuests: string[];
+  itemProgress: Record<string, Record<string, number>>;
+} | null {
+  try {
+    const data = JSON.parse(json) as unknown;
+    if (typeof data !== 'object' || data === null) return null;
+    const d = data as Record<string, unknown>;
+    if (d.version !== 1) return null;
+    if (!Array.isArray(d.completedQuests)) return null;
+    return {
+      completedQuests: d.completedQuests as string[],
+      itemProgress: (d.itemProgress as Record<string, Record<string, number>>) ?? {},
+    };
+  } catch {
+    return null;
+  }
 }

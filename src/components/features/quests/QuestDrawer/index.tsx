@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useModalAnimation } from '@/hooks/useModalAnimation';
 import { useQuestStore } from '@/store/useQuestStore';
 import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker';
@@ -14,7 +14,7 @@ const OBJECTIVE_ICON: Record<string, string> = {
   TaskObjectiveItem:        'icon-eft-quests-active',
   TaskObjectiveMark:        'icon-eft-quests-active',
   TaskObjectiveShoot:       'icon-eft-quests-active',
-  TaskObjectiveLocation:    'icon-eft-quests-active',
+  TaskObjectiveBasic:       'icon-eft-quests-active',
   TaskObjectivePlayerLevel: 'icon-eft-profile-level',
   TaskObjectiveTraderLevel: 'icon-eft-quests-active',
 };
@@ -55,20 +55,14 @@ function ObjectiveRow({ obj }: { obj: TaskObjective }) {
           </div>
         )}
 
-        {/* TaskObjectiveShoot — times / target / distance / shotType */}
+        {/* TaskObjectiveShoot — target / distance */}
         {obj.__typename === 'TaskObjectiveShoot' && (
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {obj.times != null && obj.times > 1 && (
-              <span className="text-[9px] font-blender-medium text-text-muted">{obj.times}×</span>
-            )}
             {obj.target && (
               <span className="text-[9px] font-blender-medium text-text-muted">{obj.target}</span>
             )}
             {obj.distance != null && (
-              <span className="text-[9px] font-blender-medium text-text-muted">{obj.distance}м</span>
-            )}
-            {obj.shotType && (
-              <span className="text-[9px] font-blender-medium text-text-muted">{obj.shotType}</span>
+              <span className="text-[9px] font-blender-medium text-text-muted">{obj.distance.value}м</span>
             )}
           </div>
         )}
@@ -107,6 +101,16 @@ export function QuestDrawer({ task, onClose }: Props) {
 
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const toggleQuest     = useQuestStore((s) => s.toggleQuest);
+  const questNotes      = useQuestStore((s) => s.questNotes);
+  const setNote         = useQuestStore((s) => s.setNote);
+
+  const taskId = renderTask?.id;
+  const [noteOpen, setNoteOpen] = useState(false);
+  // Sync noteOpen when task changes: auto-open if note exists
+  useEffect(() => {
+    setNoteOpen(!!(taskId && questNotes[taskId]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId]);
 
   if (!isRendered) return null;
 
@@ -208,6 +212,29 @@ export function QuestDrawer({ task, onClose }: Props) {
                   <QuestItemTracker task={renderTask} />
                 </div>
               )}
+
+              {/* Section: Заметка (UX-9) */}
+              <div className="border-t border-lines-hover px-4 pt-3 pb-4">
+                <button
+                  onClick={() => setNoteOpen((v) => !v)}
+                  className="flex items-center justify-between w-full"
+                >
+                  <span className="text-[9px] font-blender-medium uppercase tracking-widest text-text-muted">
+                    Заметка
+                  </span>
+                  <span className="text-[9px] text-text-muted">{noteOpen ? '▲' : '▼'}</span>
+                </button>
+                {noteOpen && renderTask && (
+                  <textarea
+                    key={renderTask.id}
+                    className="mt-2 w-full resize-none bg-lines-hover/30 border border-lines-hover rounded-xs p-2 text-[11px] font-blender-book text-text-primary placeholder:text-text-muted focus:outline-none focus:border-(--primary)/50 transition-colors duration-150"
+                    rows={3}
+                    placeholder="Личная заметка..."
+                    defaultValue={questNotes[renderTask.id] ?? ''}
+                    onBlur={(e) => setNote(renderTask.id, e.currentTarget.value.trim())}
+                  />
+                )}
+              </div>
 
               {/* Section: Награды */}
               {hasRewards && (

@@ -665,7 +665,7 @@ finishRewards {
 
 ---
 
-## ⏳ Sprint UX-8 — Progress Export / Import
+## ✅ DONE Sprint UX-8 — Progress Export / Import
 
 **Цель:** Экспорт прогресса квестов и предметов в JSON-файл, импорт обратно. Позволяет переносить прогресс между устройствами и делиться с другими.
 
@@ -718,7 +718,7 @@ finishRewards {
 
 ---
 
-## ⏳ Sprint UX-9 — Quest Pins & Personal Notes
+## ✅ DONE Sprint UX-9 — Quest Pins & Personal Notes
 
 **Цель:** Личные пометки к квестам — закреплённые (Pinned), отложенные (Snoozed) и приоритетные. Сохраняются в Zustand persist. Pinned-квесты показываются в верхнем виджете над графом.
 
@@ -761,7 +761,7 @@ finishRewards {
 
 ---
 
-## ⏳ Sprint UX-10 — Map Filter (In-game Locations)
+## ✅ DONE Sprint UX-10 — Map Filter (In-game Locations)
 
 **Цель:** Фильтрация квестов по игровой локации. Для квестов с `TaskObjectiveLocation` — показать чипы карт в `QuestFilterBar`. Квесты без привязки к карте остаются видимы всегда.
 
@@ -977,6 +977,6 @@ const activeItems     = getActiveItemRequirements(tasks, completedQuests, itemPr
 | UX-5 Search | ✅ | Прыжок к любому квесту по имени мгновенно |
 | UX-6 Chain Highlight | ✅ | Hover на ноду — подсветка полной цепочки зависимостей |
 | UX-7 Item Tracker Page | ✅ | Глобальный вид: "нужно 7×GPU из 3 квестов" на `/eft/progress/tracker` |
-| UX-8 Export/Import | ⏳ | Перенос прогресса между устройствами, бэкап в JSON |
-| UX-9 Pins & Notes | ⏳ | Личные закладки + текстовые заметки к квестам |
-| UX-10 Map Filter | ⏳ | Фильтр по игровой локации — "покажи только квесты на Лесу" |
+| UX-8 Export/Import | ✅ | Перенос прогресса между устройствами, бэкап в JSON |
+| UX-9 Pins & Notes | ✅ | Личные закладки + текстовые заметки к квестам |
+| UX-10 Map Filter | ✅ | Фильтр по игровой локации — "покажи только квесты на Лесу" |

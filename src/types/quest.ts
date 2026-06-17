@@ -13,9 +13,7 @@ export interface TaskObjective {
   foundInRaid?: boolean;
   // TaskObjectiveShoot
   target?: string;
-  times?: number;
-  shotType?: string;
-  distance?: number | null;
+  distance?: { value: number; compareMethod: string } | null;
   // TaskObjectivePlayerLevel
   playerLevel?: number;
   // TaskObjectiveTraderLevel
@@ -23,8 +21,8 @@ export interface TaskObjective {
   level?: number;
   // TaskObjectiveMark
   markerItem?: { id: string; name: string; shortName: string; image512pxLink: string };
-  // TaskObjectiveLocation
-  map?: { id: string; name: string; normalizedName: string } | null;
+  // TaskObjectiveBasic (location/visit)
+  maps?: Array<{ id: string; name: string; normalizedName: string }> | null;
 }
 
 // Discriminated types for type-safe narrowing (UX-3+)
@@ -81,7 +79,9 @@ export interface QuestNodeData {
   freshlyUnlocked?: boolean;
   traderLevels?: Record<string, number>;
   chainRole?: 'ancestor' | 'descendant' | 'self' | null;
+  pinned?: boolean;
   onToggle: (id: string) => void;
   onSelect: (task: TaskRaw) => void;
   onHover: (id: string | null) => void;
+  onPin: (id: string) => void;
 }
