@@ -64,7 +64,7 @@ const PROGRESS_HUB_CARDS = [
     id: 'questmap',
     title: 'Карта заданий',
     description: 'Визуальная карта прогресса по квестам, показывающая зависимости и следующие шаги.',
-    href: '/eft/questmap',
+    href: '/eft/progress/quests',
     iconPath: '/icons/eft/04-progression/quest-map.svg',
     variant: 'rectangle' as const,
   },

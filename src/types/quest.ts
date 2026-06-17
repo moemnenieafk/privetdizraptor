@@ -1,0 +1,87 @@
+export type QuestNodeStatus = 'locked' | 'active' | 'completed';
+export type QuestLockReason = 'level' | 'prereq' | 'both';
+
+export interface TaskObjective {
+  id: string;
+  type: string;
+  __typename?: string;
+  description: string;
+  optional: boolean;
+  // TaskObjectiveItem
+  item?: { id: string; name: string; shortName: string; image512pxLink: string };
+  count?: number;
+  foundInRaid?: boolean;
+  // TaskObjectiveShoot
+  target?: string;
+  times?: number;
+  shotType?: string;
+  distance?: number | null;
+  // TaskObjectivePlayerLevel
+  playerLevel?: number;
+  // TaskObjectiveTraderLevel
+  trader?: { name: string; normalizedName: string };
+  level?: number;
+  // TaskObjectiveMark
+  markerItem?: { id: string; name: string; shortName: string; image512pxLink: string };
+  // TaskObjectiveLocation
+  map?: { id: string; name: string; normalizedName: string } | null;
+}
+
+// Discriminated types for type-safe narrowing (UX-3+)
+export interface TaskObjectiveItem extends TaskObjective {
+  __typename: 'TaskObjectiveItem';
+  item: { id: string; name: string; shortName: string; image512pxLink: string };
+  count: number;
+  foundInRaid: boolean;
+}
+
+export interface TaskObjectiveTraderLevel extends TaskObjective {
+  __typename: 'TaskObjectiveTraderLevel';
+  trader: { name: string; normalizedName: string };
+  level: number;
+}
+
+export interface FinishRewards {
+  items: Array<{
+    item: { id: string; name: string; shortName: string; image512pxLink: string };
+    count: number;
+  }>;
+  traderStanding: Array<{
+    trader: { name: string; normalizedName: string };
+    standing: number;
+  }>;
+}
+
+export interface TaskTrader {
+  name: string;
+  normalizedName: string;
+  imageLink?: string;
+}
+
+export interface TaskRaw {
+  id: string;
+  name: string;
+  normalizedName: string;
+  kappaRequired: boolean;
+  lightkeeperRequired: boolean;
+  minPlayerLevel: number;
+  experience: number;
+  trader: TaskTrader;
+  taskRequirements: Array<{ task: { id: string; name: string } }>;
+  objectives: TaskObjective[];
+  finishRewards: FinishRewards;
+}
+
+export interface QuestNodeData {
+  task: TaskRaw;
+  status: QuestNodeStatus;
+  lockReason?: QuestLockReason;
+  levelGap?: number;
+  dimmed?: boolean;
+  freshlyUnlocked?: boolean;
+  traderLevels?: Record<string, number>;
+  chainRole?: 'ancestor' | 'descendant' | 'self' | null;
+  onToggle: (id: string) => void;
+  onSelect: (task: TaskRaw) => void;
+  onHover: (id: string | null) => void;
+}

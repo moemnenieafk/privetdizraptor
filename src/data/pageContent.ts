@@ -80,6 +80,16 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     description: 'Интерактивный инструмент для построения маршрутов и отслеживания квестов на всех локациях.',
     iconClass: 'icon-eft-prog-quest-map',
   },
+  'eft-progress-quests': {
+    title: 'Карта заданий',
+    description: 'Интерактивная карта зависимостей квестов от всех торговцев. Отслеживайте прогресс, фильтруйте по Каппе и Смотрителю Маяка.',
+    iconClass: 'icon-eft-prog-quest-map',
+  },
+  'eft-progress-tracker': {
+    title: 'Трекер Предметов',
+    description: 'Агрегированный вид всех предметов, нужных для активных квестов. Отмечайте найденные предметы и отслеживайте прогресс по каждому заданию.',
+    iconClass: 'icon-eft-items-tracker',
+  },
   'eft-quests-lore-quests': {
     title: 'Сюжетные задания',
     description: 'Основные квестовые линии, раскрывающие историю Таркова и лор корпорации TerraGroup.',

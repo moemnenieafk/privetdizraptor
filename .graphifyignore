@@ -1,0 +1,7 @@
+# Игнорируем сырые дампы SPT, они забьют контекст
+/Aki_Data/Server/database/templates/*.json
+/public/maps/raw_tiles/*
+
+# Но ОБЯЗАТЕЛЬНО оставляем схемы и типы TypeScript!
+!/src/types/spt-schemas.ts
+!/src/db/schema.ts

@@ -313,6 +313,19 @@
     animation: hazard-slide 1s linear infinite;
   }
 
+  /* --- Quest Map: разблокировка квеста --- */
+  @keyframes fresh-unlock {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 60%, transparent); }
+    50%  { box-shadow: 0 0 0 8px color-mix(in srgb, var(--primary) 20%, transparent); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  /* --- Тикер бегущей строки Active Context Bar --- */
+  @keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
   /* --- Базовые классы для иконок --- */
   /* Для SVG (позволяет перекрашивать иконку через background-color) */
   .icon-mask {

@@ -31,6 +31,7 @@ Consult before planning architecture or styling:
 6. **SSR:** Heavy libs (Leaflet, Canvas) → `next/dynamic` with `ssr: false`.
 7. **STATE:** UI pure. Quest trees, Barter math → Zustand or isolated helpers.
 8. **SKELETONS:** Never spinners. `animate-pulse` skeleton screens for loading states.
+9. **NO EXTERNAL WIKI LINKS:** Global ban on links to tarkov.wiki, escapefromtarkov.fandom.com, or any external wiki/database. CTA is the aggregator — all data stays internal. Route to internal pages (`/eft/items/`, `/eft/questmap`, etc.) instead.
 
 ## 5. USER PROFILE
 - **Name:** Вадим (V4DYA). Communicates in Russian.
