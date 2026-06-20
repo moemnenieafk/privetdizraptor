@@ -1055,7 +1055,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
   return (
     <div className="w-full flex flex-col gap-6">
 
-      <div className={`sticky top-18 z-40 border-b border-lines-hover/20 bg-[color-mix(in_srgb,var(--color-base)_88%,transparent)] backdrop-blur-md transition-all duration-300${showAdvanced ? ' pb-3' : ''}`}>
+      <div className={`sticky top-0 z-40 border-b border-lines-hover/20 bg-[color-mix(in_srgb,var(--color-base)_88%,transparent)] backdrop-blur-md transition-all duration-300${showAdvanced ? ' pb-3' : ''}`}>
         <CategoryControlBar
           categorySlug={categorySlug}
           searchQuery={searchQuery}

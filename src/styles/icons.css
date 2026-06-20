@@ -203,9 +203,9 @@
   .icon-eft-profile-rep-2 { mask-image: url('/icons/eft/profile-pannel/II-lvl-rep.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/II-lvl-rep.svg'); }
   .icon-eft-profile-rep-3 { mask-image: url('/icons/eft/profile-pannel/III-lvl-rep.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/III-lvl-rep.svg'); }
   .icon-eft-profile-rep-4 { mask-image: url('/icons/eft/profile-pannel/IV-Crown.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/IV-Crown.svg'); }
-  .icon-eft-profile-kappa { background-image: url('/icons/eft/profile-pannel/kappa_icon.svg'); }
+  .icon-eft-profile-kappa { mask-image: url('/icons/eft/profile-pannel/kappa_icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/kappa_icon.svg'); mask-size: contain; mask-repeat: no-repeat; mask-position: center; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; background-color: var(--color-kappa); }
   .icon-eft-profile-lb { mask-image: url('/icons/eft/profile-pannel/LB_icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/LB_icon.svg'); }
-  .icon-eft-profile-lightkeeper { background-image: url('/icons/eft/profile-pannel/lightkeeper_icon.svg'); }
+  .icon-eft-profile-lightkeeper { mask-image: url('/icons/eft/profile-pannel/lightkeeper_icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/lightkeeper_icon.svg'); mask-size: contain; mask-repeat: no-repeat; mask-position: center; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; background-color: var(--color-lightkeeper); }
   .icon-eft-profile-login { mask-image: url('/icons/eft/profile-pannel/login-icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/login-icon.svg'); }
   .icon-eft-profile-logout { mask-image: url('/icons/eft/profile-pannel/logout-icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/logout-icon.svg'); }
   .icon-eft-profile-loot-mark { mask-image: url('/icons/eft/profile-pannel/loot-mark-unheard.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/loot-mark-unheard.svg'); }
@@ -213,7 +213,7 @@
   .icon-eft-profile-settings { mask-image: url('/icons/eft/profile-pannel/profile-settings-icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/profile-settings-icon.svg'); }
   .icon-eft-profile-reset { mask-image: url('/icons/eft/profile-pannel/profile-reset-icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/profile-reset-icon.svg'); }
   .icon-eft-profile-pve { background-image: url('/icons/eft/profile-pannel/PVE_icon.svg'); }
-  .icon-eft-profile-pvp { background-image: url('/icons/eft/profile-pannel/PVP_icon.svg'); }
+  .icon-eft-profile-pvp { background-image: url('/icons/eft/profile-pannel/PVP_icon.svg'); mask-image: url('/icons/eft/profile-pannel/PVP_icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/PVP_icon.svg'); }
   .icon-eft-profile-s { mask-image: url('/icons/eft/profile-pannel/S_icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/S_icon.svg'); }
   .icon-eft-profile-tue { mask-image: url('/icons/eft/profile-pannel/TUE_icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/TUE_icon.svg'); }
   .icon-eft-profile-usec-logo { mask-image: url('/icons/eft/profile-pannel/USEC-logo-sign.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/USEC-logo-sign.svg'); }
@@ -301,3 +301,14 @@
   /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
   .icon-eft-underbarrel-launchers { mask-image: url('/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg'); }
   
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-eft-factory-day-map-icon { mask-image: url('/icons/eft/01-maps/factory-day-map-icon.svg'); -webkit-mask-image: url('/icons/eft/01-maps/factory-day-map-icon.svg'); }
+  .icon-eft-factory-night-map-icon { mask-image: url('/icons/eft/01-maps/factory-night-map-icon.svg'); -webkit-mask-image: url('/icons/eft/01-maps/factory-night-map-icon.svg'); }
+  .icon-eft-groundzero-night-map-icon { mask-image: url('/icons/eft/01-maps/groundzero-night-map-icon.svg'); -webkit-mask-image: url('/icons/eft/01-maps/groundzero-night-map-icon.svg'); }
+  .icon-eft-groundzero-day-map-icon { mask-image: url('/icons/eft/01-maps/groundzero-day-map-icon.svg'); -webkit-mask-image: url('/icons/eft/01-maps/groundzero-day-map-icon.svg'); }
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-decrement-icon { mask-image: url('/icons/decrement-icon.svg'); -webkit-mask-image: url('/icons/decrement-icon.svg'); }
+  .icon-increment-icon { mask-image: url('/icons/increment-icon.svg'); -webkit-mask-image: url('/icons/increment-icon.svg'); }
+
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-eft-find-in-raid { mask-image: url('/icons/eft/find-in-raid.svg'); -webkit-mask-image: url('/icons/eft/find-in-raid.svg'); }

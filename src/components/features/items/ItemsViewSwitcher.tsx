@@ -65,7 +65,7 @@ export function ItemsViewSwitcher({ items, className = "" }: ItemsViewSwitcherPr
 
   return (
     <div className={`flex flex-col gap-6 ${className}`}>
-      <div className="sticky top-[72px] z-40 flex items-center justify-between rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_80%,transparent)] p-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300">
+      <div className="sticky top-0 z-40 flex items-center justify-between rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_80%,transparent)] p-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300">
         <span className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">
           Найдено предметов: <span className="text-(--primary)">{items.length}</span>
         </span>

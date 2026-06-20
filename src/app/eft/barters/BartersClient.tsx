@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -6,18 +6,18 @@ import { ArrowRight, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Search, X
 import type { ProcessedBarter, ProcessedBarterSlot } from './page';
 import { formatCompactNumber } from '@/lib/formatters';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Types в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 type SortKey = 'profit' | 'roi' | 'trader' | 'level' | 'cost' | 'value';
 type SortDir = 'asc' | 'desc';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Helpers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 const TRADER_NAMES: Record<string, string> = {
-  prapor: 'Прапор', therapist: 'Терапевт', fence: 'Скупщик',
-  skier: 'Лыжник', peacekeeper: 'Миротворец', mechanic: 'Механик',
-  ragman: 'Барахольщик', jaeger: 'Егерь', ref: 'Реф',
-  lightkeeper: 'Маяк', 'btr-driver': 'БТР',
+  prapor: 'РџСЂР°РїРѕСЂ', therapist: 'РўРµСЂР°РїРµРІС‚', fence: 'РЎРєСѓРїС‰РёРє',
+  skier: 'Р›С‹Р¶РЅРёРє', peacekeeper: 'РњРёСЂРѕС‚РІРѕСЂРµС†', mechanic: 'РњРµС…Р°РЅРёРє',
+  ragman: 'Р‘Р°СЂР°С…РѕР»СЊС‰РёРє', jaeger: 'Р•РіРµСЂСЊ', ref: 'Р РµС„',
+  lightkeeper: 'РњР°СЏРє', 'btr-driver': 'Р‘РўР ',
 };
 
 function TraderAvatar({ normalizedName, name, size = 24 }: { normalizedName: string; name: string; size?: number }) {
@@ -38,7 +38,7 @@ function ItemThumb({ slot }: { slot: ProcessedBarterSlot }) {
   return (
     <div
       className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xs border border-lines-hover bg-card-menu"
-      title={`${slot.item.name}\n${slot.count > 1 ? `×${slot.count} = ` : ''}${(slot.unitPrice * slot.count).toLocaleString('ru-RU')} ₽`}
+      title={`${slot.item.name}\n${slot.count > 1 ? `Г—${slot.count} = ` : ''}${(slot.unitPrice * slot.count).toLocaleString('ru-RU')} в‚Ѕ`}
     >
       { }
       <img
@@ -54,7 +54,7 @@ function ItemThumb({ slot }: { slot: ProcessedBarterSlot }) {
       />
       {slot.count > 1 && (
         <span className="absolute bottom-0 right-0.5 font-blender-medium text-[9px] leading-none text-(--primary)">
-          ×{slot.count}
+          Г—{slot.count}
         </span>
       )}
     </div>
@@ -77,14 +77,14 @@ function SlotsCell({ slots, totalRub, isReward }: { slots: ProcessedBarterSlot[]
       </div>
       {totalRub > 0 && (
         <span className={`font-blender-medium text-[10px] ${isReward ? 'text-nvg-green' : 'text-text-muted'}`}>
-          {formatCompactNumber(totalRub)} ₽
+          {formatCompactNumber(totalRub)} в‚Ѕ
         </span>
       )}
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Main Component в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 interface BartersClientProps {
   barters: ProcessedBarter[];
@@ -99,7 +99,7 @@ export function BartersClient({ barters }: BartersClientProps) {
 
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // Уникальные торговцы
+  // РЈРЅРёРєР°Р»СЊРЅС‹Рµ С‚РѕСЂРіРѕРІС†С‹
   const traders = useMemo(() => {
     const seen = new Set<string>();
     const list: { normalizedName: string; name: string }[] = [];
@@ -189,15 +189,15 @@ export function BartersClient({ barters }: BartersClientProps) {
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── Контрол-бар ── */}
-      <div className="sticky top-18 z-40 flex w-full flex-wrap items-center gap-2 bg-(--color-base) py-3">
+      {/* в”Ђв”Ђ РљРѕРЅС‚СЂРѕР»-Р±Р°СЂ в”Ђв”Ђ */}
+      <div className="sticky top-0 z-40 flex w-full flex-wrap items-center gap-2 bg-(--color-base) py-3">
 
-        {/* Поиск */}
+        {/* РџРѕРёСЃРє */}
         <div className="relative flex h-10 min-w-48 flex-1 items-center rounded border border-lines-hover bg-(--color-base) px-3 transition-colors focus-within:border-(--primary)">
           <Search className="mr-2 h-4 w-4 shrink-0 text-text-muted" />
           <input
             type="text"
-            placeholder="ПОИСК ПО ПРЕДМЕТУ..."
+            placeholder="РџРћРРЎРљ РџРћ РџР Р•Р”РњР•РўРЈ..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-transparent font-blender-medium text-[12px] uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
@@ -209,14 +209,14 @@ export function BartersClient({ barters }: BartersClientProps) {
           )}
         </div>
 
-        {/* Торговец */}
+        {/* РўРѕСЂРіРѕРІРµС† */}
         <div className="relative shrink-0">
           <select
             value={traderFilter}
             onChange={e => setTraderFilter(e.target.value)}
             className="h-10 w-44 cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-[11px] uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
           >
-            <option value="all">Все торговцы</option>
+            <option value="all">Р’СЃРµ С‚РѕСЂРіРѕРІС†С‹</option>
             {traders.map(t => (
               <option key={t.normalizedName} value={t.normalizedName}>
                 {TRADER_NAMES[t.normalizedName] || t.name}
@@ -228,7 +228,7 @@ export function BartersClient({ barters }: BartersClientProps) {
           </span>
         </div>
 
-        {/* Только выгодные */}
+        {/* РўРѕР»СЊРєРѕ РІС‹РіРѕРґРЅС‹Рµ */}
         <button
           onClick={() => setProfitableOnly(v => !v)}
           className={`flex h-10 shrink-0 items-center gap-2 rounded border px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
@@ -238,39 +238,39 @@ export function BartersClient({ barters }: BartersClientProps) {
           }`}
         >
           <TrendingUp className="h-4 w-4 shrink-0" />
-          <span>Только выгодные</span>
+          <span>РўРѕР»СЊРєРѕ РІС‹РіРѕРґРЅС‹Рµ</span>
         </button>
 
-        {/* Статистика */}
+        {/* РЎС‚Р°С‚РёСЃС‚РёРєР° */}
         <div className="ml-auto hidden items-center gap-4 xl:flex">
           <div className="flex flex-col items-end">
-            <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">Выгодных сделок</span>
+            <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">Р’С‹РіРѕРґРЅС‹С… СЃРґРµР»РѕРє</span>
             <span className="font-blender-medium text-sm text-(--primary)">{profitableCount} / {processed.length}</span>
           </div>
           {totalProfit > 0 && (
             <div className="flex flex-col items-end">
-              <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">Макс. прибыль</span>
-              <span className="font-blender-medium text-sm text-nvg-green">{formatCompactNumber(totalProfit)} ₽</span>
+              <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">РњР°РєСЃ. РїСЂРёР±С‹Р»СЊ</span>
+              <span className="font-blender-medium text-sm text-nvg-green">{formatCompactNumber(totalProfit)} в‚Ѕ</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Заголовок таблицы ── */}
+      {/* в”Ђв”Ђ Р—Р°РіРѕР»РѕРІРѕРє С‚Р°Р±Р»РёС†С‹ в”Ђв”Ђ */}
       <div className="grid grid-cols-[180px_1fr_32px_1fr_120px_80px] items-center gap-3 border-b border-lines-hover pb-2 pl-2">
-        <SortableHeader label="Торговец / Ур." k="trader" />
-        <SortableHeader label="Нужные предметы" k="cost" />
+        <SortableHeader label="РўРѕСЂРіРѕРІРµС† / РЈСЂ." k="trader" />
+        <SortableHeader label="РќСѓР¶РЅС‹Рµ РїСЂРµРґРјРµС‚С‹" k="cost" />
         <span />
-        <SortableHeader label="Получаемые предметы" k="value" />
-        <SortableHeader label="Прибыль ₽" k="profit" className="justify-end" />
+        <SortableHeader label="РџРѕР»СѓС‡Р°РµРјС‹Рµ РїСЂРµРґРјРµС‚С‹" k="value" />
+        <SortableHeader label="РџСЂРёР±С‹Р»СЊ в‚Ѕ" k="profit" className="justify-end" />
         <SortableHeader label="ROI %" k="roi" className="justify-end" />
       </div>
 
-      {/* ── Виртуальный список ── */}
+      {/* в”Ђв”Ђ Р’РёСЂС‚СѓР°Р»СЊРЅС‹Р№ СЃРїРёСЃРѕРє в”Ђв”Ђ */}
       {processed.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center gap-2 text-text-muted">
           <TrendingDown className="h-8 w-8 opacity-40" />
-          <span className="font-blender-medium text-sm uppercase tracking-widest">Бартеры не найдены</span>
+          <span className="font-blender-medium text-sm uppercase tracking-widest">Р‘Р°СЂС‚РµСЂС‹ РЅРµ РЅР°Р№РґРµРЅС‹</span>
         </div>
       ) : (
         <div ref={parentRef} className="h-[calc(100vh-320px)] min-h-96 overflow-y-auto" style={{ contain: 'strict' }}>
@@ -290,7 +290,7 @@ export function BartersClient({ barters }: BartersClientProps) {
                       isProfit ? 'hover:border-lines-hover' : ''
                     }`}
                   >
-                    {/* Торговец + Уровень */}
+                    {/* РўРѕСЂРіРѕРІРµС† + РЈСЂРѕРІРµРЅСЊ */}
                     <div className="flex items-center gap-2">
                       <TraderAvatar normalizedName={b.trader.normalizedName} name={b.trader.name} size={28} />
                       <div className="flex flex-col gap-0.5">
@@ -299,7 +299,7 @@ export function BartersClient({ barters }: BartersClientProps) {
                         </span>
                         <div
                           className={`icon-eft-profile-rep-${Math.min(Math.max(b.level, 1), 4)} h-3.5 w-3.5 bg-text-muted mask-contain mask-center mask-no-repeat`}
-                          title={`Уровень лояльности ${b.level}`}
+                          title={`РЈСЂРѕРІРµРЅСЊ Р»РѕСЏР»СЊРЅРѕСЃС‚Рё ${b.level}`}
                         />
                       </div>
                     </div>
@@ -313,16 +313,16 @@ export function BartersClient({ barters }: BartersClientProps) {
                     {/* Reward */}
                     <SlotsCell slots={b.reward} totalRub={b.totalValue} isReward />
 
-                    {/* Прибыль */}
+                    {/* РџСЂРёР±С‹Р»СЊ */}
                     <div className="flex flex-col items-end gap-0.5">
                       <span className={`font-blender-medium text-sm leading-none ${
                         isProfit ? 'text-(--primary)' : 'text-text-muted/60'
                       }`}>
-                        {isProfit ? '+' : ''}{formatCompactNumber(b.profit)} ₽
+                        {isProfit ? '+' : ''}{formatCompactNumber(b.profit)} в‚Ѕ
                       </span>
                       {b.totalCost > 0 && (
                         <span className="font-blender-medium text-[9px] text-text-muted">
-                          из {formatCompactNumber(b.totalCost)} ₽
+                          РёР· {formatCompactNumber(b.totalCost)} в‚Ѕ
                         </span>
                       )}
                     </div>
@@ -343,13 +343,13 @@ export function BartersClient({ barters }: BartersClientProps) {
         </div>
       )}
 
-      {/* Итого */}
+      {/* РС‚РѕРіРѕ */}
       <div className="flex items-center justify-between border-t border-lines-hover pt-3">
         <span className="font-blender-medium text-[11px] uppercase tracking-widest text-text-muted">
-          Показано {processed.length} бартеров
+          РџРѕРєР°Р·Р°РЅРѕ {processed.length} Р±Р°СЂС‚РµСЂРѕРІ
         </span>
         <span className="font-blender-medium text-[11px] uppercase tracking-widest text-text-muted">
-          {profitableCount} выгодных ({processed.length > 0 ? Math.round((profitableCount / processed.length) * 100) : 0}%)
+          {profitableCount} РІС‹РіРѕРґРЅС‹С… ({processed.length > 0 ? Math.round((profitableCount / processed.length) * 100) : 0}%)
         </span>
       </div>
     </div>

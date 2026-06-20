@@ -17,10 +17,7 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className="antialiased min-h-screen flex flex-col bg-base">
-        {/* BG Layer 1: dot matrix — confined to side gutters, invisible over content */}
-        <div aria-hidden className="bg-dot-gutter pointer-events-none fixed inset-0 z-0" />
-
-        {/* BG Layer 2: primary colour ambient bloom from top — reacts to game theme */}
+        {/* BG Layer 1: primary colour ambient bloom from top — reacts to game theme */}
         <div
           aria-hidden
           className="pointer-events-none fixed inset-0 z-0"

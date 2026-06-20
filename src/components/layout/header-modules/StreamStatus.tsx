@@ -8,6 +8,15 @@ export default function StreamStatus() {
   const [isStreamOpen, setIsStreamOpen] = useState(false);
   const [isStreamVisible, setIsStreamVisible] = useState(true);
   const [hostname, setHostname] = useState('localhost');
+  const [isQuestFullscreen, setIsQuestFullscreen] = useState(false);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsQuestFullscreen(document.body.hasAttribute('data-quest-fullscreen'));
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['data-quest-fullscreen'] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     setHostname(window.location.hostname);
@@ -78,8 +87,7 @@ export default function StreamStatus() {
         role={isLive ? 'button' : undefined}
         onClick={isLive ? (e) => { e.preventDefault(); handleButtonClick(); } : undefined}
         className={`group flex items-center justify-center gap-2 w-40 h-10 rounded transition-all duration-500
-          fixed bottom-6 right-4 z-50
-          xl:top-6 xl:right-6 xl:bottom-auto
+          fixed right-4 z-96 ${isQuestFullscreen ? 'top-21.25' : 'top-4'}
           ${isLoading
             ? 'border border-neutral-800 bg-black/20'
             : `${s.border} ${s.bg} ${s.shadow} hover:brightness-125`

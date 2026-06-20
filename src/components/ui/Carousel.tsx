@@ -26,26 +26,22 @@ export const Carousel: React.FC<CarouselProps> = ({ children, options }) => {
     let accumDelta = 0; // Аккумулятор для сглаживания скролла тачпада
 
     const onWheel = (e: WheelEvent) => {
-      // Определяем доминирующую ось (X для свайпов на тачпаде, Y для колесика мыши)
       const isHorizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
-      const delta = isHorizontal ? e.deltaX : e.deltaY;
 
-      // Блокируем скролл страницы и системные жесты "назад/вперед" в Safari
+      // Вертикальный скролл страницы не перехватываем
+      if (!isHorizontal) return;
+
       e.preventDefault();
 
       const now = Date.now();
-      // Если пауза между движениями больше 200мс, сбрасываем аккумулятор (гасит инерцию макбука)
-      if (now - time > 200) {
-        accumDelta = 0;
-      }
+      if (now - time > 200) accumDelta = 0;
       time = now;
 
-      accumDelta += delta;
+      accumDelta += e.deltaX;
 
-      // Порог в 50px защищает от "прыжков" на несколько карточек за один легкий свайп
       if (accumDelta > 50) {
         emblaApi.scrollNext();
-        accumDelta = 0; // Сбрасываем после перелистывания
+        accumDelta = 0;
       } else if (accumDelta < -50) {
         emblaApi.scrollPrev();
         accumDelta = 0;

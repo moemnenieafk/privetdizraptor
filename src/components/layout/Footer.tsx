@@ -52,12 +52,12 @@ export default function Footer() {
                           "text-text-muted";
 
   return (
-    <footer className="w-full border-t border-lines-hover bg-darkbase">
+    <footer className="mt-24 w-full border-t border-lines-hover bg-darkbase">
 
       {/* Top accent tape */}
       <div className="h-px w-full bg-(--primary) opacity-20" />
 
-      <div className="max-w-480 mx-auto px-4 md:px-8 pt-7 pb-6">
+      <div className="max-w-275 mx-auto px-4 xl:px-0 pt-7 pb-6">
 
         {/* ── Section label ── */}
         <div className="flex items-center justify-between mb-6">

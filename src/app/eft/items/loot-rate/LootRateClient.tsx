@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
@@ -7,7 +7,7 @@ import { PackageX, Coins, Search, X, ChevronDown, ChevronUp } from 'lucide-react
 import { formatCompactNumber } from '@/lib/formatters';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Types в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 export interface LootItem {
   id: string;
@@ -32,30 +32,30 @@ export interface LootItem {
 type SortKey = 'name' | 'size' | 'trader' | 'flea' | 'vps' | 'buy';
 type SortDir = 'asc' | 'desc';
 
-// ─── Category Filters ─────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Category Filters в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 const CATEGORIES = [
-  { id: 'headphones', label: 'Наушники',    icon: '/icons/eft/03-items/gear/cat-headphones.svg',        types: ['headphones'] },
-  { id: 'helmets',    label: 'Шлемы',       icon: '/icons/eft/03-items/gear/cat-helmets.svg',            types: ['helmet'] },
-  { id: 'armor',      label: 'Броня',        icon: '/icons/eft/03-items/gear/cat-armor.svg',              types: ['armor'] },
-  { id: 'plates',     label: 'Плиты',        icon: '/icons/eft/03-items/gear/cat-gearcomps.svg',          types: ['armorPlate'] },
-  { id: 'rigs',       label: 'Разгрузки',    icon: '/icons/eft/03-items/gear/cat-tactical-rigs.svg',      types: ['rig'] },
-  { id: 'backpacks',  label: 'Рюкзаки',      icon: '/icons/eft/03-items/gear/cat-backpacks.svg',          types: ['backpack'] },
-  { id: 'masks',      label: 'Маски',         icon: '/icons/eft/03-items/gear/cat-masks.svg',              types: ['wearable'] },
-  { id: 'glasses',    label: 'Очки',          icon: '/icons/eft/03-items/gear/cat-visors.svg',             types: ['glasses'] },
-  { id: 'firearms',   label: 'Оружие',        icon: '/icons/eft/03-items/guns.svg',                        types: ['gun'] },
-  { id: 'mods',       label: 'Моды',          icon: '/icons/eft/03-items/guns/cat-gunmods.svg',            types: ['mods'] },
-  { id: 'ammo',       label: 'Патроны',       icon: '/icons/eft/03-items/guns/cat-ammo.svg',               types: ['ammo'] },
-  { id: 'grenades',   label: 'Гранаты',       icon: '/icons/eft/03-items/guns/cat-grenades.svg',           types: ['grenade'] },
-  { id: 'meds',       label: 'Медицина',      icon: '/icons/eft/03-items/equipment/meds.svg',              types: ['meds', 'drug', 'stimulator', 'medical', 'injectors', 'pills'] },
-  { id: 'keys',       label: 'Ключи',         icon: '/icons/eft/03-items/equipment/keys.svg',              types: ['keys', 'keycard'] },
-  { id: 'containers', label: 'Контейнеры',    icon: '/icons/eft/03-items/equipment/containers.svg',        types: ['container'] },
-  { id: 'provisions', label: 'Провизия',      icon: '/icons/eft/03-items/equipment/provisions.svg',        types: ['provisions', 'food', 'drink'] },
+  { id: 'headphones', label: 'РќР°СѓС€РЅРёРєРё',    icon: '/icons/eft/03-items/gear/cat-headphones.svg',        types: ['headphones'] },
+  { id: 'helmets',    label: 'РЁР»РµРјС‹',       icon: '/icons/eft/03-items/gear/cat-helmets.svg',            types: ['helmet'] },
+  { id: 'armor',      label: 'Р‘СЂРѕРЅСЏ',        icon: '/icons/eft/03-items/gear/cat-armor.svg',              types: ['armor'] },
+  { id: 'plates',     label: 'РџР»РёС‚С‹',        icon: '/icons/eft/03-items/gear/cat-gearcomps.svg',          types: ['armorPlate'] },
+  { id: 'rigs',       label: 'Р Р°Р·РіСЂСѓР·РєРё',    icon: '/icons/eft/03-items/gear/cat-tactical-rigs.svg',      types: ['rig'] },
+  { id: 'backpacks',  label: 'Р СЋРєР·Р°РєРё',      icon: '/icons/eft/03-items/gear/cat-backpacks.svg',          types: ['backpack'] },
+  { id: 'masks',      label: 'РњР°СЃРєРё',         icon: '/icons/eft/03-items/gear/cat-masks.svg',              types: ['wearable'] },
+  { id: 'glasses',    label: 'РћС‡РєРё',          icon: '/icons/eft/03-items/gear/cat-visors.svg',             types: ['glasses'] },
+  { id: 'firearms',   label: 'РћСЂСѓР¶РёРµ',        icon: '/icons/eft/03-items/guns.svg',                        types: ['gun'] },
+  { id: 'mods',       label: 'РњРѕРґС‹',          icon: '/icons/eft/03-items/guns/cat-gunmods.svg',            types: ['mods'] },
+  { id: 'ammo',       label: 'РџР°С‚СЂРѕРЅС‹',       icon: '/icons/eft/03-items/guns/cat-ammo.svg',               types: ['ammo'] },
+  { id: 'grenades',   label: 'Р“СЂР°РЅР°С‚С‹',       icon: '/icons/eft/03-items/guns/cat-grenades.svg',           types: ['grenade'] },
+  { id: 'meds',       label: 'РњРµРґРёС†РёРЅР°',      icon: '/icons/eft/03-items/equipment/meds.svg',              types: ['meds', 'drug', 'stimulator', 'medical', 'injectors', 'pills'] },
+  { id: 'keys',       label: 'РљР»СЋС‡Рё',         icon: '/icons/eft/03-items/equipment/keys.svg',              types: ['keys', 'keycard'] },
+  { id: 'containers', label: 'РљРѕРЅС‚РµР№РЅРµСЂС‹',    icon: '/icons/eft/03-items/equipment/containers.svg',        types: ['container'] },
+  { id: 'provisions', label: 'РџСЂРѕРІРёР·РёСЏ',      icon: '/icons/eft/03-items/equipment/provisions.svg',        types: ['provisions', 'food', 'drink'] },
 ] as const;
 
 type CategoryId = typeof CATEGORIES[number]['id'];
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Sub-components в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 function VendorIcon({ vendor }: { vendor?: { name: string; normalizedName?: string } }) {
   if (!vendor || vendor.name === '-') return null;
@@ -73,15 +73,15 @@ function PriceCell({ price, vendor, amber = false }: { price: number; vendor?: {
   );
   return (
     <div className="flex items-center justify-end gap-1.5">
-      <span title={`${price.toLocaleString('ru-RU')} ₽`} className={`cursor-help font-blender-medium text-xs ${amber ? 'text-(--primary) text-[13px]' : 'text-text-primary'}`}>
-        {formatCompactNumber(price)} ₽
+      <span title={`${price.toLocaleString('ru-RU')} в‚Ѕ`} className={`cursor-help font-blender-medium text-xs ${amber ? 'text-(--primary) text-[13px]' : 'text-text-primary'}`}>
+        {formatCompactNumber(price)} в‚Ѕ
       </span>
       <VendorIcon vendor={vendor} />
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// в”Ђв”Ђв”Ђ Main Component в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
 interface LootRateClientProps { items: LootItem[] }
 
@@ -166,7 +166,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── Фильтры категорий (иконки) ── */}
+      {/* в”Ђв”Ђ Р¤РёР»СЊС‚СЂС‹ РєР°С‚РµРіРѕСЂРёР№ (РёРєРѕРЅРєРё) в”Ђв”Ђ */}
       <div className="flex flex-wrap gap-1.5">
         {CATEGORIES.map(cat => {
           const isActive = activeCategories.has(cat.id);
@@ -201,18 +201,18 @@ export function LootRateClient({ items }: LootRateClientProps) {
             className="flex flex-col items-center gap-1 rounded border border-lines-hover/50 bg-card-menu px-2.5 py-1.5 transition-colors hover:border-red-500/50 hover:text-red-400"
           >
             <X className="h-5 w-5 text-text-muted" />
-            <span className="font-blender-medium text-[8px] uppercase leading-none tracking-widest text-text-muted">Сброс</span>
+            <span className="font-blender-medium text-[8px] uppercase leading-none tracking-widest text-text-muted">РЎР±СЂРѕСЃ</span>
           </button>
         )}
       </div>
 
-      {/* ── Контрол-бар ── */}
-      <div className="sticky top-18 z-40 flex items-center gap-3 bg-(--color-base) py-3">
+      {/* в”Ђв”Ђ РљРѕРЅС‚СЂРѕР»-Р±Р°СЂ в”Ђв”Ђ */}
+      <div className="sticky top-0 z-40 flex items-center gap-3 bg-(--color-base) py-3">
         <div className="relative flex h-10 flex-1 items-center rounded border border-lines-hover bg-(--color-base) px-3 transition-colors focus-within:border-(--primary)">
           <Search className="mr-2 h-4 w-4 shrink-0 text-text-muted" />
           <input
             type="text"
-            placeholder="ПОИСК ПРЕДМЕТА..."
+            placeholder="РџРћРРЎРљ РџР Р•Р”РњР•РўРђ..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-transparent font-blender-medium text-[12px] uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
@@ -220,25 +220,25 @@ export function LootRateClient({ items }: LootRateClientProps) {
           {search && <button onClick={() => setSearch('')} className="ml-2 text-text-muted hover:text-(--primary)"><X className="h-4 w-4" /></button>}
         </div>
         <span className="shrink-0 font-blender-medium text-[11px] uppercase tracking-widest text-text-muted">
-          {processed.length.toLocaleString('ru-RU')} предметов
+          {processed.length.toLocaleString('ru-RU')} РїСЂРµРґРјРµС‚РѕРІ
         </span>
       </div>
 
-      {/* ── Заголовок таблицы ── */}
+      {/* в”Ђв”Ђ Р—Р°РіРѕР»РѕРІРѕРє С‚Р°Р±Р»РёС†С‹ в”Ђв”Ђ */}
       <div className="grid grid-cols-[48px_1fr_56px_120px_120px_100px] items-center gap-2 border-b border-lines-hover pb-2 pr-3">
         <span />
-        <SortBtn label="Предмет" k="name" align="left" />
-        <SortBtn label="Размер" k="size" />
-        <SortBtn label="Торговец" k="trader" />
-        <SortBtn label="Барахолка" k="flea" />
-        <SortBtn label="₽/Слот" k="vps" />
+        <SortBtn label="РџСЂРµРґРјРµС‚" k="name" align="left" />
+        <SortBtn label="Р Р°Р·РјРµСЂ" k="size" />
+        <SortBtn label="РўРѕСЂРіРѕРІРµС†" k="trader" />
+        <SortBtn label="Р‘Р°СЂР°С…РѕР»РєР°" k="flea" />
+        <SortBtn label="в‚Ѕ/РЎР»РѕС‚" k="vps" />
       </div>
 
-      {/* ── Виртуальный список ── */}
+      {/* в”Ђв”Ђ Р’РёСЂС‚СѓР°Р»СЊРЅС‹Р№ СЃРїРёСЃРѕРє в”Ђв”Ђ */}
       {processed.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center gap-2 text-text-muted">
           <PackageX className="h-8 w-8 opacity-40" />
-          <span className="font-blender-medium text-sm uppercase tracking-widest">Предметы не найдены</span>
+          <span className="font-blender-medium text-sm uppercase tracking-widest">РџСЂРµРґРјРµС‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹</span>
         </div>
       ) : (
         <div ref={parentRef} className="h-[calc(100vh-370px)] min-h-96 overflow-y-auto" style={{ contain: 'strict' }}>
@@ -255,7 +255,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
                 >
                   <div className="grid grid-cols-[48px_1fr_56px_120px_120px_100px] items-center gap-2 border-b border-lines-hover/40 pr-3 py-1.5 transition-colors hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)]">
 
-                    {/* Изображение */}
+                    {/* РР·РѕР±СЂР°Р¶РµРЅРёРµ */}
                     <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-lines-hover/50">
                       <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
                       { }
@@ -274,7 +274,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
                       />
                     </div>
 
-                    {/* Название */}
+                    {/* РќР°Р·РІР°РЅРёРµ */}
                     <Link href={`/eft/items/item/${item.id}`} className="group/link flex min-w-0 flex-col overflow-hidden">
                       <span className="block truncate font-blender-medium text-[13px] uppercase leading-tight text-text-primary transition-colors group-hover/link:text-(--primary)" title={item.name}>
                         {item.name}
@@ -284,26 +284,26 @@ export function LootRateClient({ items }: LootRateClientProps) {
                       </span>
                     </Link>
 
-                    {/* Размер */}
+                    {/* Р Р°Р·РјРµСЂ */}
                     <div className="text-right">
                       <span className="font-blender-medium text-[10px] text-text-muted">
-                        {item.width}×{item.height}
+                        {item.width}Г—{item.height}
                       </span>
                       {item.slots > 1 && (
-                        <div className="font-blender-medium text-[9px] text-text-muted/50">{item.slots} сл.</div>
+                        <div className="font-blender-medium text-[9px] text-text-muted/50">{item.slots} СЃР».</div>
                       )}
                     </div>
 
-                    {/* Торговец */}
+                    {/* РўРѕСЂРіРѕРІРµС† */}
                     <PriceCell price={item.traderSell} vendor={item.traderSellVendor} />
 
-                    {/* Барахолка */}
+                    {/* Р‘Р°СЂР°С…РѕР»РєР° */}
                     <PriceCell price={item.fleaSell} vendor={{ name: 'Flea Market', normalizedName: 'flea-market' }} />
 
-                    {/* Цена/Слот */}
+                    {/* Р¦РµРЅР°/РЎР»РѕС‚ */}
                     <div className="text-right">
                       {item.vps > 0
-                        ? <span title={`${item.vps.toLocaleString('ru-RU')} ₽/слот`} className={`cursor-help font-blender-medium leading-none ${vpsColor}`}>{formatCompactNumber(item.vps)} ₽</span>
+                        ? <span title={`${item.vps.toLocaleString('ru-RU')} в‚Ѕ/СЃР»РѕС‚`} className={`cursor-help font-blender-medium leading-none ${vpsColor}`}>{formatCompactNumber(item.vps)} в‚Ѕ</span>
                         : <PackageX className="ml-auto h-3 w-3 text-text-muted/30" />}
                     </div>
                   </div>
@@ -314,10 +314,10 @@ export function LootRateClient({ items }: LootRateClientProps) {
         </div>
       )}
 
-      {/* Итог */}
+      {/* РС‚РѕРі */}
       <div className="border-t border-lines-hover pt-3">
         <span className="font-blender-medium text-[11px] uppercase tracking-widest text-text-muted">
-          Показано {processed.length} из {items.length} предметов
+          РџРѕРєР°Р·Р°РЅРѕ {processed.length} РёР· {items.length} РїСЂРµРґРјРµС‚РѕРІ
         </span>
       </div>
     </div>

@@ -13,12 +13,14 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  const hideFooter = pathname?.startsWith('/eft/questmap');
+
   return (
     <>
       <Header />
       <StreamStatus />
       <main className="flex-grow flex flex-col w-full">{children}</main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </>
   );
 }

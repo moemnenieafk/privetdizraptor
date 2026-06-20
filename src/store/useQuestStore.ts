@@ -3,6 +3,10 @@ import { persist } from 'zustand/middleware';
 import type { TaskRaw, TaskObjectiveItem } from '@/types/quest';
 
 interface QuestStore {
+  // Runtime cache — populated by QuestMapClient on mount, not persisted
+  tasks: TaskRaw[];
+  setTasks: (tasks: TaskRaw[]) => void;
+
   completedQuests: string[];
   toggleQuest: (id: string) => void;
   resetProgress: () => void;
@@ -27,13 +31,22 @@ interface QuestStore {
 export const useQuestStore = create<QuestStore>()(
   persist(
     (set) => ({
+      tasks: [],
+      setTasks: (tasks) => set({ tasks }),
+
       completedQuests: [],
       toggleQuest: (id) =>
-        set((s) => ({
-          completedQuests: s.completedQuests.includes(id)
-            ? s.completedQuests.filter((q) => q !== id)
-            : [...s.completedQuests, id],
-        })),
+        set((s) => {
+          const isCompleting = !s.completedQuests.includes(id);
+          return {
+            completedQuests: isCompleting
+              ? [...s.completedQuests, id]
+              : s.completedQuests.filter((q) => q !== id),
+            pinnedQuests: isCompleting
+              ? s.pinnedQuests.filter((p) => p !== id)
+              : s.pinnedQuests,
+          };
+        }),
       resetProgress: () => set({ completedQuests: [], itemProgress: {} }),
 
       itemProgress: {},

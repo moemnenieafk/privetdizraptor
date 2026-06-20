@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getHeaderConfig } from '@/data/headerConfig';
 import { ProfileSettingsModal, EDITIONS, EditionType } from './ProfileSettingsModal';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { useQuestStore } from '@/store/useQuestStore';
 import { ProfileDeleteModal } from './ProfileDeleteModal';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
@@ -17,6 +18,7 @@ const getLevelGroup = (level: number) => {
 
 export function PlayerTelemetry() {
   const pathname = usePathname();
+  const router   = useRouter();
   const config = getHeaderConfig(pathname || '');
 
   // Временные стейты для демонстрации верстки
@@ -34,17 +36,45 @@ export function PlayerTelemetry() {
 
   const activeProfile = profiles.find(p => p.id === activeProfileId) || profiles[0];
 
+  const tasks          = useQuestStore((s) => s.tasks);
+  const completedQuests = useQuestStore((s) => s.completedQuests);
+
+  const questStats = useMemo(() => {
+    const completedSet = new Set(completedQuests);
+    const normalize = (n: string): string => n === 'btr-driver' ? 'btrdriver' : n;
+
+    const kappaTotal     = tasks.filter(t => t.kappaRequired).length;
+    const kappaCompleted = tasks.filter(t => t.kappaRequired && completedSet.has(t.id)).length;
+    const lkTotal        = tasks.filter(t => t.lightkeeperRequired).length;
+    const lkCompleted    = tasks.filter(t => t.lightkeeperRequired && completedSet.has(t.id)).length;
+
+    const byTrader = new Map<string, { total: number; completed: number }>();
+    for (const task of tasks) {
+      const key   = normalize(task.trader.normalizedName);
+      const entry = byTrader.get(key) ?? { total: 0, completed: 0 };
+      entry.total++;
+      if (completedSet.has(task.id)) entry.completed++;
+      byTrader.set(key, entry);
+    }
+
+    return { kappaTotal, kappaCompleted, lkTotal, lkCompleted, byTrader };
+  }, [tasks, completedQuests]);
+
   // Стейты меню профиля
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [contextMenuProfileId, setContextMenuProfileId] = useState<string | null>(null);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
+  const [isProgressOpen, setIsProgressOpen] = useState(false);
+  const [isModeOpen, setIsModeOpen] = useState(false);
   const telemetryRef = useRef<HTMLDivElement>(null);
 
-  // Закрытие выпадающего меню при клике вне его области
+  // Закрытие выпадающих меню при клике/тапе вне виджета
   useClickOutside(telemetryRef, () => {
     setIsProfileMenuOpen(false);
     setContextMenuProfileId(null);
-  }, isProfileMenuOpen || contextMenuProfileId !== null);
+    setIsProgressOpen(false);
+    setIsModeOpen(false);
+  }, isProfileMenuOpen || contextMenuProfileId !== null || isProgressOpen || isModeOpen);
 
   const levelGroup = getLevelGroup(Number(activeProfile?.level) || 1);
   const activeEd = EDITIONS[activeProfile?.edition || 'Standard'];
@@ -75,14 +105,14 @@ export function PlayerTelemetry() {
 
           {/* ВЫПАДАЮЩЕЕ МЕНЮ ПРОФИЛЕЙ (OVERLAY) */}
           {isProfileMenuOpen && (
-            <div className="absolute top-[-1px] left-[-1px] flex flex-col w-55 z-100 bg-(--color-base) border border-lines-hover rounded-sm shadow-2xl animate-[fade-in_0.1s_ease-out_both]">
+            <div className="absolute -top-px -left-px flex flex-col w-55 z-100 bg-(--color-base) border border-lines-hover rounded-sm shadow-2xl animate-[fade-in_0.1s_ease-out_both]">
               
               {/* Шапка меню (Закрывает меню при клике) */}
               <div className="flex h-6 w-full items-center gap-1.5 rounded-t-sm bg-lines-hover px-2 cursor-pointer" onClick={() => setIsProfileMenuOpen(false)}>
                 <div className="flex h-4 w-4 items-center justify-center shrink-0">
                   <div className="h-full w-full icon-mask icon-eft-profile-btn-account text-zinc-100" />
                 </div>
-                <span className="text-[10px] font-blender-medium leading-[10px] text-zinc-100 uppercase mt-0.5">Ваши профили ЧВК</span>
+                <span className="text-[10px] font-blender-medium leading-2.5 text-zinc-100 uppercase mt-0.5">Ваши профили ЧВК</span>
               </div>
 
               {/* Список профилей */}
@@ -200,15 +230,23 @@ export function PlayerTelemetry() {
       <div className="flex items-center flex-1 w-full">
 
         {/* СЕКЦИЯ 1: Блок прогресса (Ширина 79px) */}
-        <div className="group relative flex h-full w-[79px] cursor-default items-center justify-between px-2 hover:bg-card-menu transition-colors rounded-bl-sm">
+        <div
+          className="group relative flex h-full w-19.75 cursor-pointer items-center justify-between px-2 hover:bg-card-menu transition-colors rounded-bl-sm"
+          onClick={() => setIsProgressOpen((v) => !v)}
+        >
           <div className={`w-5 h-5 icon-bg shrink-0 transition-transform duration-300 group-hover:scale-110 ${progressMode === 'KAPPA' ? 'icon-eft-profile-kappa' : 'icon-eft-profile-lightkeeper'}`} />
           <div className="flex flex-col items-end justify-center">
             <span className={`text-[8px] font-blender-medium uppercase leading-none opacity-50 tracking-tight transition-colors ${progressMode === 'KAPPA' ? 'text-tactical-amber' : 'text-accent-frago'}`}>Прогресс</span>
-            <span className={`text-xs font-normal font-blender-medium uppercase leading-none transition-colors ${progressMode === 'KAPPA' ? 'text-tactical-amber' : 'text-accent-frago'}`}>{isAuthenticated ? '100%' : '0%'}</span>
+            <span className={`text-xs font-normal font-blender-medium uppercase leading-none transition-colors ${progressMode === 'KAPPA' ? 'text-tactical-amber' : 'text-accent-frago'}`}>
+              {progressMode === 'KAPPA'
+                ? `${questStats.kappaTotal > 0 ? Math.round(questStats.kappaCompleted / questStats.kappaTotal * 100) : 0}%`
+                : `${questStats.lkTotal > 0 ? Math.round(questStats.lkCompleted / questStats.lkTotal * 100) : 0}%`
+              }
+            </span>
           </div>
 
           {/* Выпадающий список Прогресса */}
-          <div className="absolute top-[calc(100%+4px)] left-[-1px] hidden group-hover:flex flex-col w-55 bg-card-menu border border-lines-hover rounded-sm z-50 shadow-lg">
+          <div className={`absolute top-[calc(100%+4px)] -left-px flex-col w-55 bg-card-menu border border-lines-hover rounded-sm z-50 shadow-lg ${isProgressOpen ? 'flex' : 'hidden group-hover:flex'}`}>
             {/* Невидимый мост для мыши */}
             <div className="absolute -top-2 left-0 h-2 w-full bg-transparent" />
             <div className="flex flex-col py-1">
@@ -222,7 +260,7 @@ export function PlayerTelemetry() {
                   <div className="w-5 h-5 icon-bg icon-eft-profile-kappa" />
                   <span className="text-sm font-blender-medium uppercase text-tactical-amber">Каппа</span>
                 </div>
-                <span className="text-sm font-blender-medium text-tactical-amber">{isAuthenticated ? '260/260' : '0/260'}</span>
+                <span className="text-sm font-blender-medium text-tactical-amber">{questStats.kappaCompleted}/{questStats.kappaTotal}</span>
               </div>
               <div 
                 className={`px-2 py-1.5 flex items-center justify-between cursor-pointer transition-colors ${progressMode === 'LIGHTKEEPER' ? 'bg-accent-frago/15' : 'hover:bg-accent-frago/10'}`}
@@ -232,34 +270,46 @@ export function PlayerTelemetry() {
                   <div className="w-5 h-5 icon-bg icon-eft-profile-lightkeeper" />
                   <span className="text-sm font-blender-medium uppercase text-accent-frago">Смотритель</span>
                 </div>
-                <span className="text-sm font-blender-medium text-accent-frago">{isAuthenticated ? '8/8' : '0/8'}</span>
+                <span className="text-sm font-blender-medium text-accent-frago">{questStats.lkCompleted}/{questStats.lkTotal}</span>
               </div>
 
               <div className="h-px w-full bg-lines-hover my-0.5 shrink-0" />
               
               {/* Торговцы */}
               <div className="flex flex-col">
-                {[
-                  { id: 'prapor', name: 'Прапор', icon: 'icon-eft-quests-prapor', total: 66 },
-                  { id: 'therapist', name: 'Терапевт', icon: 'icon-eft-quests-therapist', total: 48 },
-                  { id: 'fence', name: 'Скупщик', icon: 'icon-eft-quests-fence', total: 1 },
-                  { id: 'skier', name: 'Лыжник', icon: 'icon-eft-quests-skier', total: 54 },
-                  { id: 'peacekeeper', name: 'Миротворец', icon: 'icon-eft-quests-peacekeeper', total: 59 },
-                  { id: 'mechanic', name: 'Механик', icon: 'icon-eft-quests-mechanic', total: 81 },
-                  { id: 'ragman', name: 'Барахольщик', icon: 'icon-eft-quests-ragman', total: 55 },
-                  { id: 'jaeger', name: 'Егерь', icon: 'icon-eft-quests-jaeger', total: 61 },
-                  { id: 'ref', name: 'Реф', icon: 'icon-eft-quests-ref', total: 20 },
-                  { id: 'lightkeeper', name: 'Смотритель Маяка', icon: 'icon-eft-quests-lightkeeper', total: 23 },
-                  { id: 'btrdriver', name: 'Водитель БТР', icon: 'icon-eft-quests-btrdriver', total: 0 },
-                ].map(trader => (
-                  <div key={trader.id} className="px-2 py-1 flex items-center justify-between hover:bg-(--color-base) text-text-secondary hover:text-(--primary) transition-colors cursor-pointer group/trader">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3.5 h-3.5 icon-bg ${trader.icon} opacity-50 group-hover/trader:opacity-100 transition-opacity`} />
-                      <span className="text-[11px] font-blender-medium uppercase">{trader.name}</span>
+                {([
+                  { id: 'prapor',      slug: 'prapor',      name: 'Прапор',           icon: 'icon-eft-quests-prapor'      },
+                  { id: 'therapist',   slug: 'therapist',   name: 'Терапевт',          icon: 'icon-eft-quests-therapist'   },
+                  { id: 'fence',       slug: 'fence',       name: 'Скупщик',           icon: 'icon-eft-quests-fence'       },
+                  { id: 'skier',       slug: 'skier',       name: 'Лыжник',            icon: 'icon-eft-quests-skier'       },
+                  { id: 'peacekeeper', slug: 'peacekeeper', name: 'Миротворец',        icon: 'icon-eft-quests-peacekeeper' },
+                  { id: 'mechanic',    slug: 'mechanic',    name: 'Механик',           icon: 'icon-eft-quests-mechanic'    },
+                  { id: 'ragman',      slug: 'ragman',      name: 'Барахольщик',       icon: 'icon-eft-quests-ragman'      },
+                  { id: 'jaeger',      slug: 'jaeger',      name: 'Егерь',             icon: 'icon-eft-quests-jaeger'      },
+                  { id: 'ref',         slug: 'ref',         name: 'Реф',               icon: 'icon-eft-quests-ref'         },
+                  { id: 'lightkeeper', slug: 'lightkeeper', name: 'Смотритель Маяка',  icon: 'icon-eft-quests-lightkeeper' },
+                  { id: 'btrdriver',   slug: 'btr-driver',  name: 'Водитель БТР',      icon: 'icon-eft-quests-btrdriver'   },
+                ] as const).map(trader => {
+                  const ts        = questStats.byTrader.get(trader.id);
+                  const total     = ts?.total ?? 0;
+                  const completed = ts?.completed ?? 0;
+                  return (
+                    <div
+                      key={trader.id}
+                      className="px-2 py-1 flex items-center justify-between hover:bg-(--color-base) text-text-secondary hover:text-(--primary) transition-colors cursor-pointer group/trader"
+                      onClick={() => {
+                        setIsProgressOpen(false);
+                        router.push(`/eft/progress/quests?trader=${trader.slug}`);
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-5 h-5 icon-bg ${trader.icon} opacity-50 group-hover/trader:opacity-100 transition-opacity`} />
+                        <span className="text-[11px] font-blender-medium uppercase">{trader.name}</span>
+                      </div>
+                      <span className="text-[11px] font-blender-medium">{completed}/{total}</span>
                     </div>
-                    <span className="text-[11px] font-blender-medium">{isAuthenticated ? trader.total : 0}/{trader.total}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="h-px w-full bg-lines-hover my-0.5 shrink-0" />
@@ -267,7 +317,7 @@ export function PlayerTelemetry() {
               {/* Все задания */}
               <div className="px-2 py-1.5 flex items-center justify-between hover:bg-(--color-base) text-text-secondary hover:text-(--primary) transition-colors cursor-pointer shrink-0">
                 <span className="text-xs font-blender-medium uppercase">Все задания</span>
-                <span className="text-xs font-blender-medium">{isAuthenticated ? '467/467' : '0/467'}</span>
+                <span className="text-xs font-blender-medium">{completedQuests.length}/{tasks.length || '—'}</span>
               </div>
             </div>
           </div>
@@ -277,7 +327,10 @@ export function PlayerTelemetry() {
         <div className="w-px h-6 bg-lines-hover shrink-0" />
 
         {/* СЕКЦИЯ 2: Блок режима (Ширина 64px) */}
-        <div className={`group relative flex h-full w-16 cursor-pointer items-center justify-center transition-colors ${activeProfile?.mode === 'PVP' ? 'hover:bg-mode-pvp/25' : 'hover:bg-mode-pve/25'}`}>
+        <div
+          className={`group relative flex h-full w-16 cursor-pointer items-center justify-center transition-colors ${activeProfile?.mode === 'PVP' ? 'hover:bg-mode-pvp/25' : 'hover:bg-mode-pve/25'}`}
+          onClick={() => setIsModeOpen((v) => !v)}
+        >
           <div className="flex items-center gap-1">
             <div className={`w-4.5 h-4.5 icon-bg transition-colors ${activeProfile?.mode === 'PVP' ? 'icon-eft-profile-pvp' : 'icon-eft-profile-pve'}`} />
             <div className="flex flex-col items-start justify-center">
@@ -287,17 +340,17 @@ export function PlayerTelemetry() {
           </div>
 
           {/* Выпадающий список Режимов */}
-          <div className="absolute top-[calc(100%+4px)] left-[-1px] hidden group-hover:flex flex-col w-[66px] bg-card-menu border border-lines-hover rounded-sm z-50 shadow-lg">
+          <div className={`absolute top-[calc(100%+4px)] -left-px flex-col w-16.5 bg-card-menu border border-lines-hover rounded-sm z-50 shadow-lg ${isModeOpen ? 'flex' : 'hidden group-hover:flex'}`}>
             {/* Невидимый мост для мыши */}
             <div className="absolute -top-2 left-0 h-2 w-full bg-transparent" />
-            <div onClick={() => activeProfile && updateProfile(activeProfile.id, { mode: 'PVE' })} className="flex items-center justify-center gap-1 py-1.5 hover:bg-mode-pve/25 transition-colors cursor-pointer">
+            <div onClick={(e) => { e.stopPropagation(); activeProfile && updateProfile(activeProfile.id, { mode: 'PVE' }); setIsModeOpen(false); }} className="flex items-center justify-center gap-1 py-1.5 hover:bg-mode-pve/25 transition-colors cursor-pointer">
               <div className="w-4.5 h-4.5 icon-bg icon-eft-profile-pve transition-colors" />
               <div className="flex flex-col items-start justify-center">
                 <span className="text-mode-pve text-[8px] font-blender-medium uppercase leading-none opacity-50 tracking-tight transition-colors">Режим</span>
                 <span className="text-mode-pve text-xs font-normal font-blender-medium uppercase leading-none transition-colors">PVE</span>
               </div>
             </div>
-            <div onClick={() => activeProfile && updateProfile(activeProfile.id, { mode: 'PVP' })} className="flex items-center justify-center gap-1 py-1.5 hover:bg-mode-pvp/25 transition-colors cursor-pointer">
+            <div onClick={(e) => { e.stopPropagation(); activeProfile && updateProfile(activeProfile.id, { mode: 'PVP' }); setIsModeOpen(false); }} className="flex items-center justify-center gap-1 py-1.5 hover:bg-mode-pvp/25 transition-colors cursor-pointer">
               <div className="w-4.5 h-4.5 icon-bg icon-eft-profile-pvp transition-colors" />
               <div className="flex flex-col items-start justify-center">
                 <span className="text-mode-pvp text-[8px] font-blender-medium uppercase leading-none opacity-50 tracking-tight transition-colors">Режим</span>

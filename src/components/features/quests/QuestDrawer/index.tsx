@@ -1,75 +1,93 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import { Paperclip } from 'lucide-react';
 import { useModalAnimation } from '@/hooks/useModalAnimation';
 import { useQuestStore } from '@/store/useQuestStore';
 import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker';
-import type { TaskRaw, TaskObjective } from '@/types/quest';
+import type { TaskRaw, TaskObjective, TaskObjectiveItem } from '@/types/quest';
+import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { getQuestHeroImg } from '@/lib/quest-utils';
+import questGuides from '@/data/quest-guides.json';
 
-const TRADER_SLUG: Record<string, string> = { 'btr-driver': 'btrdriver' };
-const traderImg = (n: string) => `/images/traders/eft/${TRADER_SLUG[n] ?? n}.webp`;
-
-// Маппинг __typename → CSS icon class; fallback на icon-eft-quests-active
-const OBJECTIVE_ICON: Record<string, string> = {
-  TaskObjectiveItem:        'icon-eft-quests-active',
-  TaskObjectiveMark:        'icon-eft-quests-active',
-  TaskObjectiveShoot:       'icon-eft-quests-active',
-  TaskObjectiveBasic:       'icon-eft-quests-active',
-  TaskObjectivePlayerLevel: 'icon-eft-profile-level',
-  TaskObjectiveTraderLevel: 'icon-eft-quests-active',
+const BASIC_TYPE_ICON: Record<string, string> = {
+  visit:          'icon-eft-quests-visit',
+  extract:        'icon-eft-quests-survive',
+  survive:        'icon-eft-quests-survive',
+  findItem:       'icon-eft-quests-investigate',
+  findQuestItem:  'icon-eft-quests-investigate',
+  plantItem:      'icon-eft-quests-visit',
+  plantQuestItem: 'icon-eft-quests-visit',
+  buildWeapon:    'icon-eft-quests-modify',
+  modifyWeapon:   'icon-eft-quests-modify',
 };
 
-function getObjIcon(typename?: string): string {
-  return typename ? (OBJECTIVE_ICON[typename] ?? 'icon-eft-quests-active') : 'icon-eft-quests-active';
+const TYPENAME_ICON: Record<string, string> = {
+  TaskObjectiveItem:        'icon-eft-quests-loot',
+  TaskObjectiveMark:        'icon-eft-quests-visit',
+  TaskObjectiveShoot:       'icon-eft-quests-eliminate',
+  TaskObjectivePlayerLevel: 'icon-eft-profile-pvp',
+  TaskObjectiveTraderLevel: 'icon-eft-quests-rep',
+};
+
+function getObjIcon(typename?: string, type?: string): string {
+  if (typename === 'TaskObjectiveBasic' && type) {
+    return BASIC_TYPE_ICON[type] ?? 'icon-eft-quests-investigate';
+  }
+  return typename ? (TYPENAME_ICON[typename] ?? 'icon-eft-quests-investigate') : 'icon-eft-quests-investigate';
 }
 
-function ObjectiveRow({ obj }: { obj: TaskObjective }) {
-  const iconCls = getObjIcon(obj.__typename);
+function ObjectiveRow({ obj, checked, onToggle }: { obj: TaskObjective; checked: boolean; onToggle: () => void }) {
+  const iconCls = getObjIcon(obj.__typename, obj.type);
   return (
-    <li className={`flex items-start gap-2 ${obj.optional ? 'opacity-50 italic' : ''}`}>
-      <span className={`icon-bg ${iconCls} w-3 h-3 shrink-0 mt-0.5 text-text-muted`} />
+    <li className={`flex items-start gap-3 ${obj.optional ? 'opacity-50 italic' : ''}`}>
       <div className="flex flex-col flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <span className="text-[11px] font-blender-book text-text-primary leading-snug">
+        <div className="flex items-start gap-3 cursor-pointer" onClick={onToggle}>
+          <span className={`text-base font-blender-book leading-snug flex-1 transition-colors duration-150 ${
+            checked ? 'line-through text-success' : 'text-text-primary'
+          }`}>
             {obj.description}
           </span>
-          {obj.optional && (
-            <span className="shrink-0 text-[8px] font-blender-medium uppercase not-italic text-text-muted border border-lines-hover rounded-xs px-1 py-0.5">
-              НЕ ОБЯ.
-            </span>
-          )}
+          <div className="flex items-start gap-1.5 shrink-0 pt-0.5">
+            {obj.optional && (
+              <span className="text-[8px] font-blender-medium uppercase not-italic text-text-secondary border border-lines-hover rounded-xs px-1 py-0.5">
+                НЕ ОБЯ.
+              </span>
+            )}
+            <span className={`${iconCls} icon-mask w-4 h-4 shrink-0 transition-colors duration-150 ${
+              checked ? 'text-success' : 'text-text-secondary'
+            }`} />
+          </div>
         </div>
 
-        {/* TaskObjectiveItem — shortName + count + FiR */}
         {obj.__typename === 'TaskObjectiveItem' && obj.item && (
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            <span className="text-[9px] font-blender-medium text-text-muted">{obj.item.shortName}</span>
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            <span className="text-xs font-blender-medium text-text-secondary">{obj.item.shortName}</span>
             {obj.count != null && obj.count > 1 && (
-              <span className="text-[9px] font-blender-medium text-text-muted">× {obj.count}</span>
+              <span className="text-xs font-blender-medium text-text-secondary">× {obj.count}</span>
             )}
             {obj.foundInRaid && (
-              <span className="text-[9px] font-blender-medium uppercase tracking-widest text-danger bg-danger/10 px-1 rounded-xs">
-                FIR
+              <span className="flex items-center gap-1 text-xs font-blender-medium text-(--primary)">
+                <span className="icon-eft-find-in-raid icon-mask w-3 h-3 shrink-0" />
+                найдено в рейде
               </span>
             )}
           </div>
         )}
 
-        {/* TaskObjectiveShoot — target / distance */}
         {obj.__typename === 'TaskObjectiveShoot' && (
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             {obj.target && (
-              <span className="text-[9px] font-blender-medium text-text-muted">{obj.target}</span>
+              <span className="text-xs font-blender-medium text-text-secondary">{obj.target}</span>
             )}
             {obj.distance != null && (
-              <span className="text-[9px] font-blender-medium text-text-muted">{obj.distance.value}м</span>
+              <span className="text-xs font-blender-medium text-text-secondary">{obj.distance.value}м</span>
             )}
           </div>
         )}
 
-        {/* TaskObjectiveTraderLevel — trader img + name + level */}
         {obj.__typename === 'TaskObjectiveTraderLevel' && obj.trader && (
-          <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="flex items-center gap-1.5 mt-2">
             <img
               src={traderImg(obj.trader.normalizedName)}
               alt={obj.trader.name}
@@ -77,7 +95,7 @@ function ObjectiveRow({ obj }: { obj: TaskObjective }) {
               height={12}
               className="rounded-[1px] shrink-0"
             />
-            <span className="text-[9px] font-blender-medium text-text-muted">
+            <span className="text-xs font-blender-medium text-text-secondary">
               {obj.trader.name} — ЛВЛ. {obj.level}
             </span>
           </div>
@@ -93,229 +111,276 @@ interface Props {
 }
 
 export function QuestDrawer({ task, onClose }: Props) {
-  const lastTaskRef = useRef<TaskRaw | null>(null);
+  const [heroFailed, setHeroFailed]           = useState(false);
+  const [checkedObjectives, setCheckedObjectives] = useState<Set<string>>(new Set());
+
+  const lastTaskRef       = useRef<TaskRaw | null>(null);
+  const autoCompletedRef  = useRef(false);
   if (task) lastTaskRef.current = task;
   const renderTask = task ?? lastTaskRef.current;
+
+  useEffect(() => {
+    setHeroFailed(false);
+    setCheckedObjectives(new Set());
+    autoCompletedRef.current = false;
+  }, [renderTask?.id]);
+
+  const toggleObjective = (id: string) =>
+    setCheckedObjectives(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   const { isRendered, isVisible, modalRef } = useModalAnimation(task !== null, onClose);
 
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const toggleQuest     = useQuestStore((s) => s.toggleQuest);
-  const questNotes      = useQuestStore((s) => s.questNotes);
-  const setNote         = useQuestStore((s) => s.setNote);
+  const pinnedQuests    = useQuestStore((s) => s.pinnedQuests);
+  const togglePin       = useQuestStore((s) => s.togglePin);
+  const itemProgress    = useQuestStore((s) => s.itemProgress);
 
-  const taskId = renderTask?.id;
-  const [noteOpen, setNoteOpen] = useState(false);
-  // Sync noteOpen when task changes: auto-open if note exists
   useEffect(() => {
-    setNoteOpen(!!(taskId && questNotes[taskId]));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskId]);
+    if (!renderTask) return;
+
+    const isNowCompleted = completedQuests.includes(renderTask.id);
+    const deduped = renderTask.objectives.filter((obj, i, arr) => arr.findIndex(o => o.id === obj.id) === i);
+
+    const allChecked = deduped.every(obj => checkedObjectives.has(obj.id));
+    const allItemsCollected = deduped
+      .filter(obj => obj.__typename === 'TaskObjectiveItem')
+      .every(obj => {
+        const count = (obj as TaskObjectiveItem).count ?? 0;
+        if (count === 0) return true;
+        return (itemProgress[renderTask.id]?.[obj.id] ?? 0) >= count;
+      });
+    const allDone = allChecked && allItemsCollected;
+
+    if (!isNowCompleted && allDone) {
+      autoCompletedRef.current = true;
+      toggleQuest(renderTask.id);
+    } else if (isNowCompleted && !allDone && autoCompletedRef.current) {
+      autoCompletedRef.current = false;
+      toggleQuest(renderTask.id);
+    }
+  }, [checkedObjectives, itemProgress, renderTask, completedQuests, toggleQuest]);
 
   if (!isRendered) return null;
 
+  const traderColor = renderTask ? `var(${traderCssVar(renderTask.trader.normalizedName)})` : 'transparent';
+  const drawerBg    = `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 15%, transparent), rgba(0,0,0,0.9))`;
+
   const isCompleted = renderTask ? completedQuests.includes(renderTask.id) : false;
+  const isPinned    = renderTask ? pinnedQuests.includes(renderTask.id) : false;
   const hasItemObjs = renderTask?.objectives.some((o) => o.__typename === 'TaskObjectiveItem') ?? false;
   const hasRewards  = renderTask
     ? renderTask.experience > 0 ||
       renderTask.finishRewards.traderStanding.length > 0 ||
       renderTask.finishRewards.items.length > 0
     : false;
+  const showHero = !heroFailed && !!renderTask;
 
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
-        }`}
-        onClick={onClose}
-      />
-
-      {/* Drawer panel */}
-      <div
-        ref={modalRef}
-        className={`fixed inset-y-0 right-0 z-50 w-105 max-w-[90vw] bg-card-menu border-l border-lines-hover flex flex-col transform transition-transform duration-300 ease-out ${
-          isVisible ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        {renderTask && (
-          <>
-            {/* ── Header ── */}
-            <div className="flex items-start gap-3 p-4 border-b border-lines-hover shrink-0">
-              <img
-                src={traderImg(renderTask.trader.normalizedName)}
-                alt={renderTask.trader.name}
-                width={32}
-                height={32}
-                className="rounded-xs shrink-0 mt-0.5"
-              />
-              <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-[10px] font-blender-medium uppercase tracking-widest text-text-muted">
-                  {renderTask.trader.name}
+    <div
+      ref={modalRef}
+      style={{ background: drawerBg }}
+      className={`absolute inset-y-0 right-0 z-50 w-87 border-l border-lines-hover flex flex-col transition-transform duration-200 ease-out backdrop-blur-[20px] ${
+        isVisible ? 'translate-x-0' : 'translate-x-full'
+      }`}
+    >
+      {renderTask && (
+        <>
+          {/* HEADER */}
+          <header className="shrink-0 flex items-center gap-3 px-5 h-14 border-b border-lines-hover">
+            <img
+              src={renderTask.id.startsWith('story-')
+                ? `/icons/eft/02-quests/${renderTask.id}.svg`
+                : traderImg(renderTask.trader.normalizedName)
+              }
+              alt={renderTask.trader.name}
+              width={28}
+              height={28}
+              className="rounded-xs shrink-0"
+            />
+            <span className="font-blender-medium text-xs uppercase tracking-widest text-text-primary truncate flex-1">
+              {renderTask.trader.name}
+            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {renderTask.minPlayerLevel > 0 && (
+                <span className="text-xs font-blender-medium text-text-secondary shrink-0">
+                  УР. {renderTask.minPlayerLevel}+
                 </span>
-                <span className="text-[13px] font-blender-medium uppercase leading-tight text-text-primary mt-0.5">
-                  {renderTask.name}
-                </span>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {renderTask.minPlayerLevel > 0 && (
-                    <span className="text-[9px] font-blender-medium uppercase tracking-widest text-text-muted bg-(--color-darkbase) px-1.5 py-0.5 rounded-xs">
-                      ур. {renderTask.minPlayerLevel}+
-                    </span>
-                  )}
-                  {renderTask.kappaRequired && (
-                    <span className="flex items-center gap-1 text-[9px] font-blender-medium uppercase tracking-widest text-(--primary)">
-                      <span className="icon-bg icon-eft-profile-kappa w-3 h-3 shrink-0" />
-                      Каппа
-                    </span>
-                  )}
-                  {renderTask.lightkeeperRequired && (
-                    <span className="flex items-center gap-1 text-[9px] font-blender-medium uppercase tracking-widest text-nvg-green">
-                      <span className="icon-bg icon-eft-profile-lightkeeper w-3 h-3 shrink-0" />
-                      Маяк
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="shrink-0 w-7 h-7 flex items-center justify-center rounded-xs text-[14px] text-text-muted hover:text-text-primary hover:bg-lines-hover transition-colors duration-150"
-                aria-label="Закрыть"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* ── Scrollable body ── */}
-            <div className="flex-1 overflow-y-auto flex flex-col">
-
-              {/* Section: Задачи */}
-              {renderTask.objectives.length > 0 && (
-                <div className="px-4 pt-3 pb-4">
-                  <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-muted pb-1.5">
-                    Задачи
-                  </div>
-                  <ul className="flex flex-col gap-2.5">
-                    {renderTask.objectives.map((obj) => (
-                      <ObjectiveRow key={obj.id} obj={obj} />
-                    ))}
-                  </ul>
-                </div>
               )}
-
-              {/* Section: Трекер предметов (UX-3) */}
-              {hasItemObjs && (
-                <div className="border-t border-lines-hover px-4 pt-3 pb-4">
-                  <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-muted mb-2">
-                    Трекер предметов
-                  </div>
-                  <QuestItemTracker task={renderTask} />
-                </div>
-              )}
-
-              {/* Section: Заметка (UX-9) */}
-              <div className="border-t border-lines-hover px-4 pt-3 pb-4">
-                <button
-                  onClick={() => setNoteOpen((v) => !v)}
-                  className="flex items-center justify-between w-full"
+              {renderTask.lightkeeperRequired && (
+                <span
+                  className="w-7 h-7 flex items-center justify-center rounded-xs shrink-0"
+                  style={{ background: 'color-mix(in srgb, var(--trader-lightkeeper) 10%, transparent)' }}
                 >
-                  <span className="text-[9px] font-blender-medium uppercase tracking-widest text-text-muted">
-                    Заметка
-                  </span>
-                  <span className="text-[9px] text-text-muted">{noteOpen ? '▲' : '▼'}</span>
-                </button>
-                {noteOpen && renderTask && (
-                  <textarea
-                    key={renderTask.id}
-                    className="mt-2 w-full resize-none bg-lines-hover/30 border border-lines-hover rounded-xs p-2 text-[11px] font-blender-book text-text-primary placeholder:text-text-muted focus:outline-none focus:border-(--primary)/50 transition-colors duration-150"
-                    rows={3}
-                    placeholder="Личная заметка..."
-                    defaultValue={questNotes[renderTask.id] ?? ''}
-                    onBlur={(e) => setNote(renderTask.id, e.currentTarget.value.trim())}
-                  />
+                  <span className="icon-bg icon-eft-profile-lightkeeper w-4 h-4" />
+                </span>
+              )}
+              {renderTask.kappaRequired && (
+                <span
+                  className="w-7 h-7 flex items-center justify-center rounded-xs shrink-0"
+                  style={{ background: 'color-mix(in srgb, var(--color-nvg-green) 10%, transparent)' }}
+                >
+                  <span className="icon-bg icon-eft-profile-kappa w-4 h-4" />
+                </span>
+              )}
+            </div>
+            <button onClick={onClose} className="shrink-0 h-7 w-7 flex items-center justify-center transition-opacity hover:opacity-80" aria-label="Закрыть">
+              <div className="flex h-3 w-4 items-center justify-center rounded-[1px] bg-danger-dim">
+                <div className="h-2 w-2 icon-mask icon-eft-profile-btn-close text-zinc-100" />
+              </div>
+            </button>
+          </header>
+
+          {/* OBJECTIVES + HERO */}
+          <div className="flex-1 overflow-y-auto overscroll-contain scrollbar-compact">
+            {/* HERO */}
+            {showHero ? (
+              <div className="h-40 relative overflow-hidden shrink-0">
+                <img
+                  src={getQuestHeroImg(renderTask.id)}
+                  alt={renderTask.name}
+                  className="w-full h-full object-cover"
+                  onError={() => setHeroFailed(true)}
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/90 to-transparent" />
+                <h2 className="absolute bottom-3 left-4 right-4 font-blender-medium uppercase tracking-widest text-sm text-text-primary leading-tight">
+                  {renderTask.name}
+                </h2>
+              </div>
+            ) : (
+              <h2 className="px-5 py-4 font-blender-medium uppercase text-sm text-text-primary leading-tight border-b border-lines-hover">
+                {renderTask.name}
+              </h2>
+            )}
+            {renderTask.objectives.length > 0 && (
+              <div className="px-5 py-5">
+                <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
+                  Задачи
+                </div>
+                <ul className="flex flex-col gap-4">
+                  {renderTask.objectives.filter((obj, i, arr) => arr.findIndex(o => o.id === obj.id) === i).map((obj) => (
+                    <ObjectiveRow key={obj.id} obj={obj} checked={checkedObjectives.has(obj.id)} onToggle={() => toggleObjective(obj.id)} />
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {hasItemObjs && (
+              <div className="px-5 py-5">
+                <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
+                  Трекер предметов
+                </div>
+                <QuestItemTracker task={renderTask} />
+              </div>
+            )}
+
+            {(() => {
+              const guide = (questGuides as Record<string, { videoId: string | null }>)[renderTask.id];
+              const videoId = guide?.videoId ?? null;
+              const src = videoId
+                ? `https://www.youtube.com/embed/${videoId}`
+                : `https://www.youtube.com/embed?listType=search&list=fullkamen+${encodeURIComponent(renderTask.name)}`;
+              return (
+                <div className="px-5 py-5">
+                  <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
+                    Видео-гайд
+                  </div>
+                  <div className="relative w-full aspect-video rounded-xs overflow-hidden bg-(--color-darkbase)">
+                    <iframe
+                      key={renderTask.id}
+                      src={src}
+                      title={`Гайд: ${renderTask.name}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full border-0"
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+            {hasRewards && (
+              <div className="px-4 py-6">
+                <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-secondary mb-4">
+                  Награды
+                </div>
+                {renderTask.experience > 0 && (
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="icon-eft-profile-pvp icon-mask w-4 h-4 shrink-0 text-text-secondary" />
+                    <span className="text-xs font-blender-medium text-success">
+                      +{renderTask.experience.toLocaleString('ru-RU')} XP
+                    </span>
+                  </div>
+                )}
+                {renderTask.finishRewards.traderStanding.map((ts, i) => (
+                  <div key={i} className="flex items-center gap-3 mb-3">
+                    <img
+                      src={traderImg(ts.trader.normalizedName)}
+                      alt={ts.trader.name}
+                      width={16}
+                      height={16}
+                      className="rounded-xs shrink-0"
+                    />
+                    <span className="text-xs font-blender-medium text-success">
+                      +{ts.standing}
+                    </span>
+                  </div>
+                ))}
+                {renderTask.finishRewards.items.length > 0 && (
+                  <div className="flex flex-wrap gap-3 mt-2">
+                    {renderTask.finishRewards.items.map((ri, i) => (
+                      <div
+                        key={i}
+                        className="relative w-12 h-12 bg-(--color-darkbase) border border-lines-hover rounded-xs flex items-center justify-center"
+                      >
+                        <img
+                          src={ri.item.image512pxLink}
+                          alt={ri.item.shortName}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-contain p-1"
+                        />
+                        {ri.count > 1 && (
+                          <span className="absolute bottom-0.5 right-0.5 text-xs font-blender-medium text-text-primary leading-none bg-black/60 px-0.5 rounded-xs">
+                            ×{ri.count}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
+            )}
+          </div>
 
-              {/* Section: Награды */}
-              {hasRewards && (
-                <div className="border-t border-lines-hover px-4 pt-3 pb-4">
-                  <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-muted mb-2">
-                    Награды
-                  </div>
-
-                  {/* XP */}
-                  {renderTask.experience > 0 && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="icon-bg icon-eft-profile-level w-3.5 h-3.5 shrink-0 text-text-muted" />
-                      <span className="text-[12px] font-blender-medium text-(--primary)">
-                        +{renderTask.experience.toLocaleString('ru-RU')} XP
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Trader standing */}
-                  {renderTask.finishRewards.traderStanding.map((ts, i) => (
-                    <div key={i} className="flex items-center gap-2 mb-2">
-                      <img
-                        src={traderImg(ts.trader.normalizedName)}
-                        alt={ts.trader.name}
-                        width={16}
-                        height={16}
-                        className="rounded-xs shrink-0"
-                      />
-                      <span className="text-[10px] font-blender-medium text-text-muted">
-                        {ts.trader.name}
-                      </span>
-                      <span className="text-[11px] font-blender-medium text-success">
-                        +{ts.standing}
-                      </span>
-                    </div>
-                  ))}
-
-                  {/* Reward items — горизонтальный скролл */}
-                  {renderTask.finishRewards.items.length > 0 && (
-                    <div className="flex gap-2 overflow-x-auto pb-1 mt-1">
-                      {renderTask.finishRewards.items.map((ri, i) => (
-                        <div
-                          key={i}
-                          className="relative shrink-0 w-12 h-12 bg-(--color-darkbase) border border-lines-hover rounded-xs flex items-center justify-center"
-                        >
-                          <img
-                            src={ri.item.image512pxLink}
-                            alt={ri.item.shortName}
-                            width={40}
-                            height={40}
-                            className="object-contain"
-                          />
-                          {ri.count > 1 && (
-                            <span className="absolute bottom-0.5 right-0.5 text-[8px] font-blender-medium text-text-primary leading-none">
-                              {ri.count}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* ── Footer: toggle button ── */}
-            <div className="shrink-0 border-t border-lines-hover p-3">
-              <button
-                className={`w-full h-9 rounded-xs text-[10px] font-blender-medium uppercase tracking-wider transition-colors duration-150 ${
-                  isCompleted
-                    ? 'bg-lines-hover/50 text-text-muted hover:text-text-primary hover:bg-lines-hover'
-                    : 'bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 border border-(--primary)/30'
-                }`}
-                onClick={() => toggleQuest(renderTask.id)}
-              >
-                {isCompleted ? '↩ ОТМЕНИТЬ ВЫПОЛНЕНИЕ' : '✓ ОТМЕТИТЬ ВЫПОЛНЕННЫМ'}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </>
+          {/* FOOTER */}
+          <div className="shrink-0 border-t border-lines-hover px-5 h-14 flex items-center gap-2">
+            <button
+              className={`flex-1 h-9 rounded-sm text-xs font-blender-medium uppercase tracking-widest transition-colors duration-150 ${
+                isCompleted
+                  ? 'bg-lines-hover/50 text-text-secondary hover:text-text-primary hover:bg-lines-hover'
+                  : 'bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 border border-(--primary)/30'
+              }`}
+              onClick={() => toggleQuest(renderTask.id)}
+            >
+              {isCompleted ? 'ОТМЕНИТЬ' : 'ВЫПОЛНЕНО'}
+            </button>
+            <button
+              onClick={() => togglePin(renderTask.id)}
+              className="shrink-0 w-9 h-9 flex items-center justify-center rounded-sm border transition-colors"
+              style={isPinned
+                ? { backgroundColor: 'var(--primary)', borderColor: 'var(--primary)' }
+                : { borderColor: 'var(--color-lines-hover)' }
+              }
+            >
+              <Paperclip className={`w-4 h-4 ${isPinned ? 'text-(--color-darkbase)' : 'text-text-secondary'}`} />
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

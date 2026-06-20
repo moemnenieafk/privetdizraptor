@@ -52,6 +52,21 @@
   --color-edition-pfe: #9A8866;  /* Prepare for Escape Edition */
   --color-edition-lb:  #9CA3AF;  /* Left Behind Edition */
   --color-edition-std: #52525B;  /* Standard Edition */
+  --color-kappa: #BDA550;        /* Kappa secure container color */
+  --color-lightkeeper: #2ED399;  /* Lightkeeper color */
+
+  /* Цвета торговцев EFT */
+  --trader-prapor:      #4B5320;
+  --trader-therapist:   #45998B;
+  --trader-fence:       #66527E;
+  --trader-skier:       #AA7F43;
+  --trader-peacekeeper: #588AC4;
+  --trader-mechanic:    #5F9EA0;
+  --trader-ragman:      #6B9963;
+  --trader-jaeger:      #CC5500;
+  --trader-ref:         #B49634;
+  --trader-lightkeeper: #2ED399;
+  --trader-btrdriver:   #5F6345;
 
   --color-primary: var(--primary);
   
@@ -115,12 +130,6 @@
     background-color: var(--color-base);
     color: var(--color-text-primary);
 
-    /* Точечная тактическая сетка (размер точки ~1px, шаг 53px) на сплошном фоне */
-    background-image: radial-gradient(circle, var(--color-lines-hover) 1px, transparent 1px);
-    background-size: 53px 53px;
-    background-position: center;
-    background-attachment: fixed;
-
     font-family: "BlenderPro-Book", sans-serif;
     -webkit-font-smoothing: antialiased;
   }
@@ -146,40 +155,65 @@
     letter-spacing: 0.5px;
   }
 
-  /* --- Кастомный тактический скроллбар --- */
-  /* Для Firefox */
   html {
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-lines-hover) var(--color-base);
-  }
-
-  /* Для Webkit-браузеров (Chrome, Safari, Edge) */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: var(--color-base);
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background-color: var(--color-lines-hover);
-    border-radius: 20px;
-    border: 2px solid var(--color-base);
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-primary);
-  }
-
-  /* Угол пересечения вертикального и горизонтального скроллбара */
-  ::-webkit-scrollbar-corner {
-    background-color: var(--color-base);
+    scroll-behavior: smooth;
   }
 }
 
+/* --- Кастомный тактический скроллбар (вне слоёв — максимальный приоритет) --- */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-lines-hover) var(--color-base);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-lines-hover);
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: var(--color-base);
+}
+
 @layer utilities {
+  .scrollbar-compact {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-lines-hover) transparent;
+  }
+  .scrollbar-compact::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollbar-compact::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-compact::-webkit-scrollbar-thumb {
+    background-color: var(--color-lines-hover);
+    border-radius: 20px;
+  }
+  .scrollbar-compact::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-primary);
+  }
+
+
   .tactical-grid {
     display: grid;
     grid-template-columns: repeat(2, 160px);
@@ -226,6 +260,16 @@
   .animate-flash-success {
     animation: flash-success 0.8s ease-in-out;
   }
+
+  /* --- Quest Map: dash-flow коннекторы --- */
+  @keyframes dash-flow {
+    from { stroke-dashoffset: 0; }
+    to   { stroke-dashoffset: -21; }
+  }
+
+  .qc-active    { animation: dash-flow 8s  linear infinite; }
+  .qc-locked    { animation: dash-flow 14s linear infinite; }
+  .qc-completed { animation: dash-flow 10s linear infinite; }
 
   /* Утилита для градиентной обводки с маской */
   .tactical-gradient-border {
@@ -318,6 +362,29 @@
     0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 60%, transparent); }
     50%  { box-shadow: 0 0 0 8px color-mix(in srgb, var(--primary) 20%, transparent); }
     100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  @keyframes hold-fill {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  /* --- Quest Map: dropdown поиска --- */
+  @keyframes questSearchIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-quest-search {
+    animation: questSearchIn 0.18s ease-out both;
+  }
+
+  /* Скрытый скроллбар для панели результатов поиска */
+  .scrollbar-hidden {
+    scrollbar-width: none;
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
   }
 
   /* --- Тикер бегущей строки Active Context Bar --- */

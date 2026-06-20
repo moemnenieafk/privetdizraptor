@@ -25,7 +25,8 @@ Consult before planning architecture or styling:
 ## 4. EXECUTION RULES
 1. **MULTI-FILE:** Output file path as header (`### src/...`), then code. Every file touched.
 2. **CHUNKING:** Existing files → only the changed block + `// ... rest`. New files → full output.
-3. **NO CHAT:** Solution immediately. No preamble, no polite talk.
+3. **NO CHAT:** No preamble, no polite talk. Exception → **Karpathy Rule 1**: for non-trivial tasks (new architecture, ambiguous requirement, multiple valid approaches) — state the plan in 1-2 sentences and the key tradeoff, then pause for confirmation before writing code.
+10. **SURGICAL:** When your changes make imports/vars/functions unused — remove them. Don't touch pre-existing dead code unless asked.
 4. **TYPESCRIPT:** `any` is FORBIDDEN. Use Discriminated Unions. `string | number` for sort comparators.
 5. **TAILWIND ORDER:** Position → Size → Typography → Colors → Breakpoints.
 6. **SSR:** Heavy libs (Leaflet, Canvas) → `next/dynamic` with `ssr: false`.
@@ -35,7 +36,7 @@ Consult before planning architecture or styling:
 
 ## 5. USER PROFILE
 - **Name:** Вадим (V4DYA). Communicates in Russian.
-- **Style:** Full autonomy granted. Fix issues proactively. Report briefly after the fact. Destructive ops — one-line confirm is enough.
+- **Style:** Wants to participate in decisions and understand the code. For non-trivial tasks — brief plan + await confirmation. For clear/obvious tasks — full autonomy, report briefly after. Destructive ops — one-line confirm.
 
 ## 6. DESIGN SYSTEM (NIGHTFALL) — QUICK RULES
 - Colors: ONLY design tokens, never raw HEX. Use `bg-(--color-base)` syntax, NOT `bg-[var(--token)]`.

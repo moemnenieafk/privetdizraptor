@@ -81,6 +81,7 @@ export interface QuestNodeData {
   chainRole?: 'ancestor' | 'descendant' | 'self' | null;
   pinned?: boolean;
   onToggle: (id: string) => void;
+  onForceComplete: (id: string) => void;
   onSelect: (task: TaskRaw) => void;
   onHover: (id: string | null) => void;
   onPin: (id: string) => void;

@@ -1,0 +1,8 @@
+{
+  "pkg": "centre-tactical-adaptation",
+  "globalName": "CTA",
+  "projectId": "2f0ac1a5-7724-4645-988c-68745661df2c",
+  "shape": "package",
+  "cssEntry": "src/app/globals.css",
+  "readmeHeader": ".design-sync/conventions.md"
+}

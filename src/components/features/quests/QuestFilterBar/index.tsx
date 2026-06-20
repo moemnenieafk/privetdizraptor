@@ -1,14 +1,38 @@
 'use client';
 
 import { useMemo, useRef } from 'react';
-import { Maximize2, Minimize2 } from 'lucide-react';
-import { useQuestStore } from '@/store/useQuestStore';
 import type { TaskRaw } from '@/types/quest';
+import { QuestSearch } from '@/components/features/quests/QuestSearch';
 
-const TRADER_SLUG: Record<string, string> = {
-  'btr-driver': 'btrdriver',
-};
+const TRADER_SLUG: Record<string, string> = { 'btr-driver': 'btrdriver' };
 const traderImg = (n: string) => `/images/traders/eft/${TRADER_SLUG[n] ?? n}.webp`;
+
+const MAP_ORDER = [
+  'the-lab', 'ground-zero', 'streets-of-tarkov', 'interchange', 'customs',
+  'factory', 'woods', 'reserve', 'lighthouse', 'shoreline',
+  'terminal', 'the-labyrinth', 'icebreaker', 'end-of-line',
+];
+
+const MAP_CSS: Record<string, string> = {
+  'customs':           'icon-eft-maps-customs',
+  'woods':             'icon-eft-maps-woods',
+  'factory':           'icon-eft-maps-factory',
+  'shoreline':         'icon-eft-maps-shoreline',
+  'interchange':       'icon-eft-maps-interchange',
+  'reserve':           'icon-eft-maps-reserve',
+  'lighthouse':        'icon-eft-maps-lighthouse',
+  'the-lab':           'icon-eft-maps-lab',
+  'labs':              'icon-eft-maps-lab',
+  'ground-zero':       'icon-eft-maps-groundzero',
+  'streets-of-tarkov': 'icon-eft-maps-streets',
+  'streets':           'icon-eft-maps-streets',
+  'terminal':          'icon-eft-maps-terminal',
+  'transits':          'icon-eft-maps-transits',
+  'openworld':         'icon-eft-maps-openworld',
+  'icebreaker':        'icon-eft-maps-icebreaker',
+  'the-labyrinth':     'icon-eft-maps-labyrinth',
+  'end-of-line':       'icon-eft-end-of-line-map-icon',
+};
 
 interface MapEntry {
   id: string;
@@ -17,225 +41,177 @@ interface MapEntry {
 }
 
 interface Props {
-  tasks: TaskRaw[];
-  completedQuests: string[];
-  filterKappa: boolean;
-  filterLK: boolean;
-  selectedTraders: Set<string>;
-  onKappa: () => void;
-  onLK: () => void;
-  onTrader: (normalizedName: string) => void;
-  onReset: () => void;
-  isFullscreen: boolean;
-  onToggleFullscreen: () => void;
-  searchOpen: boolean;
-  onSearchOpen: () => void;
-  // UX-8
-  onExport: () => void;
-  onImport: (file: File) => void;
-  // UX-10
-  maps: MapEntry[];
-  selectedMaps: Set<string>;
-  onMap: (id: string) => void;
+  tasks:            TaskRaw[];
+  completedQuests:  string[];
+  filterKappa:      boolean;
+  filterLK:         boolean;
+  selectedTraders:  Set<string>;
+  selectedMaps:     Set<string>;
+  searchOpen:       boolean;
+  maps:             MapEntry[];
+  onKappa:          () => void;
+  onLK:             () => void;
+  onTrader:         (name: string) => void;
+  onMap:            (id: string) => void;
+  onReset:          () => void;
+  onResetProgress:  () => void;
+  onSearchOpen:     () => void;
+  onFocus:          (task: TaskRaw) => void;
 }
+
+const STATIC_MAPS: MapEntry[] = [
+  { id: 'terminal', name: 'Терминал', normalizedName: 'terminal' },
+];
 
 export function QuestFilterBar({
   tasks,
-  completedQuests,
-  filterKappa,
-  filterLK,
   selectedTraders,
-  onKappa,
-  onLK,
-  onTrader,
-  onReset,
-  isFullscreen,
-  onToggleFullscreen,
-  searchOpen,
-  onSearchOpen,
-  onExport,
-  onImport,
-  maps,
   selectedMaps,
+  searchOpen,
+  maps,
+  onTrader,
   onMap,
+  onResetProgress,
+  onSearchOpen,
+  onFocus,
 }: Props) {
-  const resetProgress = useQuestStore((s) => s.resetProgress);
-  const fileInputRef  = useRef<HTMLInputElement>(null);
-
-  const completedSet = useMemo(() => new Set(completedQuests), [completedQuests]);
-
-  const { statLabel, statValue } = useMemo(() => {
-    if (filterKappa) {
-      const total = tasks.filter((t) => t.kappaRequired).length;
-      const done  = tasks.filter((t) => t.kappaRequired && completedSet.has(t.id)).length;
-      const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
-      return { statLabel: 'Каппа', statValue: `${done} / ${total} (${pct}%)` };
-    }
-    if (filterLK) {
-      const total = tasks.filter((t) => t.lightkeeperRequired).length;
-      const done  = tasks.filter((t) => t.lightkeeperRequired && completedSet.has(t.id)).length;
-      const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
-      return { statLabel: 'Смотритель', statValue: `${done} / ${total} (${pct}%)` };
-    }
-    const total = tasks.length;
-    const done  = tasks.filter((t) => completedSet.has(t.id)).length;
-    const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
-    return { statLabel: 'Выполнено', statValue: `${done} / ${total} (${pct}%)` };
-  }, [tasks, completedSet, filterKappa, filterLK]);
+  const allMaps = useMemo(() => {
+    const dynamicIds = new Set(maps.map(m => m.normalizedName));
+    return [...maps, ...STATIC_MAPS.filter(s => !dynamicIds.has(s.normalizedName))];
+  }, [maps]);
 
   const traders = useMemo(() => {
     const seen = new Set<string>();
     return tasks
-      .filter((t) => {
+      .filter(t => {
         if (seen.has(t.trader.normalizedName)) return false;
         seen.add(t.trader.normalizedName);
         return true;
       })
-      .map((t) => t.trader);
+      .map(t => t.trader);
   }, [tasks]);
 
-  const toggleCls = (active: boolean) =>
-    active
-      ? 'bg-(--primary)/15 text-(--primary) border border-(--primary)/40'
-      : 'bg-(--color-darkbase) text-text-muted border border-lines-hover hover:text-(--color-text-primary) hover:border-(--color-lines-active)';
+  const filterBtnCls = (active: boolean) =>
+    `w-7 h-7 flex items-center justify-center rounded border transition-colors shrink-0 ${
+      active
+        ? 'bg-(--primary)/20 border-(--primary)/40 text-(--primary)'
+        : 'border-lines-hover text-(--color-text-secondary) hover:border-(--primary)/40 hover:text-(--primary)'
+    }`;
 
-  const btnCls =
-    'px-3 h-7 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest border border-lines-hover text-text-muted hover:text-(--primary) hover:border-(--primary)/50 transition-colors duration-150';
+  const searchAnchorRef = useRef<HTMLDivElement>(null);
+
+  const divider = <div className="w-px h-7 bg-lines-hover mx-3.5 shrink-0" />;
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 border-b border-(--color-lines-hover) bg-card-menu flex-wrap shrink-0">
-      {/* Progress stat */}
-      <span className="text-[11px] font-blender-medium uppercase tracking-widest text-(--color-text-muted) shrink-0">
-        {statLabel}:{' '}
-        <span className="text-(--color-text-primary)">{statValue}</span>
-      </span>
+    <div className="relative flex items-center px-3.5 h-14 bg-card-menu shrink-0 overflow-x-auto">
 
-      <div className="w-px h-4 bg-(--color-lines-hover) shrink-0" />
-
-      {/* Kappa toggle */}
-      <button
-        onClick={onKappa}
-        className={`flex items-center gap-1.5 px-2.5 h-7 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest transition-colors duration-150 ${toggleCls(filterKappa)}`}
-      >
-        <span className="icon-bg icon-eft-profile-kappa w-3.5 h-3.5 shrink-0" />
-        Путь к Каппе
-      </button>
-
-      {/* Lightkeeper toggle */}
-      <button
-        onClick={onLK}
-        className={`flex items-center gap-1.5 px-2.5 h-7 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest transition-colors duration-150 ${toggleCls(filterLK)}`}
-      >
-        <span className="icon-bg icon-eft-profile-lightkeeper w-3.5 h-3.5 shrink-0" />
-        Смотритель Маяка
-      </button>
-
-      <div className="w-px h-4 bg-(--color-lines-hover) shrink-0" />
-
-      {/* Trader chips */}
-      <div className="flex items-center gap-1 flex-wrap">
-        {traders.map((trader) => (
-          <button
-            key={trader.normalizedName}
-            onClick={() => onTrader(trader.normalizedName)}
-            className={`flex items-center gap-1 px-2 h-6 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest transition-colors duration-150 ${toggleCls(selectedTraders.has(trader.normalizedName))}`}
-          >
-            <img
-              src={traderImg(trader.normalizedName)}
-              alt={trader.name}
-              width={16}
-              height={16}
-              className="rounded-xs shrink-0"
-            />
-            {trader.name}
-          </button>
-        ))}
+      {/* Search toggle + dropdown */}
+      <div ref={searchAnchorRef} className="relative shrink-0">
+        <button
+          onClick={onSearchOpen}
+          title="Поиск квеста (Ctrl+F)"
+          className={filterBtnCls(searchOpen)}
+        >
+          <span className="icon-mask icon-eft-search-icon w-3.5 h-3.5" />
+        </button>
+        {searchOpen && <QuestSearch tasks={tasks} onFocus={onFocus} anchorRef={searchAnchorRef} />}
       </div>
 
-      {/* Map chips (UX-10) */}
-      {maps.length > 0 && (
-        <>
-          <div className="w-px h-4 bg-lines-hover shrink-0" />
-          <div className="flex items-center gap-1 flex-wrap">
-            {maps.map((map) => (
+      {divider}
+
+      {/* Center: traders + maps */}
+      <div className="flex flex-1 items-center justify-center gap-0 min-w-0">
+
+      {/* Trader portraits 32×32 */}
+      <div className="flex items-center gap-2 shrink-0">
+        {traders.map(trader => {
+          const isSelected = selectedTraders.has(trader.normalizedName);
+          return (
+            <button
+              key={trader.normalizedName}
+              onClick={() => onTrader(trader.normalizedName)}
+              title={trader.name}
+              className={`w-8 h-8 rounded overflow-hidden shrink-0 transition-all ${
+                isSelected ? 'ring-1 ring-(--primary)' : ''
+              }`}
+              style={{ opacity: selectedTraders.size > 0 && !isSelected ? 0.6 : 1 }}
+            >
+              <img
+                src={traderImg(trader.normalizedName)}
+                alt={trader.name}
+                width={32}
+                height={32}
+                className="block object-cover object-top"
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {divider}
+
+      {/* Map icons 28×28 */}
+      {allMaps.length > 0 && (
+        <div className="flex items-center gap-2 shrink-0">
+          {allMaps
+            .filter(m => !m.normalizedName.includes('night') && !m.name.includes('21+'))
+            .sort((a, b) => {
+              const ai = MAP_ORDER.indexOf(a.normalizedName);
+              const bi = MAP_ORDER.indexOf(b.normalizedName);
+              return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+            })
+            .map(map => {
+            const isActive = selectedMaps.has(map.id);
+            const iconCls  = MAP_CSS[map.normalizedName];
+            return (
               <button
                 key={map.id}
                 onClick={() => onMap(map.id)}
-                className={`flex items-center gap-1 px-2 h-6 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest transition-colors duration-150 ${toggleCls(selectedMaps.has(map.id))}`}
+                title={map.name}
+                className={`w-7 h-7 flex items-center justify-center rounded shrink-0 transition-all ${isActive ? 'text-(--primary)' : 'text-text-secondary'}`}
+                style={{ opacity: selectedMaps.size > 0 && !isActive ? 0.35 : 1 }}
               >
-                <img
-                  src={`/images/maps/eft/${map.normalizedName}.webp`}
-                  alt={map.name}
-                  width={16}
-                  height={16}
-                  className="rounded-xs shrink-0"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-                {map.name}
+                {iconCls ? (
+                  <span className={`icon-mask ${iconCls} w-7 h-7`} />
+                ) : (
+                  <span className="text-[8px] font-blender-medium uppercase leading-none">
+                    {map.name.slice(0, 3)}
+                  </span>
+                )}
               </button>
-            ))}
-          </div>
-        </>
+            );
+          })}
+
+          {/* Конец пути — static, always last */}
+          {(() => {
+            const isActive = selectedMaps.has('end-of-line');
+            return (
+              <button
+                onClick={() => onMap('end-of-line')}
+                title="Конец пути"
+                className={`w-7 h-7 flex items-center justify-center rounded shrink-0 transition-all ${isActive ? 'text-(--primary)' : 'text-text-secondary'}`}
+                style={{ opacity: selectedMaps.size > 0 && !isActive ? 0.35 : 1 }}
+              >
+                <span className="icon-mask icon-eft-end-of-line-map-icon w-7 h-7" />
+              </button>
+            );
+          })()}
+        </div>
       )}
 
-      {/* Search button */}
-      <div className="w-px h-4 bg-lines-hover shrink-0" />
+      </div>{/* /Center */}
+
+      {divider}
+
+      {/* Reset progress */}
       <button
-        onClick={onSearchOpen}
-        title="Поиск квеста (Ctrl+F)"
-        className={`flex items-center gap-1.5 px-2.5 h-7 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest transition-colors duration-150 ${toggleCls(searchOpen)}`}
+        onClick={onResetProgress}
+        title="Сбросить прогресс заданий"
+        className="w-7 h-7 flex items-center justify-center rounded border border-danger/60 text-danger/60 hover:border-danger hover:text-danger hover:bg-danger/10 transition-colors shrink-0"
       >
-        <span className="icon-bg icon-eft-search w-3.5 h-3.5 shrink-0" />
-        Поиск
+        <span className="icon-mask icon-eft-profile-reset w-3.5 h-3.5" />
       </button>
 
-      {/* Right controls */}
-      <div className="ml-auto flex items-center gap-2 shrink-0">
-        {/* UX-8: Export / Import */}
-        <button onClick={onExport} className={btnCls} title="Экспорт прогресса в JSON">
-          Экспорт
-        </button>
-        <button onClick={() => fileInputRef.current?.click()} className={btnCls} title="Импорт прогресса из JSON">
-          Импорт
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.currentTarget.files?.[0];
-            if (file) {
-              onImport(file);
-              e.currentTarget.value = '';
-            }
-          }}
-        />
-
-        <div className="w-px h-4 bg-lines-hover" />
-
-        <button
-          onClick={() => {
-            resetProgress();
-            onReset();
-          }}
-          className="px-3 h-7 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest text-(--color-danger)/70 border border-(--color-danger)/20 hover:bg-(--color-danger)/10 hover:text-(--color-danger) transition-colors duration-150"
-        >
-          Сбросить прогресс
-        </button>
-
-        <div className="w-px h-4 bg-lines-hover" />
-
-        <button
-          onClick={onToggleFullscreen}
-          title={isFullscreen ? 'Выйти из полноэкранного режима (Esc)' : 'На весь экран'}
-          className="flex items-center justify-center w-7 h-7 rounded-xs border border-lines-hover text-text-muted hover:text-(--primary) hover:border-(--primary)/50 transition-colors duration-150"
-        >
-          {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-        </button>
-      </div>
     </div>
   );
 }

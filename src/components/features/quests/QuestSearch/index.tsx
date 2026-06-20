@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import type { TaskRaw } from '@/types/quest';
-
-const TRADER_SLUG: Record<string, string> = { 'btr-driver': 'btrdriver' };
-const traderImg = (n: string) => `/images/traders/eft/${TRADER_SLUG[n] ?? n}.webp`;
+import { traderImg } from '@/lib/trader-utils';
 
 function HighlightedText({ text, query }: { text: string; query: string }) {
   if (!query) return <>{text}</>;
@@ -20,69 +18,76 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
 }
 
 interface Props {
-  tasks: TaskRaw[];
-  isOpen: boolean;
-  onClose: () => void;
-  onFocusNode: (task: TaskRaw) => void;
+  tasks:      TaskRaw[];
+  onFocus:    (task: TaskRaw) => void;
+  anchorRef:  React.RefObject<HTMLDivElement | null>;
 }
 
-export function QuestSearch({ tasks, isOpen, onClose, onFocusNode }: Props) {
+export function QuestSearch({ tasks, onFocus, anchorRef }: Props) {
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      setQuery('');
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  }, [isOpen]);
+  // Вычисляем позицию от кнопки-якоря один раз при монтировании
+  useLayoutEffect(() => {
+    if (!anchorRef.current) return;
+    const rect = anchorRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 28, left: rect.left });
+  }, [anchorRef]);
 
-  if (!isOpen) return null;
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
   const results = query.length >= 2
-    ? tasks.filter((t) => t.name.toLowerCase().includes(query.toLowerCase())).slice(0, 8)
+    ? tasks.filter(t => t.name.toLowerCase().includes(query.toLowerCase()))
     : [];
 
+  // Ждём вычисления позиции
+  if (!pos) return null;
+
   return (
-    <div className="absolute top-0 left-0 z-50 w-72">
-      <div className="relative">
-        <span className="icon-bg icon-eft-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted pointer-events-none" />
+    <div
+      className="animate-quest-search fixed z-200"
+      style={{ top: pos.top, left: pos.left }}
+    >
+      {/* Input 348×36px */}
+      <div className="flex items-center gap-2 px-3 w-87 h-9 bg-(--color-darkbase) border border-(--primary) rounded-xs">
+        <span className="icon-mask icon-eft-search-icon w-3.5 h-3.5 text-(--primary) shrink-0" />
         <input
           ref={inputRef}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Escape' && onClose()}
-          placeholder="Поиск квеста..."
-          className="w-full h-8 pl-7 pr-3 bg-card-menu border-b border-lines-hover text-[11px] font-blender-book text-text-primary placeholder:text-text-muted outline-none focus:border-(--primary)/60 transition-colors"
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Введите название задания..."
+          className="bg-transparent outline-none w-full text-xs font-blender-book text-text-primary placeholder:text-text-secondary"
         />
       </div>
 
-      {results.length > 0 && (
-        <div className="bg-card-menu border-x border-b border-lines-hover shadow-xl max-h-64 overflow-y-auto">
-          {results.map((task) => (
-            <button
-              key={task.id}
-              onClick={() => { onFocusNode(task); onClose(); }}
-              className="w-full flex items-center gap-2 px-3 py-2 border-b border-lines-hover/50 last:border-0 hover:bg-lines-hover/40 transition-colors text-left"
-            >
-              <img
-                src={traderImg(task.trader.normalizedName)}
-                alt={task.trader.name}
-                width={14}
-                height={14}
-                className="rounded-xs shrink-0 opacity-70"
-              />
-              <span className="text-[11px] font-blender-book text-text-primary truncate">
-                <HighlightedText text={task.name} query={query} />
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {query.length >= 2 && results.length === 0 && (
-        <div className="bg-card-menu border-x border-b border-lines-hover px-3 py-2.5">
-          <span className="text-[10px] font-blender-medium uppercase text-text-muted">Квест не найден</span>
+      {/* Results 348×348px — скрытый скролл */}
+      {query.length >= 2 && (
+        <div className="mt-2 w-87 h-87 bg-(--color-darkbase) border border-lines-hover rounded-xs overflow-y-auto scrollbar-hidden">
+          {results.length === 0 ? (
+            <div className="flex items-center px-3 h-9 text-xs text-text-secondary">
+              Ничего не найдено
+            </div>
+          ) : (
+            results.map(task => (
+              <button
+                key={task.id}
+                onClick={() => onFocus(task)}
+                className="flex items-center gap-2 px-3 w-full h-9 border-b border-lines-hover hover:bg-card-menu transition-colors text-left shrink-0"
+              >
+                <img
+                  src={traderImg(task.trader.normalizedName)}
+                  alt={task.trader.name}
+                  width={20}
+                  height={20}
+                  className="rounded-xs shrink-0 opacity-70"
+                />
+                <span className="text-xs font-blender-book text-text-primary leading-tight truncate">
+                  <HighlightedText text={task.name} query={query} />
+                </span>
+              </button>
+            ))
+          )}
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import type { TarkovContextData } from "@/actions/tarkov-context";
+﻿import type { TarkovContextData } from "@/actions/tarkov-context";
 import { TraderCountdown } from "./TraderCountdown";
 
 interface ActiveContextBarProps {
@@ -9,10 +9,10 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
   const { serverOnline, serverLabel, fleaItems, nearestTrader } = data;
 
   return (
-    <div className="sticky top-15 z-40 w-full border-b border-lines-hover bg-base/95 backdrop-blur-sm">
+    <div className="sticky top-0 z-40 w-full border-b border-lines-hover bg-base/95 backdrop-blur-sm">
       <div className="flex h-9 items-stretch divide-x divide-lines-hover max-w-480 mx-auto px-4 md:px-8">
 
-        {/* LEFT — Server status */}
+        {/* LEFT вЂ” Server status */}
         <div className="flex items-center gap-2 pr-4 shrink-0 w-40 md:w-48">
           <span
             className={`shrink-0 w-1.5 h-1.5 ${serverOnline ? "bg-nvg-green" : "bg-danger"}`}
@@ -30,7 +30,7 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
           </span>
         </div>
 
-        {/* CENTER — Flea market ticker */}
+        {/* CENTER вЂ” Flea market ticker */}
         <div className="flex-1 flex items-center px-4 overflow-hidden">
           {fleaItems.length > 0 ? (
             <div
@@ -58,12 +58,12 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
             </div>
           ) : (
             <span className="font-blender-medium text-[10px] tracking-[0.2em] uppercase text-text-muted">
-              ЗАГРУЗКА РЫНКА...
+              Р—РђР“Р РЈР—РљРђ Р Р«РќРљРђ...
             </span>
           )}
         </div>
 
-        {/* RIGHT — Trader reset timer */}
+        {/* RIGHT вЂ” Trader reset timer */}
         <div className="flex items-center pl-4 shrink-0 w-40 md:w-48">
           {nearestTrader ? (
             <TraderCountdown
@@ -72,7 +72,7 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
             />
           ) : (
             <span className="font-blender-medium text-[10px] tracking-[0.2em] uppercase text-text-muted">
-              ТАЙМЕРЫ N/A
+              РўРђР™РњР•Р Р« N/A
             </span>
           )}
         </div>

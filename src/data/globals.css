@@ -33,6 +33,21 @@
   --color-success: #8DE736;
   --color-failure: #E3433F;
   --color-moderate: #FF7724;
+  --color-kappa: #BDA550;        /* Kappa secure container color */
+  --color-lightkeeper: #2ED399;  /* Lightkeeper color */
+
+  /* Цвета торговцев EFT */
+  --trader-prapor:      #4B5320;
+  --trader-therapist:   #45998B;
+  --trader-fence:       #66527E;
+  --trader-skier:       #AA7F43;
+  --trader-peacekeeper: #588AC4;
+  --trader-mechanic:    #5F9EA0;
+  --trader-ragman:      #6B9963;
+  --trader-jaeger:      #CC5500;
+  --trader-ref:         #B49634;
+  --trader-lightkeeper: #2ED399;
+  --trader-btr-driver:  #5F6345;
 
   /* Динамический акцент (связывается с var(--primary) на корне) */
   --color-primary: var(--primary);
@@ -72,41 +87,6 @@
 }
 
 @layer components {
-  /* --- 4. ФОНОВЫЕ СЛОИ --- */
-  .bg-dot-gutter {
-    background-image: radial-gradient(circle, rgba(242, 242, 242, 1) 1px, transparent 1px);
-    background-size: 48px 48px;
-    mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 2%,
-      black calc(50% - 580px),
-      transparent calc(50% - 540px),
-      transparent calc(50% + 540px),
-      black calc(50% + 580px),
-      black 98%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 2%,
-      black calc(50% - 580px),
-      transparent calc(50% - 540px),
-      transparent calc(50% + 540px),
-      black calc(50% + 580px),
-      black 98%,
-      transparent 100%
-    );
-    opacity: 0.06;
-  }
-
-  @media (max-width: 1200px) {
-    .bg-dot-gutter {
-      display: none;
-    }
-  }
-
   /* --- 5. ТАКТИЧЕСКАЯ СЕТКА (Раздел 4: Геометрия) --- */
   .tactical-grid {
     display: grid;
