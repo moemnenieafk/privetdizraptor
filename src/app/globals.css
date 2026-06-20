@@ -134,19 +134,6 @@
     -webkit-font-smoothing: antialiased;
   }
   
-  /* --- Адаптация под 2K и 4K (Глобальный множитель) --- */
-  /* 
-   * Используем множитель 1.33 (2560/1920) для 2K разрешений.
-   * Это самый правильный метод для проекта на жестких пикселях (px):
-   * он сохраняет идеальные пропорции и верстку без изменения сотен классов.
-   */
-  @media (min-width: 2560px) {
-    html { zoom: 1.3333; }
-  }
-
-  @media (min-width: 3840px) {
-    html { zoom: 2; }
-  }
 
   /* Капсим и уплотняем все заголовки по дизайну */
   h1, h2, h3, h4 {
@@ -158,6 +145,16 @@
   html {
     scroll-behavior: smooth;
   }
+}
+
+/* --- Адаптивная ширина контентной колонки (2K / 4K) --- */
+/* max-w-275 = 1100px на 1080p/1440p. На 2K расширяем до 1600px, на 4K — до 2200px.
+   Вне @layer — перебивает Tailwind-утилиты без !important. */
+@media (min-width: 2560px) {
+  .max-w-275 { max-width: 1600px; }
+}
+@media (min-width: 3840px) {
+  .max-w-275 { max-width: 2200px; }
 }
 
 /* --- Кастомный тактический скроллбар (вне слоёв — максимальный приоритет) --- */
@@ -434,7 +431,7 @@ html {
     color: var(--color-base) !important;
   }
 
-  .tactical-menu-item:hover img {
+  .tactical-menu-item:hover img:not([data-colored]) {
     filter: brightness(0);
     transition: filter 0.2s ease-out;
   }

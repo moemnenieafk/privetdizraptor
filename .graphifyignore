@@ -17,15 +17,22 @@ design-ui-ux-figma/
 **/*.gif
 
 # 3. Глобально отключаем все текстовые документы (чтобы не было '24 docs')
+*.md
+*.txt
+*.mdx
+*.csv
+*.rtf
 **/*.md
 **/*.txt
-**/*.md
 **/*.mdx
-**/*.txt
 **/*.csv
 **/*.rtf
-docs/
 README*
+
+# 5. Разрешаем только ключевые проектные доки
+!DESIGN_SYSTEM.md
+!MVPMANIFEST.md
+!PROJECT_STRUCTURE.md
 
 # 4. Разрешаем индексировать критически важные конфиги проекта
 !package.json

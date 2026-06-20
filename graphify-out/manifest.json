@@ -220,7 +220,7 @@
     "semantic_hash": ""
   },
   "next-env.d.ts": {
-    "mtime": 1781728300.1448705,
+    "mtime": 1781915028.7646852,
     "ast_hash": "2a74d3909800ca5467fa83b0ab4a4890",
     "semantic_hash": ""
   },
@@ -340,8 +340,8 @@
     "semantic_hash": ""
   },
   "src/app/eft/barters/BartersClient.tsx": {
-    "mtime": 1781654546.407976,
-    "ast_hash": "e6d7ea42789c8a5e5038ecc5565d2184",
+    "mtime": 1781775157.6751707,
+    "ast_hash": "8830bcf707fb43bf2edb82c361a4cf50",
     "semantic_hash": ""
   },
   "src/app/eft/barters/page.tsx": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "src/app/eft/items/[...category]/ItemsCategoryClient.tsx": {
-    "mtime": 1781654546.4084854,
-    "ast_hash": "f96b1178305054ac2a494cf221968e39",
+    "mtime": 1781775170.2169373,
+    "ast_hash": "3247f4dc73637e73859f0b2c3e10b631",
     "semantic_hash": ""
   },
   "src/app/eft/items/[...category]/page.tsx": {
@@ -380,8 +380,8 @@
     "semantic_hash": ""
   },
   "src/app/eft/items/loot-rate/LootRateClient.tsx": {
-    "mtime": 1781654546.4084854,
-    "ast_hash": "aa99af9faf9e29bc0bcf6b873fed4d46",
+    "mtime": 1781775157.6796713,
+    "ast_hash": "038885513f3ac5debcca60a76cb65890",
     "semantic_hash": ""
   },
   "src/app/eft/items/loot-rate/page.tsx": {
@@ -450,8 +450,8 @@
     "semantic_hash": ""
   },
   "src/app/eft/progress/quests/QuestMapClient.tsx": {
-    "mtime": 1781726707.7495508,
-    "ast_hash": "dfe514d7ace2691a6ce035d0412fbe55",
+    "mtime": 1781913820.7665563,
+    "ast_hash": "eaf809089c4169a76e4dcd24dc3cf08f",
     "semantic_hash": ""
   },
   "src/app/eft/progress/quests/QuestMapDynamic.tsx": {
@@ -460,8 +460,8 @@
     "semantic_hash": ""
   },
   "src/app/eft/progress/quests/page.tsx": {
-    "mtime": 1781726312.267785,
-    "ast_hash": "c0c6f9bb213ad541a9657dbf96c3ff33",
+    "mtime": 1781824025.3715093,
+    "ast_hash": "a383fb696eef9179ff4bd8c044266f7e",
     "semantic_hash": ""
   },
   "src/app/eft/progress/tracker/ItemTrackerClient.tsx": {
@@ -479,64 +479,9 @@
     "ast_hash": "be256885434e28519f045c9923dea1a9",
     "semantic_hash": ""
   },
-  "src/app/eft/questmap/btrdriver.ts": {
-    "mtime": 1778776206.0,
-    "ast_hash": "a47652d96dfefa42770fd7e5283b2311",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/fence.ts": {
-    "mtime": 1778763142.0,
-    "ast_hash": "47c9b47280a065f4f1292cd43440fd36",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/jaeger.ts": {
-    "mtime": 1779038604.0,
-    "ast_hash": "6a98f365adf3b9c8ce4d29804020df66",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/lightkeeper.ts": {
-    "mtime": 1778987278.0,
-    "ast_hash": "2eeea873b8cc2684bfc506ee34d9759a",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/mechanic.ts": {
-    "mtime": 1779117509.0,
-    "ast_hash": "298b93e5442d5ed128762fe2d1278837",
-    "semantic_hash": ""
-  },
   "src/app/eft/questmap/page.tsx": {
     "mtime": 1781681137.4069443,
     "ast_hash": "bc8fb1a5a0db413069702043d3b66bab",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/peacekeeper.ts": {
-    "mtime": 1779041168.0,
-    "ast_hash": "59bf4d68575be5f3f5bd58a5d12e4068",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/prapor.ts": {
-    "mtime": 1779539117.0544307,
-    "ast_hash": "31c8953654dc66e1d3fe6b535e11ccdc",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/ragman.ts": {
-    "mtime": 1779035762.0,
-    "ast_hash": "9c418d651e4e2eb9f7c4b1107994cedd",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/ref.ts": {
-    "mtime": 1779219160.6271043,
-    "ast_hash": "ddac2edbcf8c37b0baf6afb92fd7aebe",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/skier.ts": {
-    "mtime": 1778978463.0,
-    "ast_hash": "bd5202b40eae69f54b5eeb7a1e45f55b",
-    "semantic_hash": ""
-  },
-  "src/app/eft/questmap/therapist.ts": {
-    "mtime": 1779539119.3717606,
-    "ast_hash": "4d93a990dbc189e3786bc2184d5073b6",
     "semantic_hash": ""
   },
   "src/app/eft/quests/lore-quests/page.tsx": {
@@ -560,8 +505,8 @@
     "semantic_hash": ""
   },
   "src/app/layout.tsx": {
-    "mtime": 1781561224.0631845,
-    "ast_hash": "444cd3cbc341d2d3f0a3ca09f9cdfb72",
+    "mtime": 1781773241.471759,
+    "ast_hash": "10b248ab30dfa69e794656bf451e7193",
     "semantic_hash": ""
   },
   "src/app/not-found.tsx": {
@@ -570,8 +515,8 @@
     "semantic_hash": ""
   },
   "src/app/page.tsx": {
-    "mtime": 1781727769.072495,
-    "ast_hash": "118e69b9700bfa55faa1ff86380165da",
+    "mtime": 1781762451.6749723,
+    "ast_hash": "00f773a26b53563fd3e2d680fafaf501",
     "semantic_hash": ""
   },
   "src/app/template.tsx": {
@@ -630,8 +575,8 @@
     "semantic_hash": ""
   },
   "src/components/features/home/ActiveContextBar.tsx": {
-    "mtime": 1781680336.1534083,
-    "ast_hash": "787f27d00f00fec30a3505accaed8523",
+    "mtime": 1781775157.6774209,
+    "ast_hash": "4473c3cb27b43012aaddeba3ab73f268",
     "semantic_hash": ""
   },
   "src/components/features/home/CommsHub.tsx": {
@@ -640,8 +585,8 @@
     "semantic_hash": ""
   },
   "src/components/features/home/HomeClient.tsx": {
-    "mtime": 1781727818.0043259,
-    "ast_hash": "c9638ab23459cc5c0fb9867556fc1ba4",
+    "mtime": 1781763185.3337862,
+    "ast_hash": "503e058df81bcddca04fe95de31c8434",
     "semantic_hash": ""
   },
   "src/components/features/home/SupplyGrid.tsx": {
@@ -790,8 +735,8 @@
     "semantic_hash": ""
   },
   "src/components/features/items/ItemsViewSwitcher.tsx": {
-    "mtime": 1781380510.3446262,
-    "ast_hash": "5dc9491d0b7e937cd00f7fd8e3c5d020",
+    "mtime": 1781775157.6324117,
+    "ast_hash": "e02a1347a471a705f3b2ab8d268b6e1e",
     "semantic_hash": ""
   },
   "src/components/features/items/useCategoryFilters.ts": {
@@ -810,28 +755,28 @@
     "semantic_hash": ""
   },
   "src/components/features/quests/QuestDrawer/index.tsx": {
-    "mtime": 1781726596.4928877,
-    "ast_hash": "609d8cd41907337cfc37f1a2cb4991df",
+    "mtime": 1781912178.301842,
+    "ast_hash": "96a780f9a14199178420cc36a06f88a6",
     "semantic_hash": ""
   },
   "src/components/features/quests/QuestFilterBar/index.tsx": {
-    "mtime": 1781725428.1086133,
-    "ast_hash": "1c040dc64b35cb220b0e55b67c969a53",
+    "mtime": 1781913797.5362916,
+    "ast_hash": "c642f2b02a612434956c8974732507ce",
     "semantic_hash": ""
   },
   "src/components/features/quests/QuestItemTracker/index.tsx": {
-    "mtime": 1781683391.5812542,
-    "ast_hash": "ddf9b55e5b61a2a691148c465a3fc3e4",
+    "mtime": 1781906840.383646,
+    "ast_hash": "1de17cb35a4adebc464366af0b55b6d6",
     "semantic_hash": ""
   },
   "src/components/features/quests/QuestNode/index.tsx": {
-    "mtime": 1781725554.9230034,
-    "ast_hash": "7d484e86bfc62b0a4cd4752ee632f6bc",
+    "mtime": 1781910915.4881935,
+    "ast_hash": "a213de5e794d70a3cf56ddd34ed5bdc0",
     "semantic_hash": ""
   },
   "src/components/features/quests/QuestSearch/index.tsx": {
-    "mtime": 1781683736.431767,
-    "ast_hash": "4d5f9eef1c1b23bb49efe4b6bf519272",
+    "mtime": 1781913897.3102813,
+    "ast_hash": "5be75f6a6a3bee91750d308db3a0678a",
     "semantic_hash": ""
   },
   "src/components/features/telemetry/TacticalTelemetryCard.tsx": {
@@ -845,18 +790,18 @@
     "semantic_hash": ""
   },
   "src/components/layout/ConditionalLayout.tsx": {
-    "mtime": 1781482445.9307885,
-    "ast_hash": "10051120eaa7241cce1e7a00a452cd36",
+    "mtime": 1781914671.7701647,
+    "ast_hash": "ac404c1f13206cfc351936f51e76838b",
     "semantic_hash": ""
   },
   "src/components/layout/Footer.tsx": {
-    "mtime": 1781681946.2468681,
-    "ast_hash": "65836a26d02a29749ce794fd6b67c29a",
+    "mtime": 1781914138.8639386,
+    "ast_hash": "af113a22d498819edffe5682d104d7b6",
     "semantic_hash": ""
   },
   "src/components/layout/Header.tsx": {
-    "mtime": 1781651844.1725192,
-    "ast_hash": "a8eb475d070afaebb5bdb32f0b3d5ad2",
+    "mtime": 1781775128.1846182,
+    "ast_hash": "ecb0cb010fcd205f5a198782e847a63b",
     "semantic_hash": ""
   },
   "src/components/layout/header-modules/BurgerMenu.tsx": {
@@ -890,8 +835,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/header-modules/PlayerTelemetry.tsx": {
-    "mtime": 1781479568.9305806,
-    "ast_hash": "c0117467f8457238d099abfee9e837f8",
+    "mtime": 1781777942.2129388,
+    "ast_hash": "e1cd969606fe7bf2b40a26fe66046bca",
     "semantic_hash": ""
   },
   "src/components/layout/header-modules/ProfileDeleteModal.tsx": {
@@ -920,8 +865,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/header-modules/StreamStatus.tsx": {
-    "mtime": 1781482431.755574,
-    "ast_hash": "ae0b1a6584daeb0fea9e3f911b1a23e2",
+    "mtime": 1781914852.5036669,
+    "ast_hash": "79dfd24af3daec4485c348d41fcd8010",
     "semantic_hash": ""
   },
   "src/components/layout/header-modules/TacticalSearch.tsx": {
@@ -945,8 +890,8 @@
     "semantic_hash": ""
   },
   "src/components/ui/Carousel.tsx": {
-    "mtime": 1781224595.5706427,
-    "ast_hash": "164ccde740d7874384cf4eba71acc111",
+    "mtime": 1781763179.7943118,
+    "ast_hash": "71292376667b5b4166b902f33817c788",
     "semantic_hash": ""
   },
   "src/components/ui/DataViewToggle.tsx": {
@@ -1069,11 +1014,6 @@
     "ast_hash": "d15778627a13b9e04be7a9e6d677a8d4",
     "semantic_hash": ""
   },
-  "src/hooks/useScrollHeader.ts": {
-    "mtime": 1781485543.3016343,
-    "ast_hash": "ee04387d77a3618a4a848ad510da1359",
-    "semantic_hash": ""
-  },
   "src/hooks/useStreamStatus.ts": {
     "mtime": 1781381535.2072167,
     "ast_hash": "ecaa88f7fa0bf610a5a26cf545dcd3aa",
@@ -1085,8 +1025,8 @@
     "semantic_hash": ""
   },
   "src/lib/eft-api.ts": {
-    "mtime": 1781726685.458024,
-    "ast_hash": "f46cfccd72c7d34907d0d846b92b637b",
+    "mtime": 1781805607.832232,
+    "ast_hash": "540e45a2eeee41a67f70719314ed69ef",
     "semantic_hash": ""
   },
   "src/lib/eyewear-filter-config.ts": {
@@ -1145,8 +1085,8 @@
     "semantic_hash": ""
   },
   "src/store/useQuestStore.ts": {
-    "mtime": 1781725328.14434,
-    "ast_hash": "52cd2c016adce5eec0f51fe4c8a68873",
+    "mtime": 1781878681.1236548,
+    "ast_hash": "7ff20d858dc0f2fe2bea251622778dec",
     "semantic_hash": ""
   },
   "src/types/barter.ts": {
@@ -1165,8 +1105,8 @@
     "semantic_hash": ""
   },
   "src/types/quest.ts": {
-    "mtime": 1781726690.5735264,
-    "ast_hash": "3804c228ed87c4c38a5686affb4a40f8",
+    "mtime": 1781881426.668769,
+    "ast_hash": "1ba1140d963a409b8900f807a19b9ceb",
     "semantic_hash": ""
   },
   "src/types/supply.ts": {
@@ -1320,8 +1260,8 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1781683377.4884741,
-    "ast_hash": "207da522fff416f4ba6c51a8f39dd178",
+    "mtime": 1781878399.9611535,
+    "ast_hash": "095fef6d1753ee4fe577e7f1f3d5a6fb",
     "semantic_hash": ""
   },
   "DESIGN_SYSTEM.md": {
@@ -1340,8 +1280,1523 @@
     "semantic_hash": ""
   },
   "icon-list.txt": {
-    "mtime": 1781626106.4747112,
-    "ast_hash": "f4ce99dc9ac7a99d403582a696b48963",
+    "mtime": 1781907848.9262023,
+    "ast_hash": "9e6d3b799ff34eb19b988bc985c662ac",
     "semantic_hash": ""
+  },
+  ".design-sync/config.json": {
+    "mtime": 1781763782.0850103,
+    "ast_hash": "7a47b1181a8dbaa490e7c88c04812a18",
+    "semantic_hash": ""
+  },
+  "ds-bundle/_ds_bundle.js": {
+    "mtime": 1781763831.2436266,
+    "ast_hash": "98676b7c831c356e5005325eff9b25b0",
+    "semantic_hash": ""
+  },
+  "scripts/dump-quests.mjs": {
+    "mtime": 1781805570.3918614,
+    "ast_hash": "6d068678f92e5364ff0714ea6d31dfd9",
+    "semantic_hash": ""
+  },
+  "src/components/features/quests/QuestMapViewport/index.tsx": {
+    "mtime": 1781877688.536154,
+    "ast_hash": "cf105da033b924e60a925a9b286bbbdb",
+    "semantic_hash": ""
+  },
+  "src/components/features/quests/QuestResetModal/index.tsx": {
+    "mtime": 1781880237.654517,
+    "ast_hash": "00aa92a393cae54c8179ea137e3d72bd",
+    "semantic_hash": ""
+  },
+  "src/components/features/quests/QuestStatusBar/index.tsx": {
+    "mtime": 1781900397.342034,
+    "ast_hash": "7ce4e46d33be75f16798d1843588fab3",
+    "semantic_hash": ""
+  },
+  "src/components/features/quests/StubNode/index.tsx": {
+    "mtime": 1781877711.3823445,
+    "ast_hash": "03d4c2fdd778e2fe5a97c70af7a0e5cb",
+    "semantic_hash": ""
+  },
+  "src/components/features/quests/TraderNode/index.tsx": {
+    "mtime": 1781873980.0637374,
+    "ast_hash": "642283dcfb52c3243e09cf6437f8250a",
+    "semantic_hash": ""
+  },
+  "src/data/quest-guides.json": {
+    "mtime": 1781908472.958778,
+    "ast_hash": "8b879a8bc581d3603cb0116109bb83e7",
+    "semantic_hash": ""
+  },
+  "src/data/quests/eft-quests.json": {
+    "mtime": 1781805578.3773696,
+    "ast_hash": "d1db5797995a4b00cbfed42780ca43c0",
+    "semantic_hash": ""
+  },
+  "src/data/quests/index.ts": {
+    "mtime": 1781805584.3158293,
+    "ast_hash": "3438e197ce2c1d45238b373870897cbd",
+    "semantic_hash": ""
+  },
+  "src/data/traderColors.ts": {
+    "mtime": 1781805615.3783352,
+    "ast_hash": "6bce590c07745ba9186ab5ee2de57c34",
+    "semantic_hash": ""
+  },
+  "src/lib/quest-utils.ts": {
+    "mtime": 1781873043.6666193,
+    "ast_hash": "0326f75cd1d022834de8e5afebbedb13",
+    "semantic_hash": ""
+  },
+  "src/lib/trader-utils.ts": {
+    "mtime": 1781871191.5649953,
+    "ast_hash": "d6c6d869cd2facf815b1e185d7ac05fc",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/cards/TacticalCard/index.html": {
+    "mtime": 1781790132.7735288,
+    "ast_hash": "56ba80af988d4523534fa6c639b3e4c6",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/icons/IconHelpers/index.html": {
+    "mtime": 1781790172.0642035,
+    "ast_hash": "2942fe2064162977431485359ece454c",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/navigation/TacticalMenuItem/index.html": {
+    "mtime": 1781790142.014425,
+    "ast_hash": "7054965da718be929d73337922adb4e8",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/tokens/ColorPalette/index.html": {
+    "mtime": 1781790108.0014598,
+    "ast_hash": "84eb3515a2d39d6e5939ca80ca42eb43",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/tokens/TraderColors/index.html": {
+    "mtime": 1781790123.4430745,
+    "ast_hash": "8937fa13c5f31b0f2db2389b23ddd9dd",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/typography/Typography/index.html": {
+    "mtime": 1781790153.4618106,
+    "ast_hash": "97c1e729815b0288dd89a5cb372b432c",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/utilities/Animations/index.html": {
+    "mtime": 1781790236.5340197,
+    "ast_hash": "586a4487d9a59c42dbde02cd38b10623",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/utilities/GradientBorder/index.html": {
+    "mtime": 1781790231.9523525,
+    "ast_hash": "4828cbca3580ab69f7180cdc168fd4d0",
+    "semantic_hash": ""
+  },
+  "ds-bundle/components/utilities/TacticalTooltip/index.html": {
+    "mtime": 1781790234.5111637,
+    "ast_hash": "138667f7d9db7a7546dc1e9db0b004ee",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\settings.local.json": {
+    "mtime": 1781648708.129511,
+    "ast_hash": "d4d92fbc261922096bd307dcf63fb2ba",
+    "semantic_hash": "d4d92fbc261922096bd307dcf63fb2ba"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\_adherence.oxlintrc.json": {
+    "mtime": 1781698603.0,
+    "ast_hash": "43a2106bd7c2761d929364dbb9af9fbb",
+    "semantic_hash": "43a2106bd7c2761d929364dbb9af9fbb"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\_ds_bundle.js": {
+    "mtime": 1781698603.0,
+    "ast_hash": "2f77f4a3f24b67c8be3a975919cc454a",
+    "semantic_hash": "2f77f4a3f24b67c8be3a975919cc454a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\_ds_manifest.json": {
+    "mtime": 1781698603.0,
+    "ast_hash": "d9a96ca19d39f5a08aa5de50726d6510",
+    "semantic_hash": "d9a96ca19d39f5a08aa5de50726d6510"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\buttons\\Button.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "bbde97caf17ae00d295fa6ae6c286fe3",
+    "semantic_hash": "bbde97caf17ae00d295fa6ae6c286fe3"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\buttons\\Button.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "e2dde167be14109659d7a6a34029050d",
+    "semantic_hash": "e2dde167be14109659d7a6a34029050d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\buttons\\DataViewToggle.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "431c6c6c17a60db28ebfcc790d3e8ecd",
+    "semantic_hash": "431c6c6c17a60db28ebfcc790d3e8ecd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\buttons\\DataViewToggle.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "0f12da50f086525a5567bfba8f101137",
+    "semantic_hash": "0f12da50f086525a5567bfba8f101137"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\Badge.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "7ebf9e067537355f70695ab9b1ae06bb",
+    "semantic_hash": "7ebf9e067537355f70695ab9b1ae06bb"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\Badge.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "d37bf2bb90e8419147a1f18f2818b474",
+    "semantic_hash": "d37bf2bb90e8419147a1f18f2818b474"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\MetricCard.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "9db2b6830c7f585fb56c4e2e06f96b5a",
+    "semantic_hash": "9db2b6830c7f585fb56c4e2e06f96b5a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\MetricCard.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "0f4f23822dd2f278fa5b633a24e027d0",
+    "semantic_hash": "0f4f23822dd2f278fa5b633a24e027d0"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\ProgressBar.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "7cce473d91196d86b6234eef6e777044",
+    "semantic_hash": "7cce473d91196d86b6234eef6e777044"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\ProgressBar.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "51335d2496ecda7704ca870cf3f4b508",
+    "semantic_hash": "51335d2496ecda7704ca870cf3f4b508"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\RarityBadge.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "d27114df0b740b94692914be605558cf",
+    "semantic_hash": "d27114df0b740b94692914be605558cf"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\RarityBadge.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "f000d85a7d771d6cf57a3578041a1575",
+    "semantic_hash": "f000d85a7d771d6cf57a3578041a1575"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\Tooltip.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "067176b03fc5d115d34987e64e6f664e",
+    "semantic_hash": "067176b03fc5d115d34987e64e6f664e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\Tooltip.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "5d81fd9ebe2d444430117244413833e5",
+    "semantic_hash": "5d81fd9ebe2d444430117244413833e5"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\layout\\PageHeader.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "a2402c5d9e848a9777fa315365254c3b",
+    "semantic_hash": "a2402c5d9e848a9777fa315365254c3b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\layout\\PageHeader.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "d36a3036bc2d1579b87012404a67e0b4",
+    "semantic_hash": "d36a3036bc2d1579b87012404a67e0b4"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\layout\\SectionPanel.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "a4c287a3270b52c240d898f7605cc524",
+    "semantic_hash": "a4c287a3270b52c240d898f7605cc524"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\layout\\SectionPanel.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "382a9b203564945dd02d8105c47be33e",
+    "semantic_hash": "382a9b203564945dd02d8105c47be33e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\layout\\TacticalCard.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "1d7c893ae863e9fc9998ec2b7a509b69",
+    "semantic_hash": "1d7c893ae863e9fc9998ec2b7a509b69"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\layout\\TacticalCard.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "8d6cc11306c0991287d0552e3a4cb9de",
+    "semantic_hash": "8d6cc11306c0991287d0552e3a4cb9de"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\navigation\\GameCard.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "d752c6cc43b8397ff0b99a5d9fae5ee2",
+    "semantic_hash": "d752c6cc43b8397ff0b99a5d9fae5ee2"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\navigation\\GameCard.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "1db9498d3dc7777a78b320689fa2ad8a",
+    "semantic_hash": "1db9498d3dc7777a78b320689fa2ad8a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\navigation\\HubCard.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "d5b1b3044587f51c8926d9fc6b779765",
+    "semantic_hash": "d5b1b3044587f51c8926d9fc6b779765"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\navigation\\HubCard.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "89d7b94b1fc1ec7929303b6898c0d0d9",
+    "semantic_hash": "89d7b94b1fc1ec7929303b6898c0d0d9"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\switches\\EditionSwitch.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "c25d0ab8b04083d84ab7ff6dbb5bf71d",
+    "semantic_hash": "c25d0ab8b04083d84ab7ff6dbb5bf71d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\switches\\EditionSwitch.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "25197c64ac0360623b203a607713021a",
+    "semantic_hash": "25197c64ac0360623b203a607713021a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\switches\\FactionSwitch.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "9672b0a6644239949fdd4614ba2fe946",
+    "semantic_hash": "9672b0a6644239949fdd4614ba2fe946"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\switches\\FactionSwitch.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "50f3e88bd208384acb3cd8a1efd4ec2e",
+    "semantic_hash": "50f3e88bd208384acb3cd8a1efd4ec2e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\switches\\GameModeSwitch.d.ts": {
+    "mtime": 1781698604.0,
+    "ast_hash": "106c96f23656877898e9621c409ad979",
+    "semantic_hash": "106c96f23656877898e9621c409ad979"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\switches\\GameModeSwitch.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "63f05bf8286ae2a74f1ad5fb0b2e9e8d",
+    "semantic_hash": "63f05bf8286ae2a74f1ad5fb0b2e9e8d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\ui_kits\\eft\\EftHeader.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "97f069f6d3a150424b5dde22f7d27c9e",
+    "semantic_hash": "97f069f6d3a150424b5dde22f7d27c9e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\ui_kits\\eft\\ItemsScreen.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "ca0343122aef2fccfa220abefa7963a7",
+    "semantic_hash": "ca0343122aef2fccfa220abefa7963a7"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\ui_kits\\hub\\ContextBar.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "ca1e7ad26cd3986c2d2ba136803636d1",
+    "semantic_hash": "ca1e7ad26cd3986c2d2ba136803636d1"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\ui_kits\\hub\\GameRail.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "0561e3adc6f9991aa8af89ef6738ec46",
+    "semantic_hash": "0561e3adc6f9991aa8af89ef6738ec46"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\ui_kits\\hub\\HubFooter.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "e8b23c8ddb56174a71395e84896f4064",
+    "semantic_hash": "e8b23c8ddb56174a71395e84896f4064"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\ui_kits\\hub\\HubHero.jsx": {
+    "mtime": 1781698604.0,
+    "ast_hash": "c9db04f3394bab41ee89b92eaf93acd4",
+    "semantic_hash": "c9db04f3394bab41ee89b92eaf93acd4"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.design-sync\\config.json": {
+    "mtime": 1781763782.0850103,
+    "ast_hash": "7a47b1181a8dbaa490e7c88c04812a18",
+    "semantic_hash": "7a47b1181a8dbaa490e7c88c04812a18"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\_ds_bundle.js": {
+    "mtime": 1781763831.2436266,
+    "ast_hash": "98676b7c831c356e5005325eff9b25b0",
+    "semantic_hash": "98676b7c831c356e5005325eff9b25b0"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\eslint-output.json": {
+    "mtime": 1781654518.0041895,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\eslint.config.js": {
+    "mtime": 1781654532.4205136,
+    "ast_hash": "3daeb2ee97ec32a47cdcc46170f2ae01",
+    "semantic_hash": "3daeb2ee97ec32a47cdcc46170f2ae01"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\extensions.json": {
+    "mtime": 1781368340.0615866,
+    "ast_hash": "d292b664bba42337d4250d7165c55000",
+    "semantic_hash": "d292b664bba42337d4250d7165c55000"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\generate-icon-report.mjs": {
+    "mtime": 1781304115.6819296,
+    "ast_hash": "964807c3cf2390c0f7f3dba3afb741af",
+    "semantic_hash": "964807c3cf2390c0f7f3dba3afb741af"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\next-env.d.ts": {
+    "mtime": 1781915359.7192776,
+    "ast_hash": "d0f8375ae1199dc7acd3977fc33b78b8",
+    "semantic_hash": "d0f8375ae1199dc7acd3977fc33b78b8"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\next.config.ts": {
+    "mtime": 1779049588.0,
+    "ast_hash": "d401daa9726132aa758f1d5eea401431",
+    "semantic_hash": "d401daa9726132aa758f1d5eea401431"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\package.json": {
+    "mtime": 1781678745.3361762,
+    "ast_hash": "08ad1e3c29dcfc16374e57c19c2287d4",
+    "semantic_hash": "08ad1e3c29dcfc16374e57c19c2287d4"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\postcss.config.mjs": {
+    "mtime": 1781082708.5341382,
+    "ast_hash": "f76ebbe853096bd5c029b754dad8eab8",
+    "semantic_hash": "f76ebbe853096bd5c029b754dad8eab8"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\cleanup-obsolete-dirs.mjs": {
+    "mtime": 1781277337.785463,
+    "ast_hash": "d8c6c1b9dfaa44bdadb4481634b617ab",
+    "semantic_hash": "d8c6c1b9dfaa44bdadb4481634b617ab"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\dump-quests.mjs": {
+    "mtime": 1781805570.3918614,
+    "ast_hash": "6d068678f92e5364ff0714ea6d31dfd9",
+    "semantic_hash": "6d068678f92e5364ff0714ea6d31dfd9"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\ensure-page-headers.mjs": {
+    "mtime": 1781110561.8506706,
+    "ast_hash": "f3b9f988b2664be6e4dc5b6f3f267aa3",
+    "semantic_hash": "f3b9f988b2664be6e4dc5b6f3f267aa3"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\fix-warnings.mjs": {
+    "mtime": 1781112695.192119,
+    "ast_hash": "240b76e762cd51b777a425b507cca4f1",
+    "semantic_hash": "240b76e762cd51b777a425b507cca4f1"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\move-item-components.mjs": {
+    "mtime": 1781263718.9568746,
+    "ast_hash": "2659ef329454877ebd41a68648c56ca8",
+    "semantic_hash": "2659ef329454877ebd41a68648c56ca8"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\move-telemetry.mjs": {
+    "mtime": 1781279066.5556984,
+    "ast_hash": "d59e7fa47fb2b4e9a6bf37a5e4bc87d1",
+    "semantic_hash": "d59e7fa47fb2b4e9a6bf37a5e4bc87d1"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\refactor-page-headers.mjs": {
+    "mtime": 1781106955.8417354,
+    "ast_hash": "a4c4d79df1376a56e6c140ce370164e6",
+    "semantic_hash": "a4c4d79df1376a56e6c140ce370164e6"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\replace-kamen.mjs": {
+    "mtime": 1781281572.9078898,
+    "ast_hash": "c882ffee27be627d20f1890e7d9e628d",
+    "semantic_hash": "c882ffee27be627d20f1890e7d9e628d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\setup-uikit.mjs": {
+    "mtime": 1781204077.4628365,
+    "ast_hash": "2292b71e56e37c8e61cbfefeccde9c3c",
+    "semantic_hash": "2292b71e56e37c8e61cbfefeccde9c3c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\scripts\\sync-docs.mjs": {
+    "mtime": 1781113874.3616788,
+    "ast_hash": "db8456933cecc4f24917ee73a3d5261c",
+    "semantic_hash": "db8456933cecc4f24917ee73a3d5261c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\settings.json": {
+    "mtime": 1781368068.8243728,
+    "ast_hash": "ea9ffd6a7eda8eefb17ca6eb9af1577c",
+    "semantic_hash": "ea9ffd6a7eda8eefb17ca6eb9af1577c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\actions\\search-actions.ts": {
+    "mtime": 1779531890.595409,
+    "ast_hash": "3c2eb1c823dd4283f31591da1dd8eb25",
+    "semantic_hash": "3c2eb1c823dd4283f31591da1dd8eb25"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\actions\\tarkov-cartography.ts": {
+    "mtime": 1781683753.783892,
+    "ast_hash": "d26d9b0ed3b879e0229757796ecf9309",
+    "semantic_hash": "d26d9b0ed3b879e0229757796ecf9309"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\actions\\tarkov-context.ts": {
+    "mtime": 1781680305.4050279,
+    "ast_hash": "68ed421eb4a881f5e81e02fbcc7c6b8c",
+    "semantic_hash": "68ed421eb4a881f5e81e02fbcc7c6b8c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\actions\\tarkov-supply.ts": {
+    "mtime": 1781683718.990045,
+    "ast_hash": "672b7dcc228df195f603ff1009d3fb1b",
+    "semantic_hash": "672b7dcc228df195f603ff1009d3fb1b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\actions\\youtube.ts": {
+    "mtime": 1779668391.976135,
+    "ast_hash": "92ab39d20c4b69d7da7eeec020288f84",
+    "semantic_hash": "92ab39d20c4b69d7da7eeec020288f84"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\account\\AccountCenter.tsx": {
+    "mtime": 1781654546.407976,
+    "ast_hash": "7b059019a039eb7a48e0ff49bc66f94f",
+    "semantic_hash": "7b059019a039eb7a48e0ff49bc66f94f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\account\\AccountHeader.tsx": {
+    "mtime": 1781479568.9139633,
+    "ast_hash": "61fd5217620404c20df557805d486cb8",
+    "semantic_hash": "61fd5217620404c20df557805d486cb8"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\account\\layout.tsx": {
+    "mtime": 1781385708.3315654,
+    "ast_hash": "343a47381b0082f80ac32e69b37d984a",
+    "semantic_hash": "343a47381b0082f80ac32e69b37d984a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\account\\page.tsx": {
+    "mtime": 1781382946.3768487,
+    "ast_hash": "63795f8c9b03a75a0e452581d76a6425",
+    "semantic_hash": "63795f8c9b03a75a0e452581d76a6425"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\api\\twitch-status\\route.ts": {
+    "mtime": 1779668628.3238814,
+    "ast_hash": "76587c1214633744f713774f5e7a4247",
+    "semantic_hash": "76587c1214633744f713774f5e7a4247"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\barters\\BartersClient.tsx": {
+    "mtime": 1781775157.6751707,
+    "ast_hash": "8830bcf707fb43bf2edb82c361a4cf50",
+    "semantic_hash": "8830bcf707fb43bf2edb82c361a4cf50"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\barters\\page.tsx": {
+    "mtime": 1781654546.407976,
+    "ast_hash": "b4f76e03d2ddd23ee24dfdbd2fff60f7",
+    "semantic_hash": "b4f76e03d2ddd23ee24dfdbd2fff60f7"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\gamesetting\\page.tsx": {
+    "mtime": 1781380479.587438,
+    "ast_hash": "fe40ebf1e0edcee1851ac972f975c6e8",
+    "semantic_hash": "fe40ebf1e0edcee1851ac972f975c6e8"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\items\\[...category]\\ItemsCategoryClient.tsx": {
+    "mtime": 1781775170.2169373,
+    "ast_hash": "3247f4dc73637e73859f0b2c3e10b631",
+    "semantic_hash": "3247f4dc73637e73859f0b2c3e10b631"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\items\\[...category]\\page.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "6c64b737a37067ac6bf39975008273ef",
+    "semantic_hash": "6c64b737a37067ac6bf39975008273ef"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\items\\item\\[slug]\\ItemImage.tsx": {
+    "mtime": 1781654546.407976,
+    "ast_hash": "2eaa302117112f1552a544060734ccda",
+    "semantic_hash": "2eaa302117112f1552a544060734ccda"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\items\\item\\[slug]\\ItemModules.tsx": {
+    "mtime": 1781559516.5213919,
+    "ast_hash": "8f57666363affae94fc822b7b1d429dd",
+    "semantic_hash": "8f57666363affae94fc822b7b1d429dd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\items\\item\\[slug]\\page.tsx": {
+    "mtime": 1781559522.146847,
+    "ast_hash": "6390f6d0033f8343b0d5dcd9141a0508",
+    "semantic_hash": "6390f6d0033f8343b0d5dcd9141a0508"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\items\\loot-rate\\LootRateClient.tsx": {
+    "mtime": 1781775157.6796713,
+    "ast_hash": "038885513f3ac5debcca60a76cb65890",
+    "semantic_hash": "038885513f3ac5debcca60a76cb65890"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\items\\loot-rate\\page.tsx": {
+    "mtime": 1781654546.407976,
+    "ast_hash": "8e1972d11cec04102bbab3ffe5281b90",
+    "semantic_hash": "8e1972d11cec04102bbab3ffe5281b90"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\items\\page.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "df1c8d4fb568603f4b8a1c72668242bd",
+    "semantic_hash": "df1c8d4fb568603f4b8a1c72668242bd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\layout.tsx": {
+    "mtime": 1781644829.8175776,
+    "ast_hash": "846d48d0de1c9a7549cd203412ff9cab",
+    "semantic_hash": "846d48d0de1c9a7549cd203412ff9cab"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\maps\\page.tsx": {
+    "mtime": 1781380479.6420162,
+    "ast_hash": "0d3bf8ffb6af7c2e175f529e624ce63b",
+    "semantic_hash": "0d3bf8ffb6af7c2e175f529e624ce63b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\page.tsx": {
+    "mtime": 1781380479.6687725,
+    "ast_hash": "0db5dbd7baf08cbbaae652b336fd604d",
+    "semantic_hash": "0db5dbd7baf08cbbaae652b336fd604d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\achievements\\AchievementsClient.tsx": {
+    "mtime": 1781479628.475517,
+    "ast_hash": "7106ffb6df0300112ba6d0300982a363",
+    "semantic_hash": "7106ffb6df0300112ba6d0300982a363"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\achievements\\page.tsx": {
+    "mtime": 1781380479.6450937,
+    "ast_hash": "c11e8cf3025af6845a2bfe8139b14476",
+    "semantic_hash": "c11e8cf3025af6845a2bfe8139b14476"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\barter\\BarterPageClient.tsx": {
+    "mtime": 1781654865.4827724,
+    "ast_hash": "bcf86896cc07b314e96cc4e527cf8f3c",
+    "semantic_hash": "bcf86896cc07b314e96cc4e527cf8f3c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\barter\\page.tsx": {
+    "mtime": 1781652175.753433,
+    "ast_hash": "3b4801bd023fa943345ea866fafbfc40",
+    "semantic_hash": "3b4801bd023fa943345ea866fafbfc40"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\hideout\\modules\\page.tsx": {
+    "mtime": 1781380479.6481874,
+    "ast_hash": "dbe4dee4f93a8a03c4d80a5577ed0502",
+    "semantic_hash": "dbe4dee4f93a8a03c4d80a5577ed0502"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\hideout\\page.tsx": {
+    "mtime": 1781380479.6497312,
+    "ast_hash": "31304969eaa2cc3f5d179486da50958e",
+    "semantic_hash": "31304969eaa2cc3f5d179486da50958e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\loadouts\\page.tsx": {
+    "mtime": 1781380479.6507595,
+    "ast_hash": "fbc0bb492a6a2e4cee23452a52f248d9",
+    "semantic_hash": "fbc0bb492a6a2e4cee23452a52f248d9"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\page.tsx": {
+    "mtime": 1781679003.6746309,
+    "ast_hash": "5e9d3059e2f5524a87942ec3a681d991",
+    "semantic_hash": "5e9d3059e2f5524a87942ec3a681d991"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\quests\\QuestMapClient.tsx": {
+    "mtime": 1781917280.2094944,
+    "ast_hash": "a2f5a06d32a6a4da4f147130ad668708",
+    "semantic_hash": "a2f5a06d32a6a4da4f147130ad668708"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\quests\\QuestMapDynamic.tsx": {
+    "mtime": 1781726303.3643465,
+    "ast_hash": "2ab11f439f00831c001e833a9ecbbf51",
+    "semantic_hash": "2ab11f439f00831c001e833a9ecbbf51"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\quests\\page.tsx": {
+    "mtime": 1781824025.3715093,
+    "ast_hash": "a383fb696eef9179ff4bd8c044266f7e",
+    "semantic_hash": "a383fb696eef9179ff4bd8c044266f7e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\tracker\\ItemTrackerClient.tsx": {
+    "mtime": 1781685617.694013,
+    "ast_hash": "0e6cd4798b55f401e89827f8305b3779",
+    "semantic_hash": "0e6cd4798b55f401e89827f8305b3779"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\progress\\tracker\\page.tsx": {
+    "mtime": 1781685569.6103864,
+    "ast_hash": "ac554daa237e7521c34f3f1a1363ad4f",
+    "semantic_hash": "ac554daa237e7521c34f3f1a1363ad4f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\questmap\\QuestMapLoader.tsx": {
+    "mtime": 1781680609.9071536,
+    "ast_hash": "be256885434e28519f045c9923dea1a9",
+    "semantic_hash": "be256885434e28519f045c9923dea1a9"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\questmap\\page.tsx": {
+    "mtime": 1781681137.4069443,
+    "ast_hash": "bc8fb1a5a0db413069702043d3b66bab",
+    "semantic_hash": "bc8fb1a5a0db413069702043d3b66bab"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\quests\\lore-quests\\page.tsx": {
+    "mtime": 1781380479.6631258,
+    "ast_hash": "74d1e132a756b44ff2c4b3eab7c39a35",
+    "semantic_hash": "74d1e132a756b44ff2c4b3eab7c39a35"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\quests\\page.tsx": {
+    "mtime": 1781380479.6662025,
+    "ast_hash": "ff8099940525d35e56625cefdbbd7ae8",
+    "semantic_hash": "ff8099940525d35e56625cefdbbd7ae8"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\quests\\side-quests\\page.tsx": {
+    "mtime": 1781380479.6651795,
+    "ast_hash": "064e1eb08ccfd59a4063bcc24dcf30c4",
+    "semantic_hash": "064e1eb08ccfd59a4063bcc24dcf30c4"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\eft\\videos\\page.tsx": {
+    "mtime": 1781380479.6677427,
+    "ast_hash": "090fbb37e33f082d63b3c0f10afd9f62",
+    "semantic_hash": "090fbb37e33f082d63b3c0f10afd9f62"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\layout.tsx": {
+    "mtime": 1781773241.471759,
+    "ast_hash": "10b248ab30dfa69e794656bf451e7193",
+    "semantic_hash": "10b248ab30dfa69e794656bf451e7193"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\not-found.tsx": {
+    "mtime": 1781381535.1596818,
+    "ast_hash": "6b22866bdd1bc76405e3414657546774",
+    "semantic_hash": "6b22866bdd1bc76405e3414657546774"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\page.tsx": {
+    "mtime": 1781762451.6749723,
+    "ast_hash": "00f773a26b53563fd3e2d680fafaf501",
+    "semantic_hash": "00f773a26b53563fd3e2d680fafaf501"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\app\\template.tsx": {
+    "mtime": 1779670127.8935213,
+    "ast_hash": "289dcb7a505ae814dcf3906558ce8b30",
+    "semantic_hash": "289dcb7a505ae814dcf3906558ce8b30"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\Footer.js": {
+    "mtime": 1779541537.1886714,
+    "ast_hash": "23e35d27df35e6d5183ae9b4e3d31dd4",
+    "semantic_hash": "23e35d27df35e6d5183ae9b4e3d31dd4"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\PlaceholderPage.tsx": {
+    "mtime": 1781479568.9374146,
+    "ast_hash": "106f5b6e8728322bffeab8c37cf4799e",
+    "semantic_hash": "106f5b6e8728322bffeab8c37cf4799e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\barter\\BarterSearchBar.tsx": {
+    "mtime": 1781649884.0637534,
+    "ast_hash": "a3ac1b10106f39824f71dc7db1c29855",
+    "semantic_hash": "a3ac1b10106f39824f71dc7db1c29855"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\barter\\BarterTradeSelector.tsx": {
+    "mtime": 1781652154.153636,
+    "ast_hash": "6a757907240a5fc62ba2ff3889164e88",
+    "semantic_hash": "6a757907240a5fc62ba2ff3889164e88"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\barter\\ProMetaProgress.tsx": {
+    "mtime": 1781654615.029828,
+    "ast_hash": "f03ac5502bd0ce1bcc3396872a443ae8",
+    "semantic_hash": "f03ac5502bd0ce1bcc3396872a443ae8"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\barter\\StashGrid.tsx": {
+    "mtime": 1781651403.5697057,
+    "ast_hash": "12f4a9d14d7e594664ed40856f65beba",
+    "semantic_hash": "12f4a9d14d7e594664ed40856f65beba"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\barter\\StashItemTile.tsx": {
+    "mtime": 1781651366.141286,
+    "ast_hash": "f50b255937a0fdf1f3f535ac04804e79",
+    "semantic_hash": "f50b255937a0fdf1f3f535ac04804e79"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\barter\\StashItemTooltip.tsx": {
+    "mtime": 1781651306.401432,
+    "ast_hash": "5207bf5b7bea65ccf58d5e8e6f5e51ee",
+    "semantic_hash": "5207bf5b7bea65ccf58d5e8e6f5e51ee"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\barter\\StashSummary.tsx": {
+    "mtime": 1781653758.3155417,
+    "ast_hash": "595df04c3310365a0f7859fa1ae23033",
+    "semantic_hash": "595df04c3310365a0f7859fa1ae23033"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\barter\\StatsDashboard.tsx": {
+    "mtime": 1781654260.217156,
+    "ast_hash": "21d9a244f57e965daa8a2097593720ec",
+    "semantic_hash": "21d9a244f57e965daa8a2097593720ec"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\home\\ActiveContextBar.tsx": {
+    "mtime": 1781775157.6774209,
+    "ast_hash": "4473c3cb27b43012aaddeba3ab73f268",
+    "semantic_hash": "4473c3cb27b43012aaddeba3ab73f268"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\home\\CommsHub.tsx": {
+    "mtime": 1781727879.2110846,
+    "ast_hash": "4fa8b617908144f3571e393060d8b8d5",
+    "semantic_hash": "4fa8b617908144f3571e393060d8b8d5"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\home\\HomeClient.tsx": {
+    "mtime": 1781763185.3337862,
+    "ast_hash": "503e058df81bcddca04fe95de31c8434",
+    "semantic_hash": "503e058df81bcddca04fe95de31c8434"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\home\\SupplyGrid.tsx": {
+    "mtime": 1781727839.264408,
+    "ast_hash": "ff92fdfc8f0aa734658abbe499afdf67",
+    "semantic_hash": "ff92fdfc8f0aa734658abbe499afdf67"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\home\\TacticalCartography.tsx": {
+    "mtime": 1781682538.151258,
+    "ast_hash": "8dee9034e1a1c3f5a0b6de2790dc0bab",
+    "semantic_hash": "8dee9034e1a1c3f5a0b6de2790dc0bab"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\home\\TacticalCartographyClient.tsx": {
+    "mtime": 1781727873.4285085,
+    "ast_hash": "38339d7f21e0529d09cabab4fe5032ee",
+    "semantic_hash": "38339d7f21e0529d09cabab4fe5032ee"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\home\\TerminalBoot.tsx": {
+    "mtime": 1781680049.6078694,
+    "ast_hash": "2717d90bf0a8f30f7b367bc5886a2680",
+    "semantic_hash": "2717d90bf0a8f30f7b367bc5886a2680"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\home\\TraderCountdown.tsx": {
+    "mtime": 1781680318.9891295,
+    "ast_hash": "ad4304ad02618f648a2d88ce8c8ddef9",
+    "semantic_hash": "ad4304ad02618f648a2d88ce8c8ddef9"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\ArmorFilterPanel.tsx": {
+    "mtime": 1781404749.416942,
+    "ast_hash": "256f706abec2ee070419942d9b90fd45",
+    "semantic_hash": "256f706abec2ee070419942d9b90fd45"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\Badge.tsx": {
+    "mtime": 1781539058.6590085,
+    "ast_hash": "59f1cdb2209a636c8593499ad9c2b57b",
+    "semantic_hash": "59f1cdb2209a636c8593499ad9c2b57b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\BreadcrumbsSetter.tsx": {
+    "mtime": 1781531146.6770394,
+    "ast_hash": "8d608d93ada47c3e5ae77c6dd61fc6e7",
+    "semantic_hash": "8d608d93ada47c3e5ae77c6dd61fc6e7"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\CategoryControlBar.tsx": {
+    "mtime": 1781626585.5813272,
+    "ast_hash": "fe70419a9dd7119709195e813c0b093b",
+    "semantic_hash": "fe70419a9dd7119709195e813c0b093b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\CategoryTabs.tsx": {
+    "mtime": 1781352027.7836704,
+    "ast_hash": "9810717985b1433548ad4ad1657b58bf",
+    "semantic_hash": "9810717985b1433548ad4ad1657b58bf"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\EftItemTile.tsx": {
+    "mtime": 1781532985.564513,
+    "ast_hash": "05cbc5027b177642d208027311766b08",
+    "semantic_hash": "05cbc5027b177642d208027311766b08"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\Header.tsx": {
+    "mtime": 1781542148.5086575,
+    "ast_hash": "738e0de545d550b8ad6b465123ab7381",
+    "semantic_hash": "738e0de545d550b8ad6b465123ab7381"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\Indicator.tsx": {
+    "mtime": 1781645279.75717,
+    "ast_hash": "89f1c12ea1a94186fb126ee35442491e",
+    "semantic_hash": "89f1c12ea1a94186fb126ee35442491e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\Media.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "adbd11ac95ba279eba6f9728b2b3261b",
+    "semantic_hash": "adbd11ac95ba279eba6f9728b2b3261b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\Name.tsx": {
+    "mtime": 1781478827.8728142,
+    "ast_hash": "88b9e901063c370a91c98994814fa461",
+    "semantic_hash": "88b9e901063c370a91c98994814fa461"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\Pricing.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "358109f2630822948bb06a4694816791",
+    "semantic_hash": "358109f2630822948bb06a4694816791"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\context.ts": {
+    "mtime": 1781478803.3098621,
+    "ast_hash": "7d75a49612ddfe1241de38b0159b56df",
+    "semantic_hash": "7d75a49612ddfe1241de38b0159b56df"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\index.ts": {
+    "mtime": 1781478949.68722,
+    "ast_hash": "e156e4394d2d0961936688e5bfc387f6",
+    "semantic_hash": "e156e4394d2d0961936688e5bfc387f6"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\tooltips\\BarterTooltip.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "24637898d48170e38c870ff560afecad",
+    "semantic_hash": "24637898d48170e38c870ff560afecad"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\tooltips\\CraftTooltip.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "87d78c930139d1197c206a2ad2198fbc",
+    "semantic_hash": "87d78c930139d1197c206a2ad2198fbc"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\tooltips\\ProLockTooltip.tsx": {
+    "mtime": 1781645233.359684,
+    "ast_hash": "7b3a1eb6a07910c9e28092e864f80c7d",
+    "semantic_hash": "7b3a1eb6a07910c9e28092e864f80c7d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\tooltips\\QuestTooltip.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "02fa696c42258729ca51dad71b21fdcd",
+    "semantic_hash": "02fa696c42258729ca51dad71b21fdcd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EftItemTile\\types.ts": {
+    "mtime": 1781550707.8837512,
+    "ast_hash": "d0b0159b55263280a206d98ef25e0885",
+    "semantic_hash": "d0b0159b55263280a206d98ef25e0885"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\EyewearSubtypeBar.tsx": {
+    "mtime": 1781553681.802788,
+    "ast_hash": "abc53d0eeaec627d4c6f5a51e155706d",
+    "semantic_hash": "abc53d0eeaec627d4c6f5a51e155706d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\HubNav.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "be41d8c9522dabd15ddded6c9850095f",
+    "semantic_hash": "be41d8c9522dabd15ddded6c9850095f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\ItemTableRow.tsx": {
+    "mtime": 1781528784.170016,
+    "ast_hash": "f5fc1c1ed2715fae50cc764a275c872f",
+    "semantic_hash": "f5fc1c1ed2715fae50cc764a275c872f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\ItemTile.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "ad5e89b3ac4116b8c7276e5e20747005",
+    "semantic_hash": "ad5e89b3ac4116b8c7276e5e20747005"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\ItemsFilterPanel.tsx": {
+    "mtime": 1781528761.7779849,
+    "ast_hash": "c926e9c0cf19d0ff84d11356c527cd7a",
+    "semantic_hash": "c926e9c0cf19d0ff84d11356c527cd7a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\ItemsTable.tsx": {
+    "mtime": 1781528794.543505,
+    "ast_hash": "b8e5f8bb005e5ba655709f0a829ae6cb",
+    "semantic_hash": "b8e5f8bb005e5ba655709f0a829ae6cb"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\ItemsViewSwitcher.tsx": {
+    "mtime": 1781775157.6324117,
+    "ast_hash": "e02a1347a471a705f3b2ab8d268b6e1e",
+    "semantic_hash": "e02a1347a471a705f3b2ab8d268b6e1e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\useCategoryFilters.ts": {
+    "mtime": 1781569028.0202956,
+    "ast_hash": "13796026f1b916420b7c090f5641e44a",
+    "semantic_hash": "13796026f1b916420b7c090f5641e44a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\items\\useItemsFilter.ts": {
+    "mtime": 1781654648.4124758,
+    "ast_hash": "8fc71e7117541abd5d771ec8e6a9fc8c",
+    "semantic_hash": "8fc71e7117541abd5d771ec8e6a9fc8c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\page.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "af2b68f1fc9969f2b2df1f363672bcf0",
+    "semantic_hash": "af2b68f1fc9969f2b2df1f363672bcf0"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\QuestDrawer\\index.tsx": {
+    "mtime": 1781912178.301842,
+    "ast_hash": "96a780f9a14199178420cc36a06f88a6",
+    "semantic_hash": "96a780f9a14199178420cc36a06f88a6"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\QuestFilterBar\\index.tsx": {
+    "mtime": 1781913797.5362916,
+    "ast_hash": "c642f2b02a612434956c8974732507ce",
+    "semantic_hash": "c642f2b02a612434956c8974732507ce"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\QuestItemTracker\\index.tsx": {
+    "mtime": 1781906840.383646,
+    "ast_hash": "1de17cb35a4adebc464366af0b55b6d6",
+    "semantic_hash": "1de17cb35a4adebc464366af0b55b6d6"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\QuestMapViewport\\index.tsx": {
+    "mtime": 1781877688.536154,
+    "ast_hash": "cf105da033b924e60a925a9b286bbbdb",
+    "semantic_hash": "cf105da033b924e60a925a9b286bbbdb"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\QuestNode\\index.tsx": {
+    "mtime": 1781910915.4881935,
+    "ast_hash": "a213de5e794d70a3cf56ddd34ed5bdc0",
+    "semantic_hash": "a213de5e794d70a3cf56ddd34ed5bdc0"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\QuestResetModal\\index.tsx": {
+    "mtime": 1781880237.654517,
+    "ast_hash": "00aa92a393cae54c8179ea137e3d72bd",
+    "semantic_hash": "00aa92a393cae54c8179ea137e3d72bd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\QuestSearch\\index.tsx": {
+    "mtime": 1781913897.3102813,
+    "ast_hash": "5be75f6a6a3bee91750d308db3a0678a",
+    "semantic_hash": "5be75f6a6a3bee91750d308db3a0678a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\QuestStatusBar\\index.tsx": {
+    "mtime": 1781900397.342034,
+    "ast_hash": "7ce4e46d33be75f16798d1843588fab3",
+    "semantic_hash": "7ce4e46d33be75f16798d1843588fab3"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\StubNode\\index.tsx": {
+    "mtime": 1781877711.3823445,
+    "ast_hash": "03d4c2fdd778e2fe5a97c70af7a0e5cb",
+    "semantic_hash": "03d4c2fdd778e2fe5a97c70af7a0e5cb"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\quests\\TraderNode\\index.tsx": {
+    "mtime": 1781873980.0637374,
+    "ast_hash": "642283dcfb52c3243e09cf6437f8250a",
+    "semantic_hash": "642283dcfb52c3243e09cf6437f8250a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\telemetry\\TacticalTelemetryCard.tsx": {
+    "mtime": 1781479582.313767,
+    "ast_hash": "b61c250d2b85c7b72451d1498ce8fca6",
+    "semantic_hash": "b61c250d2b85c7b72451d1498ce8fca6"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\features\\telemetry\\TelemetryDetailsClient.tsx": {
+    "mtime": 1781479568.927072,
+    "ast_hash": "39a54f00009657efac2f13cbe20cb9dd",
+    "semantic_hash": "39a54f00009657efac2f13cbe20cb9dd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\ConditionalLayout.tsx": {
+    "mtime": 1781914671.7701647,
+    "ast_hash": "ac404c1f13206cfc351936f51e76838b",
+    "semantic_hash": "ac404c1f13206cfc351936f51e76838b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\Footer.tsx": {
+    "mtime": 1781914138.8639386,
+    "ast_hash": "af113a22d498819edffe5682d104d7b6",
+    "semantic_hash": "af113a22d498819edffe5682d104d7b6"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\Header.tsx": {
+    "mtime": 1781775128.1846182,
+    "ast_hash": "ecb0cb010fcd205f5a198782e847a63b",
+    "semantic_hash": "ecb0cb010fcd205f5a198782e847a63b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\BurgerMenu.tsx": {
+    "mtime": 1781623322.789532,
+    "ast_hash": "a5c0c817d9198c83857c9cbd40e14530",
+    "semantic_hash": "a5c0c817d9198c83857c9cbd40e14530"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\GameLogo.tsx": {
+    "mtime": 1781381592.4681022,
+    "ast_hash": "8e078fe42697a8e2e37bde6f95e9f16a",
+    "semantic_hash": "8e078fe42697a8e2e37bde6f95e9f16a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\HeaderNavigation.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "19dd1d5346b57d9387ec69be3a91e7ae",
+    "semantic_hash": "19dd1d5346b57d9387ec69be3a91e7ae"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\NewbieButton.tsx": {
+    "mtime": 1781381744.2816741,
+    "ast_hash": "a8da88b06cc5841c6ad0be5088260daa",
+    "semantic_hash": "a8da88b06cc5841c6ad0be5088260daa"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\NewbieModal.tsx": {
+    "mtime": 1781384310.9136655,
+    "ast_hash": "76f04dbf806c64c86ad8e5fc9f25de4e",
+    "semantic_hash": "76f04dbf806c64c86ad8e5fc9f25de4e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\PlatformLogo.tsx": {
+    "mtime": 1780672574.5405257,
+    "ast_hash": "e9faf33d5e29cda62ec102e7bebc865b",
+    "semantic_hash": "e9faf33d5e29cda62ec102e7bebc865b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\PlayerTelemetry.tsx": {
+    "mtime": 1781777942.2129388,
+    "ast_hash": "e1cd969606fe7bf2b40a26fe66046bca",
+    "semantic_hash": "e1cd969606fe7bf2b40a26fe66046bca"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\ProfileDeleteModal.tsx": {
+    "mtime": 1781479568.9311273,
+    "ast_hash": "c3ec89ad96cd788b21ede04ea3cf6091",
+    "semantic_hash": "c3ec89ad96cd788b21ede04ea3cf6091"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\ProfileResetModal.tsx": {
+    "mtime": 1781479568.932192,
+    "ast_hash": "5767d8da3b49d8a84fdee31bb36f1391",
+    "semantic_hash": "5767d8da3b49d8a84fdee31bb36f1391"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\ProfileSettingsModal.tsx": {
+    "mtime": 1781386450.4003189,
+    "ast_hash": "c5343d7804b85f069454a3d5c8ba9c8e",
+    "semantic_hash": "c5343d7804b85f069454a3d5c8ba9c8e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\SearchEmptyState.tsx": {
+    "mtime": 1781380479.7038825,
+    "ast_hash": "98aed59aecfe6aa4c7726632c8eb020a",
+    "semantic_hash": "98aed59aecfe6aa4c7726632c8eb020a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\SearchItemCard.tsx": {
+    "mtime": 1781381592.4789922,
+    "ast_hash": "bfd5f7891fe4fa38c49c39d2013d28ee",
+    "semantic_hash": "bfd5f7891fe4fa38c49c39d2013d28ee"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\StreamStatus.tsx": {
+    "mtime": 1781914852.5036669,
+    "ast_hash": "79dfd24af3daec4485c348d41fcd8010",
+    "semantic_hash": "79dfd24af3daec4485c348d41fcd8010"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\layout\\header-modules\\TacticalSearch.tsx": {
+    "mtime": 1781381744.3310952,
+    "ast_hash": "f5130a8a6f3e337a2c1b2c82b4e3df8b",
+    "semantic_hash": "f5130a8a6f3e337a2c1b2c82b4e3df8b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\page.tsx": {
+    "mtime": 1779912492.3071778,
+    "ast_hash": "c3999385fc6b95d23e6d081ab1dff1cf",
+    "semantic_hash": "c3999385fc6b95d23e6d081ab1dff1cf"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\providers\\ThemeProvider.tsx": {
+    "mtime": 1779912492.9175332,
+    "ast_hash": "268ac2430b247e767b5bd75e1c7e6196",
+    "semantic_hash": "268ac2430b247e767b5bd75e1c7e6196"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\Breadcrumbs.tsx": {
+    "mtime": 1781531172.3629906,
+    "ast_hash": "8b1cddf055660b28d2d9f25a13b1530d",
+    "semantic_hash": "8b1cddf055660b28d2d9f25a13b1530d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\Carousel.tsx": {
+    "mtime": 1781763179.7943118,
+    "ast_hash": "71292376667b5b4166b902f33817c788",
+    "semantic_hash": "71292376667b5b4166b902f33817c788"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\DataViewToggle.tsx": {
+    "mtime": 1781380479.7152302,
+    "ast_hash": "9b959ee434163efc4a0ab2697e2e1cd2",
+    "semantic_hash": "9b959ee434163efc4a0ab2697e2e1cd2"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\GameCard.tsx": {
+    "mtime": 1781380479.7172787,
+    "ast_hash": "6bee37916bc3d6511b6296c45303920c",
+    "semantic_hash": "6bee37916bc3d6511b6296c45303920c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\HubCard.tsx": {
+    "mtime": 1781654546.4084854,
+    "ast_hash": "3b5eda8b2583dcfe7aa6093cb254f2e7",
+    "semantic_hash": "3b5eda8b2583dcfe7aa6093cb254f2e7"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\ItemGridSize.tsx": {
+    "mtime": 1781533016.2723305,
+    "ast_hash": "662c375caac3c01adbb4850cbbd78074",
+    "semantic_hash": "662c375caac3c01adbb4850cbbd78074"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\NavLink.tsx": {
+    "mtime": 1779911500.7036474,
+    "ast_hash": "9240493a4701993d624bd609b5b2322e",
+    "semantic_hash": "9240493a4701993d624bd609b5b2322e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\PageHeader.tsx": {
+    "mtime": 1781569311.9896944,
+    "ast_hash": "717a5f339fe39e215aa39b1c5720102b",
+    "semantic_hash": "717a5f339fe39e215aa39b1c5720102b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\RarityBadge.tsx": {
+    "mtime": 1781479568.936359,
+    "ast_hash": "766e838d3d9dff60478ba2c301747f73",
+    "semantic_hash": "766e838d3d9dff60478ba2c301747f73"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\ScrollToTop.tsx": {
+    "mtime": 1781561214.344384,
+    "ast_hash": "e54f26128ba6ceedbcd48862bf9fce35",
+    "semantic_hash": "e54f26128ba6ceedbcd48862bf9fce35"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\TacticalCard.tsx": {
+    "mtime": 1781380479.7245026,
+    "ast_hash": "de3d86af2f81bb5d9f891eb20bf17c8c",
+    "semantic_hash": "de3d86af2f81bb5d9f891eb20bf17c8c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\Tooltip.tsx": {
+    "mtime": 1781380479.7255278,
+    "ast_hash": "07b632c1f3bcaae3d375ad394923e337",
+    "semantic_hash": "07b632c1f3bcaae3d375ad394923e337"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\kit\\Badge.tsx": {
+    "mtime": 1781479628.491604,
+    "ast_hash": "185fe4c8a9fb417a7d2a02c6cb7dd617",
+    "semantic_hash": "185fe4c8a9fb417a7d2a02c6cb7dd617"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\kit\\MetricCard.tsx": {
+    "mtime": 1781479628.4928868,
+    "ast_hash": "53b52e33f436693c8473c40d9c80ee28",
+    "semantic_hash": "53b52e33f436693c8473c40d9c80ee28"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\kit\\ProgressBar.tsx": {
+    "mtime": 1781479568.9347916,
+    "ast_hash": "103999e4f76cb134f6cd0a9c40510f85",
+    "semantic_hash": "103999e4f76cb134f6cd0a9c40510f85"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\kit\\SectionPanel.tsx": {
+    "mtime": 1781201913.2841117,
+    "ast_hash": "ba3a48a16b0e1c221e79898b55542c53",
+    "semantic_hash": "ba3a48a16b0e1c221e79898b55542c53"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\ui\\kit\\index.ts": {
+    "mtime": 1781201913.7419991,
+    "ast_hash": "8edf754c22b279292e27068d5fe6e936",
+    "semantic_hash": "8edf754c22b279292e27068d5fe6e936"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\components\\useIntersectionObserver.ts": {
+    "mtime": 1781381535.2010977,
+    "ast_hash": "ecaa88f7fa0bf610a5a26cf545dcd3aa",
+    "semantic_hash": "ecaa88f7fa0bf610a5a26cf545dcd3aa"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\data\\games.ts": {
+    "mtime": 1779664547.8128898,
+    "ast_hash": "4a73c69c4a369c2ffed8c9b74b4ce110",
+    "semantic_hash": "4a73c69c4a369c2ffed8c9b74b4ce110"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\data\\headerConfig.ts": {
+    "mtime": 1781650425.5503738,
+    "ast_hash": "687263f7ac030793fe8953b835f01d79",
+    "semantic_hash": "687263f7ac030793fe8953b835f01d79"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\data\\pageContent.ts": {
+    "mtime": 1781685630.965332,
+    "ast_hash": "eab41ed5ebb0d15d6ae108e63bc70b9b",
+    "semantic_hash": "eab41ed5ebb0d15d6ae108e63bc70b9b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\data\\quest-guides.json": {
+    "mtime": 1781908472.958778,
+    "ast_hash": "8b879a8bc581d3603cb0116109bb83e7",
+    "semantic_hash": "8b879a8bc581d3603cb0116109bb83e7"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\data\\quests\\eft-quests.json": {
+    "mtime": 1781805578.3773696,
+    "ast_hash": "d1db5797995a4b00cbfed42780ca43c0",
+    "semantic_hash": "d1db5797995a4b00cbfed42780ca43c0"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\data\\quests\\index.ts": {
+    "mtime": 1781805584.3158293,
+    "ast_hash": "3438e197ce2c1d45238b373870897cbd",
+    "semantic_hash": "3438e197ce2c1d45238b373870897cbd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\data\\slang.ts": {
+    "mtime": 1781075715.4743426,
+    "ast_hash": "9d37e5748b696af2059d59f13328d0ed",
+    "semantic_hash": "9d37e5748b696af2059d59f13328d0ed"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\data\\traderColors.ts": {
+    "mtime": 1781805615.3783352,
+    "ast_hash": "6bce590c07745ba9186ab5ee2de57c34",
+    "semantic_hash": "6bce590c07745ba9186ab5ee2de57c34"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\hooks\\useClickOutside.ts": {
+    "mtime": 1781261349.1233964,
+    "ast_hash": "fe4e7bd9ae1699c206bb0b73ffa7fd3f",
+    "semantic_hash": "fe4e7bd9ae1699c206bb0b73ffa7fd3f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\hooks\\useIntersectionObserver.ts": {
+    "mtime": 1779554707.4430466,
+    "ast_hash": "5f94da2964850e4d094238ea608e619d",
+    "semantic_hash": "5f94da2964850e4d094238ea608e619d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\hooks\\useMediaQuery.ts": {
+    "mtime": 1779659634.779122,
+    "ast_hash": "20a14cd0d5922e4679e46b30d749cdf4",
+    "semantic_hash": "20a14cd0d5922e4679e46b30d749cdf4"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\hooks\\useModalAnimation.ts": {
+    "mtime": 1781384261.6294403,
+    "ast_hash": "d15778627a13b9e04be7a9e6d677a8d4",
+    "semantic_hash": "d15778627a13b9e04be7a9e6d677a8d4"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\hooks\\useStreamStatus.ts": {
+    "mtime": 1781381535.2072167,
+    "ast_hash": "ecaa88f7fa0bf610a5a26cf545dcd3aa",
+    "semantic_hash": "ecaa88f7fa0bf610a5a26cf545dcd3aa"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\barter-calc.ts": {
+    "mtime": 1781653748.0753486,
+    "ast_hash": "e91bde7b9fd9b9a1fbd197061d6cc575",
+    "semantic_hash": "e91bde7b9fd9b9a1fbd197061d6cc575"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\eft-api.ts": {
+    "mtime": 1781805607.832232,
+    "ast_hash": "540e45a2eeee41a67f70719314ed69ef",
+    "semantic_hash": "540e45a2eeee41a67f70719314ed69ef"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\eyewear-filter-config.ts": {
+    "mtime": 1781554293.3824682,
+    "ast_hash": "882d2949433f4a1d39f8911c8fb0da5e",
+    "semantic_hash": "882d2949433f4a1d39f8911c8fb0da5e"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\formatters.ts": {
+    "mtime": 1781539740.5042267,
+    "ast_hash": "dea60fa02c7f51b4c123dd9440681c65",
+    "semantic_hash": "dea60fa02c7f51b4c123dd9440681c65"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\item-indicators.util.ts": {
+    "mtime": 1781647020.2217023,
+    "ast_hash": "e0f69c1f887f1b60e706427278febb70",
+    "semantic_hash": "e0f69c1f887f1b60e706427278febb70"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\quest-utils.ts": {
+    "mtime": 1781873043.6666193,
+    "ast_hash": "0326f75cd1d022834de8e5afebbedb13",
+    "semantic_hash": "0326f75cd1d022834de8e5afebbedb13"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\search-engine.ts": {
+    "mtime": 1781075715.474735,
+    "ast_hash": "eb70678dae1ba488726786dba5c24aa5",
+    "semantic_hash": "eb70678dae1ba488726786dba5c24aa5"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\stash-packing.ts": {
+    "mtime": 1781649813.571964,
+    "ast_hash": "13793470554d226002ff90040276072d",
+    "semantic_hash": "13793470554d226002ff90040276072d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\tarkov-colors.ts": {
+    "mtime": 1781272815.807688,
+    "ast_hash": "25129421ad9dd07f4a650ea8c0b5b2b1",
+    "semantic_hash": "25129421ad9dd07f4a650ea8c0b5b2b1"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\lib\\trader-utils.ts": {
+    "mtime": 1781871191.5649953,
+    "ast_hash": "d6c6d869cd2facf815b1e185d7ac05fc",
+    "semantic_hash": "d6c6d869cd2facf815b1e185d7ac05fc"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\store\\useBarterStore.ts": {
+    "mtime": 1781652093.0769682,
+    "ast_hash": "b9a9ef27945cf1eafcf815bf449cea12",
+    "semantic_hash": "b9a9ef27945cf1eafcf815bf449cea12"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\store\\useBreadcrumbStore.ts": {
+    "mtime": 1781531121.6801705,
+    "ast_hash": "51da027940fef27938f6b963e0fb27a2",
+    "semantic_hash": "51da027940fef27938f6b963e0fb27a2"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\store\\useGamificationStore.ts": {
+    "mtime": 1781654239.754969,
+    "ast_hash": "da0cd9eee0214ff5904d4f2bf777151d",
+    "semantic_hash": "da0cd9eee0214ff5904d4f2bf777151d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\store\\useItemsStore.ts": {
+    "mtime": 1781621788.5553598,
+    "ast_hash": "0c04df52edfe79accb0d567fdfd88cb3",
+    "semantic_hash": "0c04df52edfe79accb0d567fdfd88cb3"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\store\\usePlayerStore.ts": {
+    "mtime": 1781013109.5317771,
+    "ast_hash": "5017bd38125cbc30c2bf038ffb8f7071",
+    "semantic_hash": "5017bd38125cbc30c2bf038ffb8f7071"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\store\\useQuestStore.ts": {
+    "mtime": 1781878681.1236548,
+    "ast_hash": "7ff20d858dc0f2fe2bea251622778dec",
+    "semantic_hash": "7ff20d858dc0f2fe2bea251622778dec"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\types\\barter.ts": {
+    "mtime": 1781653741.8873892,
+    "ast_hash": "4bc81fd62ff3711208bab4d8e4f7a5ee",
+    "semantic_hash": "4bc81fd62ff3711208bab4d8e4f7a5ee"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\types\\gamification.ts": {
+    "mtime": 1781654597.6053557,
+    "ast_hash": "a643112fc73c7da957f8b64e8ea72117",
+    "semantic_hash": "a643112fc73c7da957f8b64e8ea72117"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\types\\item-modules.ts": {
+    "mtime": 1781387701.592694,
+    "ast_hash": "1fce072f98b1e24b8876b1c46b3127b0",
+    "semantic_hash": "1fce072f98b1e24b8876b1c46b3127b0"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\types\\quest.ts": {
+    "mtime": 1781881426.668769,
+    "ast_hash": "1ba1140d963a409b8900f807a19b9ceb",
+    "semantic_hash": "1ba1140d963a409b8900f807a19b9ceb"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\types\\supply.ts": {
+    "mtime": 1781683712.8568428,
+    "ast_hash": "2e4ca0c8cae703c7f164cb74bdce9fc5",
+    "semantic_hash": "2e4ca0c8cae703c7f164cb74bdce9fc5"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\src\\types\\tarkov-items.ts": {
+    "mtime": 1781413803.4954932,
+    "ast_hash": "b14dfccd6aac9b6eee920a6ee6c30a6a",
+    "semantic_hash": "b14dfccd6aac9b6eee920a6ee6c30a6a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\tailwind.config.ts": {
+    "mtime": 1781281378.7567637,
+    "ast_hash": "038704c0eacdf89ad7461e3fba3c9bb1",
+    "semantic_hash": "038704c0eacdf89ad7461e3fba3c9bb1"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\tsconfig.json": {
+    "mtime": 1778715839.0,
+    "ast_hash": "ee17fd1c97c735e9f3564e3f5251f125",
+    "semantic_hash": "ee17fd1c97c735e9f3564e3f5251f125"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\buttons\\buttons.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "e75ef876b07993c6eed8b7754b0fdaec",
+    "semantic_hash": "e75ef876b07993c6eed8b7754b0fdaec"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\data-display\\data-display.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "96862aa02a6c6739dae0fd6055e0bcd5",
+    "semantic_hash": "96862aa02a6c6739dae0fd6055e0bcd5"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\layout\\layout.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "438c408e6d9d50f3edaebfe5d82ba67a",
+    "semantic_hash": "438c408e6d9d50f3edaebfe5d82ba67a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\navigation\\navigation.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "7a9eb3bed7784cb6623576d6ab9b1bd0",
+    "semantic_hash": "7a9eb3bed7784cb6623576d6ab9b1bd0"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\components\\switches\\switches.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "56225b5666dedde221be439aad8aabb9",
+    "semantic_hash": "56225b5666dedde221be439aad8aabb9"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\brand-game-logos.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "1acc17d84f36a03725c530017738af82",
+    "semantic_hash": "1acc17d84f36a03725c530017738af82"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\brand-iconography.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "dc394454ad9f0744a976421ca4d4db8f",
+    "semantic_hash": "dc394454ad9f0744a976421ca4d4db8f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\brand-logo.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "0884135d6e0277c0f6876c749a1e384f",
+    "semantic_hash": "0884135d6e0277c0f6876c749a1e384f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\brand-textures.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "cbe3ea88a3f075f92fece4b18b9d849f",
+    "semantic_hash": "cbe3ea88a3f075f92fece4b18b9d849f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\colors-accents.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "83d58faf0db6c48e7cecec2f312fed2c",
+    "semantic_hash": "83d58faf0db6c48e7cecec2f312fed2c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\colors-editions.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "ec2fa8e1dcd362a67ee4141abb45e71a",
+    "semantic_hash": "ec2fa8e1dcd362a67ee4141abb45e71a"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\colors-rarity.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "53a8a89a28b937cc18180c545307f0de",
+    "semantic_hash": "53a8a89a28b937cc18180c545307f0de"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\colors-status.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "56b6d4399a7ce33789a4a2a54b2af689",
+    "semantic_hash": "56b6d4399a7ce33789a4a2a54b2af689"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\colors-surfaces.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "730b4495f33256616d0546c085057440",
+    "semantic_hash": "730b4495f33256616d0546c085057440"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\colors-text.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "698db0cf218d2484729ed4bc10f6d6ed",
+    "semantic_hash": "698db0cf218d2484729ed4bc10f6d6ed"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\spacing-elevation.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "c3612035e0f2d091129532a7c586d719",
+    "semantic_hash": "c3612035e0f2d091129532a7c586d719"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\spacing-radii.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "e531055f63177aedd4657b347f5e1b16",
+    "semantic_hash": "e531055f63177aedd4657b347f5e1b16"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\spacing-scale.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "db0fcc7ab0afcb75ef00c88ef95623b5",
+    "semantic_hash": "db0fcc7ab0afcb75ef00c88ef95623b5"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\type-faces.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "fc69392bdacc3c31d460743abadb8833",
+    "semantic_hash": "fc69392bdacc3c31d460743abadb8833"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\type-scale.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "4f3feea3bcb8c3c6cfc28a9379cdaeef",
+    "semantic_hash": "4f3feea3bcb8c3c6cfc28a9379cdaeef"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\guidelines\\type-tracking.card.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "089a3c3ef26479d3290f78de4b984a9d",
+    "semantic_hash": "089a3c3ef26479d3290f78de4b984a9d"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\ui_kits\\eft\\index.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "89712196e0ba7e09150345715a47ff63",
+    "semantic_hash": "89712196e0ba7e09150345715a47ff63"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.claude\\skills\\cta-design-ui\\ui_kits\\hub\\index.html": {
+    "mtime": 1781698604.0,
+    "ast_hash": "21616517ed9a4c26ded0f740787c0f82",
+    "semantic_hash": "21616517ed9a4c26ded0f740787c0f82"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\.roomodes.yaml": {
+    "mtime": 1781360031.248787,
+    "ast_hash": "5d4291edc85cf779fd2e32c39b47edfd",
+    "semantic_hash": "5d4291edc85cf779fd2e32c39b47edfd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\AGENTS.md": {
+    "mtime": 1781486467.515304,
+    "ast_hash": "6f71222419e154ed65f94686925c2ac6",
+    "semantic_hash": "6f71222419e154ed65f94686925c2ac6"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\CHANGELOG.md": {
+    "mtime": 1781555741.2270958,
+    "ast_hash": "b1bf208fd6595e962f7756dfde2bb674",
+    "semantic_hash": "b1bf208fd6595e962f7756dfde2bb674"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\CLAUDE.md": {
+    "mtime": 1781878399.9611535,
+    "ast_hash": "095fef6d1753ee4fe577e7f1f3d5a6fb",
+    "semantic_hash": "095fef6d1753ee4fe577e7f1f3d5a6fb"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\DESIGN_SYSTEM.md": {
+    "mtime": 1781555846.727241,
+    "ast_hash": "daf50495acace209843e53067cf57a5b",
+    "semantic_hash": "daf50495acace209843e53067cf57a5b"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\MVPMANIFEST.md": {
+    "mtime": 1781555818.338121,
+    "ast_hash": "979e2dbabf14b3e87c6922f3713402ca",
+    "semantic_hash": "979e2dbabf14b3e87c6922f3713402ca"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\PROJECT_STRUCTURE.md": {
+    "mtime": 1781555791.7816062,
+    "ast_hash": "2af596440d8e2a768a5b6ff1f294505f",
+    "semantic_hash": "2af596440d8e2a768a5b6ff1f294505f"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\cards\\TacticalCard\\index.html": {
+    "mtime": 1781790132.7735288,
+    "ast_hash": "56ba80af988d4523534fa6c639b3e4c6",
+    "semantic_hash": "56ba80af988d4523534fa6c639b3e4c6"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\icons\\IconHelpers\\index.html": {
+    "mtime": 1781790172.0642035,
+    "ast_hash": "2942fe2064162977431485359ece454c",
+    "semantic_hash": "2942fe2064162977431485359ece454c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\navigation\\TacticalMenuItem\\index.html": {
+    "mtime": 1781790142.014425,
+    "ast_hash": "7054965da718be929d73337922adb4e8",
+    "semantic_hash": "7054965da718be929d73337922adb4e8"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\tokens\\ColorPalette\\index.html": {
+    "mtime": 1781790108.0014598,
+    "ast_hash": "84eb3515a2d39d6e5939ca80ca42eb43",
+    "semantic_hash": "84eb3515a2d39d6e5939ca80ca42eb43"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\tokens\\TraderColors\\index.html": {
+    "mtime": 1781790123.4430745,
+    "ast_hash": "8937fa13c5f31b0f2db2389b23ddd9dd",
+    "semantic_hash": "8937fa13c5f31b0f2db2389b23ddd9dd"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\typography\\Typography\\index.html": {
+    "mtime": 1781790153.4618106,
+    "ast_hash": "97c1e729815b0288dd89a5cb372b432c",
+    "semantic_hash": "97c1e729815b0288dd89a5cb372b432c"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\utilities\\Animations\\index.html": {
+    "mtime": 1781790236.5340197,
+    "ast_hash": "586a4487d9a59c42dbde02cd38b10623",
+    "semantic_hash": "586a4487d9a59c42dbde02cd38b10623"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\utilities\\GradientBorder\\index.html": {
+    "mtime": 1781790231.9523525,
+    "ast_hash": "4828cbca3580ab69f7180cdc168fd4d0",
+    "semantic_hash": "4828cbca3580ab69f7180cdc168fd4d0"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\ds-bundle\\components\\utilities\\TacticalTooltip\\index.html": {
+    "mtime": 1781790234.5111637,
+    "ast_hash": "138667f7d9db7a7546dc1e9db0b004ee",
+    "semantic_hash": "138667f7d9db7a7546dc1e9db0b004ee"
+  },
+  "C:\\Users\\vadim\\Desktop\\cta-project\\icon-list.txt": {
+    "mtime": 1781907848.9262023,
+    "ast_hash": "9e6d3b799ff34eb19b988bc985c662ac",
+    "semantic_hash": "9e6d3b799ff34eb19b988bc985c662ac"
   }
 }

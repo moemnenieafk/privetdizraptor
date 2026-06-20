@@ -82,8 +82,7 @@ function SubNavItem({ child, faction }: { child: MenuItem; faction: string }) {
         <div className="flex items-center gap-2 overflow-hidden">
           {iconToUse && (
             isColoredIcon(child, iconToUse) ? (
-               
-              <img src={iconToUse} alt="" className="h-4 w-4 flex-shrink-0 object-contain" />
+              <img src={iconToUse} alt="" data-colored className="h-4 w-4 shrink-0 object-contain" />
             ) : (
               <div
                 className="icon-mask h-4 w-4 flex-shrink-0 bg-current transition-colors duration-200"
