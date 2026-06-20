@@ -76,6 +76,8 @@ export interface QuestNodeData {
   lockReason?: QuestLockReason;
   levelGap?: number;
   dimmed?: boolean;
+  isSubgraphTarget?: boolean;
+  isMapTarget?: boolean;
   freshlyUnlocked?: boolean;
   traderLevels?: Record<string, number>;
   chainRole?: 'ancestor' | 'descendant' | 'self' | null;

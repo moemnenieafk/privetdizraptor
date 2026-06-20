@@ -36,12 +36,23 @@ export interface ConnectionDef {
   className?:   string;
 }
 
+export interface BackgroundRect {
+  key:    string;
+  x:      number;
+  y:      number;
+  width:  number;
+  height: number;
+  fill:   string;
+}
+
 export interface QuestMapViewportRef {
   /** Pan + zoom the viewport so canvas point (cx, cy) is centered on screen. */
   setCenter(cx: number, cy: number, opts?: { zoom?: number; duration?: number }): void;
   /** Fit a bounding box into view with optional padding. */
   fitToBounds(bounds: Bounds, opts?: { padding?: number; duration?: number }): void;
   getTransform(): Transform;
+  /** Convert screen (client) coordinates to canvas coordinates. */
+  screenToCanvas(screenX: number, screenY: number): { x: number; y: number };
   zoomIn():  void;
   zoomOut(): void;
 }
@@ -49,10 +60,15 @@ export interface QuestMapViewportRef {
 interface Props {
   children?:          ReactNode;
   connections?:       ConnectionDef[];
+  backgroundRects?:   BackgroundRect[];
   chainSet?:          Set<string> | null;
   className?:         string;
   style?:             CSSProperties;
   initialTransform?:  Transform;
+  /** When true, LMB drag on empty canvas draws a rubber-band selection instead of panning. */
+  isDragMode?:        boolean;
+  /** Called with canvas-space rect after rubber-band ends (width/height > 4px). */
+  onBoxSelect?:       (x0: number, y0: number, x1: number, y1: number) => void;
   /** Debounced (60 ms) callback after pan/zoom settles. */
   onTransformChange?: (t: Transform) => void;
 }
@@ -118,22 +134,32 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
     {
       children,
       connections = [],
+      backgroundRects = [],
       chainSet,
       className,
       style,
       initialTransform,
+      isDragMode,
+      onBoxSelect,
       onTransformChange,
     },
     ref,
   ) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const canvasRef    = useRef<HTMLDivElement>(null);
-    const svgRef       = useRef<SVGSVGElement>(null);
+    const containerRef    = useRef<HTMLDivElement>(null);
+    const canvasRef       = useRef<HTMLDivElement>(null);
+    const svgRef          = useRef<SVGSVGElement>(null);
+    const selectionBoxRef = useRef<HTMLDivElement>(null);
 
     // Mutable transform — NOT React state, mutated synchronously on every frame
     const transform = useRef<Transform>(initialTransform ?? { x: 0, y: 0, scale: 1 });
 
-    // Pointer drag state
+    // Keep latest callbacks in refs so event closures don't go stale
+    const isDragModeRef  = useRef(isDragMode);
+    isDragModeRef.current = isDragMode;
+    const onBoxSelectRef  = useRef(onBoxSelect);
+    onBoxSelectRef.current = onBoxSelect;
+
+    // Pointer drag state — pan
     const drag = useRef<{
       active:         boolean;
       pointerId:      number;
@@ -143,6 +169,9 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
       startY:         number;
       hasMoved:       boolean;
     } | null>(null);
+
+    // Rubber-band selection state
+    const boxDrag = useRef<{ startX: number; startY: number } | null>(null);
 
     const rafId      = useRef(0);
     const cancelAnim = useRef<(() => void) | null>(null);
@@ -166,15 +195,35 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
       notify(t);
     }, [commit, notify]);
 
-    // ── Pointer down — begin pan ──────────────────────────────────────────
+    // ── Pointer down — begin pan OR rubber-band selection ────────────────
     const onPointerDown = useCallback((e: PointerEvent) => {
       if (e.button !== 0 && e.pointerType === 'mouse') return;
-      // Don't cancel UI clicks on nodes — only start pan from the container bg
+      // Don't cancel UI clicks on nodes — only start from the container bg
       const target = e.target as HTMLElement;
       if (target.closest('[data-no-pan]')) return;
 
       cancelAnim.current?.();
       cancelAnim.current = null;
+
+      if (isDragModeRef.current) {
+        // Rubber-band selection instead of pan
+        const cont = containerRef.current;
+        if (!cont) return;
+        const rect = cont.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        boxDrag.current = { startX: e.clientX, startY: e.clientY };
+        const el = selectionBoxRef.current;
+        if (el) {
+          el.style.left    = `${x}px`;
+          el.style.top     = `${y}px`;
+          el.style.width   = '0px';
+          el.style.height  = '0px';
+          el.style.display = 'block';
+        }
+        try { target.setPointerCapture(e.pointerId); } catch {}
+        return;
+      }
 
       drag.current = {
         active:       true,
@@ -190,8 +239,24 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
       try { target.setPointerCapture(e.pointerId); } catch {}
     }, []);
 
-    // ── Pointer move — pan via RAF ────────────────────────────────────────
+    // ── Pointer move — rubber-band update OR pan via RAF ─────────────────
     const onPointerMove = useCallback((e: PointerEvent) => {
+      if (boxDrag.current) {
+        const cont = containerRef.current;
+        const el   = selectionBoxRef.current;
+        if (!cont || !el) return;
+        const rect = cont.getBoundingClientRect();
+        const x0   = boxDrag.current.startX - rect.left;
+        const y0   = boxDrag.current.startY - rect.top;
+        const x1   = e.clientX - rect.left;
+        const y1   = e.clientY - rect.top;
+        el.style.left   = `${Math.min(x0, x1)}px`;
+        el.style.top    = `${Math.min(y0, y1)}px`;
+        el.style.width  = `${Math.abs(x1 - x0)}px`;
+        el.style.height = `${Math.abs(y1 - y0)}px`;
+        return;
+      }
+
       if (!drag.current?.active) return;
 
       const dx = e.clientX - drag.current.startClientX;
@@ -212,8 +277,34 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
       });
     }, [commitAndNotify]);
 
-    // ── Pointer up — end pan ──────────────────────────────────────────────
+    // ── Pointer up — finalize rubber-band OR end pan ─────────────────────
     const onPointerUp = useCallback((e: PointerEvent) => {
+      if (boxDrag.current) {
+        const el = selectionBoxRef.current;
+        if (el) el.style.display = 'none';
+
+        const cb   = onBoxSelectRef.current;
+        const vp   = containerRef.current;
+        if (cb && vp) {
+          const rect  = vp.getBoundingClientRect();
+          const t     = transform.current;
+          const toCanvas = (sx: number, sy: number) => ({
+            x: (sx - t.x) / t.scale,
+            y: (sy - t.y) / t.scale,
+          });
+          const x0s = boxDrag.current.startX - rect.left;
+          const y0s = boxDrag.current.startY - rect.top;
+          const x1s = e.clientX - rect.left;
+          const y1s = e.clientY - rect.top;
+          const c0  = toCanvas(Math.min(x0s, x1s), Math.min(y0s, y1s));
+          const c1  = toCanvas(Math.max(x0s, x1s), Math.max(y0s, y1s));
+          cb(c0.x, c0.y, c1.x, c1.y);
+        }
+        boxDrag.current = null;
+        try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
+        return;
+      }
+
       if (!drag.current) return;
       drag.current = null;
       if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = 0; }
@@ -338,6 +429,17 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
 
       getTransform: () => ({ ...transform.current }),
 
+      screenToCanvas(sx, sy) {
+        const vp = containerRef.current;
+        if (!vp) return { x: 0, y: 0 };
+        const rect = vp.getBoundingClientRect();
+        const { x: tx, y: ty, scale } = transform.current;
+        return {
+          x: (sx - rect.left - tx) / scale,
+          y: (sy - rect.top  - ty) / scale,
+        };
+      },
+
       zoomIn() {
         const vp = containerRef.current;
         if (!vp) return;
@@ -410,6 +512,18 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
             </filter>
           </defs>
 
+          {backgroundRects.map(r => (
+            <rect
+              key={r.key}
+              x={r.x}
+              y={r.y}
+              width={r.width}
+              height={r.height}
+              fill={r.fill}
+              rx={8}
+            />
+          ))}
+
           {connections.map((c) => {
             const finalOpacity = c.nodeIds && chainSet
               ? (chainSet.has(c.nodeIds[0]) && chainSet.has(c.nodeIds[1]) ? c.opacity : 0.05)
@@ -438,6 +552,13 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
         >
           {children}
         </div>
+
+        {/* ── Rubber-band selection rect (screen space, hidden by default) ── */}
+        <div
+          ref={selectionBoxRef}
+          className="absolute z-50 pointer-events-none border border-white/40 bg-white/5 rounded-xs"
+          style={{ display: 'none' }}
+        />
       </div>
     );
   },

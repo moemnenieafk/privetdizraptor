@@ -87,7 +87,7 @@ export default function StreamStatus() {
         role={isLive ? 'button' : undefined}
         onClick={isLive ? (e) => { e.preventDefault(); handleButtonClick(); } : undefined}
         className={`group flex items-center justify-center gap-2 w-40 h-10 rounded transition-all duration-500
-          fixed right-4 z-96 ${isQuestFullscreen ? 'top-21.25' : 'top-4'}
+          fixed right-4 top-4 z-96 ${isQuestFullscreen ? 'invisible pointer-events-none' : ''}
           ${isLoading
             ? 'border border-neutral-800 bg-black/20'
             : `${s.border} ${s.bg} ${s.shadow} hover:brightness-125`
@@ -128,7 +128,7 @@ export default function StreamStatus() {
       </a>
 
       {/* ═══ Окно стрима ═══ */}
-      {isStreamOpen && (
+      {isStreamOpen && !isQuestFullscreen && (
         <div className="fixed bottom-4 right-4 z-100">
           {/* Шапка окна — скрывается при минимизации */}
           <div
@@ -173,7 +173,7 @@ export default function StreamStatus() {
       )}
 
       {/* Кнопка развернуть — показывается когда окно свёрнуто в 1px */}
-      {isStreamOpen && !isStreamVisible && (
+      {isStreamOpen && !isStreamVisible && !isQuestFullscreen && (
         <button
           onClick={() => setIsStreamVisible(true)}
           className="fixed bottom-4 right-4 z-100 flex items-center gap-1.5 h-7 px-2.5 rounded-sm border border-lines-hover bg-card-menu transition-colors hover:border-online group/expand"

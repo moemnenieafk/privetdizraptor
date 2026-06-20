@@ -4,8 +4,12 @@ import { useMemo, useRef } from 'react';
 import type { TaskRaw } from '@/types/quest';
 import { QuestSearch } from '@/components/features/quests/QuestSearch';
 
-const TRADER_SLUG: Record<string, string> = { 'btr-driver': 'btrdriver' };
-const traderImg = (n: string) => `/images/traders/eft/${TRADER_SLUG[n] ?? n}.webp`;
+const traderImg = (n: string) => `/images/traders/eft/${n}.webp`;
+
+const TRADER_ORDER = [
+  'prapor', 'therapist', 'skier', 'peacekeeper', 'mechanic',
+  'jaeger', 'ragman', 'ref', 'fence', 'lightkeeper', 'btrdriver',
+];
 
 const MAP_ORDER = [
   'the-lab', 'ground-zero', 'streets-of-tarkov', 'interchange', 'customs',
@@ -81,14 +85,13 @@ export function QuestFilterBar({
   }, [maps]);
 
   const traders = useMemo(() => {
-    const seen = new Set<string>();
-    return tasks
-      .filter(t => {
-        if (seen.has(t.trader.normalizedName)) return false;
-        seen.add(t.trader.normalizedName);
-        return true;
-      })
-      .map(t => t.trader);
+    const map = new Map<string, TaskRaw['trader']>();
+    for (const t of tasks) {
+      if (!map.has(t.trader.normalizedName)) map.set(t.trader.normalizedName, t.trader);
+    }
+    return TRADER_ORDER
+      .filter(n => map.has(n))
+      .map(n => map.get(n)!);
   }, [tasks]);
 
   const filterBtnCls = (active: boolean) =>

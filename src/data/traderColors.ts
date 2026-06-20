@@ -9,6 +9,6 @@ export const TRADER_COLORS: Record<string, string> = {
   jaeger:       '#CC5500',
   ref:          '#B49634',
   lightkeeper:  '#2ED399',
-  'btr-driver': '#5F6345',
+  btrdriver:    '#5F6345',
   stories:      '#6096A6',
 };

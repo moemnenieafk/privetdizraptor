@@ -24,7 +24,7 @@ function getObjectiveIcon(obj: TaskObjective): string {
 
 function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const {
-    task, status, dimmed, freshlyUnlocked, pinned, chainRole,
+    task, status, dimmed, isSubgraphTarget, isMapTarget, freshlyUnlocked, pinned, chainRole,
     onToggle, onForceComplete, onSelect, onHover, onPin,
   } = data;
 
@@ -56,7 +56,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
 
   const gradientBg = {
     active:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 15%, transparent), #000000)`,
-    locked:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 8%,  transparent), #000000)`,
+    locked:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 6%, transparent), #000000)`,
     completed: `radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--color-success) 10%, transparent), #000000)`,
   }[status];
 
@@ -87,6 +87,16 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
     : ''
     : '';
 
+  const subgraphRingCls = !dimmed && isSubgraphTarget && chainRole === undefined
+    ? task.lightkeeperRequired && !task.kappaRequired
+      ? 'ring-1 ring-(--color-lightkeeper)/60'
+      : 'ring-1 ring-(--color-kappa)/60'
+    : '';
+
+  const mapRingCls = !dimmed && isMapTarget && chainRole === undefined && !isSubgraphTarget
+    ? 'ring-1 ring-amber-400/60'
+    : '';
+
   const footerBtnStyle: React.CSSProperties = status === 'active' ? {
     backgroundColor: `color-mix(in srgb, ${traderColor} 10%, transparent)`,
     color: traderColor,
@@ -110,6 +120,8 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
         'relative rounded-lg overflow-hidden cursor-pointer transition-all duration-150',
         opacityCls,
         ringCls,
+        subgraphRingCls,
+        mapRingCls,
         freshlyUnlocked ? 'animate-[fresh-unlock_0.6s_ease-out]' : '',
       ].filter(Boolean).join(' ')}
       onClick={() => onSelect(task)}

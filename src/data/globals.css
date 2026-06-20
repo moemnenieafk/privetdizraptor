@@ -47,7 +47,7 @@
   --trader-jaeger:      #CC5500;
   --trader-ref:         #B49634;
   --trader-lightkeeper: #2ED399;
-  --trader-btr-driver:  #5F6345;
+  --trader-btrdriver:   #5F6345;
 
   /* Динамический акцент (связывается с var(--primary) на корне) */
   --color-primary: var(--primary);

@@ -71,7 +71,7 @@ export function QuestStatusBar({
             : { borderColor: 'var(--color-lightkeeper)', color: 'var(--color-lightkeeper)' }
           }
         >
-          <span className="icon-bg icon-eft-profile-lightkeeper w-5.5 h-5.5" />
+          <span className="icon-mask icon-eft-profile-lightkeeper w-5.5 h-5.5" style={filterLK ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
           <span className="font-blender-medium text-[11px]">
             {lkCompleted} / {lkTotal} - {lkPct}%
           </span>
@@ -87,7 +87,7 @@ export function QuestStatusBar({
             : { borderColor: 'var(--color-kappa)', color: 'var(--color-kappa)' }
           }
         >
-          <span className="icon-bg icon-eft-profile-kappa w-5.5 h-5.5" />
+          <span className="icon-mask icon-eft-profile-kappa w-5.5 h-5.5" style={filterKappa ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
           <span className="font-blender-medium text-[11px]">
             {kappaCompleted} / {kappaTotal} - {kappaPct}%
           </span>

@@ -41,7 +41,6 @@ export function PlayerTelemetry() {
 
   const questStats = useMemo(() => {
     const completedSet = new Set(completedQuests);
-    const normalize = (n: string): string => n === 'btr-driver' ? 'btrdriver' : n;
 
     const kappaTotal     = tasks.filter(t => t.kappaRequired).length;
     const kappaCompleted = tasks.filter(t => t.kappaRequired && completedSet.has(t.id)).length;
@@ -50,7 +49,7 @@ export function PlayerTelemetry() {
 
     const byTrader = new Map<string, { total: number; completed: number }>();
     for (const task of tasks) {
-      const key   = normalize(task.trader.normalizedName);
+      const key   = task.trader.normalizedName;
       const entry = byTrader.get(key) ?? { total: 0, completed: 0 };
       entry.total++;
       if (completedSet.has(task.id)) entry.completed++;
@@ -288,7 +287,7 @@ export function PlayerTelemetry() {
                   { id: 'jaeger',      slug: 'jaeger',      name: 'Егерь',             icon: 'icon-eft-quests-jaeger'      },
                   { id: 'ref',         slug: 'ref',         name: 'Реф',               icon: 'icon-eft-quests-ref'         },
                   { id: 'lightkeeper', slug: 'lightkeeper', name: 'Смотритель Маяка',  icon: 'icon-eft-quests-lightkeeper' },
-                  { id: 'btrdriver',   slug: 'btr-driver',  name: 'Водитель БТР',      icon: 'icon-eft-quests-btrdriver'   },
+                  { id: 'btrdriver',   slug: 'btrdriver',   name: 'Водитель БТР',      icon: 'icon-eft-quests-btrdriver'   },
                 ] as const).map(trader => {
                   const ts        = questStats.byTrader.get(trader.id);
                   const total     = ts?.total ?? 0;

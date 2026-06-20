@@ -17,10 +17,12 @@ import {
   QuestMapViewport,
   type QuestMapViewportRef,
   type ConnectionDef,
+  type BackgroundRect,
   type Bounds,
 } from '@/components/features/quests/QuestMapViewport';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { Paperclip } from 'lucide-react';
+import PRESET_POSITIONS from '@/data/quests/quest-positions.json';
 
 interface Props { initialTasks: TaskRaw[] }
 
@@ -31,10 +33,10 @@ const NODE_H         = 90;
 const TRADER_W       = 168;
 const TRADER_H       = 196;
 const QUEST_START_Y  = TRADER_H + 72;   // 268
-const CELL_GAP       = 40;
-const ROW_GAP        = 96;
-const COLUMN_GAP     = 160;
-const MAX_PER_ROW    = 4;
+const CELL_GAP       = 164;
+const ROW_GAP        = 256;
+const COLUMN_GAP     = 256;
+const MAX_PER_ROW    = 15;
 const LAST_QUEST_KEY = 'cta-last-quest-id';
 const BASE_RE        = /-(day|night)$/i;
 
@@ -42,25 +44,43 @@ const STUB_W            = 180;
 const STUB_H            = 52;
 const STUB_GAP          = 8;
 const MAX_STUBS_VISIBLE = 5;
+
+const TRADER_ORDER = [
+  'prapor', 'therapist', 'skier', 'peacekeeper', 'mechanic',
+  'jaeger', 'ragman', 'ref', 'fence', 'lightkeeper', 'btrdriver',
+];
 const OBJ_ROW_H         = 36;
 const CARD_BASE_H       = 160;
+const CELL_W            = NODE_W + CELL_GAP;    // 512 — slot step (used in snap grid)
+const ROW_STAGGER       = CELL_W / 2;                        // 256 — half-cell shift for odd rows (chess pattern)
+const MAX_PER_ROW_ODD   = 13;                                // cards per odd (staggered) row
+const MAX_CARD_H        = CARD_BASE_H + 5 * OBJ_ROW_H + 24; // 364 — max card height (5 objectives + overflow badge)
+const ROW_STEP          = MAX_CARD_H + ROW_GAP;              // 620 — fixed row height (chess grid)
+const SNAP_ROW_H        = ROW_STEP;                          // 620 — snap grid row step
+const DRAG_POSITIONS_KEY = 'cta-quest-positions';
 
 function getQuestNodeHeight(objCount: number): number {
   return CARD_BASE_H + Math.min(objCount, 5) * OBJ_ROW_H + (objCount > 5 ? 24 : 0);
 }
 
-// ─── Global quest depths (prerequisite chain length) ─────────────────────────
+// ─── Local quest depths (same-trader chain only) ──────────────────────────────
 
-function computeGlobalDepths(tasks: TaskRaw[]): Map<string, number> {
+function computeLocalDepths(tasks: TaskRaw[]): Map<string, number> {
   const prereqMap = new Map<string, string[]>(
-    tasks.map(t => [t.id, t.taskRequirements.map(r => r.task.id)])
+    tasks.map(t => [t.id, t.taskRequirements
+      .filter(r => {
+        const parent = tasks.find(p => p.id === r.task.id);
+        return parent && parent.trader.normalizedName === t.trader.normalizedName;
+      })
+      .map(r => r.task.id)
+    ])
   );
   const depths    = new Map<string, number>();
   const computing = new Set<string>();
 
   function depth(id: string): number {
     if (depths.has(id))    return depths.get(id)!;
-    if (computing.has(id)) return 0; // cycle guard
+    if (computing.has(id)) return 0;
     computing.add(id);
     const pids = prereqMap.get(id) ?? [];
     const d    = pids.length === 0 ? 0 : 1 + Math.max(...pids.map(depth));
@@ -86,8 +106,9 @@ interface LayoutResult {
 }
 
 function computeLayout(tasks: TaskRaw[]): LayoutResult {
-  const depths = computeGlobalDepths(tasks);
-  const CELL_W = NODE_W + CELL_GAP;
+  const depths   = computeLocalDepths(tasks);
+  const CELL_W   = NODE_W + CELL_GAP;
+  const taskById = new Map(tasks.map(t => [t.id, t]));
 
   const byTrader = new Map<string, TaskRaw[]>();
   for (const t of tasks) {
@@ -96,7 +117,7 @@ function computeLayout(tasks: TaskRaw[]): LayoutResult {
     byTrader.set(t.trader.normalizedName, list);
   }
 
-  const traderOrder        = [...byTrader.keys()];
+  const traderOrder        = TRADER_ORDER.filter(n => byTrader.has(n));
   const positions          = new Map<string, { x: number; y: number }>();
   const nodeHeights        = new Map<string, number>();
   const traderColumnBounds = new Map<string, Bounds>();
@@ -134,24 +155,39 @@ function computeLayout(tasks: TaskRaw[]): LayoutResult {
       depthGroups.set(d, g);
     }
 
-    let maxColW  = 0;
-    let currentY = QUEST_START_Y;
+    let currentY  = QUEST_START_Y;
+    let rowIndex  = 0;                     // persists across depth groups → global chess pattern
+    const COL_PAD = ROW_STAGGER;           // 256px left margin inside column
 
     for (const dep of [...depthGroups.keys()].sort((a, b) => a - b)) {
-      const group      = depthGroups.get(dep)!;
-      const numSubrows = Math.ceil(group.length / MAX_PER_ROW);
+      const group = depthGroups.get(dep)!;
 
-      for (let sr = 0; sr < numSubrows; sr++) {
-        const row = group.slice(sr * MAX_PER_ROW, (sr + 1) * MAX_PER_ROW);
+      // Sort by avg X of same-trader parents already placed (reduces edge crossings)
+      const sortedGroup = [...group].sort((a, b) => {
+        const avgX = (q: TaskRaw) => {
+          const parents = q.taskRequirements
+            .map(r => taskById.get(r.task.id))
+            .filter((p): p is TaskRaw => !!p && p.trader.normalizedName === q.trader.normalizedName);
+          if (parents.length === 0) return 0;
+          const xs = parents.map(p => positions.get(p.id)?.x ?? 0);
+          return xs.reduce((s, x) => s + x, 0) / xs.length;
+        };
+        return avgX(a) - avgX(b);
+      });
+
+      let processed = 0;
+      while (processed < sortedGroup.length) {
+        const maxSlots = rowIndex % 2 === 0 ? MAX_PER_ROW : MAX_PER_ROW_ODD;
+        const baseOff  = rowIndex % 2 === 0 ? COL_PAD : COL_PAD + ROW_STAGGER;
+        const row      = sortedGroup.slice(processed, processed + maxSlots);
+        const offset   = baseOff + Math.floor((maxSlots - row.length) / 2) * CELL_W;
         for (let i = 0; i < row.length; i++) {
-          const h = getQuestNodeHeight(row[i].objectives.length);
-          positions.set(row[i].id, { x: currentX + i * CELL_W, y: currentY });
-          nodeHeights.set(row[i].id, h);
+          positions.set(row[i].id, { x: currentX + offset + i * CELL_W, y: currentY });
+          nodeHeights.set(row[i].id, getQuestNodeHeight(row[i].objectives.length));
         }
-        const rowMaxH = Math.max(...row.map(q => getQuestNodeHeight(q.objectives.length)));
-        const rowW    = row.length * CELL_W - CELL_GAP;
-        if (rowW > maxColW) maxColW = rowW;
-        currentY += rowMaxH + ROW_GAP;
+        currentY += ROW_STEP;
+        processed += row.length;
+        rowIndex++;
       }
     }
 
@@ -176,7 +212,7 @@ function computeLayout(tasks: TaskRaw[]): LayoutResult {
     }
 
     const colHeight      = currentY - QUEST_START_Y;
-    const effectiveWidth = Math.max(maxColW, TRADER_W);
+    const effectiveWidth = Math.max(COL_PAD * 2 + MAX_PER_ROW * CELL_W - CELL_GAP, TRADER_W);
 
     positions.set(`trader-${traderName}`, {
       x: currentX + effectiveWidth / 2 - TRADER_W / 2,
@@ -218,24 +254,32 @@ function computeLayout(tasks: TaskRaw[]): LayoutResult {
   };
 }
 
-// ─── Stepped+Rounded connector (TB: bottom-of-source → top-of-target) ────────
+// ─── Diagonal connector: foot → curve → diagonal → curve → foot ──────────────
+// Design spec: h=56px feet, corner-radius=28px, adaptive diagonal angle.
 
 function makeQuestPath(x1: number, y1: number, x2: number, y2: number): string {
   const dx = x2 - x1;
-  if (Math.abs(dx) < 2) return `M ${x1} ${y1} V ${y2}`;
+  if (Math.abs(dx) < 4) return `M ${x1} ${y1} V ${y2}`;
 
-  const safeR = Math.min(28, (y2 - y1) / 4);
-  const sx    = dx > 0 ? 1 : -1;
-  const midY  = (y1 + y2) / 2;
-  const sweepA = dx > 0 ? 1 : 0;
-  const sweepB = dx > 0 ? 0 : 1;
+  const FOOT = 56;
+  const R    = 28;
+  const s    = Math.sign(dx);
+  const k    = 0.5523; // cubic bezier quarter-circle approximation constant
+
+  const ay = y1 + FOOT;        // source foot bottom
+  const by = ay + R;           // source arc bottom  (= y1 + FOOT + R)
+  const bx = x1 + s * R;      // source arc end x
+
+  const cy = y2 - FOOT - R;   // target arc top     (= y2 - FOOT - R)
+  const cx = x2 - s * R;      // target arc start x
+  const ey = y2 - FOOT;       // target foot top
 
   return [
     `M ${x1} ${y1}`,
-    `V ${midY - safeR}`,
-    `A ${safeR} ${safeR} 0 0 ${sweepA} ${x1 + sx * safeR} ${midY}`,
-    `L ${x2 - sx * safeR} ${midY}`,
-    `A ${safeR} ${safeR} 0 0 ${sweepB} ${x2} ${midY + safeR}`,
+    `V ${ay}`,
+    `C ${x1} ${ay + R * k} ${bx - s * R * (1 - k)} ${by} ${bx} ${by}`,
+    `L ${cx} ${cy}`,
+    `C ${cx + s * R * (1 - k)} ${cy} ${x2} ${ey - R * k} ${x2} ${ey}`,
     `V ${y2}`,
   ].join(' ');
 }
@@ -269,28 +313,50 @@ function computeStatusMap(
 
 // ─── Filter ───────────────────────────────────────────────────────────────────
 
+function computeMinSubgraph(
+  tasks: TaskRaw[],
+  filterKappa: boolean,
+  filterLK: boolean,
+  ancestorMap: Map<string, Set<string>>,
+): { filteredIds: Set<string>; subgraphTargetIds: Set<string> } {
+  const subgraphTargetIds = new Set(
+    tasks
+      .filter(t => (filterKappa && t.kappaRequired) || (filterLK && t.lightkeeperRequired))
+      .map(t => t.id)
+  );
+  const filteredIds = new Set<string>(subgraphTargetIds);
+  for (const id of subgraphTargetIds)
+    for (const anc of (ancestorMap.get(id) ?? new Set<string>())) filteredIds.add(anc);
+  return { filteredIds, subgraphTargetIds };
+}
+
 function computeFilteredIds(
   tasks: TaskRaw[],
   filterKappa: boolean,
   filterLK: boolean,
   selectedTraders: Set<string>,
   selectedMaps: Set<string>,
-): Set<string> | null {
-  if (!filterKappa && !filterLK && selectedTraders.size === 0 && selectedMaps.size === 0) return null;
-  return new Set(
-    tasks.filter(t => {
-      if (filterKappa && !t.kappaRequired)       return false;
-      if (filterLK    && !t.lightkeeperRequired)  return false;
-      if (selectedTraders.size > 0 && !selectedTraders.has(t.trader.normalizedName)) return false;
-      if (selectedMaps.size > 0) {
-        const taskMaps = t.objectives
-          .filter(o => o.__typename === 'TaskObjectiveBasic' && o.maps?.length)
-          .flatMap(o => (o.maps ?? []).map(m => m.normalizedName.replace(BASE_RE, '')));
-        if (taskMaps.length > 0 && !taskMaps.some(id => selectedMaps.has(id))) return false;
-      }
-      return true;
-    }).map(t => t.id)
-  );
+  ancestorMap: Map<string, Set<string>>,
+): { filteredIds: Set<string> | null; subgraphTargetIds: Set<string> | null } {
+  if (filterKappa || filterLK)
+    return computeMinSubgraph(tasks, filterKappa, filterLK, ancestorMap);
+  if (selectedTraders.size === 0 && selectedMaps.size === 0)
+    return { filteredIds: null, subgraphTargetIds: null };
+  return {
+    filteredIds: new Set(
+      tasks.filter(t => {
+        if (selectedTraders.size > 0 && !selectedTraders.has(t.trader.normalizedName)) return false;
+        if (selectedMaps.size > 0) {
+          const taskMaps = t.objectives
+            .filter(o => o.__typename === 'TaskObjectiveBasic' && o.maps?.length)
+            .flatMap(o => (o.maps ?? []).map(m => m.normalizedName.replace(BASE_RE, '')));
+          if (taskMaps.length > 0 && !taskMaps.some(id => selectedMaps.has(id))) return false;
+        }
+        return true;
+      }).map(t => t.id)
+    ),
+    subgraphTargetIds: null,
+  };
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -298,9 +364,13 @@ function computeFilteredIds(
 export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   const searchParams = useSearchParams();
 
-  // Story quests (trader === 'stories') are excluded from the quest map
+  // Story quests excluded; btr-driver normalizedName normalized to btrdriver
   const initialTasks = useMemo(
-    () => rawTasks.filter(t => t.trader.normalizedName !== 'stories'),
+    () => rawTasks
+      .filter(t => t.trader.normalizedName !== 'stories')
+      .map(t => t.trader.normalizedName !== 'btr-driver' ? t : {
+        ...t, trader: { ...t.trader, normalizedName: 'btrdriver' },
+      }),
     [rawTasks],
   );
 
@@ -309,7 +379,8 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   const [filterLK, setFilterLK]               = useState(false);
   const [selectedTraders, setSelectedTraders] = useState<Set<string>>(() => {
     const t = searchParams.get('trader');
-    return t ? new Set([t]) : new Set();
+    const normalized = t === 'btr-driver' ? 'btrdriver' : t;
+    return normalized ? new Set([normalized]) : new Set();
   });
   const [selectedMaps, setSelectedMaps]       = useState<Set<string>>(new Set());
   const [isFullscreen, setIsFullscreen]       = useState(false);
@@ -317,8 +388,19 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   const [unlockedCount, setUnlockedCount]     = useState(0);
   const [searchOpen, setSearchOpen]           = useState(false);
   const [hoveredId, setHoveredId]             = useState<string | null>(null);
+  const [isDragMode, setIsDragMode]           = useState(false);
+  const [manualPositions, setManualPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
+  const [snapPreview, setSnapPreview]         = useState<{ id: string; x: number; y: number } | null>(null);
+  const [selectedNodes, setSelectedNodes]     = useState<Set<string>>(new Set());
+  const [groupPreview, setGroupPreview]       = useState<Map<string, { x: number; y: number }>>(new Map());
 
-  const vpRef = useRef<QuestMapViewportRef | null>(null);
+  const vpRef           = useRef<QuestMapViewportRef | null>(null);
+  const dragActiveRef   = useRef(false);
+  const selectedNodesRef = useRef(selectedNodes);
+  selectedNodesRef.current = selectedNodes;
+  // Tracks latest snapPreview for onUp closure (avoids stale capture)
+  const snapPreviewRef = useRef(snapPreview);
+  snapPreviewRef.current = snapPreview;
 
   const [resetModalOpen, setResetModalOpen] = useState(false);
 
@@ -336,6 +418,13 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   const traderLevels  = activeProfile?.traderLevels ?? {};
 
   useEffect(() => { setTasks(initialTasks); }, [initialTasks, setTasks]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAG_POSITIONS_KEY);
+      if (saved) setManualPositions(new Map(JSON.parse(saved)));
+    } catch {}
+  }, []);
 
   const playerLevelRef = useRef(playerLevel);
   playerLevelRef.current = playerLevel;
@@ -437,15 +526,27 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   const traderRootsRef         = useRef(traderRoots);
   traderRootsRef.current       = traderRoots;
 
+  // ── Effective positions: algorithm → preset → user drag (localStorage) ──────
+  const connPositions = useMemo(() => {
+    const m = new Map(layoutPositions);
+    for (const [id, p] of Object.entries(PRESET_POSITIONS)) m.set(id, p as { x: number; y: number });
+    for (const [id, p] of manualPositions) m.set(id, p);
+    return m;
+  }, [layoutPositions, manualPositions]);
+
+  const connPositionsRef = useRef(connPositions);
+  connPositionsRef.current = connPositions;
+
+
   // ── Status + filter ──────────────────────────────────────────────────────
   const statusMap = useMemo(
     () => computeStatusMap(initialTasks, new Set(completedQuests), playerLevel),
     [completedQuests, playerLevel, initialTasks],
   );
 
-  const filteredIds = useMemo(
-    () => computeFilteredIds(initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps),
-    [initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps],
+  const { filteredIds, subgraphTargetIds } = useMemo(
+    () => computeFilteredIds(initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, ancestorMap),
+    [initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, ancestorMap],
   );
 
   // ── Chain highlight ──────────────────────────────────────────────────────
@@ -486,7 +587,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   const stubRowPositions = useMemo(() => {
     const map = new Map<string, { x: number; y: number }>();
     for (const [childId, prereqs] of crossTraderEdges) {
-      const childPos    = layoutPositions.get(childId);
+      const childPos    = connPositions.get(childId);
       if (!childPos) continue;
       const visCount    = Math.min(prereqs.length, MAX_STUBS_VISIBLE);
       const rowWidth    = visCount * (STUB_W + STUB_GAP) - STUB_GAP;
@@ -496,17 +597,12 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
       });
     }
     return map;
-  }, [crossTraderEdges, layoutPositions]);
+  }, [crossTraderEdges, connPositions]);
 
   // ── Static Connections (no chainSet — ключевой фикс FPS) ─────────────────
   const staticConnections = useMemo<ConnectionDef[]>(() => {
     const result: ConnectionDef[] = [];
     const taskById = new Map(initialTasks.map(t => [t.id, t]));
-
-    function isLinearChain(parentId: string, childId: string): boolean {
-      return (childrenMap.get(parentId)?.length ?? 0) === 1
-          && (parentsMap.get(childId)?.length ?? 0) === 1;
-    }
 
     for (const task of initialTasks) {
       for (const req of task.taskRequirements) {
@@ -517,8 +613,8 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
         if (!srcTask) continue;
         if (srcTask.trader.normalizedName !== task.trader.normalizedName) continue;
 
-        const srcPos = layoutPositions.get(req.task.id);
-        const tgtPos = layoutPositions.get(task.id);
+        const srcPos = connPositions.get(req.task.id);
+        const tgtPos = connPositions.get(task.id);
         if (!srcPos || !tgtPos) continue;
 
         const srcStatus   = statusMap.get(req.task.id)?.status ?? 'locked';
@@ -531,9 +627,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
 
         result.push({
           id:      edgeId,
-          d:       isLinearChain(req.task.id, task.id)
-            ? `M ${srcPos.x + NODE_W / 2} ${srcPos.y + srcH} L ${tgtPos.x + NODE_W / 2} ${tgtPos.y}`
-            : makeQuestPath(srcPos.x + NODE_W / 2, srcPos.y + srcH, tgtPos.x + NODE_W / 2, tgtPos.y),
+          d:       makeQuestPath(srcPos.x + NODE_W / 2, srcPos.y + srcH, tgtPos.x + NODE_W / 2, tgtPos.y),
           stroke,
           opacity:   baseOpacity,
           nodeIds:   [req.task.id, task.id],
@@ -546,14 +640,14 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
     for (const [traderName, rootIds] of traderRoots) {
       if (traderName === 'ref') continue; // portrait inlined, handled separately below
       const traderVar = `var(${traderCssVar(traderName)})`;
-      const traderPos = layoutPositions.get(`trader-${traderName}`);
+      const traderPos = connPositions.get(`trader-${traderName}`);
       if (!traderPos) continue;
       for (const rootId of rootIds.slice(0, 4)) {
-        const questPos = layoutPositions.get(rootId);
+        const questPos = connPositions.get(rootId);
         if (!questPos) continue;
         result.push({
           id:        `trader-${traderName}->${rootId}`,
-          d:         `M ${traderPos.x + TRADER_W / 2} ${traderPos.y + TRADER_H} L ${questPos.x + NODE_W / 2} ${questPos.y}`,
+          d:         makeQuestPath(traderPos.x + TRADER_W / 2, traderPos.y + TRADER_H, questPos.x + NODE_W / 2, questPos.y),
           stroke:    traderVar,
           opacity:   0.5,
           nodeIds:   [`trader-${traderName}`, rootId],
@@ -563,7 +657,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
     }
 
     // Ref portrait inlined — lines from depth-0 ref quests → portrait
-    const refPortraitPos = layoutPositions.get('trader-ref');
+    const refPortraitPos = connPositions.get('trader-ref');
     if (refPortraitPos) {
       const refVar      = `var(${traderCssVar('ref')})`;
       const refQuests   = initialTasks.filter(t => t.trader.normalizedName === 'ref');
@@ -572,7 +666,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
         !(parentsMap.get(q.id) ?? []).some(pid => refQuestIds.has(pid))
       );
       for (const q of refRoots) {
-        const qPos = layoutPositions.get(q.id);
+        const qPos = connPositions.get(q.id);
         if (!qPos) continue;
         const qH = nodeHeights.get(q.id) ?? NODE_H;
         result.push({
@@ -588,7 +682,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
 
     // Stub → child connections
     for (const [childId, prereqs] of crossTraderEdges) {
-      const childPos = layoutPositions.get(childId);
+      const childPos = connPositions.get(childId);
       const rowPos   = stubRowPositions.get(childId);
       if (!childPos || !rowPos) continue;
       const childStatus = statusMap.get(childId)?.status ?? 'locked';
@@ -611,8 +705,10 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
 
     return result;
   // chainSet намеренно исключён — ключевой фикс FPS
-  }, [initialTasks, layoutPositions, nodeHeights, statusMap, staticEdgeIds, traderRoots,
+  }, [initialTasks, connPositions, nodeHeights, statusMap, staticEdgeIds, traderRoots,
       crossTraderEdges, stubRowPositions, childrenMap, parentsMap]);
+
+  const columnBackgrounds = useMemo<BackgroundRect[]>(() => [], []);
 
   const tradersInFilter = useMemo(
     () => filteredIds === null
@@ -625,7 +721,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
 
   // ── Navigate to a quest ──────────────────────────────────────────────────
   const flyToQuest = useCallback((id: string, zoom = 1.2, duration = 0) => {
-    const pos = layoutPositionsRef.current.get(id);
+    const pos = connPositionsRef.current.get(id);
     if (pos) vpRef.current?.setCenter(pos.x + NODE_W / 2, pos.y + NODE_H / 2, { zoom, duration });
   }, []);
 
@@ -639,17 +735,16 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
 
         // Restore last visited quest
         const lastId = localStorage.getItem(LAST_QUEST_KEY);
-        if (lastId && layoutPositionsRef.current.has(lastId)) {
+        if (lastId && connPositionsRef.current.has(lastId)) {
           flyToQuest(lastId, 1.2, 0);
           return;
         }
 
-        // First root quest of first trader
+        // Portrait of first trader
         const firstTrader = traderOrderRef.current[0];
         if (firstTrader) {
-          const roots   = traderRootsRef.current.get(firstTrader) ?? [];
-          const targetId = roots[0] ?? initialTasks.find(t => t.trader.normalizedName === firstTrader)?.id;
-          if (targetId) { flyToQuest(targetId, 1.0, 0); return; }
+          const pos = connPositionsRef.current.get(`trader-${firstTrader}`);
+          if (pos) { vp.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: 1.0, duration: 0 }); return; }
         }
 
         // Fallback: fit entire graph
@@ -701,6 +796,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   const hoveredRafRef    = useRef<number>(0);
   const pendingHoverRef  = useRef<string | null>(null);
   const handleHover = useCallback((id: string | null) => {
+    if (dragActiveRef.current) return;
     pendingHoverRef.current = id;
     cancelAnimationFrame(hoveredRafRef.current);
     hoveredRafRef.current = requestAnimationFrame(() => setHoveredId(pendingHoverRef.current));
@@ -720,7 +816,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   }, [ancestorMap]);
 
   const handleToggle = useCallback((taskId: string) => {
-    const { completedQuests: nowCompleted, toggleQuest, pinnedQuests: nowPinned } = useQuestStore.getState();
+    const { completedQuests: nowCompleted, toggleQuest } = useQuestStore.getState();
     const wasCompleted = nowCompleted.includes(taskId);
     toggleQuest(taskId);
     localStorage.setItem(LAST_QUEST_KEY, taskId);
@@ -782,17 +878,15 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
       return next;
     });
 
-  // Toggle-once: deselect if already active, else select and fly to first quest
+  // Toggle-once: deselect if already active, else select and fly to trader portrait
   const handleTrader = useCallback((name: string) => {
     setSelectedTraders(prev => {
       if (prev.has(name)) return new Set();
-      // Navigate to first root/entry quest of this trader at zoom 1.0
-      const roots    = traderRootsRef.current.get(name) ?? [];
-      const targetId = roots[0] ?? initialTasks.find(t => t.trader.normalizedName === name)?.id;
-      if (targetId) flyToQuest(targetId, 1.0, 500);
+      const pos = connPositionsRef.current.get(`trader-${name}`);
+      if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: 1.2, duration: 500 });
       return new Set([name]);
     });
-  }, [initialTasks, flyToQuest]);
+  }, []);
 
   const handleReset = () => {
     setFilterKappa(false);
@@ -802,6 +896,188 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
   };
 
   const handleFocusNode = useCallback((task: TaskRaw) => { flyToQuest(task.id, 1.5, 500); }, [flyToQuest]);
+
+  // ── Fly to next active quest in Kappa / LK path ──────────────────────────
+  const flyToNextInPath = useCallback((type: 'kappa' | 'lk') => {
+    const candidates = initialTasks.filter(t => {
+      const inPath = type === 'kappa' ? t.kappaRequired : t.lightkeeperRequired;
+      return inPath && statusMap.get(t.id)?.status === 'active';
+    });
+    if (candidates.length === 0) return;
+    // Shallowest in the dependency tree = fewest ancestors = first step toward Kappa/LK
+    const target = candidates.reduce((best, t) => {
+      const da = ancestorMap.get(t.id)?.size ?? 0;
+      const db = ancestorMap.get(best.id)?.size ?? 0;
+      return da < db || (da === db && t.name < best.name) ? t : best;
+    });
+    flyToQuest(target.id, 1.4, 700);
+  }, [initialTasks, statusMap, ancestorMap, flyToQuest]);
+
+  const handleKappaClick = useCallback(() => {
+    setFilterKappa(v => !v);
+    flyToNextInPath('kappa');
+  }, [flyToNextInPath]);
+
+  const handleLKClick = useCallback(() => {
+    setFilterLK(v => !v);
+    flyToNextInPath('lk');
+  }, [flyToNextInPath]);
+
+  // ── Snap: find nearest slot X in any column + nearest row Y ──────────────
+  // nodeWidth: width of element being snapped (NODE_W for quests, TRADER_W for portraits).
+  //   Center of element aligns with center of nearest quest slot.
+  // snapYGrid: false → Y is free (trader portraits can float vertically).
+  const snapPosition = useCallback((
+    rawX: number, rawY: number,
+    nodeWidth = NODE_W, snapYGrid = true,
+  ): { x: number; y: number } => {
+    const rawCenterX = rawX + nodeWidth / 2;
+    let bestX    = rawX;
+    let bestDist = Infinity;
+    for (const name of traderOrderRef.current) {
+      const b = traderColumnBoundsRef.current.get(name);
+      if (!b) continue;
+      const colStart    = b.minX + 20 + ROW_STAGGER;
+      const relX        = rawCenterX - colStart;
+      const slotI       = Math.max(0, Math.min(MAX_PER_ROW - 1, Math.round(relX / CELL_W)));
+      const slotCenterX = colStart + slotI * CELL_W + NODE_W / 2;
+      const dist        = Math.abs(rawCenterX - slotCenterX);
+      if (dist < bestDist) { bestDist = dist; bestX = slotCenterX - nodeWidth / 2; }
+    }
+    const snappedY = snapYGrid
+      ? Math.max(QUEST_START_Y, QUEST_START_Y + Math.round((rawY - QUEST_START_Y) / SNAP_ROW_H) * SNAP_ROW_H)
+      : rawY;
+    return { x: bestX, y: snappedY };
+  }, []);
+
+  // ── Drag-mode: pointer capture per node ──────────────────────────────────
+  const handleNodeDragStart = useCallback((
+    e: React.PointerEvent<HTMLDivElement>,
+    taskId: string,
+  ) => {
+    if (!isDragMode) return;
+    e.stopPropagation();
+
+    // Shift+click → toggle selection, no drag
+    if (e.shiftKey) {
+      setSelectedNodes(prev => {
+        const next = new Set(prev);
+        if (next.has(taskId)) next.delete(taskId); else next.add(taskId);
+        return next;
+      });
+      return;
+    }
+
+    const startPos = connPositionsRef.current.get(taskId);
+    if (!startPos) return;
+
+    const isTrader = taskId.startsWith('trader-');
+
+    // Group drag when anchor is part of a multi-selection
+    const isGroup = !isTrader && selectedNodesRef.current.has(taskId) && selectedNodesRef.current.size > 1;
+    type GroupEntry = { id: string; pos: { x: number; y: number } };
+    const groupPeers: GroupEntry[] = isGroup
+      ? [...selectedNodesRef.current]
+          .filter(id => id !== taskId)
+          .flatMap(id => {
+            const pos = connPositionsRef.current.get(id);
+            return pos ? [{ id, pos }] : [];
+          })
+      : [];
+
+    // Single drag clears selection
+    if (!isGroup) setSelectedNodes(new Set());
+
+    dragActiveRef.current = true;
+    const canvasStart = vpRef.current?.screenToCanvas(e.clientX, e.clientY) ?? { x: 0, y: 0 };
+    const startX      = startPos.x;
+    const startY      = startPos.y;
+    let   lastSnapped = { x: startX, y: startY };
+    let   hasMoved    = false;
+
+    function onMove(ev: PointerEvent) {
+      hasMoved = true;
+      const c   = vpRef.current?.screenToCanvas(ev.clientX, ev.clientY) ?? { x: 0, y: 0 };
+      const rawX = startX + (c.x - canvasStart.x);
+      const rawY = startY + (c.y - canvasStart.y);
+
+      // Primary grid snap: portraits center over quest slots, free Y; quests snap to grid
+      let { x: snX, y: snY } = snapPosition(rawX, rawY, isTrader ? TRADER_W : NODE_W, !isTrader);
+
+      // Secondary edge-snap: align with existing quest nodes at similar Y
+      if (!isTrader) {
+        const OBJ_SNAP = 40; // px — magnetic radius for object alignment
+        for (const [id, existPos] of connPositionsRef.current) {
+          if (id === taskId || id.startsWith('trader-')) continue;
+          if (Math.abs(existPos.y - rawY) > SNAP_ROW_H / 2) continue;
+          // Snap targets: same column X, one slot left, one slot right
+          for (const cx of [existPos.x, existPos.x - CELL_W, existPos.x + CELL_W]) {
+            if (Math.abs(rawX - cx) < OBJ_SNAP && Math.abs(rawX - cx) < Math.abs(rawX - snX)) {
+              snX = cx;
+            }
+          }
+        }
+      }
+
+      lastSnapped = { x: snX, y: snY };
+      setSnapPreview({ id: taskId, ...lastSnapped });
+
+      if (isGroup) {
+        const dx = lastSnapped.x - startX;
+        const dy = lastSnapped.y - startY;
+        setGroupPreview(new Map(groupPeers.map(g => [g.id, { x: g.pos.x + dx, y: g.pos.y + dy }])));
+      }
+    }
+
+    function onUp() {
+      dragActiveRef.current = false;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup',   onUp);
+      setSnapPreview(null);
+      if (isGroup) setGroupPreview(new Map());
+      if (hasMoved) {
+        setManualPositions(prev => {
+          const next = new Map(prev);
+          next.set(taskId, lastSnapped);
+          if (isGroup) {
+            const dx = lastSnapped.x - startX;
+            const dy = lastSnapped.y - startY;
+            for (const g of groupPeers) {
+              next.set(g.id, { x: g.pos.x + dx, y: g.pos.y + dy });
+            }
+          }
+          try { localStorage.setItem(DRAG_POSITIONS_KEY, JSON.stringify([...next])); } catch {}
+          return next;
+        });
+      }
+    }
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup',   onUp);
+    setSnapPreview({ id: taskId, x: startX, y: startY });
+  }, [isDragMode, snapPosition]);
+
+  // ── Box select: hit-test all quest nodes against canvas rect ─────────────
+  const handleBoxSelect = useCallback((cx0: number, cy0: number, cx1: number, cy1: number) => {
+    const minX = Math.min(cx0, cx1);
+    const maxX = Math.max(cx0, cx1);
+    const minY = Math.min(cy0, cy1);
+    const maxY = Math.max(cy0, cy1);
+    // Tiny rect (click) → clear selection
+    if (maxX - minX < 5 && maxY - minY < 5) {
+      setSelectedNodes(new Set());
+      return;
+    }
+    const next = new Set<string>();
+    for (const task of initialTasks) {
+      const pos = connPositionsRef.current.get(task.id);
+      if (!pos) continue;
+      if (pos.x < maxX && pos.x + NODE_W > minX && pos.y < maxY && pos.y + NODE_H > minY) {
+        next.add(task.id);
+      }
+    }
+    setSelectedNodes(next);
+  }, [initialTasks]);
 
   const containerCls   = isFullscreen ? 'fixed inset-0 z-[100] flex flex-col bg-(--color-base) overflow-hidden' : 'relative flex flex-col w-275 h-192 mx-auto outline outline-2 outline-(--color-lines-hover) rounded-lg overflow-hidden';
   const containerStyle = isFullscreen ? undefined : undefined;
@@ -815,8 +1091,8 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
           filterKappa={filterKappa}
           filterLK={filterLK}
           selectedTraders={selectedTraders}
-          onKappa={() => setFilterKappa(v => !v)}
-          onLK={() => setFilterLK(v => !v)}
+          onKappa={handleKappaClick}
+          onLK={handleLKClick}
           onTrader={handleTrader}
           onReset={handleReset}
           onResetProgress={() => setResetModalOpen(true)}
@@ -834,19 +1110,34 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
             <QuestMapViewport
               ref={vpRef}
               connections={staticConnections}
+              backgroundRects={columnBackgrounds}
               chainSet={chainSet}
               className="absolute inset-0"
+              isDragMode={isDragMode}
+              onBoxSelect={handleBoxSelect}
             >
             {/* Trader portraits */}
             {traderOrder.map(traderName => {
-              const pos     = layoutPositions.get(`trader-${traderName}`);
-              const srcTask = initialTasks.find(t => t.trader.normalizedName === traderName);
+              const nodeId     = `trader-${traderName}`;
+              const basePos    = connPositions.get(nodeId);
+              const previewPos = snapPreview?.id === nodeId ? snapPreview : undefined;
+              const pos        = previewPos ?? basePos;
+              const srcTask    = initialTasks.find(t => t.trader.normalizedName === traderName);
               if (!pos || !srcTask) return null;
+              const isDragging = !!previewPos;
               return (
                 <div
-                  key={`trader-${traderName}`}
-                  style={{ position: 'absolute', left: pos.x, top: pos.y }}
+                  key={nodeId}
+                  style={{
+                    position: 'absolute',
+                    left:     pos.x,
+                    top:      pos.y,
+                    opacity:  isDragging ? 0.72 : undefined,
+                    zIndex:   isDragging ? 200  : undefined,
+                  }}
                   data-no-pan
+                  className={isDragMode ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : undefined}
+                  onPointerDown={isDragMode ? (e) => handleNodeDragStart(e, nodeId) : undefined}
                 >
                   <TraderNode data={{
                     traderName:     srcTask.trader.name,
@@ -860,30 +1151,49 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
 
             {/* Quest nodes */}
             {initialTasks.map(task => {
-              const pos = layoutPositions.get(task.id);
+              const basePos    = connPositions.get(task.id);
+              const anchorPrev = snapPreview?.id === task.id ? snapPreview : undefined;
+              const groupPrev  = groupPreview.get(task.id);
+              const previewPos = anchorPrev ?? groupPrev;
+              const pos        = previewPos ?? basePos;
               if (!pos) return null;
-              const entry = statusMap.get(task.id) ?? { status: 'locked' as QuestNodeStatus };
+              const isDragging = !!previewPos;
+              const isSelected = isDragMode && selectedNodes.has(task.id);
+              const entry      = statusMap.get(task.id) ?? { status: 'locked' as QuestNodeStatus };
               return (
                 <div
                   key={task.id}
-                  style={{ position: 'absolute', left: pos.x, top: pos.y }}
+                  style={{
+                    position:      'absolute',
+                    left:          pos.x,
+                    top:           pos.y,
+                    opacity:       isDragging ? 0.72 : undefined,
+                    zIndex:        isDragging ? 200  : undefined,
+                    outline:       isSelected ? '2px solid rgba(255,255,255,0.45)' : undefined,
+                    outlineOffset: isSelected ? '4px' : undefined,
+                    borderRadius:  isSelected ? '4px' : undefined,
+                  }}
                   data-no-pan
+                  className={isDragMode ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : undefined}
+                  onPointerDown={isDragMode ? (e) => handleNodeDragStart(e, task.id) : undefined}
                 >
                   <QuestNode data={{
                     task,
-                    status:          entry.status,
-                    lockReason:      entry.lockReason,
-                    levelGap:        entry.levelGap,
-                    dimmed:          filteredIds !== null && !filteredIds.has(task.id),
-                    freshlyUnlocked: freshlyUnlocked.has(task.id),
-                    pinned:          pinnedSet.has(task.id),
+                    status:           entry.status,
+                    lockReason:       entry.lockReason,
+                    levelGap:         entry.levelGap,
+                    dimmed:           filteredIds !== null && !filteredIds.has(task.id),
+                    isSubgraphTarget: subgraphTargetIds?.has(task.id) ?? false,
+                    isMapTarget:      !filterKappa && !filterLK && selectedMaps.size > 0 && (filteredIds?.has(task.id) ?? false),
+                    freshlyUnlocked:  freshlyUnlocked.has(task.id),
+                    pinned:           pinnedSet.has(task.id),
                     traderLevels,
-                    chainRole:       getChainRole(task.id),
-                    onToggle:        handleToggle,
-                    onForceComplete: handleForceComplete,
-                    onPin:           togglePin,
-                    onSelect:        setSelectedTask,
-                    onHover:         handleHover,
+                    chainRole:        getChainRole(task.id),
+                    onToggle:         handleToggle,
+                    onForceComplete:  handleForceComplete,
+                    onPin:            togglePin,
+                    onSelect:         setSelectedTask,
+                    onHover:          handleHover,
                   }} />
                 </div>
               );
@@ -924,6 +1234,44 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
               );
             })}
           </QuestMapViewport>
+
+          {/* Drag mode controls */}
+          <div className="absolute top-2 right-2 z-40 flex gap-1.5" data-no-pan>
+            <button
+              onClick={() => { setIsDragMode(v => !v); setSnapPreview(null); setSelectedNodes(new Set()); setGroupPreview(new Map()); }}
+              className={`h-7 px-2.5 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest border transition-colors duration-150 ${
+                isDragMode
+                  ? 'bg-(--primary)/20 border-(--primary)/50 text-(--primary)'
+                  : 'bg-card-menu border-lines-hover text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              {isDragMode ? 'Правка вкл' : 'Правка'}
+            </button>
+            {manualPositions.size > 0 && (
+              <>
+                <button
+                  onClick={() => {
+                    const json = JSON.stringify(Object.fromEntries(manualPositions), null, 2);
+                    navigator.clipboard.writeText(json).catch(() => {});
+                  }}
+                  className="h-7 px-2.5 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest border bg-card-menu border-lines-hover text-text-secondary hover:text-text-primary transition-colors duration-150"
+                  title="Скопировать позиции в буфер — вставить Клоду"
+                >
+                  Копировать позиции
+                </button>
+                <button
+                  onClick={() => {
+                    if (!window.confirm('Сбросить все ручные позиции?')) return;
+                    setManualPositions(new Map());
+                    try { localStorage.removeItem(DRAG_POSITIONS_KEY); } catch {}
+                  }}
+                  className="h-7 px-2.5 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest border bg-card-menu border-lines-hover text-text-secondary hover:text-red-400 transition-colors duration-150"
+                >
+                  Сброс
+                </button>
+              </>
+            )}
+          </div>
 
           {unlockedCount > 1 && (
             <div className="absolute bottom-4 left-4 z-50 flex items-center gap-2 rounded-xs border border-(--primary)/40 bg-card-menu px-3 py-2">
@@ -980,8 +1328,8 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
           lkCompleted={lkCompleted}
           filterKappa={filterKappa}
           filterLK={filterLK}
-          onKappa={() => setFilterKappa(v => !v)}
-          onLK={() => setFilterLK(v => !v)}
+          onKappa={handleKappaClick}
+          onLK={handleLKClick}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsFullscreen(v => !v)}
           onExport={handleExport}
