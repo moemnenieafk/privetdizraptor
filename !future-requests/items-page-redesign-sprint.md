@@ -1,8 +1,12 @@
 # Sprint: Items Ecosystem Redesign
 
-> Статус: **Спринты 1–4 выполнены** (сессия 2026-06-21). Sprint 5 — следующий контекст.
+> Статус: **Спринты 1–5 выполнены** (сессия 2026-06-21). Спринт завершён.
 >
-> **Готово:** useFavoritesStore · useInventoryStore · useItemsStore+compareIds · EftItemTile Header(★+quest) · Media(h-30) · types(questCount/inventoryCount) · useCategoryFilters(favoritesOnly) · CategoryControlBar(★ кнопка) · FavoritesStrip · CompareDrawer · ItemsCategoryClient(questCountMap+favoritesOnly) · page.tsx(GQL+weight+tasks+containers) · SlotGrid · ItemActions · ItemPriceBlock
+> **Готово (1–4):** useFavoritesStore · useInventoryStore · useItemsStore+compareIds · EftItemTile Header(★+quest) · Media(h-30) · types(questCount/inventoryCount) · useCategoryFilters(favoritesOnly) · CategoryControlBar(★ кнопка) · FavoritesStrip · CompareDrawer · ItemsCategoryClient(questCountMap+favoritesOnly) · page.tsx(GQL+weight+tasks+containers) · SlotGrid · ItemActions · ItemPriceBlock
+>
+> **Готово (5):** ItemDetailLayout (2-колонки + full-width секции, подключены SlotGrid/ItemActions/ItemPriceBlock) · ItemQuestBlock (usedInTasks + completedQuests strike) · SimilarItems (фетч по bsgCategoryId) · LootSources → «Откуда получить» (receivedFromTasks) · page.tsx(GQL +backgroundColor +bsgCategoryId, getSimilarItems, рендер через ItemDetailLayout) · переиспользованы Module-панели характеристик из ItemModules.tsx
+>
+> **Багфикс роута:** `containedInContainers` НЕ существует на типе `Item` в схеме tarkov.dev (унаследовано из Спринта 4) — это ломало ВЕСЬ GQL-запрос, `getItemData()` возвращал null → `notFound()` → 404 на каждом предмете. Заменено на валидное `receivedFromTasks`. API не отдаёт item→loot-контейнеры через Item; «места падения» на карте требуют отдельного источника данных (maps/lootContainers) — вынести в отдельный спринт.
 
 ---
 

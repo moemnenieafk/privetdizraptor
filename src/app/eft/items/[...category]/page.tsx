@@ -254,9 +254,116 @@ const SPECIALEQUIPMENT_BSG_IDS = new Set([
   '5f4fbaaca5573a5ac31db429', // Компас
 ]);
 
+// ─── Карабины: дефолтные пресеты (полные сборки «По умолчанию») ───────────────
+// BSG-категории базовых карабинов:
+//   5447b5f1… — общая AR/Carbine (карабины = base.name начинается с «Карабин»)
+//   5447b5fc… — полуавтоматические карабины (СКС, СВТ-40, АС «Вал», ВПО-101, СР-3М…)
+const CARBINE_BASE_AR = '5447b5f14bdc2d61278b4567';
+const CARBINE_BASE_SEMI = '5447b5fc4bdc2d87278b4567';
+
+interface PresetWeaponProps {
+  caliber?: string | null;
+  fireRate?: number | null;
+}
+interface PresetProps {
+  default?: boolean | null;
+  ergonomics?: number | null;
+  recoilVertical?: number | null;
+  recoilHorizontal?: number | null;
+  baseItem?: { name?: string | null; bsgCategoryId?: string | null; properties?: PresetWeaponProps | null } | null;
+}
+interface PresetRaw extends Omit<CategoryItem, 'properties'> {
+  bsgCategoryId?: string;
+  properties: PresetProps | null;
+}
+
+async function getCarbinePresets(): Promise<CategoryItem[]> {
+  const query = `
+    query {
+      items(types: [preset], lang: ru) {
+        id
+        normalizedName
+        name
+        shortName
+        width
+        height
+        weight
+        basePrice
+        image512pxLink
+        types
+        bsgCategoryId
+        backgroundColor
+        properties {
+          ... on ItemPropertiesPreset {
+            default
+            ergonomics
+            recoilVertical
+            recoilHorizontal
+            baseItem {
+              name
+              bsgCategoryId
+              properties { ... on ItemPropertiesWeapon { caliber fireRate } }
+            }
+          }
+        }
+        sellFor { price priceRUB currency vendor { name normalizedName } }
+        buyFor { price priceRUB currency vendor { name normalizedName } }
+      }
+    }
+  `;
+
+  try {
+    const res = await fetch('https://api.tarkov.dev/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ query }),
+      next: { revalidate: 3600 },
+    });
+    const json = await res.json() as { data?: { items: PresetRaw[] }; errors?: unknown };
+    if (json.errors) {
+      console.error('GraphQL Errors in getCarbinePresets:', JSON.stringify(json.errors, null, 2));
+      return [];
+    }
+
+    const carbines = (json.data?.items ?? []).filter((i) => {
+      const p = i.properties;
+      if (!p?.default) return false;
+      const base = p.baseItem;
+      if (!base) return false;
+      return (
+        (base.bsgCategoryId === CARBINE_BASE_AR && /^Карабин/i.test(base.name ?? '')) ||
+        base.bsgCategoryId === CARBINE_BASE_SEMI
+      );
+    });
+
+    // Уплощаем статы пресета + калибр/темп из базового оружия в плоский CategoryItemProperties
+    const flattened: CategoryItem[] = carbines.map((i) => {
+      const p = i.properties!;
+      return {
+        ...i,
+        properties: {
+          ergonomics: p.ergonomics ?? null,
+          recoilVertical: p.recoilVertical ?? null,
+          recoilHorizontal: p.recoilHorizontal ?? null,
+          caliber: p.baseItem?.properties?.caliber ?? null,
+          fireRate: p.baseItem?.properties?.fireRate ?? null,
+        },
+      };
+    });
+
+    return mapItemsToEco(flattened);
+  } catch (error) {
+    console.error('Fetch error in getCarbinePresets:', error);
+    return [];
+  }
+}
+
 // BFF Pattern: Серверный запрос к GraphQL с маппингом категорий
 async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
   if (slug === 'quest-items') return getQuestItems();
+
+  // Карабины показываем как дефолтные пресеты (полные сборки), а не голые ресиверы
+  if (slug === 'carbine') return getCarbinePresets();
 
   // Снаряжение (gear hub): агрегирует 9 подразделов через 3 параллельных запроса.
   // types-запрос покрывает 7 подразделов; маски и компоненты снаряжения —
@@ -298,7 +405,6 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     'weapons': 'gun',
     'ar': 'gun',
     'bolt': 'gun',
-    'carbine': 'gun',
     'dmr': 'gun',
     'gl': 'gun',
     'grenades': 'grenade',
@@ -381,7 +487,7 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
     // Штурмовые винтовки: AK-серия, M4A1, HK 416, SCAR, AUG и др.
     // BSG смешивает AR и карабины в одной категории → post-filter убирает "Карабин"-префикс
     'ar': '5447b5f14bdc2d61278b4567',
-    // carbine: НЕ здесь — обрабатывается post-filter'ом через types:[gun] + bsgCategoryId
+    // carbine: НЕ здесь — обрабатывается отдельно через getCarbinePresets() (types:[preset], default-сборки)
     // Пистолеты-пулемёты: MP5, MP7, PP-19, KRISS Vector, ПП-91 и др.
     'smg': '5447b5e04bdc2d62278b4567',
     // Пистолеты: Glock, M9A3, TT, ПМ, Desert Eagle и др.
@@ -690,14 +796,6 @@ async function getCategoryItems(slug: string): Promise<CategoryItem[]> {
       // Убираем «Карабин»-префиксные позиции (ADAR, TX-15, ВПО-136 и др.) — они идут в carbine.
        
       items = items.filter((i: any) => !/^Карабин/i.test(i.name ?? ''));
-    } else if (slug === 'carbine') {
-      // Карабины = «Карабин»-named из общей AR/Carbine BSG-категории
-      //           + полукарабинная категория (СВТ-40, СКС, АС «Вал», ВПО-101, СР-3М и др.)
-       
-      items = items.filter((i: any) =>
-        (i.bsgCategoryId === '5447b5f14bdc2d61278b4567' && /^Карабин/i.test(i.name ?? '')) ||
-        i.bsgCategoryId === '5447b5fc4bdc2d87278b4567'
-      );
     } else if (slug === 'rounds') {
       // Только одиночные патроны — исключаем пачки и гранаты (ammo+grenade dual-type)
        

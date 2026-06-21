@@ -1,5 +1,5 @@
 ﻿import Image from 'next/image';
-import { Crosshair, Shield, HeartPulse, Package, ShoppingCart, Coins, ArrowLeftRight, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
+import { Crosshair, Shield, HeartPulse, Package, ShoppingCart, ArrowLeftRight, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
 import { formatCompactNumber } from '@/lib/formatters';
@@ -314,52 +314,7 @@ export function ContainerModule({ properties, itemWidth, itemHeight }: Container
           className="col-span-2 md:col-span-1"
         />
       </div>
-      <GridGeometry grids={properties.grids} />
     </SectionPanel>
-  );
-}
-
-// === ОБЩАЯ ГЕОМЕТРИЯ СЕТОК ===
-
-function GridGeometry({ grids }: { grids: GridInfo[] }) {
-  return (
-    <div className="pt-4 mt-6 border-t border-lines-hover">
-      <h3 className="mb-4 text-xs uppercase tracking-wider font-blender-medium text-text-secondary">
-        Внутренняя геометрия (Секции)
-      </h3>
-      <div className="flex flex-wrap items-start justify-start gap-4">
-        {grids.map((grid, index) => {
-          const slots = grid.width * grid.height;
-          return (
-            <div
-              key={index}
-              className="relative inline-flex flex-col items-center justify-center overflow-hidden min-w-28 min-h-28 p-2 rounded border border-lines-hover bg-card-menu/40 shadow-inner"
-            >
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-[1.35px] opacity-40">
-                {Array.from({ length: grid.height }).map((_, rIdx) => (
-                  <div key={rIdx} className="flex items-center justify-center gap-[1.35px]">
-                    {Array.from({ length: grid.width }).map((_, cIdx) => (
-                      <div
-                        key={cIdx}
-                        className="w-1.5 h-1.5 bg-(--color-base) border border-lines-hover/20"
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-              <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none drop-shadow-md">
-                <div className="text-sm leading-4 font-blender-medium text-text-secondary [text-shadow:-1px_1px_0px_rgb(0_0_0/1.00)]">
-                  {grid.width}x{grid.height}
-                </div>
-                <div className="mt-1 text-3xl leading-7 font-blender-medium text-text-primary [text-shadow:-1px_1px_0px_rgb(0_0_0/1.00)]">
-                  {slots}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -585,8 +540,6 @@ export function BackpackModule({ properties, itemWidth, itemHeight }: BackpackMo
           <ProgressBar label="Штраф к эргономике" value={Math.abs(properties.ergoPenalty)} max={30} inverse suffix="%" />
         )}
       </div>
-
-      <GridGeometry grids={properties.grids} />
     </SectionPanel>
   );
 }
@@ -611,8 +564,8 @@ export function TraderModule({ buyFor, sellFor }: { buyFor?: VendorOffer[]; sell
       >
         <div className="flex items-center gap-2.5">
           {isFlea ? (
-            <div className="flex w-7 h-7 shrink-0 items-center justify-center rounded-xs border border-yellow-500/20 bg-yellow-500/10 text-yellow-500 shadow-inner">
-              <Coins className="w-4 h-4" />
+            <div className="flex w-7 h-7 shrink-0 items-center justify-center rounded-xs border border-yellow-500/20 bg-yellow-500/10 shadow-inner">
+              <span className="icon-eft-currency-ruble w-4 h-4 bg-yellow-500/70 mask-contain mask-center mask-no-repeat" />
             </div>
           ) : (
             <VendorImage

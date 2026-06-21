@@ -37,17 +37,19 @@ export function EftHeader() {
         {isFavorite ? '★' : '☆'}
       </button>
 
-      {/* Short name + stat */}
-      <div className="flex min-w-0 flex-1 items-center gap-1">
-        <span className="font-blender-medium text-xs uppercase tracking-wider text-text-primary truncate">
-          {item.shortName}
+      {/* Short name */}
+      <span className="min-w-0 shrink font-blender-medium text-xs uppercase tracking-wider text-text-primary truncate">
+        {item.shortName}
+      </span>
+
+      {/* Dynamic stat — centered between name and grid */}
+      {statDisplay ? (
+        <span className="flex-1 text-center font-blender-medium text-type-caption whitespace-nowrap" style={{ color: '#9A8866' }}>
+          {statDisplay}
         </span>
-        {statDisplay && (
-          <span className="font-blender-medium text-type-caption whitespace-nowrap shrink-0" style={{ color: '#9A8866' }}>
-            {statDisplay}
-          </span>
-        )}
-      </div>
+      ) : (
+        <span className="flex-1" />
+      )}
 
       {/* Quest badge */}
       {(item.questCount ?? 0) > 0 && (
