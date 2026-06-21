@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Star, Scale } from 'lucide-react';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
 import { useItemsStore } from '@/store/useItemsStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
@@ -33,8 +33,8 @@ export function ItemActions({ itemId }: ItemActionsProps) {
               : 'border-lines-hover bg-(--color-card-menu) text-(--text-muted) hover:border-(--primary)/40 hover:text-(--primary)'
           }`}
         >
-          <span>{isFavorite ? '★' : '☆'}</span>
-          <span>{isFavorite ? 'Избранное' : 'Добавить'}</span>
+          <Star className={`h-3.5 w-3.5 shrink-0 ${isFavorite ? 'fill-current' : ''}`} />
+          <span>{isFavorite ? 'Избранное' : 'В избранное'}</span>
         </button>
 
         <button
@@ -45,7 +45,7 @@ export function ItemActions({ itemId }: ItemActionsProps) {
               : 'border-lines-hover bg-(--color-card-menu) text-(--text-muted) hover:border-(--primary)/40 hover:text-(--primary)'
           }`}
         >
-          <span>⚖</span>
+          <Scale className="h-3.5 w-3.5 shrink-0" />
           <span>{isComparing ? 'В сравнении' : 'Сравнить'}</span>
         </button>
       </div>

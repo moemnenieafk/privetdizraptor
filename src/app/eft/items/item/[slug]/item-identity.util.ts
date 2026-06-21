@@ -29,7 +29,7 @@ const CATEGORY_BY_TYPE: Array<[type: string, info: CategoryInfo]> = [
   ['mods',       { label: 'Моды',           iconClass: 'icon-eft-guns-mods',       href: '/eft/items/mods' }],
   ['keys',       { label: 'Ключи',          iconClass: 'icon-eft-eq-keys',         href: '/eft/items/keys' }],
   ['provisions', { label: 'Провизия',       iconClass: 'icon-eft-eq-provisions',   href: '/eft/items/provisions' }],
-  ['barter',     { label: 'Бартер',         iconClass: 'icon-eft-items-equipment', href: '/eft/items/barter' }],
+  ['barter',     { label: 'Предметы для бартера', iconClass: 'icon-eft-items-equipment', href: '/eft/items/barter' }],
 ];
 
 export function getItemCategory(types: string[]): CategoryInfo | null {
@@ -43,12 +43,11 @@ export function getItemCategory(types: string[]): CategoryInfo | null {
 
 interface HeadlineItem {
   properties: ItemProperties;
-  weight?: number;
 }
 
 const cleanCaliber = (caliber: string | null): string => (caliber ?? '').replace('Caliber', '');
 
-export function getItemHeadline({ properties: p, weight }: HeadlineItem): string | null {
+export function getItemHeadline({ properties: p }: HeadlineItem): string | null {
   if (p) {
     // Оружие — калибр (recoilVertical уникален для оружия)
     if ('recoilVertical' in p) {
@@ -88,5 +87,5 @@ export function getItemHeadline({ properties: p, weight }: HeadlineItem): string
     }
   }
 
-  return weight != null ? `${weight} кг` : null;
+  return null;
 }

@@ -1,9 +1,9 @@
-﻿import Image from 'next/image';
-import { Crosshair, Shield, HeartPulse, Package, ShoppingCart, ArrowLeftRight, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
+﻿import { Crosshair, Shield, HeartPulse, ArrowLeftRight, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
 import { formatCompactNumber } from '@/lib/formatters';
-import { VendorImage } from './ItemImage';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { traderImg } from '@/lib/trader-utils';
 
 // === ТИПЫ СВОЙСТВ ПРЕДМЕТОВ ===
 
@@ -118,10 +118,6 @@ function isMedicalItemProps(p: NonNullable<ItemProperties>): p is MedicalItemPro
   return 'useTime' in p && !('hitpoints' in p) && !('recoilVertical' in p) && !('penetrationPower' in p);
 }
 
-function isContainerProps(p: NonNullable<ItemProperties>): p is ContainerProperties {
-  return 'grids' in p && !('ergoPenalty' in p);
-}
-
 function isAmmoProps(p: NonNullable<ItemProperties>): p is AmmoProperties {
   return 'penetrationPower' in p;
 }
@@ -138,10 +134,6 @@ function isHelmetProps(p: NonNullable<ItemProperties>): p is HelmetProperties {
   return 'headZones' in p;
 }
 
-function isBackpackProps(p: NonNullable<ItemProperties>): p is BackpackProperties {
-  return 'grids' in p && 'ergoPenalty' in p;
-}
-
 // === ТИПЫ ДЛЯ ТОРГОВЛИ ===
 
 export interface VendorOffer {
@@ -150,6 +142,7 @@ export interface VendorOffer {
   vendor: {
     name: string;
     normalizedName: string;
+    minTraderLevel?: number;
   };
 }
 
@@ -160,8 +153,9 @@ interface BarterRequiredItem {
     id: string;
     name: string;
     shortName: string;
-    iconLink: string;
+    image512pxLink: string;
     basePrice: number;
+    backgroundColor?: string;
   };
   count: number;
 }
@@ -183,7 +177,8 @@ interface CraftRequiredItem {
     id: string;
     name: string;
     shortName: string;
-    iconLink: string;
+    image512pxLink: string;
+    backgroundColor?: string;
   };
   count: number;
 }
@@ -205,7 +200,7 @@ export function WeaponModule({ properties }: { properties: ItemProperties }) {
   if (!properties || !isWeaponProps(properties)) return null;
 
   return (
-    <SectionPanel title="Боевые Характеристики" icon={<Crosshair className="w-4 h-4" />}>
+    <SectionPanel title="Боевые Характеристики" icon={<Crosshair className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="space-y-4">
         <ProgressBar label="Эргономика" value={properties.ergonomics ?? 0} max={100} colorClass="bg-emerald-500" />
         <ProgressBar label="Вертикальная отдача" value={properties.recoilVertical ?? 0} max={300} inverse />
@@ -226,7 +221,7 @@ export function ArmorModule({ properties }: { properties: ItemProperties }) {
   if (!properties || !isArmorProps(properties)) return null;
 
   return (
-    <SectionPanel title="Защита и Баллистика" icon={<Shield className="w-4 h-4" />}>
+    <SectionPanel title="Защита и Баллистика" icon={<Shield className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="grid grid-cols-2 gap-4 mb-4 md:grid-cols-3">
         <MetricCard label="Класс брони" value={`Класс ${properties.class}`} accent="primary" />
         <MetricCard label="Прочность" value={`${properties.durability}`} subtext="Максимальная" accent="success" />
@@ -253,7 +248,7 @@ export function MedKitModule({ properties }: { properties: ItemProperties }) {
   if (!properties || !isMedKitProps(properties)) return null;
 
   return (
-    <SectionPanel title="Медицинские данные" icon={<HeartPulse className="w-4 h-4" />}>
+    <SectionPanel title="Медицинские данные" icon={<HeartPulse className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="grid grid-cols-2 gap-4">
         <MetricCard label="Восстановление HP" value={`+${properties.hitpoints}`} accent="success" />
         <MetricCard label="Время применения" value={`${properties.useTime} сек.`} accent="warning" />
@@ -274,45 +269,13 @@ export function MedicalItemModule({ properties }: { properties: ItemProperties }
   if (!properties || !isMedicalItemProps(properties)) return null;
 
   return (
-    <SectionPanel title="Медицинские данные" icon={<HeartPulse className="w-4 h-4" />}>
+    <SectionPanel title="Медицинские данные" icon={<HeartPulse className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="grid grid-cols-2 gap-4">
         <MetricCard label="Время применения" value={`${properties.useTime} сек.`} accent="warning" />
         <MetricCard label="Использований" value={properties.uses ?? 1} accent="primary" />
         {properties.cures && properties.cures.length > 0 && (
           <MetricCard label="Лечит" value={properties.cures.join(', ')} className="col-span-2" />
         )}
-      </div>
-    </SectionPanel>
-  );
-}
-
-// === МОДУЛЬ КОНТЕЙНЕРОВ ===
-
-interface ContainerModuleProps {
-  properties: ItemProperties;
-  itemWidth: number;
-  itemHeight: number;
-}
-
-export function ContainerModule({ properties, itemWidth, itemHeight }: ContainerModuleProps) {
-  if (!properties || !isContainerProps(properties) || properties.grids.length === 0) return null;
-
-  const totalCapacity = properties.grids.reduce((acc, grid) => acc + grid.width * grid.height, 0);
-  const itemSize = itemWidth * itemHeight;
-  const efficiency = itemSize > 0 ? (totalCapacity / itemSize).toFixed(1) : '0';
-
-  return (
-    <SectionPanel title="Вместимость" icon={<Package className="w-4 h-4" />}>
-      <div className="grid grid-cols-2 gap-4 mb-4 md:grid-cols-3">
-        <MetricCard label="Слотов внутри" value={totalCapacity} accent="primary" />
-        <MetricCard label="Занимает места" value={itemSize} accent="warning" />
-        <MetricCard
-          label="Эффективность"
-          value={`x${efficiency}`}
-          subtext="Отношение размера к вместимости"
-          accent={Number(efficiency) > 2 ? 'success' : 'default'}
-          className="col-span-2 md:col-span-1"
-        />
       </div>
     </SectionPanel>
   );
@@ -328,7 +291,7 @@ export function AmmoModule({ properties }: { properties: ItemProperties }) {
   const isFragBlocked = pen < 20;
 
   return (
-    <SectionPanel title="Баллистика" icon={<Target className="w-4 h-4" />}>
+    <SectionPanel title="Баллистика" icon={<Target className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="grid grid-cols-2 gap-4 mb-4 md:grid-cols-4">
         <MetricCard
           label="Калибр"
@@ -382,7 +345,7 @@ export function GrenadeModule({ properties }: { properties: ItemProperties }) {
   if (!properties || !isGrenadeProps(properties)) return null;
 
   return (
-    <SectionPanel title="Взрывные характеристики" icon={<Bomb className="w-4 h-4" />}>
+    <SectionPanel title="Взрывные характеристики" icon={<Bomb className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <MetricCard
           label="Тип"
@@ -418,7 +381,7 @@ export function HeadsetModule({ properties }: { properties: ItemProperties }) {
   const ambientVol = Math.abs(properties.ambientVolume ?? 0);
 
   return (
-    <SectionPanel title="Акустические параметры" icon={<Headphones className="w-4 h-4" />}>
+    <SectionPanel title="Акустические параметры" icon={<Headphones className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <MetricCard
           label="Дальность слуха"
@@ -456,7 +419,7 @@ export function HelmetModule({ properties }: { properties: ItemProperties }) {
   if (!properties || !isHelmetProps(properties)) return null;
 
   return (
-    <SectionPanel title="Шлем и Баллистика" icon={<Shield className="w-4 h-4" />}>
+    <SectionPanel title="Шлем и Баллистика" icon={<Shield className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="grid grid-cols-2 gap-4 mb-4 md:grid-cols-3">
         <MetricCard label="Класс брони" value={`Класс ${properties.class}`} accent="primary" />
         <MetricCard label="Прочность" value={`${properties.durability}`} subtext="Максимальная" accent="success" />
@@ -500,134 +463,47 @@ export function HelmetModule({ properties }: { properties: ItemProperties }) {
   );
 }
 
-// === МОДУЛЬ РЮКЗАКОВ ===
+// === ОБЩИЕ ХЕЛПЕРЫ КАРТОЧЕК (бартер/крафт) ===
 
-interface BackpackModuleProps {
-  properties: ItemProperties;
-  itemWidth: number;
-  itemHeight: number;
+// Градиент-карточка по accent-цвету (как QuestNode)
+function accentCardStyle(accent: string): React.CSSProperties {
+  return {
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: accent,
+    boxShadow: `0 0 12px color-mix(in srgb, ${accent} 22%, transparent)`,
+    background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${accent} 12%, transparent), #000000)`,
+  };
 }
 
-export function BackpackModule({ properties, itemWidth, itemHeight }: BackpackModuleProps) {
-  if (!properties || !isBackpackProps(properties) || properties.grids.length === 0) return null;
-
-  const totalCapacity = properties.grids.reduce((acc, grid) => acc + grid.width * grid.height, 0);
-  const itemSize = itemWidth * itemHeight;
-  const efficiency = itemSize > 0 ? (totalCapacity / itemSize).toFixed(1) : '0';
-
+// Предмет-ингредиент: чистый image512 в единой рамке 53×53 (стиль QuestNode), тинт по рарности
+function ReqItem({
+  item,
+  count,
+}: {
+  item: { id: string; name: string; shortName: string; image512pxLink: string; backgroundColor?: string };
+  count: number;
+}) {
   return (
-    <SectionPanel title="Вместимость" icon={<Package className="w-4 h-4" />}>
-      <div className="grid grid-cols-2 gap-4 mb-4 md:grid-cols-3">
-        <MetricCard label="Слотов внутри" value={totalCapacity} accent="primary" />
-        <MetricCard label="Занимает места" value={itemSize} accent="warning" />
-        <MetricCard
-          label="Эффективность"
-          value={`x${efficiency}`}
-          subtext="Отношение размера к вместимости"
-          accent={Number(efficiency) > 2 ? 'success' : 'default'}
-          className="col-span-2 md:col-span-1"
+    <div className="flex items-center gap-2">
+      <div
+        className="relative h-13.25 w-13.25 shrink-0 overflow-hidden rounded-xs border border-lines-hover"
+        style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }}
+      >
+        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
+        <img
+          src={item.image512pxLink}
+          alt={item.shortName}
+          className="absolute inset-0 z-10 h-full w-full object-contain p-1"
         />
       </div>
-
-      <div className="space-y-4 mb-4">
-        {properties.speedPenalty != null && (
-          <ProgressBar label="Штраф к скорости" value={Math.abs(properties.speedPenalty)} max={30} inverse suffix="%" />
-        )}
-        {properties.turnPenalty != null && (
-          <ProgressBar label="Штраф к повороту" value={Math.abs(properties.turnPenalty)} max={30} inverse suffix="%" />
-        )}
-        {properties.ergoPenalty != null && (
-          <ProgressBar label="Штраф к эргономике" value={Math.abs(properties.ergoPenalty)} max={30} inverse suffix="%" />
-        )}
-      </div>
-    </SectionPanel>
-  );
-}
-
-// === МОДУЛЬ ТОРГОВЛИ ===
-
-export function TraderModule({ buyFor, sellFor }: { buyFor?: VendorOffer[]; sellFor?: VendorOffer[] }) {
-  if (!buyFor?.length && !sellFor?.length) return null;
-
-  const renderOffer = (offer: VendorOffer, type: 'buy' | 'sell', index: number) => {
-    const { vendor } = offer;
-    if (!vendor || vendor.name === '-') return null;
-
-    const currency = vendor.normalizedName === 'peacekeeper' ? '$' : '₽';
-    const isFlea = vendor.normalizedName === 'flea-market' || vendor.name === 'Flea Market';
-    const priceFmt = formatCompactNumber(offer.price);
-
-    return (
-      <div
-        key={`${vendor.name}-${index}`}
-        className="flex items-center justify-between py-2.5 px-2 rounded-sm border-b border-lines-hover last:border-0 transition-colors group hover:bg-card-menu/50"
-      >
-        <div className="flex items-center gap-2.5">
-          {isFlea ? (
-            <div className="flex w-7 h-7 shrink-0 items-center justify-center rounded-xs border border-yellow-500/20 bg-yellow-500/10 shadow-inner">
-              <span className="icon-eft-currency-ruble w-4 h-4 bg-yellow-500/70 mask-contain mask-center mask-no-repeat" />
-            </div>
-          ) : (
-            <VendorImage
-              normalizedName={vendor.normalizedName}
-              name={vendor.name}
-              className="w-7 h-7 shrink-0 rounded-xs border border-lines-hover/50 object-cover"
-            />
-          )}
-          <div className="flex flex-col">
-            <span className="text-type-label uppercase leading-none tracking-wider font-blender-medium text-text-primary">
-              {vendor.name}
-            </span>
-            {!isFlea && type === 'buy' && (
-              <span className="mt-1 font-blender-medium text-type-caption leading-none text-text-muted">
-                УР. ДОСТУПА: 1+
-              </span>
-            )}
-          </div>
-        </div>
-        <span
-          title={`${offer.price.toLocaleString('ru-RU')} ${currency}`}
-          className={`cursor-help font-blender-medium text-sm ${type === 'buy' ? 'text-text-primary' : 'text-nvg-green'}`}
-        >
-          {priceFmt} {currency}
+      <div className="flex flex-col">
+        <span className="text-sm font-blender-book text-text-primary" title={item.name}>
+          {item.shortName}
         </span>
+        <span className="font-blender-medium text-xs text-text-secondary">x{count}</span>
       </div>
-    );
-  };
-
-  const rubVal = (o: VendorOffer) => o.priceRUB ?? o.price;
-  const sortedBuyFor = [...(buyFor ?? [])].sort((a, b) => rubVal(a) - rubVal(b));
-  const sortedSellFor = [...(sellFor ?? [])].sort((a, b) => rubVal(b) - rubVal(a));
-
-  return (
-    <SectionPanel title="Торговля и Рынок" icon={<ShoppingCart className="w-4 h-4" />}>
-      <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between pb-2 mb-3 border-b border-lines-hover">
-            <h4 className="text-xs uppercase tracking-widest font-blender-medium text-text-secondary">Покупка</h4>
-            <span className="font-blender-medium text-type-caption text-text-muted">Мин. цена</span>
-          </div>
-          <div className="flex flex-col">
-            {sortedBuyFor.length > 0
-              ? sortedBuyFor.map((o, i) => renderOffer(o, 'buy', i))
-              : <div className="py-4 text-center border border-dashed border-lines-hover rounded font-blender-medium text-xs text-text-muted opacity-50">Нет предложений</div>
-            }
-          </div>
-        </div>
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between pb-2 mb-3 border-b border-lines-hover">
-            <h4 className="text-xs uppercase tracking-widest font-blender-medium text-text-secondary">Продажа</h4>
-            <span className="font-blender-medium text-type-caption text-text-muted">Макс. выгода</span>
-          </div>
-          <div className="flex flex-col">
-            {sortedSellFor.length > 0
-              ? sortedSellFor.map((o, i) => renderOffer(o, 'sell', i))
-              : <div className="py-4 text-center border border-dashed border-lines-hover rounded font-blender-medium text-xs text-text-muted opacity-50">Нет предложений</div>
-            }
-          </div>
-        </div>
-      </div>
-    </SectionPanel>
+    </div>
   );
 }
 
@@ -635,71 +511,44 @@ export function TraderModule({ buyFor, sellFor }: { buyFor?: VendorOffer[]; sell
 
 export function BarterModule({ barters }: { barters: BarterOffer[] }) {
   return (
-    <SectionPanel title="Доступный бартер" icon={<ArrowLeftRight className="w-4 h-4" />}>
+    <SectionPanel title="Доступный бартер" icon={<ArrowLeftRight className="w-4 h-4" />} noDivider smallTitle bare>
       {barters.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-text-muted">
           <ArrowLeftRight className="mb-2 h-6 w-6 opacity-40" />
           <p className="text-xs uppercase tracking-widest font-blender-book">Бартер недоступен</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {barters.map((offer) => {
+            const accent = `var(--trader-${offer.trader.normalizedName})`;
             const totalCost = offer.requiredItems.reduce(
               (sum, req) => sum + req.item.basePrice * req.count,
               0
             );
             return (
-              <div
-                key={offer.id}
-                className="group flex flex-col justify-between gap-4 rounded border border-lines-hover bg-card-menu p-4 transition-colors hover:border-(--primary) sm:flex-row sm:items-center"
-              >
-                <div className="flex flex-wrap items-center gap-3">
-                  {offer.requiredItems.map((req, idx) => (
-                    <div key={req.item.id} className="flex items-center gap-2">
-                      <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-lines-hover bg-linear-to-b from-lines-hover to-(--color-base) shadow-inner">
-                        <Image
-                          src={req.item.iconLink}
-                          alt={req.item.shortName}
-                          fill
-                          sizes="48px"
-                          className="object-contain p-1"
-                          unoptimized
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-blender-book text-text-primary" title={req.item.name}>
-                          {req.item.shortName}
-                        </span>
-                        <span className="font-blender-medium text-xs text-text-secondary">
-                          x{req.count}
-                        </span>
-                      </div>
-                      {idx < offer.requiredItems.length - 1 && (
-                        <span className="ml-1 text-text-muted">+</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-4 sm:border-l sm:border-lines-hover sm:pl-4">
-                  <div className="flex flex-col text-right">
-                    <span className="text-sm font-blender-book text-text-primary">
-                      {offer.trader.name} LL{offer.level}
+              <div key={offer.id} className="relative overflow-hidden rounded-lg p-4" style={accentCardStyle(accent)}>
+                <div className="relative z-10 flex flex-col gap-3">
+                  {/* Шапка: торговец · LL · сумма */}
+                  <div className="flex items-center gap-2">
+                    <img src={traderImg(offer.trader.normalizedName)} alt={offer.trader.name} width={20} height={20} className="shrink-0 rounded-xs" />
+                    <span className="truncate font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
+                      {offer.trader.name}
                     </span>
-                    <div className="flex items-center justify-end gap-1">
-                      <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
-                        Сумма:
-                      </span>
-                      <span className="font-blender-medium text-xs text-text-primary">
-                        {formatCompactNumber(totalCost)} ₽
-                      </span>
-                    </div>
+                    <span className="shrink-0 font-blender-medium text-xs text-text-secondary">LL{offer.level}</span>
+                    <span className="ml-auto shrink-0 font-blender-medium text-xs text-text-primary">
+                      {formatCompactNumber(totalCost)} ₽
+                    </span>
                   </div>
-                  <VendorImage
-                    normalizedName={offer.trader.normalizedName}
-                    name={offer.trader.name}
-                    className="h-10 w-10 shrink-0 rounded-full border border-lines-hover object-cover"
-                  />
+
+                  {/* Требуемые предметы */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    {offer.requiredItems.map((req, idx) => (
+                      <div key={req.item.id} className="flex items-center gap-3">
+                        <ReqItem item={req.item} count={req.count} />
+                        {idx < offer.requiredItems.length - 1 && <span className="text-text-muted">+</span>}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             );
@@ -718,66 +567,57 @@ const formatDuration = (seconds: number): string => {
   return `${h > 0 ? `${h}ч ` : ''}${m}м`;
 };
 
+// Иконки станций убежища (icons.css: icon-eft-{station}), underscore-нотация
+const HIDEOUT_ICONS = new Set([
+  'air_filtering_unit', 'bitcoin_farm', 'booze_generator', 'cultist_circle', 'defective_wall',
+  'gear_rack', 'generator', 'gym', 'hall_of_fame', 'heating', 'illumitation', 'intelligence_centre',
+  'lavatory', 'med_station', 'nutrition_unit', 'rest_space', 'scav_case', 'security',
+  'shooting_range', 'solar_power', 'stash', 'water_collector', 'weapon_rack', 'workbench',
+]);
+const STATION_ICON_OVERRIDE: Record<string, string> = {
+  'intelligence-center': 'intelligence_centre',
+  'medstation': 'med_station',
+  'med-station': 'med_station',
+};
+function stationIconClass(normalizedName: string): string {
+  const key = STATION_ICON_OVERRIDE[normalizedName] ?? normalizedName.replace(/-/g, '_');
+  return HIDEOUT_ICONS.has(key) ? `icon-eft-${key}` : 'icon-eft-prog-hideout';
+}
+
 export function CraftModule({ crafts }: { crafts: CraftRecipe[] }) {
   return (
-    <SectionPanel title="Производство (Убежище)" icon={<Hammer className="w-4 h-4" />}>
+    <SectionPanel title="Производство (Убежище)" icon={<Hammer className="w-4 h-4" />} noDivider smallTitle bare>
       {crafts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-text-muted">
           <Hammer className="mb-2 h-6 w-6 opacity-40" />
           <p className="text-xs uppercase tracking-widest font-blender-book">Не производится в Убежище</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {crafts.map((recipe) => (
-            <div
-              key={recipe.id}
-              className="group relative flex flex-col justify-between gap-4 rounded border border-lines-hover bg-card-menu p-4 transition-colors hover:border-(--primary) sm:flex-row sm:items-center"
-            >
-              <div className="flex flex-wrap items-center gap-3">
-                {recipe.requiredItems.map((req, idx) => (
-                  <div key={req.item.id} className="flex items-center gap-2">
-                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-lines-hover bg-linear-to-b from-lines-hover to-(--color-base) shadow-inner">
-                      <Image
-                        src={req.item.iconLink}
-                        alt={req.item.shortName}
-                        fill
-                        sizes="48px"
-                        className="object-contain p-1"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-blender-book text-text-primary" title={req.item.name}>
-                        {req.item.shortName}
-                      </span>
-                      <span className="font-blender-medium text-xs text-text-secondary">
-                        x{req.count}
-                      </span>
-                    </div>
-                    {idx < recipe.requiredItems.length - 1 && (
-                      <span className="ml-1 text-text-muted">+</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex min-w-35 flex-col items-end gap-1 sm:border-l sm:border-lines-hover sm:pl-4">
-                <span className="uppercase tracking-widest font-blender-medium text-text-primary">
-                  {recipe.station.name}
-                </span>
-                <div className="flex items-center gap-1">
-                  <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
-                    Уровень:
+            <div key={recipe.id} className="relative overflow-hidden rounded-lg p-4" style={accentCardStyle('var(--primary)')}>
+              <div className="relative z-10 flex flex-col gap-3">
+                {/* Шапка: станция · уровень · длительность */}
+                <div className="flex items-center gap-2">
+                  <span className={`${stationIconClass(recipe.station.normalizedName)} h-4 w-4 shrink-0 bg-(--primary) mask-contain mask-center mask-no-repeat`} />
+                  <span className="truncate font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
+                    {recipe.station.name}
                   </span>
-                  <span className="font-blender-medium text-xs text-text-primary">
-                    {recipe.level}
+                  <span className="shrink-0 font-blender-medium text-xs text-text-secondary">Ур.{recipe.level}</span>
+                  <span className="ml-auto flex shrink-0 items-center gap-1 rounded bg-(--color-base) px-2 py-0.5">
+                    <Clock className="h-3 w-3 text-text-secondary" />
+                    <span className="font-blender-medium text-xs text-text-secondary">{formatDuration(recipe.duration)}</span>
                   </span>
                 </div>
-                <div className="mt-1 flex items-center gap-1 rounded px-2 py-1 bg-(--color-base)">
-                  <Clock className="h-3 w-3 text-text-secondary" />
-                  <span className="font-blender-medium text-xs text-text-secondary">
-                    {formatDuration(recipe.duration)}
-                  </span>
+
+                {/* Ингредиенты */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {recipe.requiredItems.map((req, idx) => (
+                    <div key={req.item.id} className="flex items-center gap-3">
+                      <ReqItem item={req.item} count={req.count} />
+                      {idx < recipe.requiredItems.length - 1 && <span className="text-text-muted">+</span>}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

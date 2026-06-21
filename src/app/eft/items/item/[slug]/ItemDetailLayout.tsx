@@ -5,13 +5,10 @@ import {
   ArmorModule,
   MedKitModule,
   MedicalItemModule,
-  ContainerModule,
   AmmoModule,
   GrenadeModule,
   HeadsetModule,
   HelmetModule,
-  BackpackModule,
-  TraderModule,
   BarterModule,
   CraftModule,
 } from './ItemModules';
@@ -20,14 +17,16 @@ import { SlotGrid } from './SlotGrid';
 import { ItemActions } from './ItemActions';
 import { ItemPriceBlock } from './ItemPriceBlock';
 import { ItemQuestBlock } from './ItemQuestBlock';
-import { SimilarItems, type SimilarItem } from './SimilarItems';
+import { SimilarItems } from './SimilarItems';
+import type { EftItemData } from '@/components/features/items/EftItemTile';
 import { LootSources } from './LootSources';
 import { getItemCategory, getItemHeadline } from './item-identity.util';
 import type { TarkovItem } from './page';
 
 interface ItemDetailLayoutProps {
   item: TarkovItem;
-  similar: SimilarItem[];
+  similar: EftItemData[];
+  buyLevelRequired?: number | null;
 }
 
 // ─── Статус-бейдж: иконка (как в EftItemTile/Indicator) + текст ──────────────
@@ -58,7 +57,7 @@ function StatusBadge({ label, variant, iconClass }: StatusBadgeData) {
   );
 }
 
-export function ItemDetailLayout({ item, similar }: ItemDetailLayoutProps) {
+export function ItemDetailLayout({ item, similar, buyLevelRequired }: ItemDetailLayoutProps) {
   const hasBarter = item.barters.length > 0;
   const hasCraft = item.crafts.length > 0;
   const hasQuest = (item.usedInTasks?.length ?? 0) > 0;
@@ -80,7 +79,7 @@ export function ItemDetailLayout({ item, similar }: ItemDetailLayoutProps) {
     ...(item.types.includes('noFlea') ? [{ label: 'Без барахолки', variant: 'danger' as const }] : []),
     ...(hasBarter ? [{ label: 'Бартер', variant: 'warning' as const, iconClass: 'icon-eft-prog-barter' }] : []),
     ...(hasCraft ? [{ label: 'Крафт', variant: 'info' as const, iconClass: 'icon-eft-prog-craft' }] : []),
-    ...(hasQuest ? [{ label: 'Квест', variant: 'primary' as const, iconClass: 'icon-eft-quests-side' }] : []),
+    ...(hasQuest ? [{ label: 'Задание', variant: 'primary' as const, iconClass: 'icon-eft-quests-side' }] : []),
   ];
 
   return (
@@ -115,35 +114,33 @@ export function ItemDetailLayout({ item, similar }: ItemDetailLayoutProps) {
             {item.name}
           </h1>
 
-          {/* Категория (кликабельна) · ключевой стат · статус-бейджи — в одну строку */}
+          {/* shortName │ категория (кликабельна) · стат │ статус-бейджи — в одну строку */}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-2 font-blender-medium text-sm">
+            <span className="uppercase tracking-wider text-text-secondary">{item.shortName}</span>
+
             {category && (
-              <Link
-                href={category.href}
-                className="group/cat flex items-center gap-1.5 text-text-secondary transition-colors hover:text-(--primary)"
-              >
-                <span className={`${category.iconClass} h-4 w-4 shrink-0 bg-text-secondary mask-contain mask-center mask-no-repeat transition-colors group-hover/cat:bg-(--primary)`} />
-                <span className="uppercase tracking-wider">{category.label}</span>
-              </Link>
+              <>
+                <span className="h-3 w-px bg-lines-hover" />
+                <Link
+                  href={category.href}
+                  className="group/cat flex items-center gap-1.5 text-text-secondary transition-colors hover:text-(--primary)"
+                >
+                  <span className={`${category.iconClass} h-4 w-4 shrink-0 bg-text-secondary mask-contain mask-center mask-no-repeat transition-colors group-hover/cat:bg-(--primary)`} />
+                  <span className="uppercase tracking-wider">{category.label}</span>
+                </Link>
+              </>
             )}
 
             {headline && (
               <>
-                {category && <span className="text-(--text-muted)">·</span>}
+                <span className="text-(--text-muted)">·</span>
                 <span className="text-text-secondary">{headline}</span>
               </>
             )}
 
-            {!category && !headline && (
-              <span className="text-(--text-muted)">
-                <span className="text-text-secondary">{item.shortName}</span>
-                {item.weight != null && <> · {item.weight} кг</>}
-              </span>
-            )}
-
             {statusBadges.length > 0 && (
               <>
-                {(category || headline) && <span className="mx-1 h-3 w-px bg-lines-hover" />}
+                <span className="mx-1 h-3 w-px bg-lines-hover" />
                 {statusBadges.map((b) => (
                   <StatusBadge key={b.label} {...b} />
                 ))}
@@ -152,7 +149,12 @@ export function ItemDetailLayout({ item, similar }: ItemDetailLayoutProps) {
           </div>
         </div>
 
-        <ItemPriceBlock buyFor={item.buyFor} sellFor={item.sellFor} />
+        <ItemPriceBlock
+          buyFor={item.buyFor}
+          sellFor={item.sellFor}
+          slots={item.width * item.height}
+          buyLevelRequired={buyLevelRequired}
+        />
 
         <WeaponModule properties={item.properties} />
         <ArmorModule properties={item.properties} />
@@ -162,19 +164,16 @@ export function ItemDetailLayout({ item, similar }: ItemDetailLayoutProps) {
         <HeadsetModule properties={item.properties} />
         <MedKitModule properties={item.properties} />
         <MedicalItemModule properties={item.properties} />
-        <ContainerModule properties={item.properties} itemWidth={item.width} itemHeight={item.height} />
-        <BackpackModule properties={item.properties} itemWidth={item.width} itemHeight={item.height} />
 
-        <ItemQuestBlock tasks={item.usedInTasks ?? []} itemId={item.id} />
+        <ItemQuestBlock tasks={item.usedInTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} />
       </div>
 
       {/* ── СЕКЦИИ НИЖЕ (full-width) ───────────────────── */}
       <div className="flex w-full flex-col gap-6 lg:w-full lg:basis-full">
-        <TraderModule buyFor={item.buyFor} sellFor={item.sellFor} />
         <BarterModule barters={item.barters} />
         <CraftModule crafts={item.crafts} />
         <SimilarItems items={similar} />
-        <LootSources tasks={item.receivedFromTasks ?? []} />
+        <LootSources tasks={item.receivedFromTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} />
 
         {item.description && (
           <div className="rounded border border-lines-hover bg-card-menu p-5">
