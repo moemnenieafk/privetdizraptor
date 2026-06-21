@@ -156,7 +156,24 @@ export const itemProperties = pgTable(
   (t) => [index("item_properties_gin_idx").using("gin", t.properties)],
 );
 
+/* ───────────────────────── profiles ───────────────────────── */
+/**
+ * Слой 4 — профиль игрока, 1:1 к auth.users (Supabase Auth). id = auth.users.id.
+ * Кросс-схемный FK на auth.users, триггер автосоздания профиля при регистрации
+ * и RLS-политики живут в supabase/auth-setup.sql — drizzle-kit не управляет
+ * схемой `auth`, поэтому эту обвязку накатываем отдельным SQL один раз.
+ */
+export const profiles = pgTable("profiles", {
+  id: uuid("id").primaryKey(), // = auth.users.id (FK навешивается в auth-setup.sql)
+  username: text("username"),
+  avatarUrl: text("avatar_url"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 /* ───────────────── inferred types (для использования в коде) ───────────────── */
+export type Profile = typeof profiles.$inferSelect;
+export type NewProfile = typeof profiles.$inferInsert;
 export type Game = typeof games.$inferSelect;
 export type NewGame = typeof games.$inferInsert;
 export type ItemCategory = typeof itemCategories.$inferSelect;

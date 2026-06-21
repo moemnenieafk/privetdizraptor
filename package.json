@@ -18,6 +18,8 @@
   "dependencies": {
     "@apollo/client": "^4.1.9",
     "@dagrejs/dagre": "^3.0.0",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.2",
     "@tanstack/react-virtual": "^3.14.2",
     "autoprefixer": "^10.5.0",
     "drizzle-orm": "^0.45.2",
