@@ -168,9 +168,13 @@ export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(), // = auth.users.id (FK навешивается в auth-setup.sql)
   username: text("username"),
   avatarUrl: text("avatar_url"),
+  role: text("role").notNull().default("user"), // 'user' | 'admin' (слой 5, CMS)
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// Роль пользователя — дискриминатор доступа к CMS.
+export type UserRole = "user" | "admin";
 
 /* ─────────────────────── quest_progress ─────────────────────── */
 /**

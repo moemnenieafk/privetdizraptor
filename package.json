@@ -14,7 +14,8 @@
     "db:studio": "drizzle-kit studio",
     "db:check": "tsx scripts/check-db.ts",
     "db:etl": "tsx scripts/etl-items.ts",
-    "db:sql": "tsx scripts/apply-sql.ts"
+    "db:sql": "tsx scripts/apply-sql.ts",
+    "db:admin": "tsx scripts/make-admin.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.1.9",
