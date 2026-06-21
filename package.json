@@ -12,7 +12,8 @@
     "test:responsive:update": "playwright test --update-snapshots",
     "db:push": "drizzle-kit push --force",
     "db:studio": "drizzle-kit studio",
-    "db:check": "tsx scripts/check-db.ts"
+    "db:check": "tsx scripts/check-db.ts",
+    "db:etl": "tsx scripts/etl-items.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.1.9",
