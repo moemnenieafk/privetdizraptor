@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect, type ComponentType } from 'react';
 import { Search, X, LayoutGrid, List, ChevronDown, Check, Save, SlidersHorizontal, TrendingDown, ArrowDownAZ, Activity } from 'lucide-react';
@@ -40,7 +40,7 @@ function SortDropdown({ value, onChange }: { value: string; onChange: (key: stri
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="flex h-10 items-center gap-2 bg-transparent px-3 font-blender-medium text-[11px] uppercase tracking-wider text-zinc-400 transition-colors duration-200 hover:text-zinc-200"
+        className="flex h-10 items-center gap-2 bg-transparent px-3 font-blender-medium text-type-caption uppercase tracking-wider text-zinc-400 transition-colors duration-200 hover:text-zinc-200"
       >
         {current.iconClass ? (
           <span className={`h-4 w-4 shrink-0 bg-current mask-contain mask-no-repeat mask-center ${current.iconClass}`} />
@@ -60,7 +60,7 @@ function SortDropdown({ value, onChange }: { value: string; onChange: (key: stri
                 key={opt.key}
                 type="button"
                 onClick={() => { onChange(opt.key); setOpen(false); }}
-                className={`flex w-full items-center gap-2 px-3 py-2 font-blender-medium text-[11px] uppercase tracking-wider transition-colors duration-150 ${
+                className={`flex w-full items-center gap-2 px-3 py-2 font-blender-medium text-type-caption uppercase tracking-wider transition-colors duration-150 ${
                   isSelected ? 'text-(--primary)' : 'text-zinc-500 hover:text-zinc-200'
                 }`}
               >
@@ -87,6 +87,7 @@ interface CategoryControlBarProps {
   activeArmorClasses: number[];
   barterOnly: boolean;
   availableOnly: boolean;
+  favoritesOnly: boolean;
   viewMode: 'grid' | 'table';
   isSaved: boolean;
   showAdvanced: boolean;
@@ -96,6 +97,7 @@ interface CategoryControlBarProps {
   onArmorClassToggle: (ac: number) => void;
   onBarterOnlyChange: (v: boolean) => void;
   onAvailableOnlyChange: (v: boolean) => void;
+  onFavoritesOnlyChange: (v: boolean) => void;
   onViewModeChange: (mode: 'grid' | 'table') => void;
   onSaveFilters: () => void;
   onToggleAdvanced: () => void;
@@ -110,6 +112,7 @@ export function CategoryControlBar({
   activeArmorClasses,
   barterOnly,
   availableOnly,
+  favoritesOnly,
   viewMode,
   isSaved,
   showAdvanced,
@@ -119,6 +122,7 @@ export function CategoryControlBar({
   onArmorClassToggle,
   onBarterOnlyChange,
   onAvailableOnlyChange,
+  onFavoritesOnlyChange,
   onViewModeChange,
   onSaveFilters,
   onToggleAdvanced,
@@ -136,7 +140,7 @@ export function CategoryControlBar({
           placeholder="ФИЛЬТР ПРЕДМЕТОВ..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full bg-transparent font-blender-medium text-[12px] uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
+          className="w-full bg-transparent font-blender-medium text-xs uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
         />
         {searchQuery && (
           <button onClick={() => onSearchChange('')} className="ml-2 shrink-0 text-text-muted hover:text-(--primary)">
@@ -191,6 +195,21 @@ export function CategoryControlBar({
         <span className="hidden sm:block">Бартер</span>
       </button>
 
+      {/* Избранное */}
+      <button
+        type="button"
+        onClick={() => onFavoritesOnlyChange(!favoritesOnly)}
+        title="Только избранные предметы"
+        className={`flex h-10 shrink-0 items-center gap-1.5 bg-transparent px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
+          favoritesOnly
+            ? 'text-amber-400'
+            : 'text-zinc-500 hover:text-zinc-300'
+        }`}
+      >
+        <span>{favoritesOnly ? '★' : '☆'}</span>
+        <span className="hidden sm:block">Избранное</span>
+      </button>
+
       {/* Доступно мне */}
       <button
         type="button"
@@ -220,7 +239,7 @@ export function CategoryControlBar({
         <SlidersHorizontal className="h-4 w-4 shrink-0" />
         <span className="hidden md:block">Фильтры</span>
         {activeAdvancedCount > 0 && (
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-(--primary) text-[9px] font-blender-medium text-(--color-base)">
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-(--primary) text-type-caption font-blender-medium text-(--color-base)">
             {activeAdvancedCount}
           </span>
         )}

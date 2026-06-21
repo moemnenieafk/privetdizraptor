@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -87,7 +87,7 @@ export default function StreamStatus() {
         role={isLive ? 'button' : undefined}
         onClick={isLive ? (e) => { e.preventDefault(); handleButtonClick(); } : undefined}
         className={`group flex items-center justify-center gap-2 w-40 h-10 rounded transition-all duration-500
-          fixed right-4 top-4 z-96 ${isQuestFullscreen ? 'invisible pointer-events-none' : ''}
+          fixed right-4 top-4 z-70 ${isQuestFullscreen ? 'invisible pointer-events-none' : ''}
           ${isLoading
             ? 'border border-neutral-800 bg-black/20'
             : `${s.border} ${s.bg} ${s.shadow} hover:brightness-125`
@@ -129,7 +129,7 @@ export default function StreamStatus() {
 
       {/* ═══ Окно стрима ═══ */}
       {isStreamOpen && !isQuestFullscreen && (
-        <div className="fixed bottom-4 right-4 z-100">
+        <div className="fixed bottom-4 right-4 z-70">
           {/* Шапка окна — скрывается при минимизации */}
           <div
             className={`transition-[max-height,opacity] duration-300 ease-out overflow-hidden ${
@@ -137,7 +137,7 @@ export default function StreamStatus() {
             }`}
           >
             <div className="flex items-center justify-between bg-card-menu border-t border-l border-r border-lines-hover px-3 h-8 rounded-t-sm">
-              <span className="text-[11px] font-blender-medium uppercase tracking-wider text-text-secondary">
+              <span className="text-type-caption font-blender-medium uppercase tracking-wider text-text-secondary">
                 Стрим Fullkamen
               </span>
               <button
@@ -176,10 +176,10 @@ export default function StreamStatus() {
       {isStreamOpen && !isStreamVisible && !isQuestFullscreen && (
         <button
           onClick={() => setIsStreamVisible(true)}
-          className="fixed bottom-4 right-4 z-100 flex items-center gap-1.5 h-7 px-2.5 rounded-sm border border-lines-hover bg-card-menu transition-colors hover:border-online group/expand"
+          className="fixed bottom-4 right-4 z-70 flex items-center gap-1.5 h-7 px-2.5 rounded-sm border border-lines-hover bg-card-menu transition-colors hover:border-online group/expand"
         >
           <span className="h-1 w-1 shrink-0 rounded-full bg-online animate-pulse" />
-          <span className="mt-0.5 text-[11px] font-blender-medium uppercase text-text-secondary transition-colors group-hover/expand:text-online">
+          <span className="mt-0.5 text-type-caption font-blender-medium uppercase text-text-secondary transition-colors group-hover/expand:text-online">
             Развернуть стрим
           </span>
         </button>

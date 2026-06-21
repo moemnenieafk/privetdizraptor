@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { EftQuestData, EftQuestStatus } from '../types';
 import { getTraderPortraitPath } from '@/lib/item-indicators.util';
@@ -44,7 +44,7 @@ export function EftQuestTooltip({ data, style }: EftQuestTooltipProps) {
       <div className="mb-2.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="icon-eft-prog-items-needed h-3 w-3 bg-amber-500 mask-contain mask-center mask-no-repeat" />
-          <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
+          <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
             {headerLabel}
           </span>
         </div>
@@ -73,14 +73,14 @@ export function EftQuestTooltip({ data, style }: EftQuestTooltipProps) {
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
         )}
-        <span className="font-blender-medium text-[11px] leading-tight text-text-primary">{data.questName}</span>
+        <span className="font-blender-medium text-type-caption leading-tight text-text-primary">{data.questName}</span>
       </div>
 
       {/* Body */}
       {isTaskProgress ? (
         <div className="mb-2.5 flex flex-col gap-1">
-          <p className="font-blender-book text-[10px] leading-snug text-text-secondary">{data.description}</p>
-          <span className="font-blender-medium text-[10px] text-text-muted">{data.progress}</span>
+          <p className="font-blender-book text-type-caption leading-snug text-text-secondary">{data.description}</p>
+          <span className="font-blender-medium text-type-caption text-text-muted">{data.progress}</span>
         </div>
       ) : (
         <div className="mb-2.5 flex flex-col gap-1">
@@ -92,7 +92,7 @@ export function EftQuestTooltip({ data, style }: EftQuestTooltipProps) {
                 }`}
               />
               <span
-                className={`font-blender-book text-[10px] leading-snug ${
+                className={`font-blender-book text-type-caption leading-snug ${
                   obj.completed ? 'text-text-muted line-through' : 'text-text-secondary'
                 }`}
               >
@@ -105,7 +105,7 @@ export function EftQuestTooltip({ data, style }: EftQuestTooltipProps) {
 
       {/* Status footer */}
       <div className="border-t border-lines-hover/50 pt-2 text-center">
-        <span className={`font-blender-medium text-[9px] uppercase tracking-widest ${STATUS_TEXT[data.status]}`}>
+        <span className={`font-blender-medium text-type-caption uppercase tracking-widest ${STATUS_TEXT[data.status]}`}>
           {STATUS_LABEL[data.status]}
         </span>
       </div>

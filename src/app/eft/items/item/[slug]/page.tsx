@@ -28,6 +28,26 @@ import { Tooltip } from '@/components/ui/Tooltip';
 
 // === ТИПИЗАЦИЯ ===
 
+interface TaskObjectiveRaw {
+  __typename?: string;
+  item?: { id: string };
+  count?: number;
+}
+
+interface UsedInTask {
+  id: string;
+  name: string;
+  trader: { name: string; normalizedName: string };
+  objectives: TaskObjectiveRaw[];
+}
+
+interface ContainerRef {
+  id: string;
+  name: string;
+  normalizedName: string;
+  iconLink?: string;
+}
+
 interface TarkovItem {
   id: string;
   normalizedName: string;
@@ -37,6 +57,7 @@ interface TarkovItem {
   types: string[];
   width: number;
   height: number;
+  weight?: number;
   basePrice: number;
   image512pxLink: string;
   properties: ItemProperties;
@@ -44,6 +65,8 @@ interface TarkovItem {
   buyFor?: VendorOffer[];
   barters: BarterOffer[];
   crafts: CraftRecipe[];
+  usedInTasks?: UsedInTask[];
+  containedInContainers?: ContainerRef[];
 }
 
 // === GQL ===
@@ -62,6 +85,7 @@ async function getItemData(slug: string): Promise<TarkovItem | null> {
         height
         basePrice
         image512pxLink
+        weight
         sellFor {
           price
           priceRUB
@@ -71,6 +95,20 @@ async function getItemData(slug: string): Promise<TarkovItem | null> {
           price
           priceRUB
           vendor { name normalizedName }
+        }
+        usedInTasks {
+          id
+          name
+          trader { name normalizedName }
+          objectives {
+            ... on TaskObjectiveItem { item { id } count }
+          }
+        }
+        containedInContainers {
+          id
+          name
+          normalizedName
+          iconLink
         }
         barters: bartersFor {
           id

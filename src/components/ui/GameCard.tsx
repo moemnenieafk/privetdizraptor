@@ -198,7 +198,7 @@ export function GameCard({ game, isLoading, index }: GameCardProps) {
             </div>
           )}
         </div>
-        <div className={`absolute left-0 w-full text-center top-[524px] font-blender-medium text-[10px] xl:text-[12px] tracking-wider uppercase ${
+        <div className={`absolute left-0 w-full text-center top-[524px] font-blender-medium text-type-caption xl:text-type-label tracking-wider uppercase ${
           game.isInactive ? "text-text-muted" : "text-text-secondary group-hover:text-(--primary) transition-colors duration-300"
         }`}>
           {game.isInactive ? "ТЕХНИЧЕСКИЕ РАБОТЫ" : game.subtitle}

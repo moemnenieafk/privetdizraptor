@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { EYEWEAR_SUBTYPE_LABELS, type EyewearSubtype } from '@/lib/eyewear-filter-config';
 
@@ -29,7 +29,7 @@ export function EyewearSubtypeBar({ active, onChange, counts }: EyewearSubtypeBa
           >
             {EYEWEAR_SUBTYPE_LABELS[subtype]}
             {count !== undefined && (
-              <span className={`font-blender-medium text-[10px] ${isActive ? 'text-(--primary) opacity-70' : 'text-text-muted opacity-60'}`}>
+              <span className={`font-blender-medium text-type-caption ${isActive ? 'text-(--primary) opacity-70' : 'text-text-muted opacity-60'}`}>
                 {count}
               </span>
             )}

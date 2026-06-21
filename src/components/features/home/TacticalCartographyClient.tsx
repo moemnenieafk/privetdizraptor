@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -27,7 +27,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
           </h3>
           <div className="hidden md:block h-px flex-1 bg-linear-to-r from-lines-hover to-transparent" />
         </div>
-        <p className="text-center font-blender-medium text-[10px] tracking-[0.3em] uppercase text-text-muted mb-8">
+        <p className="text-center font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted mb-8">
           // КВЕСТЫ КАППА · МАРШРУТИЗАЦИЯ РЕЙДА
         </p>
 
@@ -36,7 +36,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
           {/* LEFT — task list */}
           <div className="lg:w-[45%] shrink-0 border-b lg:border-b-0 lg:border-r border-lines-hover">
             <div className="px-3 py-2 border-b border-lines-hover bg-lines-hover/20">
-              <p className="font-blender-medium text-[9px] tracking-[0.3em] uppercase text-text-muted">
+              <p className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted">
                 АКТИВНЫЕ ЗАДАНИЯ // КАППА ТРЕКЕР
               </p>
             </div>
@@ -58,7 +58,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p
-                        className={`font-blender-medium text-[11px] uppercase tracking-wide leading-tight ${
+                        className={`font-blender-medium text-type-caption uppercase tracking-wide leading-tight ${
                           hoveredTask?.id === task.id
                             ? "text-(--primary)"
                             : "text-text-primary group-hover:text-(--primary)"
@@ -66,7 +66,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
                       >
                         {task.name}
                       </p>
-                      <span className="font-blender-medium text-[9px] tracking-[0.15em] uppercase text-(--primary)/70 border border-(--primary)/30 px-1.5 py-0.5 rounded-xs shrink-0 whitespace-nowrap">
+                      <span className="font-blender-medium text-type-caption tracking-[0.15em] uppercase text-(--primary)/70 border border-(--primary)/30 px-1.5 py-0.5 rounded-xs shrink-0 whitespace-nowrap">
                         {task.mapName}
                       </span>
                     </div>
@@ -80,17 +80,17 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
                           height={14}
                           className="w-3.5 h-3.5 object-cover grayscale opacity-50"
                         />
-                        <span className="font-blender-medium text-[9px] tracking-[0.2em] uppercase text-text-muted">
+                        <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted">
                           {task.traderName}
                         </span>
                       </span>
-                      <span className="font-blender-medium text-[9px] text-text-secondary tabular-nums">
+                      <span className="font-blender-medium text-type-caption text-text-secondary tabular-nums">
                         {task.experience.toLocaleString("ru-RU")} XP
                       </span>
                     </div>
 
                     {task.primaryObjective && (
-                      <p className="font-blender-medium text-[9px] text-text-muted mt-1 line-clamp-1 leading-tight">
+                      <p className="font-blender-medium text-type-caption text-text-muted mt-1 line-clamp-1 leading-tight">
                         › {task.primaryObjective}
                       </p>
                     )}
@@ -103,7 +103,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
           {/* RIGHT — map context */}
           <div className="lg:flex-1 flex flex-col">
             <div className="px-3 py-2 border-b border-lines-hover bg-lines-hover/20">
-              <p className="font-blender-medium text-[9px] tracking-[0.3em] uppercase text-text-muted">
+              <p className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted">
                 КОНТЕКСТ ЛОКАЦИИ
               </p>
             </div>
@@ -115,13 +115,13 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
                   <h4 className="font-blender-medium text-2xl md:text-3xl uppercase tracking-widest text-text-primary leading-none">
                     {hoveredTask.mapName}
                   </h4>
-                  <p className="font-blender-medium text-[10px] tracking-[0.3em] uppercase text-text-muted mt-1">
+                  <p className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted mt-1">
                     // {hoveredTask.mapNormalizedName}
                   </p>
                 </div>
 
                 <div>
-                  <p className="font-blender-medium text-[9px] tracking-[0.25em] uppercase text-text-muted mb-2">
+                  <p className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-text-muted mb-2">
                     ЗАДАНИЯ НА ЛОКАЦИИ · {tasksOnHoveredMap.length}
                   </p>
                   <div className="flex flex-col gap-1.5">
@@ -133,7 +133,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
                           }`}
                         />
                         <p
-                          className={`font-blender-medium text-[10px] uppercase tracking-wide ${
+                          className={`font-blender-medium text-type-caption uppercase tracking-wide ${
                             t.id === hoveredTask.id ? "text-(--primary)" : "text-text-secondary"
                           }`}
                         >
@@ -146,7 +146,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
 
                 <Link
                   href="/eft/progress/quests"
-                  className="self-start font-blender-medium text-[9px] tracking-[0.2em] uppercase text-text-muted border border-lines-hover rounded-xs px-3 py-1.5 hover:border-(--primary)/50 hover:text-(--primary) transition-none"
+                  className="self-start font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted border border-lines-hover rounded-xs px-3 py-1.5 hover:border-(--primary)/50 hover:text-(--primary) transition-none"
                 >
                   [ КАРТА КВЕСТОВ ]
                 </Link>
@@ -154,10 +154,10 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                 <div className="w-px h-12 bg-lines-hover mb-4" />
-                <p className="font-blender-medium text-[9px] tracking-[0.4em] uppercase text-text-muted">
+                <p className="font-blender-medium text-type-caption tracking-[0.4em] uppercase text-text-muted">
                   НАВЕДИТЕ НА ЗАДАНИЕ
                 </p>
-                <p className="font-blender-medium text-[9px] tracking-[0.3em] uppercase text-lines-hover mt-1">
+                <p className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-lines-hover mt-1">
                   ДЛЯ КОНТЕКСТА ЛОКАЦИИ
                 </p>
                 <div className="w-px h-12 bg-lines-hover mt-4" />
@@ -168,12 +168,12 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
 
         {/* Bottom CTA */}
         <div className="mt-px border-x border-b border-lines-hover rounded-b-xs flex items-center justify-between px-4 py-2.5">
-          <p className="font-blender-medium text-[9px] tracking-[0.25em] uppercase text-text-muted">
+          <p className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-text-muted">
             {tasks.length > 0 ? `ПОКАЗАНО ${tasks.length} ИЗ ВСЕХ КАППА КВЕСТОВ` : "ЗАГРУЗКА ДАННЫХ..."}
           </p>
           <Link
             href="/eft/progress/quests"
-            className="font-blender-medium text-[10px] tracking-[0.25em] uppercase text-(--primary) hover:text-text-primary transition-none flex items-center gap-1.5"
+            className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-(--primary) hover:text-text-primary transition-none flex items-center gap-1.5"
           >
             ПОЛНАЯ КАРТА КВЕСТОВ <span className="text-text-muted">→</span>
           </Link>

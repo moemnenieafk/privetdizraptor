@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -90,7 +90,7 @@ export function PlayerTelemetry() {
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
             >
               <div className={`w-4 h-4 icon-mask ${activeEd.icon} ${activeEd.color} transition-colors group-hover:text-(--primary)`} />
-              <span className={`${activeEd.color} text-[13px] font-blender-medium leading-none transition-colors group-hover:text-(--primary)`}>{activeProfile?.nickname || 'НЕТ ИМЕНИ'}</span>
+              <span className={`${activeEd.color} text-type-label font-blender-medium leading-none transition-colors group-hover:text-(--primary)`}>{activeProfile?.nickname || 'НЕТ ИМЕНИ'}</span>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setIsSettingsOpen(true)} className="w-3 h-3 flex items-center justify-center group focus:outline-none" title="Настройки">
@@ -104,14 +104,14 @@ export function PlayerTelemetry() {
 
           {/* ВЫПАДАЮЩЕЕ МЕНЮ ПРОФИЛЕЙ (OVERLAY) */}
           {isProfileMenuOpen && (
-            <div className="absolute -top-px -left-px flex flex-col w-55 z-100 bg-(--color-base) border border-lines-hover rounded-sm shadow-2xl animate-[fade-in_0.1s_ease-out_both]">
+            <div className="absolute -top-px -left-px flex flex-col w-55 z-30 bg-(--color-base) border border-lines-hover rounded-sm shadow-2xl animate-[fade-in_0.1s_ease-out_both]">
               
               {/* Шапка меню (Закрывает меню при клике) */}
               <div className="flex h-6 w-full items-center gap-1.5 rounded-t-sm bg-lines-hover px-2 cursor-pointer" onClick={() => setIsProfileMenuOpen(false)}>
                 <div className="flex h-4 w-4 items-center justify-center shrink-0">
                   <div className="h-full w-full icon-mask icon-eft-profile-btn-account text-zinc-100" />
                 </div>
-                <span className="text-[10px] font-blender-medium leading-2.5 text-zinc-100 uppercase mt-0.5">Ваши профили ЧВК</span>
+                <span className="text-type-caption font-blender-medium leading-2.5 text-zinc-100 uppercase mt-0.5">Ваши профили ЧВК</span>
               </div>
 
               {/* Список профилей */}
@@ -153,7 +153,7 @@ export function PlayerTelemetry() {
                           <div className="flex flex-col items-center justify-center">
                             <span className="text-base font-blender-medium leading-4 text-text-secondary">{profile.level}</span>
                             <div className="mt-px flex h-3 items-center justify-center rounded-[3px] border border-text-secondary px-1">
-                              <span className="text-[8px] uppercase leading-none tracking-wide text-text-secondary">{profile.faction}</span>
+                              <span className="text-type-caption uppercase leading-none tracking-wide text-text-secondary">{profile.faction}</span>
                             </div>
                           </div>
                         </div>
@@ -162,8 +162,8 @@ export function PlayerTelemetry() {
                       {/* Контекстное меню удаления */}
                       {contextMenuProfileId === profile.id && (
                         <>
-                          <div className="fixed inset-0 z-105" onClick={(e) => { e.stopPropagation(); setContextMenuProfileId(null); }} onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenuProfileId(null); }} />
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-110 bg-card-menu border border-lines-hover rounded-sm shadow-xl p-1 w-32 animate-[fade-in_0.1s_ease-out_both]">
+                          <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setContextMenuProfileId(null); }} onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenuProfileId(null); }} />
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-card-menu border border-lines-hover rounded-sm shadow-xl p-1 w-32 animate-[fade-in_0.1s_ease-out_both]">
                             <button 
                               className="flex items-center justify-center gap-2 px-2 py-2 hover:bg-danger/10 rounded-sm transition-colors group/delete w-full"
                               disabled={profiles.length <= 1} // Отключаем, если профиль единственный
@@ -194,13 +194,13 @@ export function PlayerTelemetry() {
                     <div className="flex h-3 w-3 items-center justify-center shrink-0">
                       <div className="h-full w-full icon-mask icon-eft-profile-btn-add bg-text-secondary transition-colors group-hover/btn:bg-(--primary)" />
                     </div>
-                    <span className="text-[13px] font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Добавить ЧВК</span>
+                    <span className="text-type-label font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Добавить ЧВК</span>
                   </button>
                   <button onClick={() => { setIsSettingsOpen(true); setIsProfileMenuOpen(false); }} className="flex h-7 w-full items-center justify-start gap-2 px-2 transition-colors hover:bg-card-menu group/btn">
                     <div className="flex h-3 w-3 items-center justify-center shrink-0">
                       <div className="h-full w-full icon-mask icon-eft-profile-settings bg-text-secondary transition-colors group-hover/btn:bg-(--primary)" />
                     </div>
-                    <span className="text-[13px] font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Настройки</span>
+                    <span className="text-type-label font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Настройки</span>
                   </button>
                   <Link
                     href="/account"
@@ -210,13 +210,13 @@ export function PlayerTelemetry() {
                     <div className="flex h-3 w-3 items-center justify-center shrink-0">
                       <div className="h-full w-full icon-mask icon-account_profile_icon bg-text-secondary transition-colors group-hover/btn:bg-(--primary)" />
                     </div>
-                    <span className="text-[13px] font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Аккаунт Центр</span>
+                    <span className="text-type-label font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Аккаунт Центр</span>
                   </Link>
                   <button onClick={() => { setIsAuthenticated(false); setIsProfileMenuOpen(false); }} className="flex h-7 w-full items-center justify-start gap-2 px-2 transition-colors hover:bg-card-menu group/btn">
                     <div className="flex h-3 w-3 items-center justify-center shrink-0">
                       <div className="h-full w-full icon-mask icon-eft-profile-logout bg-text-secondary transition-colors group-hover/btn:bg-danger" />
                     </div>
-                    <span className="text-[13px] font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-danger mt-0.5">Выйти</span>
+                    <span className="text-type-label font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-danger mt-0.5">Выйти</span>
                   </button>
                 </div>
               </div>
@@ -228,24 +228,21 @@ export function PlayerTelemetry() {
       {/* ОСНОВНАЯ ПАНЕЛЬ (Автоматически занимает оставшуюся высоту) */}
       <div className="flex items-center flex-1 w-full">
 
-        {/* СЕКЦИЯ 1: Блок прогресса (Ширина 79px) */}
+        {/* СЕКЦИЯ 1: Блок прогресса */}
         <div
-          className="group relative flex h-full w-19.75 cursor-pointer items-center justify-between px-2 hover:bg-card-menu transition-colors rounded-bl-sm"
+          className="group relative flex h-full w-19 cursor-pointer items-center justify-center gap-1.5 hover:bg-card-menu transition-colors rounded-bl-sm"
           onClick={() => setIsProgressOpen((v) => !v)}
         >
           <div className={`w-5 h-5 icon-bg shrink-0 transition-transform duration-300 group-hover:scale-110 ${progressMode === 'KAPPA' ? 'icon-eft-profile-kappa' : 'icon-eft-profile-lightkeeper'}`} />
-          <div className="flex flex-col items-end justify-center">
-            <span className={`text-[8px] font-blender-medium uppercase leading-none opacity-50 tracking-tight transition-colors ${progressMode === 'KAPPA' ? 'text-tactical-amber' : 'text-accent-frago'}`}>Прогресс</span>
-            <span className={`text-xs font-normal font-blender-medium uppercase leading-none transition-colors ${progressMode === 'KAPPA' ? 'text-tactical-amber' : 'text-accent-frago'}`}>
-              {progressMode === 'KAPPA'
-                ? `${questStats.kappaTotal > 0 ? Math.round(questStats.kappaCompleted / questStats.kappaTotal * 100) : 0}%`
-                : `${questStats.lkTotal > 0 ? Math.round(questStats.lkCompleted / questStats.lkTotal * 100) : 0}%`
-              }
-            </span>
-          </div>
+          <span className={`text-xs font-blender-medium uppercase leading-none transition-colors ${progressMode === 'KAPPA' ? 'text-tactical-amber' : 'text-accent-frago'}`}>
+            {progressMode === 'KAPPA'
+              ? `${questStats.kappaTotal > 0 ? Math.round(questStats.kappaCompleted / questStats.kappaTotal * 100) : 0}%`
+              : `${questStats.lkTotal > 0 ? Math.round(questStats.lkCompleted / questStats.lkTotal * 100) : 0}%`
+            }
+          </span>
 
           {/* Выпадающий список Прогресса */}
-          <div className={`absolute top-[calc(100%+4px)] -left-px flex-col w-55 bg-card-menu border border-lines-hover rounded-sm z-50 shadow-lg ${isProgressOpen ? 'flex' : 'hidden group-hover:flex'}`}>
+          <div className={`absolute top-[calc(100%+4px)] -left-px flex-col w-55 bg-card-menu border border-lines-hover rounded-sm z-20 shadow-lg ${isProgressOpen ? 'flex' : 'hidden group-hover:flex'}`}>
             {/* Невидимый мост для мыши */}
             <div className="absolute -top-2 left-0 h-2 w-full bg-transparent" />
             <div className="flex flex-col py-1">
@@ -303,9 +300,9 @@ export function PlayerTelemetry() {
                     >
                       <div className="flex items-center gap-2">
                         <div className={`w-5 h-5 icon-bg ${trader.icon} opacity-50 group-hover/trader:opacity-100 transition-opacity`} />
-                        <span className="text-[11px] font-blender-medium uppercase">{trader.name}</span>
+                        <span className="text-type-caption font-blender-medium uppercase">{trader.name}</span>
                       </div>
-                      <span className="text-[11px] font-blender-medium">{completed}/{total}</span>
+                      <span className="text-type-caption font-blender-medium">{completed}/{total}</span>
                     </div>
                   );
                 })}
@@ -325,36 +322,27 @@ export function PlayerTelemetry() {
         {/* Вертикальный разделитель */}
         <div className="w-px h-6 bg-lines-hover shrink-0" />
 
-        {/* СЕКЦИЯ 2: Блок режима (Ширина 64px) */}
+        {/* СЕКЦИЯ 2: Блок режима */}
         <div
-          className={`group relative flex h-full w-16 cursor-pointer items-center justify-center transition-colors ${activeProfile?.mode === 'PVP' ? 'hover:bg-mode-pvp/25' : 'hover:bg-mode-pve/25'}`}
+          className={`group relative flex h-full w-19 cursor-pointer items-center justify-center gap-1.5 transition-colors ${activeProfile?.mode === 'PVP' ? 'hover:bg-mode-pvp/25' : 'hover:bg-mode-pve/25'}`}
           onClick={() => setIsModeOpen((v) => !v)}
         >
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <div className={`w-4.5 h-4.5 icon-bg transition-colors ${activeProfile?.mode === 'PVP' ? 'icon-eft-profile-pvp' : 'icon-eft-profile-pve'}`} />
-            <div className="flex flex-col items-start justify-center">
-              <span className={`text-[8px] font-blender-medium uppercase leading-none opacity-50 tracking-tight transition-colors ${activeProfile?.mode === 'PVP' ? 'text-mode-pvp' : 'text-mode-pve'}`}>Режим</span>
-              <span className={`text-xs font-normal font-blender-medium uppercase leading-none transition-colors ${activeProfile?.mode === 'PVP' ? 'text-mode-pvp' : 'text-mode-pve'}`}>{activeProfile?.mode}</span>
-            </div>
+            <span className={`text-xs font-blender-medium uppercase leading-none transition-colors ${activeProfile?.mode === 'PVP' ? 'text-mode-pvp' : 'text-mode-pve'}`}>{activeProfile?.mode}</span>
           </div>
 
           {/* Выпадающий список Режимов */}
-          <div className={`absolute top-[calc(100%+4px)] -left-px flex-col w-16.5 bg-card-menu border border-lines-hover rounded-sm z-50 shadow-lg ${isModeOpen ? 'flex' : 'hidden group-hover:flex'}`}>
+          <div className={`absolute top-[calc(100%+4px)] -left-px flex-col w-16.5 bg-card-menu border border-lines-hover rounded-sm z-20 shadow-lg ${isModeOpen ? 'flex' : 'hidden group-hover:flex'}`}>
             {/* Невидимый мост для мыши */}
             <div className="absolute -top-2 left-0 h-2 w-full bg-transparent" />
             <div onClick={(e) => { e.stopPropagation(); activeProfile && updateProfile(activeProfile.id, { mode: 'PVE' }); setIsModeOpen(false); }} className="flex items-center justify-center gap-1 py-1.5 hover:bg-mode-pve/25 transition-colors cursor-pointer">
               <div className="w-4.5 h-4.5 icon-bg icon-eft-profile-pve transition-colors" />
-              <div className="flex flex-col items-start justify-center">
-                <span className="text-mode-pve text-[8px] font-blender-medium uppercase leading-none opacity-50 tracking-tight transition-colors">Режим</span>
-                <span className="text-mode-pve text-xs font-normal font-blender-medium uppercase leading-none transition-colors">PVE</span>
-              </div>
+              <span className="text-mode-pve text-xs font-blender-medium uppercase leading-none transition-colors">PVE</span>
             </div>
             <div onClick={(e) => { e.stopPropagation(); activeProfile && updateProfile(activeProfile.id, { mode: 'PVP' }); setIsModeOpen(false); }} className="flex items-center justify-center gap-1 py-1.5 hover:bg-mode-pvp/25 transition-colors cursor-pointer">
               <div className="w-4.5 h-4.5 icon-bg icon-eft-profile-pvp transition-colors" />
-              <div className="flex flex-col items-start justify-center">
-                <span className="text-mode-pvp text-[8px] font-blender-medium uppercase leading-none opacity-50 tracking-tight transition-colors">Режим</span>
-                <span className="text-mode-pvp text-xs font-normal font-blender-medium uppercase leading-none transition-colors">PVP</span>
-              </div>
+              <span className="text-mode-pvp text-xs font-blender-medium uppercase leading-none transition-colors">PVP</span>
             </div>
           </div>
         </div>
@@ -362,12 +350,12 @@ export function PlayerTelemetry() {
         {/* Вертикальный разделитель */}
         <div className="w-px h-6 bg-lines-hover shrink-0" />
 
-        {/* СЕКЦИЯ 3: Блок авторизации (Ширина 76px) */}
+        {/* СЕКЦИЯ 3: Блок авторизации */}
         <div className="flex w-19 h-full items-center justify-center rounded-br-sm">
           {!isAuthenticated ? (
             <button onClick={() => setIsAuthenticated(true)} className="flex h-5 w-14 items-center justify-center gap-1 rounded-xs bg-text-secondary transition-colors hover:bg-(--primary) focus:outline-none">
               <div className="h-2.5 w-2.5 icon-mask icon-eft-profile-login text-lines-hover" />
-              <span className="text-[10px] font-blender-medium uppercase leading-none text-lines-hover">Войти</span>
+              <span className="text-type-caption font-blender-medium uppercase leading-none text-lines-hover">Войти</span>
             </button>
           ) : (
             <div className="flex items-center gap-1.5 px-2 cursor-pointer group transition-opacity">
@@ -390,17 +378,12 @@ export function PlayerTelemetry() {
               
               {/* Уровень и фракция */}
               <div className="flex flex-col items-center justify-center">
-                {/* Уровень игрока */}
-                <span className="text-text-secondary text-base font-blender-medium leading-4 transition-colors group-hover:text-(--primary)">
+                <span className="text-xs font-blender-medium leading-none text-text-secondary transition-colors group-hover:text-(--primary)">
                   {activeProfile?.level || '1'}
                 </span>
-                
-                {/* Плашка фракции (через CSS-рамку, а не абсолютные слои) */}
-                <div className="mt-px flex h-3 items-center justify-center rounded-[3px] border border-text-secondary px-1 transition-colors group-hover:border-(--primary)">
-                  <span className="text-text-secondary text-[8px] uppercase tracking-wide leading-none transition-colors group-hover:text-(--primary)">
-                    {activeProfile?.faction}
-                  </span>
-                </div>
+                <div
+                  className={`mt-0.5 w-6 h-3 icon-mask text-text-secondary transition-colors group-hover:text-(--primary) ${activeProfile?.faction === 'BEAR' ? 'icon-eft-profile-bear-label' : 'icon-eft-profile-usec-label'}`}
+                />
               </div>
             </div>
           )}

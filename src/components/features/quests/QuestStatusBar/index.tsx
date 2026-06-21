@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef } from 'react';
 import { Download, Upload } from 'lucide-react';
@@ -72,7 +72,7 @@ export function QuestStatusBar({
           }
         >
           <span className="icon-mask icon-eft-profile-lightkeeper w-5.5 h-5.5" style={filterLK ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
-          <span className="font-blender-medium text-[11px]">
+          <span className="font-blender-medium text-type-caption">
             {lkCompleted} / {lkTotal} - {lkPct}%
           </span>
         </button>
@@ -88,7 +88,7 @@ export function QuestStatusBar({
           }
         >
           <span className="icon-mask icon-eft-profile-kappa w-5.5 h-5.5" style={filterKappa ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
-          <span className="font-blender-medium text-[11px]">
+          <span className="font-blender-medium text-type-caption">
             {kappaCompleted} / {kappaTotal} - {kappaPct}%
           </span>
         </button>
@@ -106,7 +106,7 @@ export function QuestStatusBar({
             {activeProfile?.level || '1'}
           </span>
           <div className="flex h-3 items-center justify-center rounded-[3px] border border-text-secondary px-1">
-            <span className="text-text-secondary text-[8px] uppercase tracking-wide leading-none">
+            <span className="text-text-secondary text-type-caption uppercase tracking-wide leading-none">
               {activeProfile?.faction}
             </span>
           </div>

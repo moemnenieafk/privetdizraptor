@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -1239,7 +1239,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
           <div className="absolute top-2 right-2 z-40 flex gap-1.5" data-no-pan>
             <button
               onClick={() => { setIsDragMode(v => !v); setSnapPreview(null); setSelectedNodes(new Set()); setGroupPreview(new Map()); }}
-              className={`h-7 px-2.5 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest border transition-colors duration-150 ${
+              className={`h-7 px-2.5 rounded-xs text-type-caption font-blender-medium uppercase tracking-widest border transition-colors duration-150 ${
                 isDragMode
                   ? 'bg-(--primary)/20 border-(--primary)/50 text-(--primary)'
                   : 'bg-card-menu border-lines-hover text-text-secondary hover:text-text-primary'
@@ -1254,7 +1254,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
                     const json = JSON.stringify(Object.fromEntries(manualPositions), null, 2);
                     navigator.clipboard.writeText(json).catch(() => {});
                   }}
-                  className="h-7 px-2.5 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest border bg-card-menu border-lines-hover text-text-secondary hover:text-text-primary transition-colors duration-150"
+                  className="h-7 px-2.5 rounded-xs text-type-caption font-blender-medium uppercase tracking-widest border bg-card-menu border-lines-hover text-text-secondary hover:text-text-primary transition-colors duration-150"
                   title="Скопировать позиции в буфер — вставить Клоду"
                 >
                   Копировать позиции
@@ -1265,7 +1265,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
                     setManualPositions(new Map());
                     try { localStorage.removeItem(DRAG_POSITIONS_KEY); } catch {}
                   }}
-                  className="h-7 px-2.5 rounded-xs text-[10px] font-blender-medium uppercase tracking-widest border bg-card-menu border-lines-hover text-text-secondary hover:text-red-400 transition-colors duration-150"
+                  className="h-7 px-2.5 rounded-xs text-type-caption font-blender-medium uppercase tracking-widest border bg-card-menu border-lines-hover text-text-secondary hover:text-red-400 transition-colors duration-150"
                 >
                   Сброс
                 </button>
@@ -1276,7 +1276,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
           {unlockedCount > 1 && (
             <div className="absolute bottom-4 left-4 z-50 flex items-center gap-2 rounded-xs border border-(--primary)/40 bg-card-menu px-3 py-2">
               <span className="icon-bg icon-eft-quests-active w-3 h-3 shrink-0" />
-              <span className="text-[10px] font-blender-medium uppercase text-(--primary)">
+              <span className="text-type-caption font-blender-medium uppercase text-(--primary)">
                 Разблокировано: {unlockedCount} квестов
               </span>
             </div>
@@ -1300,14 +1300,14 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
                       className="rounded-[1px] shrink-0"
                     />
                     <button
-                      className="text-[10px] font-blender-medium uppercase tracking-widest truncate max-w-36 text-text-secondary hover:text-text-primary transition-colors duration-150"
+                      className="text-type-caption font-blender-medium uppercase tracking-widest truncate max-w-36 text-text-secondary hover:text-text-primary transition-colors duration-150"
                       onClick={() => flyToQuest(id, 1.4, 500)}
                     >
                       {task.name}
                     </button>
                     <button
                       onClick={() => togglePin(id)}
-                      className="text-[10px] leading-none text-text-secondary hover:text-(--primary) transition-colors duration-150"
+                      className="text-type-caption leading-none text-text-secondary hover:text-(--primary) transition-colors duration-150"
                       aria-label="Снять закладку"
                     >✕</button>
                   </div>

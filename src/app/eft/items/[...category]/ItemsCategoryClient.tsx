@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useMemo, useRef, useState, useEffect, memo, forwardRef } from 'react';
 import Link from 'next/link';
@@ -15,6 +15,10 @@ import { getDynamicTopIndicator } from '@/lib/item-indicators.util';
 import { getEyewearSubtype, type EyewearSubtype } from '@/lib/eyewear-filter-config';
 import { EyewearSubtypeBar } from '@/components/features/items/EyewearSubtypeBar';
 import { useItemsStore } from '@/store/useItemsStore';
+import { useQuestStore } from '@/store/useQuestStore';
+import { useFavoritesStore } from '@/store/useFavoritesStore';
+import { FavoritesStrip } from '@/components/features/items/FavoritesStrip';
+import { CompareDrawer } from '@/components/features/items/CompareDrawer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -166,7 +170,7 @@ const rubVal = (p: { price: number; priceRUB?: number }) => p.priceRUB ?? p.pric
 const isFleaVendor = (v: { name: string; normalizedName?: string }) =>
   v.name === 'Flea Market' || v.normalizedName === 'flea-market';
 
-function toEftItem(item: ProcessedItem, slug: string): EftItemData {
+function toEftItem(item: ProcessedItem, slug: string, questCount?: number): EftItemData {
   const p = item.properties || {};
   const nonFleaBuys = (item.buyFor ?? []).filter(b => !isFleaVendor(b.vendor) && rubVal(b) > 0);
   const traderBuy = nonFleaBuys.length > 0
@@ -236,6 +240,7 @@ function toEftItem(item: ProcessedItem, slug: string): EftItemData {
         ? { price: rubVal(item.eco.fleaSell), vendor: item.eco.fleaSell.vendor }
         : undefined,
     },
+    questCount,
   };
 }
 
@@ -251,7 +256,7 @@ function renderPrice(
     return (
       <div className="flex items-center justify-end gap-1 text-text-muted opacity-50" title="Недоступно / Нет в продаже">
         <PackageX className="w-3 h-3" />
-        <span className="font-blender-medium text-[9px] uppercase tracking-widest">Нет</span>
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest">Нет</span>
       </div>
     );
   }
@@ -267,7 +272,7 @@ function renderPrice(
     : highlightGreen
     ? 'text-nvg-green'
     : 'text-text-primary';
-  const sizeClass = isBestSell ? 'text-[13px]' : 'text-xs';
+  const sizeClass = isBestSell ? 'text-type-label' : 'text-xs';
   return (
     <div className="flex items-center justify-end gap-1.5">
       <span
@@ -288,7 +293,7 @@ function renderBuyPrice(eco: ReturnType<typeof getEconomics>) {
     return (
       <div className="flex items-center justify-end gap-1 text-text-muted opacity-50" title="Недоступно / Нет в продаже">
         <PackageX className="w-3 h-3" />
-        <span className="font-blender-medium text-[9px] uppercase tracking-widest">Нет</span>
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest">Нет</span>
       </div>
     );
   }
@@ -317,7 +322,7 @@ function PenaltyCell({ ergo, speed, turn }: { ergo?: number | null; speed?: numb
   return (
     <div className="flex flex-col gap-px">
       {rows.map(({ label, val }) => (
-        <span key={label} className="font-blender-medium text-[10px] text-red-400">
+        <span key={label} className="font-blender-medium text-type-caption text-red-400">
           {label}: {val < 0 ? val : `-${val}`}%
         </span>
       ))}
@@ -360,7 +365,7 @@ function AdvancedFiltersPanel({
   const showCaliber = categorySlug === 'ammo' || GUN_SLUGS.has(categorySlug);
   const hasActiveFilters = !!(priceMin || priceMax || caliberFilter
     || cantBuyTrader || cantBuyFlea || cantSellTrader || cantSellFlea);
-  const inputClass = 'h-10 w-full rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-[12px] uppercase tracking-wider text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none';
+  const inputClass = 'h-10 w-full rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-type-label uppercase tracking-wider text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none';
 
   const AVAILABILITY_FILTERS = [
     { flag: cantBuyTrader,  set: onCantBuyTraderChange,  label: 'Купить у торговца' },
@@ -399,7 +404,7 @@ function AdvancedFiltersPanel({
             <select
               value={caliberFilter}
               onChange={(e) => onCaliberChange(e.target.value)}
-              className="h-10 w-full cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-[12px] uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
+              className="h-10 w-full cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
             >
               <option value="">Все калибры</option>
               {availableCalibers.map(c => (
@@ -415,7 +420,7 @@ function AdvancedFiltersPanel({
             key={label}
             type="button"
             onClick={() => set(!flag)}
-            className={`h-10 w-full rounded border px-3 text-left font-blender-medium text-[12px] uppercase tracking-wider transition-colors duration-200 ${
+            className={`h-10 w-full rounded border px-3 text-left font-blender-medium text-type-label uppercase tracking-wider transition-colors duration-200 ${
               flag
                 ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-(--primary)'
                 : 'border-lines-hover bg-(--color-base) text-text-muted hover:border-text-secondary hover:text-text-primary'
@@ -485,7 +490,7 @@ const CategoryTableRow = memo(forwardRef<
       {/* ─── Название (fixed) ─── */}
       <td className="px-3 py-2 w-40 max-w-40 sm:w-55 sm:max-w-55 md:w-65 md:max-w-65 lg:w-75 lg:max-w-75 xl:w-64 xl:max-w-64">
         <Link href={`/eft/items/item/${item.normalizedName}`} className="flex min-w-0 w-full flex-col overflow-hidden transition-colors group-hover:text-(--primary)">
-          <span className="block w-full truncate font-blender-medium text-[13px] uppercase leading-none" title={item.name}>{item.name}</span>
+          <span className="block w-full truncate font-blender-medium text-type-label uppercase leading-none" title={item.name}>{item.name}</span>
           <span className="mt-1 block w-full truncate font-blender-book text-xs text-text-secondary" title={item.shortName}>{item.shortName}</span>
         </Link>
       </td>
@@ -514,7 +519,7 @@ const CategoryTableRow = memo(forwardRef<
               className="w-fit mx-auto"
             />
           </td>
-          <td className="px-3 py-2 text-center text-text-secondary text-[10px] font-blender-medium uppercase">{p.deafening || 'Н/Д'}</td>
+          <td className="px-3 py-2 text-center text-text-secondary text-type-caption font-blender-medium uppercase">{p.deafening || 'Н/Д'}</td>
           <td className="px-3 py-2 text-center">
             {p.blocksHeadset
               ? <SemanticBadge color="red" label="Блок." title="Блокирует наушники" className="w-fit mx-auto" />
@@ -536,7 +541,7 @@ const CategoryTableRow = memo(forwardRef<
             />
           </td>
           <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">
+            <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
               {p.armorType ? (ARMOR_TYPE_RU[p.armorType] ?? p.armorType) : '—'}
             </span>
           </td>
@@ -562,7 +567,7 @@ const CategoryTableRow = memo(forwardRef<
             />
           </td>
           <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">
+            <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
               {p.armorType ? (ARMOR_TYPE_RU[p.armorType] ?? p.armorType) : '—'}
             </span>
           </td>
@@ -675,7 +680,7 @@ const CategoryTableRow = memo(forwardRef<
       ) : GUN_SLUGS.has(slug) ? (
         <>
           <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">
+            <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
               {p.caliber?.replace('Caliber', '') || '—'}
             </span>
           </td>
@@ -698,7 +703,7 @@ const CategoryTableRow = memo(forwardRef<
         </>
       ) : slug === 'ammo' ? (
         <>
-          <td className="px-3 py-2 text-center text-text-secondary font-blender-medium text-[10px]">{p.caliber?.replace('Caliber', '') || '—'}</td>
+          <td className="px-3 py-2 text-center text-text-secondary font-blender-medium text-type-caption">{p.caliber?.replace('Caliber', '') || '—'}</td>
           <td className="px-3 py-2"><SemanticBadge color="red" label={p.damage?.toString() || '—'} className="w-fit mx-auto" /></td>
           <td className="px-3 py-2"><SemanticBadge color="emerald" label={p.penetrationPower?.toString() || '—'} className="w-fit mx-auto" /></td>
           <td className="px-3 py-2"><SemanticBadge color="gray" label={p.armorDamage ? `${p.armorDamage}%` : '—'} className="w-fit mx-auto" /></td>
@@ -716,7 +721,7 @@ const CategoryTableRow = memo(forwardRef<
       ) : slug === 'grenades' ? (
         <>
           <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">{p.type || '—'}</span>
+            <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">{p.type || '—'}</span>
           </td>
           <td className="px-3 py-2 text-center">
             {p.fragments != null
@@ -797,7 +802,7 @@ const CategoryTableRow = memo(forwardRef<
               </span>
             ) : (
               <div className="flex items-center justify-end gap-1 text-text-muted opacity-50">
-                <PackageX className="w-3 h-3" /><span className="font-blender-medium text-[9px] uppercase tracking-widest">Нет</span>
+                <PackageX className="w-3 h-3" /><span className="font-blender-medium text-type-caption uppercase tracking-widest">Нет</span>
               </div>
             )}
           </td>
@@ -809,9 +814,9 @@ const CategoryTableRow = memo(forwardRef<
         {gpCount ? (
           <div className="flex flex-col items-center gap-px" title={`Купить у Рефа за ${gpCount} ГП монет`}>
             <span className="font-blender-medium text-xs text-(--primary)">{gpCount}</span>
-            <span className="font-blender-medium text-[8px] uppercase tracking-widest text-text-muted">ГП</span>
+            <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">ГП</span>
           </div>
-        ) : <span className="text-text-muted/40 text-[10px]">—</span>}
+        ) : <span className="text-text-muted/40 text-type-caption">—</span>}
       </td>
     </tr>
   );
@@ -837,6 +842,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
     cantBuyFlea, setCantBuyFlea,
     cantSellTrader, setCantSellTrader,
     cantSellFlea, setCantSellFlea,
+    favoritesOnly, setFavoritesOnly,
     handleColumnSort,
     handleDropdownSort,
     toggleArmorClass,
@@ -846,6 +852,8 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
   } = useCategoryFilters();
 
   const selectedTraders = useItemsStore((state) => state.selectedTraders);
+  const tasks = useQuestStore((s) => s.tasks);
+  const favoriteIds = useFavoritesStore((s) => s.favoriteIds);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeEyewearSubtype, setActiveEyewearSubtype] = useState<EyewearSubtype | 'all'>('all');
@@ -877,6 +885,18 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
     }
     return counts;
   }, [initialData, slug]);
+
+  const questCountMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const task of tasks) {
+      for (const obj of task.objectives) {
+        if (obj.__typename === 'TaskObjectiveItem' && obj.item?.id) {
+          map.set(obj.item.id, (map.get(obj.item.id) ?? 0) + 1);
+        }
+      }
+    }
+    return map;
+  }, [tasks]);
 
   const processedItems = useMemo(() => {
     let data = initialData.map(item => ({ ...item, eco: getEconomics(item) }));
@@ -925,6 +945,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
         const fleaAccessible = (item.eco.fleaBuy?.price || 0) > 0 && playerLevel >= 15;
         if (!hasTraderBuy && !fleaAccessible) return false;
       }
+      if (favoritesOnly && !favoriteIds.includes(item.id)) return false;
       return true;
     });
 
@@ -995,7 +1016,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
 
     return data;
   }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, caliberFilter, gpCoinBarters, activeEyewearSubtype, selectedTraders,
-      cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea, availableOnly, playerLevel]);
+      cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea, availableOnly, playerLevel, favoritesOnly, favoriteIds]);
 
   useEffect(() => { setVisibleCount(100); }, [processedItems]);
   const handleShowMore = () => setVisibleCount(prev => prev + 100);
@@ -1006,7 +1027,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
     return (
       <th
         scope="col"
-        className={`px-3 py-2 text-[10px] font-blender-medium uppercase tracking-widest cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)] transition-colors group select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${isActive ? 'text-(--primary)' : 'text-text-muted'} ${customClass}`}
+        className={`px-3 py-2 text-type-caption font-blender-medium uppercase tracking-widest cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)] transition-colors group select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${isActive ? 'text-(--primary)' : 'text-text-muted'} ${customClass}`}
         onClick={() => handleColumnSort(sortKey)}
       >
         <div className={`flex items-center gap-1.5 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
@@ -1063,6 +1084,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
           activeArmorClasses={activeArmorClasses}
           barterOnly={barterOnly}
           availableOnly={availableOnly}
+          favoritesOnly={favoritesOnly}
           viewMode={viewMode}
           isSaved={isSaved}
           showAdvanced={showAdvanced}
@@ -1072,6 +1094,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
           onArmorClassToggle={toggleArmorClass}
           onBarterOnlyChange={setBarterOnly}
           onAvailableOnlyChange={setAvailableOnly}
+          onFavoritesOnlyChange={setFavoritesOnly}
           onViewModeChange={setViewMode}
           onSaveFilters={handleSaveFilters}
           onToggleAdvanced={() => setShowAdvanced(v => !v)}
@@ -1100,6 +1123,11 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
         )}
       </div>
 
+      {/* Избранное — стрип над сеткой */}
+      {!favoritesOnly && favoriteIds.length > 0 && (
+        <FavoritesStrip favoriteIds={favoriteIds} items={initialData} />
+      )}
+
       {/* Eyewear subtype bar */}
       {slug === 'eyewear' && (
         <EyewearSubtypeBar
@@ -1126,7 +1154,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
               className="group relative inline-flex items-center justify-center overflow-hidden rounded border border-lines-hover bg-(--color-base) px-8 py-2 transition-all duration-300 hover:border-(--primary) hover:shadow-[0_0_15px_color-mix(in_srgb,var(--primary)_20%,transparent)]"
             >
               <div className="absolute inset-0 w-0 bg-(--primary) opacity-10 transition-all duration-300 ease-out group-hover:w-full" />
-              <span className="relative z-10 font-blender-medium text-[13px] uppercase tracking-widest text-text-secondary transition-colors duration-300 group-hover:text-(--primary)">
+              <span className="relative z-10 font-blender-medium text-type-label uppercase tracking-widest text-text-secondary transition-colors duration-300 group-hover:text-(--primary)">
                 Сбросить фильтры
               </span>
             </button>
@@ -1136,7 +1164,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
 
       {/* Skeleton — сетка */}
       {isLoading && viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-[fade-in-up_0.3s_ease-out]">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 animate-[fade-in-up_0.3s_ease-out]">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="tactical-card-base p-4 flex flex-col h-62.5 animate-pulse border-lines-hover">
               <div className="flex justify-between items-start mb-4">
@@ -1178,9 +1206,9 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
       {/* Вид: сетка */}
       {!isLoading && viewMode === 'grid' && processedItems.length > 0 && (
         <>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {displayedItems.map((item) => {
-              const eftItem = toEftItem(item, slug);
+              const eftItem = toEftItem(item, slug, questCountMap.get(item.id));
               return (
                 <EftItemTile.Root key={item.id} item={eftItem} categorySlug={slug}>
                   <EftItemTile.Header />
@@ -1210,7 +1238,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
           <table className="w-full text-sm text-left whitespace-nowrap font-blender-book">
             <thead className="sticky top-0 z-10 bg-(--color-base) border-b border-lines-hover">
               <tr>
-                <th scope="col" className="px-3 py-2 text-[10px] font-blender-medium text-text-muted uppercase tracking-widest w-16 text-center border-r border-lines-hover/50">
+                <th scope="col" className="px-3 py-2 text-type-caption font-blender-medium text-text-muted uppercase tracking-widest w-16 text-center border-r border-lines-hover/50">
                   Визуал
                 </th>
                 {renderSortableHeader('Предмет', 'name', 'left', 'w-40 max-w-40 sm:w-55 sm:max-w-55 md:w-65 md:max-w-65 lg:w-75 lg:max-w-75 xl:w-64 xl:max-w-64')}
@@ -1342,6 +1370,9 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
         </div>
       )}
 
+      {/* Сравнение — выезжающий снизу drawer */}
+      <CompareDrawer items={initialData} />
+
       {/* Toast: фильтры сохранены */}
       {isSaved && (
         <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-100 flex items-center gap-3 rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_90%,transparent)] p-3 shadow-[0_8px_30px_rgba(0,0,0,0.8)] animate-[fade-in-up_0.3s_ease-out_both] backdrop-blur-md">
@@ -1349,7 +1380,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
             <Check className="h-5 w-5 stroke-3" />
           </div>
           <div className="flex flex-col justify-center">
-            <span className="font-blender-medium text-[13px] uppercase tracking-widest text-text-primary leading-none mb-1">Настройки сохранены</span>
+            <span className="font-blender-medium text-type-label uppercase tracking-widest text-text-primary leading-none mb-1">Настройки сохранены</span>
             <span className="font-blender-book text-xs text-text-secondary leading-none">Текущие фильтры установлены по умолчанию</span>
           </div>
         </div>

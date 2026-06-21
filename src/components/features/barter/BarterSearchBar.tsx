@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
@@ -116,7 +116,7 @@ export function BarterSearchBar({ allItems }: Props) {
                 <p className="font-blender-book text-sm text-(--color-text-primary) truncate">
                   {item.name}
                 </p>
-                <p className="font-blender-medium text-[10px] uppercase text-(--color-text-muted)">
+                <p className="font-blender-medium text-type-caption uppercase text-(--color-text-muted)">
                   {item.shortName} · {item.width}×{item.height}
                 </p>
               </div>

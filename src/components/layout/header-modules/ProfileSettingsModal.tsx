@@ -139,13 +139,13 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
   return (
     // Оверлей модального окна
     <div 
-      className={`fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
     >
       
       {/* Контейнер модалки (348px) */}
       <div 
         ref={modalRef}
-        className={`flex w-[348px] flex-col items-start justify-start shadow-2xl transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}
+        className={`flex w-87 flex-col items-start justify-start shadow-2xl transition-all duration-300 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}
       >
         
         {/* ШАПКА */}
@@ -203,7 +203,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                   className="flex-1 w-full bg-transparent px-1 text-center text-2xl font-blender-medium leading-6 text-zinc-100 outline-none placeholder:text-zinc-100/30"
                   placeholder="1"
                 />
-                <div className="flex flex-col items-center justify-center gap-[2px]">
+                <div className="flex flex-col items-center justify-center gap-0.5">
                   <button onClick={() => handleLevelChange(1)} className="flex h-3 w-4 items-center justify-center text-text-muted hover:text-(--primary) transition-colors focus:outline-none">
                     <ChevronUp className="h-4 w-4" />
                   </button>
@@ -232,10 +232,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                     setPrestige(val);
                   }}
                   onKeyDown={handlePrestigeKeyDown}
-                  className="flex-1 w-full bg-transparent px-1 text-center text-2xl font-blender-medium leading-6 text-zinc-100 outline-none placeholder:text-[9px] placeholder:tracking-tight placeholder:text-zinc-100/40"
+                  className="flex-1 w-full bg-transparent px-1 text-center text-2xl font-blender-medium leading-6 text-zinc-100 outline-none placeholder:text-type-caption placeholder:tracking-tight placeholder:text-zinc-100/40"
                   placeholder="НЕТ ПРЕСТИЖА"
                 />
-                <div className="flex flex-col items-center justify-center gap-[2px]">
+                <div className="flex flex-col items-center justify-center gap-0.5">
                   <button onClick={() => handlePrestigeChange(1)} className="flex h-3 w-4 items-center justify-center text-text-muted hover:text-(--primary) transition-colors focus:outline-none">
                     <ChevronUp className="h-4 w-4" />
                   </button>
@@ -253,7 +253,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               <div className="flex-1 text-base font-blender-medium uppercase leading-4 text-text-secondary">Издание</div>
               <div className="flex flex-col items-end justify-start">
                 <div className={`text-lg font-blender-medium leading-4 ${activeEd.color}`}>{activeEd.name}</div>
-                <div className={`text-[10px] font-blender-medium leading-[10px] ${activeEd.color}`}>{activeEd.sub}</div>
+                <div className={`text-type-caption font-blender-medium leading-2.5 ${activeEd.color}`}>{activeEd.sub}</div>
               </div>
             </div>
             
@@ -281,27 +281,27 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
           <div className="flex w-full items-start justify-between gap-2">
             {/* Фракции */}
             <div className="flex flex-1 gap-1">
-              <button onClick={() => setFaction('USEC')} className={`flex flex-1 flex-col items-center justify-center rounded border h-[56px] transition-all ${faction === 'USEC' ? 'border-sky-500 bg-linear-to-t from-sky-500/20 to-transparent' : 'border-lines-hover bg-(--color-base) hover:border-sky-500/50'}`}>
+              <button onClick={() => setFaction('USEC')} className={`flex flex-1 flex-col items-center justify-center rounded border h-14 transition-all ${faction === 'USEC' ? 'border-sky-500 bg-linear-to-t from-sky-500/20 to-transparent' : 'border-lines-hover bg-(--color-base) hover:border-sky-500/50'}`}>
                 <img src="/icons/eft/profile-pannel/USEC-logo-sign.svg" alt="USEC" className={`h-10 w-10 object-contain transition-opacity ${faction === 'USEC' ? 'opacity-100' : 'opacity-40'}`} />
               </button>
-              <button onClick={() => setFaction('BEAR')} className={`flex flex-1 flex-col items-center justify-center rounded border h-[56px] transition-all ${faction === 'BEAR' ? 'border-orange-700 bg-linear-to-t from-orange-700/20 to-transparent' : 'border-lines-hover bg-(--color-base) hover:border-orange-700/50'}`}>
+              <button onClick={() => setFaction('BEAR')} className={`flex flex-1 flex-col items-center justify-center rounded border h-14 transition-all ${faction === 'BEAR' ? 'border-orange-700 bg-linear-to-t from-orange-700/20 to-transparent' : 'border-lines-hover bg-(--color-base) hover:border-orange-700/50'}`}>
                 <img src="/icons/eft/profile-pannel/BEAR-logo-sign.svg" alt="BEAR" className={`h-10 w-10 object-contain transition-opacity ${faction === 'BEAR' ? 'opacity-100' : 'opacity-40'}`} />
               </button>
             </div>
             {/* Режимы */}
             <div className="flex flex-1 gap-1">
-              <button onClick={() => setMode('PVP')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-[56px] transition-all ${mode === 'PVP' ? 'border-edition-pfe bg-edition-pfe/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-pfe/50'}`}>
+              <button onClick={() => setMode('PVP')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-14 transition-all ${mode === 'PVP' ? 'border-edition-pfe bg-edition-pfe/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-pfe/50'}`}>
                 <div className={`w-5 h-5 icon-bg icon-eft-profile-pvp transition-opacity ${mode === 'PVP' ? 'opacity-100' : 'opacity-40'}`} />
                 <div className="flex flex-col items-start justify-center">
-                  <div className={`text-[8px] font-blender-medium uppercase tracking-tight ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>Режим</div>
-                  <div className={`text-sm font-blender-medium leading-none mt-[2px] ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>PVP</div>
+                  <div className={`text-type-caption font-blender-medium uppercase tracking-tight ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>Режим</div>
+                  <div className={`text-sm font-blender-medium leading-none mt-0.5 ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>PVP</div>
                 </div>
               </button>
-              <button onClick={() => setMode('PVE')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-[56px] transition-all ${mode === 'PVE' ? 'border-edition-tue bg-edition-tue/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-tue/50'}`}>
+              <button onClick={() => setMode('PVE')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-14 transition-all ${mode === 'PVE' ? 'border-edition-tue bg-edition-tue/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-tue/50'}`}>
                 <div className={`w-5 h-5 icon-bg icon-eft-profile-pve transition-opacity ${mode === 'PVE' ? 'opacity-100' : 'opacity-40'}`} />
                 <div className="flex flex-col items-start justify-center">
-                  <div className={`text-[8px] font-blender-medium uppercase tracking-tight ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>Режим</div>
-                  <div className={`text-sm font-blender-medium leading-none mt-[2px] ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>PVE</div>
+                  <div className={`text-type-caption font-blender-medium uppercase tracking-tight ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>Режим</div>
+                  <div className={`text-sm font-blender-medium leading-none mt-0.5 ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>PVE</div>
                 </div>
               </button>
             </div>
@@ -310,14 +310,14 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
           {/* УРОВНИ ТОРГОВЦЕВ (Grid) */}
           <div className="flex w-full flex-col items-start justify-start gap-2">
             <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Уровни торговцев</div>
-            <div className="grid w-full grid-cols-9 gap-[5px]">
+            <div className="grid w-full grid-cols-9 gap-1.25">
               
               {/* Аватарки торговцев */}
               {TRADERS.map((t) => (
-                <div key={`avatar-${t.id}`} className="group/avatar relative flex h-[24px] w-full items-center justify-center rounded-xs cursor-help">
+                <div key={`avatar-${t.id}`} className="group/avatar relative flex h-6 w-full items-center justify-center rounded-xs cursor-help">
                   <div className={`w-6 h-6 icon-bg ${t.icon}`} />
                   {/* Всплывающая подсказка */}
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-(--color-base) border border-lines-hover rounded shadow-lg text-[9px] font-blender-medium uppercase whitespace-nowrap text-text-secondary opacity-0 group-hover/avatar:opacity-100 pointer-events-none transition-opacity z-50">
+                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-(--color-base) border border-lines-hover rounded shadow-lg text-type-caption font-blender-medium uppercase whitespace-nowrap text-text-secondary opacity-0 group-hover/avatar:opacity-100 pointer-events-none transition-opacity z-50">
                     {t.name}
                   </div>
                 </div>
@@ -326,17 +326,17 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               {/* Уровень КОРОНА (IV) */}
               {TRADERS.map((t) => (
                 <button key={`rep-4-${t.id}`} onClick={() => setTraderLevels({ ...traderLevels, [t.id]: 4 })} className="w-full focus:outline-none group/btn">
-                  <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-4 transition-colors ${traderLevels[t.id] >= 4 ? 'text-(--primary)' : 'text-lines-hover group-hover/btn:text-(--primary)/50'}`} />
+                  <div className={`h-5 w-full icon-mask icon-eft-profile-rep-4 transition-colors ${traderLevels[t.id] >= 4 ? 'text-(--primary)' : 'text-lines-hover group-hover/btn:text-(--primary)/50'}`} />
                 </button>
               ))}
 
               {/* Уровень III */}
               {TRADERS.map((t) => 
                 t.id === 'fence' ? (
-                  <div key={`rep-3-${t.id}`} className="w-full h-[20px]" />
+                  <div key={`rep-3-${t.id}`} className="w-full h-5" />
                 ) : (
                   <button key={`rep-3-${t.id}`} onClick={() => setTraderLevels({ ...traderLevels, [t.id]: 3 })} className="w-full focus:outline-none group/btn">
-                    <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-3 transition-colors ${traderLevels[t.id] >= 3 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
+                    <div className={`h-5 w-full icon-mask icon-eft-profile-rep-3 transition-colors ${traderLevels[t.id] >= 3 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
                   </button>
                 )
               )}
@@ -344,10 +344,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               {/* Уровень II */}
               {TRADERS.map((t) => 
                 t.id === 'fence' ? (
-                  <div key={`rep-2-${t.id}`} className="w-full h-[20px]" />
+                  <div key={`rep-2-${t.id}`} className="w-full h-5" />
                 ) : (
                   <button key={`rep-2-${t.id}`} onClick={() => setTraderLevels({ ...traderLevels, [t.id]: 2 })} className="w-full focus:outline-none group/btn">
-                    <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-2 transition-colors ${traderLevels[t.id] >= 2 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
+                    <div className={`h-5 w-full icon-mask icon-eft-profile-rep-2 transition-colors ${traderLevels[t.id] >= 2 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
                   </button>
                 )
               )}
@@ -355,7 +355,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               {/* Уровень I */}
               {TRADERS.map((t) => (
                 <button key={`rep-1-${t.id}`} onClick={() => setTraderLevels({ ...traderLevels, [t.id]: 1 })} className="w-full focus:outline-none group/btn">
-                  <div className={`h-[20px] w-full icon-mask icon-eft-profile-rep-1 transition-colors ${traderLevels[t.id] >= 1 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
+                  <div className={`h-5 w-full icon-mask icon-eft-profile-rep-1 transition-colors ${traderLevels[t.id] >= 1 ? 'text-zinc-100' : 'text-lines-hover group-hover/btn:text-text-muted'}`} />
                 </button>
               ))}
             </div>
@@ -373,10 +373,10 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
             {isAutoDetecting ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-(--primary)" />
-                <span className="text-[10px] font-blender-medium uppercase tracking-wide text-(--primary)">Синхронизация с API...</span>
+                <span className="text-type-caption font-blender-medium uppercase tracking-wide text-(--primary)">Синхронизация с API...</span>
               </div>
             ) : (
-              <span className="text-[10px] font-blender-medium uppercase tracking-wide text-text-secondary transition-colors group-hover:text-(--primary)">Автоматическое определение профиля игрока</span>
+              <span className="text-type-caption font-blender-medium uppercase tracking-wide text-text-secondary transition-colors group-hover:text-(--primary)">Автоматическое определение профиля игрока</span>
             )}
           </button>
 
@@ -386,7 +386,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               <div className="h-3 w-3 icon-mask icon-eft-profile-reset text-danger" />
               <span className="text-xs font-blender-medium leading-3 text-danger">СБРОС ПРОГРЕССА</span>
             </button>
-            <div className="flex-1 text-[8px] font-blender-medium leading-[9px] text-danger">
+            <div className="flex-1 text-type-caption font-blender-medium leading-2.25 text-danger">
               Внимание! После нажатия данной кнопки будет произведен полный сброс прогресса вашего ЧВК в игре!
             </div>
           </div>

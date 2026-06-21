@@ -1,4 +1,4 @@
-import Image from 'next/image';
+﻿import Image from 'next/image';
 import { Crosshair, Shield, HeartPulse, Package, ShoppingCart, Coins, ArrowLeftRight, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
@@ -522,20 +522,20 @@ export function HelmetModule({ properties }: { properties: ItemProperties }) {
 
       <div className="mt-4 pt-4 border-t border-lines-hover grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] uppercase tracking-widest font-blender-medium text-text-muted">Шумоподавление</span>
+          <span className="text-type-caption uppercase tracking-widest font-blender-medium text-text-muted">Шумоподавление</span>
           <span className="text-sm font-blender-medium text-text-primary uppercase">
             {properties.deafening ?? 'None'}
           </span>
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] uppercase tracking-widest font-blender-medium text-text-muted">Наушники</span>
+          <span className="text-type-caption uppercase tracking-widest font-blender-medium text-text-muted">Наушники</span>
           {properties.blocksHeadset
             ? <SemanticBadge color="red" label="Блокирует" className="w-fit" />
             : <span className="text-sm font-blender-medium text-nvg-green uppercase">Совместимы</span>
           }
         </div>
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] uppercase tracking-widest font-blender-medium text-text-muted">Зоны защиты</span>
+          <span className="text-type-caption uppercase tracking-widest font-blender-medium text-text-muted">Зоны защиты</span>
           <span className="text-xs font-blender-book text-text-secondary">
             {(properties.headZones ?? []).join(', ') || 'Н/Д'}
           </span>
@@ -622,11 +622,11 @@ export function TraderModule({ buyFor, sellFor }: { buyFor?: VendorOffer[]; sell
             />
           )}
           <div className="flex flex-col">
-            <span className="text-[13px] uppercase leading-none tracking-wider font-blender-medium text-text-primary">
+            <span className="text-type-label uppercase leading-none tracking-wider font-blender-medium text-text-primary">
               {vendor.name}
             </span>
             {!isFlea && type === 'buy' && (
-              <span className="mt-1 font-blender-medium text-[10px] leading-none text-text-muted">
+              <span className="mt-1 font-blender-medium text-type-caption leading-none text-text-muted">
                 УР. ДОСТУПА: 1+
               </span>
             )}
@@ -652,7 +652,7 @@ export function TraderModule({ buyFor, sellFor }: { buyFor?: VendorOffer[]; sell
         <div className="flex flex-col">
           <div className="flex items-center justify-between pb-2 mb-3 border-b border-lines-hover">
             <h4 className="text-xs uppercase tracking-widest font-blender-medium text-text-secondary">Покупка</h4>
-            <span className="font-blender-medium text-[10px] text-text-muted">Мин. цена</span>
+            <span className="font-blender-medium text-type-caption text-text-muted">Мин. цена</span>
           </div>
           <div className="flex flex-col">
             {sortedBuyFor.length > 0
@@ -664,7 +664,7 @@ export function TraderModule({ buyFor, sellFor }: { buyFor?: VendorOffer[]; sell
         <div className="flex flex-col">
           <div className="flex items-center justify-between pb-2 mb-3 border-b border-lines-hover">
             <h4 className="text-xs uppercase tracking-widest font-blender-medium text-text-secondary">Продажа</h4>
-            <span className="font-blender-medium text-[10px] text-text-muted">Макс. выгода</span>
+            <span className="font-blender-medium text-type-caption text-text-muted">Макс. выгода</span>
           </div>
           <div className="flex flex-col">
             {sortedSellFor.length > 0
@@ -734,7 +734,7 @@ export function BarterModule({ barters }: { barters: BarterOffer[] }) {
                       {offer.trader.name} LL{offer.level}
                     </span>
                     <div className="flex items-center justify-end gap-1">
-                      <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">
+                      <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
                         Сумма:
                       </span>
                       <span className="font-blender-medium text-xs text-text-primary">
@@ -813,7 +813,7 @@ export function CraftModule({ crafts }: { crafts: CraftRecipe[] }) {
                   {recipe.station.name}
                 </span>
                 <div className="flex items-center gap-1">
-                  <span className="font-blender-medium text-[10px] uppercase tracking-wider text-text-muted">
+                  <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
                     Уровень:
                   </span>
                   <span className="font-blender-medium text-xs text-text-primary">

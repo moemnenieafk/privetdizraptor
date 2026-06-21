@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 
@@ -34,7 +34,7 @@ export function TerminalBoot({ onComplete }: TerminalBootProps) {
         {BOOT_LINES.slice(0, visibleCount).map((line, i) => (
           <p
             key={i}
-            className={`font-blender-medium text-[11px] tracking-[0.3em] uppercase ${
+            className={`font-blender-medium text-type-caption tracking-[0.3em] uppercase ${
               i === BOOT_LINES.length - 1
                 ? "text-(--primary)"
                 : "text-text-secondary"

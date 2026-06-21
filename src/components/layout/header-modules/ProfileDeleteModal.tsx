@@ -15,7 +15,7 @@ export function ProfileDeleteModal({ isOpen, onClose, onConfirm }: ProfileDelete
 
   return (
     <div
-      className={`fixed inset-0 z-110 flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 z-210 flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-300 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}
     >
       <div
         ref={modalRef}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import type { YouTubeVideo } from "@/actions/youtube";
@@ -41,7 +41,7 @@ export function CommsHub({ videos }: CommsHubProps) {
         </h3>
         <div className="hidden md:block h-px flex-1 max-w-40 lg:max-w-87 bg-linear-to-r from-lines-hover to-transparent" />
       </div>
-      <p className="text-center font-blender-medium text-[10px] tracking-[0.3em] uppercase text-text-muted mb-8">
+      <p className="text-center font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted mb-8">
         // УСТАНОВЛЕНО СОЕДИНЕНИЕ · ЧАСТОТА: ФИЛОСОФИЯ КАМЕНИЗМА
       </p>
 
@@ -51,11 +51,11 @@ export function CommsHub({ videos }: CommsHubProps) {
         <div className="border-b border-lines-hover px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 bg-(--primary) animate-pulse" />
-            <span className="font-blender-medium text-[9px] tracking-[0.3em] uppercase text-(--primary)">
+            <span className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-(--primary)">
               FULLKAMEN // СВОДКА С ПЕРЕДОВОЙ
             </span>
           </div>
-          <span className="font-blender-medium text-[9px] tracking-[0.2em] uppercase text-text-muted">
+          <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted">
             ВИДЕОАРХИВ
           </span>
         </div>
@@ -78,7 +78,7 @@ export function CommsHub({ videos }: CommsHubProps) {
 
         {/* Social links */}
         <div className="p-4 md:p-5">
-          <p className="font-blender-medium text-[9px] tracking-[0.3em] uppercase text-text-muted mb-3">
+          <p className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted mb-3">
             УЗЛЫ СВЯЗИ
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-lines-hover border border-lines-hover">
@@ -90,10 +90,10 @@ export function CommsHub({ videos }: CommsHubProps) {
                 rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
                 className="bg-base px-3 py-3 flex flex-col gap-0.5 hover:bg-(--primary)/5 hover:border-l hover:border-l-(--primary) transition-none group"
               >
-                <span className="font-blender-medium text-[11px] uppercase tracking-widest text-text-secondary group-hover:text-(--primary) transition-none">
+                <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-secondary group-hover:text-(--primary) transition-none">
                   {link.label}
                 </span>
-                <span className="font-blender-medium text-[8px] tracking-[0.2em] uppercase text-text-muted">
+                <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted">
                   {link.sub}
                 </span>
               </a>
@@ -115,11 +115,11 @@ function VideoCard({ video, index }: { video: YouTubeVideo; index: number }) {
     >
       {/* Top bar */}
       <div className="px-2 py-1.5 border-b border-lines-hover flex items-center justify-between">
-        <span className="font-blender-medium text-[8px] tracking-[0.25em] uppercase text-text-muted">
+        <span className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-text-muted">
           // РАЗВЕДДАННЫЕ [{String(index + 1).padStart(2, "0")}]
         </span>
         {video.publishedAt && (
-          <span className="font-blender-medium text-[8px] tabular-nums text-text-muted">
+          <span className="font-blender-medium text-type-caption tabular-nums text-text-muted">
             {new Date(video.publishedAt).toLocaleDateString("ru-RU", {
               day: "2-digit",
               month: "2-digit",
@@ -160,7 +160,7 @@ function VideoCard({ video, index }: { video: YouTubeVideo; index: number }) {
 
       {/* Title bar */}
       <div className="px-2 py-2 border-t border-lines-hover">
-        <p className="font-blender-medium text-[10px] uppercase tracking-wide text-text-secondary group-hover:text-text-primary transition-none line-clamp-1 leading-tight">
+        <p className="font-blender-medium text-type-caption uppercase tracking-wide text-text-secondary group-hover:text-text-primary transition-none line-clamp-1 leading-tight">
           {video.title}
         </p>
       </div>

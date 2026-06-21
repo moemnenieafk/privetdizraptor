@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import { X } from 'lucide-react';
@@ -35,7 +35,7 @@ export function StashItemTile({ item, onHover, onHoverMove, onLeave }: Props) {
         />
       )}
 
-      <span className="absolute bottom-0 left-0 px-0.75 py-px bg-black/50 font-blender-medium text-[8px] uppercase text-text-muted leading-tight select-none">
+      <span className="absolute bottom-0 left-0 px-0.75 py-px bg-black/50 font-blender-medium text-type-caption uppercase text-text-muted leading-tight select-none">
         {item.width}×{item.height}
       </span>
 

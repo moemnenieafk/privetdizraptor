@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { formatCompactNumber, formatCurrencyDisplay } from '@/lib/formatters';
 import type { EftBarterData } from '../types';
@@ -38,7 +38,7 @@ export function EftBarterTooltip({ data, style }: EftBarterTooltipProps) {
       <div className="mb-2.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="icon-eft-prog-barter h-3 w-3 bg-text-muted mask-contain mask-center mask-no-repeat" />
-          <span className={`font-blender-medium text-[9px] uppercase tracking-widest ${VALUE_COLOR[level]}`}>
+          <span className={`font-blender-medium text-type-caption uppercase tracking-widest ${VALUE_COLOR[level]}`}>
             {LABELS[level]}
           </span>
         </div>
@@ -61,11 +61,11 @@ export function EftBarterTooltip({ data, style }: EftBarterTooltipProps) {
               className="h-8 w-8 shrink-0 rounded-xs border border-lines-hover/30 bg-(--color-base) object-contain p-0.5"
               onError={(e) => { e.currentTarget.src = '/images/placeholder.webp'; }}
             />
-            <span className="min-w-0 flex-1 font-blender-book text-[10px] leading-tight text-text-secondary">
+            <span className="min-w-0 flex-1 font-blender-book text-type-caption leading-tight text-text-secondary">
               {itm.name}
             </span>
             {itm.count > 1 && (
-              <span className="shrink-0 font-blender-medium text-[10px] text-text-muted">×{itm.count}</span>
+              <span className="shrink-0 font-blender-medium text-type-caption text-text-muted">×{itm.count}</span>
             )}
           </div>
         ))}
@@ -87,10 +87,10 @@ export function EftBarterTooltip({ data, style }: EftBarterTooltipProps) {
           { label: 'КОМИССИЯ', value: `-${formatCompactNumber(Math.abs(data.commission))} ₽`, colored: false },
         ]).map(({ label, value, colored }) => (
           <div key={label} className="flex items-baseline justify-between gap-2">
-            <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
+            <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
               {label}
             </span>
-            <span className={`font-blender-medium text-[11px] ${colored ? VALUE_COLOR[level] : 'text-text-primary'}`}>
+            <span className={`font-blender-medium text-type-caption ${colored ? VALUE_COLOR[level] : 'text-text-primary'}`}>
               {value}
             </span>
           </div>

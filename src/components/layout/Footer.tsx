@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -63,11 +63,11 @@ export default function Footer() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-px h-4 bg-(--primary) opacity-50" />
-            <span className="font-blender-medium text-[9px] tracking-[0.4em] uppercase text-text-muted">
+            <span className="font-blender-medium text-type-caption tracking-[0.4em] uppercase text-text-muted">
               ПОДСИСТЕМА // НАВИГАЦИЯ
             </span>
           </div>
-          <span className="font-blender-medium text-[9px] tracking-[0.3em] uppercase text-text-muted opacity-50">
+          <span className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted opacity-50">
             BUILD {BUILD_VERSION}
           </span>
         </div>
@@ -83,13 +83,13 @@ export default function Footer() {
                 href={href}
                 className="group flex items-baseline gap-1.5 transition-none"
               >
-                <span className="font-blender-medium text-[10px] uppercase text-text-muted group-hover:text-(--primary) transition-none shrink-0">
+                <span className="font-blender-medium text-type-caption uppercase text-text-muted group-hover:text-(--primary) transition-none shrink-0">
                   &gt;
                 </span>
-                <span className="font-blender-medium text-[10px] tracking-[0.15em] uppercase text-text-secondary group-hover:text-(--primary) transition-none">
+                <span className="font-blender-medium text-type-caption tracking-[0.15em] uppercase text-text-secondary group-hover:text-(--primary) transition-none">
                   {path}
                 </span>
-                <span className="font-blender-medium text-[8px] tracking-[0.15em] uppercase text-text-muted hidden lg:block">
+                <span className="font-blender-medium text-type-caption tracking-[0.15em] uppercase text-text-muted hidden lg:block">
                   {label}
                 </span>
               </Link>
@@ -98,17 +98,17 @@ export default function Footer() {
 
           {/* COL 2 — diagnostics */}
           <div className="flex flex-col gap-3">
-            <p className="font-blender-medium text-[9px] tracking-[0.35em] uppercase text-text-muted mb-1">
+            <p className="font-blender-medium text-type-caption tracking-[0.35em] uppercase text-text-muted mb-1">
               ДИАГНОСТИКА
             </p>
 
             {/* API ping */}
             <div className="flex items-center gap-2">
               <span className={`shrink-0 w-1.5 h-1.5 ${pingDot}`} />
-              <span className="font-blender-medium text-[10px] tracking-[0.2em] uppercase text-text-secondary">
+              <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-secondary">
                 API.TARKOV.DEV
               </span>
-              <span className={`font-blender-medium text-[10px] tabular-nums ${pingText}`}>
+              <span className={`font-blender-medium text-type-caption tabular-nums ${pingText}`}>
                 {pingLabel}
               </span>
             </div>
@@ -116,10 +116,10 @@ export default function Footer() {
             {/* Local sync */}
             <div className="flex items-center gap-2">
               <span className="shrink-0 w-1.5 h-1.5 bg-tactical-amber" />
-              <span className="font-blender-medium text-[10px] tracking-[0.2em] uppercase text-text-secondary">
+              <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-secondary">
                 STORAGE
               </span>
-              <span className="font-blender-medium text-[10px] tracking-[0.15em] uppercase text-tactical-amber">
+              <span className="font-blender-medium text-type-caption tracking-[0.15em] uppercase text-tactical-amber">
                 LOCAL
               </span>
             </div>
@@ -127,10 +127,10 @@ export default function Footer() {
             {/* Runtime */}
             <div className="flex items-center gap-2">
               <span className="shrink-0 w-1.5 h-1.5 bg-(--primary) opacity-50" />
-              <span className="font-blender-medium text-[10px] tracking-[0.2em] uppercase text-text-secondary">
+              <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-secondary">
                 CTA RUNTIME
               </span>
-              <span className="font-blender-medium text-[10px] tracking-[0.15em] uppercase text-(--primary) opacity-70">
+              <span className="font-blender-medium text-type-caption tracking-[0.15em] uppercase text-(--primary) opacity-70">
                 {BUILD_VERSION}
               </span>
             </div>
@@ -138,13 +138,13 @@ export default function Footer() {
 
           {/* COL 3 — protocol / about */}
           <div className="flex flex-col gap-3">
-            <p className="font-blender-medium text-[9px] tracking-[0.35em] uppercase text-text-muted mb-1">
+            <p className="font-blender-medium text-type-caption tracking-[0.35em] uppercase text-text-muted mb-1">
               ПРОТОКОЛ
             </p>
-            <p className="font-blender-medium text-[10px] tracking-[0.12em] uppercase text-text-secondary leading-5 max-w-52">
+            <p className="font-blender-medium text-type-caption tracking-[0.12em] uppercase text-text-secondary leading-5 max-w-52">
               ЦЕНТР ТАКТИЧЕСКОЙ АДАПТАЦИИ — ТАКТИЧЕСКИЙ ТЕРМИНАЛ ДЛЯ ХАРДКОРНЫХ ШУТЕРОВ
             </p>
-            <p className="font-blender-medium text-[9px] tracking-[0.15em] uppercase text-text-muted leading-relaxed">
+            <p className="font-blender-medium text-type-caption tracking-[0.15em] uppercase text-text-muted leading-relaxed">
               ДАННЫЕ: TARKOV.DEV · CC BY-NC-SA<br />
               НЕ АФФИЛИРОВАНО С BSG
             </p>
@@ -153,7 +153,7 @@ export default function Footer() {
                 href="https://github.com/V4DYATV"
                 target="_blank"
                 rel="noreferrer"
-                className="font-blender-medium text-[9px] tracking-[0.25em] uppercase text-text-muted border border-lines-hover px-2.5 py-1 hover:border-(--primary) hover:text-(--primary) transition-none"
+                className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-text-muted border border-lines-hover px-2.5 py-1 hover:border-(--primary) hover:text-(--primary) transition-none"
               >
                 [ GITHUB ]
               </a>
@@ -161,7 +161,7 @@ export default function Footer() {
                 href="https://t.me/fullkamen"
                 target="_blank"
                 rel="noreferrer"
-                className="font-blender-medium text-[9px] tracking-[0.25em] uppercase text-text-muted border border-lines-hover px-2.5 py-1 hover:border-(--primary) hover:text-(--primary) transition-none"
+                className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-text-muted border border-lines-hover px-2.5 py-1 hover:border-(--primary) hover:text-(--primary) transition-none"
               >
                 [ TG ]
               </a>
@@ -172,10 +172,10 @@ export default function Footer() {
 
         {/* ── Bottom copyright band ── */}
         <div className="border-t border-lines-hover pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-          <span className="font-blender-medium text-[9px] tracking-[0.25em] uppercase text-text-muted opacity-50">
+          <span className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-text-muted opacity-50">
             © 2026 ЦТА · ЦЕНТР ТАКТИЧЕСКОЙ АДАПТАЦИИ · ВСЕ ПРАВА ЗАЩИЩЕНЫ
           </span>
-          <span className="font-blender-medium text-[9px] tracking-[0.2em] uppercase text-text-muted opacity-30">
+          <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted opacity-30">
             {BUILD_VERSION} · NIGHTFALL DS
           </span>
         </div>

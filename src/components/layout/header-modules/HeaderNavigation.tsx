@@ -85,23 +85,23 @@ function SubNavItem({ child, faction }: { child: MenuItem; faction: string }) {
               <img src={iconToUse} alt="" data-colored className="h-4 w-4 shrink-0 object-contain" />
             ) : (
               <div
-                className="icon-mask h-4 w-4 flex-shrink-0 bg-current transition-colors duration-200"
+                className="icon-mask h-4 w-4 shrink-0 bg-current transition-colors duration-200"
                 style={{ maskImage: `url(${iconToUse})`, WebkitMaskImage: `url(${iconToUse})`, maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }}
               />
             )
           )}
-          <span className="truncate pt-0.5 font-blender-medium text-[13px] uppercase leading-none tracking-wide">
+          <span className="truncate pt-0.5 font-blender-medium text-type-label uppercase leading-none tracking-wide">
             {child.label}
           </span>
         </div>
         {child.children && (
-          <ChevronDown className={`h-3.5 w-3.5 flex-shrink-0 transition-all duration-200 ${isOpen ? (flyLeft ? 'rotate-90' : '-rotate-90') : '-rotate-90'}`} />
+          <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-all duration-200 ${isOpen ? (flyLeft ? 'rotate-90' : '-rotate-90') : '-rotate-90'}`} />
         )}
       </Link>
 
       {/* Вылет меню 3-го уровня с умным позиционированием и дизайн-токенами */}
       {child.children && (
-        <div className={`absolute ${flyLeft ? 'right-[calc(100%+4px)] origin-top-right' : 'left-[calc(100%+4px)] origin-top-left'} top-[-4px] z-50 flex w-[200px] flex-col rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] py-1.5 shadow-2xl backdrop-blur-md transition-all duration-300 ease-out ${isOpen ? 'visible scale-100 opacity-100' : 'invisible pointer-events-none scale-95 opacity-0'}`}>
+        <div className={`absolute ${flyLeft ? 'right-[calc(100%+4px)] origin-top-right' : 'left-[calc(100%+4px)] origin-top-left'} -top-1 z-20 flex w-50 flex-col rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] py-1.5 shadow-2xl backdrop-blur-md transition-all duration-300 ease-out ${isOpen ? 'visible scale-100 opacity-100' : 'invisible pointer-events-none scale-95 opacity-0'}`}>
           {/* Невидимый мост для курсора */}
           <div className={`absolute ${flyLeft ? '-right-4' : '-left-4'} top-0 h-full w-4 bg-transparent`} />
 
@@ -160,12 +160,12 @@ function NavItem({ item, pathname, faction }: { item: MenuItem; pathname: string
       >
         <span className="pt-0.5">{item.label}</span>
         {item.children && (
-          <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
         )}
       </Link>
 
       {item.children && (
-        <div className={`absolute left-0 top-[calc(100%+8px)] z-50 flex w-[200px] flex-col rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] py-1.5 shadow-2xl backdrop-blur-md origin-top transition-all duration-300 ease-out ${isOpen ? 'visible translate-y-0 scale-100 opacity-100' : 'invisible -translate-y-2 scale-95 opacity-0 pointer-events-none'}`}>
+        <div className={`absolute left-0 top-[calc(100%+8px)] z-20 flex w-50 flex-col rounded border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] py-1.5 shadow-2xl backdrop-blur-md origin-top transition-all duration-300 ease-out ${isOpen ? 'visible translate-y-0 scale-100 opacity-100' : 'invisible -translate-y-2 scale-95 opacity-0 pointer-events-none'}`}>
           <div className="absolute -top-4 left-0 h-4 w-full bg-transparent" />
           {item.children.map((child) => (
             <SubNavItem key={child.id} child={child} faction={faction} />

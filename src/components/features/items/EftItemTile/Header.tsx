@@ -1,12 +1,9 @@
-"use client";
+﻿"use client";
 
 import { ItemGridSize } from '@/components/ui/ItemGridSize';
+import { useFavoritesStore } from '@/store/useFavoritesStore';
 import { useEftItemTile } from './context';
 import type { EftTopStat } from './types';
-
-interface EftHeaderProps {
-  stat?: string;
-}
 
 function renderTopStat(topStat: EftTopStat): string | null {
   switch (topStat.kind) {
@@ -20,31 +17,47 @@ function renderTopStat(topStat: EftTopStat): string | null {
   }
 }
 
-export function EftHeader({ stat }: EftHeaderProps) {
+export function EftHeader() {
   const { item } = useEftItemTile();
-  const statDisplay = stat ?? (item.topStat ? renderTopStat(item.topStat) : null);
+  const isFavorite = useFavoritesStore((s) => s.isFavorite(item.id));
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+
+  const statDisplay = item.topStat ? renderTopStat(item.topStat) : null;
 
   return (
-    <div className="mb-3 grid grid-cols-3 items-center gap-1">
-      {/* Left: short name */}
-      <span className="font-blender-medium text-xs uppercase tracking-wider text-text-primary truncate min-w-0">
-        {item.shortName}
-      </span>
+    <div className="mb-3 flex items-center gap-1">
+      {/* Fav button */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(item.id); }}
+        className={`shrink-0 text-sm leading-none transition-colors ${
+          isFavorite ? 'text-amber-400' : 'text-(--text-muted) hover:text-(--primary)'
+        }`}
+        aria-label={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+      >
+        {isFavorite ? '★' : '☆'}
+      </button>
 
-      {/* Center: dynamic top indicator */}
-      <div className="flex items-center justify-center">
+      {/* Short name + stat */}
+      <div className="flex min-w-0 flex-1 items-center gap-1">
+        <span className="font-blender-medium text-xs uppercase tracking-wider text-text-primary truncate">
+          {item.shortName}
+        </span>
         {statDisplay && (
-          <span
-            className="font-blender-medium text-[10px] whitespace-nowrap"
-            style={{ color: '#9A8866' }}
-          >
+          <span className="font-blender-medium text-type-caption whitespace-nowrap shrink-0" style={{ color: '#9A8866' }}>
             {statDisplay}
           </span>
         )}
       </div>
 
-      {/* Right: grid size — label first, icon right */}
-      <div className="flex justify-end">
+      {/* Quest badge */}
+      {(item.questCount ?? 0) > 0 && (
+        <span className="shrink-0 rounded-xs bg-amber-400/15 px-1 font-blender-medium text-type-caption uppercase tracking-wider text-amber-400">
+          Квест ×{item.questCount}
+        </span>
+      )}
+
+      {/* Grid size */}
+      <div className="shrink-0">
         <ItemGridSize width={item.width} height={item.height} showLabel labelFirst />
       </div>
     </div>

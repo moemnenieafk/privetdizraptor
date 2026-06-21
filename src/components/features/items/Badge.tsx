@@ -36,7 +36,7 @@ export const Badge = ({ color, label, title, isStrike, iconClass, iconSizeClass,
     >
       {iconClass && <span className={`${iconSizeClass || 'w-3 h-3'} shrink-0 bg-current mask-contain mask-no-repeat mask-center ${iconClass}`} />}
       {label && (
-        <span className={`font-blender-medium text-[12px] ${isStrike ? "opacity-50 line-through" : ""}`}>
+        <span className={`font-blender-medium text-type-label ${isStrike ? "opacity-50 line-through" : ""}`}>
           {label}
         </span>
       )}

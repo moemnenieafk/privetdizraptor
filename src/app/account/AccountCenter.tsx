@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { ChevronLeft, ChevronDown, Check } from 'lucide-react';
@@ -51,7 +51,7 @@ function FlatRow({
   return (
     <div className="flex items-center gap-4 border-b border-lines-hover py-5 last:border-b-0">
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
           {label}
         </span>
         {children && (
@@ -80,7 +80,7 @@ function RowBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center rounded border px-4 py-2 font-blender-medium text-[10px] uppercase tracking-widest transition-all duration-200 ${cls}`}
+      className={`flex items-center rounded border px-4 py-2 font-blender-medium text-type-caption uppercase tracking-widest transition-all duration-200 ${cls}`}
     >
       {label}
     </button>
@@ -91,7 +91,7 @@ function BackBtn({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="mb-6 inline-flex items-center gap-1 rounded border border-lines-hover bg-card-menu px-3 py-1.5 font-blender-medium text-[10px] uppercase tracking-widest text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
+      className="mb-6 inline-flex items-center gap-1 rounded border border-lines-hover bg-card-menu px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
     >
       <ChevronLeft className="h-3 w-3" />
       Назад
@@ -120,7 +120,7 @@ function FormInput({ placeholder, type = 'text' }: { placeholder: string; type?:
 function FormActions({ onCancel }: { onCancel: () => void }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <button className="w-full max-w-45 rounded border border-(--primary) bg-(--primary)/10 px-6 py-2.5 font-blender-medium text-[10px] uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
+      <button className="w-full max-w-45 rounded border border-(--primary) bg-(--primary)/10 px-6 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
         Отправить
       </button>
       <button
@@ -160,7 +160,7 @@ function AvatarView({ onBack }: { onBack: () => void }) {
             defaultValue={20}
             className="h-px w-full cursor-pointer appearance-none bg-lines-hover [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-(--primary)"
           />
-          <span className="text-center font-blender-book text-[10px] text-text-muted">Масштабирование аватара</span>
+          <span className="text-center font-blender-book text-type-caption text-text-muted">Масштабирование аватара</span>
         </div>
 
         <label className="flex w-full max-w-md cursor-pointer flex-col items-center gap-2 rounded border border-dashed border-lines-hover px-6 py-8 text-center transition-colors hover:border-(--primary)/50">
@@ -175,7 +175,7 @@ function AvatarView({ onBack }: { onBack: () => void }) {
           </p>
         </label>
 
-        <button className="rounded border border-(--primary) bg-(--primary)/10 px-8 py-2.5 font-blender-medium text-[10px] uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
+        <button className="rounded border border-(--primary) bg-(--primary)/10 px-8 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
           Сохранить
         </button>
       </div>
@@ -262,7 +262,7 @@ function SubscriptionView({ onBack }: { onBack: () => void }) {
             </button>
           ))}
         </div>
-        <button className="rounded border border-(--primary) bg-(--primary)/10 px-8 py-2.5 font-blender-medium text-[10px] uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
+        <button className="rounded border border-(--primary) bg-(--primary)/10 px-8 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
           Сохранить
         </button>
       </div>
@@ -306,7 +306,7 @@ function TwoFAView({ onBack }: { onBack: () => void }) {
 
         <div className="flex w-full max-w-md flex-col gap-4">
           <div>
-            <p className="mb-2 font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
+            <p className="mb-2 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
               Текущий способ защиты учётной записи
             </p>
             <div className="flex items-center justify-between rounded border border-(--primary) bg-(--primary)/5 px-4 py-3">
@@ -316,7 +316,7 @@ function TwoFAView({ onBack }: { onBack: () => void }) {
           </div>
 
           <div>
-            <p className="mb-2 font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
+            <p className="mb-2 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
               Доступные способы защиты учётной записи
             </p>
             <div className="flex flex-col divide-y divide-lines-hover rounded border border-lines-hover">
@@ -324,7 +324,7 @@ function TwoFAView({ onBack }: { onBack: () => void }) {
                 <div key={m.label} className="flex items-center justify-between px-4 py-3">
                   <span className="font-blender-book text-sm text-text-secondary">{m.label}</span>
                   {m.status && (
-                    <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+                    <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
                       {m.status}
                     </span>
                   )}
@@ -386,7 +386,7 @@ function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
           label="Имя пользователя"
           action={<RowBtn onClick={() => onNavigate('username')} />}
         >
-          <span className="font-blender-book text-[11px] text-text-muted">Текущий логин:</span>
+          <span className="font-blender-book text-type-caption text-text-muted">Текущий логин:</span>
           <span className={`font-blender-medium text-sm ${ed.color}`}>
             {activeProfile?.nickname ?? '—'}
           </span>
@@ -396,7 +396,7 @@ function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
           label="Email"
           action={<RowBtn onClick={() => onNavigate('email')} />}
         >
-          <span className="font-blender-book text-[11px] text-text-muted">Текущий E-mail:</span>
+          <span className="font-blender-book text-type-caption text-text-muted">Текущий E-mail:</span>
           <span className="font-blender-book text-sm text-text-secondary">
             vad***re@gmail.com
           </span>
@@ -410,7 +410,7 @@ function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
             <>
               <div className="flex h-5 items-center gap-1 rounded border border-tactical-amber/30 bg-tactical-amber/10 px-1.5">
                 <div className="h-3 w-3 icon-mask icon-account_prostatus_icon bg-tactical-amber" />
-                <span className="font-mono text-[9px] tracking-wider text-tactical-amber">PRO</span>
+                <span className="font-mono text-type-caption tracking-wider text-tactical-amber">PRO</span>
               </div>
               <span className="font-blender-book text-sm text-tactical-amber">
                 Полный доступ ко всем функциям
@@ -455,7 +455,7 @@ function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
                 </span>
               </div>
               <RowBtn label="Сброс прогресса" variant="danger" />
-              <p className="font-blender-book text-[9px] leading-relaxed text-text-muted opacity-70">
+              <p className="font-blender-book text-type-caption leading-relaxed text-text-muted opacity-70">
                 Внимание! После сброса данные нельзя восстановить. Прогресс ЧВК: задания, бартер, настройки в игре.
               </p>
             </div>
@@ -486,7 +486,7 @@ function SecurityPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         label="Пароль"
         action={<RowBtn onClick={() => onNavigate('password')} />}
       >
-        <span className="font-blender-book text-[11px] text-text-muted">Последнее изменение пароля:</span>
+        <span className="font-blender-book text-type-caption text-text-muted">Последнее изменение пароля:</span>
         <span className="font-mono text-xs text-text-secondary">10.06.2026</span>
         <span className="font-mono text-xs text-text-muted">15:10</span>
       </FlatRow>
@@ -495,7 +495,7 @@ function SecurityPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         label="Двухфакторная аутентификация"
         action={<RowBtn onClick={() => onNavigate('2fa')} />}
       >
-        <span className="font-blender-book text-[11px] text-text-muted">Привязана</span>
+        <span className="font-blender-book text-type-caption text-text-muted">Привязана</span>
         <span className="font-mono text-xs text-text-secondary">10.06.2026</span>
         <span className="font-mono text-xs text-text-muted">15:30</span>
       </FlatRow>
@@ -532,7 +532,7 @@ function LinkingPanel() {
               </span>
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+              <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
                 {platform.name}
               </span>
               <span className="font-blender-book text-sm text-text-secondary">
@@ -564,7 +564,7 @@ function BillingPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         label="Выбранный тариф"
         action={<RowBtn onClick={() => onNavigate('plan')} />}
       >
-        <span className="font-blender-book text-[11px] text-text-muted">Последнее изменение:</span>
+        <span className="font-blender-book text-type-caption text-text-muted">Последнее изменение:</span>
         <span className="font-mono text-xs text-text-secondary">10.06.2026</span>
         <span className="font-mono text-xs text-text-muted">15:10</span>
       </FlatRow>
@@ -584,7 +584,7 @@ function ProStatusPanel() {
             PRO
           </span>
           <div className="flex h-5 items-center rounded border border-tactical-amber/40 bg-tactical-amber/10 px-2">
-            <span className="font-mono text-[9px] tracking-widest text-tactical-amber">
+            <span className="font-mono text-type-caption tracking-widest text-tactical-amber">
               Активен
             </span>
           </div>
@@ -653,7 +653,7 @@ export function AccountCenter() {
                       isActive ? 'bg-(--primary)' : 'bg-text-muted group-hover:bg-text-primary'
                     }`}
                   />
-                  <span className="whitespace-nowrap font-blender-medium text-[10px] uppercase tracking-widest transition-colors lg:text-xs">
+                  <span className="whitespace-nowrap font-blender-medium text-type-caption uppercase tracking-widest transition-colors lg:text-xs">
                     {tab.label}
                   </span>
                 </button>

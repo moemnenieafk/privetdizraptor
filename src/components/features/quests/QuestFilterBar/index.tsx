@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useRef } from 'react';
 import type { TaskRaw } from '@/types/quest';
@@ -177,7 +177,7 @@ export function QuestFilterBar({
                 {iconCls ? (
                   <span className={`icon-mask ${iconCls} w-7 h-7`} />
                 ) : (
-                  <span className="text-[8px] font-blender-medium uppercase leading-none">
+                  <span className="text-type-caption font-blender-medium uppercase leading-none">
                     {map.name.slice(0, 3)}
                   </span>
                 )}

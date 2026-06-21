@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
@@ -67,12 +67,12 @@ export function StashGrid() {
                       {item.name}
                     </p>
                     <div className="flex items-center gap-3 mt-0.5">
-                      <span className="font-blender-medium text-[10px] uppercase text-text-muted">
+                      <span className="font-blender-medium text-type-caption uppercase text-text-muted">
                         {item.width}×{item.height}
                       </span>
                       {item.fleaPrice !== null && (
                         <span
-                          className="font-blender-medium text-[10px]"
+                          className="font-blender-medium text-type-caption"
                           style={{
                             color: arbitrage
                               ? 'var(--color-success)'
@@ -85,7 +85,7 @@ export function StashGrid() {
                     </div>
                   </div>
                   {arbitrage && (
-                    <span className="shrink-0 font-blender-medium text-[8px] uppercase text-success border border-success/40 px-1.5 py-0.5">
+                    <span className="shrink-0 font-blender-medium text-type-caption uppercase text-success border border-success/40 px-1.5 py-0.5">
                       АРБИТРАЖ
                     </span>
                   )}

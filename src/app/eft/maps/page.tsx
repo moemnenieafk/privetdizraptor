@@ -33,7 +33,7 @@ export default function MapsPage() {
                 }}
               />
             )}
-            <span className="font-blender-medium text-[13px] text-text-secondary uppercase tracking-widest transition-colors duration-300 group-hover:text-primary text-center">
+            <span className="font-blender-medium text-type-label text-text-secondary uppercase tracking-widest transition-colors duration-300 group-hover:text-primary text-center">
               {mapData.label}
             </span>
           </Link>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -110,7 +110,7 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
 
         {/* Section Label + Divider */}
         <div className="flex items-center gap-3">
-          <span className="shrink-0 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted">
+          <span className="shrink-0 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted">
             Навигация по разделу
           </span>
           <div className="flex-1 h-px bg-lines-hover" />

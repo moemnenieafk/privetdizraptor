@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -113,7 +113,7 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
             title="Получение путем обмена (Бартер)"
           >
             <span className="icon-eft-prog-barter h-2.5 w-2.5 bg-nvg-green mask-contain mask-center mask-no-repeat" />
-            <span className="mt-px font-blender-medium text-[8px] uppercase leading-none tracking-widest text-nvg-green">Бартер</span>
+            <span className="mt-px font-blender-medium text-type-caption uppercase leading-none tracking-widest text-nvg-green">Бартер</span>
           </div>
         )}
 
@@ -172,7 +172,7 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
           <VendorAvatar vendor={traderSell?.vendor} />
           {/* Trader sell (small, muted) */}
           {traderSellPrice > 0 && fleaSell && (
-            <span className="font-blender-medium text-[10px] text-text-muted">
+            <span className="font-blender-medium text-type-caption text-text-muted">
               {formatCompactNumber(traderSellPrice)} ₽
             </span>
           )}
@@ -187,7 +187,7 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
           ) : (
             <span className="ml-auto flex items-center gap-1 text-text-muted/50">
               <PackageX className="h-3 w-3" />
-              <span className="font-blender-medium text-[10px] uppercase tracking-widest">Нет</span>
+              <span className="font-blender-medium text-type-caption uppercase tracking-widest">Нет</span>
             </span>
           )}
         </div>
@@ -203,13 +203,13 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
             return (
               <span
                 title={`${buyPrice.toLocaleString('ru-RU')} ₽`}
-                className="cursor-help font-blender-medium text-[11px] text-nvg-green"
+                className="cursor-help font-blender-medium text-type-caption text-nvg-green"
               >
                 {isUSD ? `$${formatCompactNumber(eco.bestBuy!.price!)}` : `${formatCompactNumber(buyPrice)} ₽`}
               </span>
             );
           })() : (
-            <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted/60">
+            <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted/60">
               Нельзя купить
             </span>
           )}
@@ -217,7 +217,7 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
 
         {/* Строка 3: Цена / Слот */}
         <div className="mt-0.5 flex items-center justify-between rounded border border-lines-hover/50 bg-[color-mix(in_srgb,var(--color-card-menu)_40%,transparent)] px-2 py-1.5">
-          <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+          <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
             Цена / Слот
           </span>
           {eco.vps > 0 ? (
@@ -232,7 +232,7 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
           ) : (
             <span className="flex items-center gap-1 text-text-muted/50">
               <PackageX className="h-3 w-3" />
-              <span className="font-blender-medium text-[9px] uppercase tracking-widest">Нет</span>
+              <span className="font-blender-medium text-type-caption uppercase tracking-widest">Нет</span>
             </span>
           )}
         </div>

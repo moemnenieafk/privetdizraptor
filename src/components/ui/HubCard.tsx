@@ -43,8 +43,8 @@ export function HubCard({
 
   // Динамические классы для двух видов адаптивных карточек (348x348 и 348x160)
   const dimensions = isSquare
-    ? 'w-full aspect-square md:w-[348px] md:h-[348px] md:col-span-2 md:row-span-2'
-    : 'w-full aspect-[348/160] md:w-[348px] md:h-[160px] md:col-span-2';
+    ? 'w-full aspect-square md:col-span-2 md:row-span-2'
+    : 'w-full aspect-[348/160] md:col-span-2';
 
   const resolvedIconUrl = iconPath || `/icons/${gameId}/${id}-icon.svg`;
 
@@ -99,7 +99,7 @@ export function HubCard({
       style={{ animationDelay: `${index * 100}ms` }}
     >
       {/* Иконка карточки с тултипом (с отступом 21px в правом верхнем углу) */}
-      <div className="absolute top-[21px] right-[21px] z-10 w-[32px] h-[32px]">
+      <div className="absolute top-5 right-5 z-10 w-8 h-8">
         <Tooltip 
           content={iconTooltip || title} 
           position="left" 
@@ -131,13 +131,13 @@ export function HubCard({
 
       {/* Бейдж (смещен влево, чтобы не перекрывать иконку) */}
       {badgeText && (
-        <div className="absolute top-[24px] left-[24px] text-[10px] font-blender-medium tracking-widest uppercase text-primary/50 group-hover:text-primary transition-colors">
+        <div className="absolute top-6 left-6 text-type-caption font-blender-medium tracking-widest uppercase text-primary/50 group-hover:text-primary transition-colors">
           {badgeText}
         </div>
       )}
 
       {/* Текстовый блок (внизу) */}
-      <div className="absolute bottom-[24px] left-[24px] right-[24px] flex flex-col gap-1">
+      <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-1">
         <h3 className="text-xl font-blender-medium uppercase tracking-wide text-text-primary group-hover:text-primary transition-colors">
           {title}
         </h3>

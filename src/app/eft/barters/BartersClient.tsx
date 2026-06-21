@@ -53,7 +53,7 @@ function ItemThumb({ slot }: { slot: ProcessedBarterSlot }) {
         }}
       />
       {slot.count > 1 && (
-        <span className="absolute bottom-0 right-0.5 font-blender-medium text-[9px] leading-none text-(--primary)">
+        <span className="absolute bottom-0 right-0.5 font-blender-medium text-type-caption leading-none text-(--primary)">
           Г—{slot.count}
         </span>
       )}
@@ -71,12 +71,12 @@ function SlotsCell({ slots, totalRub, isReward }: { slots: ProcessedBarterSlot[]
         {visible.map((s, i) => <ItemThumb key={i} slot={s} />)}
         {rest > 0 && (
           <div className="flex h-10 w-10 items-center justify-center rounded-xs border border-lines-hover bg-card-menu">
-            <span className="font-blender-medium text-[10px] text-text-muted">+{rest}</span>
+            <span className="font-blender-medium text-type-caption text-text-muted">+{rest}</span>
           </div>
         )}
       </div>
       {totalRub > 0 && (
-        <span className={`font-blender-medium text-[10px] ${isReward ? 'text-nvg-green' : 'text-text-muted'}`}>
+        <span className={`font-blender-medium text-type-caption ${isReward ? 'text-nvg-green' : 'text-text-muted'}`}>
           {formatCompactNumber(totalRub)} в‚Ѕ
         </span>
       )}
@@ -176,7 +176,7 @@ export function BartersClient({ barters }: BartersClientProps) {
   const SortableHeader = ({ label, k, className = '' }: { label: string; k: SortKey; className?: string }) => (
     <button
       onClick={() => handleSort(k)}
-      className={`flex items-center gap-1 font-blender-medium text-[10px] uppercase tracking-widest text-text-muted transition-colors hover:text-text-primary ${className}`}
+      className={`flex items-center gap-1 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors hover:text-text-primary ${className}`}
     >
       {label}
       <SortIcon k={k} />
@@ -200,7 +200,7 @@ export function BartersClient({ barters }: BartersClientProps) {
             placeholder="РџРћРРЎРљ РџРћ РџР Р•Р”РњР•РўРЈ..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-transparent font-blender-medium text-[12px] uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
+            className="w-full bg-transparent font-blender-medium text-type-label uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
           />
           {search && (
             <button onClick={() => setSearch('')} className="ml-2 shrink-0 text-text-muted hover:text-(--primary)">
@@ -214,7 +214,7 @@ export function BartersClient({ barters }: BartersClientProps) {
           <select
             value={traderFilter}
             onChange={e => setTraderFilter(e.target.value)}
-            className="h-10 w-44 cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-[11px] uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
+            className="h-10 w-44 cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-type-caption uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
           >
             <option value="all">Р’СЃРµ С‚РѕСЂРіРѕРІС†С‹</option>
             {traders.map(t => (
@@ -244,12 +244,12 @@ export function BartersClient({ barters }: BartersClientProps) {
         {/* РЎС‚Р°С‚РёСЃС‚РёРєР° */}
         <div className="ml-auto hidden items-center gap-4 xl:flex">
           <div className="flex flex-col items-end">
-            <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">Р’С‹РіРѕРґРЅС‹С… СЃРґРµР»РѕРє</span>
+            <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">Р’С‹РіРѕРґРЅС‹С… СЃРґРµР»РѕРє</span>
             <span className="font-blender-medium text-sm text-(--primary)">{profitableCount} / {processed.length}</span>
           </div>
           {totalProfit > 0 && (
             <div className="flex flex-col items-end">
-              <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">РњР°РєСЃ. РїСЂРёР±С‹Р»СЊ</span>
+              <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">РњР°РєСЃ. РїСЂРёР±С‹Р»СЊ</span>
               <span className="font-blender-medium text-sm text-nvg-green">{formatCompactNumber(totalProfit)} в‚Ѕ</span>
             </div>
           )}
@@ -294,7 +294,7 @@ export function BartersClient({ barters }: BartersClientProps) {
                     <div className="flex items-center gap-2">
                       <TraderAvatar normalizedName={b.trader.normalizedName} name={b.trader.name} size={28} />
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-blender-medium text-[11px] uppercase tracking-wide text-text-primary leading-tight">
+                        <span className="font-blender-medium text-type-caption uppercase tracking-wide text-text-primary leading-tight">
                           {TRADER_NAMES[b.trader.normalizedName] || b.trader.name}
                         </span>
                         <div
@@ -321,7 +321,7 @@ export function BartersClient({ barters }: BartersClientProps) {
                         {isProfit ? '+' : ''}{formatCompactNumber(b.profit)} в‚Ѕ
                       </span>
                       {b.totalCost > 0 && (
-                        <span className="font-blender-medium text-[9px] text-text-muted">
+                        <span className="font-blender-medium text-type-caption text-text-muted">
                           РёР· {formatCompactNumber(b.totalCost)} в‚Ѕ
                         </span>
                       )}
@@ -345,10 +345,10 @@ export function BartersClient({ barters }: BartersClientProps) {
 
       {/* РС‚РѕРіРѕ */}
       <div className="flex items-center justify-between border-t border-lines-hover pt-3">
-        <span className="font-blender-medium text-[11px] uppercase tracking-widest text-text-muted">
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
           РџРѕРєР°Р·Р°РЅРѕ {processed.length} Р±Р°СЂС‚РµСЂРѕРІ
         </span>
-        <span className="font-blender-medium text-[11px] uppercase tracking-widest text-text-muted">
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
           {profitableCount} РІС‹РіРѕРґРЅС‹С… ({processed.length > 0 ? Math.round((profitableCount / processed.length) * 100) : 0}%)
         </span>
       </div>

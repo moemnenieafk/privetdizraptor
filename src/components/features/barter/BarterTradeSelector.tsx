@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
@@ -101,7 +101,7 @@ export function BarterTradeSelector({ allBarters }: Props) {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+          <p className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
             {selectedBarter.trader.name} LL{selectedBarter.level}
             {selectedBarter.taskUnlock && (
               <span className="ml-2 text-moderate">· квест</span>
@@ -112,7 +112,7 @@ export function BarterTradeSelector({ allBarters }: Props) {
         <button
           type="button"
           onClick={clearBarter}
-          className="shrink-0 flex items-center gap-1 px-2 py-1 font-blender-medium text-[10px] uppercase text-text-muted hover:text-failure transition-colors duration-150"
+          className="shrink-0 flex items-center gap-1 px-2 py-1 font-blender-medium text-type-caption uppercase text-text-muted hover:text-failure transition-colors duration-150"
         >
           <X size={11} />
           Сброс
@@ -171,7 +171,7 @@ export function BarterTradeSelector({ allBarters }: Props) {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-blender-medium text-[10px] uppercase text-text-muted">
+                    <span className="font-blender-medium text-type-caption uppercase text-text-muted">
                       {trade.trader.name} LL{trade.level}
                     </span>
                     {trade.taskUnlock && (

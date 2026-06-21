@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -56,7 +56,7 @@ export default function TelemetryDetailsClient({ id }: TelemetryDetailsClientPro
   }
 
   if (!profile?.metrics) {
-    return <div className="mt-3 text-center font-mono text-[10px] uppercase tracking-widest text-text-muted">Данные недоступны</div>;
+    return <div className="mt-3 text-center font-mono text-type-caption uppercase tracking-widest text-text-muted">Данные недоступны</div>;
   }
 
   const metrics = profile.metrics;
@@ -68,7 +68,7 @@ export default function TelemetryDetailsClient({ id }: TelemetryDetailsClientPro
         className="group flex w-full items-center justify-between py-2 transition-colors duration-300 hover:text-(--primary) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--primary)"
         aria-expanded={isExpanded}
       >
-        <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted transition-colors duration-300 group-hover:text-(--primary)">
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors duration-300 group-hover:text-(--primary)">
           Детальная сводка
         </span>
         <span className={`text-text-muted transition-transform duration-300 ease-out group-hover:text-(--primary) ${isExpanded ? 'rotate-180' : ''}`}>

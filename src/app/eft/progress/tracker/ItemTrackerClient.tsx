@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import { useQuestStore, getActiveItemRequirements } from '@/store/useQuestStore';
@@ -96,7 +96,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {/* Stats strip */}
-      <div className="flex items-center gap-4 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted">
+      <div className="flex items-center gap-4 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted">
         <span>Всего предметов: <span className="text-text-primary">{totalItems}</span></span>
         <span className="text-lines-hover">|</span>
         <span>Собрано: <span className="text-success">{completedItems}</span></span>
@@ -114,7 +114,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск предмета..."
-            className="w-full pl-7 pr-3 h-7 rounded-xs border border-lines-hover bg-card-menu text-[11px] font-blender-book text-text-primary placeholder:text-text-muted focus:outline-none focus:border-(--primary)/60 transition-colors"
+            className="w-full pl-7 pr-3 h-7 rounded-xs border border-lines-hover bg-card-menu text-type-caption font-blender-book text-text-primary placeholder:text-text-muted focus:outline-none focus:border-(--primary)/60 transition-colors"
           />
         </div>
 
@@ -122,7 +122,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
         <select
           value={sortMode}
           onChange={(e) => setSortMode(e.target.value as SortMode)}
-          className="h-7 px-2 rounded-xs border border-lines-hover bg-card-menu text-[10px] font-blender-medium uppercase text-text-secondary focus:outline-none focus:border-(--primary)/60 cursor-pointer"
+          className="h-7 px-2 rounded-xs border border-lines-hover bg-card-menu text-type-caption font-blender-medium uppercase text-text-secondary focus:outline-none focus:border-(--primary)/60 cursor-pointer"
         >
           <option value="progress">По прогрессу</option>
           <option value="name">По названию</option>
@@ -132,7 +132,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
         {/* Filter chips */}
         <button
           onClick={() => setFilterFiR((v) => !v)}
-          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-xs border text-[10px] font-blender-medium uppercase tracking-wider transition-colors cursor-pointer ${
+          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-xs border text-type-caption font-blender-medium uppercase tracking-wider transition-colors cursor-pointer ${
             filterFiR
               ? 'bg-(--primary)/15 border-(--primary)/50 text-(--primary)'
               : 'border-lines-hover bg-card-menu text-text-muted hover:border-(--primary)/30 hover:text-text-secondary'
@@ -144,7 +144,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
 
         <button
           onClick={() => setFilterDone((v) => !v)}
-          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-xs border text-[10px] font-blender-medium uppercase tracking-wider transition-colors cursor-pointer ${
+          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-xs border text-type-caption font-blender-medium uppercase tracking-wider transition-colors cursor-pointer ${
             filterDone
               ? 'bg-(--primary)/15 border-(--primary)/50 text-(--primary)'
               : 'border-lines-hover bg-card-menu text-text-muted hover:border-(--primary)/30 hover:text-text-secondary'
@@ -153,7 +153,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
           Незавершённые
         </button>
 
-        <span className="ml-auto text-[10px] font-blender-medium uppercase text-text-muted">
+        <span className="ml-auto text-type-caption font-blender-medium uppercase text-text-muted">
           {filtered.length} предметов
         </span>
       </div>
@@ -162,7 +162,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-text-muted">
           <span className="icon-bg icon-eft-quests-active w-8 h-8 opacity-30" />
-          <p className="text-[11px] font-blender-medium uppercase tracking-widest">
+          <p className="text-type-caption font-blender-medium uppercase tracking-widest">
             {query ? 'Предметы не найдены' : 'Все предметы собраны'}
           </p>
         </div>
@@ -193,23 +193,23 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                     className="rounded-xs object-contain bg-lines-hover/30 shrink-0"
                   />
                   <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    <span className="text-[11px] font-blender-medium uppercase text-text-primary leading-tight line-clamp-2">
+                    <span className="text-type-caption font-blender-medium uppercase text-text-primary leading-tight line-clamp-2">
                       {group.item.name}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-blender-medium uppercase text-text-muted border border-lines-hover rounded-xs px-1 py-px">
+                      <span className="text-type-caption font-blender-medium uppercase text-text-muted border border-lines-hover rounded-xs px-1 py-px">
                         {group.item.shortName}
                       </span>
                       {group.foundInRaid && (
-                        <span className="text-[9px] font-blender-medium uppercase text-(--primary)">
+                        <span className="text-type-caption font-blender-medium uppercase text-(--primary)">
                           FiR
                         </span>
                       )}
                     </div>
                   </div>
                   {/* Total progress badge */}
-                  <div className={`shrink-0 text-[11px] font-blender-medium tabular-nums ${done ? 'text-success' : 'text-text-primary'}`}>
-                    {group.totalFound} <span className="text-text-muted text-[9px]">/ {group.totalNeeded}</span>
+                  <div className={`shrink-0 text-type-caption font-blender-medium tabular-nums ${done ? 'text-success' : 'text-text-primary'}`}>
+                    {group.totalFound} <span className="text-text-muted text-type-caption">/ {group.totalNeeded}</span>
                   </div>
                 </div>
 
@@ -235,13 +235,13 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                           className="rounded-xs shrink-0 opacity-70"
                         />
                         <span
-                          className={`flex-1 text-[10px] font-blender-book truncate ${
+                          className={`flex-1 text-type-caption font-blender-book truncate ${
                             questDone ? 'line-through text-text-muted' : 'text-text-secondary'
                           }`}
                         >
                           {quest.questName}
                         </span>
-                        <span className="text-[9px] font-blender-medium text-text-muted shrink-0">
+                        <span className="text-type-caption font-blender-medium text-text-muted shrink-0">
                           ×{quest.needed}
                         </span>
                         {/* Counter */}
@@ -253,7 +253,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                           >
                             −
                           </button>
-                          <span className={`text-[10px] font-blender-medium w-6 text-center tabular-nums ${questDone ? 'text-success' : 'text-text-primary'}`}>
+                          <span className={`text-type-caption font-blender-medium w-6 text-center tabular-nums ${questDone ? 'text-success' : 'text-text-primary'}`}>
                             {quest.found}
                           </span>
                           <button

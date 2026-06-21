@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import type { TaskRaw, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
@@ -55,7 +55,7 @@ export function QuestItemTracker({ task }: Props) {
                 {obj.item.shortName}
               </span>
               {obj.foundInRaid && (
-                <span className="text-[9px] font-blender-medium uppercase tracking-widest text-(--primary)">
+                <span className="text-type-caption font-blender-medium uppercase tracking-widest text-(--primary)">
                   НАЙДЕНО В РЕЙДЕ
                 </span>
               )}

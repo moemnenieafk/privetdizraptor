@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { SupplyItem } from "@/types/supply";
 
 interface SupplyGridProps {
@@ -27,7 +27,7 @@ export function SupplyGrid({ items }: SupplyGridProps) {
           </h3>
           <div className="hidden md:block h-px flex-1 bg-linear-to-r from-lines-hover to-transparent" />
         </div>
-        <p className="text-center font-blender-medium text-[10px] tracking-[0.3em] uppercase text-text-muted mb-8">
+        <p className="text-center font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted mb-8">
           // ПРИБЫЛЬНЫЕ АКТИВЫ · АРБИТРАЖ · 24H ДИАПАЗОН
         </p>
 
@@ -43,7 +43,7 @@ export function SupplyGrid({ items }: SupplyGridProps) {
                 href={`/eft/items`}
                 className="relative bg-card-menu border border-lines-hover rounded-xs p-3 flex flex-col gap-1.5 group hover:border-(--primary)/40 hover:bg-(--primary)/5"
               >
-                <p className="font-blender-medium text-[10px] uppercase tracking-wider text-text-primary leading-tight line-clamp-2 group-hover:text-(--primary)">
+                <p className="font-blender-medium text-type-caption uppercase tracking-wider text-text-primary leading-tight line-clamp-2 group-hover:text-(--primary)">
                   {item.name}
                 </p>
 
@@ -51,14 +51,14 @@ export function SupplyGrid({ items }: SupplyGridProps) {
                   <p className="font-blender-medium text-xs text-text-secondary tabular-nums">
                     {formatPrice(item.avg24hPrice)}
                   </p>
-                  <p className="font-blender-medium text-[9px] text-text-muted tabular-nums">
+                  <p className="font-blender-medium text-type-caption text-text-muted tabular-nums">
                     L {formatPrice(item.low24hPrice)} / H {formatPrice(item.high24hPrice)}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                   <span
-                    className={`font-blender-medium text-[9px] tracking-[0.15em] uppercase px-1.5 py-0.5 border rounded-xs ${
+                    className={`font-blender-medium text-type-caption tracking-[0.15em] uppercase px-1.5 py-0.5 border rounded-xs ${
                       changePos
                         ? "text-nvg-green border-nvg-green/30 bg-nvg-green/5"
                         : "text-danger border-danger/30 bg-danger/5"
@@ -68,7 +68,7 @@ export function SupplyGrid({ items }: SupplyGridProps) {
                   </span>
 
                   <span
-                    className={`font-blender-medium text-[9px] tracking-widest uppercase px-1.5 py-0.5 border rounded-xs ${
+                    className={`font-blender-medium text-type-caption tracking-widest uppercase px-1.5 py-0.5 border rounded-xs ${
                       rangeHigh
                         ? "text-tactical-amber border-tactical-amber/30 bg-tactical-amber/5"
                         : "text-text-muted border-lines-hover"
@@ -79,7 +79,7 @@ export function SupplyGrid({ items }: SupplyGridProps) {
 
                   {item.bestTraderBuy && (
                     <span
-                      className={`font-blender-medium text-[9px] tracking-widest uppercase px-1.5 py-0.5 border rounded-xs ${
+                      className={`font-blender-medium text-type-caption tracking-widest uppercase px-1.5 py-0.5 border rounded-xs ${
                         buybackPos
                           ? "text-nvg-green border-nvg-green/30 bg-nvg-green/5"
                           : "text-danger border-danger/30 bg-danger/5"
@@ -99,7 +99,7 @@ export function SupplyGrid({ items }: SupplyGridProps) {
                       height={16}
                       className="w-4 h-4 object-cover grayscale opacity-60"
                     />
-                    <p className="font-blender-medium text-[9px] uppercase tracking-wider text-text-muted">
+                    <p className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
                       {item.bestTraderBuy.vendorName} · {formatPrice(item.bestTraderBuy.price)}
                     </p>
                   </div>

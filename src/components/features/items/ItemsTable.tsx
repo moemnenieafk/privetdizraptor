@@ -31,25 +31,25 @@ export const ItemsTable = memo(function ItemsTable({ items }: ItemsTableProps) {
       <table className="w-full table-fixed border-collapse text-left relative font-blender-book">
         <thead className="sticky top-0 z-20 bg-[color-mix(in_srgb,var(--color-card-menu)_95%,transparent)] backdrop-blur-md shadow-md ring-1 ring-lines-hover">
           <tr>
-            <th className="w-[35%] p-2 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:p-3 lg:w-[30%]">
+            <th className="w-[35%] p-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted sm:p-3 lg:w-[30%]">
               Предмет
             </th>
-            <th className="hidden p-2 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:p-3 md:table-cell md:w-[15%]">
+            <th className="hidden p-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted sm:p-3 md:table-cell md:w-[15%]">
               Категория
             </th>
-            <th className="hidden p-2 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:p-3 xl:table-cell xl:w-[20%]">
+            <th className="hidden p-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted sm:p-3 xl:table-cell xl:w-[20%]">
               Характеристики
             </th>
-            <th className="hidden p-2 text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:p-3 lg:table-cell lg:w-[8%]">
+            <th className="hidden p-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted sm:p-3 lg:table-cell lg:w-[8%]">
               Размер
             </th>
-            <th className="w-[20%] p-2 text-right text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:w-[15%] sm:p-3 lg:w-[10%]">
+            <th className="w-[20%] p-2 text-right text-type-caption font-blender-medium uppercase tracking-widest text-text-muted sm:w-[15%] sm:p-3 lg:w-[10%]">
               Покупка
             </th>
-            <th className="w-[20%] p-2 text-right text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:w-[15%] sm:p-3 lg:w-[10%]">
+            <th className="w-[20%] p-2 text-right text-type-caption font-blender-medium uppercase tracking-widest text-text-muted sm:w-[15%] sm:p-3 lg:w-[10%]">
               Продажа
             </th>
-            <th className="w-[25%] p-2 text-right text-[10px] font-blender-medium uppercase tracking-widest text-text-muted sm:w-[20%] sm:p-3 lg:w-[15%]">
+            <th className="w-[25%] p-2 text-right text-type-caption font-blender-medium uppercase tracking-widest text-text-muted sm:w-[20%] sm:p-3 lg:w-[15%]">
               Выгода/Слот
             </th>
           </tr>

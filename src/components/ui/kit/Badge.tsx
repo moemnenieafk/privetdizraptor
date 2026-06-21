@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'primary';
 
@@ -23,7 +23,7 @@ export function Badge({ children, variant = 'default', className = '' }: BadgePr
       className={`
         inline-flex items-center justify-center 
         px-2 py-0.5 rounded border 
-        text-[10px] uppercase tracking-widest
+        text-type-caption uppercase tracking-widest
         transition-colors duration-200
         ${variantStyles[variant]} ${className}
       `}

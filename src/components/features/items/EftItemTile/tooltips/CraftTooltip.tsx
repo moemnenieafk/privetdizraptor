@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { formatCompactNumber, formatCurrencyDisplay } from '@/lib/formatters';
 import type { EftCraftData } from '../types';
@@ -36,11 +36,11 @@ export function EftCraftTooltip({ data, style }: EftCraftTooltipProps) {
       style={style}
     >
       <div className="mb-2.5 flex items-center justify-between gap-2">
-        <span className={`font-blender-medium text-[9px] uppercase tracking-widest ${VALUE_COLOR[level]}`}>
+        <span className={`font-blender-medium text-type-caption uppercase tracking-widest ${VALUE_COLOR[level]}`}>
           {LABELS[level]}
         </span>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="font-blender-medium text-[10px] text-text-muted">УР.{data.stationLevel}</span>
+          <span className="font-blender-medium text-type-caption text-text-muted">УР.{data.stationLevel}</span>
           <span className="icon-eft-prog-craft h-3 w-3 bg-text-muted mask-contain mask-center mask-no-repeat" />
         </div>
       </div>
@@ -55,11 +55,11 @@ export function EftCraftTooltip({ data, style }: EftCraftTooltipProps) {
               className="h-8 w-8 shrink-0 rounded-xs border border-lines-hover/30 bg-(--color-base) object-contain p-0.5"
               onError={(e) => { e.currentTarget.src = '/images/placeholder.webp'; }}
             />
-            <span className="min-w-0 flex-1 font-blender-book text-[10px] leading-tight text-text-secondary">
+            <span className="min-w-0 flex-1 font-blender-book text-type-caption leading-tight text-text-secondary">
               {ing.name}
             </span>
             {ing.count > 1 && (
-              <span className="shrink-0 font-blender-medium text-[10px] text-text-muted">×{ing.count}</span>
+              <span className="shrink-0 font-blender-medium text-type-caption text-text-muted">×{ing.count}</span>
             )}
           </div>
         ))}
@@ -82,10 +82,10 @@ export function EftCraftTooltip({ data, style }: EftCraftTooltipProps) {
           { label: 'ПРИБЫЛЬ / Ч',  value: `${formatCompactNumber(data.profitPerHour)} ₽`,  colored: true },
         ]).map(({ label, value, colored }) => (
           <div key={label} className="flex items-baseline justify-between gap-2">
-            <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
+            <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
               {label}
             </span>
-            <span className={`font-blender-medium text-[11px] ${colored ? VALUE_COLOR[level] : 'text-text-primary'}`}>
+            <span className={`font-blender-medium text-type-caption ${colored ? VALUE_COLOR[level] : 'text-text-primary'}`}>
               {value}
             </span>
           </div>

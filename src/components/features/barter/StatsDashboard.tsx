@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useGamificationStore } from '@/store/useGamificationStore';
 import { TRADER_TIERS } from '@/types/gamification';
@@ -44,7 +44,7 @@ export function StatsDashboard() {
   return (
     <div className="mt-8 border border-lines-hover">
       <div className="px-4 py-2 border-b border-lines-hover bg-card-menu">
-        <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
           Торговый путь
         </span>
       </div>
@@ -60,11 +60,11 @@ export function StatsDashboard() {
               >
                 {tier.label}
               </span>
-              <span className="font-blender-medium text-[10px] uppercase text-text-muted">
+              <span className="font-blender-medium text-type-caption uppercase text-text-muted">
                 ур.{tier.level}
               </span>
             </div>
-            <span className="font-blender-medium text-[10px] text-text-muted">
+            <span className="font-blender-medium text-type-caption text-text-muted">
               {fmt(xp)} XP{nextTier && ` / ${fmt(nextTier.xpRequired)}`}
             </span>
           </div>
@@ -76,7 +76,7 @@ export function StatsDashboard() {
             />
           </div>
           {nextTier && (
-            <p className="mt-1 font-blender-medium text-[9px] uppercase text-text-muted">
+            <p className="mt-1 font-blender-medium text-type-caption uppercase text-text-muted">
               до {nextTier.label}: {fmt(nextTier.xpRequired - xp)} XP
             </p>
           )}
@@ -87,7 +87,7 @@ export function StatsDashboard() {
           <div className="flex flex-wrap items-start gap-x-6 gap-y-2 pt-2.5 border-t border-lines-hover">
             {sessionProfit > 0 && (
               <div>
-                <p className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
+                <p className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
                   Профит сессии
                 </p>
                 <p
@@ -100,7 +100,7 @@ export function StatsDashboard() {
             )}
             {sessionSavings > 0 && (
               <div>
-                <p className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
+                <p className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
                   Сэкономлено
                 </p>
                 <p
@@ -121,7 +121,7 @@ export function StatsDashboard() {
                     className="px-2 py-1 border border-lines-hover"
                   >
                     <span
-                      className="font-blender-medium text-[9px] uppercase tracking-widest"
+                      className="font-blender-medium text-type-caption uppercase tracking-widest"
                       style={{ color: 'var(--primary)' }}
                     >
                       ▲ {badge.label}

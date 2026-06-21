@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Check, Lock } from 'lucide-react';
 import { useGamificationStore } from '@/store/useGamificationStore';
@@ -17,18 +17,18 @@ export function ProMetaProgress() {
     <div className="mt-6 border border-lines-hover">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-lines-hover bg-card-menu">
-        <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
           Мета-прогресс · PRO-доступ
         </span>
         {isUnlocked ? (
           <span
-            className="font-blender-medium text-[10px] uppercase tracking-widest px-2 py-0.5 border"
+            className="font-blender-medium text-type-caption uppercase tracking-widest px-2 py-0.5 border"
             style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}
           >
             PRO
           </span>
         ) : (
-          <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+          <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
             {completedCount} / {PRO_UNLOCK_AT}
           </span>
         )}
@@ -51,7 +51,7 @@ export function ProMetaProgress() {
                 <Lock size={9} className="text-text-muted shrink-0" strokeWidth={2} />
               )}
               <span
-                className="font-blender-medium text-[9px] uppercase tracking-widest truncate"
+                className="font-blender-medium text-type-caption uppercase tracking-widest truncate"
                 style={{ color: c.completed ? 'var(--primary)' : undefined }}
               >
                 {c.label}
@@ -69,14 +69,14 @@ export function ProMetaProgress() {
                 style={{ width: `${progressPct}%`, background: 'var(--primary)' }}
               />
             </div>
-            <p className="mt-1 font-blender-medium text-[9px] uppercase text-text-muted">
+            <p className="mt-1 font-blender-medium text-type-caption uppercase text-text-muted">
               ещё {formatRemainingChallenges(remaining)}
             </p>
           </div>
         ) : (
           <div className="flex items-center gap-2 pt-1 border-t border-lines-hover">
             <span
-              className="font-blender-medium text-[9px] uppercase tracking-widest"
+              className="font-blender-medium text-type-caption uppercase tracking-widest"
               style={{ color: 'var(--primary)' }}
             >
               ▲ PRO-функции активны — экспорт сводки доступен

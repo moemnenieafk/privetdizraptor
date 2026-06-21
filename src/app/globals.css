@@ -88,6 +88,23 @@
   --color-darkbase: #0D0D0E;
   --primary: #E68E25;
   --shadow-neon: var(--shadow-neon-eft);
+
+  /* --- Fluid Type Scale (clamp 320→1920px; 4K через root rem scaling) --- */
+  --type-display:  clamp(2rem,       1.6rem    + 2vw,     4rem);
+  --type-h1:       clamp(1.75rem,    1.5rem    + 1.25vw,  3rem);
+  --type-h2:       clamp(1.5rem,     1.35rem   + 0.75vw,  2.25rem);
+  --type-h3:       clamp(1.25rem,    1.15rem   + 0.5vw,   1.75rem);
+  --type-h4:       clamp(1.125rem,   1.075rem  + 0.25vw,  1.375rem);
+  --type-body-lg:  clamp(1rem,       0.95rem   + 0.25vw,  1.25rem);
+  --type-body:     clamp(0.9375rem,  0.9rem    + 0.125vw, 1.0625rem);
+  --type-label:    clamp(0.8125rem,  0.7875rem + 0.125vw, 0.9375rem);
+  --type-caption:  clamp(0.75rem,    0.725rem  + 0.125vw, 0.875rem);
+
+  /* --- Content Grid (1100px / 6 колонок / 28px gutter) --- */
+  --grid-max:     1100px;
+  --grid-columns: 6;
+  --grid-col:     160px;
+  --grid-gap:     28px;
 }
 
 .theme-frago {
@@ -144,6 +161,8 @@
 
   html {
     scroll-behavior: smooth;
+    /* Масштабирование под 2K/4K: 16px на 1080p → ~21px на 2K → 28px на 4K */
+    font-size: clamp(16px, 0.833vw, 28px);
   }
 }
 
@@ -213,22 +232,17 @@ html {
 
   .tactical-grid {
     display: grid;
-    grid-template-columns: repeat(2, 160px);
-    gap: 28px;
-    justify-content: center;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
     width: 100%;
-    margin: 0 auto;
   }
 
   @media (min-width: 768px) {
-    .tactical-grid { grid-template-columns: repeat(4, 160px); }
+    .tactical-grid { grid-template-columns: repeat(4, 1fr); }
   }
 
   @media (min-width: 1280px) {
-    .tactical-grid { 
-      grid-template-columns: repeat(6, 160px); 
-      max-width: 1100px;
-    }
+    .tactical-grid { grid-template-columns: repeat(6, 1fr); }
   }
 
   .tactical-card-base {
@@ -323,15 +337,26 @@ html {
     animation: fade-in-up 1s cubic-bezier(0.165, 0.84, 0.44, 1) both;
   }
 
+  /* --- Fluid type utilities --- */
+  .text-type-display  { font-size: var(--type-display); }
+  .text-type-h1       { font-size: var(--type-h1); }
+  .text-type-h2       { font-size: var(--type-h2); }
+  .text-type-h3       { font-size: var(--type-h3); }
+  .text-type-h4       { font-size: var(--type-h4); }
+  .text-type-body-lg  { font-size: var(--type-body-lg); }
+  .text-type-body     { font-size: var(--type-body); }
+  .text-type-label    { font-size: var(--type-label); }
+  .text-type-caption  { font-size: var(--type-caption); }
+
   /* --- Адаптивная типографика для хаба --- */
   .hub-heading {
-    @apply text-[18px] sm:text-[20px] md:text-[22px] lg:text-[24px] 
-           mb-0 transition-all duration-300;
+    font-size: var(--type-h4);
+    @apply mb-0 transition-all duration-300;
   }
 
   .hub-description {
-    @apply text-[12px] sm:text-[13px] md:text-[14px] lg:text-[16px] 
-           max-w-70 sm:max-w-95 md:max-w-120 lg:max-w-150 transition-all duration-300;
+    font-size: var(--type-body);
+    @apply max-w-70 sm:max-w-95 md:max-w-120 lg:max-w-150 transition-all duration-300;
   }
 
   /* --- Анимация предупреждающих полосок (Hazard Stripes) --- */

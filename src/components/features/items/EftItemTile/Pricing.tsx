@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { PackageX } from 'lucide-react';
 import { formatCurrencyDisplay } from '@/lib/formatters';
@@ -108,7 +108,7 @@ function PriceCell({
     return (
       <div className="flex items-center gap-1">
         <PackageX className="h-3.5 w-3.5 text-red-600" />
-        <span className="font-blender-medium text-[9px] uppercase tracking-widest text-red-600">НЕТ</span>
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-red-600">НЕТ</span>
       </div>
     );
   }
@@ -136,7 +136,7 @@ function PriceCell({
         className={`cursor-help font-blender-medium ${
           accent
             ? `text-sm ${profitable ? 'text-success' : 'text-text-secondary'}`
-            : 'text-[11px] text-text-secondary'
+            : 'text-type-caption text-text-secondary'
         }`}
       >
         {display}
@@ -150,7 +150,7 @@ function VpsCell({ price, priceRUB, slots, profitable = false }: { price?: numbe
     return (
       <div className="flex items-center gap-1">
         <PackageX className="h-3 w-3 text-danger/40" />
-        <span className="font-blender-medium text-[9px] text-text-muted/50">—</span>
+        <span className="font-blender-medium text-type-caption text-text-muted/50">—</span>
       </div>
     );
   }
@@ -191,9 +191,9 @@ export function EftPricing() {
 
       {/* ── Покупка ── */}
       <div className="mb-1 flex w-full items-center gap-2">
-        <span className="font-blender-medium text-[10px] uppercase leading-none tracking-wide text-zinc-600 opacity-50">ПОКУПКА</span>
+        <span className="font-blender-medium text-type-caption uppercase leading-none tracking-wide text-zinc-600 opacity-50">ПОКУПКА</span>
         <div className="h-px flex-1 bg-neutral-800" />
-        <span className="font-blender-medium text-[10px] uppercase leading-none tracking-wide text-zinc-600 opacity-50">БАРАХОЛКА</span>
+        <span className="font-blender-medium text-type-caption uppercase leading-none tracking-wide text-zinc-600 opacity-50">БАРАХОЛКА</span>
       </div>
       <div className="mb-2.5 grid grid-cols-2 gap-2">
         <PriceCell entry={pricing.traderBuy} showQuestUnlock={hasQuestUnlock} />
@@ -204,9 +204,9 @@ export function EftPricing() {
 
       {/* ── Продажа ── */}
       <div className="mb-1 flex w-full items-center gap-2">
-        <span className="font-blender-medium text-[10px] uppercase leading-none tracking-wide text-zinc-600 opacity-50">ПРОДАЖА</span>
+        <span className="font-blender-medium text-type-caption uppercase leading-none tracking-wide text-zinc-600 opacity-50">ПРОДАЖА</span>
         <div className="h-px flex-1 bg-neutral-800" />
-        <span className="font-blender-medium text-[10px] uppercase leading-none tracking-wide text-zinc-600 opacity-50">БАРАХОЛКА</span>
+        <span className="font-blender-medium text-type-caption uppercase leading-none tracking-wide text-zinc-600 opacity-50">БАРАХОЛКА</span>
       </div>
       <div className="mb-2 grid grid-cols-2 gap-2">
         <PriceCell entry={pricing.traderSell} levelRequired={minPlayerLevel} />

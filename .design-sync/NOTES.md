@@ -5,7 +5,7 @@
 - **Project ID:** `2f0ac1a5-7724-4645-988c-68745661df2c`
 - **URL:** https://claude.ai/design/p/2f0ac1a5-7724-4645-988c-68745661df2c
 - **Shape:** tokens-only (no component bundle)
-- **Synced:** 2026-06-18 (re-sync: added trader colors, kappa, lightkeeper tokens)
+- **Synced:** 2026-06-21 (re-sync: fluid type scale tokens, grid tokens, scrollbar utils, quest map animations, tactical-menu-item img fix, 2K/4K max-w-275 overrides)
 
 ## Why tokens-only
 

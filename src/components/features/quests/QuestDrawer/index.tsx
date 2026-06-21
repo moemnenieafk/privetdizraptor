@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef, useState, useEffect } from 'react';
 import { Paperclip } from 'lucide-react';
@@ -50,7 +50,7 @@ function ObjectiveRow({ obj, checked, onToggle }: { obj: TaskObjective; checked:
           </span>
           <div className="flex items-start gap-1.5 shrink-0 pt-0.5">
             {obj.optional && (
-              <span className="text-[8px] font-blender-medium uppercase not-italic text-text-secondary border border-lines-hover rounded-xs px-1 py-0.5">
+              <span className="text-type-caption font-blender-medium uppercase not-italic text-text-secondary border border-lines-hover rounded-xs px-1 py-0.5">
                 НЕ ОБЯ.
               </span>
             )}
@@ -258,7 +258,7 @@ export function QuestDrawer({ task, onClose }: Props) {
             )}
             {renderTask.objectives.length > 0 && (
               <div className="px-5 py-5">
-                <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
+                <div className="text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
                   Задачи
                 </div>
                 <ul className="flex flex-col gap-4">
@@ -271,7 +271,7 @@ export function QuestDrawer({ task, onClose }: Props) {
 
             {hasItemObjs && (
               <div className="px-5 py-5">
-                <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
+                <div className="text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
                   Трекер предметов
                 </div>
                 <QuestItemTracker task={renderTask} />
@@ -286,7 +286,7 @@ export function QuestDrawer({ task, onClose }: Props) {
                 : `https://www.youtube.com/embed?listType=search&list=fullkamen+${encodeURIComponent(renderTask.name)}`;
               return (
                 <div className="px-5 py-5">
-                  <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
+                  <div className="text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary mb-3">
                     Видео-гайд
                   </div>
                   <div className="relative w-full aspect-video rounded-xs overflow-hidden bg-(--color-darkbase)">
@@ -304,7 +304,7 @@ export function QuestDrawer({ task, onClose }: Props) {
             })()}
             {hasRewards && (
               <div className="px-4 py-6">
-                <div className="text-[9px] font-blender-medium uppercase tracking-widest text-text-secondary mb-4">
+                <div className="text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary mb-4">
                   Награды
                 </div>
                 {renderTask.experience > 0 && (

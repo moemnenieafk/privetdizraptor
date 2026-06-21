@@ -4,7 +4,12 @@ interface ItemsStore {
   selectedTraders: string[];
   toggleTrader: (id: string) => void;
   clearTraders: () => void;
+  compareIds: string[];
+  toggleCompare: (id: string) => void;
+  clearCompare: () => void;
 }
+
+const MAX_COMPARE = 4;
 
 export const useItemsStore = create<ItemsStore>((set) => ({
   selectedTraders: [],
@@ -15,4 +20,15 @@ export const useItemsStore = create<ItemsStore>((set) => ({
         : [...state.selectedTraders, id],
     })),
   clearTraders: () => set({ selectedTraders: [] }),
+
+  compareIds: [],
+  toggleCompare: (id) =>
+    set((state) => {
+      if (state.compareIds.includes(id)) {
+        return { compareIds: state.compareIds.filter((c) => c !== id) };
+      }
+      if (state.compareIds.length >= MAX_COMPARE) return state;
+      return { compareIds: [...state.compareIds, id] };
+    }),
+  clearCompare: () => set({ compareIds: [] }),
 }));

@@ -60,6 +60,7 @@ export function useCategoryFilters() {
   const [cantBuyFlea, setCantBuyFlea] = useState(searchParams.get('nbf') === 'true');
   const [cantSellTrader, setCantSellTrader] = useState(searchParams.get('nst') === 'true');
   const [cantSellFlea, setCantSellFlea] = useState(searchParams.get('nsf') === 'true');
+  const [favoritesOnly, setFavoritesOnly] = useState(searchParams.get('fav') === 'true');
 
   const profiles = usePlayerStore((state) => state.profiles);
   const activeProfileId = usePlayerStore((state) => state.activeProfileId);
@@ -112,6 +113,7 @@ export function useCategoryFilters() {
       if (cantBuyFlea) params.set('nbf', 'true'); else params.delete('nbf');
       if (cantSellTrader) params.set('nst', 'true'); else params.delete('nst');
       if (cantSellFlea) params.set('nsf', 'true'); else params.delete('nsf');
+      if (favoritesOnly) params.set('fav', 'true'); else params.delete('fav');
 
       const query = params.toString();
       if (query !== searchParams.toString()) {
@@ -122,7 +124,7 @@ export function useCategoryFilters() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, sortConfig, barterOnly, availableOnly, viewMode, activeArmorClasses,
       priceMin, priceMax, caliberFilter,
-      cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea,
+      cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea, favoritesOnly,
       pathname, router, searchParams]);
 
   const handleColumnSort = (key: string) => {
@@ -164,6 +166,7 @@ export function useCategoryFilters() {
     setCantBuyFlea(false);
     setCantSellTrader(false);
     setCantSellFlea(false);
+    setFavoritesOnly(false);
   };
 
   const resetAdvancedFilters = () => {
@@ -196,6 +199,7 @@ export function useCategoryFilters() {
     cantBuyFlea, setCantBuyFlea,
     cantSellTrader, setCantSellTrader,
     cantSellFlea, setCantSellFlea,
+    favoritesOnly, setFavoritesOnly,
     handleColumnSort,
     handleDropdownSort,
     toggleArmorClass,

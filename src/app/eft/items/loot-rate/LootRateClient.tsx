@@ -73,7 +73,7 @@ function PriceCell({ price, vendor, amber = false }: { price: number; vendor?: {
   );
   return (
     <div className="flex items-center justify-end gap-1.5">
-      <span title={`${price.toLocaleString('ru-RU')} в‚Ѕ`} className={`cursor-help font-blender-medium text-xs ${amber ? 'text-(--primary) text-[13px]' : 'text-text-primary'}`}>
+      <span title={`${price.toLocaleString('ru-RU')} в‚Ѕ`} className={`cursor-help font-blender-medium text-xs ${amber ? 'text-(--primary) text-type-label' : 'text-text-primary'}`}>
         {formatCompactNumber(price)} в‚Ѕ
       </span>
       <VendorIcon vendor={vendor} />
@@ -153,7 +153,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
     return (
       <button
         onClick={() => handleSort(k)}
-        className={`flex items-center gap-1 font-blender-medium text-[10px] uppercase tracking-widest transition-colors hover:text-text-primary ${align === 'right' ? 'justify-end' : 'justify-start'} ${active ? 'text-(--primary)' : 'text-text-muted'}`}
+        className={`flex items-center gap-1 font-blender-medium text-type-caption uppercase tracking-widest transition-colors hover:text-text-primary ${align === 'right' ? 'justify-end' : 'justify-start'} ${active ? 'text-(--primary)' : 'text-text-muted'}`}
       >
         {label}
         {active
@@ -189,7 +189,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
                   backgroundColor: isActive ? 'var(--primary)' : 'var(--color-text-muted)',
                 }}
               />
-              <span className={`font-blender-medium text-[8px] uppercase leading-none tracking-widest transition-colors ${isActive ? 'text-(--primary)' : 'text-text-muted group-hover:text-text-secondary'}`}>
+              <span className={`font-blender-medium text-type-caption uppercase leading-none tracking-widest transition-colors ${isActive ? 'text-(--primary)' : 'text-text-muted group-hover:text-text-secondary'}`}>
                 {cat.label}
               </span>
             </button>
@@ -201,7 +201,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
             className="flex flex-col items-center gap-1 rounded border border-lines-hover/50 bg-card-menu px-2.5 py-1.5 transition-colors hover:border-red-500/50 hover:text-red-400"
           >
             <X className="h-5 w-5 text-text-muted" />
-            <span className="font-blender-medium text-[8px] uppercase leading-none tracking-widest text-text-muted">РЎР±СЂРѕСЃ</span>
+            <span className="font-blender-medium text-type-caption uppercase leading-none tracking-widest text-text-muted">РЎР±СЂРѕСЃ</span>
           </button>
         )}
       </div>
@@ -215,11 +215,11 @@ export function LootRateClient({ items }: LootRateClientProps) {
             placeholder="РџРћРРЎРљ РџР Р•Р”РњР•РўРђ..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-transparent font-blender-medium text-[12px] uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
+            className="w-full bg-transparent font-blender-medium text-type-label uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
           />
           {search && <button onClick={() => setSearch('')} className="ml-2 text-text-muted hover:text-(--primary)"><X className="h-4 w-4" /></button>}
         </div>
-        <span className="shrink-0 font-blender-medium text-[11px] uppercase tracking-widest text-text-muted">
+        <span className="shrink-0 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
           {processed.length.toLocaleString('ru-RU')} РїСЂРµРґРјРµС‚РѕРІ
         </span>
       </div>
@@ -276,21 +276,21 @@ export function LootRateClient({ items }: LootRateClientProps) {
 
                     {/* РќР°Р·РІР°РЅРёРµ */}
                     <Link href={`/eft/items/item/${item.id}`} className="group/link flex min-w-0 flex-col overflow-hidden">
-                      <span className="block truncate font-blender-medium text-[13px] uppercase leading-tight text-text-primary transition-colors group-hover/link:text-(--primary)" title={item.name}>
+                      <span className="block truncate font-blender-medium text-type-label uppercase leading-tight text-text-primary transition-colors group-hover/link:text-(--primary)" title={item.name}>
                         {item.name}
                       </span>
-                      <span className="mt-0.5 block truncate font-blender-book text-[10px] text-text-muted">
+                      <span className="mt-0.5 block truncate font-blender-book text-type-caption text-text-muted">
                         {item.shortName}
                       </span>
                     </Link>
 
                     {/* Р Р°Р·РјРµСЂ */}
                     <div className="text-right">
-                      <span className="font-blender-medium text-[10px] text-text-muted">
+                      <span className="font-blender-medium text-type-caption text-text-muted">
                         {item.width}Г—{item.height}
                       </span>
                       {item.slots > 1 && (
-                        <div className="font-blender-medium text-[9px] text-text-muted/50">{item.slots} СЃР».</div>
+                        <div className="font-blender-medium text-type-caption text-text-muted/50">{item.slots} СЃР».</div>
                       )}
                     </div>
 
@@ -316,7 +316,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
 
       {/* РС‚РѕРі */}
       <div className="border-t border-lines-hover pt-3">
-        <span className="font-blender-medium text-[11px] uppercase tracking-widest text-text-muted">
+        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
           РџРѕРєР°Р·Р°РЅРѕ {processed.length} РёР· {items.length} РїСЂРµРґРјРµС‚РѕРІ
         </span>
       </div>

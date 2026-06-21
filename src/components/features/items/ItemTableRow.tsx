@@ -66,7 +66,7 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
 
       {/* Категория */}
       <td className="p-3 hidden md:table-cell">
-        <span className="rounded border border-lines-hover bg-(--color-base) px-2 py-1 font-blender-medium text-[10px] uppercase text-text-muted">
+        <span className="rounded border border-lines-hover bg-(--color-base) px-2 py-1 font-blender-medium text-type-caption uppercase text-text-muted">
           {CATEGORY_MAP[item.category] || item.category}
         </span>
       </td>
@@ -91,7 +91,7 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
               {formatCompactNumber(buyPrice)} ₽
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] text-text-muted">
+            <span className="inline-flex items-center gap-1 text-type-caption text-text-muted">
               <MinusCircle className="h-3.5 w-3.5 shrink-0" />
               Нет в продаже
             </span>
@@ -107,7 +107,7 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
               {formatCompactNumber(sellPrice)} ₽
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] text-text-muted">
+            <span className="inline-flex items-center gap-1 text-type-caption text-text-muted">
               <MinusCircle className="h-3.5 w-3.5 shrink-0" />
               Недоступно
             </span>
@@ -123,7 +123,7 @@ export const ItemTableRow = memo(forwardRef<HTMLTableRowElement, ItemTableRowPro
               {formatCompactNumber(profitPerSlot)} ₽
             </span>
           ) : (
-            <span className="text-[11px] text-text-muted">—</span>
+            <span className="text-type-caption text-text-muted">—</span>
           )}
         </span>
       </td>

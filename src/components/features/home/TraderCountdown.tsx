@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 
@@ -35,7 +35,7 @@ export function TraderCountdown({ traderName, resetTime }: TraderCountdownProps)
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="font-blender-medium text-[9px] tracking-[0.3em] uppercase text-text-muted">
+      <span className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted">
         {traderName.toUpperCase()}
       </span>
       <span

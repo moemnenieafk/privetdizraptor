@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useBarterStore } from '@/store/useBarterStore';
 import { calcStashEconomics, calcBarterProfit, formatRub } from '@/lib/barter-calc';
@@ -81,7 +81,7 @@ function MetricCard({ label, value, color = 'neutral' }: MetricCardProps) {
 
   return (
     <div className="flex flex-col px-4 py-2.5 bg-card-menu border border-lines-hover gap-0.5">
-      <span className="font-blender-medium text-[9px] uppercase tracking-widest text-text-muted">
+      <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
         {label}
       </span>
       <span className="font-blender-medium text-sm" style={{ color: valueColor }}>

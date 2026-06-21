@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { ReactNode } from 'react';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
@@ -9,7 +9,7 @@ export function EftMedia({ children }: { children?: ReactNode }) {
   const { item } = useEftItemTile();
 
   return (
-    <div className="relative mb-3 h-24 w-full">
+    <div className="relative mb-3 h-30 w-full">
       {/* Inner clip — overflow-hidden applied only here so absolute indicators & portal tooltips escape */}
       <div className="absolute inset-0 overflow-hidden rounded-sm border border-lines-hover">
         {/* Rarity tint */}
@@ -45,12 +45,12 @@ export function EftMedia({ children }: { children?: ReactNode }) {
       {item.ammoOverlay && (
         <>
           <div className="absolute left-2 top-1/2 z-20 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded bg-red-500/20 outline-1 -outline-offset-1 outline-red-500/30 backdrop-blur-sm">
-            <span className="font-blender-medium text-[10px] leading-none text-red-500">
+            <span className="font-blender-medium text-type-caption leading-none text-red-500">
               {item.ammoOverlay.damage}
             </span>
           </div>
           <div className="absolute right-2 top-1/2 z-20 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded bg-orange-400/20 outline-1 -outline-offset-1 outline-orange-400/30 backdrop-blur-sm">
-            <span className="font-blender-medium text-[10px] leading-none text-orange-400">
+            <span className="font-blender-medium text-type-caption leading-none text-orange-400">
               {item.ammoOverlay.penetration}
             </span>
           </div>

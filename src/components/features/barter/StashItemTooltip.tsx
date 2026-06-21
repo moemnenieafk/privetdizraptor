@@ -1,4 +1,4 @@
-import { isArbitrageProfitable, formatRub } from '@/lib/barter-calc';
+﻿import { isArbitrageProfitable, formatRub } from '@/lib/barter-calc';
 import type { StashItem } from '@/types/barter';
 
 interface Props {
@@ -19,14 +19,14 @@ export function StashItemTooltip({ item, x, y }: Props) {
         <p className="font-blender-medium text-xs uppercase tracking-widest text-(--color-text-primary) leading-tight">
           {item.name}
         </p>
-        <p className="font-blender-medium text-[10px] uppercase text-(--color-text-muted) mt-0.5">
+        <p className="font-blender-medium text-type-caption uppercase text-(--color-text-muted) mt-0.5">
           {item.shortName} · {item.width}×{item.height}
         </p>
       </div>
 
       <div className="px-3 py-2 space-y-1">
         <div className="flex items-center justify-between gap-4">
-          <span className="font-blender-medium text-[10px] uppercase text-(--color-text-muted) shrink-0">
+          <span className="font-blender-medium text-type-caption uppercase text-(--color-text-muted) shrink-0">
             Барахолка
           </span>
           <span
@@ -37,7 +37,7 @@ export function StashItemTooltip({ item, x, y }: Props) {
           </span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="font-blender-medium text-[10px] uppercase text-(--color-text-muted) shrink-0">
+          <span className="font-blender-medium text-type-caption uppercase text-(--color-text-muted) shrink-0">
             Торговец
           </span>
           <span className="font-blender-medium text-xs text-(--color-text-secondary)">
@@ -48,7 +48,7 @@ export function StashItemTooltip({ item, x, y }: Props) {
 
       {arbitrage && (
         <div className="px-3 py-1.5 border-t border-(--color-lines-hover)">
-          <p className="font-blender-medium text-[9px] uppercase tracking-widest text-(--color-success)">
+          <p className="font-blender-medium text-type-caption uppercase tracking-widest text-(--color-success)">
             ▲ арбитраж выгоден
           </p>
         </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -90,7 +90,7 @@ export default function KeepItemsPage() {
         <h1 className="text-2xl font-blender-medium tracking-[0.3em] uppercase text-text-primary mb-2">
           НУЖНЫЕ ПРЕДМЕТЫ <span className="text-primary">EFT</span>
         </h1>
-        <p className="text-[10px] tracking-widest text-text-muted uppercase">
+        <p className="text-type-caption tracking-widest text-text-muted uppercase">
           Списки лута, который необходимо сохранить для выполнения заданий (Каппа) и постройки убежища
         </p>
       </div>
@@ -98,7 +98,7 @@ export default function KeepItemsPage() {
       {/* Панель управления */}
       <div className="mb-8 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center bg-card-menu border border-lines-hover p-4 rounded-lg animate-[fade-in-up_0.5s_both]">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-blender-medium tracking-wider text-text-muted uppercase mr-2">КАТЕГОРИИ:</span>
+          <span className="text-type-caption font-blender-medium tracking-wider text-text-muted uppercase mr-2">КАТЕГОРИИ:</span>
           {[
             { id: "all", label: "ВСЕ ПРЕДМЕТЫ" },
             { id: "kappa", label: "ДЛЯ КАППЫ" },
@@ -107,7 +107,7 @@ export default function KeepItemsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveCategory(tab.id)}
-              className={`text-[10px] font-blender-medium tracking-widest px-3 py-1.5 border rounded-md transition-all uppercase ${
+              className={`text-type-caption font-blender-medium tracking-widest px-3 py-1.5 border rounded-md transition-all uppercase ${
                 activeCategory === tab.id
                   ? "bg-primary text-black border-primary"
                   : "bg-transparent text-text-secondary border-lines-hover hover:border-primary/50 hover:text-text-primary"
@@ -120,8 +120,8 @@ export default function KeepItemsPage() {
         
         {/* Сортировка */}
         <div className="flex items-center gap-2 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 border-lines-hover pt-3 lg:pt-0">
-          <span className="text-[10px] font-blender-medium tracking-wider text-text-muted uppercase mr-2">ОТОБРАЖЕНИЕ:</span>
-          <button className="text-[10px] font-blender-medium tracking-widest px-4 py-1.5 border rounded-md bg-transparent text-text-primary border-lines-hover hover:border-primary/50 flex items-center gap-2 uppercase">
+          <span className="text-type-caption font-blender-medium tracking-wider text-text-muted uppercase mr-2">ОТОБРАЖЕНИЕ:</span>
+          <button className="text-type-caption font-blender-medium tracking-widest px-4 py-1.5 border rounded-md bg-transparent text-text-primary border-lines-hover hover:border-primary/50 flex items-center gap-2 uppercase">
             СЕТКОЙ ⊞
           </button>
         </div>
@@ -131,7 +131,7 @@ export default function KeepItemsPage() {
       {loading ? (
         <div className="w-full h-[40vh] flex flex-col items-center justify-center text-text-secondary">
           <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-          <div className="font-blender-medium text-[12px] tracking-[0.4em] uppercase animate-pulse">
+          <div className="font-blender-medium text-type-label tracking-[0.4em] uppercase animate-pulse">
             СИНХРОНИЗАЦИЯ БАЗЫ...
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function KeepItemsPage() {
                 </div>
                 {/* Мета-информация */}
                 <div className="flex items-center justify-between border-t border-lines-hover pt-4 mt-4">
-                  <span className={`text-[10px] tracking-[0.2em] px-2 py-0.5 border rounded-sm ${rarityStyle}`}>
+                  <span className={`text-type-caption tracking-[0.2em] px-2 py-0.5 border rounded-sm ${rarityStyle}`}>
                     {item.rarity}
                   </span>
                   <span className="text-xs font-mono text-text-muted">

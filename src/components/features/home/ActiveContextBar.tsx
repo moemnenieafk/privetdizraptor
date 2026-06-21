@@ -18,11 +18,11 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
             className={`shrink-0 w-1.5 h-1.5 ${serverOnline ? "bg-nvg-green" : "bg-danger"}`}
             aria-hidden
           />
-          <span className="font-blender-medium text-[10px] tracking-[0.25em] uppercase text-text-secondary truncate">
+          <span className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-text-secondary truncate">
             {serverLabel}
           </span>
           <span
-            className={`font-blender-medium text-[9px] tracking-[0.2em] uppercase shrink-0 ${
+            className={`font-blender-medium text-type-caption tracking-[0.2em] uppercase shrink-0 ${
               serverOnline ? "text-nvg-green" : "text-danger"
             }`}
           >
@@ -45,7 +45,7 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
                 return (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-2 font-blender-medium text-[10px] tracking-[0.2em] uppercase"
+                    className="inline-flex items-center gap-2 font-blender-medium text-type-caption tracking-[0.2em] uppercase"
                   >
                     <span className="text-text-secondary truncate max-w-32">{item.name}</span>
                     <span className={isPositive ? "text-nvg-green" : "text-danger"}>
@@ -57,7 +57,7 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
               })}
             </div>
           ) : (
-            <span className="font-blender-medium text-[10px] tracking-[0.2em] uppercase text-text-muted">
+            <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted">
               Р—РђР“Р РЈР—РљРђ Р Р«РќРљРђ...
             </span>
           )}
@@ -71,7 +71,7 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
               resetTime={nearestTrader.resetTime}
             />
           ) : (
-            <span className="font-blender-medium text-[10px] tracking-[0.2em] uppercase text-text-muted">
+            <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted">
               РўРђР™РњР•Р Р« N/A
             </span>
           )}

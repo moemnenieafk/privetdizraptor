@@ -27,7 +27,7 @@ export function GameLogo({ gameId }: GameLogoProps) {
   return (
     <div 
       ref={dropdownRef}
-      className="relative flex h-14 w-[160px] cursor-pointer items-center justify-center rounded border border-lines-hover bg-black/20 transition-colors duration-300 hover:border-(--primary) group"
+      className="relative flex h-14 w-40 cursor-pointer items-center justify-center rounded border border-lines-hover bg-black/20 transition-colors duration-300 hover:border-(--primary) group"
       onClick={() => setIsOpen(!isOpen)}
     >
       {/* Шаг 2: Текущий логотип-маска */}
@@ -47,7 +47,7 @@ export function GameLogo({ gameId }: GameLogoProps) {
 
       {/* Шаг 3: Выпадающее меню со списком доступных игр */}
       <div 
-        className={`absolute left-0 top-[calc(100%+8px)] z-50 flex w-[160px] flex-col overflow-hidden rounded border border-lines-hover bg-card-menu shadow-lg transition-all duration-200 ${isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
+        className={`absolute left-0 top-[calc(100%+8px)] z-20 flex w-40 flex-col overflow-hidden rounded border border-lines-hover bg-card-menu shadow-lg transition-all duration-200 ${isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'}`}
       >
         {activeGames.map((game) => (
           <Link 

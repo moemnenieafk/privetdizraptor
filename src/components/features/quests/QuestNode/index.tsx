@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { memo, useRef, useState, useEffect } from 'react';
 import type { QuestNodeData } from '@/types/quest';
@@ -203,7 +203,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
                     {obj.description}
                   </span>
                   {isItem && obj.foundInRaid && (
-                    <span className="text-[9px] font-blender-medium uppercase tracking-widest text-(--primary)">
+                    <span className="text-type-caption font-blender-medium uppercase tracking-widest text-(--primary)">
                       НАЙДЕНО В РЕЙДЕ
                     </span>
                   )}

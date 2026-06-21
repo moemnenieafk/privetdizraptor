@@ -241,13 +241,13 @@ export function TacticalSearch() {
   };
 
   return (
-    <div className="relative w-full max-w-[724px]" ref={dropdownRef}>
+    <div className="relative w-full" ref={dropdownRef}>
       {/* Строка поиска (Обертка) */}
       <div className="group flex items-center justify-between w-full h-14 px-3.5 bg-black/20 rounded border border-lines-hover overflow-hidden transition-colors duration-300 focus-within:border-(--primary)">
         
         {/* Левая иконка (Лупа) */}
         <div 
-          className="icon-mask w-6 h-6 flex-shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary)"
+          className="icon-mask w-6 h-6 shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary)"
           style={{ WebkitMaskImage: 'url(/icons/eft/search-icon.svg)', maskImage: 'url(/icons/eft/search-icon.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center' }}
         />
         
@@ -269,7 +269,7 @@ export function TacticalSearch() {
         
         {/* Правая иконка (Хоткей CTRL+Q) */}
         <div 
-          className="icon-mask w-10 h-5 flex-shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary) group-focus-within:opacity-50"
+          className="icon-mask w-10 h-5 shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary) group-focus-within:opacity-50"
           style={{ WebkitMaskImage: 'url(/icons/eft/ctrl-q-icon.svg)', maskImage: 'url(/icons/eft/ctrl-q-icon.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center' }}
         />
       </div>
@@ -277,18 +277,18 @@ export function TacticalSearch() {
       {/* Выпадающее меню результатов */}
       {isOpen && (
         // Расширяем контейнер, чтобы вместить сетку (до 1100px), центрируя его относительно инпута
-        <div className="absolute top-full left-1/2 -translate-x-1/2 w-[96vw] max-w-275 mt-2 bg-card-menu/95 backdrop-blur-xl border border-[color-mix(in_srgb,var(--primary)_50%,transparent)] rounded-lg shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden z-50 animate-[fade-in-up_0.2s_ease-out_both]">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 w-[96vw] max-w-275 mt-2 bg-card-menu/95 backdrop-blur-xl border border-[color-mix(in_srgb,var(--primary)_50%,transparent)] rounded-lg shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden z-60 animate-[fade-in-up_0.2s_ease-out_both]">
           
-          <div className="max-h-[450px] overflow-y-auto">
+          <div className="max-h-112.5 overflow-y-auto">
             
             {/* СЕКЦИЯ: ПОСЛЕДНИЕ ЗАПРОСЫ */}
             {query.trim().length === 0 && recentSearches.length > 0 && (
               <div className="py-2 border-b border-lines-hover/50">
                 <div className="px-4 py-1.5 flex justify-between items-center bg-base/50 mb-1">
-                  <span className="text-[10px] font-blender-medium tracking-widest uppercase text-text-muted">
+                  <span className="text-type-caption font-blender-medium tracking-widest uppercase text-text-muted">
                     Последние запросы
                   </span>
-                  <button onClick={clearSearches} className="text-[10px] font-blender-medium tracking-widest uppercase text-text-secondary hover:text-danger transition-colors focus:outline-none">
+                  <button onClick={clearSearches} className="text-type-caption font-blender-medium tracking-widest uppercase text-text-secondary hover:text-danger transition-colors focus:outline-none">
                     Очистить
                   </button>
                 </div>
@@ -317,7 +317,7 @@ export function TacticalSearch() {
             {filteredResults.length > 0 && (
               <div className="py-2">
                 <div className="px-4 py-1.5 bg-base/50 border-b border-lines-hover/50 mb-1">
-                  <span className="text-[10px] font-blender-medium tracking-widest uppercase text-text-muted">
+                  <span className="text-type-caption font-blender-medium tracking-widest uppercase text-text-muted">
                     Разделы Хаба
                   </span>
                 </div>
@@ -336,10 +336,10 @@ export function TacticalSearch() {
                             const iconToUse = (faction === 'USEC' && item.iconUrlUsec) ? item.iconUrlUsec : ((faction === 'BEAR' && item.iconUrlBear) ? item.iconUrlBear : item.iconUrl);
                             return iconToUse ? (
                               isColoredIcon(item, iconToUse) ? (
-                                <img src={iconToUse} alt="" className="h-4 w-4 flex-shrink-0 object-contain" />
+                                <img src={iconToUse} alt="" className="h-4 w-4 shrink-0 object-contain" />
                               ) : (
                                 <div 
-                                  className={`h-4 w-4 flex-shrink-0 text-text-secondary transition-colors group-hover/item:text-(--primary) ${item.iconClass || 'icon-mask'}`}
+                                  className={`h-4 w-4 shrink-0 text-text-secondary transition-colors group-hover/item:text-(--primary) ${item.iconClass || 'icon-mask'}`}
                                   style={{ maskImage: `url(${iconToUse})`, WebkitMaskImage: `url(${iconToUse})`, maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }}
                                 />
                               )
@@ -363,7 +363,7 @@ export function TacticalSearch() {
             {itemResults.length > 0 && (
               <div className="py-2 border-t border-lines-hover/50">
                 <div className="px-4 py-1.5 bg-base/50 border-b border-lines-hover/50 mb-1">
-                  <span className="text-[10px] font-blender-medium tracking-widest uppercase text-text-muted">
+                  <span className="text-type-caption font-blender-medium tracking-widest uppercase text-text-muted">
                     База предметов EFT
                   </span>
                 </div>
@@ -392,7 +392,7 @@ export function TacticalSearch() {
             {isPending && (
               <div className="px-4 py-6 flex flex-col items-center justify-center gap-3 text-(--primary) border-t border-lines-hover/50">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="text-[10px] font-blender-medium tracking-widest uppercase">
+                <span className="text-type-caption font-blender-medium tracking-widest uppercase">
                   Синхронизация с базой...
                 </span>
               </div>
