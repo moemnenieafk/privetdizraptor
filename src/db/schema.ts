@@ -8,6 +8,7 @@ import {
   timestamp,
   index,
   uniqueIndex,
+  primaryKey,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
@@ -171,7 +172,38 @@ export const profiles = pgTable("profiles", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/* ─────────────────────── quest_progress ─────────────────────── */
+/**
+ * Слой 4b — прогресс квестов игрока в облаке (замена localStorage).
+ * Одна строка на пользователя+игру. Поля-блобы 1:1 повторяют форму
+ * zustand-стора useQuestStore (см. его partialize), чтобы синк шёл напрямую
+ * через loadProgress(). user_id → profiles.id (а тот → auth.users) с каскадом.
+ */
+export const questProgress = pgTable(
+  "quest_progress",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    completedQuests: jsonb("completed_quests").$type<string[]>().notNull(),
+    itemProgress: jsonb("item_progress")
+      .$type<Record<string, Record<string, number>>>()
+      .notNull(),
+    pinnedQuests: jsonb("pinned_quests").$type<string[]>().notNull(),
+    questNotes: jsonb("quest_notes").$type<Record<string, string>>().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
+);
+
 /* ───────────────── inferred types (для использования в коде) ───────────────── */
+export type QuestProgress = typeof questProgress.$inferSelect;
+export type NewQuestProgress = typeof questProgress.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
 export type Game = typeof games.$inferSelect;

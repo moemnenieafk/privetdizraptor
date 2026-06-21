@@ -75,3 +75,30 @@ export async function getCtaEftItem(
   if (!res.ok) throw new Error(`CTA API /eft/items/${id} → ${res.status}`);
   return res.json() as Promise<CtaEftItemDetail>;
 }
+
+/* ───────────────── прогресс квестов (слой 4b) ───────────────── */
+// Форма 1:1 повторяет persisted-поля useQuestStore.
+export interface ProgressPayload {
+  completedQuests: string[];
+  itemProgress: Record<string, Record<string, number>>;
+  pinnedQuests: string[];
+  questNotes: Record<string, string>;
+}
+
+// Прогресс текущего пользователя из сессии. null — не авторизован.
+export async function getCtaProgress(): Promise<ProgressPayload | null> {
+  const res = await fetch(`${baseUrl()}/api/eft/progress`, { cache: "no-store" });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`CTA API /eft/progress → ${res.status}`);
+  return res.json() as Promise<ProgressPayload>;
+}
+
+// Сохранить прогресс. false — не авторизован/ошибка.
+export async function saveCtaProgress(p: ProgressPayload): Promise<boolean> {
+  const res = await fetch(`${baseUrl()}/api/eft/progress`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(p),
+  });
+  return res.ok;
+}
