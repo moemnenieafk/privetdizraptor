@@ -1,13 +1,19 @@
 'use server'
 
-import { getAllEftItems, getEftItemsPricing, type SellOffer } from '@/lib/eft-api';
+import { eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { items } from '@/db/schema';
+import { eftGameId } from '@/db/eft';
+import { getEftPriceMapFromDb } from '@/db/prices';
+import { itemIconUrl } from '@/lib/item-icon';
 import { searchItems } from '@/lib/search-engine';
 import { EFT_QUESTS } from '@/data/quests';
+import type { EftItem } from '@/lib/eft-api';
+import type { CtaVendorOffer } from '@/lib/eft-prices';
 import type { SearchItemResult, QuestSearchResult, QuestSearchItem } from '@/types/search';
 
-// Цена в рублях: priceRUB приоритетнее (валютные офферы уже сконвертированы).
-const rubVal = (o: SellOffer) => o.priceRUB ?? o.price;
-// Барахолка как вендор в данных tarkov.dev.
+// Цена в рублях: priceRUB приоритетнее.
+const rubVal = (o: { price: number; priceRUB?: number }) => o.priceRUB ?? o.price;
 const isFlea = (v: { name: string; normalizedName?: string }) =>
   v.normalizedName === 'flea-market' || v.name === 'Flea Market';
 
@@ -17,18 +23,40 @@ const perSlot = (price: number, w: number, h: number) => {
 };
 
 export async function searchEftItemsAction(query: string): Promise<SearchItemResult[]> {
-  console.log(`\n⚡ X-RAY [SEARCH:ITEMS]: Получен запрос "${query}"`);
   if (!query || query.length < 2) return [];
 
-  const items = await getAllEftItems();
-  const top = searchItems(items, query).slice(0, 12); // Топ-12 на клиент
+  // Каталог и цены — из НАШЕЙ Supabase (рантайм без api.tarkov.dev).
+  const gameId = await eftGameId();
+  const [itemRows, priceMap] = await Promise.all([
+    db
+      .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName, width: items.gridWidth, height: items.gridHeight })
+      .from(items)
+      .where(eq(items.gameId, gameId)),
+    getEftPriceMapFromDb(),
+  ]);
+
+  const eftItems: EftItem[] = itemRows.map((r) => {
+    const px = priceMap.get(r.inGameId);
+    return {
+      id: r.inGameId,
+      normalizedName: px?.normalizedName ?? '',
+      name: r.name,
+      shortName: r.shortName ?? '',
+      types: px?.types ?? [],
+      width: r.width ?? 1,
+      height: r.height ?? 1,
+      gridImageLink: itemIconUrl(r.inGameId),
+      lastLowPrice: px?.lastLowPrice ?? null,
+      backgroundColor: px?.backgroundColor,
+      bsgCategoryId: px?.bsgCategoryId,
+    };
+  });
+
+  const top = searchItems(eftItems, query).slice(0, 12);
   if (top.length === 0) return [];
 
-  // Догружаем цены продажи только для найденных предметов.
-  const pricing = await getEftItemsPricing(top.map((i) => i.id));
-
   return top.map((it): SearchItemResult => {
-    const sells = pricing.get(it.id) ?? [];
+    const sells: CtaVendorOffer[] = priceMap.get(it.id)?.sellFor ?? [];
 
     const traderSells = sells.filter((s) => !isFlea(s.vendor) && rubVal(s) > 0);
     const bestTrader = traderSells.length
@@ -54,7 +82,7 @@ export async function searchEftItemsAction(query: string): Promise<SearchItemRes
             price: rubVal(bestTrader),
             perSlot: perSlot(rubVal(bestTrader), it.width, it.height),
             vendorName: bestTrader.vendor.name,
-            vendorNormalizedName: bestTrader.vendor.normalizedName,
+            vendorNormalizedName: bestTrader.vendor.normalizedName ?? '',
           }
         : undefined,
       fleaSell: fleaPrice > 0
@@ -73,7 +101,7 @@ export async function searchQuestsAction(query: string): Promise<QuestSearchResu
   ).slice(0, 6);
 
   return matched.map((t) => {
-    // Предметы-цели задания (giveItem/findItem), дедуп по id, до 4 штук.
+    // Предметы-цели задания, дедуп по id, до 4 штук.
     const items = new Map<string, QuestSearchItem>();
     for (const obj of t.objectives) {
       if (obj.__typename === 'TaskObjectiveItem' && obj.item && !items.has(obj.item.id)) {
