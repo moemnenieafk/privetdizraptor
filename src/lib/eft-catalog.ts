@@ -8,7 +8,6 @@
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { items, itemCategories, itemProperties } from "@/db/schema";
-import type { ItemProperties } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
 import type { CategoryItemProperties } from "@/app/eft/items/[...category]/ItemsCategoryClient";
 
@@ -43,7 +42,7 @@ const num2d = (v: unknown): number[][] | undefined =>
  * ключам с коэрсингом. Грубый `type:"generic"` (наш дискриминатор) под тип гранаты
  * не подставляем.
  */
-function mapProps(p: ItemProperties | null): CategoryItemProperties {
+export function mapProps(p: unknown): CategoryItemProperties {
   const r = (p ?? {}) as Record<string, unknown>;
   const grenadeType = s(r.type);
   return {
