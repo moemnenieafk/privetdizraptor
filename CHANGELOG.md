@@ -5,6 +5,25 @@
 
 ---
 
+## [4.2.1] - 2026-06-23 — Self-mirror: очистка стейл-строк при вайпе
+
+### 🐛 Исправлено (Fixed)
+- **Зеркало бартеров/крафтов копило «мёртвые» строки при вайпе.** `syncEftBartersCrafts` (`src/db/barters-crafts.ts`) делал только upsert — рецепты, исчезнувшие из tarkov.dev при смене вайпа, оставались в таблицах `barters`/`crafts` навсегда. Теперь после upsert лишние строки удаляются (`delete … where game_id=$ and id NOT IN (свежие)`). Коммит `f3f79c1`.
+- **Зеркало лендинг-справочников — та же проблема.** `syncEftLandingData` (`src/db/landing.ts`) аналогично не чистил `achievements` / `maps` / `traders`. Логика вынесена в типобезопасный хелпер `pruneStale(table, idCol, gameCol, gameId, keep[], label)` (дженерик `PgTable`/`PgColumn`; у `traders` PK — `normalizedName`, а не `id`). Коммит `ffd0a2b`.
+
+### 🛡️ Защита от разрушительного прюна
+- **Пустой свежий набор не трогает таблицу** — `notInArray(col, [])` компилируется в SQL `true` и снёс бы её целиком; отсекается проверкой длины перед `delete`.
+- **`PRUNE_MIN_RATIO = 0.5`** — если источник отдал HTTP 200, но усечённый список (напр. 12 из 778 при обрезке CDN/edge), прюн пропускается, старые данные сохраняются, пишется `console.warn`. Риск найден многоагентным ревью (ultracode).
+- **Скоуп по `game_id`** — мультиигровая БД, чужие игры не задеваются.
+- **Счётчик удалений из command tag (`res.count`)** — без `.returning()`, не тащим тела удалённых строк по пулеру.
+
+### 🔬 Технические детали (API)
+- Результат синков расширен: `bartersDeleted` / `craftsDeleted` / `bartersPruneSkipped` / `craftsPruneSkipped`, а для лендинга — per-table `*Deleted` / `*PruneSkipped` (achievements/maps/traders). Поля видны в JSON крон-роута `/api/cron/sync-prices` и в CLI-логах (`db:sync-barters-crafts`, `db:sync-landing`).
+- **`prices` намеренно НЕ прюнится:** PK по стабильному BSG-`inGameId` (а не по wipe-волатильному tarkov.dev-`id`), плюс стейл-цена инертна — джойнится к каталогу, без соответствия не отображается.
+- **Проверено вживую в проде:** `/api/cron/sync-prices` → HTTP 200 со всеми новыми полями (`items:5044, barters:778, crafts:211, achievements:109, maps:16, traders:16`; все `*Deleted: 0`, `*PruneSkipped: false` — вайпа нет).
+
+---
+
 ## [4.2.0] - 2026-06-15 — Контейнеры: правильная типизация и индикаторы вместимости
 
 ### 🚀 Добавлено (Added)
