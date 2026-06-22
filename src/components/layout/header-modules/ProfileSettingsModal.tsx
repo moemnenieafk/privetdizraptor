@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { ProfileResetModal } from './ProfileResetModal';
+import type { ProfileOcrResult } from '@/types/profile-ocr';
 
 export type EditionType = 'Standard' | 'LB' | 'PFE' | 'EOD' | 'TUE';
 
@@ -60,7 +61,9 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
   const [isVisible, setIsVisible] = useState(false);
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [ocrError, setOcrError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Закрытие при клике вне модалки, если не открыто вложенное окно сброса
   useClickOutside(modalRef, onClose, isVisible && !isResetModalOpen);
@@ -115,26 +118,60 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
     if (e.key === 'ArrowDown') { e.preventDefault(); handlePrestigeChange(-1); }
   };
 
-  // Обработчик кнопки Автоопределения (Имитация запроса к API)
+  // Автоопределение профиля по скриншоту (Gemini Vision).
+  // Каркас: распознавание лишь ПРЕД-ЗАПОЛНЯЕТ форму — пользователь проверяет и правит.
+  // Реальные вызовы включаются заданием GEMINI_API_KEY на сервере (см. /api/profile-ocr).
   const handleAutoDetect = () => {
     if (isAutoDetecting) return;
+    setOcrError(null);
+    fileInputRef.current?.click();
+  };
+
+  const runOcr = async (dataUrl: string, mimeType: string) => {
+    setOcrError(null);
     setIsAutoDetecting(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/profile-ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl, mimeType }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setOcrError(typeof json?.error === 'string' ? json.error : 'Не удалось распознать');
+        return;
+      }
+      const d = json.data as ProfileOcrResult;
+      // Применяем только распознанные поля (null — оставляем как есть).
+      if (d.nickname) setNickname(d.nickname.slice(0, 15));
+      if (d.level != null) setLevel(String(Math.max(1, Math.min(99, d.level))));
+      if (d.prestige != null) setPrestige(String(Math.max(0, Math.min(6, d.prestige))));
+      if (d.edition) setEdition(d.edition);
+      if (d.faction) setFaction(d.faction);
+      if (d.mode) setMode(d.mode);
+    } catch {
+      setOcrError('Сеть недоступна');
+    } finally {
       setIsAutoDetecting(false);
-      // Имитируем получение данных успешного прокачанного профиля
-      setNickname('FULLKAMEN_API');
-      setLevel('65');
-      setPrestige('4');
-      setEdition('TUE');
-      setFaction('BEAR');
-      setMode('PVP');
-      setTraderLevels({ prapor: 4, therapist: 4, fence: 4, skier: 4, peacekeeper: 4, mechanic: 4, ragman: 4, jaeger: 4, ref: 4 });
-    }, 2000);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // позволяем выбрать тот же файл повторно
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { void runOcr(reader.result as string, file.type || 'image/png'); };
+    reader.onerror = () => setOcrError('Не удалось прочитать файл');
+    reader.readAsDataURL(file);
   };
 
   if (!isRendered) return null;
 
   const activeEd = EDITIONS[edition];
+  // PRO-статус из подписки. Биллинга нет — берём ту же логику, что и Аккаунт-центр
+  // (премиум-издания TUE/EOD = активная PRO-подписка).
+  const isPro = edition === 'TUE' || edition === 'EOD';
 
   return (
     // Оверлей модального окна
@@ -181,6 +218,17 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                 className={`flex-1 w-full bg-transparent text-xl font-blender-medium leading-5 ${activeEd.color} outline-none ${activeEd.placeholder}`}
                 spellCheck={false}
               />
+              {isPro && (
+                <div
+                  className="flex shrink-0 items-center gap-1 rounded-xs bg-tactical-amber/10 px-1.5 py-1"
+                  title="PRO-статус — активная подписка (Аккаунт-центр)"
+                >
+                  <div className="h-3.5 w-3.5 icon-mask icon-account_prostatus_icon bg-tactical-amber" />
+                  <span className="text-type-micro font-blender-medium leading-none tracking-wider text-tactical-amber">
+                    PRO
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -292,17 +340,11 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
             <div className="flex flex-1 gap-1">
               <button onClick={() => setMode('PVP')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-14 transition-all ${mode === 'PVP' ? 'border-edition-pfe bg-edition-pfe/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-pfe/50'}`}>
                 <div className={`w-5 h-5 icon-bg icon-eft-profile-pvp transition-opacity ${mode === 'PVP' ? 'opacity-100' : 'opacity-40'}`} />
-                <div className="flex flex-col items-start justify-center">
-                  <div className={`text-type-caption font-blender-medium uppercase tracking-tight ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>Режим</div>
-                  <div className={`text-sm font-blender-medium leading-none mt-0.5 ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>PVP</div>
-                </div>
+                <div className={`text-sm font-blender-medium leading-none ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>PvP</div>
               </button>
               <button onClick={() => setMode('PVE')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-14 transition-all ${mode === 'PVE' ? 'border-edition-tue bg-edition-tue/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-tue/50'}`}>
                 <div className={`w-5 h-5 icon-bg icon-eft-profile-pve transition-opacity ${mode === 'PVE' ? 'opacity-100' : 'opacity-40'}`} />
-                <div className="flex flex-col items-start justify-center">
-                  <div className={`text-type-caption font-blender-medium uppercase tracking-tight ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>Режим</div>
-                  <div className={`text-sm font-blender-medium leading-none mt-0.5 ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>PVE</div>
-                </div>
+                <div className={`text-sm font-blender-medium leading-none ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>PvE</div>
               </button>
             </div>
           </div>
@@ -361,24 +403,38 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
             </div>
           </div>
 
-          {/* КНОПКА АВТООПРЕДЕЛЕНИЯ */}
-          <button 
-            onClick={handleAutoDetect}
-            disabled={isAutoDetecting}
-            className="group relative flex h-8 w-full cursor-pointer items-center justify-center overflow-hidden rounded border border-lines-hover bg-(--color-base) transition-colors hover:border-(--primary) disabled:opacity-50 disabled:cursor-wait"
-          >
-            <div className="absolute left-0 top-0 h-full w-2 opacity-50 transition-colors bg-[repeating-linear-gradient(-45deg,#52525B,#52525B_3px,transparent_3px,transparent_6px)] group-hover:bg-[repeating-linear-gradient(-45deg,var(--primary),var(--primary)_3px,transparent_3px,transparent_6px)]" />
-            <div className="absolute right-0 top-0 h-full w-2 opacity-50 transition-colors bg-[repeating-linear-gradient(-45deg,#52525B,#52525B_3px,transparent_3px,transparent_6px)] group-hover:bg-[repeating-linear-gradient(-45deg,var(--primary),var(--primary)_3px,transparent_3px,transparent_6px)]" />
-            
-            {isAutoDetecting ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-(--primary)" />
-                <span className="text-type-caption font-blender-medium uppercase tracking-wide text-(--primary)">Синхронизация с API...</span>
-              </div>
-            ) : (
-              <span className="text-type-micro font-blender-medium uppercase tracking-wide text-text-secondary transition-colors group-hover:text-(--primary)">Автоматическое определение профиля игрока</span>
+          {/* АВТООПРЕДЕЛЕНИЕ ПРОФИЛЯ ПО СКРИНШОТУ (Gemini OCR) */}
+          <div className="flex w-full flex-col gap-1.5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <button
+              onClick={handleAutoDetect}
+              disabled={isAutoDetecting}
+              className="group relative flex h-8 w-full cursor-pointer items-center justify-center overflow-hidden rounded border border-lines-hover bg-(--color-base) transition-colors hover:border-(--primary) disabled:opacity-50 disabled:cursor-wait"
+            >
+              <div className="absolute left-0 top-0 h-full w-2 opacity-50 transition-colors bg-[repeating-linear-gradient(-45deg,#52525B,#52525B_3px,transparent_3px,transparent_6px)] group-hover:bg-[repeating-linear-gradient(-45deg,var(--primary),var(--primary)_3px,transparent_3px,transparent_6px)]" />
+              <div className="absolute right-0 top-0 h-full w-2 opacity-50 transition-colors bg-[repeating-linear-gradient(-45deg,#52525B,#52525B_3px,transparent_3px,transparent_6px)] group-hover:bg-[repeating-linear-gradient(-45deg,var(--primary),var(--primary)_3px,transparent_3px,transparent_6px)]" />
+
+              {isAutoDetecting ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-(--primary)" />
+                  <span className="text-type-caption font-blender-medium uppercase tracking-wide text-(--primary)">Распознаю скриншот...</span>
+                </div>
+              ) : (
+                <span className="text-type-micro font-blender-medium uppercase tracking-wide text-text-secondary transition-colors group-hover:text-(--primary)">Загрузить скриншот профиля для распознавания</span>
+              )}
+            </button>
+            {ocrError && (
+              <span className="text-type-micro font-blender-medium uppercase tracking-wide text-danger">
+                {ocrError}
+              </span>
             )}
-          </button>
+          </div>
 
           {/* КНОПКА СБРОСА ПРОГРЕССА */}
           <div className="flex w-full items-start justify-center gap-2 opacity-60 transition-opacity hover:opacity-100">
@@ -386,7 +442,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               <div className="h-3 w-3 icon-mask icon-eft-profile-reset text-danger" />
               <span className="text-xs font-blender-medium leading-3 text-danger">СБРОС ПРОГРЕССА</span>
             </button>
-            <div className="flex-1 text-type-mirco font-blender-medium leading-2.25 text-danger">
+            <div className="flex-1 text-type-micro font-blender-medium leading-2.25 text-danger">
               Внимание! После нажатия данной кнопки будет произведен полный сброс прогресса вашего ЧВК в игре!
             </div>
           </div>
@@ -399,6 +455,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
         isOpen={isResetModalOpen} 
         onClose={() => setIsResetModalOpen(false)}
         onConfirm={() => {
+          setNickname('TarkovCitizen');
           setLevel('1');
           setPrestige('0');
           setEdition('Standard');
