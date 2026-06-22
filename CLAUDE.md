@@ -33,6 +33,7 @@ Consult before planning architecture or styling:
 7. **STATE:** UI pure. Quest trees, Barter math → Zustand or isolated helpers.
 8. **SKELETONS:** Never spinners. `animate-pulse` skeleton screens for loading states.
 9. **NO EXTERNAL WIKI LINKS:** Global ban on links to tarkov.wiki, escapefromtarkov.fandom.com, or any external wiki/database. CTA is the aggregator — all data stays internal. Route to internal pages (`/eft/items/`, `/eft/questmap`, etc.) instead.
+11. **BACKEND AUTONOMY:** EFT-данные (каталог, цены/экономика, бартеры, крафты, ачивки, карты, торговцы) ПОЛНОСТЬЮ зеркалятся в нашу Supabase серверным кроном. UI читает ТОЛЬКО наш бэкенд: в RSC — `getEftCatalog()` (`src/lib/eft-catalog.ts`) + `getEftPriceMapFromDb()` (`src/db/prices.ts`); по HTTP — `src/lib/cta-api.ts`; иконки — `itemIconUrl()` (`src/lib/item-icon.ts`). **ЗАПРЕЩЕНО** добавлять рантайм-вызовы `api.tarkov.dev` в страницах/компонентах/server-actions — единственная легальная точка контакта это серверный крон `/api/cron/sync-prices`. Нужен незеркалённый датасет → заведи mirror-таблицу + синк в крон (рецепт в скилле `cta-backend`), НЕ фетч на запрос. Граница сессий: `src/db/schema.ts` + `db:push` ведёт ТОЛЬКО бэкенд-сессия.
 
 ## 5. USER PROFILE
 - **Name:** Вадим (V4DYA). Communicates in Russian.
