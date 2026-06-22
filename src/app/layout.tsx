@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" data-scroll-behavior="smooth">
       <body className="antialiased min-h-screen flex flex-col bg-base">
         {/* BG Layer 1: primary colour ambient bloom from top — reacts to game theme */}
         <div

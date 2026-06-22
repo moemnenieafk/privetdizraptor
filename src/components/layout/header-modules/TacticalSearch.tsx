@@ -5,9 +5,10 @@ import { Command, ArrowRight, Loader2, History, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getHeaderConfig, type MenuItem } from '@/data/headerConfig';
 import Link from 'next/link';
-import { searchEftItemsAction } from '@/actions/search-actions';
+import { searchEftItemsAction, searchQuestsAction } from '@/actions/search-actions';
 import { SearchItemCard } from './SearchItemCard';
-import type { TarkovItem } from '@/types/tarkov-items';
+import { SearchQuestCard } from './SearchQuestCard';
+import type { SearchItemResult, QuestSearchResult } from '@/types/search';
 import { SearchEmptyState } from './SearchEmptyState';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useClickOutside } from '@/hooks/useClickOutside';
@@ -47,8 +48,9 @@ export function TacticalSearch() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   
-  // Состояния для поиска предметов EFT
-  const [itemResults, setItemResults] = useState<TarkovItem[]>([]);
+  // Состояния для контентного поиска (предметы EFT + задания)
+  const [itemResults, setItemResults] = useState<SearchItemResult[]>([]);
+  const [questResults, setQuestResults] = useState<QuestSearchResult[]>([]);
   const [isPending, startTransition] = useTransition();
 
   // Подключаем хранилище для определения фракции (влияет на иконки оружия)
@@ -136,32 +138,33 @@ export function TacticalSearch() {
           try {
             const q = query.trim();
             const sq = switchLayout(q);
-            
-            if (q === sq) {
-              const data = await searchEftItemsAction(q);
-              setItemResults(Array.isArray(data) ? (data as unknown as TarkovItem[]) : []);
-            } else {
-              // Если раскладка меняется, ищем сразу по двум вариантам параллельно
-              const [res1, res2] = await Promise.all([
-                searchEftItemsAction(q),
-                searchEftItemsAction(sq)
-              ]);
-              
-              const arr1 = Array.isArray(res1) ? (res1 as unknown as TarkovItem[]) : [];
-              const arr2 = Array.isArray(res2) ? (res2 as unknown as TarkovItem[]) : [];
-              
-              // Объединяем и удаляем дубликаты по id
-              const merged = [...arr1, ...arr2];
-              const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
-              setItemResults(unique);
-            }
+            // При смене раскладки ищем сразу по двум вариантам параллельно.
+            const terms = q === sq ? [q] : [q, sq];
+
+            const [itemBatches, questBatches] = await Promise.all([
+              Promise.all(terms.map((term) => searchEftItemsAction(term))),
+              Promise.all(terms.map((term) => searchQuestsAction(term))),
+            ]);
+
+            // Объединяем варианты раскладок и удаляем дубликаты по id.
+            const uniqueItems = Array.from(
+              new Map(itemBatches.flat().map((i) => [i.id, i])).values()
+            );
+            setItemResults(uniqueItems.slice(0, 12));
+
+            const uniqueQuests = Array.from(
+              new Map(questBatches.flat().map((qst) => [qst.id, qst])).values()
+            );
+            setQuestResults(uniqueQuests.slice(0, 6));
           } catch (err) {
-            console.error("Ошибка при поиске предметов:", err);
+            console.error("Ошибка при поиске:", err);
             setItemResults([]);
+            setQuestResults([]);
           }
         });
       } else {
         setItemResults([]);
+        setQuestResults([]);
       }
     }, 300);
 
@@ -171,7 +174,7 @@ export function TacticalSearch() {
   // Сбрасываем выделение при обновлении результатов
   useEffect(() => {
     setSelectedIndex(-1);
-  }, [query, itemResults]);
+  }, [query, itemResults, questResults]);
 
   // Автоскролл к выбранному элементу
   useEffect(() => {
@@ -206,7 +209,11 @@ export function TacticalSearch() {
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen) return;
-    const totalItems = filteredResults.length + Math.min(itemResults.length, 12);
+    // Порядок групп в выдаче: [разделы][задания][предметы]
+    const menuCount = filteredResults.length;
+    const questCount = questResults.length;
+    const itemCount = Math.min(itemResults.length, 12);
+    const totalItems = menuCount + questCount + itemCount;
     if (totalItems === 0) return;
 
     if (e.key === 'ArrowDown') {
@@ -218,22 +225,25 @@ export function TacticalSearch() {
     } else if (e.key === 'Enter') {
       if (selectedIndex >= 0) {
         e.preventDefault();
-        
+
         saveSearch(query);
-        
-        if (selectedIndex < filteredResults.length) {
+
+        if (selectedIndex < menuCount) {
           // Переход по разделу хаба
-          const targetPath = filteredResults[selectedIndex].path || '#';
-          router.push(targetPath);
+          router.push(filteredResults[selectedIndex].path || '#');
+        } else if (selectedIndex < menuCount + questCount) {
+          // Переход к карте заданий с фокусом на квесте
+          const quest = questResults[selectedIndex - menuCount];
+          router.push(quest ? `/eft/questmap?quest=${quest.id}` : '/eft/questmap');
         } else {
           // Переход по предмету EFT
-          const itemIndex = selectedIndex - filteredResults.length;
+          const itemIndex = selectedIndex - menuCount - questCount;
           const targetItem = itemResults[itemIndex];
           if (targetItem) {
-            router.push(`/eft/items/${targetItem.id}`);
+            router.push(`/eft/items/item/${targetItem.normalizedName}`);
           }
         }
-        
+
         setIsOpen(false);
         inputRef.current?.blur();
       }
@@ -359,6 +369,32 @@ export function TacticalSearch() {
               </div>
             )}
 
+            {/* СЕКЦИЯ: ЗАДАНИЯ */}
+            {questResults.length > 0 && (
+              <div className="py-2 border-t border-lines-hover/50">
+                <div className="px-4 py-1.5 bg-base/50 border-b border-lines-hover/50 mb-1">
+                  <span className="text-type-caption font-blender-medium tracking-widest uppercase text-text-muted">
+                    Задания
+                  </span>
+                </div>
+                <ul className="flex flex-col gap-1.5 px-2">
+                  {questResults.map((quest, idx) => {
+                    const globalIndex = filteredResults.length + idx;
+                    const isSelected = selectedIndex === globalIndex;
+                    return (
+                      <li key={quest.id} id={`search-result-${globalIndex}`}>
+                        <SearchQuestCard
+                          item={quest}
+                          isSelected={isSelected}
+                          onSelect={() => { saveSearch(query); setIsOpen(false); setQuery(''); }}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
             {/* СЕКЦИЯ: ПРЕДМЕТЫ EFT */}
             {itemResults.length > 0 && (
               <div className="py-2 border-t border-lines-hover/50">
@@ -368,10 +404,10 @@ export function TacticalSearch() {
                   </span>
                 </div>
                 <div className="px-4 pb-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-7 mt-4 justify-items-center">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2 mt-4">
                     {/* Выводим до 12 карточек с помощью нового компонента */}
                 {itemResults.slice(0, 12).map((item, idx) => {
-                  const globalIndex = filteredResults.length + idx;
+                  const globalIndex = filteredResults.length + questResults.length + idx;
                   const isSelected = selectedIndex === globalIndex;
                   return (
                     <div 

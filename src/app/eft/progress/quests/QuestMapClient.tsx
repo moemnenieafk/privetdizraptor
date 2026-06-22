@@ -733,6 +733,13 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
         const vp = vpRef.current;
         if (!vp) return;
 
+        // Deep-link из глобального поиска: плавный полёт к конкретному квесту (?quest=<id>)
+        const focusId = searchParams.get('quest');
+        if (focusId && connPositionsRef.current.has(focusId)) {
+          flyToQuest(focusId, 1.4, 600);
+          return;
+        }
+
         // Restore last visited quest
         const lastId = localStorage.getItem(LAST_QUEST_KEY);
         if (lastId && connPositionsRef.current.has(lastId)) {
