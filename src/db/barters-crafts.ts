@@ -4,12 +4,17 @@
 //
 // Источник трогает только syncEftBartersCrafts() — крон /api/cron/sync-prices
 // и CLI `npm run db:sync-barters-crafts`. Импорты относительные (tsx-safe).
-import { sql } from "drizzle-orm";
+import { and, eq, notInArray, sql } from "drizzle-orm";
 import { db } from "./index";
 import { barters, crafts, type TradeSlot } from "./schema";
 import { eftGameId } from "./eft";
 
 const ENDPOINT = "https://api.tarkov.dev/graphql";
+
+// Порог защиты прюна: НЕ удаляем стейл-строки, если свежий набор из источника меньше этой
+// доли уже лежащего в БД — страховка от частичного/обрезанного ответа tarkov.dev (HTTP 200,
+// но усечённый список). Легитимный вайп меняет id, но число бартеров/крафтов резко не режет.
+const PRUNE_MIN_RATIO = 0.5;
 
 /* ───────────────── сырой ответ API (без any) ───────────────── */
 interface RawSlot {
@@ -66,6 +71,10 @@ const toSlots = (arr?: RawSlot[]): TradeSlot[] =>
 export interface SyncStaticResult {
   barters: number;
   crafts: number;
+  bartersDeleted: number;
+  craftsDeleted: number;
+  bartersPruneSkipped: boolean;
+  craftsPruneSkipped: boolean;
 }
 
 /** Тянет бартеры+крафты из tarkov.dev и bulk-upsert'ит в таблицы `barters`/`crafts`. */
@@ -150,5 +159,60 @@ export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
       });
   }
 
-  return { barters: barterRows.length, crafts: craftRows.length };
+  // Чистим стейл-строки — бартеры/крафты, исчезнувшие из источника (типично при вайпе).
+  // ⚠️ Два разрушительных края, оба отсекаем ПЕРЕД delete:
+  //   1) пустой свежий набор — notInArray(col, []) компилируется в SQL `true` → снесло бы
+  //      ВСЮ таблицу. Гард: `rows.length > 0`.
+  //   2) частичный/обрезанный ответ источника (HTTP 200, но, скажем, 12 из 778 — обрезка
+  //      CDN/edge или полу-сломанный резолвер без top-level `errors`): прошёл бы res.ok,
+  //      json.errors, both-empty-throw и `length > 0`, а delete снёс бы сотни ВАЛИДНЫХ
+  //      строк. Гард: PRUNE_MIN_RATIO — если свежих сильно меньше, чем уже в БД, прюн
+  //      пропускаем (данные целы) и пишем варн.
+  // Скоуп по gameId — мультиигровая БД, чужие игры не задеваем. Счётчик удалённых — из
+  // command tag (res.count), без .returning(): не тащим тело удалённых строк по пулеру.
+  let bartersDeleted = 0;
+  let craftsDeleted = 0;
+  let bartersPruneSkipped = false;
+  let craftsPruneSkipped = false;
+
+  if (barterRows.length > 0) {
+    const had = await db.$count(barters, eq(barters.gameId, gameId));
+    if (barterRows.length < had * PRUNE_MIN_RATIO) {
+      bartersPruneSkipped = true;
+      console.warn(
+        `[barters-crafts] прюн бартеров пропущен: свежих ${barterRows.length} << в БД ${had} (похоже на частичный ответ источника)`,
+      );
+    } else {
+      const keep = barterRows.map((r) => r.id);
+      const res = await db
+        .delete(barters)
+        .where(and(eq(barters.gameId, gameId), notInArray(barters.id, keep)));
+      bartersDeleted = res.count;
+    }
+  }
+
+  if (craftRows.length > 0) {
+    const had = await db.$count(crafts, eq(crafts.gameId, gameId));
+    if (craftRows.length < had * PRUNE_MIN_RATIO) {
+      craftsPruneSkipped = true;
+      console.warn(
+        `[barters-crafts] прюн крафтов пропущен: свежих ${craftRows.length} << в БД ${had} (похоже на частичный ответ источника)`,
+      );
+    } else {
+      const keep = craftRows.map((r) => r.id);
+      const res = await db
+        .delete(crafts)
+        .where(and(eq(crafts.gameId, gameId), notInArray(crafts.id, keep)));
+      craftsDeleted = res.count;
+    }
+  }
+
+  return {
+    barters: barterRows.length,
+    crafts: craftRows.length,
+    bartersDeleted,
+    craftsDeleted,
+    bartersPruneSkipped,
+    craftsPruneSkipped,
+  };
 }

@@ -7,7 +7,11 @@ config({ path: ".env.local" });
 async function main() {
   const { syncEftBartersCrafts } = await import("../src/db/barters-crafts.ts");
   const r = await syncEftBartersCrafts();
-  console.log(`ГОТОВО: barters=${r.barters}, crafts=${r.crafts}`);
+  const note = (skipped: boolean) => (skipped ? ", ПРЮН ПРОПУЩЕН (частичный ответ?)" : "");
+  console.log(
+    `ГОТОВО: barters=${r.barters} (−${r.bartersDeleted} стейл${note(r.bartersPruneSkipped)}), ` +
+      `crafts=${r.crafts} (−${r.craftsDeleted} стейл${note(r.craftsPruneSkipped)})`,
+  );
   process.exit(0);
 }
 

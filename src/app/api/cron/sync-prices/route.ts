@@ -21,7 +21,14 @@ export async function GET(req: Request): Promise<NextResponse> {
     // Цены — критичны (частый синк). Бартеры/крафты — best-effort: их сбой не должен
     // ронять прайс-синк (они меняются раз в вайп, не ежечасно).
     const priceRes = await syncEftPrices();
-    let staticRes = { barters: 0, crafts: 0 };
+    let staticRes = {
+      barters: 0,
+      crafts: 0,
+      bartersDeleted: 0,
+      craftsDeleted: 0,
+      bartersPruneSkipped: false,
+      craftsPruneSkipped: false,
+    };
     try {
       staticRes = await syncEftBartersCrafts();
     } catch (e) {
