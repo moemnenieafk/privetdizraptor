@@ -5,6 +5,22 @@
 
 ---
 
+## [4.3.0] - 2026-06-23 — EFT-раздел полностью автономен (бартер-фича off tarkov.dev)
+
+### ♻️ Изменено (Changed)
+- **Симулятор бартера `/eft/progress/barter` переведён на наш self-mirror.** Раньше серверный `page.tsx` ходил прямыми GraphQL-запросами в `api.tarkov.dev` (`items(types:[barter])` + `barters()`). Теперь `initialItems`/`initialBarters` собираются из нашей Supabase: каталог `items` + `getEftPriceMapFromDb()` + таблица `barters`, иконки `itemIconUrl()`. Это был **последний живой рантайм-вызов tarkov.dev** в EFT-разделе. Коммит `b125c33`.
+- **Хирургически:** изменён только серверный `page.tsx`. Контракт данных (`BarterSearchResult[]` / `BarterTrade[]` из `src/types/barter.ts`) сохранён 1:1 — клиент `BarterPageClient`, типы и фичекомпоненты не тронуты. Семантика цен (RUB-нормализация `priceRUB`, flea/trader-детект по `vendor.normalizedName`), уровни торговцев и `taskUnlock` перенесены без изменений.
+
+### 🚀 Добавлено (Added)
+- **Правило 11 «BACKEND AUTONOMY» в `CLAUDE.md`** (коммит `2fe7aa2`) — кросс-сессионная директива: UI читает ТОЛЬКО наш бэкенд (`getEftCatalog`/`getEftPriceMapFromDb`/`cta-api`/`itemIconUrl`), рантайм-вызовы `api.tarkov.dev` в страницах/компонентах/actions запрещены, новый датасет → mirror-таблица + синк в крон. CLAUDE.md закоммичен → правило видит и фронт-сессия.
+
+### 🔬 Технические детали (API)
+- `base(id)` (сборка `BarterItemBase`) мемоизирована per-render: один ингредиент, встречающийся в десятках бартеров, строится один раз.
+- **Зона риска (по итогам ultracode-ревью, низкая):** `types[]` и `backgroundColor` живут только в зеркале `prices` — предмет без price-строки (рассинхрон `barters`↔`prices`) не попадёт в ручной поиск и отрисуется нейтрально-серым. Косметика: расчёты прибыли/XP идут от `priceRUB` в `sellFor`/`buyFor`, не от цвета.
+- **Проверено вживую (data-path на боевой Supabase):** `items=5044, prices=5044, barters=778`; `initialItems` (types ⊇ barter) = 323; sample-сделка маппится корректно (Видеокарта, `sellFor`=6 офферов, `bg=blue`). `tsc` 0 ошибок, ноль обращений к `api.tarkov.dev` в рантайме.
+
+---
+
 ## [4.2.1] - 2026-06-23 — Self-mirror: очистка стейл-строк при вайпе
 
 ### 🐛 Исправлено (Fixed)
