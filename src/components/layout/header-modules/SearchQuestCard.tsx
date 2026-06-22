@@ -10,9 +10,17 @@ interface SearchQuestCardProps {
   item: QuestSearchResult;
   isSelected: boolean;
   onSelect: () => void;
+  /** Клик по плитке предмета-цели — подставить его в глобальный поиск. */
+  onItemClick: (shortName: string) => void;
 }
 
-export const SearchQuestCard = ({ item, isSelected, onSelect }: SearchQuestCardProps) => {
+/** Куда ведёт результат-задание: стори-квесты не на карте → в лор; остальные → FlyTo на карту. */
+export const questResultHref = (item: Pick<QuestSearchResult, "id">) =>
+  item.id.startsWith("story-")
+    ? "/eft/quests/lore-quests"
+    : `/eft/questmap?quest=${item.id}`;
+
+export const SearchQuestCard = ({ item, isSelected, onSelect, onItemClick }: SearchQuestCardProps) => {
   const nn = item.trader.normalizedName;
   const traderColor = `var(${traderCssVar(nn)})`;
   const avatar = item.id.startsWith("story-")
@@ -20,9 +28,7 @@ export const SearchQuestCard = ({ item, isSelected, onSelect }: SearchQuestCardP
     : traderImg(nn);
 
   return (
-    <Link
-      href={`/eft/questmap?quest=${item.id}`}
-      onClick={onSelect}
+    <div
       style={
         {
           "--tc": traderColor,
@@ -45,7 +51,16 @@ export const SearchQuestCard = ({ item, isSelected, onSelect }: SearchQuestCardP
         }}
       />
 
-      <div className="relative z-10 flex w-full items-center gap-3">
+      {/* Основной клик карточки — переход к карте квестов / лору (растянутая ссылка) */}
+      <Link
+        href={questResultHref(item)}
+        onClick={onSelect}
+        aria-label={item.name}
+        className="absolute inset-0 z-10"
+      />
+
+      {/* Контент: не перехватывает клики (уходят на ссылку), кроме плиток предметов */}
+      <div className="pointer-events-none relative z-20 flex w-full items-center gap-3">
         {/* Аватар торговца / иконка стори-квеста */}
         <img
           src={avatar}
@@ -79,10 +94,16 @@ export const SearchQuestCard = ({ item, isSelected, onSelect }: SearchQuestCardP
           {item.items.length > 0 && (
             <div className="flex items-center gap-1">
               {item.items.map((qi) => (
-                <div
+                <button
                   key={qi.id}
-                  className="relative h-7 w-7 shrink-0"
-                  title={`${qi.shortName}${qi.count > 1 ? ` ×${qi.count}` : ""}`}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onItemClick(qi.shortName);
+                  }}
+                  title={`${qi.shortName}${qi.count > 1 ? ` ×${qi.count}` : ""} — найти в поиске`}
+                  className="pointer-events-auto relative h-7 w-7 shrink-0 transition-transform hover:scale-110"
                 >
                   <div className="absolute inset-0 overflow-hidden rounded-xs border border-lines-hover">
                     <div className="absolute inset-0 bg-(--color-darkbase)" />
@@ -109,7 +130,7 @@ export const SearchQuestCard = ({ item, isSelected, onSelect }: SearchQuestCardP
                       {qi.count}
                     </span>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -134,6 +155,6 @@ export const SearchQuestCard = ({ item, isSelected, onSelect }: SearchQuestCardP
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 };

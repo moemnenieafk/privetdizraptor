@@ -1,13 +1,13 @@
 ﻿'use client';
 
 import { useEffect, useRef, useState, useTransition, useMemo } from 'react';
-import { Command, ArrowRight, Loader2, History, X } from 'lucide-react';
+import { Command, ArrowRight, History, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getHeaderConfig, type MenuItem } from '@/data/headerConfig';
 import Link from 'next/link';
 import { searchEftItemsAction, searchQuestsAction } from '@/actions/search-actions';
 import { SearchItemCard } from './SearchItemCard';
-import { SearchQuestCard } from './SearchQuestCard';
+import { SearchQuestCard, questResultHref } from './SearchQuestCard';
 import type { SearchItemResult, QuestSearchResult } from '@/types/search';
 import { SearchEmptyState } from './SearchEmptyState';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -232,9 +232,9 @@ export function TacticalSearch() {
           // Переход по разделу хаба
           router.push(filteredResults[selectedIndex].path || '#');
         } else if (selectedIndex < menuCount + questCount) {
-          // Переход к карте заданий с фокусом на квесте
+          // Переход к карте заданий (FlyTo) или в лор для стори-квестов
           const quest = questResults[selectedIndex - menuCount];
-          router.push(quest ? `/eft/questmap?quest=${quest.id}` : '/eft/questmap');
+          router.push(quest ? questResultHref(quest) : '/eft/questmap');
         } else {
           // Переход по предмету EFT
           const itemIndex = selectedIndex - menuCount - questCount;
@@ -274,12 +274,12 @@ export function TacticalSearch() {
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleInputKeyDown}
           placeholder="ГЛОБАЛЬНЫЙ ТАКТИЧЕСКИЙ ПОИСК..."
-          className="flex-1 h-full bg-transparent outline-none px-4 text-center uppercase font-blender-medium text-lg text-lines-hover placeholder:text-lines-hover focus:text-(--primary) placeholder:group-focus-within:text-(--primary)"
+          className="flex-1 h-full bg-transparent outline-none px-4 text-center uppercase font-blender-medium text-base sm:text-lg text-lines-hover placeholder:text-lines-hover focus:text-(--primary) placeholder:group-focus-within:text-(--primary)"
         />
         
-        {/* Правая иконка (Хоткей CTRL+Q) */}
-        <div 
-          className="icon-mask w-10 h-5 shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary) group-focus-within:opacity-50"
+        {/* Правая иконка (Хоткей CTRL+Q) — скрыта на тач/узких экранах */}
+        <div
+          className="hidden sm:block icon-mask w-10 h-5 shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary) group-focus-within:opacity-50"
           style={{ WebkitMaskImage: 'url(/icons/eft/ctrl-q-icon.svg)', maskImage: 'url(/icons/eft/ctrl-q-icon.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center' }}
         />
       </div>
@@ -289,7 +289,7 @@ export function TacticalSearch() {
         // Расширяем контейнер, чтобы вместить сетку (до 1100px), центрируя его относительно инпута
         <div className="absolute top-full left-1/2 -translate-x-1/2 w-[96vw] max-w-275 mt-2 bg-card-menu/95 backdrop-blur-xl border border-[color-mix(in_srgb,var(--primary)_50%,transparent)] rounded-lg shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden z-60 animate-[fade-in-up_0.2s_ease-out_both]">
           
-          <div className="max-h-112.5 overflow-y-auto">
+          <div className="max-h-[70vh] overflow-y-auto">
             
             {/* СЕКЦИЯ: ПОСЛЕДНИЕ ЗАПРОСЫ */}
             {query.trim().length === 0 && recentSearches.length > 0 && (
@@ -387,6 +387,7 @@ export function TacticalSearch() {
                           item={quest}
                           isSelected={isSelected}
                           onSelect={() => { saveSearch(query); setIsOpen(false); setQuery(''); }}
+                          onItemClick={(shortName) => { setQuery(shortName); setSelectedIndex(-1); inputRef.current?.focus(); }}
                         />
                       </li>
                     );
@@ -424,13 +425,25 @@ export function TacticalSearch() {
               </div>
             )}
 
-            {/* СОСТОЯНИЕ: ЗАГРУЗКА */}
-            {isPending && (
-              <div className="px-4 py-6 flex flex-col items-center justify-center gap-3 text-(--primary) border-t border-lines-hover/50">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="text-type-caption font-blender-medium tracking-widest uppercase">
-                  Синхронизация с базой...
-                </span>
+            {/* СОСТОЯНИЕ: ЗАГРУЗКА — скелетон-сетка карточек (без спиннеров) */}
+            {isPending && itemResults.length === 0 && (
+              <div className="px-4 pt-3 pb-4 border-t border-lines-hover/50">
+                <div className="mb-3 h-3 w-40 rounded-xs bg-lines-hover/50 animate-pulse" />
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex aspect-square flex-col gap-2 rounded-md border border-lines-hover bg-card-menu/40 p-2"
+                    >
+                      <div className="h-2.5 w-2/3 rounded-xs bg-lines-hover/60 animate-pulse" />
+                      <div className="flex-1 rounded-sm bg-lines-hover/25 animate-pulse" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="h-2 rounded-xs bg-lines-hover/50 animate-pulse" />
+                        <div className="h-2 rounded-xs bg-lines-hover/50 animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
