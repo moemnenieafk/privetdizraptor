@@ -1,4 +1,11 @@
 import { notFound } from 'next/navigation';
+import { and, eq, inArray } from 'drizzle-orm';
+import { db } from '@/db';
+import { items, itemProperties, prices, barters, crafts } from '@/db/schema';
+import { eftGameId } from '@/db/eft';
+import { getEftPriceMapFromDb } from '@/db/prices';
+import { itemIconUrl } from '@/lib/item-icon';
+import { EFT_QUESTS } from '@/data/quests';
 import { BreadcrumbsSetter } from '@/components/features/items/BreadcrumbsSetter';
 import { CatalogBackLink } from './CatalogBackLink';
 import type {
@@ -63,160 +70,52 @@ export interface TarkovItem {
   receivedFromTasks?: RewardTask[];
 }
 
-// === GQL ===
+// === Маппинг сырых свойств (properties_raw, tarkov.dev-форма) → форма ItemModules ===
+// Строим по __typename → точная форма (type-guard'ы ItemModules различают по полям).
+function mapDetailProperties(raw: Record<string, unknown> | null | undefined): ItemProperties {
+  if (!raw) return null;
+  const n = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  const s = (v: unknown): string | null => (typeof v === 'string' && v.length > 0 ? v : null);
+  const b = (v: unknown): boolean | null => (typeof v === 'boolean' ? v : null);
+  const sa = (v: unknown): string[] | null =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : null;
+  const mat = (v: unknown): { name: string } | null =>
+    v && typeof v === 'object' && typeof (v as { name?: unknown }).name === 'string'
+      ? { name: (v as { name: string }).name }
+      : null;
+  const grids = (v: unknown): { width: number; height: number }[] =>
+    Array.isArray(v)
+      ? v.map((g) => ({ width: Number((g as { width?: unknown })?.width) || 0, height: Number((g as { height?: unknown })?.height) || 0 }))
+      : [];
 
-async function getItemData(slug: string): Promise<TarkovItem | null> {
-  const query = `
-    query {
-      item(normalizedName: "${slug}", lang: ru) {
-        id
-        normalizedName
-        name
-        shortName
-        description
-        types
-        width
-        height
-        basePrice
-        backgroundColor
-        bsgCategoryId
-        image512pxLink
-        weight
-        sellFor {
-          price
-          priceRUB
-          vendor { name normalizedName }
-        }
-        buyFor {
-          price
-          priceRUB
-          vendor {
-            name
-            normalizedName
-            ... on TraderOffer { minTraderLevel }
-          }
-        }
-        usedInTasks {
-          id
-          name
-          taskImageLink
-          kappaRequired
-          minPlayerLevel
-          trader { name normalizedName }
-          objectives {
-            ... on TaskObjectiveItem { item { id shortName image512pxLink } count }
-          }
-        }
-        receivedFromTasks {
-          id
-          name
-          taskImageLink
-          kappaRequired
-          minPlayerLevel
-          trader { name normalizedName }
-          finishRewards {
-            items { item { id } count }
-          }
-        }
-        barters: bartersFor {
-          id
-          trader { name normalizedName }
-          level
-          requiredItems {
-            item { id name shortName image512pxLink basePrice backgroundColor }
-            count
-          }
-        }
-        crafts: craftsFor {
-          id
-          station { name normalizedName }
-          level
-          duration
-          requiredItems {
-            item { id name shortName image512pxLink backgroundColor }
-            count
-          }
-        }
-        properties {
-          ... on ItemPropertiesWeapon {
-            caliber
-            fireRate
-            ergonomics
-            recoilVertical
-            recoilHorizontal
-          }
-          ... on ItemPropertiesArmor {
-            class
-            durability
-            speedPenalty
-            turnPenalty
-            ergoPenalty
-            material { name }
-          }
-          ... on ItemPropertiesMedKit {
-            hitpoints
-            useTime
-            maxHealPerUse
-            cures
-          }
-          ... on ItemPropertiesMedicalItem {
-            uses
-            useTime
-            cures
-          }
-          ... on ItemPropertiesContainer {
-            grids { width height }
-          }
-          ... on ItemPropertiesAmmo {
-            caliber
-            damage
-            penetrationPower
-            armorDamage
-            fragmentationChance
-            initialSpeed
-          }
-          ... on ItemPropertiesGrenade {
-            type
-            fuse
-            minExplosionDistance
-            maxExplosionDistance
-            fragments
-          }
-          ... on ItemPropertiesHeadphone {
-            distanceModifier
-            ambientVolume
-          }
-          ... on ItemPropertiesHelmet {
-            class
-            durability
-            deafening
-            headZones
-            material { name }
-            blocksHeadset
-            speedPenalty
-            turnPenalty
-            ergoPenalty
-          }
-          ... on ItemPropertiesBackpack {
-            grids { width height }
-            speedPenalty
-            turnPenalty
-            ergoPenalty
-          }
-        }
-      }
-    }
-  `;
-
-  const res = await fetch('https://api.tarkov.dev/graphql', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ query }),
-    next: { revalidate: 3600 },
-  });
-
-  const json = await res.json() as { data?: { item: TarkovItem } };
-  return json.data?.item ?? null;
+  switch (raw.__typename) {
+    case 'ItemPropertiesWeapon':
+      return { caliber: s(raw.caliber), fireRate: n(raw.fireRate), ergonomics: n(raw.ergonomics), recoilVertical: n(raw.recoilVertical), recoilHorizontal: n(raw.recoilHorizontal) };
+    case 'ItemPropertiesArmor':
+    case 'ItemPropertiesChestRig':
+    case 'ItemPropertiesArmorAttachment':
+      return { class: n(raw.class) ?? 0, durability: n(raw.durability) ?? 0, speedPenalty: n(raw.speedPenalty), turnPenalty: n(raw.turnPenalty), ergoPenalty: n(raw.ergoPenalty), material: mat(raw.material) };
+    case 'ItemPropertiesHelmet':
+      return { class: n(raw.class) ?? 0, durability: n(raw.durability) ?? 0, deafening: s(raw.deafening), headZones: sa(raw.headZones), material: mat(raw.material), blocksHeadset: b(raw.blocksHeadset), speedPenalty: n(raw.speedPenalty), turnPenalty: n(raw.turnPenalty), ergoPenalty: n(raw.ergoPenalty) };
+    case 'ItemPropertiesMedKit':
+      return { hitpoints: n(raw.hitpoints) ?? 0, useTime: n(raw.useTime) ?? 0, maxHealPerUse: n(raw.maxHealPerUse), cures: sa(raw.cures) };
+    case 'ItemPropertiesMedicalItem':
+    case 'ItemPropertiesPainkiller':
+    case 'ItemPropertiesStim':
+      return { uses: n(raw.uses), useTime: n(raw.useTime) ?? 0, cures: sa(raw.cures) };
+    case 'ItemPropertiesContainer':
+      return { grids: grids(raw.grids) };
+    case 'ItemPropertiesBackpack':
+      return { grids: grids(raw.grids), speedPenalty: n(raw.speedPenalty), turnPenalty: n(raw.turnPenalty), ergoPenalty: n(raw.ergoPenalty) };
+    case 'ItemPropertiesAmmo':
+      return { caliber: s(raw.caliber), damage: n(raw.damage), penetrationPower: n(raw.penetrationPower), armorDamage: n(raw.armorDamage), fragmentationChance: n(raw.fragmentationChance), initialSpeed: n(raw.initialSpeed) };
+    case 'ItemPropertiesGrenade':
+      return { type: s(raw.type), fuse: n(raw.fuse), minExplosionDistance: n(raw.minExplosionDistance), maxExplosionDistance: n(raw.maxExplosionDistance), fragments: n(raw.fragments) };
+    case 'ItemPropertiesHeadphone':
+      return { distanceModifier: n(raw.distanceModifier), ambientVolume: n(raw.ambientVolume) };
+    default:
+      return null;
+  }
 }
 
 // === ПОХОЖИЕ ПРЕДМЕТЫ (та же BSG-категория) → EftItemData для EftItemTile ===
@@ -256,22 +155,6 @@ interface SimItemRaw {
   sellFor?: SimVendorRaw[];
   buyFor?: SimVendorRaw[];
 }
-
-const SIM_PROPS_GQL = `
-  __typename
-  ... on ItemPropertiesArmor { class durability }
-  ... on ItemPropertiesHelmet { class durability }
-  ... on ItemPropertiesChestRig { class durability capacity }
-  ... on ItemPropertiesGlasses { class durability }
-  ... on ItemPropertiesBackpack { capacity }
-  ... on ItemPropertiesContainer { capacity }
-  ... on ItemPropertiesWeapon { ergonomics }
-  ... on ItemPropertiesWeaponMod { ergonomics recoilModifier }
-  ... on ItemPropertiesAmmo { damage penetrationPower }
-  ... on ItemPropertiesMedKit { hitpoints }
-  ... on ItemPropertiesMedicalItem { uses }
-  ... on ItemPropertiesHeadphone { ambientVolume distanceModifier }
-`;
 
 const simRubVal = (o: SimVendorRaw) => o.priceRUB ?? o.price;
 const simIsFlea = (v: { name: string; normalizedName?: string }) =>
@@ -314,98 +197,174 @@ function toSimilarEftItem(it: SimItemRaw): EftItemData {
   };
 }
 
-async function getSimilarItems(bsgCategoryId: string, excludeId: string): Promise<EftItemData[]> {
-  const query = `
-    query {
-      items(bsgCategoryId: "${bsgCategoryId}", lang: ru) {
-        id
-        normalizedName
-        name
-        shortName
-        width
-        height
-        weight
-        basePrice
-        backgroundColor
-        image512pxLink
-        types
-        properties { ${SIM_PROPS_GQL} }
-        sellFor { price priceRUB currency vendor { name normalizedName } }
-        buyFor  { price priceRUB currency vendor { name normalizedName } }
-      }
-    }
-  `;
+// === Сборка карточки предмета ИЗ НАШЕЙ БД (замена tarkov.dev) ===
 
-  try {
-    const res = await fetch('https://api.tarkov.dev/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ query }),
-      next: { revalidate: 3600 },
-    });
-
-    const json = await res.json() as { data?: { items: SimItemRaw[] }; errors?: unknown };
-    if (json.errors) return [];
-
-    return (json.data?.items ?? [])
-      .filter((it) => it.id !== excludeId)
-      .sort((a, b) => (b.basePrice ?? 0) - (a.basePrice ?? 0))
-      .slice(0, 8)
-      .map(toSimilarEftItem);
-  } catch {
-    return [];
-  }
+interface DetailData {
+  item: TarkovItem;
+  similar: EftItemData[];
 }
 
-// === ТРЕБУЕМЫЙ УРОВЕНЬ ИГРОКА (loyalty → requiredPlayerLevel) ===
+async function getEftItemDetail(slug: string): Promise<DetailData | null> {
+  const gameId = await eftGameId();
+  const priceMap = await getEftPriceMapFromDb();
 
-type TraderLevelMap = Record<string, Record<number, number>>;
-
-async function getTraderLevels(): Promise<TraderLevelMap> {
-  const query = `query { traders(lang: ru) { normalizedName levels { level requiredPlayerLevel } } }`;
-  try {
-    const res = await fetch('https://api.tarkov.dev/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ query }),
-      next: { revalidate: 3600 },
-    });
-    const json = await res.json() as {
-      data?: { traders: { normalizedName: string; levels: { level: number; requiredPlayerLevel: number }[] }[] };
-    };
-    const map: TraderLevelMap = {};
-    for (const t of json.data?.traders ?? []) {
-      map[t.normalizedName] = {};
-      for (const lvl of t.levels) map[t.normalizedName][lvl.level] = lvl.requiredPlayerLevel;
-    }
-    return map;
-  } catch {
-    return {};
+  // slug = normalizedName → inGameId
+  let mainId: string | undefined;
+  for (const [id, p] of priceMap) {
+    if (p.normalizedName === slug) { mainId = id; break; }
   }
+  if (!mainId) return null;
+  const px = priceMap.get(mainId)!;
+
+  const [base] = await db
+    .select({
+      name: items.name, shortName: items.shortName, description: items.description,
+      weight: items.weight, width: items.gridWidth, height: items.gridHeight,
+      basePrice: items.basePrice, propertiesRaw: itemProperties.propertiesRaw,
+    })
+    .from(items)
+    .leftJoin(itemProperties, eq(itemProperties.itemId, items.id))
+    .where(and(eq(items.gameId, gameId), eq(items.inGameId, mainId)));
+  if (!base) return null;
+
+  // Справочник имён/цен/размеров всех предметов (для слотов бартеров/крафтов и похожих)
+  const allItems = await db
+    .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName, basePrice: items.basePrice, weight: items.weight, width: items.gridWidth, height: items.gridHeight })
+    .from(items)
+    .where(eq(items.gameId, gameId));
+  const itemInfo = new Map(allItems.map((r) => [r.inGameId, r]));
+
+  // Бартеры/крафты, ПРОИЗВОДЯЩИЕ этот предмет
+  const [barterRows, craftRows] = await Promise.all([
+    db.select().from(barters).where(eq(barters.gameId, gameId)),
+    db.select().from(crafts).where(eq(crafts.gameId, gameId)),
+  ]);
+  const slotItem = (id: string) => {
+    const i = itemInfo.get(id);
+    return {
+      id, name: i?.name ?? id, shortName: i?.shortName ?? '', image512pxLink: itemIconUrl(id),
+      basePrice: i?.basePrice ?? 0, backgroundColor: priceMap.get(id)?.backgroundColor,
+    };
+  };
+  const itemBarters: BarterOffer[] = barterRows
+    .filter((b) => b.rewardItems.some((sl) => sl.itemId === mainId))
+    .map((b) => ({
+      id: b.id,
+      trader: { name: b.traderName, normalizedName: b.traderNormalizedName ?? '' },
+      level: b.level ?? 1,
+      requiredItems: b.requiredItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
+    }));
+  const itemCrafts: CraftRecipe[] = craftRows
+    .filter((c) => c.rewardItems.some((sl) => sl.itemId === mainId))
+    .map((c) => ({
+      id: c.id,
+      station: { name: c.stationName, normalizedName: c.stationNormalizedName ?? '' },
+      level: c.level ?? 1,
+      duration: c.duration ?? 0,
+      requiredItems: c.requiredItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
+    }));
+
+  // Квесты: где предмет требуется / где выдаётся в награду (из статического EFT_QUESTS)
+  const usedInTasks: UsedInTask[] = [];
+  const receivedFromTasks: RewardTask[] = [];
+  for (const t of EFT_QUESTS) {
+    const objs = t.objectives.filter((o) => o.__typename === 'TaskObjectiveItem' && o.item?.id === mainId);
+    if (objs.length) {
+      usedInTasks.push({
+        id: t.id, name: t.name, taskImageLink: t.trader.imageLink, kappaRequired: t.kappaRequired, minPlayerLevel: t.minPlayerLevel,
+        trader: { name: t.trader.name, normalizedName: t.trader.normalizedName },
+        objectives: objs.map((o) => ({ __typename: o.__typename, item: o.item ? { id: o.item.id, shortName: o.item.shortName, image512pxLink: o.item.image512pxLink } : undefined, count: o.count })),
+      });
+    }
+    if (t.finishRewards?.items?.some((r) => r.item?.id === mainId)) {
+      receivedFromTasks.push({
+        id: t.id, name: t.name, taskImageLink: t.trader.imageLink, kappaRequired: t.kappaRequired, minPlayerLevel: t.minPlayerLevel,
+        trader: { name: t.trader.name, normalizedName: t.trader.normalizedName },
+        finishRewards: { items: t.finishRewards.items.map((r) => ({ item: { id: r.item.id }, count: r.count })) },
+      });
+    }
+  }
+
+  const toVendor = (o: { price: number; priceRUB?: number; vendor: { name: string; normalizedName?: string } }): VendorOffer => ({
+    price: o.price, priceRUB: o.priceRUB, vendor: { name: o.vendor.name, normalizedName: o.vendor.normalizedName ?? '' },
+  });
+
+  const item: TarkovItem = {
+    id: mainId,
+    normalizedName: px.normalizedName || slug,
+    name: base.name,
+    shortName: base.shortName ?? '',
+    description: base.description ?? '',
+    types: px.types ?? [],
+    width: base.width ?? 1,
+    height: base.height ?? 1,
+    weight: base.weight ?? undefined,
+    basePrice: base.basePrice ?? 0,
+    backgroundColor: px.backgroundColor,
+    bsgCategoryId: px.bsgCategoryId,
+    image512pxLink: itemIconUrl(mainId),
+    properties: mapDetailProperties(base.propertiesRaw),
+    sellFor: (px.sellFor ?? []).map(toVendor),
+    buyFor: (px.buyFor ?? []).map(toVendor),
+    barters: itemBarters,
+    crafts: itemCrafts,
+    usedInTasks,
+    receivedFromTasks,
+  };
+
+  // Похожие предметы (та же BSG-категория)
+  let similar: EftItemData[] = [];
+  if (px.bsgCategoryId) {
+    const simIds = [...priceMap.entries()]
+      .filter(([id, p]) => p.bsgCategoryId === px.bsgCategoryId && id !== mainId)
+      .map(([id]) => id);
+    if (simIds.length) {
+      const propRows = await db
+        .select({ inGameId: items.inGameId, propertiesRaw: itemProperties.propertiesRaw })
+        .from(items)
+        .leftJoin(itemProperties, eq(itemProperties.itemId, items.id))
+        .where(and(eq(items.gameId, gameId), inArray(items.inGameId, simIds)));
+      const propsById = new Map(propRows.map((r) => [r.inGameId, r.propertiesRaw]));
+      const sims: SimItemRaw[] = simIds
+        .map((id) => {
+          const p = priceMap.get(id)!;
+          const i = itemInfo.get(id);
+          return {
+            id,
+            normalizedName: p.normalizedName,
+            name: i?.name ?? id,
+            shortName: i?.shortName ?? '',
+            width: i?.width ?? 1,
+            height: i?.height ?? 1,
+            weight: i?.weight ?? undefined,
+            basePrice: i?.basePrice ?? 0,
+            backgroundColor: p.backgroundColor,
+            image512pxLink: itemIconUrl(id),
+            types: p.types ?? [],
+            properties: (propsById.get(id) ?? undefined) as SimItemRaw['properties'],
+            sellFor: p.sellFor as SimVendorRaw[],
+            buyFor: p.buyFor as SimVendorRaw[],
+          };
+        })
+        .sort((a, b) => b.basePrice - a.basePrice)
+        .slice(0, 8);
+      similar = sims.map(toSimilarEftItem);
+    }
+  }
+
+  return { item, similar };
 }
 
 // === СТРАНИЦА ===
 
 export default async function ItemDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const item = await getItemData(slug);
+  const data = await getEftItemDetail(slug);
+  if (!data) notFound();
 
-  if (!item) notFound();
-
-  const [similar, traderLevels] = await Promise.all([
-    item.bsgCategoryId ? getSimilarItems(item.bsgCategoryId, item.id) : Promise.resolve([] as EftItemData[]),
-    getTraderLevels(),
-  ]);
-
-  // Требуемый уровень ЧВК для лучшей покупки у торговца (гексагон на ячейке покупки)
-  const traderBuys = (item.buyFor ?? []).filter((b) => b.vendor.normalizedName !== 'flea-market');
-  const bestTraderBuy = traderBuys.length
-    ? traderBuys.reduce((min, c) => ((c.priceRUB ?? c.price) < (min.priceRUB ?? min.price) ? c : min))
-    : null;
-  const buyLevelRequired =
-    bestTraderBuy?.vendor.minTraderLevel != null
-      ? traderLevels[bestTraderBuy.vendor.normalizedName]?.[bestTraderBuy.vendor.minTraderLevel] ?? null
-      : null;
+  const { item, similar } = data;
+  // Требуемый уровень торговца у нас не зеркалится → гексагон уровня не показываем.
+  const buyLevelRequired = null;
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
