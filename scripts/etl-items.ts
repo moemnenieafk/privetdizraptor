@@ -206,17 +206,31 @@ async function main() {
       .map((it) => {
         const itemId = idMap.get(it.id);
         return itemId
-          ? { itemId, properties: toItemProperties(it.properties) }
+          ? {
+              itemId,
+              properties: toItemProperties(it.properties),
+              // сырые свойства из источника (для богатых колонок категорий)
+              propertiesRaw: (it.properties ?? null) as Record<string, unknown> | null,
+            }
           : null;
       })
-      .filter((r): r is { itemId: string; properties: ItemProperties } => r !== null);
+      .filter(
+        (r): r is {
+          itemId: string;
+          properties: ItemProperties;
+          propertiesRaw: Record<string, unknown> | null;
+        } => r !== null,
+      );
 
     await db
       .insert(itemProperties)
       .values(propRows)
       .onConflictDoUpdate({
         target: itemProperties.itemId,
-        set: { properties: sql`excluded.properties` },
+        set: {
+          properties: sql`excluded.properties`,
+          propertiesRaw: sql`excluded.properties_raw`,
+        },
       });
     upProps += propRows.length;
     console.log(`  …обработано ${upItems}/${raw.length}`);

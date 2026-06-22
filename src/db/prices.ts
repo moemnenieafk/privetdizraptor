@@ -29,6 +29,7 @@ export async function syncEftPrices(): Promise<SyncResult> {
     gameId,
     inGameId,
     normalizedName: p.normalizedName || null,
+    bsgCategoryId: p.bsgCategoryId ?? null,
     backgroundColor: p.backgroundColor ?? null,
     types: p.types ?? null,
     lastLowPrice: p.lastLowPrice ?? null,
@@ -47,6 +48,7 @@ export async function syncEftPrices(): Promise<SyncResult> {
         target: [prices.gameId, prices.inGameId],
         set: {
           normalizedName: sql`excluded.normalized_name`,
+          bsgCategoryId: sql`excluded.bsg_category_id`,
           backgroundColor: sql`excluded.background_color`,
           types: sql`excluded.types`,
           lastLowPrice: sql`excluded.last_low_price`,
@@ -75,6 +77,7 @@ export async function getEftPriceMapFromDb(): Promise<Map<string, EftPriceInfo>>
         r.inGameId,
         {
           normalizedName: r.normalizedName ?? "",
+          bsgCategoryId: r.bsgCategoryId ?? undefined,
           backgroundColor: r.backgroundColor ?? undefined,
           types: r.types ?? undefined,
           lastLowPrice: r.lastLowPrice ?? undefined,

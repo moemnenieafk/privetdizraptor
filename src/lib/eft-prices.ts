@@ -3,8 +3,8 @@
 // Рантайм-UI цены из tarkov.dev НЕ тянет — он читает нашу таблицу `prices`.
 //
 // Берём: sellFor/buyFor (цены торговцев+барахолки), normalizedName (ссылка на
-// карточку), backgroundColor (редкость), types (фильтр «бартер»), и скалярные
-// поля барахолки (lastLowPrice/avg24hPrice/changeLast48hPercent).
+// карточку), bsgCategoryId (фильтр категорий), backgroundColor (редкость), types
+// (фильтр «бартер»), и скалярные поля барахолки (lastLowPrice/avg24h/change48h).
 import type { EftCurrency } from "@/lib/formatters";
 
 const ENDPOINT = "https://api.tarkov.dev/graphql";
@@ -18,6 +18,7 @@ export interface CtaVendorOffer {
 
 export interface EftPriceInfo {
   normalizedName: string;
+  bsgCategoryId?: string;
   backgroundColor?: string;
   types?: string[];
   lastLowPrice?: number;
@@ -37,6 +38,7 @@ interface RawOffer {
 interface RawItem {
   id: string;
   normalizedName?: string;
+  bsgCategoryId?: string;
   backgroundColor?: string;
   types?: string[];
   lastLowPrice?: number;
@@ -55,6 +57,7 @@ const QUERY = `
     items(lang: ru) {
       id
       normalizedName
+      bsgCategoryId
       backgroundColor
       types
       lastLowPrice
@@ -95,6 +98,7 @@ export async function getEftPriceMap(): Promise<Map<string, EftPriceInfo>> {
         it.id,
         {
           normalizedName: it.normalizedName ?? "",
+          bsgCategoryId: it.bsgCategoryId ?? undefined,
           backgroundColor: it.backgroundColor,
           types: it.types,
           lastLowPrice: it.lastLowPrice ?? undefined,

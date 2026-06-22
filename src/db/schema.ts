@@ -153,6 +153,10 @@ export const itemProperties = pgTable(
       .primaryKey()
       .references(() => items.id, { onDelete: "cascade" }),
     properties: jsonb("properties").$type<ItemProperties>().notNull(),
+    // Сырые свойства из items_database.json (tarkov.dev-форма, с __typename и ВСЕМИ
+    // полями) — для богатых колонок страницы категорий. Тонкий `properties` выше
+    // оставлен для дискриминатора `type` и GIN-фильтра.
+    propertiesRaw: jsonb("properties_raw").$type<Record<string, unknown>>(),
   },
   (t) => [index("item_properties_gin_idx").using("gin", t.properties)],
 );
@@ -179,6 +183,7 @@ export const prices = pgTable(
       .references(() => games.id, { onDelete: "cascade" }),
     inGameId: text("in_game_id").notNull(), // 24-символьный BSG UID
     normalizedName: text("normalized_name"),
+    bsgCategoryId: text("bsg_category_id"), // тонкая BSG-категория (для фильтра категорий)
     backgroundColor: text("background_color"),
     types: jsonb("types").$type<string[]>(),
     lastLowPrice: integer("last_low_price"),
