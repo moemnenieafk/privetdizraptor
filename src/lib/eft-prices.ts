@@ -1,11 +1,10 @@
-// Best-effort обогащение каталога EFT живыми данными из tarkov.dev.
+// Фетч цен/экономики EFT из tarkov.dev. ИСТОЧНИК для self-mirror'а: эту функцию
+// вызывает ТОЛЬКО серверный синк (src/db/prices.ts → крон /api/cron/sync-prices).
+// Рантайм-UI цены из tarkov.dev НЕ тянет — он читает нашу таблицу `prices`.
 //
-// Цены (sellFor/buyFor) — «живые» данные, которых нет в нашем статическом
-// источнике. Здесь же берём normalizedName (для ссылки на страницу предмета),
-// backgroundColor (цвет редкости плитки) и types (для фильтра «только бартер»).
-//
-// Гибрид с graceful degradation: если tarkov.dev недоступен / отдал ошибку —
-// возвращаем пустую карту, и список рендерится из каталога без цен.
+// Берём: sellFor/buyFor (цены торговцев+барахолки), normalizedName (ссылка на
+// карточку), backgroundColor (редкость), types (фильтр «бартер»), и скалярные
+// поля барахолки (lastLowPrice/avg24hPrice/changeLast48hPercent).
 import type { EftCurrency } from "@/lib/formatters";
 
 const ENDPOINT = "https://api.tarkov.dev/graphql";
@@ -21,6 +20,9 @@ export interface EftPriceInfo {
   normalizedName: string;
   backgroundColor?: string;
   types?: string[];
+  lastLowPrice?: number;
+  avg24hPrice?: number;
+  changeLast48hPercent?: number;
   sellFor: CtaVendorOffer[];
   buyFor: CtaVendorOffer[];
 }
@@ -37,6 +39,9 @@ interface RawItem {
   normalizedName?: string;
   backgroundColor?: string;
   types?: string[];
+  lastLowPrice?: number;
+  avg24hPrice?: number;
+  changeLast48hPercent?: number;
   sellFor?: RawOffer[];
   buyFor?: RawOffer[];
 }
@@ -52,6 +57,9 @@ const QUERY = `
       normalizedName
       backgroundColor
       types
+      lastLowPrice
+      avg24hPrice
+      changeLast48hPercent
       sellFor { price priceRUB currency vendor { name normalizedName } }
       buyFor  { price priceRUB currency vendor { name normalizedName } }
     }
@@ -66,8 +74,8 @@ const mapOffer = (o: RawOffer): CtaVendorOffer => ({
 });
 
 /**
- * Карта id → экономика/мета из tarkov.dev. Кэш ISR 1 час.
- * Никогда не бросает: при любой ошибке отдаёт пустую Map (страница не падает).
+ * Карта id → экономика/мета из tarkov.dev. Никогда не бросает: при любой ошибке
+ * отдаёт пустую Map (синк сам решает, что делать с пустотой).
  */
 export async function getEftPriceMap(): Promise<Map<string, EftPriceInfo>> {
   try {
@@ -75,7 +83,7 @@ export async function getEftPriceMap(): Promise<Map<string, EftPriceInfo>> {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ query: QUERY }),
-      next: { revalidate: 3600 },
+      cache: "no-store",
     });
     if (!res.ok) return new Map();
 
@@ -89,6 +97,9 @@ export async function getEftPriceMap(): Promise<Map<string, EftPriceInfo>> {
           normalizedName: it.normalizedName ?? "",
           backgroundColor: it.backgroundColor,
           types: it.types,
+          lastLowPrice: it.lastLowPrice ?? undefined,
+          avg24hPrice: it.avg24hPrice ?? undefined,
+          changeLast48hPercent: it.changeLast48hPercent ?? undefined,
           sellFor: (it.sellFor ?? []).map(mapOffer),
           buyFor: (it.buyFor ?? []).map(mapOffer),
         } satisfies EftPriceInfo,

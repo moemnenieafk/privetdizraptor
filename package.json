@@ -15,7 +15,8 @@
     "db:check": "tsx scripts/check-db.ts",
     "db:etl": "tsx scripts/etl-items.ts",
     "db:sql": "tsx scripts/apply-sql.ts",
-    "db:admin": "tsx scripts/make-admin.ts"
+    "db:admin": "tsx scripts/make-admin.ts",
+    "db:sync-prices": "tsx scripts/sync-prices.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.1.9",

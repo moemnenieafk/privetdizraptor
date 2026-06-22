@@ -5,7 +5,7 @@ import { ItemsCategoryClient, CategoryItem } from './[...category]/ItemsCategory
 import { HubNav } from '@/components/features/items/HubNav';
 import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
 import { getEftCatalog } from '@/lib/eft-catalog';
-import { getEftPriceMap } from '@/lib/eft-prices';
+import { getEftPriceMapFromDb } from '@/db/prices';
 import { itemIconUrl } from '@/lib/item-icon';
 
 function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null {
@@ -20,10 +20,10 @@ function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null 
 }
 
 async function getItemsData(): Promise<CategoryItem[]> {
-  // Каталог — всегда из нашей Supabase (источник истины + оффлайн-фолбэк).
-  // Цены / normalizedName / backgroundColor / types — best-effort из tarkov.dev:
-  // если он недоступен, карта пустая, и список всё равно рендерится (без цен).
-  const [catalog, priceMap] = await Promise.all([getEftCatalog(), getEftPriceMap()]);
+  // Каталог И цены — всё из нашей Supabase. Цены зеркалит крон /api/cron/sync-prices
+  // из tarkov.dev; в рантайме страница в tarkov.dev НЕ ходит. Пустая карта (синк ещё
+  // не прогонялся) → список всё равно рендерится из каталога (без цен).
+  const [catalog, priceMap] = await Promise.all([getEftCatalog(), getEftPriceMapFromDb()]);
 
   return catalog.map((c): CategoryItem => {
     const px = priceMap.get(c.id);

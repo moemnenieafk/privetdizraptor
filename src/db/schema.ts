@@ -157,6 +157,40 @@ export const itemProperties = pgTable(
   (t) => [index("item_properties_gin_idx").using("gin", t.properties)],
 );
 
+/* ───────────────────────── prices (self-mirror tarkov.dev) ───────────────────────── */
+/**
+ * Слой 3+ — зеркало живых цен/экономики из tarkov.dev. Наполняется серверным
+ * кроном (`/api/cron/sync-prices`), UI читает ТОЛЬКО отсюда — чтобы ни одна
+ * страница не обращалась к api.tarkov.dev в рантайме (см. autonomy-research).
+ * 1 строка на (игра, предмет). Источник легко заменить — таблица-буфер.
+ */
+export type PriceVendorOffer = {
+  price: number;
+  priceRUB?: number;
+  currency?: string;
+  vendor: { name: string; normalizedName?: string };
+};
+
+export const prices = pgTable(
+  "prices",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    inGameId: text("in_game_id").notNull(), // 24-символьный BSG UID
+    normalizedName: text("normalized_name"),
+    backgroundColor: text("background_color"),
+    types: jsonb("types").$type<string[]>(),
+    lastLowPrice: integer("last_low_price"),
+    avg24hPrice: integer("avg24h_price"),
+    changeLast48hPercent: real("change_last_48h_percent"),
+    sellFor: jsonb("sell_for").$type<PriceVendorOffer[]>(),
+    buyFor: jsonb("buy_for").$type<PriceVendorOffer[]>(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.gameId, t.inGameId] })],
+);
+
 /* ───────────────────────── profiles ───────────────────────── */
 /**
  * Слой 4 — профиль игрока, 1:1 к auth.users (Supabase Auth). id = auth.users.id.
@@ -218,3 +252,5 @@ export type Item = typeof items.$inferSelect;
 export type NewItem = typeof items.$inferInsert;
 export type ItemPropertiesRow = typeof itemProperties.$inferSelect;
 export type NewItemPropertiesRow = typeof itemProperties.$inferInsert;
+export type PriceRow = typeof prices.$inferSelect;
+export type NewPriceRow = typeof prices.$inferInsert;
