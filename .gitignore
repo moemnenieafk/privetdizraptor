@@ -49,6 +49,11 @@ next-env.d.ts
 # Claude Code internal
 .claude/
 
+# Item icons — отдаём из Supabase Storage (bucket cta-media), в репо не держим.
+# Локальные .webp остаются на диске как офлайн-фолбэк (см. src/lib/item-icon.ts).
+# items_database.json / fetch_tarkov_db.py / search_index.txt — остаются в гите.
+public/images/items/eft/*.webp
+
 # Design sync — generated/machine state (durable set in .design-sync/ IS committed)
 .ds-sync/
 ds-bundle/
