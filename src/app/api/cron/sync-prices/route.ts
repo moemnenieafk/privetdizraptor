@@ -7,7 +7,7 @@ import { syncEftPrices } from "@/db/prices";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 120; // синк ~6 МБ fetch + upsert 5000 строк
+export const maxDuration = 60; // макс. для Hobby-плана Vercel (120 невалидно → сброс в 10с)
 
 export async function GET(req: Request): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
@@ -19,7 +19,10 @@ export async function GET(req: Request): Promise<NextResponse> {
     const result = await syncEftPrices();
     return NextResponse.json({ ok: true, ...result, at: new Date().toISOString() });
   } catch (e) {
+    // Эндпоинт за CRON_SECRET (только админ/крон) — отдаём реальный текст ошибки
+    // вызывающему, чтобы было видно причину в логах GitHub Actions / Vercel.
     console.error("[cron/sync-prices]", e);
-    return NextResponse.json({ ok: false, error: "sync failed" }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
