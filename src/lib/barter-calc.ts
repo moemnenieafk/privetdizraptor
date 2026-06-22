@@ -1,4 +1,38 @@
-import type { StashItem, StashEconomics, BarterTrade, BarterCalculation } from '@/types/barter';
+import type {
+  StashItem,
+  StashEconomics,
+  BarterTrade,
+  BarterCalculation,
+  BarterVerdict,
+} from '@/types/barter';
+
+// ─── Налог барахолки (Flea Market) ──────────────────────────
+// Документированная формула tarkov.dev. Константы патч-зависимы — держим именованными.
+const FLEA_TAX_SELL = 0.03; // Ti
+const FLEA_TAX_REQ = 0.03; // Tr
+const FLEA_TAX_POWER = 1.08;
+
+/** Комиссия барахолки за выставление лота: f(базовая цена, цена продажи, кол-во). */
+export function calcFleaFee(basePrice: number, sellPrice: number, count = 1): number {
+  if (basePrice <= 0 || sellPrice <= 0) return 0;
+  const vo = basePrice * count; // ценность предмета
+  const vr = sellPrice; // запрашиваемая цена (тотал за стак)
+  let po = Math.log10(vo / vr);
+  let pr = Math.log10(vr / vo);
+  if (vr < vo) po = Math.pow(po, FLEA_TAX_POWER);
+  else pr = Math.pow(pr, FLEA_TAX_POWER);
+  const fee = vo * FLEA_TAX_SELL * Math.pow(4, po) + vr * FLEA_TAX_REQ * Math.pow(4, pr);
+  return Number.isFinite(fee) && fee > 0 ? Math.round(fee) : 0;
+}
+
+const VERDICT_THRESHOLD = 500;
+
+/** Вердикт по чистой прибыли «в карман». */
+export function calcVerdict(netProfit: number): BarterVerdict {
+  if (netProfit > VERDICT_THRESHOLD) return 'profitable';
+  if (netProfit < -VERDICT_THRESHOLD) return 'unprofitable';
+  return 'neutral';
+}
 
 export function isArbitrageProfitable(item: StashItem): boolean {
   return (
@@ -46,9 +80,37 @@ export function calcBarterProfit(trade: BarterTrade, stashItems: StashItem[]): B
     return sum + (prices.length ? Math.max(...prices) : 0) * count;
   }, 0);
 
+  // Best TRADER sell (без флии) — для маршрута «слить торговцу», где налога нет
+  const rewardTraderSellRub = trade.rewardItems.reduce((sum, { item, count }) => {
+    const prices = item.sellFor
+      .filter(s => s.vendor.normalizedName !== 'flea-market')
+      .map(s => s.priceRUB ?? s.price)
+      .filter(p => p > 0);
+    return sum + (prices.length ? Math.max(...prices) : 0) * count;
+  }, 0);
+
+  // Комиссия флии за продажу награды (тотал по всем наградным предметам)
+  const fleaCommission = trade.rewardItems.reduce((sum, { item, count }) => {
+    const fleaEntry = item.sellFor.find(s => s.vendor.normalizedName === 'flea-market');
+    const unitPrice = fleaEntry ? (fleaEntry.priceRUB ?? fleaEntry.price) : 0;
+    const base = item.basePrice ?? 0;
+    if (unitPrice <= 0 || base <= 0) return sum;
+    return sum + calcFleaFee(base, unitPrice * count, count);
+  }, 0);
+
   const instantProfit = rewardBestSellRub - totalComponentsCost;
   const calculatedSavings = targetItemFleaPrice - totalComponentsCost;
-  const roi = totalComponentsCost > 0 ? (instantProfit / totalComponentsCost) * 100 : 0;
+
+  // Честная прибыль «в карман»: лучшее из двух маршрутов сбыта
+  const traderNet = rewardTraderSellRub - totalComponentsCost;
+  const fleaNet =
+    targetItemFleaPrice > 0
+      ? targetItemFleaPrice - fleaCommission - totalComponentsCost
+      : Number.NEGATIVE_INFINITY;
+  const netProfit = Math.max(traderNet, fleaNet);
+
+  // ROI считаем от ЧИСТОЙ прибыли (после налога флии) — согласуется с «Чистыми» и бейджем «Спекулянт».
+  const roi = totalComponentsCost > 0 ? (netProfit / totalComponentsCost) * 100 : 0;
 
   return {
     totalComponentsCost,
@@ -57,9 +119,28 @@ export function calcBarterProfit(trade: BarterTrade, stashItems: StashItem[]): B
     calculatedSavings,
     isFleaArbitrageProfitable: instantProfit > 0,
     roi,
+    fleaCommission,
+    netProfit,
+    verdict: calcVerdict(netProfit),
   };
 }
 
 export function formatRub(value: number): string {
   return `₽ ${new Intl.NumberFormat('ru-RU').format(Math.round(value))}`;
+}
+
+/** Компактный формат для больших сумм (XP/вехи): «250 МЛН», «1.5 МЛРД», иначе полный. */
+export function formatCompactRub(value: number): string {
+  if (!Number.isFinite(value)) return '—';
+  const abs = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  if (abs >= 1_000_000_000) {
+    const v = abs / 1_000_000_000;
+    return `${sign}${Number.isInteger(v) ? v : v.toFixed(1)} МЛРД`;
+  }
+  if (abs >= 1_000_000) {
+    const v = abs / 1_000_000;
+    return `${sign}${Number.isInteger(v) ? v : v.toFixed(1)} МЛН`;
+  }
+  return new Intl.NumberFormat('ru-RU').format(Math.round(value));
 }

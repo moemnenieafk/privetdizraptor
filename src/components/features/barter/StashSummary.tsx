@@ -1,50 +1,20 @@
-﻿'use client';
+'use client';
 
 import { useBarterStore } from '@/store/useBarterStore';
 import { calcStashEconomics, calcBarterProfit, formatRub } from '@/lib/barter-calc';
+import { VerdictCard } from './VerdictCard';
 
 export function StashSummary() {
   const items = useBarterStore((s) => s.items);
   const selectedBarter = useBarterStore((s) => s.selectedBarter);
 
-  // ─── Barter simulation mode ──────────────────────────────────
+  // ─── Barter simulation mode → карточка-вердикт ───────────────
   if (selectedBarter) {
     const calc = calcBarterProfit(selectedBarter, items);
-    const profitPositive = calc.instantProfit >= 0;
-    const savingsPositive = calc.calculatedSavings >= 0;
-    const roiPositive = calc.roi >= 0;
-
-    return (
-      <div className="mt-5 flex flex-wrap gap-2">
-        <MetricCard label="Ингредиенты" value={formatRub(calc.totalComponentsCost)} />
-        <MetricCard
-          label="Цена награды"
-          value={calc.targetItemFleaPrice > 0 ? formatRub(calc.targetItemFleaPrice) : '—'}
-        />
-        <MetricCard
-          label="Мгновенный профит"
-          value={`${profitPositive ? '+' : ''}${formatRub(calc.instantProfit)}`}
-          color={profitPositive ? 'success' : 'danger'}
-        />
-        {calc.targetItemFleaPrice > 0 && (
-          <MetricCard
-            label="Экономия"
-            value={`${savingsPositive ? '+' : ''}${formatRub(calc.calculatedSavings)}`}
-            color={savingsPositive ? 'success' : 'danger'}
-          />
-        )}
-        {calc.totalComponentsCost > 0 && (
-          <MetricCard
-            label="ROI"
-            value={`${roiPositive ? '+' : ''}${calc.roi.toFixed(1)}%`}
-            color={roiPositive ? 'success' : 'danger'}
-          />
-        )}
-      </div>
-    );
+    return <VerdictCard barter={selectedBarter} calc={calc} />;
   }
 
-  // ─── Manual stash mode ───────────────────────────────────────
+  // ─── Manual stash mode → stat-карточки ───────────────────────
   if (items.length === 0) return null;
 
   const { totalFleaValue, totalTraderValue, arbitrageCount, arbitrageProfit } =
@@ -52,41 +22,47 @@ export function StashSummary() {
 
   return (
     <div className="mt-5 flex flex-wrap gap-2">
-      <MetricCard label="На барахолке" value={formatRub(totalFleaValue)} />
-      <MetricCard label="У торговцев" value={formatRub(totalTraderValue)} />
+      <StatCard label="На барахолке" value={formatRub(totalFleaValue)} />
+      <StatCard label="У торговцев" value={formatRub(totalTraderValue)} />
       {arbitrageCount > 0 && (
-        <MetricCard
+        <StatCard
           label={`Арбитраж ×${arbitrageCount}`}
           value={`+${formatRub(arbitrageProfit)}`}
-          color="success"
+          color="var(--color-success)"
         />
       )}
     </div>
   );
 }
 
-interface MetricCardProps {
+interface StatCardProps {
   label: string;
   value: string;
-  color?: 'success' | 'danger' | 'neutral';
+  color?: string;
 }
 
-function MetricCard({ label, value, color = 'neutral' }: MetricCardProps) {
-  const valueColor =
-    color === 'success'
-      ? 'var(--color-success)'
-      : color === 'danger'
-      ? 'var(--color-danger)'
-      : 'var(--color-text-secondary)';
-
+function StatCard({ label, value, color = 'var(--color-text-secondary)' }: StatCardProps) {
   return (
-    <div className="flex flex-col px-4 py-2.5 bg-card-menu border border-lines-hover gap-0.5">
+    <div className="flex min-w-37.5 flex-1 flex-col gap-2 rounded border border-lines-hover bg-card-menu p-4">
       <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
         {label}
       </span>
-      <span className="font-blender-medium text-sm" style={{ color: valueColor }}>
-        {value}
-      </span>
+      <div className="flex items-center justify-between gap-3">
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded"
+          style={{ background: `color-mix(in srgb, ${color} 14%, transparent)` }}
+        >
+          <span
+            className="icon-eft-currency-ruble h-4 w-4 mask-contain mask-center mask-no-repeat"
+            style={{ backgroundColor: color }}
+            role="img"
+            aria-label="Рубль"
+          />
+        </div>
+        <span className="font-blender-medium text-xl leading-none" style={{ color }}>
+          {value}
+        </span>
+      </div>
     </div>
   );
 }

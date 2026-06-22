@@ -102,3 +102,35 @@ export async function saveCtaProgress(p: ProgressPayload): Promise<boolean> {
   });
   return res.ok;
 }
+
+/* ───────────────── прогресс бартера / геймификация (слой 4c) ───────────────── */
+// Форма 1:1 повторяет persisted-поля useGamificationStore.
+export interface BarterProgressPayload {
+  xp: number;
+  confirmedBarterIds: string[];
+  badges: { id: string; label: string; description: string; unlockedAt: number | null }[];
+  streak: number;
+  bestStreak: number;
+  dailyDate: string | null;
+  dailyProfit: number;
+  lifetimeProfit: number;
+  lifetimeSavings: number;
+}
+
+// Прогресс бартера текущего пользователя из сессии. null — не авторизован.
+export async function getCtaBarterProgress(): Promise<BarterProgressPayload | null> {
+  const res = await fetch(`${baseUrl()}/api/eft/barter-progress`, { cache: "no-store" });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`CTA API /eft/barter-progress → ${res.status}`);
+  return res.json() as Promise<BarterProgressPayload>;
+}
+
+// Сохранить прогресс бартера. false — не авторизован/ошибка.
+export async function saveCtaBarterProgress(p: BarterProgressPayload): Promise<boolean> {
+  const res = await fetch(`${baseUrl()}/api/eft/barter-progress`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(p),
+  });
+  return res.ok;
+}

@@ -106,7 +106,11 @@ export function StashGrid() {
 
       {/* Desktop: stash grid */}
       <div
-        className="hidden md:block relative"
+        className="relative hidden rounded border border-lines-hover bg-card-menu p-2 shadow-[inset_0_0_24px_rgba(0,0,0,0.5)] md:block"
+        style={{ width: gridW + 18, height: gridH + 18 }}
+      >
+      <div
+        className="relative"
         style={{ width: gridW, height: gridH }}
       >
         {/* Layer 1: background cells */}
@@ -155,6 +159,7 @@ export function StashGrid() {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </>
   );

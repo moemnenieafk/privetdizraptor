@@ -393,6 +393,27 @@ html {
     to   { transform: scaleX(1); }
   }
 
+  /* --- Бегущий блик по заполненной части прогресс-баров --- */
+  @keyframes shimmer {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(220%); }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  /* Всплывающий «+N XP» при фиксации сделки */
+  @keyframes xp-float {
+    0%   { opacity: 0; transform: translateY(6px) scale(0.9); }
+    15%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-26px) scale(1); }
+  }
+
+  .animate-xp-float {
+    animation: xp-float 1.4s ease-out both;
+  }
+
   /* --- Quest Map: dropdown поиска --- */
   @keyframes questSearchIn {
     from { opacity: 0; transform: translateY(-6px); }

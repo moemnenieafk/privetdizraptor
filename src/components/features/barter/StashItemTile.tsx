@@ -18,7 +18,7 @@ export function StashItemTile({ item, onHover, onHoverMove, onLeave }: Props) {
 
   return (
     <div
-      className="group relative w-full h-full border border-lines-hover hover:border-(--primary) transition-colors duration-150 cursor-default overflow-hidden"
+      className="group relative w-full h-full border border-lines-hover hover:border-(--primary) hover:shadow-[0_0_12px_color-mix(in_srgb,var(--primary)_40%,transparent)] transition-all duration-150 cursor-default overflow-hidden"
       style={{ background: getTarkovBackgroundColor(item.backgroundColor) }}
       onMouseEnter={(e) => onHover?.(e.clientX, e.clientY)}
       onMouseMove={(e) => onHoverMove?.(e.clientX, e.clientY)}

@@ -38,7 +38,7 @@ const BARTER_TRADES_QUERY = `
       rewardItems {
         count
         item {
-          id name shortName image512pxLink backgroundColor width height
+          id name shortName image512pxLink backgroundColor width height basePrice
           sellFor { price priceRUB vendor { name normalizedName } }
           buyFor  { price priceRUB vendor { name normalizedName } }
         }

@@ -21,6 +21,7 @@ export interface BarterItemBase {
   sellFor: BarterPrice[];
   buyFor?: BarterPrice[];
   normalizedName?: string;
+  basePrice?: number;
 }
 
 // Full item from items(types:[barter]) query — has normalizedName + buyFor required
@@ -58,6 +59,8 @@ export interface BarterTrade {
   rewardItems: BarterTradeItem[];
 }
 
+export type BarterVerdict = 'profitable' | 'neutral' | 'unprofitable';
+
 export interface BarterCalculation {
   totalComponentsCost: number;
   targetItemFleaPrice: number;
@@ -65,6 +68,12 @@ export interface BarterCalculation {
   calculatedSavings: number;
   isFleaArbitrageProfitable: boolean;
   roi: number;
+  /** Комиссия барахолки за продажу награды (налог флии). */
+  fleaCommission: number;
+  /** Честная прибыль «в карман»: лучшее из (трейдер-продажа) и (флиа − налог) минус ингредиенты. */
+  netProfit: number;
+  /** Вердикт по netProfit с порогом ±500 ₽. */
+  verdict: BarterVerdict;
 }
 
 export interface StashEconomics {

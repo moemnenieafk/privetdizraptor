@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { Trash2, CheckCircle2, Copy } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { Trash2, CheckCircle2, Copy, Volume2, VolumeX } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useBarterStore } from '@/store/useBarterStore';
 import { useGamificationStore } from '@/store/useGamificationStore';
 import { calcBarterProfit, formatRub } from '@/lib/barter-calc';
-import { computeProStatus } from '@/types/gamification';
+import { computeProStatus, type TraderTier } from '@/types/gamification';
+import { useSfx } from '@/hooks/useSfx';
+import { useGamificationSync, type SyncState } from '@/hooks/useGamificationSync';
 import { BarterSearchBar } from '@/components/features/barter/BarterSearchBar';
 import { BarterTradeSelector } from '@/components/features/barter/BarterTradeSelector';
 import { StashGrid } from '@/components/features/barter/StashGrid';
@@ -28,22 +31,61 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
   const xp = useGamificationStore((s) => s.xp);
   const confirmedBarterIds = useGamificationStore((s) => s.confirmedBarterIds);
   const badges = useGamificationStore((s) => s.badges);
+  const { play } = useSfx();
+  const sync = useGamificationSync();
 
   const { isUnlocked: proUnlocked } = computeProStatus(xp, confirmedBarterIds, badges);
 
   const [dealConfirmed, setDealConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [floatXp, setFloatXp] = useState<number | null>(null);
+  const [rankUpTier, setRankUpTier] = useState<TraderTier | null>(null);
+  const floatTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rankTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // SSR-safe регидратация persist-стора на клиенте (skipHydration в сторе).
+  useEffect(() => {
+    void useGamificationStore.persist.rehydrate();
+  }, []);
+
+  // Очистка отложенных таймеров эффектов при размонтировании.
+  useEffect(
+    () => () => {
+      if (floatTimer.current) clearTimeout(floatTimer.current);
+      if (rankTimer.current) clearTimeout(rankTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     setDealConfirmed(false);
+    setFloatXp(null);
+    setRankUpTier(null);
+    if (floatTimer.current) clearTimeout(floatTimer.current);
+    if (rankTimer.current) clearTimeout(rankTimer.current);
   }, [selectedBarter?.id]);
 
   const handleConfirmDeal = useCallback(() => {
     if (!selectedBarter || dealConfirmed) return;
     const calc = calcBarterProfit(selectedBarter, items);
-    recordDeal({ barter: selectedBarter, calc, allBarters: initialBarters });
+    const result = recordDeal({ barter: selectedBarter, calc, allBarters: initialBarters });
     setDealConfirmed(true);
-  }, [selectedBarter, items, dealConfirmed, recordDeal, initialBarters]);
+
+    if (result.rankUp) play('rank-up');
+    else if (result.newBadges.length > 0) play('unlock');
+    else play(result.verdict === 'profitable' ? 'coins' : 'confirm');
+
+    if (result.xpGained > 0) {
+      setFloatXp(result.xpGained);
+      if (floatTimer.current) clearTimeout(floatTimer.current);
+      floatTimer.current = setTimeout(() => setFloatXp(null), 1500);
+    }
+    if (result.rankUp) {
+      setRankUpTier(result.rankUp);
+      if (rankTimer.current) clearTimeout(rankTimer.current);
+      rankTimer.current = setTimeout(() => setRankUpTier(null), 2800);
+    }
+  }, [selectedBarter, items, dealConfirmed, recordDeal, initialBarters, play]);
 
   const handleExport = useCallback(() => {
     if (!selectedBarter) return;
@@ -59,7 +101,8 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
       `Ингредиенты:        ${formatRub(calc.totalComponentsCost)}`,
       `Цена награды:       ${calc.targetItemFleaPrice > 0 ? formatRub(calc.targetItemFleaPrice) : '—'}`,
       `Мгновенный профит:  ${sign(calc.instantProfit)}${formatRub(calc.instantProfit)}`,
-      `Экономия:           ${sign(calc.calculatedSavings)}${formatRub(calc.calculatedSavings)}`,
+      `Комиссия флии:      −${formatRub(calc.fleaCommission)}`,
+      `Чистыми:            ${sign(calc.netProfit)}${formatRub(calc.netProfit)}`,
       `ROI:                ${sign(calc.roi)}${calc.roi.toFixed(1)}%`,
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       `cta — Центр Тактической Адаптации`,
@@ -74,6 +117,11 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
     <>
       <PageHeader pageId="eft-progress-barter" />
 
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <SyncIndicator state={sync.state} />
+        <MuteToggle />
+      </div>
+
       <div className="mt-2 mb-5 space-y-2">
         {/* Row 1: Barter trade selector */}
         <BarterTradeSelector allBarters={initialBarters} />
@@ -86,7 +134,7 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
               <button
                 type="button"
                 onClick={clearStash}
-                className="flex shrink-0 items-center gap-1.5 px-3 py-2 bg-card-menu border border-lines-hover hover:border-failure hover:text-failure text-text-secondary font-blender-book text-sm transition-colors duration-150"
+                className="flex shrink-0 items-center gap-1.5 border border-lines-hover bg-card-menu px-3 py-2 font-blender-book text-sm text-text-secondary transition-colors duration-150 hover:border-failure hover:text-failure"
               >
                 <Trash2 size={13} />
                 Очистить схрон
@@ -103,9 +151,18 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
       <StashSummary />
 
       {selectedBarter && (
-        <div className="mt-3 flex items-center gap-2 flex-wrap">
+        <div className="relative mt-3 flex flex-wrap items-center gap-2">
+          {floatXp !== null && (
+            <span
+              className="animate-xp-float pointer-events-none absolute -top-5 left-6 font-blender-medium text-sm"
+              style={{ color: 'var(--color-success)' }}
+            >
+              +{formatRub(floatXp)} XP
+            </span>
+          )}
+
           {dealConfirmed ? (
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-card-menu border border-lines-hover">
+            <div className="flex items-center gap-2 border border-lines-hover bg-card-menu px-4 py-2.5">
               <CheckCircle2 size={14} style={{ color: 'var(--color-success)' }} />
               <span
                 className="font-blender-medium text-xs uppercase tracking-widest"
@@ -118,7 +175,13 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
             <button
               type="button"
               onClick={handleConfirmDeal}
-              className="flex items-center gap-2 px-4 py-2.5 bg-card-menu border border-lines-hover hover:border-(--primary) font-blender-medium text-xs uppercase tracking-widest text-text-secondary hover:text-(--primary) transition-colors duration-150"
+              className="flex items-center gap-2 rounded px-5 py-3 font-blender-medium text-sm uppercase tracking-widest transition-all duration-200"
+              style={{
+                color: 'var(--primary)',
+                border: '1px solid var(--primary)',
+                background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
+                boxShadow: '0 0 16px color-mix(in srgb, var(--primary) 18%, transparent)',
+              }}
             >
               ▲ Зафиксировать сделку
             </button>
@@ -128,7 +191,7 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
             <button
               type="button"
               onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-2.5 bg-card-menu border border-lines-hover font-blender-medium text-xs uppercase tracking-widest transition-colors duration-150"
+              className="flex items-center gap-1.5 border border-lines-hover bg-card-menu px-3 py-2.5 font-blender-medium text-xs uppercase tracking-widest transition-colors duration-150"
               style={copied ? { color: 'var(--color-success)', borderColor: 'var(--color-success)' } : { color: 'var(--color-text-muted)' }}
             >
               <Copy size={12} />
@@ -138,8 +201,71 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
         </div>
       )}
 
+      {rankUpTier && (
+        <div
+          className="mt-3 flex animate-[fade-in-up_0.5s_ease-out_both] items-center gap-2 rounded-lg border px-4 py-3"
+          style={{
+            borderColor: 'var(--primary)',
+            background: 'color-mix(in srgb, var(--primary) 12%, transparent)',
+            boxShadow: '0 0 24px color-mix(in srgb, var(--primary) 30%, transparent)',
+          }}
+        >
+          <span
+            className="font-blender-medium text-sm uppercase tracking-widest"
+            style={{ color: 'var(--primary)' }}
+          >
+            ▲ Ранг повышен — {rankUpTier.label}
+          </span>
+        </div>
+      )}
+
       <StatsDashboard />
       <ProMetaProgress />
     </>
+  );
+}
+
+function SyncIndicator({ state }: { state: SyncState }) {
+  if (state === 'guest') {
+    return (
+      <Link
+        href="/login"
+        className="flex items-center gap-1.5 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted transition-colors duration-150 hover:text-(--primary)"
+      >
+        <span className="text-text-muted">●</span>
+        Локально · войти для синка
+      </Link>
+    );
+  }
+  const cfg: Record<Exclude<SyncState, 'guest'>, { color: string; text: string }> = {
+    loading: { color: 'var(--color-text-muted)', text: 'Синхронизация…' },
+    synced: { color: 'var(--color-success)', text: 'Синхронизировано' },
+    error: { color: 'var(--color-danger)', text: 'Оффлайн — локально' },
+  };
+  const c = cfg[state];
+  return (
+    <span
+      className="flex items-center gap-1.5 font-blender-medium text-type-micro uppercase tracking-widest"
+      style={{ color: c.color }}
+    >
+      ● {c.text}
+    </span>
+  );
+}
+
+function MuteToggle() {
+  const { muted, toggle } = useSfx();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      title={muted ? 'Включить звук' : 'Выключить звук'}
+      className="flex items-center gap-1.5 border border-lines-hover bg-card-menu px-2.5 py-1.5 text-text-muted transition-colors duration-150 hover:text-(--primary)"
+    >
+      {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+      <span className="font-blender-medium text-type-micro uppercase tracking-widest">
+        {muted ? 'звук выкл' : 'звук вкл'}
+      </span>
+    </button>
   );
 }
