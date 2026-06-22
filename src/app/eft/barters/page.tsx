@@ -1,27 +1,13 @@
+import { eq } from 'drizzle-orm';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { BartersClient } from './BartersClient';
+import { db } from '@/db';
+import { barters as bartersTable, items } from '@/db/schema';
+import { eftGameId } from '@/db/eft';
+import { getEftPriceMapFromDb } from '@/db/prices';
+import { itemIconUrl } from '@/lib/item-icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface RawBarterItem {
-  item: {
-    id: string;
-    name: string;
-    shortName: string;
-    image512pxLink?: string;
-    buyFor:  { price: number; priceRUB?: number; currency?: string; vendor: { name: string; normalizedName?: string } }[];
-    sellFor: { price: number; priceRUB?: number; currency?: string; vendor: { name: string; normalizedName?: string } }[];
-  };
-  count: number;
-}
-
-interface RawBarter {
-  id?: string;
-  trader: { name: string; normalizedName: string };
-  level: number;
-  requiredItems: RawBarterItem[];
-  rewardItems:   RawBarterItem[];
-}
 
 export interface ProcessedBarterSlot {
   item: { id: string; name: string; shortName: string; image512pxLink?: string };
@@ -41,98 +27,62 @@ export interface ProcessedBarter {
   roi:        number;
 }
 
-// ─── Fetch ────────────────────────────────────────────────────────────────────
+// ─── Сборка из НАШЕЙ БД (бартеры + items + цены). В tarkov.dev не ходим. ────────
 
 async function fetchBarters(): Promise<ProcessedBarter[]> {
-  const query = `
-    query {
-      barters {
-        trader { name normalizedName }
-        level
-        requiredItems {
-          item {
-            id name shortName image512pxLink
-            buyFor  { price priceRUB currency vendor { name normalizedName } }
-          }
-          count
-        }
-        rewardItems {
-          item {
-            id name shortName image512pxLink
-            sellFor { price priceRUB currency vendor { name normalizedName } }
-          }
-          count
-        }
-      }
-    }
-  `;
+  const gameId = await eftGameId();
+  const [barterRows, itemRows, priceMap] = await Promise.all([
+    db.select().from(bartersTable).where(eq(bartersTable.gameId, gameId)),
+    db.select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName }).from(items).where(eq(items.gameId, gameId)),
+    getEftPriceMapFromDb(),
+  ]);
+  const nameMap = new Map(itemRows.map((r) => [r.inGameId, r]));
 
-  try {
-    const res = await fetch('https://api.tarkov.dev/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ query }),
-      next: { revalidate: 3600 },
+  const rubVal = (p: { price: number; priceRUB?: number }) => p.priceRUB ?? p.price;
+  const isFlea = (v: { name: string; normalizedName?: string }) =>
+    v.name === 'Flea Market' || v.normalizedName === 'flea-market';
+  const slot = (id: string): { id: string; name: string; shortName: string; image512pxLink?: string } => {
+    const i = nameMap.get(id);
+    return { id, name: i?.name ?? id, shortName: i?.shortName ?? '', image512pxLink: itemIconUrl(id) };
+  };
+
+  return barterRows.map((b): ProcessedBarter => {
+    const required: ProcessedBarterSlot[] = b.requiredItems.map((s) => {
+      const validBuys = (priceMap.get(s.itemId)?.buyFor ?? []).filter((x) => rubVal(x) > 0);
+      const cheapest = validBuys.length
+        ? validBuys.reduce((mn, cur) => (rubVal(cur) < rubVal(mn) ? cur : mn), validBuys[0])
+        : null;
+      return { item: slot(s.itemId), count: s.count, unitPrice: cheapest ? rubVal(cheapest) : 0 };
     });
-    const json = await res.json();
-    if (json.errors) { console.error('Barters GQL errors:', json.errors); return []; }
 
-     
-    const raw: RawBarter[] = json.data?.barters || [];
-    const rubVal = (p: { price: number; priceRUB?: number }) => p.priceRUB ?? p.price;
-    const isFlea = (v: { name: string; normalizedName?: string }) =>
-      v.name === 'Flea Market' || v.normalizedName === 'flea-market';
-
-    return raw.map((b, idx): ProcessedBarter => {
-      const required: ProcessedBarterSlot[] = b.requiredItems.map(r => {
-        const validBuys = (r.item.buyFor || []).filter(x => rubVal(x) > 0);
-        const cheapest  = validBuys.length
-          ? validBuys.reduce((mn, cur) => rubVal(cur) < rubVal(mn) ? cur : mn, validBuys[0])
+    const reward: ProcessedBarterSlot[] = b.rewardItems.map((s) => {
+      const sells = priceMap.get(s.itemId)?.sellFor ?? [];
+      const traderSells = sells.filter((x) => !isFlea(x.vendor));
+      const bestSell = traderSells.length
+        ? traderSells.reduce((mx, cur) => (rubVal(cur) > rubVal(mx) ? cur : mx), traderSells[0])
+        : sells.length
+          ? sells.reduce((mx, cur) => (rubVal(cur) > rubVal(mx) ? cur : mx), sells[0])
           : null;
-        return {
-          item: { id: r.item.id, name: r.item.name, shortName: r.item.shortName, image512pxLink: r.item.image512pxLink },
-          count: r.count,
-          unitPrice: cheapest ? rubVal(cheapest) : 0,
-        };
-      });
-
-      const reward: ProcessedBarterSlot[] = b.rewardItems.map(r => {
-        const sells = (r.item.sellFor || []);
-        // Предпочитаем продажу торговцу (без комиссии барахолки), затем барахолку
-        const traderSells = sells.filter(s => !isFlea(s.vendor));
-        const bestSell = traderSells.length
-          ? traderSells.reduce((mx, cur) => rubVal(cur) > rubVal(mx) ? cur : mx, traderSells[0])
-          : sells.length
-          ? sells.reduce((mx, cur) => rubVal(cur) > rubVal(mx) ? cur : mx, sells[0])
-          : null;
-        return {
-          item: { id: r.item.id, name: r.item.name, shortName: r.item.shortName, image512pxLink: r.item.image512pxLink },
-          count: r.count,
-          unitPrice: bestSell ? rubVal(bestSell) : 0,
-        };
-      });
-
-      const totalCost  = required.reduce((s, x) => s + x.unitPrice * x.count, 0);
-      const totalValue = reward.reduce((s, x) => s + x.unitPrice * x.count, 0);
-      const profit     = totalValue - totalCost;
-      const roi        = totalCost > 0 ? Math.round((profit / totalCost) * 100) : 0;
-
-      return {
-        id:    `barter-${idx}-${b.trader.normalizedName}`,
-        trader: b.trader,
-        level:  b.level,
-        required,
-        reward,
-        totalCost,
-        totalValue,
-        profit,
-        roi,
-      };
+      return { item: slot(s.itemId), count: s.count, unitPrice: bestSell ? rubVal(bestSell) : 0 };
     });
-  } catch (err) {
-    console.error('Barters fetch error:', err);
-    return [];
-  }
+
+    const totalCost = required.reduce((s, x) => s + x.unitPrice * x.count, 0);
+    const totalValue = reward.reduce((s, x) => s + x.unitPrice * x.count, 0);
+    const profit = totalValue - totalCost;
+    const roi = totalCost > 0 ? Math.round((profit / totalCost) * 100) : 0;
+
+    return {
+      id: b.id,
+      trader: { name: b.traderName, normalizedName: b.traderNormalizedName ?? '' },
+      level: b.level ?? 1,
+      required,
+      reward,
+      totalCost,
+      totalValue,
+      profit,
+      roi,
+    };
+  });
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
