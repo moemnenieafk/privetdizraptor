@@ -1,5 +1,7 @@
 'use client';
 
+import { itemIconUrl } from '@/lib/item-icon';
+
 interface ItemImageProps {
   id: string;
   image512pxLink: string;
@@ -12,7 +14,7 @@ export function ItemImage({ id, image512pxLink, name, className = '' }: ItemImag
   return (
      
     <img
-      src={`/images/items/eft/${id}.webp`}
+      src={itemIconUrl(id)}
       alt={name}
       className={className}
       onError={(e) => {

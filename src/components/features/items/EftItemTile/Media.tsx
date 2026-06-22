@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { useEftItemTile } from './context';
 import { EftIndicator } from './Indicator';
+import { itemIconUrl } from '@/lib/item-icon';
 
 export function EftMedia({ children }: { children?: ReactNode }) {
   const { item } = useEftItemTile();
@@ -23,7 +24,7 @@ export function EftMedia({ children }: { children?: ReactNode }) {
         {/* Item image */}
         { }
         <img
-          src={`/images/items/eft/${item.id}.webp`}
+          src={itemIconUrl(item.id)}
           alt={item.name}
           loading="lazy"
           decoding="async"

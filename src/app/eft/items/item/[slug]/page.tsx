@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 import { BreadcrumbsSetter } from '@/components/features/items/BreadcrumbsSetter';
+import { CatalogBackLink } from './CatalogBackLink';
 import type {
   ItemProperties,
   VendorOffer,
@@ -414,12 +413,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
       <div className="w-full max-w-275 px-4 mx-auto xl:px-0">
 
         <div className="mb-6">
-          <Link
-            href="/eft/items"
-            className="inline-flex items-center text-xs uppercase tracking-widest font-blender-medium text-text-muted hover:text-(--primary) transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" /> База предметов
-          </Link>
+          <CatalogBackLink focusId={item.id} />
         </div>
 
         <ItemDetailLayout item={item} similar={similar} buyLevelRequired={buyLevelRequired} />

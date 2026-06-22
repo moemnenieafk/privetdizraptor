@@ -6,6 +6,7 @@ import { useItemsStore } from '@/store/useItemsStore';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { formatCompactNumber } from '@/lib/formatters';
 import type { CategoryItem } from '@/app/eft/items/[...category]/ItemsCategoryClient';
+import { itemIconUrl } from '@/lib/item-icon';
 
 interface CompareDrawerProps {
   items: CategoryItem[];
@@ -70,7 +71,7 @@ export function CompareDrawer({ items }: CompareDrawerProps) {
                   >
                     <div className="absolute inset-0 shadow-[inset_0_0_10px_rgba(0,0,0,0.7)]" />
                     <img
-                      src={`/images/items/eft/${item.id}.webp`}
+                      src={itemIconUrl(item.id)}
                       alt={item.name}
                       loading="lazy"
                       className="absolute inset-0 h-full w-full object-contain p-1 transition-transform duration-200 group-hover:scale-105"

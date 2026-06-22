@@ -2,12 +2,15 @@
 
 import React, { useMemo, useRef, useState, useEffect, memo, forwardRef } from 'react';
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { PackageX, Coins, ChevronUp, ChevronDown, Check, X } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Badge as SemanticBadge, getArmorClassColor } from '@/components/features/items/Badge';
 import { EftItemTile } from '@/components/features/items/EftItemTile';
-import type { EftItemData } from '@/components/features/items/EftItemTile';
+import type { EftItemData, EftBarterData, EftCraftData, EftQuestData } from '@/components/features/items/EftItemTile';
+import { applyQuestProgress, type QuestProgressRef } from '@/lib/eft-indicators.economics';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { itemIconUrl } from '@/lib/item-icon';
 import { useCategoryFilters } from '@/components/features/items/useCategoryFilters';
 import { CategoryControlBar } from '@/components/features/items/CategoryControlBar';
 import { formatCompactNumber } from '@/lib/formatters';
@@ -91,6 +94,12 @@ interface ItemsCategoryClientProps {
   initialData: CategoryItem[];
   categorySlug?: string;
   gpCoinBarters?: Record<string, number>;
+  /** Серверные карты индикаторов плитки (ключ — id предмета). */
+  barterDataMap?: Record<string, EftBarterData>;
+  craftDataMap?: Record<string, EftCraftData>;
+  /** Определения квест-индикаторов (с сервера) + рефы для оверлея прогресса на клиенте. */
+  questDataMap?: Record<string, EftQuestData>;
+  questRefMap?: Record<string, QuestProgressRef>;
 }
 
 // ─── Slug groups ──────────────────────────────────────────────────────────────
@@ -170,12 +179,32 @@ const rubVal = (p: { price: number; priceRUB?: number }) => p.priceRUB ?? p.pric
 const isFleaVendor = (v: { name: string; normalizedName?: string }) =>
   v.name === 'Flea Market' || v.normalizedName === 'flea-market';
 
-function toEftItem(item: ProcessedItem, slug: string, questCount?: number): EftItemData {
+function toEftItem(
+  item: ProcessedItem,
+  slug: string,
+  questCount: number | undefined,
+  barterDataMap: Record<string, EftBarterData>,
+  craftDataMap: Record<string, EftCraftData>,
+  questIndicatorMap: Map<string, EftQuestData>,
+): EftItemData {
   const p = item.properties || {};
   const nonFleaBuys = (item.buyFor ?? []).filter(b => !isFleaVendor(b.vendor) && rubVal(b) > 0);
   const traderBuy = nonFleaBuys.length > 0
     ? nonFleaBuys.reduce((min, curr) => rubVal(curr) < rubVal(min) ? curr : min, nonFleaBuys[0])
     : undefined;
+
+  // Индикаторы плитки: бартер/крафт (серверные карты) + квест (из стора). Только определённые ключи.
+  const barter = barterDataMap[item.id];
+  const craft  = craftDataMap[item.id];
+  const quest  = questIndicatorMap.get(item.id);
+  let indicators: EftItemData['indicators'] | undefined;
+  if (barter || craft || quest) {
+    indicators = {};
+    if (barter) indicators.barter = barter;
+    if (craft)  indicators.craft  = craft;
+    if (quest)  indicators.quest  = quest;
+  }
+
   return {
     id: item.id,
     normalizedName: item.normalizedName,
@@ -190,32 +219,7 @@ function toEftItem(item: ProcessedItem, slug: string, questCount?: number): EftI
       ? { damage: p.damage ?? 0, penetration: p.penetrationPower ?? 0 }
       : undefined,
     topStat: getDynamicTopIndicator(item, slug),
-    ...(process.env.NODE_ENV === 'development' && item.normalizedName === '6b47-helmet' && {
-      indicators: {
-        barter: {
-          trader: { name: 'Ragman', normalizedName: 'ragman' },
-          items: [{ id: 'mock-tape', name: 'Синяя изолента', count: 3 }],
-          buyPrice: 45000, savings: 12000, profit: 8500, commission: 3500,
-        },
-        craft: {
-          stationLevel: 1,
-          ingredients: [
-            { id: 'mock-ara', name: 'Арамид', count: 2 },
-            { id: 'mock-scot', name: 'Скотч', count: 1 },
-          ],
-          durationLabel: '20 мин',
-          buyPrice: 35572, turnoverPerHour: 124260, profit: 4232, profitPerHour: 12697,
-        },
-        quest: {
-          type: 'task_progress' as const,
-          questName: 'Контр-компромат',
-          npcName: 'Скупщик',
-          description: 'Найти и передать предмет Скупщику',
-          progress: '0 / 3',
-          status: 'not_started' as const,
-        },
-      },
-    }),
+    indicators,
     pricing: {
       traderBuy: traderBuy
         ? {
@@ -450,8 +454,8 @@ function AdvancedFiltersPanel({
 
 const CategoryTableRow = memo(forwardRef<
   HTMLTableRowElement,
-  { item: ProcessedItem; categorySlug?: string; gpCount?: number } & React.HTMLAttributes<HTMLTableRowElement>
->(function CategoryTableRow({ item, categorySlug, gpCount, ...props }, ref) {
+  { item: ProcessedItem; categorySlug?: string; gpCount?: number; highlighted?: boolean } & React.HTMLAttributes<HTMLTableRowElement>
+>(function CategoryTableRow({ item, categorySlug, gpCount, highlighted, ...props }, ref) {
   const slug = categorySlug || '';
   const p = item.properties || {};
 
@@ -462,14 +466,23 @@ const CategoryTableRow = memo(forwardRef<
   const bestSellIsFlea   = fSell > tSell && fSell > 0;
 
   return (
-    <tr ref={ref} {...props} className="border-b border-lines-hover/40 last:border-0 hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)] transition-colors group">
+    <tr
+      ref={ref}
+      id={`eft-item-${item.id}`}
+      {...props}
+      className={`border-b border-lines-hover/40 last:border-0 transition-colors group ${
+        highlighted
+          ? 'bg-[color-mix(in_srgb,var(--primary)_18%,transparent)]'
+          : 'hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)]'
+      }`}
+    >
       {/* ─── Визуал (fixed) ─── */}
       <td className="px-3 py-2 border-r border-lines-hover/50">
         <div className="relative w-12 h-12 mx-auto bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
           { }
           <img
-            src={`/images/items/eft/${item.id}.webp`}
+            src={itemIconUrl(item.id)}
             alt={item.name}
             loading="lazy"
             decoding="async"
@@ -824,7 +837,15 @@ const CategoryTableRow = memo(forwardRef<
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }: ItemsCategoryClientProps) {
+export function ItemsCategoryClient({
+  initialData,
+  categorySlug,
+  gpCoinBarters,
+  barterDataMap,
+  craftDataMap,
+  questDataMap,
+  questRefMap,
+}: ItemsCategoryClientProps) {
   const {
     viewMode, setViewMode,
     searchQuery, setSearchQuery,
@@ -852,7 +873,15 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
   } = useCategoryFilters();
 
   const selectedTraders = useItemsStore((state) => state.selectedTraders);
+  const setCatalogReturnPath = useItemsStore((s) => s.setCatalogReturnPath);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const focusId = searchParams.get('focus');
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const focusedRef = useRef<string | null>(null);
   const tasks = useQuestStore((s) => s.tasks);
+  const completedQuests = useQuestStore((s) => s.completedQuests);
+  const itemProgress = useQuestStore((s) => s.itemProgress);
   const favoriteIds = useFavoritesStore((s) => s.favoriteIds);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -897,6 +926,15 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
     }
     return map;
   }, [tasks]);
+
+  // Квест-индикаторы плитки: серверные определения + живой прогресс из персистентного стора.
+  const questIndicatorMap = useMemo(
+    () => applyQuestProgress(questDataMap ?? {}, questRefMap ?? {}, completedQuests, itemProgress),
+    [questDataMap, questRefMap, completedQuests, itemProgress],
+  );
+
+  const emptyBarterMap = useMemo<Record<string, EftBarterData>>(() => ({}), []);
+  const emptyCraftMap = useMemo<Record<string, EftCraftData>>(() => ({}), []);
 
   const processedItems = useMemo(() => {
     let data = initialData.map(item => ({ ...item, eco: getEconomics(item) }));
@@ -1022,6 +1060,22 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
   const handleShowMore = () => setVisibleCount(prev => prev + 100);
   const displayedItems = processedItems.slice(0, visibleCount);
 
+  // Запоминаем текущий раздел каталога (с видом/фильтрами из URL, но без focus) —
+  // чтобы кнопка «База предметов» вернула пользователя ровно сюда.
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('focus');
+    const qs = params.toString();
+    setCatalogReturnPath(`${pathname}${qs ? `?${qs}` : ''}`);
+  }, [pathname, searchParams, setCatalogReturnPath]);
+
+  // Снять подсветку через 2с.
+  useEffect(() => {
+    if (!highlightId) return;
+    const t = setTimeout(() => setHighlightId(null), 2000);
+    return () => clearTimeout(t);
+  }, [highlightId]);
+
   const renderSortableHeader = (label: string, sortKey: string, align: 'left' | 'center' | 'right' = 'left', customClass = '') => {
     const isActive = sortConfig.key === sortKey;
     return (
@@ -1053,6 +1107,32 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
   const tablePaddingBottom = virtualTableRows.length > 0
     ? tableVirtualizer.getTotalSize() - virtualTableRows[virtualTableRows.length - 1].end
     : 0;
+
+  // Возврат со страницы предмета (?focus=<id>): прокрутить к предмету и подсветить.
+  useEffect(() => {
+    if (!focusId || isLoading) return;
+    if (focusedRef.current === focusId) return;
+    const index = processedItems.findIndex((i) => i.id === focusId);
+    if (index < 0) return;
+
+    if (viewMode === 'table') {
+      focusedRef.current = focusId;
+      setHighlightId(focusId);
+      requestAnimationFrame(() => tableVirtualizer.scrollToIndex(index, { align: 'center' }));
+      return;
+    }
+
+    // Сетка: сначала убедиться, что плитка отрендерена (visibleCount), затем скролл.
+    if (index >= visibleCount) {
+      setVisibleCount(Math.ceil((index + 1) / 100) * 100);
+      return; // дождёмся ререндера — эффект перезапустится по visibleCount
+    }
+    const el = document.getElementById(`eft-item-${focusId}`);
+    if (!el) return; // ещё не в DOM — повторим на следующем ререндере
+    focusedRef.current = focusId;
+    setHighlightId(focusId);
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [focusId, isLoading, viewMode, processedItems, visibleCount, tableVirtualizer]);
 
   // Dynamic colspan for skeleton/padding rows (+1 for GP column)
   const dynamicColCount =
@@ -1208,9 +1288,22 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {displayedItems.map((item) => {
-              const eftItem = toEftItem(item, slug, questCountMap.get(item.id));
+              const eftItem = toEftItem(
+                item,
+                slug,
+                questCountMap.get(item.id),
+                barterDataMap ?? emptyBarterMap,
+                craftDataMap ?? emptyCraftMap,
+                questIndicatorMap,
+              );
               return (
-                <EftItemTile.Root key={item.id} item={eftItem} categorySlug={slug}>
+                <EftItemTile.Root
+                  key={item.id}
+                  item={eftItem}
+                  categorySlug={slug}
+                  anchorId={`eft-item-${item.id}`}
+                  highlighted={highlightId === item.id}
+                >
                   <EftItemTile.Header />
                   <EftItemTile.Media />
                   <EftItemTile.Name />
@@ -1359,6 +1452,7 @@ export function ItemsCategoryClient({ initialData, categorySlug, gpCoinBarters }
                     item={item}
                     categorySlug={categorySlug}
                     gpCount={gpCoinBarters?.[item.id]}
+                    highlighted={highlightId === item.id}
                     data-index={virtualRow.index}
                     ref={tableVirtualizer.measureElement}
                   />

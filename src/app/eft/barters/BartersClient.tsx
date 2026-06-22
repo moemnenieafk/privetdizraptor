@@ -5,6 +5,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ArrowRight, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 import type { ProcessedBarter, ProcessedBarterSlot } from './page';
 import { formatCompactNumber } from '@/lib/formatters';
+import { itemIconUrl } from '@/lib/item-icon';
 
 // в”Ђв”Ђв”Ђ Types в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
@@ -42,7 +43,7 @@ function ItemThumb({ slot }: { slot: ProcessedBarterSlot }) {
     >
       { }
       <img
-        src={`/images/items/eft/${slot.item.id}.webp`}
+        src={itemIconUrl(slot.item.id)}
         alt={slot.item.shortName}
         className="h-9 w-9 object-contain p-0.5"
         onError={(e) => {

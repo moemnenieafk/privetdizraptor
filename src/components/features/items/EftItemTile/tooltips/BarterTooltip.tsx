@@ -3,6 +3,7 @@
 import { formatCompactNumber, formatCurrencyDisplay } from '@/lib/formatters';
 import type { EftBarterData } from '../types';
 import { calcEftProfitLevel } from '../types';
+import { itemIconUrl } from '@/lib/item-icon';
 
 const LABELS = {
   neutral:      'НЕЙТРАЛЬНЫЙ БАРТЕР',
@@ -56,7 +57,7 @@ export function EftBarterTooltip({ data, style }: EftBarterTooltipProps) {
           <div key={itm.id} className="flex items-center gap-2">
             { }
             <img
-              src={itm.iconLink || `/images/items/eft/${itm.id}.webp`}
+              src={itm.iconLink || itemIconUrl(itm.id)}
               alt={itm.name}
               className="h-8 w-8 shrink-0 rounded-xs border border-lines-hover/30 bg-(--color-base) object-contain p-0.5"
               onError={(e) => { e.currentTarget.src = '/images/placeholder.webp'; }}

@@ -6,6 +6,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { PackageX, Coins, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatCompactNumber } from '@/lib/formatters';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { itemIconUrl } from '@/lib/item-icon';
 
 // в”Ђв”Ђв”Ђ Types в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 
@@ -260,7 +261,7 @@ export function LootRateClient({ items }: LootRateClientProps) {
                       <div className="absolute inset-0 pointer-events-none" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
                       { }
                       <img
-                        src={`/images/items/eft/${item.id}.webp`}
+                        src={itemIconUrl(item.id)}
                         alt={item.shortName}
                         loading="lazy"
                         decoding="async"

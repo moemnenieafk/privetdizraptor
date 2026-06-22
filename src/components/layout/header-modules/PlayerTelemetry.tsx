@@ -355,7 +355,7 @@ export function PlayerTelemetry() {
           {!isAuthenticated ? (
             <button onClick={() => setIsAuthenticated(true)} className="flex h-5 w-14 items-center justify-center gap-1 rounded-xs bg-text-secondary transition-colors hover:bg-(--primary) focus:outline-none">
               <div className="h-2.5 w-2.5 icon-mask icon-eft-profile-login text-lines-hover" />
-              <span className="text-type-caption font-blender-medium uppercase leading-none text-lines-hover">Войти</span>
+              <span className="text-type-micro font-blender-medium uppercase leading-none text-lines-hover">Войти</span>
             </button>
           ) : (
             <div className="flex items-center gap-1.5 px-2 cursor-pointer group transition-opacity">

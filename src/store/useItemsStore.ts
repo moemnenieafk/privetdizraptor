@@ -7,6 +7,9 @@ interface ItemsStore {
   compareIds: string[];
   toggleCompare: (id: string) => void;
   clearCompare: () => void;
+  /** Последний просмотренный раздел каталога — куда вернуть со страницы предмета. */
+  catalogReturnPath: string | null;
+  setCatalogReturnPath: (path: string | null) => void;
 }
 
 const MAX_COMPARE = 4;
@@ -31,4 +34,7 @@ export const useItemsStore = create<ItemsStore>((set) => ({
       return { compareIds: [...state.compareIds, id] };
     }),
   clearCompare: () => set({ compareIds: [] }),
+
+  catalogReturnPath: null,
+  setCatalogReturnPath: (path) => set({ catalogReturnPath: path }),
 }));

@@ -15,7 +15,7 @@ export interface CtaEftItem {
   width: number | null;
   height: number | null;
   basePrice: number | null;
-  image: string; // локальный путь /images/items/eft/{id}.webp
+  image: string; // URL иконки (Supabase Storage, см. itemIconUrl)
 }
 
 export interface CtaEftItemDetail extends CtaEftItem {

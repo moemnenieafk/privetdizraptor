@@ -1,9 +1,20 @@
 ﻿import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import { unstable_cache } from 'next/cache';
 import { HEADER_DICTIONARY, MenuItem } from '@/data/headerConfig';
 import { ItemsCategoryClient, CategoryItem } from './ItemsCategoryClient';
 import { HubNav } from '@/components/features/items/HubNav';
 import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
+import {
+  buildBarterData,
+  buildCraftData,
+  buildQuestIndicators,
+  type RawBarter,
+  type RawCraft,
+  type BarterUnlockInfo,
+} from '@/lib/eft-indicators.economics';
+import type { EftBarterData, EftCraftData } from '@/components/features/items/EftItemTile';
+import { EFT_QUESTS } from '@/data/quests';
 
 interface Props {
   params: Promise<{ category: string[] }>;
@@ -888,6 +899,140 @@ async function getGpCoinBarters(): Promise<Record<string, number>> {
   }
 }
 
+// ─── Индикаторы плитки: бартеры/крафты, компактные карты по id предмета-награды ──
+
+const INDICATOR_TRADE_ITEM_FIELDS = `
+  id name shortName image512pxLink basePrice types
+  buyFor  { price priceRUB currency vendor { name normalizedName } }
+  sellFor { price priceRUB currency vendor { name normalizedName } }
+`;
+
+// Сырой fetch без data-cache (ответ >2MB не кэшируется Next) — кэшируем КОМПАКТНЫЙ
+// результат через unstable_cache ниже (ключ + revalidate 1ч).
+async function fetchIndicatorBarters(): Promise<{
+  barterDataMap: Record<string, EftBarterData>;
+  barterUnlockMap: Record<string, BarterUnlockInfo>;
+}> {
+  const query = `
+    query {
+      barters(lang: ru) {
+        trader { name normalizedName }
+        level
+        taskUnlock { id name }
+        requiredItems { count item { ${INDICATOR_TRADE_ITEM_FIELDS} } }
+        rewardItems   { count item { ${INDICATOR_TRADE_ITEM_FIELDS} } }
+      }
+    }
+  `;
+  try {
+    const res = await fetch('https://api.tarkov.dev/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ query }),
+      cache: 'no-store',
+    });
+    const json = await res.json();
+    if (json.errors) {
+      console.error('GraphQL Errors in getIndicatorBarters:', JSON.stringify(json.errors, null, 2));
+      return { barterDataMap: {}, barterUnlockMap: {} };
+    }
+    const barters: RawBarter[] = json.data?.barters ?? [];
+    const grouped: Record<string, RawBarter[]> = {};
+    const barterUnlockMap: Record<string, BarterUnlockInfo> = {};
+    for (const b of barters) {
+      for (const r of b.rewardItems ?? []) {
+        const id = r.item?.id;
+        if (!id) continue;
+        if (!grouped[id]) grouped[id] = [];
+        grouped[id].push(b);
+        if (b.taskUnlock?.id && !barterUnlockMap[id]) {
+          barterUnlockMap[id] = {
+            taskId: b.taskUnlock.id,
+            trader: { name: b.trader.name, normalizedName: b.trader.normalizedName },
+          };
+        }
+      }
+    }
+    const barterDataMap: Record<string, EftBarterData> = {};
+    for (const [id, list] of Object.entries(grouped)) {
+      const data = buildBarterData(list);
+      if (data) barterDataMap[id] = data;
+    }
+    return { barterDataMap, barterUnlockMap };
+  } catch (error) {
+    console.error('Fetch error in getIndicatorBarters:', error);
+    return { barterDataMap: {}, barterUnlockMap: {} };
+  }
+}
+
+const getIndicatorBarters = unstable_cache(
+  fetchIndicatorBarters,
+  ['eft-indicator-barters'],
+  { revalidate: 3600 },
+);
+
+async function fetchIndicatorCrafts(): Promise<Record<string, EftCraftData>> {
+  const query = `
+    query {
+      crafts(lang: ru) {
+        station { name normalizedName }
+        level
+        duration
+        requiredItems { count item { ${INDICATOR_TRADE_ITEM_FIELDS} } }
+        rewardItems   { count item { ${INDICATOR_TRADE_ITEM_FIELDS} } }
+      }
+    }
+  `;
+  try {
+    const res = await fetch('https://api.tarkov.dev/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ query }),
+      cache: 'no-store',
+    });
+    const json = await res.json();
+    if (json.errors) {
+      console.error('GraphQL Errors in getIndicatorCrafts:', JSON.stringify(json.errors, null, 2));
+      return {};
+    }
+    const crafts: RawCraft[] = json.data?.crafts ?? [];
+    const grouped: Record<string, RawCraft[]> = {};
+    for (const c of crafts) {
+      for (const r of c.rewardItems ?? []) {
+        const id = r.item?.id;
+        if (!id) continue;
+        if (!grouped[id]) grouped[id] = [];
+        grouped[id].push(c);
+      }
+    }
+    const craftDataMap: Record<string, EftCraftData> = {};
+    for (const [id, list] of Object.entries(grouped)) {
+      const data = buildCraftData(list);
+      if (data) craftDataMap[id] = data;
+    }
+    return craftDataMap;
+  } catch (error) {
+    console.error('Fetch error in getIndicatorCrafts:', error);
+    return {};
+  }
+}
+
+const getIndicatorCrafts = unstable_cache(
+  fetchIndicatorCrafts,
+  ['eft-indicator-crafts'],
+  { revalidate: 3600 },
+);
+
+/** Сужает карту индикаторов до предметов текущей категории — не шлём лишнее в клиент. */
+function pickByIds<T>(map: Record<string, T>, ids: Set<string>): Record<string, T> {
+  const out: Record<string, T> = {};
+  for (const id of ids) {
+    const v = map[id];
+    if (v !== undefined) out[id] = v;
+  }
+  return out;
+}
+
 export default async function ItemsDynamicPage({ params }: Props) {
   // В Next.js 15+ params является асинхронным (Promise), поэтому его нужно "дождаться"
   const resolvedParams = await params;
@@ -929,10 +1074,26 @@ export default async function ItemsDynamicPage({ params }: Props) {
   const pageId = `eft-items-${resolvedParams.category.join('-')}`;
   const pageContent = PAGE_CONTENT_DICTIONARY[pageId];
 
-  const [itemsData, gpCoinBarters] = await Promise.all([
+  const [itemsData, gpCoinBarters, indicatorBarters, craftDataMap] = await Promise.all([
     getCategoryItems(slug),
     getGpCoinBarters(),
+    getIndicatorBarters(),
+    getIndicatorCrafts(),
   ]);
+
+  // Квест-индикаторы: определения из статического EFT_QUESTS (на сервере, не в клиент-бандле);
+  // живой прогресс накладывается на клиенте из персистентного quest-стора.
+  const { dataMap: questDataMap, refMap: questRefMap } = buildQuestIndicators(
+    EFT_QUESTS,
+    indicatorBarters.barterUnlockMap,
+  );
+
+  // Сужаем карты до предметов текущей категории (отображаемые предметы ⊆ itemsData).
+  const itemIds = new Set(itemsData.map((i) => i.id));
+  const barterDataMap = pickByIds(indicatorBarters.barterDataMap, itemIds);
+  const craftDataMapForCategory = pickByIds(craftDataMap, itemIds);
+  const questDataMapForCategory = pickByIds(questDataMap, itemIds);
+  const questRefMapForCategory = pickByIds(questRefMap, itemIds);
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14">
@@ -947,7 +1108,15 @@ export default async function ItemsDynamicPage({ params }: Props) {
         />
 
         <Suspense>
-          <ItemsCategoryClient initialData={itemsData} categorySlug={slug} gpCoinBarters={gpCoinBarters} />
+          <ItemsCategoryClient
+            initialData={itemsData}
+            categorySlug={slug}
+            gpCoinBarters={gpCoinBarters}
+            barterDataMap={barterDataMap}
+            craftDataMap={craftDataMapForCategory}
+            questDataMap={questDataMapForCategory}
+            questRefMap={questRefMapForCategory}
+          />
         </Suspense>
       </div>
     </main>

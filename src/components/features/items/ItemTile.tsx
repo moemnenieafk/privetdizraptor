@@ -8,6 +8,7 @@ import { Badge as SemanticBadge, getArmorClassColor } from "@/components/feature
 import { ItemGridSize } from "@/components/ui/ItemGridSize";
 import { getTarkovBackgroundColor } from "@/lib/tarkov-colors";
 import { formatCompactNumber } from "@/lib/formatters";
+import { itemIconUrl } from "@/lib/item-icon";
 
 interface Vendor { name: string; normalizedName?: string }
 
@@ -124,7 +125,7 @@ export const ItemTile = React.memo(function ItemTile({ item, categorySlug }: Ite
         />
         { }
         <img
-          src={`/images/items/eft/${item.id}.webp`}
+          src={itemIconUrl(item.id)}
           alt={item.name}
           loading="lazy"
           decoding="async"

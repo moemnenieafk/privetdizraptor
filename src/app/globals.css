@@ -99,6 +99,7 @@
   --type-body:     clamp(0.9375rem,  0.9rem    + 0.125vw, 1.0625rem);
   --type-label:    clamp(0.8125rem,  0.7875rem + 0.125vw, 0.9375rem);
   --type-caption:  clamp(0.75rem,    0.725rem  + 0.125vw, 0.875rem);
+  --type-micro:    0.625rem; /* 10px фикс — компактные тултипы индикаторов */
 
   /* --- Content Grid (1100px / 6 колонок / 28px gutter) --- */
   --grid-max:     1100px;
@@ -347,6 +348,7 @@ html {
   .text-type-body     { font-size: var(--type-body); }
   .text-type-label    { font-size: var(--type-label); }
   .text-type-caption  { font-size: var(--type-caption); }
+  .text-type-micro    { font-size: var(--type-micro); }
 
   /* --- Адаптивная типографика для хаба --- */
   .hub-heading {

@@ -376,7 +376,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
                 <span className="text-type-caption font-blender-medium uppercase tracking-wide text-(--primary)">Синхронизация с API...</span>
               </div>
             ) : (
-              <span className="text-type-caption font-blender-medium uppercase tracking-wide text-text-secondary transition-colors group-hover:text-(--primary)">Автоматическое определение профиля игрока</span>
+              <span className="text-type-micro font-blender-medium uppercase tracking-wide text-text-secondary transition-colors group-hover:text-(--primary)">Автоматическое определение профиля игрока</span>
             )}
           </button>
 
@@ -386,7 +386,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
               <div className="h-3 w-3 icon-mask icon-eft-profile-reset text-danger" />
               <span className="text-xs font-blender-medium leading-3 text-danger">СБРОС ПРОГРЕССА</span>
             </button>
-            <div className="flex-1 text-type-caption font-blender-medium leading-2.25 text-danger">
+            <div className="flex-1 text-type-mirco font-blender-medium leading-2.25 text-danger">
               Внимание! После нажатия данной кнопки будет произведен полный сброс прогресса вашего ЧВК в игре!
             </div>
           </div>

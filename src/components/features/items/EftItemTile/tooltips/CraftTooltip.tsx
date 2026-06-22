@@ -3,6 +3,7 @@
 import { formatCompactNumber, formatCurrencyDisplay } from '@/lib/formatters';
 import type { EftCraftData } from '../types';
 import { calcEftProfitLevel } from '../types';
+import { itemIconUrl } from '@/lib/item-icon';
 
 const LABELS = {
   neutral:      'НЕЙТРАЛЬНЫЙ КРАФТ',
@@ -50,7 +51,7 @@ export function EftCraftTooltip({ data, style }: EftCraftTooltipProps) {
           <div key={ing.id} className="flex items-center gap-2">
             { }
             <img
-              src={ing.iconLink || `/images/items/eft/${ing.id}.webp`}
+              src={ing.iconLink || itemIconUrl(ing.id)}
               alt={ing.name}
               className="h-8 w-8 shrink-0 rounded-xs border border-lines-hover/30 bg-(--color-base) object-contain p-0.5"
               onError={(e) => { e.currentTarget.src = '/images/placeholder.webp'; }}

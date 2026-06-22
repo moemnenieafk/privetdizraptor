@@ -17,6 +17,5 @@ export async function eftGameId(): Promise<string> {
   return cache;
 }
 
-// Иконки лежат локально в public как {inGameId}.webp (R2 пока не используем).
-export const itemImagePath = (inGameId: string): string =>
-  `/images/items/eft/${inGameId}.webp`;
+// URL иконки предмета — единый хелпер (Supabase Storage). См. src/lib/item-icon.ts.
+export { itemIconUrl as itemImagePath } from "@/lib/item-icon";
