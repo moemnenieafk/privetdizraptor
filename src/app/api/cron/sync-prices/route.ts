@@ -4,6 +4,7 @@
 // Это ЕДИНСТВЕННОЕ место, где наш бэкенд ходит в api.tarkov.dev.
 import { NextResponse } from "next/server";
 import { syncEftPrices } from "@/db/prices";
+import { syncEftBartersCrafts } from "@/db/barters-crafts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,8 +17,16 @@ export async function GET(req: Request): Promise<NextResponse> {
   }
 
   try {
-    const result = await syncEftPrices();
-    return NextResponse.json({ ok: true, ...result, at: new Date().toISOString() });
+    // Цены — критичны (частый синк). Бартеры/крафты — best-effort: их сбой не должен
+    // ронять прайс-синк (они меняются раз в вайп, не ежечасно).
+    const priceRes = await syncEftPrices();
+    let staticRes = { barters: 0, crafts: 0 };
+    try {
+      staticRes = await syncEftBartersCrafts();
+    } catch (e) {
+      console.error("[cron/sync-prices] barters/crafts:", e);
+    }
+    return NextResponse.json({ ok: true, ...priceRes, ...staticRes, at: new Date().toISOString() });
   } catch (e) {
     // Эндпоинт за CRON_SECRET (только админ/крон) — отдаём реальный текст ошибки
     // вызывающему, чтобы было видно причину в логах GitHub Actions / Vercel.

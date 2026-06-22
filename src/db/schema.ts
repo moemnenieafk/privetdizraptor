@@ -191,6 +191,43 @@ export const prices = pgTable(
   (t) => [primaryKey({ columns: [t.gameId, t.inGameId] })],
 );
 
+/* ───────────────────────── barters / crafts (self-mirror tarkov.dev) ───────────────────────── */
+/**
+ * Зеркало ТОПОЛОГИИ бартеров и крафтов (без цен — цены берём из `prices` при
+ * чтении, чтобы оставались свежими). Слоты — массив {itemId, count}; имя/иконка/
+ * цена подтягиваются join'ом к `items` + `prices`. Наполняет тот же крон.
+ */
+export type TradeSlot = { itemId: string; count: number };
+
+export const barters = pgTable("barters", {
+  id: text("id").primaryKey(), // tarkov.dev barter id
+  gameId: uuid("game_id")
+    .notNull()
+    .references(() => games.id, { onDelete: "cascade" }),
+  traderName: text("trader_name").notNull(),
+  traderNormalizedName: text("trader_normalized_name"),
+  level: integer("level"),
+  taskUnlockId: text("task_unlock_id"), // квест-гейт бартера (для unlock_trade-индикатора)
+  taskUnlockName: text("task_unlock_name"),
+  requiredItems: jsonb("required_items").$type<TradeSlot[]>().notNull(),
+  rewardItems: jsonb("reward_items").$type<TradeSlot[]>().notNull(),
+  syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const crafts = pgTable("crafts", {
+  id: text("id").primaryKey(), // tarkov.dev craft id
+  gameId: uuid("game_id")
+    .notNull()
+    .references(() => games.id, { onDelete: "cascade" }),
+  stationName: text("station_name").notNull(),
+  stationNormalizedName: text("station_normalized_name"),
+  level: integer("level"),
+  duration: integer("duration"), // секунды
+  requiredItems: jsonb("required_items").$type<TradeSlot[]>().notNull(),
+  rewardItems: jsonb("reward_items").$type<TradeSlot[]>().notNull(),
+  syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 /* ───────────────────────── profiles ───────────────────────── */
 /**
  * Слой 4 — профиль игрока, 1:1 к auth.users (Supabase Auth). id = auth.users.id.
@@ -254,3 +291,7 @@ export type ItemPropertiesRow = typeof itemProperties.$inferSelect;
 export type NewItemPropertiesRow = typeof itemProperties.$inferInsert;
 export type PriceRow = typeof prices.$inferSelect;
 export type NewPriceRow = typeof prices.$inferInsert;
+export type BarterRow = typeof barters.$inferSelect;
+export type NewBarterRow = typeof barters.$inferInsert;
+export type CraftRow = typeof crafts.$inferSelect;
+export type NewCraftRow = typeof crafts.$inferInsert;
