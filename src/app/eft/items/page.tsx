@@ -4,6 +4,9 @@ import { HEADER_DICTIONARY, MenuItem } from '@/data/headerConfig';
 import { ItemsCategoryClient, CategoryItem } from './[...category]/ItemsCategoryClient';
 import { HubNav } from '@/components/features/items/HubNav';
 import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
+import { getEftCatalog } from '@/lib/eft-catalog';
+import { getEftPriceMap } from '@/lib/eft-prices';
+import { itemIconUrl } from '@/lib/item-icon';
 
 function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null {
   for (const item of items) {
@@ -16,106 +19,31 @@ function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null 
   return null;
 }
 
-async function getAllItems(): Promise<CategoryItem[]> {
-  const query = `
-    query {
-      items(lang: ru) {
-        id
-        normalizedName
-        name
-        shortName
-        width
-        height
-        weight
-        basePrice
-        image512pxLink
-        types
-        backgroundColor
-        properties {
-          __typename
-          ... on ItemPropertiesWeaponMod {
-            ergonomics
-            recoilModifier
-            accuracyModifier
-          }
-          ... on ItemPropertiesAmmo {
-            caliber
-            damage
-            penetrationPower
-            armorDamage
-          }
-          ... on ItemPropertiesWeapon {
-            caliber
-            ergonomics
-            recoilVertical
-            recoilHorizontal
-          }
-          ... on ItemPropertiesArmor {
-            class
-            durability
-            armorType
-          }
-          ... on ItemPropertiesHelmet {
-            class
-            durability
-            armorType
-          }
-          ... on ItemPropertiesContainer {
-            capacity
-          }
-        }
-        sellFor { price priceRUB currency vendor { name normalizedName } }
-        buyFor { price priceRUB currency vendor { name normalizedName } }
-      }
-    }
-  `;
+async function getItemsData(): Promise<CategoryItem[]> {
+  // Каталог — всегда из нашей Supabase (источник истины + оффлайн-фолбэк).
+  // Цены / normalizedName / backgroundColor / types — best-effort из tarkov.dev:
+  // если он недоступен, карта пустая, и список всё равно рендерится (без цен).
+  const [catalog, priceMap] = await Promise.all([getEftCatalog(), getEftPriceMap()]);
 
-  try {
-    const res = await fetch('https://api.tarkov.dev/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ query }),
-      next: { revalidate: 3600 },
-    });
-
-    const json = await res.json();
-    if (json.errors) return [];
-
-     
-    return (json.data?.items || []).map((item: any) => {
-      const bestSell = item.sellFor?.reduce(
-         
-        (prev: any, current: any) => (prev.price > current.price ? prev : current),
-        { price: 0 }
-      );
-       
-      const rubVal = (p: any) => p.priceRUB ?? p.price;
-       
-      const validBuyFor = item.buyFor?.filter((b: any) => rubVal(b) > 0) || [];
-      const bestBuy =
-        validBuyFor.length > 0
-          ?  
-            validBuyFor.reduce((prev: any, current: any) =>
-              rubVal(current) < rubVal(prev) ? current : prev
-            )
-          : null;
-      const minPrice = bestBuy ? rubVal(bestBuy) : item.basePrice || 0;
-      const slots = (item.width || 1) * (item.height || 1);
-      const vps = slots > 0 ? Math.round((bestSell?.price || 0) / slots) : 0;
-
-      return {
-        ...item,
-        eco: {
-          bestSell: { price: bestSell?.price || 0, vendor: bestSell?.vendor },
-          bestBuy: bestBuy ? { vendor: bestBuy.vendor } : undefined,
-          minPrice,
-          vps,
-        },
-      };
-    });
-  } catch {
-    return [];
-  }
+  return catalog.map((c): CategoryItem => {
+    const px = priceMap.get(c.id);
+    return {
+      id: c.id,
+      normalizedName: px?.normalizedName ?? '',
+      name: c.name,
+      shortName: c.shortName,
+      width: c.width,
+      height: c.height,
+      weight: c.weight,
+      backgroundColor: px?.backgroundColor,
+      basePrice: c.basePrice,
+      image512pxLink: itemIconUrl(c.id), // иконка из нашего Supabase Storage
+      types: px?.types,
+      properties: c.properties,
+      sellFor: px?.sellFor ?? [],
+      buyFor: px?.buyFor ?? [],
+    };
+  });
 }
 
 export default async function ItemsHubPage() {
@@ -125,7 +53,7 @@ export default async function ItemsHubPage() {
   if (!itemsNode) notFound();
 
   const pageContent = PAGE_CONTENT_DICTIONARY['eft-items'];
-  const itemsData = await getAllItems();
+  const itemsData = await getItemsData();
 
   const tabs = (itemsNode.children || []).map((child) => ({
     id: child.id,
