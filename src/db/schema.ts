@@ -3,7 +3,9 @@ import {
   uuid,
   text,
   integer,
+  bigint,
   real,
+  boolean,
   jsonb,
   timestamp,
   index,
@@ -189,6 +191,8 @@ export const prices = pgTable(
     lastLowPrice: integer("last_low_price"),
     avg24hPrice: integer("avg24h_price"),
     changeLast48hPercent: real("change_last_48h_percent"),
+    low24hPrice: integer("low24h_price"),
+    high24hPrice: integer("high24h_price"),
     sellFor: jsonb("sell_for").$type<PriceVendorOffer[]>(),
     buyFor: jsonb("buy_for").$type<PriceVendorOffer[]>(),
     syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
@@ -230,6 +234,37 @@ export const crafts = pgTable("crafts", {
   duration: integer("duration"), // секунды
   requiredItems: jsonb("required_items").$type<TradeSlot[]>().notNull(),
   rewardItems: jsonb("reward_items").$type<TradeSlot[]>().notNull(),
+  syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+/* ───────────────── achievements / maps / traders (self-mirror tarkov.dev) ───────────────── */
+// Достижения EFT (страница /eft/progress/achievements). playersCompletedPercent «живой».
+export const achievements = pgTable("achievements", {
+  id: text("id").primaryKey(),
+  gameId: uuid("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  hidden: boolean("hidden"),
+  playersCompletedPercent: real("players_completed_percent"),
+  syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Карты EFT (для лендинг-виджета картографии). wiki НЕ храним (правило: без внешних вики).
+export const maps = pgTable("maps", {
+  id: text("id").primaryKey(),
+  gameId: uuid("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  normalizedName: text("normalized_name").notNull(),
+  syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Торговцы EFT (resetTime для виджета «ближайший сброс»; levels на будущее).
+export const traders = pgTable("traders", {
+  normalizedName: text("normalized_name").primaryKey(),
+  gameId: uuid("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  resetTime: text("reset_time"),
+  levels: jsonb("levels").$type<{ level: number; requiredPlayerLevel: number }[]>(),
   syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -281,7 +316,46 @@ export const questProgress = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
 );
 
+/* ─────────────────────── barter_progress ─────────────────────── */
+/**
+ * Слой 4c — облачный прогресс геймификации «Прибыль бартера» (замена localStorage).
+ * Одна строка на пользователя+игру; поля 1:1 повторяют persisted-форму
+ * useGamificationStore. xp/прибыль — bigint: цель прогрессии 500M → 1B → 2B+
+ * переполняет int4 (~2.1 млрд). user_id → profiles.id с каскадом.
+ */
+export type BarterBadgePersist = {
+  id: string;
+  label: string;
+  description: string;
+  unlockedAt: number | null;
+};
+
+export const barterProgress = pgTable(
+  "barter_progress",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    xp: bigint("xp", { mode: "number" }).notNull().default(0),
+    confirmedBarterIds: jsonb("confirmed_barter_ids").$type<string[]>().notNull(),
+    badges: jsonb("badges").$type<BarterBadgePersist[]>().notNull(),
+    streak: integer("streak").notNull().default(0),
+    bestStreak: integer("best_streak").notNull().default(0),
+    dailyDate: text("daily_date"),
+    dailyProfit: bigint("daily_profit", { mode: "number" }).notNull().default(0),
+    lifetimeProfit: bigint("lifetime_profit", { mode: "number" }).notNull().default(0),
+    lifetimeSavings: bigint("lifetime_savings", { mode: "number" }).notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
+);
+
 /* ───────────────── inferred types (для использования в коде) ───────────────── */
+export type BarterProgressRow = typeof barterProgress.$inferSelect;
+export type NewBarterProgressRow = typeof barterProgress.$inferInsert;
 export type QuestProgress = typeof questProgress.$inferSelect;
 export type NewQuestProgress = typeof questProgress.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
@@ -300,3 +374,9 @@ export type BarterRow = typeof barters.$inferSelect;
 export type NewBarterRow = typeof barters.$inferInsert;
 export type CraftRow = typeof crafts.$inferSelect;
 export type NewCraftRow = typeof crafts.$inferInsert;
+export type AchievementRow = typeof achievements.$inferSelect;
+export type NewAchievementRow = typeof achievements.$inferInsert;
+export type MapRow = typeof maps.$inferSelect;
+export type NewMapRow = typeof maps.$inferInsert;
+export type TraderRow = typeof traders.$inferSelect;
+export type NewTraderRow = typeof traders.$inferInsert;

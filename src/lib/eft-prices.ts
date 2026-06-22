@@ -24,6 +24,8 @@ export interface EftPriceInfo {
   lastLowPrice?: number;
   avg24hPrice?: number;
   changeLast48hPercent?: number;
+  low24hPrice?: number;
+  high24hPrice?: number;
   sellFor: CtaVendorOffer[];
   buyFor: CtaVendorOffer[];
 }
@@ -44,6 +46,8 @@ interface RawItem {
   lastLowPrice?: number;
   avg24hPrice?: number;
   changeLast48hPercent?: number;
+  low24hPrice?: number;
+  high24hPrice?: number;
   sellFor?: RawOffer[];
   buyFor?: RawOffer[];
 }
@@ -63,6 +67,8 @@ const QUERY = `
       lastLowPrice
       avg24hPrice
       changeLast48hPercent
+      low24hPrice
+      high24hPrice
       sellFor { price priceRUB currency vendor { name normalizedName } }
       buyFor  { price priceRUB currency vendor { name normalizedName } }
     }
@@ -104,6 +110,8 @@ export async function getEftPriceMap(): Promise<Map<string, EftPriceInfo>> {
           lastLowPrice: it.lastLowPrice ?? undefined,
           avg24hPrice: it.avg24hPrice ?? undefined,
           changeLast48hPercent: it.changeLast48hPercent ?? undefined,
+          low24hPrice: it.low24hPrice ?? undefined,
+          high24hPrice: it.high24hPrice ?? undefined,
           sellFor: (it.sellFor ?? []).map(mapOffer),
           buyFor: (it.buyFor ?? []).map(mapOffer),
         } satisfies EftPriceInfo,

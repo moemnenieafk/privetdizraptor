@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { syncEftPrices } from "@/db/prices";
 import { syncEftBartersCrafts } from "@/db/barters-crafts";
+import { syncEftLandingData } from "@/db/landing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,13 @@ export async function GET(req: Request): Promise<NextResponse> {
     } catch (e) {
       console.error("[cron/sync-prices] barters/crafts:", e);
     }
-    return NextResponse.json({ ok: true, ...priceRes, ...staticRes, at: new Date().toISOString() });
+    let landingRes = { achievements: 0, maps: 0, traders: 0 };
+    try {
+      landingRes = await syncEftLandingData();
+    } catch (e) {
+      console.error("[cron/sync-prices] landing:", e);
+    }
+    return NextResponse.json({ ok: true, ...priceRes, ...staticRes, ...landingRes, at: new Date().toISOString() });
   } catch (e) {
     // Эндпоинт за CRON_SECRET (только админ/крон) — отдаём реальный текст ошибки
     // вызывающему, чтобы было видно причину в логах GitHub Actions / Vercel.

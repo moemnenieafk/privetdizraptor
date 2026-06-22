@@ -23,13 +23,10 @@ export default function Footer() {
 
   useEffect(() => {
     const t0 = performance.now();
-    fetch("https://api.tarkov.dev/graphql", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: "{ __typename }" }),
-      signal: AbortSignal.timeout(6000),
-    })
-      .then(() => {
+    // Пинг НАШЕГО бэкенда (а не tarkov.dev) — диагностика доступности CTA API.
+    fetch("/api/eft/items?limit=1", { signal: AbortSignal.timeout(6000) })
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
         setPing(Math.round(performance.now() - t0));
         setPingState("ok");
       })
@@ -106,7 +103,7 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               <span className={`shrink-0 w-1.5 h-1.5 ${pingDot}`} />
               <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-secondary">
-                API.TARKOV.DEV
+                CTA API
               </span>
               <span className={`font-blender-medium text-type-caption tabular-nums ${pingText}`}>
                 {pingLabel}
