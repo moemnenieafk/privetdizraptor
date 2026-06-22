@@ -5,7 +5,12 @@ config({ path: ".env.local" });
 async function main() {
   const { syncEftLandingData } = await import("../src/db/landing.ts");
   const r = await syncEftLandingData();
-  console.log(`ГОТОВО: achievements=${r.achievements}, maps=${r.maps}, traders=${r.traders}`);
+  const note = (skipped: boolean) => (skipped ? ", ПРЮН ПРОПУЩЕН (частичный ответ?)" : "");
+  console.log(
+    `ГОТОВО: achievements=${r.achievements} (−${r.achievementsDeleted} стейл${note(r.achievementsPruneSkipped)}), ` +
+      `maps=${r.maps} (−${r.mapsDeleted} стейл${note(r.mapsPruneSkipped)}), ` +
+      `traders=${r.traders} (−${r.tradersDeleted} стейл${note(r.tradersPruneSkipped)})`,
+  );
   process.exit(0);
 }
 

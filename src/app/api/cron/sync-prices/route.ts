@@ -34,7 +34,17 @@ export async function GET(req: Request): Promise<NextResponse> {
     } catch (e) {
       console.error("[cron/sync-prices] barters/crafts:", e);
     }
-    let landingRes = { achievements: 0, maps: 0, traders: 0 };
+    let landingRes = {
+      achievements: 0,
+      maps: 0,
+      traders: 0,
+      achievementsDeleted: 0,
+      mapsDeleted: 0,
+      tradersDeleted: 0,
+      achievementsPruneSkipped: false,
+      mapsPruneSkipped: false,
+      tradersPruneSkipped: false,
+    };
     try {
       landingRes = await syncEftLandingData();
     } catch (e) {

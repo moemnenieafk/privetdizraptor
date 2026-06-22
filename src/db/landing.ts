@@ -1,12 +1,44 @@
 // Self-mirror «лендинговых» справочников EFT из tarkov.dev: достижения, карты,
 // торговцы (resetTime/levels). Синк зовёт крон + CLI; читалки — страницы/экшены.
 // Импорты относительные (tsx-safe).
-import { eq, sql } from "drizzle-orm";
+import { and, eq, notInArray, sql } from "drizzle-orm";
+import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { achievements, maps, traders } from "./schema";
 import { eftGameId } from "./eft";
 
 const ENDPOINT = "https://api.tarkov.dev/graphql";
+
+// Порог защиты прюна: НЕ удаляем стейл-строки, если свежий набор из источника меньше этой
+// доли уже лежащего в БД — страховка от частичного/обрезанного ответа tarkov.dev (HTTP 200,
+// но усечённый список). Тот же приём, что в barters-crafts.ts.
+const PRUNE_MIN_RATIO = 0.5;
+
+/**
+ * Удаляет стейл-строки таблицы (id, исчезнувшие из источника), но БЕЗОПАСНО:
+ *  - пустой `keep` не трогает таблицу (notInArray([]) → SQL `true` снёс бы всё);
+ *  - усечённый ответ (свежих < PRUNE_MIN_RATIO от того, что в БД) → прюн пропускаем + warn;
+ *  - скоуп по gameId (мультиигровая БД); счётчик из command tag (res.count), без .returning().
+ */
+async function pruneStale(
+  table: PgTable,
+  idCol: PgColumn,
+  gameCol: PgColumn,
+  gameId: string,
+  keep: string[],
+  label: string,
+): Promise<{ deleted: number; skipped: boolean }> {
+  if (keep.length === 0) return { deleted: 0, skipped: false };
+  const had = await db.$count(table, eq(gameCol, gameId));
+  if (keep.length < had * PRUNE_MIN_RATIO) {
+    console.warn(
+      `[landing] прюн ${label} пропущен: свежих ${keep.length} << в БД ${had} (похоже на частичный ответ источника)`,
+    );
+    return { deleted: 0, skipped: true };
+  }
+  const res = await db.delete(table).where(and(eq(gameCol, gameId), notInArray(idCol, keep)));
+  return { deleted: res.count, skipped: false };
+}
 
 interface RawAchievement { id: string; name?: string; description?: string; hidden?: boolean; playersCompletedPercent?: number }
 interface RawMap { id: string; name?: string; normalizedName?: string }
@@ -24,7 +56,17 @@ const QUERY = `
   }
 `;
 
-export interface SyncLandingResult { achievements: number; maps: number; traders: number }
+export interface SyncLandingResult {
+  achievements: number;
+  maps: number;
+  traders: number;
+  achievementsDeleted: number;
+  mapsDeleted: number;
+  tradersDeleted: number;
+  achievementsPruneSkipped: boolean;
+  mapsPruneSkipped: boolean;
+  tradersPruneSkipped: boolean;
+}
 
 /** Тянет achievements+maps+traders из tarkov.dev и upsert'ит в наши таблицы. */
 export async function syncEftLandingData(): Promise<SyncLandingResult> {
@@ -81,7 +123,22 @@ export async function syncEftLandingData(): Promise<SyncLandingResult> {
       });
   }
 
-  return { achievements: a.length, maps: m.length, traders: t.length };
+  // Чистим стейл-строки (achievements/maps/traders, исчезнувшие из источника при вайпе).
+  const aP = await pruneStale(achievements, achievements.id, achievements.gameId, gameId, a.map((x) => x.id), "achievements");
+  const mP = await pruneStale(maps, maps.id, maps.gameId, gameId, m.map((x) => x.id), "maps");
+  const tP = await pruneStale(traders, traders.normalizedName, traders.gameId, gameId, t.map((x) => x.normalizedName), "traders");
+
+  return {
+    achievements: a.length,
+    maps: m.length,
+    traders: t.length,
+    achievementsDeleted: aP.deleted,
+    mapsDeleted: mP.deleted,
+    tradersDeleted: tP.deleted,
+    achievementsPruneSkipped: aP.skipped,
+    mapsPruneSkipped: mP.skipped,
+    tradersPruneSkipped: tP.skipped,
+  };
 }
 
 /* ───────────────── читалки (рантайм, чистое чтение нашей БД) ───────────────── */
