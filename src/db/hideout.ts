@@ -5,10 +5,11 @@
 // Источник трогает только syncEftHideout() — CLI `npm run db:sync-hideout`.
 // Ключи (станция+уровень) стабильны между вайпами → чистый upsert без прюна.
 // Импорты относительные (tsx-safe).
-import { sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./index";
 import {
   hideoutUpgrades,
+  items,
   type HideoutItemReq,
   type HideoutModuleReq,
   type HideoutTraderReq,
@@ -150,4 +151,72 @@ export async function syncEftHideout(): Promise<SyncHideoutResult> {
   }
 
   return { stations: stations.length, upgrades: rows.length };
+}
+
+/* ───────────────── чтение для UI: агрегатор «нужно для убежища» ───────────────── */
+
+// Валюты — не «собираемые» предметы, в шопинг-лист не включаем (₽/€/$).
+const CURRENCY_IDS = new Set([
+  "5449016a4bdc2d6f028b456f", // ₽ Roubles
+  "569668774bdc2da2298b4568", // € Euros
+  "5696686a4bdc2da3298b456a", // $ Dollars
+]);
+
+export interface HideoutNeedSource {
+  station: string;
+  stationName: string;
+  level: number;
+  count: number;
+}
+export interface HideoutNeed {
+  itemId: string;
+  itemName: string;
+  itemShort: string;
+  total: number;
+  sources: HideoutNeedSource[];
+}
+
+/**
+ * Агрегатор предметов, нужных на полную застройку убежища (по всем апгрейдам).
+ * Группировка по предмету; источники = станция+уровень+кол-во. Имена — из `items`,
+ * иконка добавляется на уровне страницы (itemIconUrl). Валюта исключена. RSC-only.
+ */
+export async function getHideoutNeeds(): Promise<HideoutNeed[]> {
+  const gameId = await eftGameId();
+  const rows = await db
+    .select()
+    .from(hideoutUpgrades)
+    .where(eq(hideoutUpgrades.gameId, gameId));
+
+  const map = new Map<string, HideoutNeed>();
+  for (const r of rows) {
+    for (const req of r.itemRequirements) {
+      if (CURRENCY_IDS.has(req.itemId)) continue;
+      const a =
+        map.get(req.itemId) ??
+        { itemId: req.itemId, itemName: "", itemShort: "", total: 0, sources: [] };
+      a.total += req.count;
+      a.sources.push({ station: r.stationNormalizedName, stationName: r.stationName, level: r.level, count: req.count });
+      map.set(req.itemId, a);
+    }
+  }
+
+  const ids = [...map.keys()];
+  if (ids.length > 0) {
+    const itemRows = await db
+      .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName })
+      .from(items)
+      .where(and(eq(items.gameId, gameId), inArray(items.inGameId, ids)));
+    const byId = new Map(itemRows.map((i) => [i.inGameId, i]));
+    for (const a of map.values()) {
+      const it = byId.get(a.itemId);
+      a.itemName = it?.name ?? a.itemId;
+      a.itemShort = it?.shortName ?? "";
+    }
+  }
+
+  for (const a of map.values()) {
+    a.sources.sort((x, y) => x.stationName.localeCompare(y.stationName) || x.level - y.level);
+  }
+  return [...map.values()].sort((x, y) => y.total - x.total || x.itemName.localeCompare(y.itemName));
 }
