@@ -9,6 +9,8 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { useQuestStore } from '@/store/useQuestStore';
 import { ProfileDeleteModal } from './ProfileDeleteModal';
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { useUser } from '@/hooks/useUser';
+import { createClient } from '@/lib/supabase/client';
 
 // Функция вычисления группы иконки уровня (1-16)
 const getLevelGroup = (level: number) => {
@@ -21,8 +23,16 @@ export function PlayerTelemetry() {
   const router   = useRouter();
   const config = getHeaderConfig(pathname || '');
 
-  // Временные стейты для демонстрации верстки
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Реальная авторизация: статус из сессии Supabase (хук useUser).
+  const { user } = useUser();
+  const isAuthenticated = !!user;
+  const supabaseRef = useRef(createClient());
+  const handleLogin = () => router.push('/login');
+  const handleSignOut = async () => {
+    await supabaseRef.current.auth.signOut();
+    // useUser перехватит SIGNED_OUT через onAuthStateChange → виджет свернётся.
+  };
+
   const [progressMode, setProgressMode] = useState<'KAPPA' | 'LIGHTKEEPER'>('KAPPA');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -96,7 +106,7 @@ export function PlayerTelemetry() {
               <button onClick={() => setIsSettingsOpen(true)} className="w-3 h-3 flex items-center justify-center group focus:outline-none" title="Настройки">
                 <div className="w-full h-full icon-mask icon-eft-profile-settings text-text-muted transition-colors group-hover:text-(--primary)" />
               </button>
-              <button onClick={() => setIsAuthenticated(false)} className="w-3 h-3 flex items-center justify-center group focus:outline-none" title="Выход">
+              <button onClick={handleSignOut} className="w-3 h-3 flex items-center justify-center group focus:outline-none" title="Выход">
                 <div className="w-full h-full icon-mask icon-eft-profile-logout text-text-muted transition-colors group-hover:text-(--primary)" />
               </button>
             </div>
@@ -212,7 +222,7 @@ export function PlayerTelemetry() {
                     </div>
                     <span className="text-type-label font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Аккаунт Центр</span>
                   </Link>
-                  <button onClick={() => { setIsAuthenticated(false); setIsProfileMenuOpen(false); }} className="flex h-7 w-full items-center justify-start gap-2 px-2 transition-colors hover:bg-card-menu group/btn">
+                  <button onClick={() => { void handleSignOut(); setIsProfileMenuOpen(false); }} className="flex h-7 w-full items-center justify-start gap-2 px-2 transition-colors hover:bg-card-menu group/btn">
                     <div className="flex h-3 w-3 items-center justify-center shrink-0">
                       <div className="h-full w-full icon-mask icon-eft-profile-logout bg-text-secondary transition-colors group-hover/btn:bg-danger" />
                     </div>
@@ -353,7 +363,7 @@ export function PlayerTelemetry() {
         {/* СЕКЦИЯ 3: Блок авторизации */}
         <div className="flex w-19 h-full items-center justify-center rounded-br-sm">
           {!isAuthenticated ? (
-            <button onClick={() => setIsAuthenticated(true)} className="flex h-5 w-14 items-center justify-center gap-1 rounded-xs bg-text-secondary transition-colors hover:bg-(--primary) focus:outline-none">
+            <button onClick={handleLogin} className="flex h-5 w-14 items-center justify-center gap-1 rounded-xs bg-text-secondary transition-colors hover:bg-(--primary) focus:outline-none">
               <div className="h-2.5 w-2.5 icon-mask icon-eft-profile-login text-lines-hover" />
               <span className="text-type-micro font-blender-medium uppercase leading-none text-lines-hover">Войти</span>
             </button>

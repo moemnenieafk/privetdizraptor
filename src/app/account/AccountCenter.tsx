@@ -1,8 +1,11 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronDown, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronDown, Check, LogOut } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { createClient } from '@/lib/supabase/client';
+import type { Me } from '@/lib/auth/me';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -361,11 +364,10 @@ function PlanView({ onBack }: { onBack: () => void }) {
 
 // ─── Tab panels ───────────────────────────────────────────────────────────────
 
-function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
+function ProfilePanel({ onNavigate, me }: { onNavigate: (v: ViewId) => void; me: Me }) {
   const profiles = usePlayerStore((s) => s.profiles);
   const activeProfileId = usePlayerStore((s) => s.activeProfileId);
   const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0];
-  const ed = EDITIONS[activeProfile?.edition ?? 'Standard'];
   const isPro = activeProfile?.edition === 'TUE' || activeProfile?.edition === 'EOD';
 
   return (
@@ -387,8 +389,8 @@ function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
           action={<RowBtn onClick={() => onNavigate('username')} />}
         >
           <span className="font-blender-book text-type-caption text-text-muted">Текущий логин:</span>
-          <span className={`font-blender-medium text-sm ${ed.color}`}>
-            {activeProfile?.nickname ?? '—'}
+          <span className="font-blender-medium text-sm text-text-secondary">
+            {me.username ?? '(не задан)'}
           </span>
         </FlatRow>
 
@@ -398,7 +400,7 @@ function ProfilePanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         >
           <span className="font-blender-book text-type-caption text-text-muted">Текущий E-mail:</span>
           <span className="font-blender-book text-sm text-text-secondary">
-            vad***re@gmail.com
+            {me.email ?? '—'}
           </span>
         </FlatRow>
 
@@ -599,7 +601,8 @@ function ProStatusPanel() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function AccountCenter() {
+export function AccountCenter({ me }: { me: Me }) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [activeView, setActiveView] = useState<ViewId | null>(null);
 
@@ -611,6 +614,11 @@ export function AccountCenter() {
   const navigate = (view: ViewId) => setActiveView(view);
   const goBack = () => setActiveView(null);
 
+  const handleSignOut = async () => {
+    await createClient().auth.signOut();
+    router.push('/login'); // кабинет под server-гардом — уходим на логин
+  };
+
   const renderContent = () => {
     if (activeView === 'avatar')        return <AvatarView onBack={goBack} />;
     if (activeView === 'username')      return <UsernameView onBack={goBack} />;
@@ -621,7 +629,7 @@ export function AccountCenter() {
     if (activeView === 'plan')          return <PlanView onBack={goBack} />;
 
     switch (activeTab) {
-      case 'profile':   return <ProfilePanel onNavigate={navigate} />;
+      case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} />;
       case 'security':  return <SecurityPanel onNavigate={navigate} />;
       case 'linking':   return <LinkingPanel />;
       case 'billing':   return <BillingPanel onNavigate={navigate} />;
@@ -659,6 +667,16 @@ export function AccountCenter() {
                 </button>
               );
             })}
+
+            <button
+              onClick={handleSignOut}
+              className="group flex shrink-0 items-center gap-3 rounded border border-lines-hover bg-card-menu px-3 py-3.5 text-left text-text-muted transition-all duration-200 hover:border-danger hover:text-danger lg:mt-2 lg:w-full lg:px-4"
+            >
+              <LogOut className="h-5 w-5 shrink-0" />
+              <span className="whitespace-nowrap font-blender-medium text-type-caption uppercase tracking-widest lg:text-xs">
+                Выйти
+              </span>
+            </button>
           </aside>
 
           {/* Content */}
