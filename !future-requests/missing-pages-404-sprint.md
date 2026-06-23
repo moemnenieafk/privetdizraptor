@@ -4,7 +4,11 @@
 > открой новый чат Клода, прочитай этот файл и продолжай с нужной фазы. Отмечай прогресс ✅.
 > Источник-план: `~/.claude/plans/smooth-zooming-zephyr.md`.
 >
-> **Статус фаз:** Phase 0 ✅ · Phase 1A (сюжетка) ✅ · Phase 1B (трейдеры) ✅ · Phase 2 (price-slot/craft/bitcoin/needed/prestige) ✅ · Phase 3 (боссы) ✅ · Phase 4 (карты) ⬜ блокер-данных.
+> **Статус фаз:** Phase 0 ✅ · Phase 1A (сюжетка) ✅ · Phase 1B (трейдеры) ✅ · Phase 2 (price-slot/craft/bitcoin/needed/prestige + **loot-tier 2.6 ✅**) ✅ · Phase 3 (боссы) ✅ · Phase 4 (карты) ⬜ блокер-данных.
+>
+> ## Журнал (день 3)
+> - **loot-tier (2.6) — ГОТОВО (build green, ○ Static).** Кодировка `LootRateClient.tsx` восстановлена: файл был равномерным double-encoding мохибейком (UTF-8→прочитан как cp1251→пересохранён в UTF-8). Развернул `text.encode('cp1251').decode('utf-8')`; единственный неразворачиваемый символ — заглавная «И» (байт `0x98` не определён в cp1251, 3×: ПОИСК/Изображение/Итог) — пропатчен через ASCII-плейсхолдер. Записан UTF-8 без BOM, верифицирован байт-ассертами (16/16 меток, ноль мохибейка/control-символов).
+> - **Тир-режим** свёрнут в `/eft/items/loot-rate` (toggle «Тиры» → бейдж S/A/B/C/D + пилюли-фильтр поверх готовых фильтров/сорта; тир по `vps`). Тир-логика вынесена в `src/lib/loot-tier.util.ts` (Tier/пороги 40k/20k/10k/5k/0/цвета/`tierOf`); `PriceSlotClient` отрефакторен на неё — дубликат устранён.
 >
 > ## Журнал (день 2, автономно — pushed на main)
 > - **Phase 1B** — `QuestTraderList` (реюз `QuestNode`+`QuestDrawer`), `computeStatusMap`→`src/lib/quest-status.ts`; `/eft/quests/<трейдер>`. Карта квестов цела.
@@ -16,7 +20,6 @@
 > - Коммиты: 4df487e, 68b5d57, 9eeda3d, a676de4.
  - **Кодекс — Торговцы** (03e74cd) — `/eft/gamesetting/traders` индекс + детали (11, досье+кросс-ссылка на квесты). `src/data/traders.ts`.
 > - ⬜ Осталось:
->   - **loot-tier (2.6) — ЗАБЛОКИРОВАНО:** `src/app/eft/items/loot-rate/LootRateClient.tsx` **побит кодировкой** (метки категорий мусор: «РќР°СѓС€РЅРёРєРё»). Сначала починить кодировку файла (UTF-8) → потом фолд-ин тир-режима. Редактировать вслепую нельзя.
 >   - needed-часть убежища → mirror `hideout_upgrades`; Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс lore/timeline/factions/locations → контент/данные; HP остальных 10 боссов → выверенные значения; опц. полноэкранный `/eft/quests/task/[id]`.
 >
 > ## Журнал выполнения (автономная сессия)
@@ -138,8 +141,8 @@ EFT-данные **полностью зеркалятся в Supabase**. **За
 ### 2.5 Престиж — `/eft/progress/prestige`
 Табы по уровням: требования → награды → сбрасывается/переносится. Реюз `usePlayerStore`,`AchievementsClient`. Новое статич. `prestige-requirements.json`/`prestige-rewards.json`, `PrestigeClient.tsx`. Нужны навыки игрока (из `/api/profile-ocr` или расширить стор). Делать последним.
 
-### 2.6 Рейтинг предметов (loot-tier) — ✅ РЕШЕНО: свернуть в каталог
-Добавить toggle «тир-строки S–D» в существующий `/eft/items/loot-rate` (режим отображения поверх готовых фильтров/сорта/избранного — НЕ отдельный раздел, НЕ дубль ~600-800 LOC). Тир-пороги из ₽/слот. OCR/Jarvis — премиум-роадмап.
+### 2.6 Рейтинг предметов (loot-tier) — ✅ ГОТОВО (build green)
+Toggle «Тиры» в `/eft/items/loot-rate`: тир-бейдж S/A/B/C/D + пилюли-фильтр поверх готовых фильтров/сорта (НЕ отдельный раздел). Тир по `vps` (₽/слот). Тир-логика — общий `src/lib/loot-tier.util.ts` (реюз в price-slot). Шкала 5-уровневая S/A/B/C/D (пороги 40k/20k/10k/5k/0). OCR/Jarvis — премиум-роадмап.
 
 ---
 

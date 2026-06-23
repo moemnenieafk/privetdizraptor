@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { calcFleaFee } from '@/lib/barter-calc';
+import { type LootTier, TIER_COLOR, TIER_ORDER, tierOf } from '@/lib/loot-tier.util';
 
 export interface PriceSlotItem {
   id: string;
@@ -18,40 +19,19 @@ export interface PriceSlotItem {
   changeLast48h?: number;
 }
 
-type Tier = 'S' | 'A' | 'B' | 'C' | 'D';
-
-const TIER_THRESHOLDS: { tier: Tier; min: number }[] = [
-  { tier: 'S', min: 40_000 },
-  { tier: 'A', min: 20_000 },
-  { tier: 'B', min: 10_000 },
-  { tier: 'C', min: 5_000 },
-  { tier: 'D', min: 0 },
-];
-
-const TIER_COLOR: Record<Tier, string> = {
-  S: 'text-success',
-  A: 'text-(--primary)',
-  B: 'text-sky-400',
-  C: 'text-text-secondary',
-  D: 'text-text-muted',
-};
-
 // Семантика цветов подложки предметов EFT (для лёгкого левого акцента строки).
 const BG_HEX: Record<string, string> = {
   violet: '#4C2A55', yellow: '#666628', orange: '#3C1900', blue: '#1C4156',
   green: '#152D00', red: '#631D1D', black: '#1D1D1D', grey: '#7F7F7F',
 };
 
-function tierOf(pps: number): Tier {
-  return (TIER_THRESHOLDS.find((t) => pps >= t.min)?.tier ?? 'D');
-}
 const fmt = (n: number) => n.toLocaleString('ru-RU');
 
 export function PriceSlotClient({ items }: { items: PriceSlotItem[] }) {
   const [intelL3, setIntelL3] = useState(false);
   const [mgmt, setMgmt] = useState(0);
   const [search, setSearch] = useState('');
-  const [tierFilter, setTierFilter] = useState<Tier | null>(null);
+  const [tierFilter, setTierFilter] = useState<LootTier | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const feeMod = (1 - (intelL3 ? 0.3 : 0)) * (1 - 0.003 * Math.max(0, Math.min(50, mgmt)));
@@ -117,7 +97,7 @@ export function PriceSlotClient({ items }: { items: PriceSlotItem[] }) {
             >
               Все
             </button>
-            {(['S', 'A', 'B', 'C', 'D'] as Tier[]).map((t) => (
+            {TIER_ORDER.map((t) => (
               <button
                 key={t}
                 type="button"
