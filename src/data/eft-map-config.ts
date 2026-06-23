@@ -40,6 +40,8 @@ export interface EftMapConfig {
   coordinateRotation: number;
   /** Углы холста L.CRS.Simple: [[y1,x1],[y2,x2]]. */
   bounds: [[number, number], [number, number]] | null;
+  /** Отдельные границы для SVG-подложки, если отличаются от bounds (редко). */
+  svgBounds?: [[number, number], [number, number]] | null;
   /** [min,max] game-Y дефолтного (наземного) этажа. */
   heightRange: [number, number] | null;
   /** id <g>-группы наземного этажа в SVG. */
@@ -123,6 +125,10 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     bounds: [
       [289, -293],
       [-303, 244],
+    ],
+    svgBounds: [
+      [289, -274],
+      [-303, 272],
     ],
     heightRange: [-7, 10000],
     svgLayer: "Ground_Level",

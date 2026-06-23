@@ -499,3 +499,108 @@ html {
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
 }
+
+/* ═══════════════════ Интерактивные карты (Phase 4, Leaflet) ═══════════════════ */
+.cta-map-root .leaflet-container {
+  background: var(--color-base);
+  font-family: var(--font-blender-book);
+  outline: none;
+  cursor: grab;
+}
+.cta-map-root .leaflet-container:active { cursor: grabbing; }
+.cta-map-svg { filter: saturate(0.92) brightness(0.96) contrast(1.02); }
+
+/* цвет маркера по фракции/типу */
+.ef-pmc, .ss-pmc, .lg-spawn { --mk: #5FB85B; }
+.ef-scav, .ss-scav { --mk: #E6A23C; }
+.ef-shared, .ef-all, .ss-all { --mk: #5FA8D8; }
+.ss-boss { --mk: #E5484D; }
+.ss-sniper { --mk: #C26BE0; }
+
+.cta-mk { box-sizing: border-box; }
+
+/* выход: точка + подпись */
+.cta-extract { position: relative; display: flex; align-items: center; cursor: pointer; }
+.cta-ex-dot {
+  width: 14px; height: 14px; border-radius: 9999px;
+  background: var(--mk, #5FA8D8); border: 2px solid var(--color-base);
+  box-shadow: 0 0 0 1.5px var(--mk, #5FA8D8), 0 0 10px 1px color-mix(in srgb, var(--mk, #5FA8D8) 65%, transparent);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.cta-ex-name {
+  position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+  white-space: nowrap; pointer-events: none;
+  font-family: var(--font-blender-medium); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--color-text-primary); padding: 1px 5px; border-radius: 2px;
+  background: color-mix(in srgb, var(--color-base) 58%, transparent);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+}
+.cta-extract:hover { z-index: 10000; }
+.cta-extract:hover .cta-ex-dot { transform: scale(1.28); box-shadow: 0 0 0 2px var(--mk), 0 0 18px 4px var(--mk); }
+
+/* спавн: ромб */
+.cta-spawn {
+  width: 12px; height: 12px; background: var(--mk, #5FA8D8);
+  border: 1.5px solid var(--color-base); transform: rotate(45deg); cursor: pointer;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--mk, #5FA8D8) 60%, transparent);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.cta-spawn:hover { transform: rotate(45deg) scale(1.35); box-shadow: 0 0 12px 2px var(--mk); }
+
+/* переход / опасность */
+.cta-transit {
+  display: grid; place-items: center; width: 22px; height: 22px; border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-base) 82%, transparent);
+  border: 1.5px solid #5FA8D8; color: #5FA8D8; font-size: 13px; line-height: 1;
+  box-shadow: 0 0 8px rgba(95, 168, 216, 0.45);
+}
+.cta-hazard {
+  display: grid; place-items: center; width: 18px; height: 18px;
+  color: #E5484D; font-size: 14px; line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(229, 72, 77, 0.7));
+}
+
+/* полигон зоны выхода (ховер) */
+.cta-ex-zone { fill: var(--mk, #5FA8D8); fill-opacity: 0.14; stroke: var(--mk, #5FA8D8); stroke-width: 1.5; stroke-opacity: 0.85; }
+
+/* тултип */
+.leaflet-tooltip.cta-tip {
+  background: color-mix(in srgb, var(--color-base) 92%, transparent);
+  border: 1px solid var(--color-lines-hover); border-radius: 3px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px);
+  padding: 6px 9px;
+}
+.leaflet-tooltip.cta-tip::before { display: none; }
+.cta-tip-h { font-family: var(--font-blender-medium); text-transform: uppercase; letter-spacing: 0.07em; font-size: 12px; color: var(--color-text-primary); }
+.cta-tip-h.t-extract { color: #5FB85B; }
+.cta-tip-h.t-spawn { color: #E6A23C; }
+.cta-tip-h.t-transit { color: #5FA8D8; }
+.cta-tip-h.t-hazard { color: #E5484D; }
+.cta-tip-sub { font-family: var(--font-blender-book); font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+/* легенда */
+.cta-legend { width: 11px; height: 11px; display: inline-block; }
+.lg-extract { background: #5FB85B; border-radius: 9999px; box-shadow: 0 0 6px #5FB85B; }
+.lg-spawn { background: #E6A23C; transform: rotate(45deg); border-radius: 1px; }
+.lg-boss { background: #E5484D; border-radius: 9999px; }
+.lg-hazard { background: color-mix(in srgb, #E5484D 25%, transparent); border: 1px solid #E5484D; border-radius: 2px; }
+
+/* фильтры слоёв / фракций (классы на .cta-map-root) */
+.cta-map-root.hide-extract .cta-extract { display: none; }
+.cta-map-root.hide-spawn .cta-spawn { display: none; }
+.cta-map-root.hide-transit .cta-transit { display: none; }
+.cta-map-root.hide-hazard .cta-hazard { display: none; }
+.cta-map-root.fac-pmc .ss-scav, .cta-map-root.fac-pmc .ef-scav { display: none; }
+.cta-map-root.fac-scav .ss-pmc, .cta-map-root.fac-scav .ef-pmc { display: none; }
+
+/* spawn→extract: подсветка валидных выходов */
+.cta-map-root.sel-pmc .cta-extract:not(.ef-pmc):not(.ef-shared):not(.ef-all),
+.cta-map-root.sel-scav .cta-extract:not(.ef-scav):not(.ef-shared):not(.ef-all) { opacity: 0.16; }
+.cta-map-root.sel-pmc .ef-pmc .cta-ex-dot, .cta-map-root.sel-pmc .ef-shared .cta-ex-dot, .cta-map-root.sel-pmc .ef-all .cta-ex-dot,
+.cta-map-root.sel-scav .ef-scav .cta-ex-dot, .cta-map-root.sel-scav .ef-shared .cta-ex-dot, .cta-map-root.sel-scav .ef-all .cta-ex-dot {
+  animation: cta-mk-pulse 1.4s ease-in-out infinite;
+}
+@keyframes cta-mk-pulse {
+  0%, 100% { box-shadow: 0 0 0 1.5px var(--mk), 0 0 8px 1px var(--mk); }
+  50% { box-shadow: 0 0 0 2px var(--mk), 0 0 20px 6px var(--mk); }
+}

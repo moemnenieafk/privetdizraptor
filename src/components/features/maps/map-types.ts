@@ -1,0 +1,29 @@
+import type { EftMapConfig } from '@/data/eft-map-config';
+
+/** Сериализуемый маркер для клиента (подмножество map_markers). */
+export interface MapViewMarker {
+  id: string;
+  type: string;
+  position: { x: number; y: number; z: number } | null;
+  outline: { x: number; y: number; z: number }[] | null;
+  label: string | null;
+  faction: string | null;
+  sides: string[] | null;
+  categories: string[] | null;
+  meta: Record<string, unknown> | null;
+}
+
+/** Полный пакет данных одной карты для интерактивного вьюера. */
+export interface MapView {
+  slug: string;
+  name: string;
+  imageUrl: string;
+  author: string | null;
+  authorLink: string | null;
+  raidDuration: number | null;
+  players: string | null;
+  minPlayerLevel: number | null;
+  maxPlayerLevel: number | null;
+  config: EftMapConfig;
+  markers: MapViewMarker[];
+}

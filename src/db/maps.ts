@@ -485,20 +485,21 @@ export async function syncEftMapsGeometry(): Promise<SyncMapsResult> {
 
 /* ───────────────── читалки (рантайм, чистое чтение нашей БД) ───────────────── */
 
-/** Карта + её маркеры для страницы /eft/maps/[slug]. null — нет интерактивных данных. */
+/** Карта (+ru-имя из maps) и её маркеры для страницы /eft/maps/[slug]. null — нет данных. */
 export async function getEftMapData(
   slug: string,
-): Promise<{ asset: MapAssetRow; markers: MapMarkerRow[] } | null> {
+): Promise<{ asset: MapAssetRow; name: string; markers: MapMarkerRow[] } | null> {
   try {
     const gameId = await eftGameId();
-    const [asset] = await db
-      .select()
+    const [row] = await db
+      .select({ asset: mapAssets, name: maps.name })
       .from(mapAssets)
+      .innerJoin(maps, eq(maps.id, mapAssets.mapId))
       .where(and(eq(mapAssets.gameId, gameId), eq(mapAssets.normalizedName, slug)))
       .limit(1);
-    if (!asset) return null;
-    const markers = await db.select().from(mapMarkers).where(eq(mapMarkers.mapId, asset.mapId));
-    return { asset, markers };
+    if (!row) return null;
+    const markers = await db.select().from(mapMarkers).where(eq(mapMarkers.mapId, row.asset.mapId));
+    return { asset: row.asset, name: row.name, markers };
   } catch (e) {
     console.error("[getEftMapData]", e);
     return null;
