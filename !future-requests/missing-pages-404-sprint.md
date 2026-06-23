@@ -13,6 +13,7 @@
 > - **HP боссов — ГОТОВО для всех 15 (build green, SSG; runtime проверен).** Тянул авторитетные значения по зонам из tarkov.dev GraphQL (`bosses { health }`) разово для авторинга статики. Хелпер `bossHp(head,chest,stomach,arm,leg)` заменил `STANDARD_HP`. Добавил HP 10 боссам (kaban/kollontai/partisan/zryachiy/bigpipe/birdeye/knight/sektant/thewedge/shadowoftagilla) **+ исправил 5 существующих** — они были PMC-плейсхолдерами (killa 440→890, tagilla 510→1220, shturman 440→812, gluhar 540→1010, sanitar 440→1270). Лор не тронут (diff-классификация + targeted-скрипт).
 > - **Кодекс-лор (сюжетный батч 4+2) — ГОТОВО (build green; runtime 6/6 = 200).** Тип `src/types/codex.ts` + self-contained `CodexArticle` (шапка-глиф, лид, вертикальный таймлайн, секции, related, плашка достоверности). Ветвление `gamesetting/[slug]` (статья → шаблон, иначе заглушка). 4 статьи `src/data/codex/{lore,timeline,factions,corporations}.ts` — контент через research-воркфлоу `codex-lore-research` (8 агентов: research→адверсариальный фактчек), сгенерён в TS скриптом из JSON (текст байт-точный, спекуляции помечены, без внешних ссылок). 2 индекс-лендинга `characters`/`materials`.
 > - **Кодекс-лор добивка — ГОТОВО (build green; runtime 200).** Ещё 2 статьи через `codex-lore-research-2`: `locations.ts` «Локации» (8 секций, 11 карт) + `theories.ts` «Теории и загадки» (7 секций, формат «Канон/Подтверждено/Спекуляции» с явными пометками). Реестр `index.ts` пересобран на 6 статей. Осталось кодекса: audiotapes/docs-notes (нужны данные предметов).
+> - **Backend `hideout_upgrades` — mirror ГОТОВ (db:push+db:sql+sync выполнены, RLS on).** Таблица `hideout_upgrades` (PK игра+станция+уровень; JSONB item/station/trader/skill requirements + constructionTime) в `schema.ts`; `supabase/hideout-upgrades-rls.sql`; `src/db/hideout.ts` `syncEftHideout()` (upsert-only); `scripts/sync-hideout.ts` + `db:sync-hideout`. **26 станций → 68 строк** засинхрено из tarkov.dev, форма JSONB и RLS проверены. Разблокирует needed-убежище UI + гейты craft-profit (это UI-надстройки, бэкенд готов).
 >
 > ## Журнал (день 2, автономно — pushed на main)
 > - **Phase 1B** — `QuestTraderList` (реюз `QuestNode`+`QuestDrawer`), `computeStatusMap`→`src/lib/quest-status.ts`; `/eft/quests/<трейдер>`. Карта квестов цела.
@@ -24,7 +25,7 @@
 > - Коммиты: 4df487e, 68b5d57, 9eeda3d, a676de4.
  - **Кодекс — Торговцы** (03e74cd) — `/eft/gamesetting/traders` индекс + детали (11, досье+кросс-ссылка на квесты). `src/data/traders.ts`.
 > - ⬜ Осталось:
->   - needed-часть убежища → mirror `hideout_upgrades`; Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс: audiotapes/docs-notes → данные предметов.
+>   - needed-убежище UI-агрегатор + craft-profit гейты (mirror `hideout_upgrades` ✅ готов — осталась UI-надстройка); Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс: audiotapes/docs-notes → данные предметов.
 >
 > ## Журнал выполнения (автономная сессия)
 > **✅ Phase 0 — заглушки (build green):** `src/components/ui/SectionPlaceholder.tsx`, `src/lib/section-nav.ts`,

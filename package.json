@@ -18,6 +18,7 @@
     "db:admin": "tsx scripts/make-admin.ts",
     "db:sync-prices": "tsx scripts/sync-prices.ts",
     "db:sync-barters-crafts": "tsx scripts/sync-barters-crafts.ts",
+    "db:sync-hideout": "tsx scripts/sync-hideout.ts",
     "db:sync-landing": "tsx scripts/sync-landing.ts"
   },
   "dependencies": {

@@ -268,6 +268,38 @@ export const traders = pgTable("traders", {
   syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/* ───────────────── hideout_upgrades (self-mirror tarkov.dev) ───────────────── */
+/**
+ * Зеркало требований апгрейдов убежища из tarkov.dev. 1 строка на (игра, станция, уровень).
+ * Разблокирует «Нужные предметы» (агрегатор предметов убежища) и гейты craft-profit.
+ * itemRequirements — {itemId, count} (валюта-рубли тоже идёт предметом); имя/иконка/цена
+ * подтягиваются join'ом к items/prices при чтении. Ключи (станция+уровень) стабильны
+ * между вайпами, поэтому синк — чистый upsert без прюна. Наполняет `db:sync-hideout`.
+ */
+export type HideoutItemReq = { itemId: string; count: number };
+export type HideoutModuleReq = { station: string; level: number };
+export type HideoutTraderReq = { trader: string; level: number };
+export type HideoutSkillReq = { skill: string; level: number };
+
+export const hideoutUpgrades = pgTable(
+  "hideout_upgrades",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    stationNormalizedName: text("station_normalized_name").notNull(),
+    stationName: text("station_name").notNull(),
+    level: integer("level").notNull(),
+    constructionTime: integer("construction_time"), // секунды
+    itemRequirements: jsonb("item_requirements").$type<HideoutItemReq[]>().notNull(),
+    stationRequirements: jsonb("station_requirements").$type<HideoutModuleReq[]>().notNull(),
+    traderRequirements: jsonb("trader_requirements").$type<HideoutTraderReq[]>().notNull(),
+    skillRequirements: jsonb("skill_requirements").$type<HideoutSkillReq[]>().notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.gameId, t.stationNormalizedName, t.level] })],
+);
+
 /* ───────────────────────── profiles ───────────────────────── */
 /**
  * Слой 4 — профиль игрока, 1:1 к auth.users (Supabase Auth). id = auth.users.id.
@@ -380,3 +412,5 @@ export type MapRow = typeof maps.$inferSelect;
 export type NewMapRow = typeof maps.$inferInsert;
 export type TraderRow = typeof traders.$inferSelect;
 export type NewTraderRow = typeof traders.$inferInsert;
+export type HideoutUpgradeRow = typeof hideoutUpgrades.$inferSelect;
+export type NewHideoutUpgradeRow = typeof hideoutUpgrades.$inferInsert;
