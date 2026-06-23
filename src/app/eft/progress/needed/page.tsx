@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { EFT_QUESTS } from '@/data/quests';
 import { itemIconUrl } from '@/lib/item-icon';
-import { getHideoutNeeds } from '@/db/hideout';
+import { getHideoutNeeds, getHideoutStations } from '@/db/hideout';
 import type { TaskObjectiveItem } from '@/types/quest';
 import { type NeededReq } from './NeededItemsClient';
 import { type HideoutNeedItem } from './HideoutNeededClient';
@@ -38,10 +38,8 @@ function buildQuestReqs(): NeededReq[] {
 export default async function NeededItemsPage() {
   const questReqs = buildQuestReqs();
   // Убежище — из нашего зеркала hideout_upgrades (иконку добавляем тут, как в квестах).
-  const hideoutNeeds: HideoutNeedItem[] = (await getHideoutNeeds()).map((n) => ({
-    ...n,
-    itemIcon: itemIconUrl(n.itemId),
-  }));
+  const [rawNeeds, hideoutStations] = await Promise.all([getHideoutNeeds(), getHideoutStations()]);
+  const hideoutNeeds: HideoutNeedItem[] = rawNeeds.map((n) => ({ ...n, itemIcon: itemIconUrl(n.itemId) }));
 
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
@@ -53,7 +51,7 @@ export default async function NeededItemsPage() {
             квестов. <span className="text-text-primary">Убежище</span>: сумма по всем апгрейдам (из нашего зеркала данных).
           </p>
         </header>
-        <NeededTabs questReqs={questReqs} hideoutNeeds={hideoutNeeds} />
+        <NeededTabs questReqs={questReqs} hideoutNeeds={hideoutNeeds} hideoutStations={hideoutStations} />
       </div>
     </main>
   );

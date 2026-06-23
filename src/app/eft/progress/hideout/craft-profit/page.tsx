@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { crafts as craftsTable, items } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
 import { getEftPriceMapFromDb } from '@/db/prices';
-import { getHideoutUnlockMap } from '@/db/hideout';
+import { getHideoutUnlockMap, getHideoutStations } from '@/db/hideout';
 import { itemIconUrl } from '@/lib/item-icon';
 import { CraftProfitClient, type ProcessedCraft } from './CraftProfitClient';
 
@@ -100,7 +100,7 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
 }
 
 export default async function CraftProfitPage() {
-  const crafts = await fetchCrafts();
+  const [crafts, stations] = await Promise.all([fetchCrafts(), getHideoutStations()]);
 
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
@@ -112,7 +112,7 @@ export default async function CraftProfitPage() {
             отсортировано по прибыли в час.
           </p>
         </header>
-        <CraftProfitClient crafts={crafts} />
+        <CraftProfitClient crafts={crafts} hideoutStations={stations} />
       </div>
     </main>
   );

@@ -3,10 +3,19 @@
 import { useState } from 'react';
 import { NeededItemsClient, type NeededReq } from './NeededItemsClient';
 import { HideoutNeededClient, type HideoutNeedItem } from './HideoutNeededClient';
+import { type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
 
 type Tab = 'quests' | 'hideout';
 
-export function NeededTabs({ questReqs, hideoutNeeds }: { questReqs: NeededReq[]; hideoutNeeds: HideoutNeedItem[] }) {
+export function NeededTabs({
+  questReqs,
+  hideoutNeeds,
+  hideoutStations,
+}: {
+  questReqs: NeededReq[];
+  hideoutNeeds: HideoutNeedItem[];
+  hideoutStations: HideoutStationInfo[];
+}) {
   const [tab, setTab] = useState<Tab>('quests');
 
   const tabs: { id: Tab; label: string; count: number }[] = [
@@ -34,7 +43,7 @@ export function NeededTabs({ questReqs, hideoutNeeds }: { questReqs: NeededReq[]
         ))}
       </div>
 
-      {tab === 'quests' ? <NeededItemsClient reqs={questReqs} /> : <HideoutNeededClient needs={hideoutNeeds} />}
+      {tab === 'quests' ? <NeededItemsClient reqs={questReqs} /> : <HideoutNeededClient needs={hideoutNeeds} stations={hideoutStations} />}
     </div>
   );
 }

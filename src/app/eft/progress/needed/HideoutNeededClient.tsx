@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useHideoutStore } from '@/store/useHideoutStore';
+import { HideoutLevelsPanel, type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
 
 export interface HideoutNeedItem {
   itemId: string;
@@ -13,35 +15,52 @@ export interface HideoutNeedItem {
 
 type SortKey = 'total' | 'name';
 
-export function HideoutNeededClient({ needs }: { needs: HideoutNeedItem[] }) {
+export function HideoutNeededClient({ needs, stations }: { needs: HideoutNeedItem[]; stations: HideoutStationInfo[] }) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('total');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const levels = useHideoutStore((s) => s.levels);
+
+  const anyBuilt = useMemo(() => Object.values(levels).some((v) => v > 0), [levels]);
+
+  // «Осталось»: оставляем только источники для уровней ВЫШЕ уже построенного; пустые предметы убираем.
+  const remaining = useMemo(() => {
+    return needs
+      .map((n) => {
+        const sources = n.sources.filter((s) => s.level > (levels[s.station] ?? 0));
+        return { ...n, sources, total: sources.reduce((a, b) => a + b.count, 0) };
+      })
+      .filter((n) => n.sources.length > 0);
+  }, [needs, levels]);
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     const list = q
-      ? needs.filter((n) => n.itemName.toLowerCase().includes(q) || n.itemShort.toLowerCase().includes(q))
-      : needs;
+      ? remaining.filter((n) => n.itemName.toLowerCase().includes(q) || n.itemShort.toLowerCase().includes(q))
+      : remaining;
     return [...list].sort((x, y) =>
       sortKey === 'name' ? x.itemName.localeCompare(y.itemName) : y.total - x.total || x.itemName.localeCompare(y.itemName),
     );
-  }, [needs, search, sortKey]);
+  }, [remaining, search, sortKey]);
 
   const overall = useMemo(() => {
-    const units = needs.reduce((s, n) => s + n.total, 0);
-    return { items: needs.length, units };
-  }, [needs]);
+    const units = remaining.reduce((s, n) => s + n.total, 0);
+    return { items: remaining.length, units };
+  }, [remaining]);
 
   return (
     <div className="flex flex-col gap-5">
+      <HideoutLevelsPanel stations={stations} />
+
       {/* Сводка */}
       <div className="rounded-md border border-lines-hover bg-card-menu p-4">
         <span className="text-sm font-blender-medium uppercase tracking-widest text-text-primary">
-          На полную застройку: <span className="text-(--primary)">{overall.items}</span> предметов · {overall.units.toLocaleString('ru-RU')} шт.
+          {anyBuilt ? 'Осталось собрать' : 'На полную застройку'}: <span className="text-(--primary)">{overall.items}</span> предметов · {overall.units.toLocaleString('ru-RU')} шт.
         </span>
         <p className="mt-1 text-type-caption text-text-muted font-blender-book">
-          Сумма по всем апгрейдам убежища (валюта исключена). Разверни строку — по каким станциям и уровням.
+          {anyBuilt
+            ? 'С учётом построенных уровней (панель «Моё убежище»). Разверни строку — по каким станциям/уровням осталось.'
+            : 'Сумма по всем апгрейдам убежища (валюта исключена). Отметь построенное в «Моё убежище» — покажу остаток.'}
         </p>
       </div>
 
@@ -115,7 +134,9 @@ export function HideoutNeededClient({ needs }: { needs: HideoutNeedItem[] }) {
           );
         })}
         {visible.length === 0 && (
-          <p className="py-12 text-center text-sm text-text-muted font-blender-book">Ничего не найдено — измени запрос.</p>
+          <p className="py-12 text-center text-sm text-text-muted font-blender-book">
+            {anyBuilt ? 'Всё для текущих целей собрано — подними уровни в «Моё убежище».' : 'Ничего не найдено — измени запрос.'}
+          </p>
         )}
       </div>
     </div>

@@ -268,3 +268,30 @@ export async function getHideoutUnlockMap(): Promise<HideoutUnlockMap> {
   }
   return out;
 }
+
+export interface HideoutStationInfo {
+  normalizedName: string;
+  name: string;
+  maxLevel: number;
+}
+
+/** Канонический список станций убежища с максимальным уровнем (для сеттера «Моё убежище»). RSC-only. */
+export async function getHideoutStations(): Promise<HideoutStationInfo[]> {
+  const gameId = await eftGameId();
+  const rows = await db
+    .select({
+      n: hideoutUpgrades.stationNormalizedName,
+      name: hideoutUpgrades.stationName,
+      level: hideoutUpgrades.level,
+    })
+    .from(hideoutUpgrades)
+    .where(eq(hideoutUpgrades.gameId, gameId));
+
+  const map = new Map<string, HideoutStationInfo>();
+  for (const r of rows) {
+    const e = map.get(r.n) ?? { normalizedName: r.n, name: r.name, maxLevel: 0 };
+    e.maxLevel = Math.max(e.maxLevel, r.level);
+    map.set(r.n, e);
+  }
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+}

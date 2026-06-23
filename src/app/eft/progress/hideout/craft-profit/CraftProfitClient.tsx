@@ -1,7 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Lock } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
+import { useHideoutStore } from '@/store/useHideoutStore';
+import { HideoutLevelsPanel, type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
 
 export interface CraftSlot {
   item: { id: string; name: string; shortName: string; image512pxLink?: string };
@@ -56,12 +58,15 @@ function pphColor(pph: number): string {
   return 'text-text-muted';
 }
 
-export function CraftProfitClient({ crafts }: { crafts: ProcessedCraft[] }) {
+export function CraftProfitClient({ crafts, hideoutStations }: { crafts: ProcessedCraft[]; hideoutStations: HideoutStationInfo[] }) {
   const [search, setSearch] = useState('');
   const [onlyProfitable, setOnlyProfitable] = useState(false);
+  const [onlyBuildable, setOnlyBuildable] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('pph');
   const [activeStation, setActiveStation] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const levels = useHideoutStore((s) => s.levels);
+  const builtLevel = (c: ProcessedCraft) => levels[c.stationNormalized] ?? 0;
 
   // Станции: иконка, имя, счётчик, лучший ₽/час
   const stations = useMemo(() => {
@@ -91,6 +96,7 @@ export function CraftProfitClient({ crafts }: { crafts: ProcessedCraft[] }) {
     () =>
       crafts.filter((c) => {
         if (onlyProfitable && c.profit <= 0) return false;
+        if (onlyBuildable && builtLevel(c) < c.level) return false;
         if (activeStation && (c.stationNormalized || c.stationName) !== activeStation) return false;
         if (q) {
           const hit = c.reward.some((r) => r.item.name.toLowerCase().includes(q) || r.item.shortName.toLowerCase().includes(q));
@@ -98,7 +104,8 @@ export function CraftProfitClient({ crafts }: { crafts: ProcessedCraft[] }) {
         }
         return true;
       }),
-    [crafts, onlyProfitable, activeStation, q],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [crafts, onlyProfitable, onlyBuildable, activeStation, q, levels],
   );
 
   // Группировка по станции (отсортированной по лучшему ₽/час)
@@ -131,6 +138,8 @@ export function CraftProfitClient({ crafts }: { crafts: ProcessedCraft[] }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <HideoutLevelsPanel stations={hideoutStations} />
+
       {/* Контролы */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -150,6 +159,17 @@ export function CraftProfitClient({ crafts }: { crafts: ProcessedCraft[] }) {
             }`}
           >
             Только прибыльные
+          </button>
+          <button
+            type="button"
+            onClick={() => setOnlyBuildable((v) => !v)}
+            className={`h-9 rounded px-3 text-type-caption font-blender-medium uppercase tracking-widest transition-colors ${
+              onlyBuildable
+                ? 'border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-(--primary)'
+                : 'border border-lines-hover bg-card-menu text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            Доступные сейчас
           </button>
           <div className="flex items-center gap-1">
             <span className="text-type-caption uppercase tracking-widest text-text-muted">Сорт:</span>
@@ -236,8 +256,12 @@ export function CraftProfitClient({ crafts }: { crafts: ProcessedCraft[] }) {
                       <span className={`shrink-0 text-type-caption ${expanded ? 'text-(--primary)' : 'text-text-muted'}`}>{expanded ? '▾' : '▸'}</span>
                       <span className="truncate text-sm font-blender-medium text-text-primary">{rewardName}</span>
                       <span className="shrink-0 rounded-xs border border-lines-hover px-1.5 text-type-caption text-text-muted">ур.{c.level}</span>
-                      {c.gate && (c.gate.traders.length > 0 || c.gate.skills.length > 0) && (
-                        <Lock className="h-3 w-3 shrink-0 text-text-muted" aria-label="Требуется торговец/навык" />
+                      {builtLevel(c) >= c.level ? (
+                        <Check className="h-3.5 w-3.5 shrink-0 text-success" aria-label="Станция построена — доступно сейчас" />
+                      ) : (
+                        c.gate && (c.gate.traders.length > 0 || c.gate.skills.length > 0) && (
+                          <Lock className="h-3 w-3 shrink-0 text-text-muted" aria-label="Требуется торговец/навык" />
+                        )
                       )}
                     </span>
                     <span className="w-16 text-right text-sm text-text-secondary tabular-nums">{fmtDur(c.duration)}</span>

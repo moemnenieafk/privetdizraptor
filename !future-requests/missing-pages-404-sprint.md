@@ -16,6 +16,7 @@
 > - **Backend `hideout_upgrades` — mirror ГОТОВ (db:push+db:sql+sync выполнены, RLS on).** Таблица `hideout_upgrades` (PK игра+станция+уровень; JSONB item/station/trader/skill requirements + constructionTime) в `schema.ts`; `supabase/hideout-upgrades-rls.sql`; `src/db/hideout.ts` `syncEftHideout()` (upsert-only); `scripts/sync-hideout.ts` + `db:sync-hideout`. **26 станций → 68 строк** засинхрено из tarkov.dev, форма JSONB и RLS проверены.
 > - **needed-убежище агрегатор — ГОТОВО (build green ○ Static; runtime 200).** `getHideoutNeeds()` в `src/db/hideout.ts` (RSC-чтение зеркала, join имён из `items`, валюта ₽/€/$ исключена). Таб-переключатель `NeededTabs` (Квесты | Убежище) на `/eft/progress/needed`; `HideoutNeededClient` — шопинг-лист (поиск/сорт, разворот → станция+уровень+кол-во). **Квесты=256, Убежище=116** позиций. Завершает Phase 2.4 (без трекинга «построено» — нет hideout-стора, это будущий шаг).
 > - **craft-profit гейты — ГОТОВО (build green ○ Static; runtime 200).** `getHideoutUnlockMap()` в `src/db/hideout.ts` (требования разблокировки уровня станции: пререквизит-станции/торговец/навык; имена станций — self-map, трейдеры — RU-map). `gate` на `ProcessedCraft`; лок-индикатор на строках с гейтом торговца/навыка (**88 из 211 крафтов**); блок «Доступ — станция ур.N» в разворачивании. Пейофф `hideout_upgrades` реализован полностью (needed + craft-profit).
+> - **Трекинг «построено» — ГОТОВО (build green; tsc/runtime ок).** Стор `useHideoutStore` (уровни станций, persist `cta-hideout`); `getHideoutStations()` (канон-список + maxLevel); переиспользуемая панель `HideoutLevelsPanel` (сеттер «Моё убежище» ±). **needed-Убежище** пересчитывает «осталось» (источники с level > построено); **craft-profit** — тоггл «Доступные сейчас» + индикатор ✓/🔒 по построенному уровню. Усиливает обе свежие страницы.
 >
 > ## Журнал (день 2, автономно — pushed на main)
 > - **Phase 1B** — `QuestTraderList` (реюз `QuestNode`+`QuestDrawer`), `computeStatusMap`→`src/lib/quest-status.ts`; `/eft/quests/<трейдер>`. Карта квестов цела.
@@ -27,7 +28,7 @@
 > - Коммиты: 4df487e, 68b5d57, 9eeda3d, a676de4.
  - **Кодекс — Торговцы** (03e74cd) — `/eft/gamesetting/traders` индекс + детали (11, досье+кросс-ссылка на квесты). `src/data/traders.ts`.
 > - ⬜ Осталось:
->   - needed-убежище трекинг «построено» (нужен hideout-стор); Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс: audiotapes/docs-notes → данные предметов.
+>   - Phase 4 карты → `map_assets`/`map_markers`+изображения (бэкенд-хостинг); кодекс: audiotapes/docs-notes → данные предметов (маппинг внутриигровых записей).
 >
 > ## Журнал выполнения (автономная сессия)
 > **✅ Phase 0 — заглушки (build green):** `src/components/ui/SectionPlaceholder.tsx`, `src/lib/section-nav.ts`,
