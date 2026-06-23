@@ -5,6 +5,8 @@ import { factionsArticle } from './factions';
 import { corporationsArticle } from './corporations';
 import { locationsArticle } from './locations';
 import { theoriesArticle } from './theories';
+import { audiotapesArticle } from './audiotapes';
+import { docsNotesArticle } from './docs-notes';
 
 // Реестр статей кодекса (gamesetting). research-лор EFT, см. @/types/codex.
 const CODEX_ARTICLES: Record<string, CodexArticle> = {
@@ -14,6 +16,8 @@ const CODEX_ARTICLES: Record<string, CodexArticle> = {
   corporations: corporationsArticle,
   locations: locationsArticle,
   theories: theoriesArticle,
+  audiotapes: audiotapesArticle,
+  'docs-notes': docsNotesArticle,
 };
 
 export function getCodexArticle(slug: string): CodexArticle | null {
