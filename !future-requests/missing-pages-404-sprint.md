@@ -11,6 +11,7 @@
 > - **Тир-режим** свёрнут в `/eft/items/loot-rate` (toggle «Тиры» → бейдж S/A/B/C/D + пилюли-фильтр поверх готовых фильтров/сорта; тир по `vps`). Тир-логика вынесена в `src/lib/loot-tier.util.ts` (Tier/пороги 40k/20k/10k/5k/0/цвета/`tierOf`); `PriceSlotClient` отрефакторен на неё — дубликат устранён.
 > - **Полноэкранный квест-таск — ГОТОВО (build green, ƒ; runtime 200/404 проверены).** Тело `QuestDrawer` вынесено в общий `src/components/features/quests/QuestDetail/` (проп `variant: 'drawer'|'page'` — контейнер/размеры/нав-экшен; всё состояние+стор+auto-complete внутри, `dedupedObjectives` через `useMemo`). `QuestDrawer` теперь тонкая обёртка (slide-анимация+панель+close). Новый RSC-роут `/eft/quests/task/[id]` (`.find` в `EFT_QUESTS`, `notFound`, back-ссылка «Квесты»). Deep-link: в дровере иконка «развернуть» → страница; на странице «Карта» → `/eft/questmap?quest=<id>`.
 > - **HP боссов — ГОТОВО для всех 15 (build green, SSG; runtime проверен).** Тянул авторитетные значения по зонам из tarkov.dev GraphQL (`bosses { health }`) разово для авторинга статики. Хелпер `bossHp(head,chest,stomach,arm,leg)` заменил `STANDARD_HP`. Добавил HP 10 боссам (kaban/kollontai/partisan/zryachiy/bigpipe/birdeye/knight/sektant/thewedge/shadowoftagilla) **+ исправил 5 существующих** — они были PMC-плейсхолдерами (killa 440→890, tagilla 510→1220, shturman 440→812, gluhar 540→1010, sanitar 440→1270). Лор не тронут (diff-классификация + targeted-скрипт).
+> - **Кодекс-лор (сюжетный батч 4+2) — ГОТОВО (build green; runtime 6/6 = 200).** Тип `src/types/codex.ts` + self-contained `CodexArticle` (шапка-глиф, лид, вертикальный таймлайн, секции, related, плашка достоверности). Ветвление `gamesetting/[slug]` (статья → шаблон, иначе заглушка). 4 статьи `src/data/codex/{lore,timeline,factions,corporations}.ts` — контент через research-воркфлоу `codex-lore-research` (8 агентов: research→адверсариальный фактчек), сгенерён в TS скриптом из JSON (текст байт-точный, спекуляции помечены, без внешних ссылок). 2 индекс-лендинга `characters`/`materials`. Осталось кодекса: locations/theories/audiotapes/docs-notes.
 >
 > ## Журнал (день 2, автономно — pushed на main)
 > - **Phase 1B** — `QuestTraderList` (реюз `QuestNode`+`QuestDrawer`), `computeStatusMap`→`src/lib/quest-status.ts`; `/eft/quests/<трейдер>`. Карта квестов цела.
@@ -22,7 +23,7 @@
 > - Коммиты: 4df487e, 68b5d57, 9eeda3d, a676de4.
  - **Кодекс — Торговцы** (03e74cd) — `/eft/gamesetting/traders` индекс + детали (11, досье+кросс-ссылка на квесты). `src/data/traders.ts`.
 > - ⬜ Осталось:
->   - needed-часть убежища → mirror `hideout_upgrades`; Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс lore/timeline/factions/locations → контент/данные.
+>   - needed-часть убежища → mirror `hideout_upgrades`; Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс: locations/theories/audiotapes/docs-notes → контент/данные.
 >
 > ## Журнал выполнения (автономная сессия)
 > **✅ Phase 0 — заглушки (build green):** `src/components/ui/SectionPlaceholder.tsx`, `src/lib/section-nav.ts`,
