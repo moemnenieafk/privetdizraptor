@@ -10,7 +10,7 @@ import { itemIconUrl } from '@/lib/item-icon';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ProcessedBarterSlot {
-  item: { id: string; name: string; shortName: string; image512pxLink?: string };
+  item: { id: string; name: string; shortName: string; image512pxLink?: string; normalizedName?: string };
   count: number;
   unitPrice: number; // RUB
 }
@@ -19,6 +19,7 @@ export interface ProcessedBarter {
   id:       string;
   trader:   { name: string; normalizedName: string };
   level:    number;
+  taskUnlock?: { id: string; name?: string } | null; // квест-гейт бартера (кросс-линк на карту квестов)
   required: ProcessedBarterSlot[];
   reward:   ProcessedBarterSlot[];
   totalCost:  number;
@@ -41,9 +42,9 @@ async function fetchBarters(): Promise<ProcessedBarter[]> {
   const rubVal = (p: { price: number; priceRUB?: number }) => p.priceRUB ?? p.price;
   const isFlea = (v: { name: string; normalizedName?: string }) =>
     v.name === 'Flea Market' || v.normalizedName === 'flea-market';
-  const slot = (id: string): { id: string; name: string; shortName: string; image512pxLink?: string } => {
+  const slot = (id: string): { id: string; name: string; shortName: string; image512pxLink?: string; normalizedName?: string } => {
     const i = nameMap.get(id);
-    return { id, name: i?.name ?? id, shortName: i?.shortName ?? '', image512pxLink: itemIconUrl(id) };
+    return { id, name: i?.name ?? id, shortName: i?.shortName ?? '', image512pxLink: itemIconUrl(id), normalizedName: priceMap.get(id)?.normalizedName ?? undefined };
   };
 
   return barterRows.map((b): ProcessedBarter => {
@@ -75,6 +76,7 @@ async function fetchBarters(): Promise<ProcessedBarter[]> {
       id: b.id,
       trader: { name: b.traderName, normalizedName: b.traderNormalizedName ?? '' },
       level: b.level ?? 1,
+      taskUnlock: b.taskUnlockId ? { id: b.taskUnlockId, name: b.taskUnlockName ?? undefined } : null,
       required,
       reward,
       totalCost,
