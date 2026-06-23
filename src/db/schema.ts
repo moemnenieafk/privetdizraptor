@@ -462,7 +462,44 @@ export const barterProgress = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
 );
 
+/* ─────────────────────── player_profiles ─────────────────────── */
+/**
+ * Слой 4d — облачные ИГРОВЫЕ профили (ник/уровень/prestige/edition/фракция/режим/
+ * уровни торговцев). ГИБРИД: localStorage остаётся источником, синк в БД при логине
+ * (паттерн ProgressSync). Одна строка на пользователя+игру; JSONB-блоб 1:1 повторяет
+ * persisted-форму usePlayerStore (`{ profiles[], activeProfileId }`). До 5 профилей.
+ * RLS owner-only (supabase/player-profiles-rls.sql).
+ */
+export type PlayerProfilePersist = {
+  id: string;
+  nickname: string;
+  level: string;
+  prestige: string;
+  faction: string;
+  edition: string;
+  mode: string;
+  traderLevels: Record<string, number>;
+};
+
+export const playerProfiles = pgTable(
+  "player_profiles",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    profiles: jsonb("profiles").$type<PlayerProfilePersist[]>().notNull(),
+    activeProfileId: text("active_profile_id").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
+);
+
 /* ───────────────── inferred types (для использования в коде) ───────────────── */
+export type PlayerProfileRow = typeof playerProfiles.$inferSelect;
+export type NewPlayerProfileRow = typeof playerProfiles.$inferInsert;
 export type BarterProgressRow = typeof barterProgress.$inferSelect;
 export type NewBarterProgressRow = typeof barterProgress.$inferInsert;
 export type QuestProgress = typeof questProgress.$inferSelect;

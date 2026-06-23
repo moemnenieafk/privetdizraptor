@@ -4,6 +4,7 @@
 // Работает и на сервере (RSC), и в браузере: на сервере self-fetch требует
 // абсолютный URL, в браузере — относительный.
 import type { ItemProperties } from "@/db/schema";
+import type { PlayerProfile } from "@/store/usePlayerStore";
 
 /* ───────────────── DTO (общая форма ответа API) ───────────────── */
 export interface CtaEftItem {
@@ -128,6 +129,31 @@ export async function getCtaBarterProgress(): Promise<BarterProgressPayload | nu
 // Сохранить прогресс бартера. false — не авторизован/ошибка.
 export async function saveCtaBarterProgress(p: BarterProgressPayload): Promise<boolean> {
   const res = await fetch(`${baseUrl()}/api/eft/barter-progress`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(p),
+  });
+  return res.ok;
+}
+
+/* ───────────────── игровые профили (слой 4d) ───────────────── */
+// Форма 1:1 повторяет persisted-поля usePlayerStore.
+export interface PlayerProfilePayload {
+  profiles: PlayerProfile[];
+  activeProfileId: string;
+}
+
+// Игровые профили текущего пользователя из сессии. null — не авторизован.
+export async function getCtaPlayerProfile(): Promise<PlayerProfilePayload | null> {
+  const res = await fetch(`${baseUrl()}/api/eft/player-profile`, { cache: "no-store" });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`CTA API /eft/player-profile → ${res.status}`);
+  return res.json() as Promise<PlayerProfilePayload>;
+}
+
+// Сохранить игровые профили. false — не авторизован/ошибка.
+export async function saveCtaPlayerProfile(p: PlayerProfilePayload): Promise<boolean> {
+  const res = await fetch(`${baseUrl()}/api/eft/player-profile`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(p),
