@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { crafts as craftsTable, items } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
 import { getEftPriceMapFromDb } from '@/db/prices';
+import { getHideoutUnlockMap } from '@/db/hideout';
 import { itemIconUrl } from '@/lib/item-icon';
 import { CraftProfitClient, type ProcessedCraft } from './CraftProfitClient';
 
@@ -32,13 +33,14 @@ function stationIcon(normalized?: string | null, name?: string | null): string |
 // Сборка из НАШЕЙ БД (crafts + items + цены). В рантайме в tarkov.dev НЕ ходим.
 async function fetchCrafts(): Promise<ProcessedCraft[]> {
   const gameId = await eftGameId();
-  const [craftRows, itemRows, priceMap] = await Promise.all([
+  const [craftRows, itemRows, priceMap, unlockMap] = await Promise.all([
     db.select().from(craftsTable).where(eq(craftsTable.gameId, gameId)),
     db
       .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName })
       .from(items)
       .where(eq(items.gameId, gameId)),
     getEftPriceMapFromDb(),
+    getHideoutUnlockMap(),
   ]);
   const nameMap = new Map(itemRows.map((r) => [r.inGameId, r]));
 
@@ -74,13 +76,15 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
       const duration = c.duration ?? 0;
       const profitPerHour = duration > 0 ? Math.round(profit / (duration / 3600)) : 0;
       const roi = totalCost > 0 ? Math.round((profit / totalCost) * 100) : 0;
+      const stationNormalized = c.stationNormalizedName ?? '';
+      const level = c.level ?? 1;
 
       return {
         id: c.id,
         stationName: c.stationName,
-        stationNormalized: c.stationNormalizedName ?? '',
+        stationNormalized,
         stationIcon: stationIcon(c.stationNormalizedName, c.stationName),
-        level: c.level ?? 1,
+        level,
         duration,
         required,
         reward,
@@ -89,6 +93,7 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
         profit,
         profitPerHour,
         roi,
+        gate: unlockMap[`${stationNormalized}|${level}`],
       };
     })
     .sort((a, b) => b.profitPerHour - a.profitPerHour);

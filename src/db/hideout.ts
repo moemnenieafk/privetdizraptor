@@ -220,3 +220,51 @@ export async function getHideoutNeeds(): Promise<HideoutNeed[]> {
   }
   return [...map.values()].sort((x, y) => y.total - x.total || x.itemName.localeCompare(y.itemName));
 }
+
+/* ───────────────── чтение для UI: гейты разблокировки станций ───────────────── */
+
+// normalizedName торговца → русское имя (для гейтов craft-profit). Стабильный набор.
+const TRADER_RU: Record<string, string> = {
+  prapor: "Прапор",
+  therapist: "Терапевт",
+  skier: "Лыжник",
+  peacekeeper: "Миротворец",
+  mechanic: "Механик",
+  ragman: "Барахольщик",
+  jaeger: "Егерь",
+  fence: "Скупщик",
+  ref: "Реф",
+  lightkeeper: "Смотритель маяка",
+  "btr-driver": "Водитель БТР",
+};
+
+export interface StationUnlock {
+  stations: { name: string; level: number }[]; // пререквизит-станции (рус. имя)
+  traders: { name: string; level: number }[]; // торговец (рус. имя) + ЛВЛ
+  skills: { name: string; level: number }[]; // навык (имя уже рус. из lang:ru)
+}
+// Ключ — `${stationNormalizedName}|${level}`.
+export type HideoutUnlockMap = Record<string, StationUnlock>;
+
+/**
+ * Карта требований разблокировки уровней станций (из `hideout_upgrades`) для гейтов
+ * craft-profit. Имена пререквизит-станций берём из самих же строк (self-map). RSC-only.
+ */
+export async function getHideoutUnlockMap(): Promise<HideoutUnlockMap> {
+  const gameId = await eftGameId();
+  const rows = await db
+    .select()
+    .from(hideoutUpgrades)
+    .where(eq(hideoutUpgrades.gameId, gameId));
+
+  const stationRu = new Map(rows.map((r) => [r.stationNormalizedName, r.stationName]));
+  const out: HideoutUnlockMap = {};
+  for (const r of rows) {
+    out[`${r.stationNormalizedName}|${r.level}`] = {
+      stations: r.stationRequirements.map((s) => ({ name: stationRu.get(s.station) ?? s.station, level: s.level })),
+      traders: r.traderRequirements.map((t) => ({ name: TRADER_RU[t.trader] ?? t.trader, level: t.level })),
+      skills: r.skillRequirements.map((s) => ({ name: s.skill, level: s.level })),
+    };
+  }
+  return out;
+}

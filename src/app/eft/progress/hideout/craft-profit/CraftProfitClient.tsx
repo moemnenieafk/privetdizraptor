@@ -1,11 +1,18 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Lock } from 'lucide-react';
 
 export interface CraftSlot {
   item: { id: string; name: string; shortName: string; image512pxLink?: string };
   count: number;
   unitPrice: number;
+}
+
+export interface StationGate {
+  stations: { name: string; level: number }[];
+  traders: { name: string; level: number }[];
+  skills: { name: string; level: number }[];
 }
 
 export interface ProcessedCraft {
@@ -22,6 +29,7 @@ export interface ProcessedCraft {
   profit: number;
   profitPerHour: number;
   roi: number;
+  gate?: StationGate;
 }
 
 type SortKey = 'pph' | 'profit' | 'roi' | 'duration';
@@ -228,6 +236,9 @@ export function CraftProfitClient({ crafts }: { crafts: ProcessedCraft[] }) {
                       <span className={`shrink-0 text-type-caption ${expanded ? 'text-(--primary)' : 'text-text-muted'}`}>{expanded ? '▾' : '▸'}</span>
                       <span className="truncate text-sm font-blender-medium text-text-primary">{rewardName}</span>
                       <span className="shrink-0 rounded-xs border border-lines-hover px-1.5 text-type-caption text-text-muted">ур.{c.level}</span>
+                      {c.gate && (c.gate.traders.length > 0 || c.gate.skills.length > 0) && (
+                        <Lock className="h-3 w-3 shrink-0 text-text-muted" aria-label="Требуется торговец/навык" />
+                      )}
                     </span>
                     <span className="w-16 text-right text-sm text-text-secondary tabular-nums">{fmtDur(c.duration)}</span>
                     <span className="w-20 text-right text-sm text-text-secondary tabular-nums">{fmtRub(c.totalCost)}→{fmtRub(c.totalValue)}</span>
@@ -236,9 +247,14 @@ export function CraftProfitClient({ crafts }: { crafts: ProcessedCraft[] }) {
                   </button>
 
                   {expanded && (
-                    <div className="grid gap-4 bg-(--color-darkbase) px-4 py-3 sm:grid-cols-2">
-                      <CraftSlots title="Вход" slots={c.required} />
-                      <CraftSlots title="Выход" slots={c.reward} />
+                    <div className="bg-(--color-darkbase) px-4 py-3">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <CraftSlots title="Вход" slots={c.required} />
+                        <CraftSlots title="Выход" slots={c.reward} />
+                      </div>
+                      {c.gate && c.gate.stations.length + c.gate.traders.length + c.gate.skills.length > 0 && (
+                        <StationGateBlock gate={c.gate} stationName={c.stationName} level={c.level} />
+                      )}
                     </div>
                   )}
                 </div>
@@ -272,6 +288,29 @@ function CraftSlots({ title, slots }: { title: string; slots: CraftSlot[] }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// Требования разблокировки уровня станции (из зеркала hideout_upgrades).
+function StationGateBlock({ gate, stationName, level }: { gate: StationGate; stationName: string; level: number }) {
+  const chips: string[] = [
+    ...gate.stations.map((s) => `${s.name} ур.${s.level}`),
+    ...gate.traders.map((t) => `${t.name} ур.${t.level}`),
+    ...gate.skills.map((s) => `Навык: ${s.name} ур.${s.level}`),
+  ];
+  return (
+    <div className="mt-4 border-t border-lines-hover pt-3">
+      <p className="mb-2 flex items-center gap-1.5 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted">
+        <Lock className="h-3 w-3" /> Доступ — {stationName} ур.{level}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {chips.map((c, i) => (
+          <span key={i} className="rounded-xs border border-lines-hover bg-card-menu px-2 py-0.5 text-type-caption text-text-secondary font-blender-book">
+            {c}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
