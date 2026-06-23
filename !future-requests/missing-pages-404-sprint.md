@@ -14,7 +14,10 @@
 > - **Phase 2.3** — `bitcoin-profit` (формула 145000/(1+(GPU−1)*0.041225), окупаемость, цены из зеркала).
 > - **Phase 2.5** — `prestige` (требования/награды/сброс-перенос; пороги патч-зависимы).
 > - Коммиты: 4df487e, 68b5d57, 9eeda3d, a676de4.
-> - ⬜ Осталось: Phase 2.6 loot-tier (свернуть тир-режим в `/eft/items/loot-rate`), needed-убежище (mirror `hideout_upgrades`), Phase 3 кодекс-торговцы + остальной лор + HP остальных боссов, Phase 4 карты (нужны `map_assets`/`map_markers`+изображения).
+ - **Кодекс — Торговцы** (03e74cd) — `/eft/gamesetting/traders` индекс + детали (11, досье+кросс-ссылка на квесты). `src/data/traders.ts`.
+> - ⬜ Осталось:
+>   - **loot-tier (2.6) — ЗАБЛОКИРОВАНО:** `src/app/eft/items/loot-rate/LootRateClient.tsx` **побит кодировкой** (метки категорий мусор: «РќР°СѓС€РЅРёРєРё»). Сначала починить кодировку файла (UTF-8) → потом фолд-ин тир-режима. Редактировать вслепую нельзя.
+>   - needed-часть убежища → mirror `hideout_upgrades`; Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс lore/timeline/factions/locations → контент/данные; HP остальных 10 боссов → выверенные значения; опц. полноэкранный `/eft/quests/task/[id]`.
 >
 > ## Журнал выполнения (автономная сессия)
 > **✅ Phase 0 — заглушки (build green):** `src/components/ui/SectionPlaceholder.tsx`, `src/lib/section-nav.ts`,
