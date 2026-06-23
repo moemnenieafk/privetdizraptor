@@ -4,7 +4,17 @@
 > открой новый чат Клода, прочитай этот файл и продолжай с нужной фазы. Отмечай прогресс ✅.
 > Источник-план: `~/.claude/plans/smooth-zooming-zephyr.md`.
 >
-> **Статус фаз:** Phase 0 — ✅ · Phase 1A (сюжетка) — ✅ · Phase 3 (боссы) — ✅ · Phase 1B/2/4 — ⬜.
+> **Статус фаз:** Phase 0 ✅ · Phase 1A (сюжетка) ✅ · Phase 1B (трейдеры) ✅ · Phase 2 (price-slot/craft/bitcoin/needed/prestige) ✅ · Phase 3 (боссы) ✅ · Phase 4 (карты) ⬜ блокер-данных.
+>
+> ## Журнал (день 2, автономно — pushed на main)
+> - **Phase 1B** — `QuestTraderList` (реюз `QuestNode`+`QuestDrawer`), `computeStatusMap`→`src/lib/quest-status.ts`; `/eft/quests/<трейдер>`. Карта квестов цела.
+> - **Phase 2.2** — `craft-profit` (чипы станций, ₽/час, разворот вход/выход).
+> - **Phase 2.1** — `price-slot` (топ-500 ₽/слот, тиры S–D, налог+модификаторы убежища реактивно, вердикт торговец/барахолка).
+> - **Phase 2.4** — `needed` (агрегатор предметов активных квестов; часть убежища — позже, нужна `hideout_upgrades`).
+> - **Phase 2.3** — `bitcoin-profit` (формула 145000/(1+(GPU−1)*0.041225), окупаемость, цены из зеркала).
+> - **Phase 2.5** — `prestige` (требования/награды/сброс-перенос; пороги патч-зависимы).
+> - Коммиты: 4df487e, 68b5d57, 9eeda3d, a676de4.
+> - ⬜ Осталось: Phase 2.6 loot-tier (свернуть тир-режим в `/eft/items/loot-rate`), needed-убежище (mirror `hideout_upgrades`), Phase 3 кодекс-торговцы + остальной лор + HP остальных боссов, Phase 4 карты (нужны `map_assets`/`map_markers`+изображения).
 >
 > ## Журнал выполнения (автономная сессия)
 > **✅ Phase 0 — заглушки (build green):** `src/components/ui/SectionPlaceholder.tsx`, `src/lib/section-nav.ts`,
