@@ -13,6 +13,8 @@ import type {
   VendorOffer,
   BarterOffer,
   CraftRecipe,
+  UsedInBarter,
+  UsedInCraft,
 } from './ItemModules';
 import { ItemDetailLayout } from './ItemDetailLayout';
 import { getDynamicTopIndicator } from '@/lib/item-indicators.util';
@@ -66,6 +68,8 @@ export interface TarkovItem {
   buyFor?: VendorOffer[];
   barters: BarterOffer[];
   crafts: CraftRecipe[];
+  usedInBarters?: UsedInBarter[];
+  usedInCrafts?: UsedInCraft[];
   usedInTasks?: UsedInTask[];
   receivedFromTasks?: RewardTask[];
 }
@@ -244,14 +248,20 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     return {
       id, name: i?.name ?? id, shortName: i?.shortName ?? '', image512pxLink: itemIconUrl(id),
       basePrice: i?.basePrice ?? 0, backgroundColor: priceMap.get(id)?.backgroundColor,
+      normalizedName: priceMap.get(id)?.normalizedName ?? undefined, // для кросс-линка на карточку
     };
   };
+  const barterTaskUnlock = (b: { taskUnlockId: string | null; taskUnlockName: string | null }) =>
+    b.taskUnlockId ? { id: b.taskUnlockId, name: b.taskUnlockName ?? undefined } : null;
+
+  // Бартеры/крафты, ПРОИЗВОДЯЩИЕ предмет (предмет в reward).
   const itemBarters: BarterOffer[] = barterRows
     .filter((b) => b.rewardItems.some((sl) => sl.itemId === mainId))
     .map((b) => ({
       id: b.id,
       trader: { name: b.traderName, normalizedName: b.traderNormalizedName ?? '' },
       level: b.level ?? 1,
+      taskUnlock: barterTaskUnlock(b),
       requiredItems: b.requiredItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
     }));
   const itemCrafts: CraftRecipe[] = craftRows
@@ -262,6 +272,28 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
       level: c.level ?? 1,
       duration: c.duration ?? 0,
       requiredItems: c.requiredItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
+    }));
+
+  // ОБРАТНОЕ направление: бартеры/крафты, где предмет — ИНГРЕДИЕНТ (предмет в required).
+  const usedInBarters: UsedInBarter[] = barterRows
+    .filter((b) => b.requiredItems.some((sl) => sl.itemId === mainId))
+    .map((b) => ({
+      id: b.id,
+      trader: { name: b.traderName, normalizedName: b.traderNormalizedName ?? '' },
+      level: b.level ?? 1,
+      taskUnlock: barterTaskUnlock(b),
+      usedCount: b.requiredItems.find((sl) => sl.itemId === mainId)?.count ?? 1,
+      rewardItems: b.rewardItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
+    }));
+  const usedInCrafts: UsedInCraft[] = craftRows
+    .filter((c) => c.requiredItems.some((sl) => sl.itemId === mainId))
+    .map((c) => ({
+      id: c.id,
+      station: { name: c.stationName, normalizedName: c.stationNormalizedName ?? '' },
+      level: c.level ?? 1,
+      duration: c.duration ?? 0,
+      usedCount: c.requiredItems.find((sl) => sl.itemId === mainId)?.count ?? 1,
+      rewardItems: c.rewardItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
     }));
 
   // Квесты: где предмет требуется / где выдаётся в награду (из статического EFT_QUESTS)
@@ -308,6 +340,8 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     buyFor: (px.buyFor ?? []).map(toVendor),
     barters: itemBarters,
     crafts: itemCrafts,
+    usedInBarters,
+    usedInCrafts,
     usedInTasks,
     receivedFromTasks,
   };

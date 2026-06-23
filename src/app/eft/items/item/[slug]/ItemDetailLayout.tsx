@@ -11,6 +11,8 @@ import {
   HelmetModule,
   BarterModule,
   CraftModule,
+  UsedInBarterModule,
+  UsedInCraftModule,
 } from './ItemModules';
 import { ItemImage } from './ItemImage';
 import { SlotGrid } from './SlotGrid';
@@ -172,6 +174,8 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired }: ItemDetail
       <div className="flex w-full flex-col gap-6 lg:w-full lg:basis-full">
         <BarterModule barters={item.barters} />
         <CraftModule crafts={item.crafts} />
+        <UsedInBarterModule usedIn={item.usedInBarters ?? []} />
+        <UsedInCraftModule usedIn={item.usedInCrafts ?? []} />
         <SimilarItems items={similar} />
         <LootSources tasks={item.receivedFromTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} />
 
