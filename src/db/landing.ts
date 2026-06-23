@@ -20,7 +20,7 @@ const PRUNE_MIN_RATIO = 0.5;
  *  - усечённый ответ (свежих < PRUNE_MIN_RATIO от того, что в БД) → прюн пропускаем + warn;
  *  - скоуп по gameId (мультиигровая БД); счётчик из command tag (res.count), без .returning().
  */
-async function pruneStale(
+export async function pruneStale(
   table: PgTable,
   idCol: PgColumn,
   gameCol: PgColumn,

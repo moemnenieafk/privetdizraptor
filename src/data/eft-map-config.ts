@@ -1,0 +1,262 @@
+/**
+ * Статик рендер-конфиг интерактивных карт EFT (Phase 4).
+ *
+ * Эти параметры (проекция мира→картинка, поворот, границы холста, этажи) НЕ приходят
+ * из tarkov.dev GraphQL — это конфигурация НАШЕГО Leaflet-рендера. Значения портированы
+ * из open-source the-hideout/tarkov-dev (MIT, `src/data/maps.json`) и сверены 2026-06-23.
+ *
+ * Координаты маркеров (см. `map_markers`) — это сырые Unity world-coords {x,y,z}, где
+ * (x,z) = горизонтальная плоскость, y = высота (для мульти-этажа). На рендере:
+ *   imgX = x * transform[0] + transform[1]
+ *   imgY = z * transform[2] + transform[3]
+ * затем поворот на `coordinateRotation`. `bounds` = углы холста L.CRS.Simple [[y1,x1],[y2,x2]].
+ *
+ * Подложки-картинки (SVG) — авторский арт (атрибуция в `author`/`authorLink`), зеркалятся
+ * в Storage cta-media по ключу `maps/eft/{slug}.svg` (см. scripts/upload-map-assets.ts).
+ */
+
+export interface MapLayerConfig {
+  name: string;
+  /** id <g>-группы внутри SVG (этаж). */
+  svgLayer?: string;
+  /** Видим ли слой по умолчанию. */
+  show: boolean;
+  /** [min, max] игровой высоты (game-Y) для фильтра маркеров по этажу. */
+  height: [number, number];
+}
+
+export interface EftMapConfig {
+  /** slug (= maps.normalizedName). */
+  slug: string;
+  /** Имя файла-подложки в репо the-hideout (для скачивания/заливки). null — нет SVG-подложки. */
+  svgFile: string | null;
+  author: string | null;
+  authorLink: string | null;
+  minZoom: number;
+  maxZoom: number;
+  /** [scaleX, offsetX, scaleZ, offsetZ] — world(x,z) → image-space. null если нет проекции. */
+  transform: [number, number, number, number] | null;
+  /** Поворот холста, градусы: 0 / 90 / 180 / 270. */
+  coordinateRotation: number;
+  /** Углы холста L.CRS.Simple: [[y1,x1],[y2,x2]]. */
+  bounds: [[number, number], [number, number]] | null;
+  /** [min,max] game-Y дефолтного (наземного) этажа. */
+  heightRange: [number, number] | null;
+  /** id <g>-группы наземного этажа в SVG. */
+  svgLayer: string | null;
+  /** Дополнительные этажи (мульти-этаж, v2). */
+  layers: MapLayerConfig[];
+}
+
+const SHEBUKA = "Shebuka";
+const SHEBUKA_LINK = "https://github.com/the-hideout/tarkov-dev-svg-maps/";
+
+export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
+  customs: {
+    slug: "customs",
+    svgFile: "Customs.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 2,
+    maxZoom: 6,
+    transform: [0.239, 168.65, 0.239, 136.35],
+    coordinateRotation: 180,
+    bounds: [
+      [698, -307],
+      [-372, 237],
+    ],
+    heightRange: [-1000, 1000],
+    svgLayer: "Ground_Level",
+    layers: [
+      { name: "Подземелье", svgLayer: "Underground_Level", show: false, height: [-1000, 0.5] },
+      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [2.7, 6.5] },
+      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [5.7, 1000] },
+    ],
+  },
+  woods: {
+    slug: "woods",
+    svgFile: "Woods.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 2,
+    maxZoom: 6,
+    transform: [0.1855, 112.95, 0.1855, 167.85],
+    coordinateRotation: 180,
+    bounds: [
+      [646, -914],
+      [-761, 442],
+    ],
+    heightRange: null,
+    svgLayer: "Ground_Level",
+    layers: [],
+  },
+  shoreline: {
+    slug: "shoreline",
+    svgFile: "Shoreline.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 2,
+    maxZoom: 6,
+    transform: [0.16, 83.2, 0.16, 111.1],
+    coordinateRotation: 180,
+    bounds: [
+      [504, -415],
+      [-1056, 618],
+    ],
+    heightRange: [-1000, -1],
+    svgLayer: "Ground_Level",
+    layers: [
+      { name: "Подземелье", svgLayer: "Underground_Level", show: false, height: [-1000, -5] },
+      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [-1, 2] },
+      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [2, 1000] },
+    ],
+  },
+  reserve: {
+    slug: "reserve",
+    svgFile: "Reserve.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 2,
+    maxZoom: 6,
+    transform: [0.395, 122, 0.395, 137.65],
+    coordinateRotation: 180,
+    bounds: [
+      [289, -293],
+      [-303, 244],
+    ],
+    heightRange: [-7, 10000],
+    svgLayer: "Ground_Level",
+    layers: [
+      { name: "Бункеры", svgLayer: "Bunkers", show: false, height: [-10000, -7.27] },
+      { name: "2-й этаж", show: false, height: [22.1, 25.7] },
+      { name: "3-й этаж", show: false, height: [25.7, 29.3] },
+    ],
+  },
+  interchange: {
+    slug: "interchange",
+    svgFile: "Interchange.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 1,
+    maxZoom: 6,
+    transform: [0.265, 150.6, 0.265, 134.6],
+    coordinateRotation: 180,
+    bounds: [
+      [598, -442],
+      [-433, 426],
+    ],
+    heightRange: null,
+    svgLayer: "Ground_Level",
+    layers: [
+      { name: "2-й этаж", svgLayer: "First_Floor", show: true, height: [25, 34] },
+      { name: "3-й этаж", svgLayer: "Second_Floor", show: false, height: [34, 1000] },
+    ],
+  },
+  lighthouse: {
+    slug: "lighthouse",
+    svgFile: "Lighthouse.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 1,
+    maxZoom: 6,
+    transform: [0.2, 0, 0.2, 0],
+    coordinateRotation: 180,
+    bounds: [
+      [515, -998],
+      [-545, 725],
+    ],
+    heightRange: null,
+    svgLayer: "Ground_Level",
+    layers: [],
+  },
+  factory: {
+    slug: "factory",
+    svgFile: "Factory.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 1,
+    maxZoom: 6,
+    transform: [1.629, 119.9, 1.629, 139.3],
+    coordinateRotation: 90,
+    bounds: [
+      [77, -64.5],
+      [-65.5, 67.4],
+    ],
+    heightRange: [-1, 3],
+    svgLayer: "Ground_Floor",
+    layers: [
+      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [3, 6] },
+      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [6, 10000] },
+      { name: "Тоннели", svgLayer: "Basement", show: false, height: [-10000, -1] },
+    ],
+  },
+  "streets-of-tarkov": {
+    slug: "streets-of-tarkov",
+    svgFile: "StreetsOfTarkov.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 1,
+    maxZoom: 5,
+    transform: [0.38, 0, 0.38, 0],
+    coordinateRotation: 180,
+    bounds: [
+      [323, -295],
+      [-280, 532],
+    ],
+    heightRange: [-6, 10],
+    svgLayer: "Ground_Level",
+    layers: [
+      { name: "Подземелье", svgLayer: "Underground_Level", show: false, height: [-10000, -6] },
+      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [10, 15] },
+      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [15, 20] },
+      { name: "4-й этаж", svgLayer: "Fourth_Floor", show: false, height: [20, 25] },
+      { name: "5-й этаж", svgLayer: "Fifth_Floor", show: false, height: [25, 10000] },
+    ],
+  },
+  "ground-zero": {
+    slug: "ground-zero",
+    svgFile: "GroundZero.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 1,
+    maxZoom: 6,
+    transform: [0.524, 167.3, 0.524, 65.1],
+    coordinateRotation: 180,
+    bounds: [
+      [249, -124],
+      [-99, 364],
+    ],
+    heightRange: [-1000, 28],
+    svgLayer: "Ground_Level",
+    layers: [
+      { name: "Гараж", svgLayer: "Underground_Level", show: false, height: [-1000, 21] },
+      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [28, 32.3] },
+      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [32.3, 1000] },
+    ],
+  },
+  terminal: {
+    slug: "terminal",
+    svgFile: "Terminal.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 2,
+    maxZoom: 6,
+    transform: [0.2, 0, 0.2, 0],
+    coordinateRotation: 180,
+    bounds: [
+      [463, -580],
+      [-433, 475],
+    ],
+    heightRange: null,
+    svgLayer: "Ground_Level",
+    layers: [],
+  },
+};
+
+/** slug → конфиг (или undefined, если карта не интерактивная / нет SVG-подложки). */
+export function getMapConfig(slug: string): EftMapConfig | undefined {
+  return EFT_MAP_CONFIG[slug];
+}
+
+/** Все интерактивные карты с SVG-подложкой (для скрипта заливки и индекса). */
+export const INTERACTIVE_MAP_SLUGS = Object.keys(EFT_MAP_CONFIG);

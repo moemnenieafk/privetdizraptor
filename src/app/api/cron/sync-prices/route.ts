@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { syncEftPrices } from "@/db/prices";
 import { syncEftBartersCrafts } from "@/db/barters-crafts";
 import { syncEftLandingData } from "@/db/landing";
+import { syncEftMapsGeometry } from "@/db/maps";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +51,29 @@ export async function GET(req: Request): Promise<NextResponse> {
     } catch (e) {
       console.error("[cron/sync-prices] landing:", e);
     }
-    return NextResponse.json({ ok: true, ...priceRes, ...staticRes, ...landingRes, at: new Date().toISOString() });
+    // Геометрия карт (Phase 4) — best-effort: меняется раз в вайп, не должна ронять прайс-синк.
+    let mapsRes = {
+      maps: 0,
+      assets: 0,
+      markers: 0,
+      markersDeleted: 0,
+      assetsDeleted: 0,
+      markersPruneSkipped: 0,
+      assetsPruneSkipped: false,
+    };
+    try {
+      mapsRes = await syncEftMapsGeometry();
+    } catch (e) {
+      console.error("[cron/sync-prices] maps-geometry:", e);
+    }
+    return NextResponse.json({
+      ok: true,
+      ...priceRes,
+      ...staticRes,
+      ...landingRes,
+      mapsGeometry: mapsRes,
+      at: new Date().toISOString(),
+    });
   } catch (e) {
     // Эндпоинт за CRON_SECRET (только админ/крон) — отдаём реальный текст ошибки
     // вызывающему, чтобы было видно причину в логах GitHub Actions / Vercel.

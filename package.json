@@ -19,7 +19,9 @@
     "db:sync-prices": "tsx scripts/sync-prices.ts",
     "db:sync-barters-crafts": "tsx scripts/sync-barters-crafts.ts",
     "db:sync-hideout": "tsx scripts/sync-hideout.ts",
-    "db:sync-landing": "tsx scripts/sync-landing.ts"
+    "db:sync-landing": "tsx scripts/sync-landing.ts",
+    "db:sync-maps-geometry": "tsx scripts/sync-maps-geometry.ts",
+    "db:upload-maps": "tsx scripts/upload-map-assets.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.1.9",

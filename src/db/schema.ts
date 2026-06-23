@@ -300,6 +300,83 @@ export const hideoutUpgrades = pgTable(
   (t) => [primaryKey({ columns: [t.gameId, t.stationNormalizedName, t.level] })],
 );
 
+/* ───────────────── map geometry (self-mirror tarkov.dev) — Phase 4 интерактивные карты ───────────────── */
+/**
+ * Зеркало ГЕОМЕТРИИ интерактивных карт из tarkov.dev GraphQL (Map.{spawns,extracts,…}).
+ * Координаты — факты (как prices), лицензионно чистые. Картинки-подложки (SVG) НЕ здесь —
+ * они в Storage cta-media, ключ хранится в map_assets.imageKey; параметры проекции
+ * (transform/bounds/rotation/heightRange/layers) — в статике src/data/eft-map-config.ts
+ * (это параметры НАШЕГО рендера, не игровые данные). Наполняет `db:sync-maps-geometry` + крон.
+ */
+
+// Per-map: метаданные карты + указатель на изображение в Storage + атрибуция автора SVG.
+export const mapAssets = pgTable("map_assets", {
+  mapId: text("map_id")
+    .primaryKey()
+    .references(() => maps.id, { onDelete: "cascade" }),
+  gameId: uuid("game_id")
+    .notNull()
+    .references(() => games.id, { onDelete: "cascade" }),
+  normalizedName: text("normalized_name").notNull(), // slug = ключ в eft-map-config
+  imageKey: text("image_key"), // ключ в Storage cta-media: "maps/eft/{slug}.svg" (null если нет интерактивной подложки)
+  imageFormat: text("image_format"), // "svg"
+  author: text("author"), // атрибуция автора SVG (Shebuka/Jindouz/…), требование лицензии
+  authorLink: text("author_link"),
+  raidDuration: integer("raid_duration"), // минуты
+  players: text("players"), // "8-12"
+  minPlayerLevel: integer("min_player_level"),
+  maxPlayerLevel: integer("max_player_level"),
+  syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Тип маркера (дискриминатор). position null допустим (боссы — спавн по зоне, без координат).
+export type MapMarkerKind =
+  | "extract"
+  | "spawn"
+  | "transit"
+  | "hazard"
+  | "loot_container"
+  | "loot_loose"
+  | "lock"
+  | "switch"
+  | "boss"
+  | "stationary_weapon";
+
+export type MapPos = { x: number; y: number; z: number };
+
+// Все маркеры всех карт. id — GraphQL id (extract/transit/switch) ИЛИ synth-hash от
+// mapId+type+позиция (spawn/loot/hazard/lock/…). PK composite (mapId, id). Геометрия в
+// jsonb — зеркалит источник 1:1 (как слоты barters/crafts). Прюн — per-map (см. maps.ts).
+export const mapMarkers = pgTable(
+  "map_markers",
+  {
+    mapId: text("map_id")
+      .notNull()
+      .references(() => maps.id, { onDelete: "cascade" }),
+    id: text("id").notNull(),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    type: text("type").$type<MapMarkerKind>().notNull(),
+    position: jsonb("position").$type<MapPos>(), // null у боссов
+    outline: jsonb("outline").$type<MapPos[]>(), // полигон зоны (выходы/опасности/…)
+    top: real("top"),
+    bottom: real("bottom"),
+    label: text("label"),
+    faction: text("faction"), // extract: "all"|"pmc"|"scav"
+    sides: jsonb("sides").$type<string[]>(), // spawn: ["pmc"]/["scav"]/…
+    categories: jsonb("categories").$type<string[]>(), // spawn: ["bot"]/["player"]/["boss"]/["sniper"]
+    linkedItemId: text("linked_item_id"), // lock.key.id / lootContainer.id / lootLoose первый item
+    linkedQuestId: text("linked_quest_id"), // зарезервировано под квест-слой (v2)
+    meta: jsonb("meta").$type<Record<string, unknown>>(), // тип-специфичная нагрузка (switch-цепочки, boss spawnLocations, …)
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.mapId, t.id] }),
+    index("map_markers_map_type_idx").on(t.mapId, t.type),
+  ],
+);
+
 /* ───────────────────────── profiles ───────────────────────── */
 /**
  * Слой 4 — профиль игрока, 1:1 к auth.users (Supabase Auth). id = auth.users.id.
@@ -414,3 +491,7 @@ export type TraderRow = typeof traders.$inferSelect;
 export type NewTraderRow = typeof traders.$inferInsert;
 export type HideoutUpgradeRow = typeof hideoutUpgrades.$inferSelect;
 export type NewHideoutUpgradeRow = typeof hideoutUpgrades.$inferInsert;
+export type MapAssetRow = typeof mapAssets.$inferSelect;
+export type NewMapAssetRow = typeof mapAssets.$inferInsert;
+export type MapMarkerRow = typeof mapMarkers.$inferSelect;
+export type NewMapMarkerRow = typeof mapMarkers.$inferInsert;
