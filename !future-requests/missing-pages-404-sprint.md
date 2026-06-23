@@ -9,6 +9,7 @@
 > ## Журнал (день 3)
 > - **loot-tier (2.6) — ГОТОВО (build green, ○ Static).** Кодировка `LootRateClient.tsx` восстановлена: файл был равномерным double-encoding мохибейком (UTF-8→прочитан как cp1251→пересохранён в UTF-8). Развернул `text.encode('cp1251').decode('utf-8')`; единственный неразворачиваемый символ — заглавная «И» (байт `0x98` не определён в cp1251, 3×: ПОИСК/Изображение/Итог) — пропатчен через ASCII-плейсхолдер. Записан UTF-8 без BOM, верифицирован байт-ассертами (16/16 меток, ноль мохибейка/control-символов).
 > - **Тир-режим** свёрнут в `/eft/items/loot-rate` (toggle «Тиры» → бейдж S/A/B/C/D + пилюли-фильтр поверх готовых фильтров/сорта; тир по `vps`). Тир-логика вынесена в `src/lib/loot-tier.util.ts` (Tier/пороги 40k/20k/10k/5k/0/цвета/`tierOf`); `PriceSlotClient` отрефакторен на неё — дубликат устранён.
+> - **Полноэкранный квест-таск — ГОТОВО (build green, ƒ; runtime 200/404 проверены).** Тело `QuestDrawer` вынесено в общий `src/components/features/quests/QuestDetail/` (проп `variant: 'drawer'|'page'` — контейнер/размеры/нав-экшен; всё состояние+стор+auto-complete внутри, `dedupedObjectives` через `useMemo`). `QuestDrawer` теперь тонкая обёртка (slide-анимация+панель+close). Новый RSC-роут `/eft/quests/task/[id]` (`.find` в `EFT_QUESTS`, `notFound`, back-ссылка «Квесты»). Deep-link: в дровере иконка «развернуть» → страница; на странице «Карта» → `/eft/questmap?quest=<id>`.
 >
 > ## Журнал (день 2, автономно — pushed на main)
 > - **Phase 1B** — `QuestTraderList` (реюз `QuestNode`+`QuestDrawer`), `computeStatusMap`→`src/lib/quest-status.ts`; `/eft/quests/<трейдер>`. Карта квестов цела.
@@ -20,7 +21,7 @@
 > - Коммиты: 4df487e, 68b5d57, 9eeda3d, a676de4.
  - **Кодекс — Торговцы** (03e74cd) — `/eft/gamesetting/traders` индекс + детали (11, досье+кросс-ссылка на квесты). `src/data/traders.ts`.
 > - ⬜ Осталось:
->   - needed-часть убежища → mirror `hideout_upgrades`; Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс lore/timeline/factions/locations → контент/данные; HP остальных 10 боссов → выверенные значения; опц. полноэкранный `/eft/quests/task/[id]`.
+>   - needed-часть убежища → mirror `hideout_upgrades`; Phase 4 карты → `map_assets`/`map_markers`+изображения; кодекс lore/timeline/factions/locations → контент/данные; HP остальных 10 боссов → выверенные значения.
 >
 > ## Журнал выполнения (автономная сессия)
 > **✅ Phase 0 — заглушки (build green):** `src/components/ui/SectionPlaceholder.tsx`, `src/lib/section-nav.ts`,
