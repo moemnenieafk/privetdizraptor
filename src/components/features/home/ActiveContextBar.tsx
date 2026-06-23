@@ -12,7 +12,7 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
     <div className="sticky top-0 z-40 w-full border-b border-lines-hover bg-base/95 backdrop-blur-sm">
       <div className="flex h-9 items-stretch divide-x divide-lines-hover max-w-480 mx-auto px-4 md:px-8">
 
-        {/* LEFT вЂ” Server status */}
+        {/* LEFT — Server status */}
         <div className="flex items-center gap-2 pr-4 shrink-0 w-40 md:w-48">
           <span
             className={`shrink-0 w-1.5 h-1.5 ${serverOnline ? "bg-nvg-green" : "bg-danger"}`}
@@ -30,7 +30,7 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
           </span>
         </div>
 
-        {/* CENTER вЂ” Flea market ticker */}
+        {/* CENTER — Flea market ticker */}
         <div className="flex-1 flex items-center px-4 overflow-hidden">
           {fleaItems.length > 0 ? (
             <div
@@ -58,12 +58,12 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
             </div>
           ) : (
             <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted">
-              Р—РђР“Р РЈР—РљРђ Р Р«РќРљРђ...
+              ЗАГРУЗКА РЫНКА...
             </span>
           )}
         </div>
 
-        {/* RIGHT вЂ” Trader reset timer */}
+        {/* RIGHT — Trader reset timer */}
         <div className="flex items-center pl-4 shrink-0 w-40 md:w-48">
           {nearestTrader ? (
             <TraderCountdown
@@ -72,7 +72,7 @@ export function ActiveContextBar({ data }: ActiveContextBarProps) {
             />
           ) : (
             <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted">
-              РўРђР™РњР•Р Р« N/A
+              ТАЙМЕРЫ N/A
             </span>
           )}
         </div>
