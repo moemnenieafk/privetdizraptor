@@ -13,8 +13,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60; // макс. для Hobby-плана Vercel (120 невалидно → сброс в 10с)
 
 export async function GET(req: Request): Promise<NextResponse> {
+  // Fail-closed: без заданного CRON_SECRET эндпоинт НЕДОСТУПЕН (раньше при пустом
+  // секрете запись в БД мог триггерить кто угодно). Прод/GitHub Actions шлют Bearer.
   const secret = process.env.CRON_SECRET;
-  if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

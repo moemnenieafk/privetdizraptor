@@ -1,5 +1,21 @@
 import { NextResponse } from 'next/server';
 import type { ProfileOcrResult } from '@/types/profile-ocr';
+import { createClient } from '@/lib/supabase/server';
+
+export const runtime = 'nodejs';
+
+// Авторизация: OCR шлёт картинку в платный Gemini — пускаем ТОЛЬКО залогиненных
+// (защита от спама = счёт). Пользователь берётся из сессии Supabase.
+async function currentUserId(): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
+// Допустимые типы изображения (валидируем перед отправкой в модель).
+const ALLOWED_MIME = new Set(['image/png', 'image/jpeg', 'image/webp']);
 
 // Распознавание профиля игрока EFT со скриншота через Google Gemini (REST, без SDK).
 // Активируется переменной окружения GEMINI_API_KEY (.env.local). Ключ — только на сервере.
@@ -35,6 +51,12 @@ const PROMPT = `Распознай профиль игрока Escape from Tarko
 Если поле не видно или ты не уверен — верни null. Ничего не выдумывай.`;
 
 export async function POST(req: Request) {
+  // Гейт авторизации — раньше эндпоинт был открыт (любой спамил платный Gemini).
+  const userId = await currentUserId();
+  if (!userId) {
+    return NextResponse.json({ error: 'Требуется вход' }, { status: 401 });
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
@@ -53,6 +75,9 @@ export async function POST(req: Request) {
   const { image, mimeType = 'image/png' } = body;
   if (!image) {
     return NextResponse.json({ error: 'Нет изображения' }, { status: 400 });
+  }
+  if (!ALLOWED_MIME.has(mimeType)) {
+    return NextResponse.json({ error: 'Неподдерживаемый тип изображения' }, { status: 400 });
   }
   // Принимаем и data-URL, и «голый» base64.
   const base64 = image.includes(',') ? image.slice(image.indexOf(',') + 1) : image;
