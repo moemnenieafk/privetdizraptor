@@ -2,10 +2,10 @@
 
 import { useRef, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Paperclip, Maximize2, Map as MapIcon } from 'lucide-react';
+import { Paperclip, Maximize2, Map as MapIcon, ArrowLeftRight, ChevronRight } from 'lucide-react';
 import { useQuestStore } from '@/store/useQuestStore';
 import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker';
-import type { TaskRaw, TaskObjective, TaskObjectiveItem } from '@/types/quest';
+import type { TaskRaw, TaskObjective, TaskObjectiveItem, QuestBarterLite } from '@/types/quest';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { getQuestHeroImg } from '@/lib/quest-utils';
 import questGuides from '@/data/quest-guides.json';
@@ -111,13 +111,15 @@ interface Props {
   variant?: 'drawer' | 'page';
   /** Только drawer: закрытие панели (показывает крестик). */
   onClose?: () => void;
+  /** Бартеры, которые открывает этот квест (кросс-линк Quest→Barter→Item). */
+  barters?: QuestBarterLite[];
 }
 
 /**
  * Детальный разбор квеста: цели+чекбоксы, hero, трекер предметов, видео-гайд,
  * награды, toggle «выполнено» / pin. Общий рендер для дровера карты и полноэкранной страницы.
  */
-export function QuestDetail({ task, variant = 'drawer', onClose }: Props) {
+export function QuestDetail({ task, variant = 'drawer', onClose, barters }: Props) {
   const isPage = variant === 'page';
 
   const [heroFailed, setHeroFailed]               = useState(false);
@@ -320,6 +322,44 @@ export function QuestDetail({ task, variant = 'drawer', onClose }: Props) {
     </div>
   );
 
+  // ── Открывает бартеры (кросс-линк Quest → Barter → Item) ──────────────────
+  const bartersBlock = barters && barters.length > 0 && (
+    <div className={isPage ? 'px-6 py-6' : 'px-5 py-5'}>
+      <div className="mb-3 flex items-center gap-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary">
+        <ArrowLeftRight className="h-3.5 w-3.5" />
+        Открывает бартеры
+        <span className="text-text-muted">· {barters.length}</span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {barters.map((b) => (
+          <div key={b.id} className="flex flex-wrap items-center gap-2 rounded-xs border border-lines-hover bg-(--color-darkbase) p-2">
+            <img src={traderImg(b.trader.normalizedName)} alt={b.trader.name} width={18} height={18} className="shrink-0 rounded-xs" />
+            <span className="font-blender-medium text-type-caption uppercase tracking-wide text-text-secondary">{b.trader.name}</span>
+            <span className="font-blender-medium text-type-caption text-text-muted">LL{b.level}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
+            {b.rewardItems.map((rw) => {
+              const tile = (
+                <span className="relative flex h-9 w-9 items-center justify-center rounded-xs border border-lines-hover bg-(--color-base) transition-colors group-hover:border-(--primary)">
+                  <img src={rw.image} alt={rw.shortName} className="h-8 w-8 object-contain p-0.5" />
+                  {rw.count > 1 && (
+                    <span className="absolute bottom-0 right-0.5 font-blender-medium text-type-caption leading-none text-(--primary)">×{rw.count}</span>
+                  )}
+                </span>
+              );
+              return rw.normalizedName ? (
+                <Link key={rw.id} href={`/eft/items/item/${rw.normalizedName}`} title={rw.name} className="group">
+                  {tile}
+                </Link>
+              ) : (
+                <span key={rw.id} title={rw.name}>{tile}</span>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   // ── Footer ──────────────────────────────────────────────────────────────
   const footer = (
     <div className={`shrink-0 border-t border-lines-hover flex items-center gap-2 ${isPage ? 'px-6 py-4' : 'px-5 h-14'}`}>
@@ -355,6 +395,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose }: Props) {
         {trackerBlock}
         {videoBlock}
         {rewardsBlock}
+        {bartersBlock}
         {footer}
       </div>
     );
@@ -369,6 +410,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose }: Props) {
         {trackerBlock}
         {videoBlock}
         {rewardsBlock}
+        {bartersBlock}
       </div>
       {footer}
     </>

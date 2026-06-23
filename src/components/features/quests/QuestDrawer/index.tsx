@@ -3,16 +3,18 @@
 import { useRef } from 'react';
 import { useModalAnimation } from '@/hooks/useModalAnimation';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
-import type { TaskRaw } from '@/types/quest';
+import type { TaskRaw, QuestBarterLite } from '@/types/quest';
 import { traderCssVar } from '@/lib/trader-utils';
 
 interface Props {
   task: TaskRaw | null;
   onClose: () => void;
+  /** Бартеры, открываемые выбранным квестом. */
+  barters?: QuestBarterLite[];
 }
 
 /** Слайд-панель карты заданий: анимация + chrome, контент — общий `QuestDetail`. */
-export function QuestDrawer({ task, onClose }: Props) {
+export function QuestDrawer({ task, onClose, barters }: Props) {
   // Держим последний таск, чтобы дорисовать панель во время exit-анимации.
   const lastTaskRef = useRef<TaskRaw | null>(null);
   if (task) lastTaskRef.current = task;
@@ -33,7 +35,7 @@ export function QuestDrawer({ task, onClose }: Props) {
         isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
-      {renderTask && <QuestDetail task={renderTask} variant="drawer" onClose={onClose} />}
+      {renderTask && <QuestDetail task={renderTask} variant="drawer" onClose={onClose} barters={barters} />}
     </div>
   );
 }

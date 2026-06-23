@@ -254,6 +254,9 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
   const barterTaskUnlock = (b: { taskUnlockId: string | null; taskUnlockName: string | null }) =>
     b.taskUnlockId ? { id: b.taskUnlockId, name: b.taskUnlockName ?? undefined } : null;
 
+  // Предметы, которые можно получить по бартеру (для подсказки на ингредиентах крафта).
+  const barterableIds = new Set(barterRows.flatMap((b) => b.rewardItems.map((s) => s.itemId)));
+
   // Бартеры/крафты, ПРОИЗВОДЯЩИЕ предмет (предмет в reward).
   const itemBarters: BarterOffer[] = barterRows
     .filter((b) => b.rewardItems.some((sl) => sl.itemId === mainId))
@@ -271,7 +274,10 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
       station: { name: c.stationName, normalizedName: c.stationNormalizedName ?? '' },
       level: c.level ?? 1,
       duration: c.duration ?? 0,
-      requiredItems: c.requiredItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
+      requiredItems: c.requiredItems.map((sl) => ({
+        item: { ...slotItem(sl.itemId), hasBarter: barterableIds.has(sl.itemId) },
+        count: sl.count,
+      })),
     }));
 
   // ОБРАТНОЕ направление: бартеры/крафты, где предмет — ИНГРЕДИЕНТ (предмет в required).

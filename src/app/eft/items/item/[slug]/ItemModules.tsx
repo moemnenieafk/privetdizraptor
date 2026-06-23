@@ -189,6 +189,7 @@ interface CraftRequiredItem {
     image512pxLink: string;
     backgroundColor?: string;
     normalizedName?: string;
+    hasBarter?: boolean; // ингредиент доступен по бартеру (сорсинг-подсказка)
   };
   count: number;
 }
@@ -523,7 +524,7 @@ function ReqItem({
   item,
   count,
 }: {
-  item: { id: string; name: string; shortName: string; image512pxLink: string; backgroundColor?: string; normalizedName?: string };
+  item: { id: string; name: string; shortName: string; image512pxLink: string; backgroundColor?: string; normalizedName?: string; hasBarter?: boolean };
   count: number;
 }) {
   const body = (
@@ -538,6 +539,14 @@ function ReqItem({
           alt={item.shortName}
           className="absolute inset-0 z-10 h-full w-full object-contain p-1"
         />
+        {item.hasBarter && (
+          <span
+            title="Доступен по бартеру"
+            className="absolute top-0 left-0 z-20 flex h-4 w-4 items-center justify-center rounded-br-xs bg-(--primary)"
+          >
+            <ArrowLeftRight className="h-2.5 w-2.5 text-(--color-base)" />
+          </span>
+        )}
       </div>
       <div className="flex flex-col">
         <span className="text-sm font-blender-book text-text-primary transition-colors group-hover:text-(--primary)" title={item.name}>

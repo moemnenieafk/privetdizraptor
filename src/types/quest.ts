@@ -70,6 +70,22 @@ export interface TaskRaw {
   finishRewards: FinishRewards;
 }
 
+// Бартер, открываемый квестом (для бейджа ноды + списка в QuestDetail).
+export interface QuestBarterRewardItem {
+  id: string;
+  name: string;
+  shortName: string;
+  normalizedName?: string;
+  image: string;
+  count: number;
+}
+export interface QuestBarterLite {
+  id: string;
+  trader: { name: string; normalizedName: string };
+  level: number;
+  rewardItems: QuestBarterRewardItem[];
+}
+
 export interface QuestNodeData {
   task: TaskRaw;
   status: QuestNodeStatus;
@@ -82,6 +98,7 @@ export interface QuestNodeData {
   traderLevels?: Record<string, number>;
   chainRole?: 'ancestor' | 'descendant' | 'self' | null;
   pinned?: boolean;
+  barterCount?: number; // сколько бартеров открывает квест
   onToggle: (id: string) => void;
   onForceComplete: (id: string) => void;
   onSelect: (task: TaskRaw) => void;

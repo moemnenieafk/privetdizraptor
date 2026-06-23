@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
-import type { TaskRaw, QuestNodeStatus } from '@/types/quest';
+import type { TaskRaw, QuestNodeStatus, QuestBarterLite } from '@/types/quest';
 import { computeStatusMap } from '@/lib/quest-status';
 import { QuestNode } from '@/components/features/quests/QuestNode';
 import { QuestFilterBar } from '@/components/features/quests/QuestFilterBar';
@@ -25,7 +25,7 @@ import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { Paperclip } from 'lucide-react';
 import PRESET_POSITIONS from '@/data/quests/quest-positions.json';
 
-interface Props { initialTasks: TaskRaw[] }
+interface Props { initialTasks: TaskRaw[]; bartersByQuest?: Record<string, QuestBarterLite[]> }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -338,7 +338,7 @@ function computeFilteredIds(
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
+export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest }: Props) {
   const searchParams = useSearchParams();
 
   // Story quests excluded; btr-driver normalizedName normalized to btrdriver
@@ -1173,6 +1173,7 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
                     pinned:           pinnedSet.has(task.id),
                     traderLevels,
                     chainRole:        getChainRole(task.id),
+                    barterCount:      bartersByQuest?.[task.id]?.length ?? 0,
                     onToggle:         handleToggle,
                     onForceComplete:  handleForceComplete,
                     onPin:            togglePin,
@@ -1319,7 +1320,11 @@ export default function QuestMapClient({ initialTasks: rawTasks }: Props) {
           onExport={handleExport}
           onImport={handleImport}
         />
-        <QuestDrawer task={selectedTask} onClose={() => setSelectedTask(null)} />
+        <QuestDrawer
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          barters={selectedTask ? bartersByQuest?.[selectedTask.id] : undefined}
+        />
       </div>
 
       <QuestResetModal

@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { TaskRaw } from '@/types/quest';
+import type { TaskRaw, QuestBarterLite } from '@/types/quest';
 
 const QuestMapClient = dynamic(
   () => import('@/app/eft/progress/quests/QuestMapClient'),
@@ -13,6 +13,12 @@ const QuestMapClient = dynamic(
   },
 );
 
-export function QuestMapLoader({ initialTasks }: { initialTasks: TaskRaw[] }) {
-  return <QuestMapClient initialTasks={initialTasks} />;
+export function QuestMapLoader({
+  initialTasks,
+  bartersByQuest,
+}: {
+  initialTasks: TaskRaw[];
+  bartersByQuest?: Record<string, QuestBarterLite[]>;
+}) {
+  return <QuestMapClient initialTasks={initialTasks} bartersByQuest={bartersByQuest} />;
 }

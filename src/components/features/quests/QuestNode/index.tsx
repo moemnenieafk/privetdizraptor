@@ -5,7 +5,7 @@ import type { QuestNodeData } from '@/types/quest';
 import type { TaskObjective, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
-import { Paperclip } from 'lucide-react';
+import { Paperclip, ArrowLeftRight } from 'lucide-react';
 
 function getObjectiveIcon(obj: TaskObjective): string {
   if (obj.__typename === 'TaskObjectiveTraderLevel') return 'icon-eft-quests-rep';
@@ -24,7 +24,7 @@ function getObjectiveIcon(obj: TaskObjective): string {
 
 function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const {
-    task, status, dimmed, isSubgraphTarget, isMapTarget, freshlyUnlocked, pinned, chainRole,
+    task, status, dimmed, isSubgraphTarget, isMapTarget, freshlyUnlocked, pinned, chainRole, barterCount = 0,
     onToggle, onForceComplete, onSelect, onHover, onPin,
   } = data;
 
@@ -173,6 +173,18 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
         <h3 className="px-4 pb-3 font-blender-medium text-sm leading-tight text-text-primary">
           {task.name}
         </h3>
+
+        {barterCount > 0 && (
+          <div className="px-4 pb-2">
+            <span
+              title={`Открывает ${barterCount} бартеров`}
+              className="inline-flex items-center gap-1 rounded-xs border border-lines-hover px-1.5 py-0.5 font-blender-medium text-type-caption uppercase tracking-wide text-text-muted"
+            >
+              <ArrowLeftRight className="h-2.5 w-2.5 text-(--primary)" />
+              {barterCount} бартер{barterCount % 10 === 1 && barterCount % 100 !== 11 ? '' : barterCount % 10 >= 2 && barterCount % 10 <= 4 && (barterCount % 100 < 10 || barterCount % 100 >= 20) ? 'а' : 'ов'}
+            </span>
+          </div>
+        )}
 
         <ul className="px-4 flex flex-col gap-2">
           {task.objectives.filter((obj, i, arr) => arr.findIndex(o => o.id === obj.id) === i).slice(0, 5).map(obj => {

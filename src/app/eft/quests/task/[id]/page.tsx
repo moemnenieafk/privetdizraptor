@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { EFT_QUESTS } from '@/data/quests';
+import { getBartersByQuest } from '@/db/barter-quest';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import type { TaskRaw } from '@/types/quest';
 
@@ -21,6 +22,8 @@ export default async function QuestTaskPage({ params }: Props) {
   const task = EFT_QUESTS.find((t) => t.id === id);
   if (!task) notFound();
 
+  const bartersByQuest = await getBartersByQuest();
+
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-3xl px-4">
@@ -31,7 +34,7 @@ export default async function QuestTaskPage({ params }: Props) {
           <ArrowLeft className="h-3.5 w-3.5" />
           Квесты
         </Link>
-        <QuestDetail task={normalizeTrader(task)} variant="page" />
+        <QuestDetail task={normalizeTrader(task)} variant="page" barters={bartersByQuest[task.id]} />
       </div>
     </main>
   );
