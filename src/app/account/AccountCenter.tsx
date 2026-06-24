@@ -1,12 +1,23 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronDown, Check, LogOut } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
+import {
+  changeEmail,
+  changeUsername,
+  requestPasswordReset,
+  uploadAvatar,
+} from '@/lib/cta-api';
 import type { Me } from '@/lib/auth/me';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
+
+const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // зеркалит серверный EMAIL_RE
+const USERNAME_COOLDOWN_DAYS = 60; // 2 месяца ≈ 60 дней (зеркалит серверный кулдаун)
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -110,23 +121,62 @@ function SubTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-function FormInput({ placeholder, type = 'text' }: { placeholder: string; type?: string }) {
+function FormInput({
+  placeholder,
+  type = 'text',
+  value,
+  onChange,
+  disabled,
+  readOnly,
+  maxLength,
+  autoComplete,
+}: {
+  placeholder: string;
+  type?: string;
+  value: string;
+  onChange?: (v: string) => void;
+  disabled?: boolean;
+  readOnly?: boolean;
+  maxLength?: number;
+  autoComplete?: string;
+}) {
   return (
     <input
       type={type}
       placeholder={placeholder}
-      className="w-full rounded border border-lines-hover bg-(--color-base) px-4 py-3 font-blender-book text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none"
+      value={value}
+      onChange={(e) => onChange?.(e.target.value)}
+      disabled={disabled}
+      readOnly={readOnly}
+      maxLength={maxLength}
+      autoComplete={autoComplete}
+      className="w-full rounded border border-lines-hover bg-(--color-base) px-4 py-3 font-blender-book text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none disabled:opacity-50 read-only:opacity-70"
     />
   );
 }
 
-function FormActions({ onCancel }: { onCancel: () => void }) {
+function FormActions({
+  onCancel,
+  submitting,
+  disabled,
+  label = 'Отправить',
+}: {
+  onCancel: () => void;
+  submitting?: boolean;
+  disabled?: boolean;
+  label?: string;
+}) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <button className="w-full max-w-45 rounded border border-(--primary) bg-(--primary)/10 px-6 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
-        Отправить
+      <button
+        type="submit"
+        disabled={submitting || disabled}
+        className="w-full max-w-45 rounded border border-(--primary) bg-(--primary)/10 px-6 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {submitting ? 'Отправляю…' : label}
       </button>
       <button
+        type="button"
         onClick={onCancel}
         className="font-blender-book text-xs text-text-muted underline underline-offset-4 transition-colors hover:text-(--primary)"
       >
@@ -144,51 +194,213 @@ function CooldownWarning({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Строка обратной связи под формой: ошибка (danger) или успех (green).
+function Feedback({ error, success }: { error?: string | null; success?: string | null }) {
+  if (error) {
+    return (
+      <p className="text-center font-blender-book text-xs leading-relaxed text-danger">{error}</p>
+    );
+  }
+  if (success) {
+    return (
+      <p className="text-center font-blender-book text-xs leading-relaxed text-green-400">
+        {success}
+      </p>
+    );
+  }
+  return null;
+}
+
 // ─── Edit sub-views ───────────────────────────────────────────────────────────
 
-function AvatarView({ onBack }: { onBack: () => void }) {
+const AVATAR_OUT = 400; // итоговый размер квадрата (px), webp
+
+function AvatarView({ onBack, me }: { onBack: () => void; me: Me }) {
+  const router = useRouter();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [img, setImg] = useState<HTMLImageElement | null>(null);
+  const [scale, setScale] = useState(1);
+  const [status, setStatus] = useState<'idle' | 'saving' | 'done'>('idle');
+  const [error, setError] = useState<string | null>(null);
+
+  // Чистим отложенный onBack, если вью размонтировали раньше срабатывания.
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  // Перерисовка квадратного кропа при смене картинки/масштаба.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !img) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, AVATAR_OUT, AVATAR_OUT);
+    const cover = Math.max(AVATAR_OUT / img.width, AVATAR_OUT / img.height);
+    const s = cover * scale;
+    const w = img.width * s;
+    const h = img.height * s;
+    ctx.drawImage(img, (AVATAR_OUT - w) / 2, (AVATAR_OUT - h) / 2, w, h);
+  }, [img, scale]);
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    if (!f.type.startsWith('image/')) {
+      setError('Только изображения');
+      return;
+    }
+    setError(null);
+    const url = URL.createObjectURL(f);
+    const image = new Image();
+    image.onload = () => {
+      setImg(image);
+      setScale(1);
+      URL.revokeObjectURL(url);
+    };
+    image.onerror = () => {
+      setError('Не удалось прочитать файл');
+      URL.revokeObjectURL(url);
+    };
+    image.src = url;
+  };
+
+  const save = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !img) return;
+    setError(null);
+    setStatus('saving');
+    const blob = await new Promise<Blob | null>((res) =>
+      canvas.toBlob((b) => res(b), 'image/webp', 0.85),
+    );
+    if (!blob) {
+      setError('Не удалось обработать изображение');
+      setStatus('idle');
+      return;
+    }
+    if (blob.size > 500 * 1024) {
+      setError('Слишком большой файл — уменьшите масштаб');
+      setStatus('idle');
+      return;
+    }
+    const r = await uploadAvatar(blob);
+    if (!r.ok) {
+      setError(r.error ?? 'Не удалось загрузить');
+      setStatus('idle');
+      return;
+    }
+    setStatus('done');
+    router.refresh();
+    timer.current = setTimeout(onBack, 1000);
+  };
+
   return (
     <div className="flex flex-col">
       <BackBtn onClick={onBack} />
       <div className="flex flex-col items-center gap-5">
         <SubTitle>Сменить аватар</SubTitle>
 
-        <div className="h-48 w-48 rounded border border-lines-hover bg-(--color-base)" />
-
-        <div className="flex w-full max-w-xs flex-col gap-1.5">
-          <input
-            type="range"
-            min={0}
-            max={100}
-            defaultValue={20}
-            className="h-px w-full cursor-pointer appearance-none bg-lines-hover [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-(--primary)"
+        {/* Превью: canvas-кроп нового файла ИЛИ текущий аватар/плейсхолдер */}
+        {img ? (
+          <canvas
+            ref={canvasRef}
+            width={AVATAR_OUT}
+            height={AVATAR_OUT}
+            className="h-48 w-48 rounded border border-lines-hover bg-(--color-base) object-cover"
           />
-          <span className="text-center font-blender-book text-type-caption text-text-muted">Масштабирование аватара</span>
-        </div>
+        ) : me.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={me.avatarUrl}
+            alt="Текущий аватар"
+            className="h-48 w-48 rounded border border-lines-hover object-cover"
+          />
+        ) : (
+          <div className="h-48 w-48 rounded border border-lines-hover bg-(--color-base)" />
+        )}
 
-        <label className="flex w-full max-w-md cursor-pointer flex-col items-center gap-2 rounded border border-dashed border-lines-hover px-6 py-8 text-center transition-colors hover:border-(--primary)/50">
-          <input type="file" accept="image/*" className="hidden" />
+        {img && (
+          <div className="flex w-full max-w-xs flex-col gap-1.5">
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.01}
+              value={scale}
+              onChange={(e) => setScale(Number(e.target.value))}
+              className="h-px w-full cursor-pointer appearance-none bg-lines-hover [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-(--primary)"
+            />
+            <span className="text-center font-blender-book text-type-caption text-text-muted">
+              Масштабирование аватара
+            </span>
+          </div>
+        )}
+
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+        <label
+          onClick={() => fileRef.current?.click()}
+          className="flex w-full max-w-md cursor-pointer flex-col items-center gap-2 rounded border border-dashed border-lines-hover px-6 py-8 text-center transition-colors hover:border-(--primary)/50"
+        >
           <p className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
-            Переместите или выберите изображение...
+            {img ? 'Выбрать другое изображение...' : 'Выберите изображение...'}
           </p>
           <p className="font-blender-book text-xs text-text-muted">
-            изображение должно быть не более{' '}
-            <strong className="text-text-secondary">500×500px</strong> и{' '}
-            <strong className="text-text-secondary">500 Кб</strong>.
+            будет сохранено как квадрат{' '}
+            <strong className="text-text-secondary">{AVATAR_OUT}×{AVATAR_OUT}px</strong> webp,
+            не более <strong className="text-text-secondary">500 Кб</strong>.
           </p>
         </label>
 
-        <button className="rounded border border-(--primary) bg-(--primary)/10 px-8 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
-          Сохранить
+        <button
+          type="button"
+          onClick={save}
+          disabled={!img || status === 'saving' || status === 'done'}
+          className="rounded border border-(--primary) bg-(--primary)/10 px-8 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {status === 'saving' ? 'Сохраняю…' : status === 'done' ? 'Готово' : 'Сохранить'}
         </button>
+        <Feedback error={error} success={status === 'done' ? 'Аватар обновлён' : null} />
       </div>
     </div>
   );
 }
 
-function UsernameView({ onBack }: { onBack: () => void }) {
+function UsernameView({ onBack, me }: { onBack: () => void; me: Me }) {
+  const router = useRouter();
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [value, setValue] = useState('');
+  const [status, setStatus] = useState<'idle' | 'saving' | 'done'>('idle');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  // Кулдаун — зеркалит серверный (60 дней от usernameChangedAt). 0 = можно менять.
+  const daysLeft = useMemo(() => {
+    if (!me.usernameChangedAt) return 0;
+    const elapsed = Date.now() - new Date(me.usernameChangedAt).getTime();
+    const left = USERNAME_COOLDOWN_DAYS * DAY_MS - elapsed;
+    return left > 0 ? Math.ceil(left / DAY_MS) : 0;
+  }, [me.usernameChangedAt]);
+
+  const valid = USERNAME_RE.test(value.trim());
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setStatus('saving');
+    const r = await changeUsername(value.trim());
+    if (!r.ok) {
+      setError(r.error ?? 'Не удалось сменить логин');
+      setStatus('idle');
+      return;
+    }
+    setStatus('done');
+    router.refresh();
+    timer.current = setTimeout(onBack, 1000);
+  };
+
   return (
-    <div className="flex flex-col">
+    <form onSubmit={submit} className="flex flex-col">
       <BackBtn onClick={onBack} />
       <div className="flex flex-col items-center gap-5">
         <div className="flex flex-col items-center gap-2 text-center">
@@ -198,28 +410,85 @@ function UsernameView({ onBack }: { onBack: () => void }) {
           </p>
         </div>
         <div className="flex w-full max-w-md flex-col gap-3">
-          <FormInput placeholder="Введите имя пользователя" />
-          <CooldownWarning>Вы можете изменить логин один раз в 2 месяца.</CooldownWarning>
+          <FormInput
+            placeholder="Введите имя пользователя"
+            value={value}
+            onChange={setValue}
+            disabled={daysLeft > 0 || status === 'done'}
+            maxLength={15}
+          />
+          <CooldownWarning>
+            {daysLeft > 0
+              ? `Логин менялся недавно — следующая смена через ~${daysLeft} дн.`
+              : 'Вы можете изменить логин один раз в 2 месяца.'}
+          </CooldownWarning>
+          <Feedback error={error} success={status === 'done' ? 'Логин обновлён' : null} />
         </div>
-        <FormActions onCancel={onBack} />
+        <FormActions
+          onCancel={onBack}
+          submitting={status === 'saving'}
+          disabled={!valid || daysLeft > 0 || status === 'done'}
+          label="Сохранить"
+        />
       </div>
-    </div>
+    </form>
   );
 }
 
-function EmailView({ onBack }: { onBack: () => void }) {
+function EmailView({ onBack, me }: { onBack: () => void; me: Me }) {
+  const [value, setValue] = useState('');
+  const [status, setStatus] = useState<'idle' | 'saving' | 'sent'>('idle');
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setStatus('saving');
+    const r = await changeEmail(value.trim());
+    if (!r.ok) {
+      setError(r.error ?? 'Не удалось сменить e-mail');
+      setStatus('idle');
+      return;
+    }
+    setStatus('sent');
+  };
+
   return (
-    <div className="flex flex-col">
+    <form onSubmit={submit} className="flex flex-col">
       <BackBtn onClick={onBack} />
       <div className="flex flex-col items-center gap-5">
         <SubTitle>Сменить E-MAIL</SubTitle>
         <div className="flex w-full max-w-md flex-col gap-3">
-          <FormInput placeholder="Введите новый E-mail" type="email" />
-          <CooldownWarning>Вы можете изменить e-mail один раз в 2 месяца.</CooldownWarning>
+          <p className="text-center font-blender-book text-xs text-text-muted">
+            Текущий: <span className="text-text-secondary">{me.email ?? '—'}</span>
+          </p>
+          <FormInput
+            placeholder="Введите новый E-mail"
+            type="email"
+            value={value}
+            onChange={setValue}
+            disabled={status === 'sent'}
+            autoComplete="email"
+          />
+          <Feedback
+            error={error}
+            success={
+              status === 'sent'
+                ? `Письмо для подтверждения отправлено на ${value}. Перейдите по ссылке, чтобы завершить смену.`
+                : null
+            }
+          />
         </div>
-        <FormActions onCancel={onBack} />
+        {status !== 'sent' && (
+          <FormActions
+            onCancel={onBack}
+            submitting={status === 'saving'}
+            disabled={!EMAIL_RE.test(value.trim())}
+            label="Отправить"
+          />
+        )}
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -273,23 +542,55 @@ function SubscriptionView({ onBack }: { onBack: () => void }) {
   );
 }
 
-function PasswordView({ onBack }: { onBack: () => void }) {
+function PasswordView({ onBack, me }: { onBack: () => void; me: Me }) {
+  const [status, setStatus] = useState<'idle' | 'saving' | 'sent'>('idle');
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setStatus('saving');
+    // Ссылка уходит на e-mail из сессии (сервер игнорирует поле ввода — анти-абьюз).
+    const r = await requestPasswordReset();
+    if (!r.ok) {
+      setError(r.error ?? 'Не удалось отправить письмо');
+      setStatus('idle');
+      return;
+    }
+    setStatus('sent');
+  };
+
   return (
-    <div className="flex flex-col">
+    <form onSubmit={submit} className="flex flex-col">
       <BackBtn onClick={onBack} />
       <div className="flex flex-col items-center gap-5">
         <div className="flex flex-col items-center gap-2 text-center">
           <SubTitle>Сменить пароль</SubTitle>
           <p className="font-blender-book text-xs leading-relaxed text-text-muted max-w-xs">
-            Укажите действующий адрес электронной почты, которой вы используете для входа, и вам будут высланы инструкции по восстановлению пароля.
+            Мы вышлем ссылку для смены пароля на адрес, привязанный к вашему аккаунту. Перейдите по ней, чтобы задать новый пароль.
           </p>
         </div>
         <div className="w-full max-w-md">
-          <FormInput placeholder="E-mail" type="email" />
+          <FormInput placeholder="E-mail" type="email" value={me.email ?? ''} readOnly />
         </div>
-        <FormActions onCancel={onBack} />
+        <Feedback
+          error={error}
+          success={
+            status === 'sent'
+              ? `Письмо со ссылкой отправлено на ${me.email}. Проверьте почту.`
+              : null
+          }
+        />
+        {status !== 'sent' && (
+          <FormActions
+            onCancel={onBack}
+            submitting={status === 'saving'}
+            disabled={!me.email}
+            label="Отправить"
+          />
+        )}
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -379,9 +680,18 @@ function ProfilePanel({ onNavigate, me }: { onNavigate: (v: ViewId) => void; me:
           label="Аватар профиля"
           action={<RowBtn onClick={() => onNavigate('avatar')} />}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded border border-lines-hover bg-(--color-base)">
-            <div className="h-5 w-5 icon-mask icon-account_profile_icon bg-lines-hover" />
-          </div>
+          {me.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={me.avatarUrl}
+              alt="Аватар"
+              className="h-10 w-10 rounded border border-lines-hover object-cover"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded border border-lines-hover bg-(--color-base)">
+              <div className="h-5 w-5 icon-mask icon-account_profile_icon bg-lines-hover" />
+            </div>
+          )}
         </FlatRow>
 
         <FlatRow
@@ -620,11 +930,11 @@ export function AccountCenter({ me }: { me: Me }) {
   };
 
   const renderContent = () => {
-    if (activeView === 'avatar')        return <AvatarView onBack={goBack} />;
-    if (activeView === 'username')      return <UsernameView onBack={goBack} />;
-    if (activeView === 'email')         return <EmailView onBack={goBack} />;
+    if (activeView === 'avatar')        return <AvatarView onBack={goBack} me={me} />;
+    if (activeView === 'username')      return <UsernameView onBack={goBack} me={me} />;
+    if (activeView === 'email')         return <EmailView onBack={goBack} me={me} />;
     if (activeView === 'subscription')  return <SubscriptionView onBack={goBack} />;
-    if (activeView === 'password')      return <PasswordView onBack={goBack} />;
+    if (activeView === 'password')      return <PasswordView onBack={goBack} me={me} />;
     if (activeView === '2fa')           return <TwoFAView onBack={goBack} />;
     if (activeView === 'plan')          return <PlanView onBack={goBack} />;
 

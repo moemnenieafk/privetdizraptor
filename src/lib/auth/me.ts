@@ -11,6 +11,7 @@ export interface Me {
   username: string | null;
   avatarUrl: string | null;
   role: string; // 'user' | 'admin'
+  usernameChangedAt: string | null; // ISO; для кулдауна смены логина в UI
 }
 
 /** Текущий пользователь (сессия + profiles). null — не залогинен. */
@@ -22,7 +23,12 @@ export async function getMe(): Promise<Me | null> {
   if (!user) return null;
 
   const [p] = await db
-    .select({ username: profiles.username, avatarUrl: profiles.avatarUrl, role: profiles.role })
+    .select({
+      username: profiles.username,
+      avatarUrl: profiles.avatarUrl,
+      role: profiles.role,
+      usernameChangedAt: profiles.usernameChangedAt,
+    })
     .from(profiles)
     .where(eq(profiles.id, user.id))
     .limit(1);
@@ -33,5 +39,6 @@ export async function getMe(): Promise<Me | null> {
     username: p?.username ?? null,
     avatarUrl: p?.avatarUrl ?? null,
     role: p?.role ?? "user",
+    usernameChangedAt: p?.usernameChangedAt ? p.usernameChangedAt.toISOString() : null,
   };
 }

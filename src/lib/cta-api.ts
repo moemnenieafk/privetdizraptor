@@ -160,3 +160,54 @@ export async function saveCtaPlayerProfile(p: PlayerProfilePayload): Promise<boo
   });
   return res.ok;
 }
+
+/* ───────────────── аккаунт-идентичность (слой 4 / Фаза 2) ───────────────── */
+// Мутации кабинета: логин/e-mail/пароль/аватар. Вызываются из клиента.
+// Возвращают { ok, error? } — текст ошибки приходит с сервера (кулдаун/занято/…).
+export interface AccountResult {
+  ok: boolean;
+  error?: string;
+}
+
+async function readError(res: Response): Promise<string> {
+  const json = (await res.json().catch(() => null)) as { error?: unknown } | null;
+  return typeof json?.error === "string" ? json.error : "Произошла ошибка";
+}
+
+// Сменить логин (3–15 символов, уникальный, раз в 2 месяца).
+export async function changeUsername(username: string): Promise<AccountResult> {
+  const res = await fetch(`${baseUrl()}/api/account/username`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username }),
+  });
+  return res.ok ? { ok: true } : { ok: false, error: await readError(res) };
+}
+
+// Сменить e-mail (Supabase шлёт подтверждение на новый адрес).
+export async function changeEmail(email: string): Promise<AccountResult> {
+  const res = await fetch(`${baseUrl()}/api/account/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return res.ok ? { ok: true } : { ok: false, error: await readError(res) };
+}
+
+// Запросить ссылку сброса пароля на e-mail из сессии. email — куда ушло письмо.
+export async function requestPasswordReset(): Promise<AccountResult & { email?: string }> {
+  const res = await fetch(`${baseUrl()}/api/account/password`, { method: "POST" });
+  if (!res.ok) return { ok: false, error: await readError(res) };
+  const json = (await res.json().catch(() => null)) as { email?: string } | null;
+  return { ok: true, email: json?.email };
+}
+
+// Загрузить аватар (готовый квадратный webp-blob из canvas). url — новый адрес картинки.
+export async function uploadAvatar(file: Blob): Promise<AccountResult & { url?: string }> {
+  const fd = new FormData();
+  fd.append("file", file, "avatar.webp");
+  const res = await fetch(`${baseUrl()}/api/account/avatar`, { method: "POST", body: fd });
+  if (!res.ok) return { ok: false, error: await readError(res) };
+  const json = (await res.json().catch(() => null)) as { url?: string } | null;
+  return { ok: true, url: json?.url };
+}

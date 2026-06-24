@@ -388,6 +388,9 @@ export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(), // = auth.users.id (FK навешивается в auth-setup.sql)
   username: text("username"),
   avatarUrl: text("avatar_url"),
+  // Кулдаун смены логина (Фаза 2-идентичность): когда username менялся в последний раз.
+  // Колонка additive — заводится через supabase/account-identity.sql (db:sql, без db:push).
+  usernameChangedAt: timestamp("username_changed_at", { withTimezone: true }),
   role: text("role").notNull().default("user"), // 'user' | 'admin' (слой 5, CMS)
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
