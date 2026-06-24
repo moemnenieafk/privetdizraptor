@@ -7,6 +7,7 @@ import { syncEftPrices } from "@/db/prices";
 import { syncEftBartersCrafts } from "@/db/barters-crafts";
 import { syncEftLandingData } from "@/db/landing";
 import { syncEftMapsGeometry } from "@/db/maps";
+import { syncEftIcons, type SyncIconsResult } from "@/db/icons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,12 +69,27 @@ export async function GET(req: Request): Promise<NextResponse> {
     } catch (e) {
       console.error("[cron/sync-prices] maps-geometry:", e);
     }
+    // Иконки — best-effort: зеркалит недостающие 512px из tarkov.dev по мере их появления.
+    // Не должно ронять прайс-синк. См. src/db/icons.ts.
+    let iconsRes: SyncIconsResult = {
+      iconsChecked: 0,
+      iconsReady: 0,
+      iconsFilled: 0,
+      iconsFailed: 0,
+      iconsStillMissing: 0,
+    };
+    try {
+      iconsRes = await syncEftIcons();
+    } catch (e) {
+      console.error("[cron/sync-prices] icons:", e);
+    }
     return NextResponse.json({
       ok: true,
       ...priceRes,
       ...staticRes,
       ...landingRes,
       mapsGeometry: mapsRes,
+      icons: iconsRes,
       at: new Date().toISOString(),
     });
   } catch (e) {
