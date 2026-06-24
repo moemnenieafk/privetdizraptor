@@ -4,6 +4,7 @@
 // шаблона) → после подтверждения обновляет сессию и ведёт на /account.
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   } = await supabase.auth.getUser();
   if (!user) return err(401, "Не авторизован");
 
+  if (bodyTooLarge(req, JSON_BODY_CAP)) return err(413, "Слишком большой запрос");
   let body: unknown;
   try {
     body = await req.json();

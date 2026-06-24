@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { questProgress } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
 import { createClient } from "@/lib/supabase/server";
+import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
 import type { ProgressPayload } from "@/lib/cta-api";
 
 export const runtime = "nodejs";
@@ -68,6 +69,9 @@ export async function PUT(req: Request): Promise<NextResponse> {
   const userId = await currentUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  if (bodyTooLarge(req, JSON_BODY_CAP)) {
+    return NextResponse.json({ error: "too large" }, { status: 413 });
+  }
   let body: unknown;
   try {
     body = await req.json();

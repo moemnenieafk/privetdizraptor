@@ -36,9 +36,19 @@ export async function rateLimit(key: string, max: number, windowSeconds: number)
   }
 }
 
-/** IP клиента из заголовков прокси (Vercel ставит x-forwarded-for). */
+/**
+ * IP клиента из доверенного источника. На Vercel `x-real-ip` ставит САМА платформа
+ * (клиент не подделает). Фолбэк — ПОСЛЕДНИЙ (правый) сегмент x-forwarded-for: его
+ * дописывает прокси, тогда как левый сегмент клиент может подделать и крутить
+ * фейковые IP, обходя rate-limit. Поэтому НЕ берём split(',')[0].
+ */
 export function clientIp(req: Request): string {
+  const real = req.headers.get("x-real-ip")?.trim();
+  if (real) return real;
   const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0]?.trim() || "unknown";
-  return req.headers.get("x-real-ip")?.trim() || "unknown";
+  if (xff) {
+    const parts = xff.split(",");
+    return parts[parts.length - 1]?.trim() || "unknown";
+  }
+  return "unknown";
 }

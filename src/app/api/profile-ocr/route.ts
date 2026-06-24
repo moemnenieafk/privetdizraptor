@@ -1,8 +1,23 @@
 import { NextResponse } from 'next/server';
 import type { ProfileOcrResult } from '@/types/profile-ocr';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
+
+// Картинка идёт в платный Gemini → жёсткие лимиты против cost-абьюза.
+const MAX_OCR_BODY = 8 * 1024 * 1024; // тело запроса ≤ 8 МБ (base64 раздувает ~×1.33)
+const MAX_OCR_B64 = 6_000_000; // ≈ 4.5 МБ декодированного изображения
+
+// Сигнатура реального изображения (magic-byte) — не доверяем клиентскому mimeType.
+function magicMatches(base64: string, mimeType: string): boolean {
+  const head = Buffer.from(base64.slice(0, 16), 'base64');
+  if (head.length < 12) return false;
+  if (mimeType === 'image/png') return head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47;
+  if (mimeType === 'image/jpeg') return head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+  if (mimeType === 'image/webp') return head.toString('ascii', 0, 4) === 'RIFF' && head.toString('ascii', 8, 12) === 'WEBP';
+  return false;
+}
 
 // Авторизация: OCR шлёт картинку в платный Gemini — пускаем ТОЛЬКО залогиненных
 // (защита от спама = счёт). Пользователь берётся из сессии Supabase.
@@ -57,6 +72,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Требуется вход' }, { status: 401 });
   }
 
+  // Per-user rate-limit — платный Gemini, ключ по userId (IP легко крутить).
+  if (!(await rateLimit(`ocr:uid:${userId}`, 10, 3600))) {
+    return NextResponse.json({ error: 'Слишком много запросов. Попробуйте позже.' }, { status: 429 });
+  }
+  // Ранний отсев переразмерного тела до буферизации/парсинга.
+  const declaredLen = Number(req.headers.get('content-length') ?? '0');
+  if (Number.isFinite(declaredLen) && declaredLen > MAX_OCR_BODY) {
+    return NextResponse.json({ error: 'Изображение слишком большое' }, { status: 413 });
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
@@ -81,6 +106,13 @@ export async function POST(req: Request) {
   }
   // Принимаем и data-URL, и «голый» base64.
   const base64 = image.includes(',') ? image.slice(image.indexOf(',') + 1) : image;
+  if (base64.length > MAX_OCR_B64) {
+    return NextResponse.json({ error: 'Изображение слишком большое' }, { status: 413 });
+  }
+  // Сверяем реальные байты с заявленным типом — иначе мусорный payload жрёт токены Gemini.
+  if (!magicMatches(base64, mimeType)) {
+    return NextResponse.json({ error: 'Файл не является корректным изображением' }, { status: 422 });
+  }
 
   try {
     const res = await fetch(geminiUrl(GEMINI_MODEL, apiKey), {

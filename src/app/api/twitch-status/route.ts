@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 
+// Кэш ответа на 30с: один исходящий запрос к Twitch обслуживает все клиентские хиты
+// (анти-абьюз открытого прокси — иначе флуд жрёт квоту Twitch-приложения).
+export const revalidate = 30;
+
 // Глобальные переменные для кеширования токена (работает между вызовами в теплых serverless-функциях)
 let cachedToken: string | null = null;
 let tokenExpiresAt: number = 0;

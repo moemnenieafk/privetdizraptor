@@ -8,6 +8,7 @@
 // Supabase Dashboard должен зеркалить magic-link (token_hash) — действие Вадима.
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,11 @@ export async function POST(req: Request): Promise<NextResponse> {
   } = await supabase.auth.getUser();
   if (!user) return err(401, "Не авторизован");
   if (!user.email) return err(400, "К аккаунту не привязан e-mail");
+
+  // Анти-спам писем сброса (расход общей SMTP-квоты): не чаще 3/час на юзера.
+  if (!(await rateLimit(`pwreset:uid:${user.id}`, 3, 3600))) {
+    return err(429, "Слишком часто. Попробуйте позже.");
+  }
 
   const origin = new URL(req.url).origin;
   const { error } = await supabase.auth.resetPasswordForEmail(user.email, {

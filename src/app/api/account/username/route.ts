@@ -6,6 +6,7 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
 
 export const runtime = "nodejs";
 
@@ -36,6 +37,7 @@ export async function PUT(req: Request): Promise<NextResponse> {
   const userId = await currentUserId();
   if (!userId) return err(401, "Не авторизован");
 
+  if (bodyTooLarge(req, JSON_BODY_CAP)) return err(413, "Слишком большой запрос");
   let body: unknown;
   try {
     body = await req.json();
