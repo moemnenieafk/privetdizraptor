@@ -33,6 +33,8 @@ public static class IconRenderer
         public float keyIntensity;
         public float fillIntensity;
         public float ambientLevel;
+        public float[] bgColor;      // фон; null = прозрачный
+        public float[] glassTint;    // хак для стекла: заменить материал на непрозрачный с этим тинтом (+нормаль-фростинг)
     }
     [Serializable] public class JobList { public Job[] jobs; }
 
@@ -99,6 +101,22 @@ public static class IconRenderer
             }
             inst.transform.rotation = itemRot;
 
+            // ХАК для стекла: заменить кастомный glass-шейдер на непрозрачный Standard с тинтом + нормаль (фростинг)
+            if (job.glassTint != null && job.glassTint.Length == 3) {
+                var tint = new Color(job.glassTint[0], job.glassTint[1], job.glassTint[2]);
+                foreach (var r in inst.GetComponentsInChildren<Renderer>(true)) {
+                    if (!(r is MeshRenderer)) continue;
+                    var src = r.sharedMaterial;
+                    var std = new Material(Shader.Find("Standard"));
+                    std.color = tint;
+                    var n = src != null ? src.GetTexture("_BumpMap") : null;
+                    if (n != null) { std.SetTexture("_BumpMap", n); std.EnableKeyword("_NORMALMAP"); std.SetFloat("_BumpScale", 1.2f); }
+                    std.SetFloat("_Glossiness", 0.42f);
+                    std.SetFloat("_Metallic", 0f);
+                    r.material = std;
+                }
+            }
+
             // 3. границы по видимым рендерерам
             var rends = inst.GetComponentsInChildren<Renderer>(true);
             Bounds b2 = new Bounds(Vector3.zero, Vector3.zero); bool first = true;
@@ -113,7 +131,9 @@ public static class IconRenderer
             var camGo = new GameObject("IconCam");
             cam = camGo.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color(0, 0, 0, 0);
+            cam.backgroundColor = (job.bgColor != null && job.bgColor.Length == 4)
+                ? new Color(job.bgColor[0], job.bgColor[1], job.bgColor[2], job.bgColor[3])
+                : new Color(0, 0, 0, 0);
             cam.allowHDR = false; cam.allowMSAA = true;
             cam.transform.rotation = camRot;
             float bs = Mathf.Max(job.boundsScale, 0.05f);
