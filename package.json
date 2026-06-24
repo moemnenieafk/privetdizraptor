@@ -19,6 +19,7 @@
     "db:login-link": "tsx scripts/login-link.ts",
     "db:sync-prices": "tsx scripts/sync-prices.ts",
     "db:sync-icons": "tsx scripts/sync-icons.ts",
+    "icons:render-missing": "node scripts/icon-render/render_missing.mjs",
     "db:sync-barters-crafts": "tsx scripts/sync-barters-crafts.ts",
     "db:sync-hideout": "tsx scripts/sync-hideout.ts",
     "db:sync-landing": "tsx scripts/sync-landing.ts",
