@@ -3,6 +3,7 @@
 import { useMemo, useRef } from 'react';
 import type { TaskRaw } from '@/types/quest';
 import { QuestSearch } from '@/components/features/quests/QuestSearch';
+import { MAP_ICON_CSS as MAP_CSS, MAP_ORDER } from '@/data/map-icons';
 
 const traderImg = (n: string) => `/images/traders/eft/${n}.webp`;
 
@@ -10,33 +11,6 @@ const TRADER_ORDER = [
   'prapor', 'therapist', 'skier', 'peacekeeper', 'mechanic',
   'jaeger', 'ragman', 'ref', 'fence', 'lightkeeper', 'btrdriver',
 ];
-
-const MAP_ORDER = [
-  'the-lab', 'ground-zero', 'streets-of-tarkov', 'interchange', 'customs',
-  'factory', 'woods', 'reserve', 'lighthouse', 'shoreline',
-  'terminal', 'the-labyrinth', 'icebreaker', 'end-of-line',
-];
-
-const MAP_CSS: Record<string, string> = {
-  'customs':           'icon-eft-maps-customs',
-  'woods':             'icon-eft-maps-woods',
-  'factory':           'icon-eft-maps-factory',
-  'shoreline':         'icon-eft-maps-shoreline',
-  'interchange':       'icon-eft-maps-interchange',
-  'reserve':           'icon-eft-maps-reserve',
-  'lighthouse':        'icon-eft-maps-lighthouse',
-  'the-lab':           'icon-eft-maps-lab',
-  'labs':              'icon-eft-maps-lab',
-  'ground-zero':       'icon-eft-maps-groundzero',
-  'streets-of-tarkov': 'icon-eft-maps-streets',
-  'streets':           'icon-eft-maps-streets',
-  'terminal':          'icon-eft-maps-terminal',
-  'transits':          'icon-eft-maps-transits',
-  'openworld':         'icon-eft-maps-openworld',
-  'icebreaker':        'icon-eft-maps-icebreaker',
-  'the-labyrinth':     'icon-eft-maps-labyrinth',
-  'end-of-line':       'icon-eft-end-of-line-map-icon',
-};
 
 interface MapEntry {
   id: string;

@@ -510,6 +510,10 @@ html {
 .cta-map-root .leaflet-container:active { cursor: grabbing; }
 .cta-map-svg { filter: saturate(0.92) brightness(0.96) contrast(1.02); }
 
+/* этажи: активный в фокусе, остальные <g>-слои затемнены + заблюрены */
+.cta-map-svg [data-floor] { transition: opacity 0.25s ease, filter 0.25s ease; }
+.cta-map-svg [data-floor].is-dimmed { opacity: 0.28; filter: blur(2px) saturate(0.6); }
+
 /* цвет маркера по фракции/типу */
 .ef-pmc, .ss-pmc, .lg-spawn { --mk: #5FB85B; }
 .ef-scav, .ss-scav { --mk: #E6A23C; }
@@ -603,4 +607,11 @@ html {
 @keyframes cta-mk-pulse {
   0%, 100% { box-shadow: 0 0 0 1.5px var(--mk), 0 0 8px 1px var(--mk); }
   50% { box-shadow: 0 0 0 2px var(--mk), 0 0 20px 6px var(--mk); }
+}
+
+/* подсветка зоны квеста (deep-link «Посмотреть на карте локации») */
+.cta-quest-zone { --mk: var(--primary); stroke-width: 2.5; animation: cta-zone-pulse 1.5s ease-in-out infinite; }
+@keyframes cta-zone-pulse {
+  0%, 100% { fill-opacity: 0.12; stroke-opacity: 0.7; }
+  50% { fill-opacity: 0.3; stroke-opacity: 1; }
 }

@@ -1,23 +1,27 @@
 import { notFound } from 'next/navigation';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
-import { getEftMapData } from '@/db/maps';
+import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
 import { getMapConfig } from '@/data/eft-map-config';
 import { mapImageUrl } from '@/lib/map-image';
-import { MapViewerLoader } from '@/components/features/maps/MapViewerLoader';
+import { MapFrame } from '@/components/features/maps/MapFrame';
+import { questsForMap } from '@/lib/map-quests';
 import type { MapView, MapViewMarker } from '@/components/features/maps/map-types';
+import type { MapBossStat, MapQuestZone } from '@/components/features/maps/map-frame-types';
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ quest?: string }>;
 }
 
 // v1 интерактива: выходы / спавны / переходы / опасности (остальное — за галочкой, v2).
 const V1_TYPES = new Set(['extract', 'spawn', 'transit', 'hazard']);
 
-// Детальная карта локации. Есть интерактивные данные + конфиг проекции → Leaflet-вьюер,
+// Детальная карта локации. Есть интерактивные данные + конфиг проекции → Leaflet-фрейм,
 // иначе — умная заглушка (карты без SVG-подложки / не интерактивные).
-export default async function MapPage({ params }: Props) {
+export default async function MapPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { quest: focusQuestId } = await searchParams;
   const config = getMapConfig(slug);
 
   if (config?.svgFile && config.transform) {
@@ -30,11 +34,34 @@ export default async function MapPage({ params }: Props) {
           type: m.type,
           position: m.position ?? null,
           outline: m.outline ?? null,
+          top: m.top ?? null,
+          bottom: m.bottom ?? null,
           label: m.label ?? null,
           faction: m.faction ?? null,
           sides: m.sides ?? null,
           categories: m.categories ?? null,
           meta: m.meta ?? null,
+        }));
+
+      // Боссы — отдельным блоком статистики (position=null, на холсте не рисуются).
+      const bosses: MapBossStat[] = data.markers
+        .filter((m) => m.type === 'boss')
+        .map((m) => {
+          const meta = m.meta as { spawnChance?: number } | null;
+          return {
+            id: m.id,
+            name: m.label ?? '—',
+            spawnChance: typeof meta?.spawnChance === 'number' ? meta.spawnChance : null,
+          };
+        });
+
+      // Зоны квестов (linkedQuestId) — для перелёта/подсветки по ?quest=id.
+      const questZones: MapQuestZone[] = data.markers
+        .filter((m) => m.type === 'quest_zone' && m.linkedQuestId)
+        .map((m) => ({
+          questId: m.linkedQuestId as string,
+          position: m.position ? { x: m.position.x, z: m.position.z } : null,
+          outline: (m.outline ?? []).map((p) => ({ x: p.x, z: p.z })),
         }));
 
       const view: MapView = {
@@ -50,7 +77,22 @@ export default async function MapPage({ params }: Props) {
         config,
         markers,
       };
-      return <MapViewerLoader data={view} />;
+
+      const navMaps = await getEftInteractiveMapsWithNames();
+      const quests = questsForMap(slug);
+
+      return (
+        <main className="w-full px-4 pt-4 pb-8 xl:px-8">
+          <MapFrame
+            data={view}
+            navMaps={navMaps}
+            quests={quests}
+            bosses={bosses}
+            questZones={questZones}
+            focusQuestId={focusQuestId}
+          />
+        </main>
+      );
     }
   }
 

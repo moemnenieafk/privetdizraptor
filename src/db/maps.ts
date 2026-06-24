@@ -517,3 +517,167 @@ export async function getEftInteractiveMaps(): Promise<MapAssetRow[]> {
     return [];
   }
 }
+
+/* ───────────────── зоны объективов квестов → map_markers (quest_zone) ───────────────── */
+// Координаты зон (TaskZone) — факты, как и геометрия карт. Только этот синк (крон/CLI)
+// ходит в tarkov.dev (правило 11). Изолирован от syncEftMapsGeometry: свой прюн по
+// type='quest_zone' + гард на пустой ответ. Поля сверены интроспекцией (2026-06-24).
+const QUEST_ZONES_QUERY = `
+  query {
+    tasks(lang: ru) {
+      id name
+      objectives {
+        id
+        ... on TaskObjectiveBasic     { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
+        ... on TaskObjectiveItem      { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
+        ... on TaskObjectiveMark      { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
+        ... on TaskObjectiveQuestItem { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
+        ... on TaskObjectiveShoot     { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
+      }
+    }
+  }
+`;
+
+interface RawZone {
+  id: string;
+  map?: { normalizedName: string } | null;
+  position?: RawPos | null;
+  outline?: RawPos[] | null;
+  top?: number | null;
+  bottom?: number | null;
+}
+interface RawObjectiveZones {
+  id: string;
+  zones?: RawZone[] | null;
+}
+interface RawTaskZones {
+  id: string;
+  name: string;
+  objectives?: RawObjectiveZones[] | null;
+}
+interface RawTasksResponse {
+  data?: { tasks?: RawTaskZones[] };
+  errors?: unknown;
+}
+
+/** Базовый slug карты: срезаем суффиксы вариантов рейда (день/ночь/21+). */
+const baseSlug = (s: string): string => s.replace(/-(21|day|night)$/i, "");
+
+export interface SyncQuestZonesResult {
+  zones: number;
+  deleted: number;
+  pruneSkipped: boolean;
+}
+
+/**
+ * Зеркалит координаты зон объективов квестов в map_markers (type='quest_zone',
+ * linkedQuestId=taskId). Привязка — к интерактивной карте по базовому slug. Питает кнопку
+ * «Посмотреть на карте» (перелёт+подсветка зоны). type — свободный text, db:push НЕ нужен.
+ */
+export async function syncEftQuestZones(): Promise<SyncQuestZonesResult> {
+  const res = await fetch(ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ query: QUEST_ZONES_QUERY }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`tarkov.dev quest-zones → HTTP ${res.status}`);
+  const json = (await res.json()) as RawTasksResponse;
+  if (json.errors || !json.data) throw new Error("tarkov.dev quest-zones: ошибочный/пустой ответ");
+
+  const gameId = await eftGameId();
+
+  // base-slug → mapId, только интерактивные карты (imageKey задан); зоны вне их игнорируем.
+  const assetRows = await db
+    .select({ slug: mapAssets.normalizedName, mapId: mapAssets.mapId, imageKey: mapAssets.imageKey })
+    .from(mapAssets)
+    .where(eq(mapAssets.gameId, gameId));
+  const slugToId = new Map<string, string>();
+  for (const r of assetRows) if (r.imageKey) slugToId.set(r.slug, r.mapId);
+
+  const dedup = new Map<string, NewMapMarkerRow>();
+  for (const t of json.data.tasks ?? []) {
+    for (const o of t.objectives ?? []) {
+      for (const z of o.zones ?? []) {
+        if (!z.position || !z.map?.normalizedName) continue;
+        const mapId = slugToId.get(baseSlug(z.map.normalizedName));
+        if (!mapId) continue;
+        const id = `qz_${hash64(`${t.id}|${z.id}|${mapId}`)}`;
+        dedup.set(`${mapId} ${id}`, {
+          mapId,
+          id,
+          gameId,
+          type: "quest_zone",
+          position: { x: z.position.x, y: z.position.y, z: z.position.z },
+          outline: (z.outline ?? []).map((p) => ({ x: p.x, y: p.y, z: p.z })),
+          top: z.top ?? null,
+          bottom: z.bottom ?? null,
+          label: t.name,
+          faction: null,
+          sides: null,
+          categories: null,
+          linkedItemId: null,
+          linkedQuestId: t.id,
+          meta: { zoneId: z.id },
+        });
+      }
+    }
+  }
+
+  const rows = [...dedup.values()];
+  // Пусто → НЕ прюним (страховка от обрезанного ответа), старые зоны сохраняем.
+  if (rows.length === 0) return { zones: 0, deleted: 0, pruneSkipped: true };
+
+  const CHUNK = 500;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    await db
+      .insert(mapMarkers)
+      .values(rows.slice(i, i + CHUNK))
+      .onConflictDoUpdate({
+        target: [mapMarkers.mapId, mapMarkers.id],
+        set: {
+          type: sql`excluded.type`,
+          position: sql`excluded.position`,
+          outline: sql`excluded.outline`,
+          top: sql`excluded.top`,
+          bottom: sql`excluded.bottom`,
+          label: sql`excluded.label`,
+          linkedQuestId: sql`excluded.linked_quest_id`,
+          meta: sql`excluded.meta`,
+          syncedAt: sql`now()`,
+        },
+      });
+  }
+
+  // Прюн стейл quest_zone (скоуп type='quest_zone' по игре).
+  const keepIds = rows.map((r) => r.id);
+  const del = await db
+    .delete(mapMarkers)
+    .where(and(eq(mapMarkers.gameId, gameId), eq(mapMarkers.type, "quest_zone"), notInArray(mapMarkers.id, keepIds)));
+
+  return { zones: rows.length, deleted: del.count, pruneSkipped: false };
+}
+
+export interface InteractiveMapNav {
+  slug: string;        // normalizedName
+  name: string;        // ru-имя из maps
+}
+
+/**
+ * Интерактивные карты (imageKey задан) + ru-имя — динамический источник для индекса
+ * /eft/maps и навигации по разделу. Добавили/убрали карту в БД → список сам обновился.
+ */
+export async function getEftInteractiveMapsWithNames(): Promise<InteractiveMapNav[]> {
+  try {
+    const gameId = await eftGameId();
+    const rows = await db
+      .select({ slug: mapAssets.normalizedName, name: maps.name, imageKey: mapAssets.imageKey })
+      .from(mapAssets)
+      .innerJoin(maps, eq(maps.id, mapAssets.mapId))
+      .where(eq(mapAssets.gameId, gameId));
+    return rows.filter((r) => r.imageKey).map((r) => ({ slug: r.slug, name: r.name }));
+  } catch (e) {
+    console.error("[getEftInteractiveMapsWithNames]", e);
+    return [];
+  }
+}

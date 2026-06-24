@@ -6,6 +6,9 @@ export interface MapViewMarker {
   type: string;
   position: { x: number; y: number; z: number } | null;
   outline: { x: number; y: number; z: number }[] | null;
+  /** Диапазон игровой высоты (game-Y) — для фильтра по этажу. */
+  top: number | null;
+  bottom: number | null;
   label: string | null;
   faction: string | null;
   sides: string[] | null;
