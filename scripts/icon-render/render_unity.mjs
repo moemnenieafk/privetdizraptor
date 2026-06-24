@@ -20,6 +20,7 @@ const UNITY = arg("unity", "C:/Program Files/Unity/Hub/Editor/2022.3.43f1/Editor
 const PROJECT = arg("project", join(HERE, "unity", "_project"));
 const PY = arg("python", "python");
 const ITEMS = arg("items", "");
+const MAP = arg("map", "");
 const RES = arg("res", "512");
 const UPLOAD = flag("upload");
 const OUT = join(HERE, "out-unity");
@@ -59,6 +60,7 @@ const glassToFix = [];
 for (const id of ids) {
   try {
     const rargs = ["scripts/icon-render/resolve_bundle.py", "--id", id, "--win", WIN];
+    if (MAP) rargs.push("--map", MAP);
     if (ITEMS) rargs.push("--items", ITEMS);
     const key = run(PY, rargs, { cwd: ROOT }).toString("utf8").split("\n").map(s => s.trim()).filter(s => s && !s.startsWith("#")).pop();
     if (!key) { console.log(`  SKIP ${id}: не разрешён`); continue; }

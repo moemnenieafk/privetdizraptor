@@ -52,11 +52,16 @@ def name_fallback(template_id, catalog_path, win):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--id", required=True)
-    ap.add_argument("--items", help="BSG items.json (Prefab paths) — предпочтительно")
+    ap.add_argument("--map", help="готовая карта id->bundleKey (JSON) — высший приоритет (напр. src/data/icon-bundle-map-eft.json)")
+    ap.add_argument("--items", help="BSG items.json (Prefab paths)")
     ap.add_argument("--catalog", default="public/images/items/eft/items_database.json")
     ap.add_argument("--win", default=r"C:/Battlestate Games/Escape from Tarkov/EscapeFromTarkov_Data/StreamingAssets/Windows")
     a = ap.parse_args()
 
+    if a.map and os.path.exists(a.map):
+        mp = json.load(open(a.map, encoding="utf-8"))
+        if mp.get(a.id):
+            print(mp[a.id]); return
     if a.items and os.path.exists(a.items):
         m = load_items_prefab(a.items)
         if a.id in m:
