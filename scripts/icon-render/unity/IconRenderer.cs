@@ -126,13 +126,18 @@ public static class IconRenderer
             cam.farClipPlane = dist + radius * 4f;
             cam.transform.position = center - cam.transform.forward * dist;
 
-            // 5. свет (ambient + key/fill); отражения металла идут из материала _Cube (бандл cubemaps загружен)
+            // 5. свет (ambient + key + fill); отражения металла идут из материала _Cube (бандл cubemaps загружен)
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.42f, 0.43f, 0.46f);
-            lightGo = new GameObject("KeyLight");
-            var key = lightGo.AddComponent<Light>();
-            key.type = LightType.Directional; key.intensity = 1.3f; key.color = Color.white;
-            key.transform.rotation = Quaternion.Euler(35f, 145f, 0f);
+            RenderSettings.ambientLight = new Color(0.58f, 0.59f, 0.63f);
+            lightGo = new GameObject("Lights");
+            var keyGo = new GameObject("Key"); keyGo.transform.SetParent(lightGo.transform);
+            var key = keyGo.AddComponent<Light>();
+            key.type = LightType.Directional; key.intensity = 1.5f; key.color = Color.white;
+            keyGo.transform.rotation = Quaternion.Euler(35f, 145f, 0f);
+            var fillGo = new GameObject("Fill"); fillGo.transform.SetParent(lightGo.transform);
+            var fill = fillGo.AddComponent<Light>();
+            fill.type = LightType.Directional; fill.intensity = 0.65f; fill.color = new Color(0.9f, 0.93f, 1f);
+            fillGo.transform.rotation = Quaternion.Euler(-15f, -35f, 0f);
 
             // 6. рендер -> прозрачный PNG
             int res = job.res > 0 ? job.res : 512;
