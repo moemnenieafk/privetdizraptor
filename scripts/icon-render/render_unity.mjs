@@ -120,10 +120,16 @@ if (UPLOAD) {
   bucket = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } }).storage.from("cta-media");
 }
 let made = 0, up = 0;
+const FILL = 0.90; // предмет занимает 90% кадра по большей стороне
 for (const f of png) {
   const id = f.replace(".png", "");
+  // АВТО-КРОП: убираем прозрачные поля -> предмет красиво заполняет кадр (надёжно для skinned-носимых)
+  const trimmed = await sharp(join(OUT, f)).ensureAlpha().trim({ threshold: 10 }).toBuffer();
   for (const s of SIZES) {
-    const webp = await sharp(join(OUT, f)).resize(s.px, s.px, { fit: "inside" }).webp({ quality: 90 }).toBuffer();
+    const inner = Math.round(s.px * FILL);
+    const fitted = await sharp(trimmed).resize(inner, inner, { fit: "inside" }).toBuffer();
+    const webp = await sharp({ create: { width: s.px, height: s.px, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .composite([{ input: fitted, gravity: "center" }]).webp({ quality: 90 }).toBuffer();
     const name = `${id}${s.suffix}.webp`;
     writeFileSync(join(OUT, name), webp); made++;
     if (bucket) {

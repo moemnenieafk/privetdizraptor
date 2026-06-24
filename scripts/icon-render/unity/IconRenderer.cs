@@ -123,13 +123,17 @@ public static class IconRenderer
             foreach (var r in rends) {
                 Bounds rb;
                 if (r is SkinnedMeshRenderer smr) {
-                    // SkinnedMeshRenderer.bounds РАЗДУТ (bind-pose/анимация) -> носимые предметы (броня/риги/маски)
-                    // рендерились мелко. Берём ТУГИЕ границы из локального AABB меша через трансформ.
+                    // SkinnedMeshRenderer.bounds РАЗДУТ (bind-pose/анимация) и зависит от костей -> носимые
+                    // (броня/риги/маски) рендерились мелко. BakeMesh даёт РЕАЛЬНУЮ позу -> тугие границы по вершинам.
                     if (smr.sharedMesh == null) continue;
-                    var lb = smr.sharedMesh.bounds; var mtx = smr.transform.localToWorldMatrix; var e = lb.extents;
-                    rb = new Bounds(mtx.MultiplyPoint3x4(lb.center), Vector3.zero);
-                    for (int sx = -1; sx <= 1; sx += 2) for (int sy = -1; sy <= 1; sy += 2) for (int sz = -1; sz <= 1; sz += 2)
-                        rb.Encapsulate(mtx.MultiplyPoint3x4(lb.center + new Vector3(sx * e.x, sy * e.y, sz * e.z)));
+                    var baked = new Mesh();
+                    smr.BakeMesh(baked);
+                    var verts = baked.vertices;
+                    if (verts.Length == 0) { UnityEngine.Object.DestroyImmediate(baked); continue; }
+                    var mtx = smr.transform.localToWorldMatrix;
+                    rb = new Bounds(mtx.MultiplyPoint3x4(verts[0]), Vector3.zero);
+                    for (int vi = 1; vi < verts.Length; vi++) rb.Encapsulate(mtx.MultiplyPoint3x4(verts[vi]));
+                    UnityEngine.Object.DestroyImmediate(baked);
                 } else if (r is MeshRenderer) {
                     rb = r.bounds;
                 } else continue;
@@ -158,8 +162,11 @@ public static class IconRenderer
                 cam.fieldOfView = job.perspective;
                 dist = (radius / bs) / Mathf.Tan(job.perspective * Mathf.Deg2Rad * 0.5f);
             }
-            cam.nearClipPlane = Mathf.Max(0.001f, dist - radius * 4f);
-            cam.farClipPlane = dist + radius * 4f;
+            // Запас по кадру: рендерим предмет целиком (даже если bounds раздут -> мелко),
+            // финальное кадрирование делает АВТО-КРОП в пост-обработке (надёжно для skinned).
+            dist *= 1.6f;
+            cam.nearClipPlane = Mathf.Max(0.001f, dist - radius * 6f);
+            cam.farClipPlane = dist + radius * 6f;
             cam.transform.position = center - cam.transform.forward * dist;
 
             // 5. свет (ambient + key + fill); отражения металла/стекла из материала _Cube (бандл cubemaps загружен)
