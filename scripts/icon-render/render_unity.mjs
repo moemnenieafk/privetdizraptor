@@ -61,7 +61,7 @@ for (const id of ids) {
       cameraMode: 5, // предмет=identity, камера=Inverse(Icon.rotation) — пиксель-точно (сверено: 0.0° vs tarkov.dev)
       perspective: m.perspective, boundsScale: m.boundsScale,
       orthographic: m.orthographic | 0, orthographicSize: m.orthographicSize || 10,
-      outPath: join(OUT, `${id}.png`), res: parseInt(RES, 10),
+      outPath: join(OUT, `${id}.png`), res: parseInt(arg("master", "2048"), 10),
     });
   } catch (e) { console.log(`  FAIL prep ${id}: ${String(e.message || e).split("\n")[0]}`); }
 }
@@ -77,20 +77,28 @@ try {
   console.error("Unity вернул ненулевой код (часть заданий могла упасть) — смотри лог выше");
 }
 
-// --- 4. собрать PNG (+ опц. webp/upload) ---
+// --- 4. из мастер-PNG -> webp 512 (+ 1024 для зума) [+ опц. заливка] ---
 const png = readdirSync(OUT).filter(f => f.endsWith(".png"));
-console.log(`готово PNG: ${png.length} в ${OUT}`);
-if (UPLOAD && png.length) {
+console.log(`готово мастер-PNG: ${png.length} в ${OUT}`);
+const sharp = (await import("sharp")).default;
+const SIZES = [{ suffix: "", px: 512 }, { suffix: "-1024", px: 1024 }]; // {id}.webp + {id}-1024.webp
+let bucket = null;
+if (UPLOAD) {
   const { config } = await import("dotenv"); config({ path: join(ROOT, ".env.local") });
   const { createClient } = await import("@supabase/supabase-js");
-  const sharp = (await import("sharp")).default;
-  const bucket = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } }).storage.from("cta-media");
-  let up = 0;
-  for (const f of png) {
-    const id = f.replace(".png", "");
-    const webp = await sharp(join(OUT, f)).webp({ quality: 92 }).toBuffer();
-    const { error } = await bucket.upload(`items/eft/${id}.webp`, webp, { contentType: "image/webp", upsert: true });
-    if (error) console.log(`  upload FAIL ${id}: ${error.message}`); else up++;
-  }
-  console.log(`залито в cta-media: ${up}`);
+  bucket = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } }).storage.from("cta-media");
 }
+let made = 0, up = 0;
+for (const f of png) {
+  const id = f.replace(".png", "");
+  for (const s of SIZES) {
+    const webp = await sharp(join(OUT, f)).resize(s.px, s.px, { fit: "inside" }).webp({ quality: 90 }).toBuffer();
+    const name = `${id}${s.suffix}.webp`;
+    writeFileSync(join(OUT, name), webp); made++;
+    if (bucket) {
+      const { error } = await bucket.upload(`items/eft/${name}`, webp, { contentType: "image/webp", upsert: true });
+      if (error) console.log(`  upload FAIL ${name}: ${error.message}`); else up++;
+    }
+  }
+}
+console.log(`webp создано: ${made}${UPLOAD ? `, залито в cta-media: ${up}` : ` в ${OUT}`}`);
