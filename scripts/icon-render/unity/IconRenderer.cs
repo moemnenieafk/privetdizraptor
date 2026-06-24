@@ -59,7 +59,7 @@ public static class IconRenderer
 
     static void RenderOne(Job job) {
         var bundles = new List<AssetBundle>();
-        GameObject inst = null; Camera cam = null; RenderTexture rt = null; GameObject lightGo = null;
+        GameObject inst = null; Camera cam = null; RenderTexture rt = null; GameObject lightGo = null; Cubemap cube = null;
         try {
             // 1. зависимости (shaders/textures/cubemaps) ДО основного бандла
             foreach (var dp in job.depPaths)
@@ -149,6 +149,34 @@ public static class IconRenderer
             fill.intensity = job.fillIntensity > 0f ? job.fillIntensity : 0.65f;
             fillGo.transform.rotation = Quaternion.Euler(-15f, -35f, 0f);
 
+            // студийное окружение отражений (даёт БЛИКИ на металле/стекле; раньше отражалась пустота)
+            int cs = 64;
+            cube = new Cubemap(cs, TextureFormat.RGBA32, false);
+            Color cTop = new Color(1.15f, 1.15f, 1.2f), cMid = new Color(0.5f, 0.51f, 0.55f), cBot = new Color(0.08f, 0.08f, 0.1f);
+            System.Func<float, Color> grad = (t) => t > 0.5f ? Color.Lerp(cMid, cTop, (t - 0.5f) * 2f) : Color.Lerp(cBot, cMid, t * 2f);
+            foreach (CubemapFace face in new[] { CubemapFace.PositiveX, CubemapFace.NegativeX, CubemapFace.PositiveY, CubemapFace.NegativeY, CubemapFace.PositiveZ, CubemapFace.NegativeZ }) {
+                var px = new Color[cs * cs];
+                for (int yy = 0; yy < cs; yy++) for (int xx = 0; xx < cs; xx++) {
+                    float u = (xx + 0.5f) / cs * 2f - 1f, v = (yy + 0.5f) / cs * 2f - 1f;
+                    Vector3 dir;
+                    switch (face) {
+                        case CubemapFace.PositiveX: dir = new Vector3(1, -v, -u); break;
+                        case CubemapFace.NegativeX: dir = new Vector3(-1, -v, u); break;
+                        case CubemapFace.PositiveY: dir = new Vector3(u, 1, v); break;
+                        case CubemapFace.NegativeY: dir = new Vector3(u, -1, -v); break;
+                        case CubemapFace.PositiveZ: dir = new Vector3(u, -v, 1); break;
+                        default: dir = new Vector3(-u, -v, -1); break;
+                    }
+                    dir.Normalize();
+                    px[yy * cs + xx] = grad((dir.y + 1f) * 0.5f);
+                }
+                cube.SetPixels(px, face);
+            }
+            cube.Apply();
+            RenderSettings.defaultReflectionMode = UnityEngine.Rendering.DefaultReflectionMode.Custom;
+            RenderSettings.customReflectionTexture = cube;
+            DynamicGI.UpdateEnvironment();
+
             // 6. рендер -> прозрачный PNG
             int res = job.res > 0 ? job.res : 512;
             rt = new RenderTexture(res, res, 24, RenderTextureFormat.ARGB32);
@@ -168,6 +196,7 @@ public static class IconRenderer
             if (inst != null) UnityEngine.Object.DestroyImmediate(inst);
             if (cam != null) UnityEngine.Object.DestroyImmediate(cam.gameObject);
             if (lightGo != null) UnityEngine.Object.DestroyImmediate(lightGo);
+            if (cube != null) UnityEngine.Object.DestroyImmediate(cube);
             foreach (var b in bundles) if (b != null) b.Unload(true);
         }
     }
