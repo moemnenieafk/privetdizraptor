@@ -49,7 +49,8 @@
 - `scripts/icon-render/render_unity.mjs` (`npm run icons:render-unity`) — драйвер: resolve→extract(meta: prefabName/bundle/deps/icon-params)→jobs.json→Unity batch→PNG[→webp/upload]. Создаёт Unity-проект сам, кладёт скрипт в `Assets/Editor/`.
 - `extract_item.py` дополнен: пишет в meta `prefabName`/`bundleKey`/`depKeys` для Unity.
 - Запуск: `Unity.exe -batchmode -quit -projectPath <p> -executeMethod IconRenderer.RenderBatch -jobsFile jobs.json` (БЕЗ `-nographics`).
-- **Открытые вопросы при прогоне:** загрузятся ли шейдеры EFT в 2022.3.43f1 (ожидаемо да); точная модель камеры (камера=Icon.rotation vs учёт pivotRotation); освещение иконочной сцены BSG (сейчас ambient+directional — подстроить); прозрачность альфы opaque-шейдеров.
+- **Прогон выполнен (2026-06-24):** ✅ шейдеры EFT загружаются в 2022.3.43f1 → материал точный (сочный, как tarkov.dev). ✅ **КАМЕРА РЕШЕНА ПИКСЕЛЬ-ТОЧНО**: перебрал 6 моделей композиции, замер наклона силуэта по моментам vs tarkov.dev. **Победитель — mode 5: предмет=identity, камера=`Quaternion.Inverse(Icon.rotation)`** → отклонение **0.0°** (батарейка −40.9° = эталон −40.9°), визуально 1:1. Вывод: `Icon.rotation` = поворот ОТ камеры К предмету, камере нужен ОБРАТНЫЙ (поэтому в Blender с «как есть» был остаток ~10°). `pivotRotation` в режиме иконки НЕ участвует (возможно — для 3D-инспекта). Зафиксировано в `render_unity.mjs` (`cameraMode:5`).
+- **Осталось проверить per-категория:** универсален ли mode 5 (или часть категорий требует pivotRotation); освещение иконочной сцены BSG (сейчас ambient+directional — батарейка чуть темнее tarkov.dev); прозрачность альфы opaque-шейдеров.
 
 ## Не-цели
 - Оружие/пресеты (Гейт 3 базового спринта) — отдельно (сборка из многих бандлов-деталей).

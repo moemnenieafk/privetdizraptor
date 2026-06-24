@@ -58,6 +58,7 @@ for (const id of ids) {
       depPaths: (m.depKeys || []).map(k => join(WIN, k)),
       iconRotation: m.iconRotation,
       pivotRotation: m.pivotRotation,
+      cameraMode: 5, // предмет=identity, камера=Inverse(Icon.rotation) — пиксель-точно (сверено: 0.0° vs tarkov.dev)
       perspective: m.perspective, boundsScale: m.boundsScale,
       orthographic: m.orthographic | 0, orthographicSize: m.orthographicSize || 10,
       outPath: join(OUT, `${id}.png`), res: parseInt(RES, 10),

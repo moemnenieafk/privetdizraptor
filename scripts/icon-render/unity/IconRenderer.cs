@@ -21,6 +21,7 @@ public static class IconRenderer
         public string[] depPaths;
         public float[] iconRotation; // x,y,z,w
         public float[] pivotRotation; // x,y,z,w — поза предмета
+        public int cameraMode; // 0=item:pivot,cam:icon (дефолт) … перебор моделей камеры
         public float perspective;
         public float boundsScale;
         public int orthographic;
@@ -77,10 +78,21 @@ public static class IconRenderer
 
             inst = UnityEngine.Object.Instantiate(prefab);
             inst.transform.position = Vector3.zero;
-            // предмет поворачивается pivotRotation (камера — Icon.rotation)
-            inst.transform.rotation = (job.pivotRotation != null && job.pivotRotation.Length == 4)
+            // модели композиции pivotRotation/Icon.rotation (перебор для точного ракурса)
+            var icon = new Quaternion(job.iconRotation[0], job.iconRotation[1], job.iconRotation[2], job.iconRotation[3]);
+            var pivot = (job.pivotRotation != null && job.pivotRotation.Length == 4)
                 ? new Quaternion(job.pivotRotation[0], job.pivotRotation[1], job.pivotRotation[2], job.pivotRotation[3])
                 : Quaternion.identity;
+            Quaternion itemRot, camRot;
+            switch (job.cameraMode) {
+                default: case 0: itemRot = pivot; camRot = icon; break;
+                case 1: itemRot = Quaternion.identity; camRot = icon; break;
+                case 2: itemRot = pivot; camRot = pivot * icon; break;
+                case 3: itemRot = Quaternion.identity; camRot = pivot * icon; break;
+                case 4: itemRot = pivot; camRot = icon * pivot; break;
+                case 5: itemRot = Quaternion.identity; camRot = Quaternion.Inverse(icon); break;
+            }
+            inst.transform.rotation = itemRot;
 
             // 3. границы по видимым рендерерам
             var rends = inst.GetComponentsInChildren<Renderer>(true);
@@ -98,8 +110,7 @@ public static class IconRenderer
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0, 0, 0, 0);
             cam.allowHDR = false; cam.allowMSAA = true;
-            var q = new Quaternion(job.iconRotation[0], job.iconRotation[1], job.iconRotation[2], job.iconRotation[3]);
-            cam.transform.rotation = q;
+            cam.transform.rotation = camRot;
             float bs = Mathf.Max(job.boundsScale, 0.05f);
             float dist;
             if (job.orthographic != 0) {
