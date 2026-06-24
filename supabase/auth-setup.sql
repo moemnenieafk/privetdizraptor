@@ -17,17 +17,28 @@ returns trigger
 language plpgsql
 security definer set search_path = ''
 as $$
+declare
+  base text;
+  cand text;
+  n int := 0;
 begin
+  -- Базовый ник: OAuth-метаданные или local-part email; гарантируем непустоту.
+  base := coalesce(
+    nullif(new.raw_user_meta_data ->> 'user_name', ''),
+    nullif(new.raw_user_meta_data ->> 'name', ''),
+    nullif(split_part(coalesce(new.email, ''), '@', 1), ''),
+    'user'
+  );
+  -- Уникальность без учёта регистра: иначе совпадение local-part email нарушит
+  -- profiles_username_lower_uniq (account-identity.sql) и сломает регистрацию.
+  cand := base;
+  while exists (select 1 from public.profiles where lower(username) = lower(cand)) loop
+    n := n + 1;
+    cand := base || n::text;
+  end loop;
+
   insert into public.profiles (id, username, avatar_url)
-  values (
-    new.id,
-    coalesce(
-      new.raw_user_meta_data ->> 'user_name',
-      new.raw_user_meta_data ->> 'name',
-      split_part(new.email, '@', 1)
-    ),
-    new.raw_user_meta_data ->> 'avatar_url'
-  )
+  values (new.id, cand, new.raw_user_meta_data ->> 'avatar_url')
   on conflict (id) do nothing;
   return new;
 end;

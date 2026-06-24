@@ -2,20 +2,24 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { safeNext } from "@/lib/auth/safe-next";
 
 type MagicStatus = "idle" | "sending" | "sent" | "error";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function LoginForm() {
   const searchParams = useSearchParams();
   const next = safeNext(searchParams.get("next"));
   const supabase = createClient();
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // e-mail ИЛИ имя пользователя
   const [password, setPassword] = useState("");
+  const [reveal, setReveal] = useState(false);
 
-  // Вход по паролю
+  // Вход по паролю (через серверный роут — резолвит username→email)
   const [signing, setSigning] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
 
@@ -26,14 +30,15 @@ export function LoginForm() {
     e.preventDefault();
     setPwError(null);
     setSigning(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, password }),
+    });
+    if (!res.ok) {
       setSigning(false);
-      setPwError(
-        /invalid login credentials/i.test(error.message)
-          ? "Неверный e-mail или пароль"
-          : "Не удалось войти. Попробуйте снова.",
-      );
+      const json = (await res.json().catch(() => null)) as { error?: string } | null;
+      setPwError(json?.error ?? "Не удалось войти");
       return;
     }
     // Полный переход — чтобы сервер/middleware сразу увидели свежую сессию в куках.
@@ -41,13 +46,14 @@ export function LoginForm() {
   }
 
   async function sendMagicLink() {
-    if (!email) {
-      setPwError("Введите e-mail для ссылки");
+    if (!EMAIL_RE.test(identifier)) {
+      setPwError("Для ссылки на почту введите e-mail (не имя пользователя)");
       return;
     }
+    setPwError(null);
     setMagic("sending");
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: identifier,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`,
       },
@@ -70,26 +76,37 @@ export function LoginForm() {
         Вход в ЦТА
       </h1>
 
-      {/* Вход по e-mail + паролю */}
+      {/* Вход по e-mail/имени + паролю */}
       <form onSubmit={signInPassword} className="flex flex-col gap-3">
         <input
-          type="email"
+          type="text"
           required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          autoComplete="username"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          placeholder="E-mail или имя пользователя"
           className="rounded-xs border border-white/15 bg-white/5 px-3 py-2 font-blender-book text-sm outline-none focus:border-(--primary)"
         />
-        <input
-          type="password"
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Пароль"
-          className="rounded-xs border border-white/15 bg-white/5 px-3 py-2 font-blender-book text-sm outline-none focus:border-(--primary)"
-        />
+        <div className="relative">
+          <input
+            type={reveal ? "text" : "password"}
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Пароль"
+            className="w-full rounded-xs border border-white/15 bg-white/5 px-3 py-2 pr-10 font-blender-book text-sm outline-none focus:border-(--primary)"
+          />
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setReveal((r) => !r)}
+            aria-label={reveal ? "Скрыть пароль" : "Показать пароль"}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 transition-colors hover:text-(--primary)"
+          >
+            {reveal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
         <button
           type="submit"
           disabled={signing}
@@ -118,7 +135,7 @@ export function LoginForm() {
         </button>
         {magic === "sent" && (
           <p className="font-blender-book text-sm text-green-400">
-            Письмо со ссылкой отправлено на {email}. Проверьте почту.
+            Письмо со ссылкой отправлено на {identifier}. Проверьте почту.
           </p>
         )}
         {magic === "error" && (

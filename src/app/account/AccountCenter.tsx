@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronDown, Check, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
 import { changeEmail, changeUsername, uploadAvatar } from '@/lib/cta-api';
@@ -135,18 +135,34 @@ function FormInput({
   maxLength?: number;
   autoComplete?: string;
 }) {
+  const [reveal, setReveal] = useState(false);
+  const isPassword = type === 'password';
+  const effectiveType = isPassword && reveal ? 'text' : type;
   return (
-    <input
-      type={type}
-      placeholder={placeholder}
-      value={value}
-      onChange={(e) => onChange?.(e.target.value)}
-      disabled={disabled}
-      readOnly={readOnly}
-      maxLength={maxLength}
-      autoComplete={autoComplete}
-      className="w-full rounded border border-lines-hover bg-(--color-base) px-4 py-3 font-blender-book text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none disabled:opacity-50 read-only:opacity-70"
-    />
+    <div className="relative w-full">
+      <input
+        type={effectiveType}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        disabled={disabled}
+        readOnly={readOnly}
+        maxLength={maxLength}
+        autoComplete={autoComplete}
+        className={`w-full rounded border border-lines-hover bg-(--color-base) px-4 py-3 ${isPassword ? 'pr-11' : ''} font-blender-book text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none disabled:opacity-50 read-only:opacity-70`}
+      />
+      {isPassword && (
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setReveal((r) => !r)}
+          aria-label={reveal ? 'Скрыть пароль' : 'Показать пароль'}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-(--primary)"
+        >
+          {reveal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      )}
+    </div>
   );
 }
 
