@@ -22,24 +22,41 @@ declare
   cand text;
   n int := 0;
 begin
-  -- Базовый ник: OAuth-метаданные или local-part email; гарантируем непустоту.
+  -- Базовый ник: OAuth-метаданные или local-part email. Чистим под формат
+  -- ([A-Za-z0-9_-]), непустой, не длиннее 15 символов.
   base := coalesce(
     nullif(new.raw_user_meta_data ->> 'user_name', ''),
     nullif(new.raw_user_meta_data ->> 'name', ''),
     nullif(split_part(coalesce(new.email, ''), '@', 1), ''),
     'user'
   );
-  -- Уникальность без учёта регистра: иначе совпадение local-part email нарушит
-  -- profiles_username_lower_uniq (account-identity.sql) и сломает регистрацию.
+  base := nullif(regexp_replace(base, '[^A-Za-z0-9_-]', '', 'g'), '');
+  base := left(coalesce(base, 'user'), 15);
   cand := base;
-  while exists (select 1 from public.profiles where lower(username) = lower(cand)) loop
-    n := n + 1;
-    cand := base || n::text;
+
+  -- Race-safe: вставляем, при коллизии username (profiles_username_lower_uniq,
+  -- account-identity.sql) добавляем суффикс и повторяем. on conflict (id) ловит
+  -- только PK, поэтому конфликт ника перехватываем явно. Длину держим ≤15.
+  loop
+    begin
+      insert into public.profiles (id, username, avatar_url)
+      values (new.id, cand, new.raw_user_meta_data ->> 'avatar_url')
+      on conflict (id) do nothing;
+      exit;
+    exception when unique_violation then
+      n := n + 1;
+      cand := left(base, greatest(1, 15 - length(n::text))) || n::text;
+      if n > 99 then
+        -- крайний случай — гарантированно уникальный хвост из id
+        cand := left(replace(new.id::text, '-', ''), 15);
+        insert into public.profiles (id, username, avatar_url)
+        values (new.id, cand, new.raw_user_meta_data ->> 'avatar_url')
+        on conflict (id) do nothing;
+        exit;
+      end if;
+    end;
   end loop;
 
-  insert into public.profiles (id, username, avatar_url)
-  values (new.id, cand, new.raw_user_meta_data ->> 'avatar_url')
-  on conflict (id) do nothing;
   return new;
 end;
 $$;
