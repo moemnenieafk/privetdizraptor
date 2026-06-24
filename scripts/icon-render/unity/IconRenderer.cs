@@ -162,12 +162,36 @@ public static class IconRenderer
                 cam.fieldOfView = job.perspective;
                 dist = (radius / bs) / Mathf.Tan(job.perspective * Mathf.Deg2Rad * 0.5f);
             }
-            // Запас по кадру: рендерим предмет целиком (даже если bounds раздут -> мелко),
-            // финальное кадрирование делает АВТО-КРОП в пост-обработке (надёжно для skinned).
-            dist *= 1.6f;
-            cam.nearClipPlane = Mathf.Max(0.001f, dist - radius * 6f);
-            cam.farClipPlane = dist + radius * 6f;
+            dist *= 1.6f; // запас, чтобы предмет точно влез в кадр для измерения
+            cam.nearClipPlane = Mathf.Max(0.001f, dist - radius * 10f);
+            cam.farClipPlane = dist + radius * 10f;
             cam.transform.position = center - cam.transform.forward * dist;
+
+            // КАМЕРА-АВТОФИТ: измеряем реальный экранный размер -> центрируем (truck) + зум ОБЪЕКТИВОМ (FOV).
+            // Камеру НЕ двигаем ближе (нет клиппинга), предмет крупный на ПОЛНОМ разрешении -> резко.
+            // Надёжно для skinned-носимых (броня/риги/маски), у которых bounds раздут -> были мелкие/мыло.
+            if (job.orthographic == 0) {
+                const int mres = 512; const float target = 0.92f;
+                var mrt = new RenderTexture(mres, mres, 24, RenderTextureFormat.ARGB32);
+                cam.targetTexture = mrt; cam.Render();
+                var prevA = RenderTexture.active; RenderTexture.active = mrt;
+                var mt = new Texture2D(mres, mres, TextureFormat.RGBA32, false);
+                mt.ReadPixels(new Rect(0, 0, mres, mres), 0, 0); mt.Apply(); RenderTexture.active = prevA;
+                var pxs = mt.GetPixels32();
+                int minx = mres, miny = mres, maxx = -1, maxy = -1;
+                for (int y = 0; y < mres; y++) for (int x = 0; x < mres; x++)
+                    if (pxs[y * mres + x].a > 20) { if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; }
+                UnityEngine.Object.DestroyImmediate(mt); mrt.Release(); UnityEngine.Object.DestroyImmediate(mrt);
+                if (maxx >= minx) {
+                    float halfTan = Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad * 0.5f);
+                    float wpp = (2f * dist * halfTan) / mres; // мир на пиксель на глубине предмета
+                    float cx = (minx + maxx) * 0.5f, cy = (miny + maxy) * 0.5f;
+                    cam.transform.position += cam.transform.right * ((cx - mres * 0.5f) * wpp) + cam.transform.up * ((cy - mres * 0.5f) * wpp);
+                    float extent = Mathf.Max(maxx - minx, maxy - miny) + 1f;
+                    float newFov = 2f * Mathf.Atan((extent / (mres * target)) * halfTan) * Mathf.Rad2Deg;
+                    cam.fieldOfView = Mathf.Clamp(newFov, 0.3f, 60f);
+                }
+            }
 
             // 5. свет (ambient + key + fill); отражения металла/стекла из материала _Cube (бандл cubemaps загружен)
             float amb = job.ambientLevel > 0f ? job.ambientLevel : 0.58f;
