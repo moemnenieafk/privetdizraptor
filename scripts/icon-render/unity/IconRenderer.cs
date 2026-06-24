@@ -121,8 +121,19 @@ public static class IconRenderer
             var rends = inst.GetComponentsInChildren<Renderer>(true);
             Bounds b2 = new Bounds(Vector3.zero, Vector3.zero); bool first = true;
             foreach (var r in rends) {
-                if (!(r is MeshRenderer || r is SkinnedMeshRenderer)) continue;
-                if (first) { b2 = r.bounds; first = false; } else b2.Encapsulate(r.bounds);
+                Bounds rb;
+                if (r is SkinnedMeshRenderer smr) {
+                    // SkinnedMeshRenderer.bounds РАЗДУТ (bind-pose/анимация) -> носимые предметы (броня/риги/маски)
+                    // рендерились мелко. Берём ТУГИЕ границы из локального AABB меша через трансформ.
+                    if (smr.sharedMesh == null) continue;
+                    var lb = smr.sharedMesh.bounds; var mtx = smr.transform.localToWorldMatrix; var e = lb.extents;
+                    rb = new Bounds(mtx.MultiplyPoint3x4(lb.center), Vector3.zero);
+                    for (int sx = -1; sx <= 1; sx += 2) for (int sy = -1; sy <= 1; sy += 2) for (int sz = -1; sz <= 1; sz += 2)
+                        rb.Encapsulate(mtx.MultiplyPoint3x4(lb.center + new Vector3(sx * e.x, sy * e.y, sz * e.z)));
+                } else if (r is MeshRenderer) {
+                    rb = r.bounds;
+                } else continue;
+                if (first) { b2 = rb; first = false; } else b2.Encapsulate(rb);
             }
             if (first) throw new Exception("нет видимых рендереров");
             Vector3 center = b2.center; float radius = b2.extents.magnitude;
