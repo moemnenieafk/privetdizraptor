@@ -24,6 +24,7 @@
     "db:sync-hideout": "tsx scripts/sync-hideout.ts",
     "db:sync-landing": "tsx scripts/sync-landing.ts",
     "db:sync-maps-geometry": "tsx scripts/sync-maps-geometry.ts",
+    "db:sync-quest-zones": "tsx scripts/sync-quest-zones.ts",
     "db:upload-maps": "tsx scripts/upload-map-assets.ts"
   },
   "dependencies": {

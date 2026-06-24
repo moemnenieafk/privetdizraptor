@@ -2,12 +2,13 @@
 
 import { useRef, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Paperclip, Maximize2, Map as MapIcon, ArrowLeftRight, ChevronRight } from 'lucide-react';
+import { Paperclip, Maximize2, Map as MapIcon, MapPin, ArrowLeftRight, ChevronRight } from 'lucide-react';
 import { useQuestStore } from '@/store/useQuestStore';
 import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem, QuestBarterLite } from '@/types/quest';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { getQuestHeroImg } from '@/lib/quest-utils';
+import { firstInteractiveMapSlug } from '@/lib/quest-map-link';
 import questGuides from '@/data/quest-guides.json';
 
 const BASIC_TYPE_ICON: Record<string, string> = {
@@ -185,6 +186,9 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters }: Prop
     ? `/icons/eft/02-quests/${task.id}.svg`
     : traderImg(task.trader.normalizedName);
 
+  // Карта локации с интерактивной подложкой (для кнопки «Локация» → перелёт+подсветка зоны).
+  const locationSlug = firstInteractiveMapSlug(task);
+
   // ── Header ──────────────────────────────────────────────────────────────
   const header = (
     <header className={`shrink-0 flex items-center gap-3 border-b border-lines-hover ${isPage ? 'px-6 h-16' : 'px-5 h-14'}`}>
@@ -207,20 +211,41 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters }: Prop
           </span>
         )}
         {isPage ? (
-          <Link
-            href={`/eft/questmap?quest=${task.id}`}
-            title="Показать на карте"
-            className="ml-1 flex items-center gap-1.5 h-7 px-2.5 rounded-xs border border-lines-hover text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary)/50 hover:text-(--primary)"
-          >
-            <MapIcon className="w-3.5 h-3.5" />
-            Карта
-          </Link>
+          <>
+            <Link
+              href={`/eft/questmap?quest=${task.id}`}
+              title="Показать в карте заданий"
+              className="ml-1 flex items-center gap-1.5 h-7 px-2.5 rounded-xs border border-lines-hover text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary)/50 hover:text-(--primary)"
+            >
+              <MapIcon className="w-3.5 h-3.5" />
+              Карта
+            </Link>
+            {locationSlug && (
+              <Link
+                href={`/eft/maps/${locationSlug}?quest=${task.id}`}
+                title="Показать зону на карте локации"
+                className="flex items-center gap-1.5 h-7 px-2.5 rounded-xs border border-lines-hover text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary)/50 hover:text-(--primary)"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                Локация
+              </Link>
+            )}
+          </>
         ) : (
           <>
+            {locationSlug && (
+              <Link
+                href={`/eft/maps/${locationSlug}?quest=${task.id}`}
+                title="Показать зону на карте локации"
+                className="ml-1 shrink-0 h-7 w-7 flex items-center justify-center rounded-xs text-text-secondary transition-colors hover:text-(--primary)"
+              >
+                <MapPin className="w-4 h-4" />
+              </Link>
+            )}
             <Link
               href={`/eft/quests/task/${task.id}`}
               title="Открыть на отдельной странице"
-              className="ml-1 shrink-0 h-7 w-7 flex items-center justify-center rounded-xs text-text-secondary transition-colors hover:text-(--primary)"
+              className="shrink-0 h-7 w-7 flex items-center justify-center rounded-xs text-text-secondary transition-colors hover:text-(--primary)"
             >
               <Maximize2 className="w-4 h-4" />
             </Link>

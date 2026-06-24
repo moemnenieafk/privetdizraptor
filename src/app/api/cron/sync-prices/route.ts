@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import { syncEftPrices } from "@/db/prices";
 import { syncEftBartersCrafts } from "@/db/barters-crafts";
 import { syncEftLandingData } from "@/db/landing";
-import { syncEftMapsGeometry } from "@/db/maps";
+import { syncEftMapsGeometry, syncEftQuestZones } from "@/db/maps";
 import { syncEftIcons, type SyncIconsResult } from "@/db/icons";
 
 export const runtime = "nodejs";
@@ -69,6 +69,13 @@ export async function GET(req: Request): Promise<NextResponse> {
     } catch (e) {
       console.error("[cron/sync-prices] maps-geometry:", e);
     }
+    // Зоны объективов квестов (quest_zone) — best-effort: питают «Посмотреть на карте».
+    let questZonesRes = { zones: 0, deleted: 0, pruneSkipped: false };
+    try {
+      questZonesRes = await syncEftQuestZones();
+    } catch (e) {
+      console.error("[cron/sync-prices] quest-zones:", e);
+    }
     // Иконки — best-effort: зеркалит недостающие 512px из tarkov.dev по мере их появления.
     // Не должно ронять прайс-синк. См. src/db/icons.ts.
     let iconsRes: SyncIconsResult = {
@@ -89,6 +96,7 @@ export async function GET(req: Request): Promise<NextResponse> {
       ...staticRes,
       ...landingRes,
       mapsGeometry: mapsRes,
+      questZones: questZonesRes,
       icons: iconsRes,
       at: new Date().toISOString(),
     });

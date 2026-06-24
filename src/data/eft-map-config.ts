@@ -259,6 +259,29 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
   },
 };
 
+/** Этаж карты для UI-переключателя: имя, id <g>-группы SVG (или null) и диапазон высоты. */
+export interface MapFloor {
+  name: string;
+  /** id <g>-группы в SVG для затемнения соседних этажей; null — этаж без отдельной группы. */
+  svgLayer: string | null;
+  /** [min,max] game-Y для фильтра маркеров; null — без фильтра (показать все). */
+  height: [number, number] | null;
+}
+
+/**
+ * Список этажей карты: индекс 0 — наземный (svgLayer/heightRange конфига), далее — layers[].
+ * Используется и фреймом (переключатель), и вьюером (затемнение/фильтр) — одна точка правды.
+ */
+export function buildMapFloors(cfg: EftMapConfig): MapFloor[] {
+  const ground: MapFloor = { name: 'Поверхность', svgLayer: cfg.svgLayer, height: cfg.heightRange };
+  const extra: MapFloor[] = cfg.layers.map((l) => ({
+    name: l.name,
+    svgLayer: l.svgLayer ?? null,
+    height: l.height,
+  }));
+  return [ground, ...extra];
+}
+
 /** slug → конфиг (или undefined, если карта не интерактивная / нет SVG-подложки). */
 export function getMapConfig(slug: string): EftMapConfig | undefined {
   return EFT_MAP_CONFIG[slug];

@@ -2,12 +2,9 @@
 
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft,
   ArrowLeftRight,
-  Clock,
   DoorOpen,
   Footprints,
   Layers,
@@ -15,11 +12,12 @@ import {
   Minus,
   Plus,
   TriangleAlert,
-  Users,
   X,
 } from 'lucide-react';
-import type { EftMapConfig } from '@/data/eft-map-config';
+import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
+import { MapLegend } from './MapLegend';
 import type { MapView, MapViewMarker } from './map-types';
+import type { MapViewerApi } from './map-frame-types';
 
 /* ───────────────── проекция (порт из open-source tarkov-dev, MIT) ───────────────── */
 // Кастомный CRS зашивает transform + поворот в проекцию: маркеры ставятся в сырых
@@ -147,9 +145,21 @@ const LAYER_META: { key: LayerKey; label: string; Icon: typeof DoorOpen }[] = [
   { key: 'hazard', label: 'Опасности', Icon: TriangleAlert },
 ];
 
-export function MapViewerClient({ data }: { data: MapView }) {
+export function MapViewerClient({
+  data,
+  onReady,
+  activeFloor = 0,
+}: {
+  data: MapView;
+  onReady?: (api: MapViewerApi) => void;
+  activeFloor?: number;
+}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const highlightRef = useRef<L.Polygon | null>(null);
+  const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null }[]>([]);
+  const svgGroupsRef = useRef<Map<string, SVGGElement> | null>(null);
+  const activeFloorRef = useRef(activeFloor);
 
   const [vis, setVis] = useState<Record<LayerKey, boolean>>({
     extract: true,
@@ -165,6 +175,45 @@ export function MapViewerClient({ data }: { data: MapView }) {
     for (const m of data.markers) if (m.type in c) c[m.type as LayerKey]++;
     return c;
   }, [data.markers]);
+
+  const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
+
+  // Применить этаж: затемнить чужие <g>-слои SVG + спрятать маркеры вне диапазона высоты.
+  const applyFloor = useCallback(
+    (idx: number) => {
+      const fl = floors[idx] ?? floors[0];
+      const groups = svgGroupsRef.current;
+      if (groups) {
+        groups.forEach((g, id) => {
+          if (fl?.svgLayer && id !== fl.svgLayer) g.classList.add('is-dimmed');
+          else g.classList.remove('is-dimmed');
+        });
+      }
+      const range = fl?.height ?? null;
+      const isGround = idx === 0;
+      for (const { marker, top, bottom } of markersRef.current) {
+        const el = marker.getElement();
+        if (!el) continue;
+        let visible: boolean;
+        if (top == null && bottom == null) visible = isGround; // без высоты → только наземный
+        else if (!range) visible = true; // этаж без диапазона → показать всё
+        else visible = (top ?? bottom ?? 0) >= range[0] && (bottom ?? top ?? 0) <= range[1];
+        el.style.display = visible ? '' : 'none';
+      }
+    },
+    [floors],
+  );
+
+  const applyFloorRef = useRef(applyFloor);
+  useEffect(() => {
+    applyFloorRef.current = applyFloor;
+    activeFloorRef.current = activeFloor;
+  });
+
+  // Реакция на переключение этажа (без пересоздания карты).
+  useEffect(() => {
+    applyFloor(activeFloor);
+  }, [activeFloor, applyFloor]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -184,14 +233,39 @@ export function MapViewerClient({ data }: { data: MapView }) {
     });
     mapRef.current = map;
 
+    // SVG-подложка живёт в DOM (инлайн-svgOverlay, не <img>) → <g>-группы этажей доступны
+    // для затемнения/блюра. При сбое загрузки — фолбэк на растровый overlay (без этажей).
+    let cancelledSvg = false;
     if (cfg.bounds) {
       const viewBounds = bb(cfg.bounds);
       const imgBounds = cfg.svgBounds ? bb(cfg.svgBounds) : viewBounds;
       map.setMaxBounds(scaledBounds(cfg.bounds, 1.5));
-      L.imageOverlay(data.imageUrl, imgBounds, {
-        interactive: false,
-        className: 'cta-map-svg',
-      }).addTo(map);
+
+      fetch(data.imageUrl)
+        .then((r) => r.text())
+        .then((txt) => {
+          if (cancelledSvg || !mapRef.current) return;
+          const doc = new DOMParser().parseFromString(txt, 'image/svg+xml');
+          const svgEl = doc.documentElement as unknown as SVGSVGElement;
+          if (svgEl.nodeName.toLowerCase() !== 'svg') throw new Error('bad svg');
+          L.svgOverlay(svgEl, imgBounds, { interactive: false, className: 'cta-map-svg' }).addTo(map);
+          const gmap = new Map<string, SVGGElement>();
+          for (const fl of floors) {
+            if (!fl.svgLayer) continue;
+            const g = svgEl.querySelector<SVGGElement>(`#${CSS.escape(fl.svgLayer)}`);
+            if (g) {
+              g.dataset.floor = fl.svgLayer;
+              gmap.set(fl.svgLayer, g);
+            }
+          }
+          svgGroupsRef.current = gmap;
+          applyFloorRef.current(activeFloorRef.current);
+        })
+        .catch(() => {
+          if (cancelledSvg || !mapRef.current) return;
+          L.imageOverlay(data.imageUrl, imgBounds, { interactive: false, className: 'cta-map-svg' }).addTo(map);
+        });
+
       map.fitBounds(viewBounds);
     }
 
@@ -203,6 +277,7 @@ export function MapViewerClient({ data }: { data: MapView }) {
       hazard: L.layerGroup().addTo(map),
     };
 
+    markersRef.current = [];
     for (const m of data.markers) {
       if (!m.position) continue;
       const key = m.type as LayerKey;
@@ -228,19 +303,49 @@ export function MapViewerClient({ data }: { data: MapView }) {
         if (k === 'pmc' || k === 'scav') marker.on('click', () => setSel((p) => (p === k ? null : k)));
       }
       marker.addTo(groups[key]);
+      markersRef.current.push({ marker, top: m.top, bottom: m.bottom });
     }
 
     map.on('click', () => setSel(null));
     requestAnimationFrame(() => map.invalidateSize());
+    applyFloorRef.current(activeFloorRef.current); // первичный фильтр маркеров по этажу
+
+    // Императивный API для фрейма (поиск, перелёт/подсветка зоны квеста).
+    const api: MapViewerApi = {
+      flyTo: (p, zoom) => map.flyTo(ll(p), zoom ?? Math.min(cfg.maxZoom, 4), { duration: 0.6 }),
+      highlightZone: (outline) => {
+        if (highlightRef.current) {
+          highlightRef.current.remove();
+          highlightRef.current = null;
+        }
+        if (!outline || outline.length < 3) return;
+        const poly = L.polygon(outline.map((o) => ll(o)), {
+          className: 'cta-ex-zone cta-quest-zone ef-all',
+          interactive: false,
+        });
+        poly.addTo(map);
+        highlightRef.current = poly;
+        map.flyToBounds(poly.getBounds(), { padding: [60, 60], maxZoom: cfg.maxZoom, duration: 0.6 });
+      },
+      fitView: () => {
+        if (cfg.bounds) map.fitBounds(bb(cfg.bounds));
+      },
+      toggleLayer: (key) => setVis((p) => (key in p ? { ...p, [key]: !p[key as LayerKey] } : p)),
+    };
+    onReady?.(api);
 
     return () => {
+      cancelledSvg = true;
+      highlightRef.current = null;
+      svgGroupsRef.current = null;
+      markersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
-  }, [data]);
+  }, [data, onReady, floors]);
 
   const rootCls = [
-    'cta-map-root relative h-[78vh] min-h-[560px] w-full overflow-hidden rounded-sm border border-lines-hover bg-(--color-base)',
+    'cta-map-root absolute inset-0 overflow-hidden bg-(--color-base)',
     vis.extract ? '' : 'hide-extract',
     vis.spawn ? '' : 'hide-spawn',
     vis.transit ? '' : 'hide-transit',
@@ -263,53 +368,20 @@ export function MapViewerClient({ data }: { data: MapView }) {
     <div className={rootCls}>
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
-      {/* Хедер карты */}
-      <div className="pointer-events-none absolute top-3 left-3 z-[500] flex flex-col gap-2">
-        <div className="pointer-events-auto flex flex-col gap-2 rounded-sm border border-lines-hover bg-(--color-base)/80 px-3.5 py-2.5 backdrop-blur-md">
-          <Link
-            href="/eft/maps"
-            className="inline-flex items-center gap-1.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors hover:text-(--primary)"
+      {/* Фракция (фильтр выходов по стороне) — заголовок/статы/назад живут во фрейме */}
+      <div className="absolute top-3 left-3 z-[500] inline-flex w-fit overflow-hidden rounded-sm border border-lines-hover bg-(--color-base)/80 backdrop-blur-md">
+        {(['all', 'pmc', 'scav'] as Faction[]).map((f) => (
+          <button
+            key={f}
+            type="button"
+            onClick={() => setFaction(f)}
+            className={`px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest transition-colors ${
+              faction === f ? 'bg-(--primary) text-(--color-base)' : 'text-text-muted hover:text-(--primary)'
+            }`}
           >
-            <ArrowLeft className="h-3 w-3" /> Карты
-          </Link>
-          <h1 className="text-2xl font-blender-medium uppercase leading-none tracking-widest text-text-primary">
-            {data.name}
-          </h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-blender-medium text-type-caption text-text-secondary">
-            {data.raidDuration ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="h-3 w-3 text-(--primary)" /> {data.raidDuration} мин
-              </span>
-            ) : null}
-            {data.players ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Users className="h-3 w-3 text-(--primary)" /> {data.players}
-              </span>
-            ) : null}
-            {data.minPlayerLevel ? (
-              <span className="inline-flex items-center gap-1.5">
-                ур. {data.minPlayerLevel}
-                {data.maxPlayerLevel ? `–${data.maxPlayerLevel}` : '+'}
-              </span>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Фракция */}
-        <div className="pointer-events-auto inline-flex w-fit overflow-hidden rounded-sm border border-lines-hover bg-(--color-base)/80 backdrop-blur-md">
-          {(['all', 'pmc', 'scav'] as Faction[]).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFaction(f)}
-              className={`px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest transition-colors ${
-                faction === f ? 'bg-(--primary) text-(--color-base)' : 'text-text-muted hover:text-(--primary)'
-              }`}
-            >
-              {{ all: 'Все', pmc: 'ЧВК', scav: 'Дикие' }[f]}
-            </button>
-          ))}
-        </div>
+            {{ all: 'Все', pmc: 'ЧВК', scav: 'Дикие' }[f]}
+          </button>
+        ))}
       </div>
 
       {/* Панель слоёв */}
@@ -343,20 +415,8 @@ export function MapViewerClient({ data }: { data: MapView }) {
         </div>
       </div>
 
-      {/* Легенда */}
-      <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex flex-col gap-1.5 rounded-sm border border-lines-hover bg-(--color-base)/80 px-3 py-2.5 backdrop-blur-md">
-        <div className="mb-0.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">Легенда</div>
-        {[
-          ['lg-extract', 'Выход'],
-          ['lg-spawn', 'Спавн'],
-          ['lg-boss', 'Босс / снайпер'],
-          ['lg-hazard', 'Опасность'],
-        ].map(([cls, label]) => (
-          <div key={cls} className="flex items-center gap-2 font-blender-book text-type-caption text-text-secondary">
-            <span className={`cta-legend ${cls}`} /> {label}
-          </div>
-        ))}
-      </div>
+      {/* Легенда (единая таблица соответствия иконок ЦТА) */}
+      <MapLegend />
 
       {/* Подсказка spawn→extract */}
       {sel ? (

@@ -340,7 +340,8 @@ export type MapMarkerKind =
   | "lock"
   | "switch"
   | "boss"
-  | "stationary_weapon";
+  | "stationary_weapon"
+  | "quest_zone"; // зоны объективов квестов (linkedQuestId) — для подсветки «Посмотреть на карте»
 
 export type MapPos = { x: number; y: number; z: number };
 
