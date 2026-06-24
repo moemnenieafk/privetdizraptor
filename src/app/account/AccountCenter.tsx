@@ -5,12 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronDown, Check, LogOut } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
-import {
-  changeEmail,
-  changeUsername,
-  requestPasswordReset,
-  uploadAvatar,
-} from '@/lib/cta-api';
+import { changeEmail, changeUsername, uploadAvatar } from '@/lib/cta-api';
 import type { Me } from '@/lib/auth/me';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 
@@ -542,22 +537,36 @@ function SubscriptionView({ onBack }: { onBack: () => void }) {
   );
 }
 
-function PasswordView({ onBack, me }: { onBack: () => void; me: Me }) {
-  const [status, setStatus] = useState<'idle' | 'saving' | 'sent'>('idle');
+function PasswordView({ onBack }: { onBack: () => void }) {
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [status, setStatus] = useState<'idle' | 'saving' | 'done'>('idle');
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setStatus('saving');
-    // Ссылка уходит на e-mail из сессии (сервер игнорирует поле ввода — анти-абьюз).
-    const r = await requestPasswordReset();
-    if (!r.ok) {
-      setError(r.error ?? 'Не удалось отправить письмо');
-      setStatus('idle');
+    if (password.length < 8) {
+      setError('Пароль не короче 8 символов');
       return;
     }
-    setStatus('sent');
+    if (password !== confirm) {
+      setError('Пароли не совпадают');
+      return;
+    }
+    setStatus('saving');
+    // Ставим пароль напрямую — юзер уже в активной сессии, письмо не нужно.
+    const { error: upErr } = await createClient().auth.updateUser({ password });
+    if (upErr) {
+      setStatus('idle');
+      setError(
+        /reauthentication|recent/i.test(upErr.message)
+          ? 'Требуется свежий вход. Перелогиньтесь и повторите.'
+          : 'Не удалось сменить пароль. Попробуйте позже.',
+      );
+      return;
+    }
+    setStatus('done');
   };
 
   return (
@@ -567,26 +576,34 @@ function PasswordView({ onBack, me }: { onBack: () => void; me: Me }) {
         <div className="flex flex-col items-center gap-2 text-center">
           <SubTitle>Сменить пароль</SubTitle>
           <p className="font-blender-book text-xs leading-relaxed text-text-muted max-w-xs">
-            Мы вышлем ссылку для смены пароля на адрес, привязанный к вашему аккаунту. Перейдите по ней, чтобы задать новый пароль.
+            Задайте пароль для входа на сайт по e-mail и паролю. Не короче 8 символов.
           </p>
         </div>
-        <div className="w-full max-w-md">
-          <FormInput placeholder="E-mail" type="email" value={me.email ?? ''} readOnly />
+        <div className="flex w-full max-w-md flex-col gap-3">
+          <FormInput
+            placeholder="Новый пароль"
+            type="password"
+            value={password}
+            onChange={setPassword}
+            disabled={status === 'done'}
+            autoComplete="new-password"
+          />
+          <FormInput
+            placeholder="Повторите пароль"
+            type="password"
+            value={confirm}
+            onChange={setConfirm}
+            disabled={status === 'done'}
+            autoComplete="new-password"
+          />
+          <Feedback error={error} success={status === 'done' ? 'Пароль сохранён' : null} />
         </div>
-        <Feedback
-          error={error}
-          success={
-            status === 'sent'
-              ? `Письмо со ссылкой отправлено на ${me.email}. Проверьте почту.`
-              : null
-          }
-        />
-        {status !== 'sent' && (
+        {status !== 'done' && (
           <FormActions
             onCancel={onBack}
             submitting={status === 'saving'}
-            disabled={!me.email}
-            label="Отправить"
+            disabled={password.length < 8 || password !== confirm}
+            label="Сохранить"
           />
         )}
       </div>
@@ -934,7 +951,7 @@ export function AccountCenter({ me }: { me: Me }) {
     if (activeView === 'username')      return <UsernameView onBack={goBack} me={me} />;
     if (activeView === 'email')         return <EmailView onBack={goBack} me={me} />;
     if (activeView === 'subscription')  return <SubscriptionView onBack={goBack} />;
-    if (activeView === 'password')      return <PasswordView onBack={goBack} me={me} />;
+    if (activeView === 'password')      return <PasswordView onBack={goBack} />;
     if (activeView === '2fa')           return <TwoFAView onBack={goBack} />;
     if (activeView === 'plan')          return <PlanView onBack={goBack} />;
 

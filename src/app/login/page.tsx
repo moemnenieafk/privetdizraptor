@@ -1,4 +1,5 @@
 // Страница входа /login. Если уже авторизован — показывает, кто вошёл, + выход.
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
 
@@ -26,7 +27,9 @@ export default async function LoginPage() {
           </form>
         </div>
       ) : (
-        <LoginForm />
+        <Suspense fallback={<div className="font-blender-book text-sm text-white/50">Загрузка…</div>}>
+          <LoginForm />
+        </Suspense>
       )}
     </main>
   );
