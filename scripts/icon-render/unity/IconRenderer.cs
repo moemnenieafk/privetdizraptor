@@ -28,6 +28,11 @@ public static class IconRenderer
         public float orthographicSize;
         public string outPath;
         public int res;
+        // освещение (0/null => дефолты): подбор угла/яркости
+        public float[] keyEuler;     // x,y,z поворот ключевого света
+        public float keyIntensity;
+        public float fillIntensity;
+        public float ambientLevel;
     }
     [Serializable] public class JobList { public Job[] jobs; }
 
@@ -126,17 +131,22 @@ public static class IconRenderer
             cam.farClipPlane = dist + radius * 4f;
             cam.transform.position = center - cam.transform.forward * dist;
 
-            // 5. свет (ambient + key + fill); отражения металла идут из материала _Cube (бандл cubemaps загружен)
+            // 5. свет (ambient + key + fill); отражения металла/стекла из материала _Cube (бандл cubemaps загружен)
+            float amb = job.ambientLevel > 0f ? job.ambientLevel : 0.58f;
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.58f, 0.59f, 0.63f);
+            RenderSettings.ambientLight = new Color(amb, amb * 1.02f, amb * 1.09f);
             lightGo = new GameObject("Lights");
             var keyGo = new GameObject("Key"); keyGo.transform.SetParent(lightGo.transform);
             var key = keyGo.AddComponent<Light>();
-            key.type = LightType.Directional; key.intensity = 1.5f; key.color = Color.white;
-            keyGo.transform.rotation = Quaternion.Euler(35f, 145f, 0f);
+            key.type = LightType.Directional; key.color = Color.white;
+            key.intensity = job.keyIntensity > 0f ? job.keyIntensity : 1.5f;
+            keyGo.transform.rotation = (job.keyEuler != null && job.keyEuler.Length == 3)
+                ? Quaternion.Euler(job.keyEuler[0], job.keyEuler[1], job.keyEuler[2])
+                : Quaternion.Euler(35f, 145f, 0f);
             var fillGo = new GameObject("Fill"); fillGo.transform.SetParent(lightGo.transform);
             var fill = fillGo.AddComponent<Light>();
-            fill.type = LightType.Directional; fill.intensity = 0.65f; fill.color = new Color(0.9f, 0.93f, 1f);
+            fill.type = LightType.Directional; fill.color = new Color(0.9f, 0.93f, 1f);
+            fill.intensity = job.fillIntensity > 0f ? job.fillIntensity : 0.65f;
             fillGo.transform.rotation = Quaternion.Euler(-15f, -35f, 0f);
 
             // 6. рендер -> прозрачный PNG
