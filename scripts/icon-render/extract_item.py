@@ -7,6 +7,14 @@
 import os, sys, json, argparse
 import UnityPy
 
+def _q(d):
+    d = d or {}
+    return [d.get("x", 0.0), d.get("y", 0.0), d.get("z", 0.0), d.get("w", 1.0)]
+
+def _v(d, default=0.0):
+    d = d or {}
+    return [d.get("x", default), d.get("y", default), d.get("z", default)]
+
 def norm_key(p, win):
     p = p.replace("\\", "/")
     i = p.lower().find("streamingassets/windows/")
@@ -141,6 +149,11 @@ def main():
         "prefabName": prefab_name,
         "bundleKey": key,
         "depKeys": sorted(k for k in keys if k != key),
+        # поза пивота (предмет поворачивается pivotRotation, камера — Icon.rotation)
+        "pivotRotation": _q(icon.get("pivotRotation")),
+        "pivotPosition": _v(icon.get("pivotPosition")),
+        "iconPosition": _v((ic.get("position"))),
+        "scale": _v(icon.get("scale"), 1.0),
     }
     json.dump(meta, open(os.path.join(a.out, "meta.json"), "w"), indent=2)
     print(f"OK: частей {len(parts)}, FOV {meta['perspective']}, ortho {meta['orthographic']} -> {a.out}/meta.json")

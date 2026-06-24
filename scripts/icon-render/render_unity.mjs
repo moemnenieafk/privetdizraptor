@@ -57,6 +57,7 @@ for (const id of ids) {
       bundlePath: join(WIN, m.bundleKey || key),
       depPaths: (m.depKeys || []).map(k => join(WIN, k)),
       iconRotation: m.iconRotation,
+      pivotRotation: m.pivotRotation,
       perspective: m.perspective, boundsScale: m.boundsScale,
       orthographic: m.orthographic | 0, orthographicSize: m.orthographicSize || 10,
       outPath: join(OUT, `${id}.png`), res: parseInt(RES, 10),

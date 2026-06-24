@@ -20,6 +20,7 @@ public static class IconRenderer
         public string bundlePath;
         public string[] depPaths;
         public float[] iconRotation; // x,y,z,w
+        public float[] pivotRotation; // x,y,z,w — поза предмета
         public float perspective;
         public float boundsScale;
         public int orthographic;
@@ -76,7 +77,10 @@ public static class IconRenderer
 
             inst = UnityEngine.Object.Instantiate(prefab);
             inst.transform.position = Vector3.zero;
-            inst.transform.rotation = Quaternion.identity;
+            // предмет поворачивается pivotRotation (камера — Icon.rotation)
+            inst.transform.rotation = (job.pivotRotation != null && job.pivotRotation.Length == 4)
+                ? new Quaternion(job.pivotRotation[0], job.pivotRotation[1], job.pivotRotation[2], job.pivotRotation[3])
+                : Quaternion.identity;
 
             // 3. границы по видимым рендерерам
             var rends = inst.GetComponentsInChildren<Renderer>(true);
