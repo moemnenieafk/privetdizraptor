@@ -1,2 +1,5 @@
 out/
 .work/
+out-unity/
+.work-unity/
+unity/_project/

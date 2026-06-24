@@ -61,14 +61,20 @@ def main():
     objs = list(env.objects)
     os.makedirs(a.out, exist_ok=True)
 
-    # 1. Icon-параметры из PreviewPivot
+    # 1. Icon-параметры из PreviewPivot (+ имя корневого префаба для Unity-рендера)
     icon = None
+    prefab_name = None
     for o in objs:
         if o.type.name != "MonoBehaviour":
             continue
         try:
-            if o.read().m_Script.read().m_ClassName == "PreviewPivot":
+            d = o.read()
+            if d.m_Script.read().m_ClassName == "PreviewPivot":
                 icon = o.read_typetree()
+                try:
+                    prefab_name = d.m_GameObject.read().m_Name
+                except Exception:
+                    prefab_name = None
                 break
         except Exception:
             pass
@@ -131,6 +137,10 @@ def main():
         "orthographic": ic.get("orthographic", 0),
         "orthographicSize": ic.get("orthographicSize", 10.0),
         "parts": parts,
+        # для Unity-рендера (пиксель-точный): какой префаб грузить и какие бандлы
+        "prefabName": prefab_name,
+        "bundleKey": key,
+        "depKeys": sorted(k for k in keys if k != key),
     }
     json.dump(meta, open(os.path.join(a.out, "meta.json"), "w"), indent=2)
     print(f"OK: частей {len(parts)}, FOV {meta['perspective']}, ortho {meta['orthographic']} -> {a.out}/meta.json")

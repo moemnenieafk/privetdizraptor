@@ -36,6 +36,21 @@
 - Доработка `render_item.py`: metalness + cube-environment.
 - Отчёт: таблица «категория → Δугла, статус материала/металла».
 
+## 🎯 ПИКСЕЛЬ-ТОЧНЫЙ ПОДХОД: Unity (родной движок) — основной; Blender — фолбэк
+
+Решение V4DYA (2026-06-24): для пиксель-точности рендерить в РОДНОМ движке Unity (как у EFT), а Blender-Python оставить быстрым фолбэком. Почему Unity снимает ОБА узких места разом:
+- **Ракурс — точно:** координаты те же, `Icon.rotation` ставится в камеру БЕЗ конвертации (в Blender была приблизительная конвертация Unity→Blender — источник остаточных ~10° и расхождения цепи).
+- **Материалы/металл — точно:** грузим РЕАЛЬНЫЕ шейдеры EFT (бандл `shaders`) + `cubemaps` → металл/золото/стекло как в игре, без PBR-аппроксимации и без ручного выбора материала под Blender.
+
+**Версия:** EFT = Unity **2022.3.43f2**; ставим **2022.3.43f1** (в архивах Hub нет f2; f1↔f2 = микро-патч, бандлы/шейдеры совместимы). Unity 6 НЕ годится — шейдеры 2022.3 в нём не заработают.
+
+**Реализация (готово, ждёт установки Unity для прогона):**
+- `scripts/icon-render/unity/IconRenderer.cs` — C# batch-рендер: грузит бандл+зависимости (вкл. `shaders`/`cubemaps`), инстанцирует префаб, камера по Icon-параметрам (нативно), 512px прозрачный PNG.
+- `scripts/icon-render/render_unity.mjs` (`npm run icons:render-unity`) — драйвер: resolve→extract(meta: prefabName/bundle/deps/icon-params)→jobs.json→Unity batch→PNG[→webp/upload]. Создаёт Unity-проект сам, кладёт скрипт в `Assets/Editor/`.
+- `extract_item.py` дополнен: пишет в meta `prefabName`/`bundleKey`/`depKeys` для Unity.
+- Запуск: `Unity.exe -batchmode -quit -projectPath <p> -executeMethod IconRenderer.RenderBatch -jobsFile jobs.json` (БЕЗ `-nographics`).
+- **Открытые вопросы при прогоне:** загрузятся ли шейдеры EFT в 2022.3.43f1 (ожидаемо да); точная модель камеры (камера=Icon.rotation vs учёт pivotRotation); освещение иконочной сцены BSG (сейчас ambient+directional — подстроить); прозрачность альфы opaque-шейдеров.
+
 ## Не-цели
 - Оружие/пресеты (Гейт 3 базового спринта) — отдельно (сборка из многих бандлов-деталей).
 - Микрокосметика (точная насыщенность) — после геометрии/материала.
