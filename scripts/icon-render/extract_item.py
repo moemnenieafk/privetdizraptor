@@ -93,6 +93,7 @@ def main():
     # 2. рендер-меши: GameObject с MeshFilter+MeshRenderer (пропуск коллайдеров/LOD>0)
     parts = []
     seen_mesh = set()
+    is_glass = False  # кастомный EFT glass/heat-шейдер (frosted-бутылки) — для авто-тинта
     for o in objs:
         if o.type.name != "GameObject":
             continue
@@ -122,6 +123,10 @@ def main():
         try:
             mr = comp["MeshRenderer"].read()
             mat = mr.m_Materials[0].read()
+            _cols = mat.m_SavedProperties.m_Colors
+            _cols = _cols.items() if hasattr(_cols, "items") else _cols
+            if any(ck in ("_HeatColor1", "_HeatColor2", "_HeatSize") for ck, _ in _cols):
+                is_glass = True
             tex = mat.m_SavedProperties.m_TexEnvs
             tex = tex.items() if hasattr(tex, "items") else tex
             for k, te in tex:
@@ -149,6 +154,7 @@ def main():
         "prefabName": prefab_name,
         "bundleKey": key,
         "depKeys": sorted(k for k in keys if k != key),
+        "isGlass": is_glass,
         # поза пивота (предмет поворачивается pivotRotation, камера — Icon.rotation)
         "pivotRotation": _q(icon.get("pivotRotation")),
         "pivotPosition": _v(icon.get("pivotPosition")),

@@ -41,8 +41,21 @@ const editorDir = join(PROJECT, "Assets", "Editor");
 mkdirSync(editorDir, { recursive: true });
 cpSync(join(HERE, "unity", "IconRenderer.cs"), join(editorDir, "IconRenderer.cs"));
 
+// авто-тинт стекла: средний цвет иконки tarkov.dev (RGB норм. 0..1) или null
+async function glassTintFromTarkovDev(id, sharp) {
+  const res = await fetch("https://api.tarkov.dev/graphql", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: `{ items(ids:["${id}"]){ iconLink } }` }) });
+  const link = (await res.json())?.data?.items?.[0]?.iconLink;
+  if (!link || link.includes("unknown")) return null;
+  const buf = Buffer.from(await (await fetch(link)).arrayBuffer());
+  const { data } = await sharp(buf).resize(16, 16, { fit: "fill" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let i = 0; i < data.length; i += 4) if (data[i + 3] > 40) { r += data[i]; g += data[i + 1]; b += data[i + 2]; n++; }
+  return n ? [r / n / 255, g / n / 255, b / n / 255] : null;
+}
+
 // --- 2. собрать jobs ---
 const jobs = [];
+const glassToFix = [];
 for (const id of ids) {
   try {
     const rargs = ["scripts/icon-render/resolve_bundle.py", "--id", id, "--win", WIN];
@@ -52,7 +65,7 @@ for (const id of ids) {
     const w = join(WORK, id);
     run(PY, ["scripts/icon-render/extract_item.py", "--bundle", join(WIN, key), "--out", w, "--win", WIN], { cwd: ROOT });
     const m = JSON.parse(readFileSync(join(w, "meta.json"), "utf8"));
-    jobs.push({
+    const job = {
       prefabName: m.prefabName || "",
       bundlePath: join(WIN, m.bundleKey || key),
       depPaths: (m.depKeys || []).map(k => join(WIN, k)),
@@ -62,10 +75,26 @@ for (const id of ids) {
       perspective: m.perspective, boundsScale: m.boundsScale,
       orthographic: m.orthographic | 0, orthographicSize: m.orthographicSize || 10,
       outPath: join(OUT, `${id}.png`), res: parseInt(arg("master", "2048"), 10),
-    });
+    };
+    jobs.push(job);
+    if (m.isGlass) glassToFix.push({ job, id }); // стекло -> авто-тинт из иконки tarkov.dev
   } catch (e) { console.log(`  FAIL prep ${id}: ${String(e.message || e).split("\n")[0]}`); }
 }
 if (!jobs.length) { console.error("нет заданий"); process.exit(1); }
+
+// авто-тинт для стеклянных предметов (из иконки tarkov.dev)
+if (glassToFix.length) {
+  const sharp = (await import("sharp")).default;
+  console.log(`стеклянных предметов: ${glassToFix.length} -> авто-тинт из tarkov.dev`);
+  for (const { job, id } of glassToFix) {
+    try {
+      const tint = await glassTintFromTarkovDev(id, sharp);
+      if (tint) { job.glassTint = tint; console.log(`  glass ${id}: тинт [${tint.map(x => x.toFixed(2)).join(", ")}]`); }
+      else console.log(`  glass ${id}: тинт не получен (нет иконки tarkov.dev) — рендер как есть`);
+    } catch (e) { console.log(`  glass ${id}: ${e.message}`); }
+  }
+}
+
 const jobsFile = join(WORK, "jobs.json");
 writeFileSync(jobsFile, JSON.stringify({ jobs }, null, 2));
 console.log(`заданий: ${jobs.length} -> Unity batch render...`);
