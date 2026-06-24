@@ -114,6 +114,13 @@
 
 ---
 
+## 🛡 Security pass (аудит + хардненинг + капча) — 2026-06-24
+Комплексный мульти-агентный security-аудит всего сайта (32 находки / 12 подтв., без critical/RCE, SQL-инъекций НЕТ). Закрыто:
+- **Хардненинг (`d504e8c`):** profile-ocr (per-user rate-limit + кап тела/base64 + magic-byte — стоп биллинг-абьюзу Gemini); `clientIp` → доверенный `x-real-ip`/правый XFF (закрыт обход rate-limit спуфингом); security-заголовки (X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy, HSTS; **enforcing-CSP отложен** — подбирать отдельно); кэш twitch-status 30с; rate-limit на /api/account/password; кап размера JSON-тела в 5 роутах (`lib/http.ts`).
+- **Капча Cloudflare Turnstile (адаптивно):** `/login` — капча ПОСЛЕ 1-й ошибки входа (через `rate_limits`-флаг `loginfail:ip`); `/register` — всегда. Серверная проверка `lib/turnstile.ts` (fail-open при сбое CF / если ключ не задан). Виджет `components/ui/Turnstile.tsx` (NIGHTFALL dark). Ключи в Vercel env (`NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`).
+- **Действия Вадима (сделано):** Supabase «Secure password change» ВКЛ (закрыл HIGH #1: смена пароля без реаутентификации). «Secure email change» — дефолт ВКЛ (#2).
+- **Отложено:** enforcing-CSP (тестить отдельно); rate-limit прочих публичных /api/*; reauth/кулдаун смены email — defense-in-depth, не срочно.
+
 ## ⚠️ Координация (общее дерево с фронт-сессией)
 - Фуллстек = бэкенд-сессия трогает **фронт-файлы** (`AccountCenter.tsx`, `usePlayerStore.ts`, `header-modules/*`), которые фронт-сессия активно правит. Чтобы не конфликтовать: **Фазы 1–2 (UI) начинать после того, как фронт-сессия закоммитит текущий заход по этим файлам.**
 - `src/db/schema.ts` + `db:push` ведёт ТОЛЬКО бэкенд-сессия (после push — сразу `db:sql`, иначе снесёт RLS/триггеры).

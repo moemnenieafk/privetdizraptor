@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, MailCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { safeNext } from "@/lib/auth/safe-next";
+import { Turnstile } from "@/components/ui/Turnstile";
 
 type Mode = "login" | "register";
 type MagicStatus = "idle" | "sending" | "sent" | "error";
@@ -74,6 +75,16 @@ export function LoginForm() {
 
   const [mode, setMode] = useState<Mode>("login");
 
+  // ── капча (Turnstile) ──
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaKey, setCaptchaKey] = useState(0); // смена → ремаунт виджета (новый токен)
+  const [loginCaptchaRequired, setLoginCaptchaRequired] = useState(false);
+  const resetCaptcha = () => {
+    setCaptchaToken("");
+    setCaptchaKey((k) => k + 1);
+  };
+
   // ── вход ──
   const [identifier, setIdentifier] = useState("");
   const [loginPw, setLoginPw] = useState("");
@@ -94,6 +105,8 @@ export function LoginForm() {
     setLoginError(null);
     setRegError(null);
     setMagic("idle");
+    setLoginCaptchaRequired(false);
+    resetCaptcha();
   }
 
   async function signInPassword(e: React.FormEvent) {
@@ -103,12 +116,18 @@ export function LoginForm() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier, password: loginPw }),
+      body: JSON.stringify({ identifier, password: loginPw, captchaToken }),
     });
     if (!res.ok) {
       setSigning(false);
-      const json = (await res.json().catch(() => null)) as { error?: string } | null;
+      const json = (await res.json().catch(() => null)) as
+        | { error?: string; captchaRequired?: boolean }
+        | null;
       setLoginError(json?.error ?? "Не удалось войти");
+      if (json?.captchaRequired) {
+        setLoginCaptchaRequired(true); // показать капчу со след. попытки
+        resetCaptcha(); // токен одноразовый — свежий челлендж
+      }
       return;
     }
     window.location.assign(next);
@@ -138,11 +157,15 @@ export function LoginForm() {
       setRegError("Проверьте поля: e-mail, логин (3–15), пароль ≥8 и совпадение.");
       return;
     }
+    if (siteKey && !captchaToken) {
+      setRegError("Пройдите проверку «я не робот»");
+      return;
+    }
     setRegState("submitting");
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, username, password: regPw }),
+      body: JSON.stringify({ email, username, password: regPw, captchaToken }),
     });
     const json = (await res.json().catch(() => null)) as
       | { ok?: boolean; needsConfirm?: boolean; error?: string }
@@ -150,6 +173,7 @@ export function LoginForm() {
     if (!res.ok) {
       setRegState("idle");
       setRegError(json?.error ?? "Не удалось зарегистрироваться");
+      resetCaptcha(); // токен одноразовый — сбрасываем для повтора
       return;
     }
     if (json?.needsConfirm) {
@@ -220,7 +244,14 @@ export function LoginForm() {
                   placeholder="Пароль"
                   autoComplete="current-password"
                 />
-                <PrimaryButton disabled={signing}>{signing ? "Вхожу…" : "Войти"}</PrimaryButton>
+                {siteKey && loginCaptchaRequired && (
+                  <Turnstile key={captchaKey} siteKey={siteKey} onToken={setCaptchaToken} />
+                )}
+                <PrimaryButton
+                  disabled={signing || (loginCaptchaRequired && !!siteKey && !captchaToken)}
+                >
+                  {signing ? "Вхожу…" : "Войти"}
+                </PrimaryButton>
                 {loginError && <p className="font-blender-book text-xs text-danger">{loginError}</p>}
               </form>
 
@@ -287,7 +318,10 @@ export function LoginForm() {
                 placeholder="Повторите пароль"
                 autoComplete="new-password"
               />
-              <PrimaryButton disabled={regState === "submitting" || !regValid}>
+              {siteKey && <Turnstile key={captchaKey} siteKey={siteKey} onToken={setCaptchaToken} />}
+              <PrimaryButton
+                disabled={regState === "submitting" || !regValid || (!!siteKey && !captchaToken)}
+              >
                 {regState === "submitting" ? "Создаю…" : "Зарегистрироваться"}
               </PrimaryButton>
               {regError && <p className="font-blender-book text-xs text-danger">{regError}</p>}

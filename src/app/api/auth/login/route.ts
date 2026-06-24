@@ -8,9 +8,12 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
-import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { rateLimit, clientIp, hasRecentEvent, recordEvent, clearEvent } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
+
+const FAIL_WINDOW = 3600; // окно «недавней ошибки» для адаптивной капчи (1ч)
 
 const tooMany = () =>
   NextResponse.json({ error: "Слишком много попыток. Попробуйте позже." }, { status: 429 });
@@ -21,6 +24,9 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
 const fail = () => NextResponse.json({ error: "Неверный логин или пароль" }, { status: 401 });
+// Неудача по креденшелам: помечаем для адаптивной капчи и просим капчу на след. попытку.
+const failCreds = () =>
+  NextResponse.json({ error: "Неверный логин или пароль", captchaRequired: true }, { status: 401 });
 
 // username → e-mail через profiles.id + admin.getUserById (service-role).
 // auth.users клиенту/анону недоступен, поэтому резолвим серверно.
@@ -45,8 +51,9 @@ async function emailForUsername(username: string): Promise<string | null> {
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
+  const ip = clientIp(req);
   // Rate-limit по IP (поверх лимитов GoTrue): защита от брутфорса/стаффинга.
-  if (!(await rateLimit(`login:ip:${clientIp(req)}`, 20, 300))) return tooMany();
+  if (!(await rateLimit(`login:ip:${ip}`, 20, 300))) return tooMany();
 
   let body: unknown;
   try {
@@ -56,19 +63,39 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
   const identifier = isObject(body) && typeof body.identifier === "string" ? body.identifier.trim() : "";
   const password = isObject(body) && typeof body.password === "string" ? body.password : "";
+  const captchaToken = isObject(body) && typeof body.captchaToken === "string" ? body.captchaToken : "";
   if (!identifier || !password) return fail();
   // Cap длины — отсекаем переразмерный ввод до БД/admin/signIn (анти-DoS-усилитель).
   if (identifier.length > 320 || password.length > 128) return fail();
 
+  const failKey = `loginfail:ip:${ip}`;
+
+  // Адаптивная капча: если с этого IP была недавняя ошибка входа — требуем Turnstile.
+  if (await hasRecentEvent(failKey, FAIL_WINDOW)) {
+    if (!(await verifyTurnstile(captchaToken, ip))) {
+      return NextResponse.json(
+        { error: "Подтвердите, что вы не робот", captchaRequired: true },
+        { status: 400 },
+      );
+    }
+  }
+
   let email: string | null = identifier;
   if (!EMAIL_RE.test(identifier)) {
     email = await emailForUsername(identifier);
-    if (!email) return fail();
+    if (!email) {
+      await recordEvent(failKey, FAIL_WINDOW);
+      return failCreds();
+    }
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return fail();
+  if (error) {
+    await recordEvent(failKey, FAIL_WINDOW);
+    return failCreds();
+  }
 
+  await clearEvent(failKey); // успех → снять требование капчи с этого IP
   return NextResponse.json({ ok: true });
 }

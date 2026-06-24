@@ -9,6 +9,7 @@ import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -39,10 +40,16 @@ export async function POST(req: Request): Promise<NextResponse> {
   const email = isObject(body) && typeof body.email === "string" ? body.email.trim() : "";
   const username = isObject(body) && typeof body.username === "string" ? body.username.trim() : "";
   const password = isObject(body) && typeof body.password === "string" ? body.password : "";
+  const captchaToken = isObject(body) && typeof body.captchaToken === "string" ? body.captchaToken : "";
 
   if (!EMAIL_RE.test(email) || email.length > 254) return err(422, "Введите корректный e-mail");
   if (!USERNAME_RE.test(username)) return err(422, "Логин: 3–15 символов, латиница, цифры, _ и -");
   if (password.length < 8 || password.length > 128) return err(422, "Пароль: 8–128 символов");
+
+  // Капча обязательна на регистрации (чистый бот-таргет + шлёт письма).
+  if (!(await verifyTurnstile(captchaToken, clientIp(req)))) {
+    return err(400, "Подтвердите, что вы не робот");
+  }
 
   // Анти-ресенд-бомба: ограничиваем число регистраций на один e-mail (письма-подтверждения).
   if (!(await rateLimit(`register:email:${email.toLowerCase()}`, 3, 3600))) return err(429, TOO_MANY);

@@ -37,6 +37,51 @@ export async function rateLimit(key: string, max: number, windowSeconds: number)
 }
 
 /**
+ * Отметить событие (напр. неудачный вход) в окне windowSeconds. Используется
+ * для адаптивной капчи: «была ли недавно ошибка с этого IP». Та же таблица rate_limits.
+ */
+export async function recordEvent(key: string, windowSeconds: number): Promise<void> {
+  try {
+    await db.execute(sql`
+      insert into rate_limits (key, count, window_start)
+      values (${key}, 1, now())
+      on conflict (key) do update set
+        count = case
+          when rate_limits.window_start < now() - make_interval(secs => ${windowSeconds}::int)
+          then 1 else rate_limits.count + 1 end,
+        window_start = case
+          when rate_limits.window_start < now() - make_interval(secs => ${windowSeconds}::int)
+          then now() else rate_limits.window_start end
+    `);
+  } catch {
+    /* best-effort: на сбое БД просто не запоминаем событие */
+  }
+}
+
+/** Было ли событие key в пределах окна. Fail-open: при сбое БД — false (капчу не навязываем). */
+export async function hasRecentEvent(key: string, windowSeconds: number): Promise<boolean> {
+  try {
+    const rows = (await db.execute(sql`
+      select 1 as ok from rate_limits
+      where key = ${key} and window_start > now() - make_interval(secs => ${windowSeconds}::int)
+      limit 1
+    `)) as unknown as Array<{ ok: number }>;
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Снять отметку (напр. после успешного входа). */
+export async function clearEvent(key: string): Promise<void> {
+  try {
+    await db.execute(sql`delete from rate_limits where key = ${key}`);
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
  * IP клиента из доверенного источника. На Vercel `x-real-ip` ставит САМА платформа
  * (клиент не подделает). Фолбэк — ПОСЛЕДНИЙ (правый) сегмент x-forwarded-for: его
  * дописывает прокси, тогда как левый сегмент клиент может подделать и крутить
