@@ -500,6 +500,20 @@ export const playerProfiles = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
 );
 
+/* ─────────────────────── rate_limits (S5 — app-level лимитер) ─────────────────────── */
+/**
+ * Fixed-window счётчик для rate-limit публичных auth-эндпоинтов (login/register).
+ * Бэкенд-онли: пишет/читает только серверная owner-роль (Drizzle, мимо RLS);
+ * RLS включён без policy (supabase/rate-limits.sql) — anon/authenticated доступа нет.
+ * key = "login:ip:..." / "register:email:..."; протухшие ключи чистятся опортунистически.
+ * Заводится через db:sql (additive), без db:push. Vercel+Supabase, без внешнего Upstash.
+ */
+export const rateLimits = pgTable("rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull().default(0),
+  windowStart: timestamp("window_start", { withTimezone: true }).defaultNow().notNull(),
+});
+
 /* ───────────────── inferred types (для использования в коде) ───────────────── */
 export type PlayerProfileRow = typeof playerProfiles.$inferSelect;
 export type NewPlayerProfileRow = typeof playerProfiles.$inferInsert;

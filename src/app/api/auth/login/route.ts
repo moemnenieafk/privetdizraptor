@@ -8,8 +8,12 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+const tooMany = () =>
+  NextResponse.json({ error: "Слишком много попыток. Попробуйте позже." }, { status: 429 });
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -41,6 +45,9 @@ async function emailForUsername(username: string): Promise<string | null> {
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
+  // Rate-limit по IP (поверх лимитов GoTrue): защита от брутфорса/стаффинга.
+  if (!(await rateLimit(`login:ip:${clientIp(req)}`, 20, 300))) return tooMany();
+
   let body: unknown;
   try {
     body = await req.json();

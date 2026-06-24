@@ -8,8 +8,11 @@ import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+const TOO_MANY = "Слишком много попыток. Попробуйте позже.";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
@@ -20,6 +23,9 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 const err = (status: number, error: string) => NextResponse.json({ error }, { status });
 
 export async function POST(req: Request): Promise<NextResponse> {
+  // Rate-limit по IP — против масс-регистрации/расхода квоты писем.
+  if (!(await rateLimit(`register:ip:${clientIp(req)}`, 5, 600))) return err(429, TOO_MANY);
+
   // 3 коротких поля — тело крошечное; режем переразмерный payload до парсинга.
   const len = Number(req.headers.get("content-length") ?? "0");
   if (Number.isFinite(len) && len > 4096) return err(413, "Слишком большой запрос");
@@ -37,6 +43,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (!EMAIL_RE.test(email) || email.length > 254) return err(422, "Введите корректный e-mail");
   if (!USERNAME_RE.test(username)) return err(422, "Логин: 3–15 символов, латиница, цифры, _ и -");
   if (password.length < 8 || password.length > 128) return err(422, "Пароль: 8–128 символов");
+
+  // Анти-ресенд-бомба: ограничиваем число регистраций на один e-mail (письма-подтверждения).
+  if (!(await rateLimit(`register:email:${email.toLowerCase()}`, 3, 3600))) return err(429, TOO_MANY);
 
   // Уникальность логина без учёта регистра (профиль создаёт триггер; индекс — гарант).
   const [taken] = await db
