@@ -1,9 +1,16 @@
 // POST /api/account/avatar — загрузка аватара текущего юзера (Фаза 2-идентичность).
-// Клиент присылает готовый квадратный webp (canvas-кроп). Заливаем СЕССИОННЫМ
-// клиентом в бакет cta-media по ключу avatars/{uid}.webp — RLS по auth.uid()
-// (см. supabase/account-identity.sql). Service-key в рантайме НЕ инстанцируем.
+// Клиент присылает готовый квадратный webp (canvas-кроп). Заливаем в бакет cta-media
+// по ключу avatars/{uid}.webp.
+//
+// ⚠️ Заливка идёт SERVICE-ROLE клиентом (обход RLS) — ОСОЗНАННОЕ исключение из правила
+// «service-key не в рантайме». Причина: в этом проекте data-plane Supabase не валидирует
+// пользовательский JWT для storage-RLS (баг фичи JWT signing keys, см. auto-memory
+// [[supabase-jwt-es256-dataplane]]). Безопасность держит САМ роут: сессия (getUser→401)
+// + ключ ЖЁСТКО = avatars/{user.id}.webp (id из сессии, не из тела) — юзер не зальёт
+// чужой аватар. Требует SUPABASE_SERVICE_ROLE_KEY в env рантайма (Vercel).
 import { NextResponse } from "next/server";
 import { eq, sql } from "drizzle-orm";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
@@ -49,14 +56,21 @@ export async function POST(req: Request): Promise<NextResponse> {
     buf.toString("ascii", 8, 12) === "WEBP";
   if (!isWebp) return err(422, "Файл не является корректным webp");
 
-  const { error: upErr } = await supabase.storage
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!serviceKey || !supabaseUrl) return err(500, "Хранилище не настроено");
+
+  // Service-role клиент: путь уже жёстко привязан к user.id (см. шапку файла).
+  const admin = createAdminClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { error: upErr } = await admin.storage
     .from("cta-media")
     .upload(key, buf, { contentType: "image/webp", upsert: true });
   if (upErr) return err(500, "Не удалось загрузить аватар");
 
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   // ?v= — cache-busting: ключ один и тот же при перезаливке.
-  const url = `${base}/storage/v1/object/public/cta-media/${key}?v=${Date.now()}`;
+  const url = `${supabaseUrl}/storage/v1/object/public/cta-media/${key}?v=${Date.now()}`;
 
   await db
     .update(profiles)

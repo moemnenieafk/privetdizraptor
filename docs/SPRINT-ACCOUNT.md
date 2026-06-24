@@ -79,10 +79,20 @@
 - ✅ Решение по паролю: **сброс по e-mail** (как мокап), не updateUser-на-месте. Аватар: **кроп/масштаб сейчас** (canvas). Выбор Вадима.
 - Файлы: `src/app/api/account/{username,email,password,avatar}/route.ts`, `src/app/reset-password/*`, `src/lib/cta-api.ts` (обёртки), `src/lib/auth/me.ts` (+usernameChangedAt), `src/app/account/AccountCenter.tsx` (живые формы), `supabase/account-identity.sql`, `src/db/schema.ts`.
 
-**⚠️ 3 ручных шага Вадима в Supabase Dashboard (без них письма сброса/смены email ведут в никуда):**
-1. **Email-шаблоны** Auth → Email Templates: **Reset Password** и **Change Email Address** должны зеркалить magic-link (token_hash) — вести на `/auth/confirm?token_hash={{ .TokenHash }}&type=recovery` (и `type=email_change`) с `next={{ .RedirectTo }}`. *(Для пароля есть фолбэк `?code=`, для email — нет, шаблон обязателен.)*
-2. **Redirect URLs** Auth → URL Configuration: добавить `/reset-password` (и `/account`).
-3. (опц.) Свой SMTP — иначе общий лимит Supabase единственный бэкстоп против email-абьюза (см. ниже).
+**Статус живого тестирования (2026-06-24, вечер):**
+- ✅ **Смена логина** — работает (V4DYATV сменён в проде). Весь стек сессия→БД→unique-индекс проверен.
+- ✅ **Логин по magic-link ПОЧИНЕН** (`d034fad`, в проде): дефолтный email-шаблон (его НЕЛЬЗЯ редактировать без custom SMTP) в PKCE-проекте отдаёт `?code=`, а `/auth/confirm` умел только `token_hash` → `/login?error=link`. Теперь роут поддерживает оба. Редактировать шаблоны НЕ нужно. Redirect URLs (`/reset-password`,`/account`,`/auth/confirm`) — Вадим добавил.
+- 🛠 **Дев-инструмент `npm run db:login-link -- <email> [recovery]`** (`bfe3aeb`) — генерит ссылку входа/сброса БЕЗ письма (admin.generateLink), мимо лимита почты. Для тестов.
+
+**Аватар — РЕШЕНО через service-role (2026-06-24). История бага:**
+- Симптом: загрузка → 500. Раскопано raw-HTTP диагностикой: **data-plane Supabase (Storage/PostgREST) НЕ валидирует пользовательский JWT** для storage-RLS → запрос трактуется как анонимный → `auth.uid()`=NULL → политика `name='avatars/'||auth.uid()||'.webp'` даёт 403. Проверено: НЕ зависит от алгоритма токена — провалилось и на ES256, и после ротации на HS256. Это **платформенный баг фичи «JWT signing keys»** (токены получают `kid`, storage их не принимает). Service-role заливка проходит (обходит RLS).
+- **Фикс:** `avatar/route.ts` заливает через **service-role admin-клиент** (обход RLS). Безопасность держит САМ роут: сессия (getUser→401) + ключ ЖЁСТКО `avatars/{user.id}.webp` (id из сессии, не из тела). Осознанное исключение из «service-key не в рантайме» (см. auto-memory [[supabase-jwt-es256-dataplane]]).
+- ⚠️ **Требует `SUPABASE_SERVICE_ROLE_KEY` в env рантайма Vercel** (раньше ключ жил только в скриптах). Без него роут вернёт 500 «Хранилище не настроено». **Действие Вадима:** Vercel → Project Settings → Environment Variables → добавить `SUPABASE_SERVICE_ROLE_KEY` (Production), значение из Supabase → Project Settings → API → service_role.
+- Storage-RLS политики `avatars_*` оставлены (безвредны) — пригодятся, если платформенный баг JWT когда-нибудь починят и вернёмся на session-client.
+- JWT-ключ проекта сейчас = Legacy HS256 (Вадим откатил с ECC при диагностике; это нормальное состояние, на работу не влияет).
+- 🔭 Латентный долг: data-plane не принимает user-JWT → ЛЮБАЯ будущая RLS-фича через supabase-клиент (не Drizzle) сломается. Чинить — тикет в Supabase / вкладка «Legacy JWT Secret» (убрать kid-токены). Сейчас не блокирует (весь рантайм ходит в БД через Drizzle).
+
+**Смена e-mail — упирается в лимит писем** (`429 over_email_send_rate_limit`), не баг: `updateUser({email})` шлёт подтверждение, встроенная почта Supabase капается на весь проект. Заработает после сброса лимита / с custom SMTP.
 
 **Security-review (multi-agent, 17 находок / 9 подтв.) — что НЕ закрыто (осознанно, в рамках отложенного S5 rate-limit):**
 - `POST /api/account/email` шлёт письмо-подтверждение на адрес ИЗ ТЕЛА (так устроена смена email в Supabase) → потенциальный email-relay/исчерпание квоты. Бэкстоп — встроенный rate-limit Supabase. Приоритетная цель, когда возьмёмся за S5: per-user кулдаун смены email (зеркало username-кулдауна) + свой SMTP.
