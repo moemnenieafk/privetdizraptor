@@ -62,7 +62,7 @@ if (existsSync(PLACEHOLDER)) {
 }
 
 const missingFiles = (byHash.get(placeholderHash) || []).slice().sort();
-const missingIds = missingFiles.map((f) => f.replace(".webp", ""));
+let missingIds = missingFiles.map((f) => f.replace(".webp", ""));
 
 // предупреждение, если заглушка по образу — не крупнейший кластер (повод проверить образ)
 if (clusters[0][0] !== placeholderHash) {
@@ -112,6 +112,21 @@ if (GAME === "eft") {
   }
 }
 
+// ---- 4.5 фильтр Twitch-дропсов (каталожный мусор: множество промо-контейнеров
+//          одного имени «Twitch ... case», без отдельной модели в клиенте — не настоящие пропуски) ----
+const KEEP_PROMO = hasFlag("keep-promo");
+const isPromoJunk = (name) => {
+  const n = (name || "").toLowerCase();
+  return n.includes("twitch") && n.includes("case"); // "Twitch Icebreaker 2026 case (Common)" и т.п.
+};
+let promoFiltered = [];
+if (!KEEP_PROMO && meta.size) {
+  promoFiltered = missingIds.filter((id) => isPromoJunk(meta.get(id)?.name));
+  const promoSet = new Set(promoFiltered);
+  missingIds = missingIds.filter((id) => !promoSet.has(id));
+  if (promoFiltered.length) console.log(`фильтр Twitch-дропсов: исключено ${promoFiltered.length} промо-контейнеров (--keep-promo чтобы оставить)`);
+}
+
 // ---- 5. группировка ----
 const byCategory = new Map(); // category -> [{id,name}]
 for (const id of missingIds) {
@@ -131,7 +146,7 @@ const report = {
   game: GAME,
   iconsDir: DIR,
   placeholder: { path: PLACEHOLDER, sha256: placeholderHash, source: placeholderSource },
-  totals: { scanned: files.length, missing: missingIds.length, withIcon: files.length - missingIds.length },
+  totals: { scanned: files.length, missing: missingIds.length, withIcon: files.length - missingIds.length, filteredTwitchPromo: promoFiltered.length },
   perceptualExtra,
   byCategory: grouped,
   missingIds,
@@ -145,6 +160,7 @@ txt.push(`Сгенерировано: ${stamp}`);
 txt.push(`Источник заглушки: ${placeholderSource}`);
 txt.push(`Плейсхолдер sha256: ${placeholderHash}`);
 txt.push(`Без иконки: ${missingIds.length} из ${files.length}`);
+if (promoFiltered.length) txt.push(`Отфильтровано Twitch-дропсов (промо): ${promoFiltered.length}`);
 if (PERCEPTUAL) txt.push(`Перцептивно похожих (перекодированные?): ${perceptualExtra.length}`);
 txt.push("");
 for (const g of grouped) {
@@ -163,6 +179,7 @@ writeFileSync(backfillPath, JSON.stringify(missingIds), "utf8");
 
 // ---- консольная сводка ----
 console.log(`\n=== БЕЗ ИКОНКИ: ${missingIds.length} из ${files.length} (${GAME}) ===`);
+if (promoFiltered.length) console.log(`  (Twitch-дропсов отфильтровано: ${promoFiltered.length})`);
 for (const g of grouped) console.log(`  ${String(g.count).padStart(4)}  ${g.category}`);
 console.log(`\nОтчёт: ${jsonPath}`);
 console.log(`       ${txtPath}`);
