@@ -19,12 +19,14 @@ export function MapBottomBar({ data, questIds, bosses, isFullscreen, onToggleFul
 
   return (
     <div className="flex items-center gap-3 px-3.5 h-14 bg-card-menu shrink-0 overflow-x-auto scrollbar-hidden">
-      {/* Прогресс по квестам карты */}
-      <div className="flex shrink-0 items-center gap-1.5 font-blender-medium text-sm uppercase tracking-widest">
-        <span className="text-text-secondary">Задания:</span>
-        <span className="text-success">{quest.completed}</span>
-        <span className="text-text-secondary">/ {quest.total} — {quest.pct}%</span>
-      </div>
+      {/* Прогресс по квестам карты (статичные карты без квестов — скрываем) */}
+      {!data.config.staticMap && (
+        <div className="flex shrink-0 items-center gap-1.5 font-blender-medium text-sm uppercase tracking-widest">
+          <span className="text-text-secondary">Задания:</span>
+          <span className="text-success">{quest.completed}</span>
+          <span className="text-text-secondary">/ {quest.total} — {quest.pct}%</span>
+        </div>
+      )}
 
       {/* Боссы + шансы спавна */}
       {bosses.length > 0 && (

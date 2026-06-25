@@ -22,7 +22,9 @@ export interface MapLayerConfig {
   /** Видим ли слой по умолчанию. */
   show: boolean;
   /** [min, max] игровой высоты (game-Y) для фильтра маркеров по этажу. */
-  height: [number, number];
+  height?: [number, number];
+  /** Статичная карта: basename SVG этого этажа в /public/images/maps/eft (без .svg). */
+  image?: string;
 }
 
 export interface EftMapConfig {
@@ -30,6 +32,16 @@ export interface EftMapConfig {
   slug: string;
   /** Имя файла-подложки в репо the-hideout (для скачивания/заливки). null — нет SVG-подложки. */
   svgFile: string | null;
+  /**
+   * Статичная карта (наш собственный арт в /public, не геометрия tarkov.dev): рисуем подложку
+   * с зумом/паном БЕЗ маркеров/слоёв/поиска. SVG читается из /images/maps/eft/{slug}.svg
+   * напрямую (Next), без Storage/CDN и без записи в map_assets (синк её пропускает).
+   */
+  staticMap?: boolean;
+  /** Отображаемое имя (для статичных карт — их нет в БД, имя берём отсюда). */
+  displayName?: string;
+  /** Имя наземного этажа в переключателе (по умолчанию «Поверхность»). */
+  groundName?: string;
   author: string | null;
   authorLink: string | null;
   minZoom: number;
@@ -257,6 +269,33 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     svgLayer: "Ground_Level",
     layers: [],
   },
+  "the-lab": {
+    // Наш собственный трёхуровневый план Лаборатории (арт V4DYA, NIGHTFALL-перекраска).
+    // Статичная карта: подложки из /public, без маркеров tarkov.dev (рисунок не геопривязан).
+    // Каждый этаж — отдельный SVG; переключатель меняет подложку (см. MapViewerClient).
+    slug: "the-lab",
+    svgFile: "the-lab.svg",
+    staticMap: true,
+    displayName: "Лаборатория",
+    groundName: "1-й уровень",
+    author: "V4DYA",
+    authorLink: null,
+    // CRS.Simple по viewBox 5500×4200; transform-identity (маркеров нет → калибровка не нужна).
+    minZoom: -4,
+    maxZoom: 2,
+    transform: [1, 0, 1, 0],
+    coordinateRotation: 0,
+    bounds: [
+      [0, 0],
+      [5500, 4200],
+    ],
+    heightRange: null,
+    svgLayer: null,
+    layers: [
+      { name: "Подземелье", show: false, image: "the-lab-m1" },
+      { name: "2-й уровень", show: false, image: "the-lab-2" },
+    ],
+  },
 };
 
 /** Этаж карты для UI-переключателя: имя, id <g>-группы SVG (или null) и диапазон высоты. */
@@ -266,18 +305,27 @@ export interface MapFloor {
   svgLayer: string | null;
   /** [min,max] game-Y для фильтра маркеров; null — без фильтра (показать все). */
   height: [number, number] | null;
+  /** Статичная карта: URL подложки этого этажа в /public; null — общая подложка карты. */
+  image: string | null;
 }
 
 /**
  * Список этажей карты: индекс 0 — наземный (svgLayer/heightRange конфига), далее — layers[].
- * Используется и фреймом (переключатель), и вьюером (затемнение/фильтр) — одна точка правды.
+ * Используется и фреймом (переключатель), и вьюером (затемнение/фильтр/смена подложки) — одна точка правды.
  */
 export function buildMapFloors(cfg: EftMapConfig): MapFloor[] {
-  const ground: MapFloor = { name: 'Поверхность', svgLayer: cfg.svgLayer, height: cfg.heightRange };
+  const img = (base: string) => `/images/maps/eft/${base}.svg`;
+  const ground: MapFloor = {
+    name: cfg.groundName ?? 'Поверхность',
+    svgLayer: cfg.svgLayer,
+    height: cfg.heightRange,
+    image: cfg.staticMap ? img(cfg.slug) : null,
+  };
   const extra: MapFloor[] = cfg.layers.map((l) => ({
     name: l.name,
     svgLayer: l.svgLayer ?? null,
-    height: l.height,
+    height: l.height ?? null,
+    image: cfg.staticMap && l.image ? img(l.image) : null,
   }));
   return [ground, ...extra];
 }
@@ -285,6 +333,13 @@ export function buildMapFloors(cfg: EftMapConfig): MapFloor[] {
 /** slug → конфиг (или undefined, если карта не интерактивная / нет SVG-подложки). */
 export function getMapConfig(slug: string): EftMapConfig | undefined {
   return EFT_MAP_CONFIG[slug];
+}
+
+/** Статичные карты (наш арт в /public) — для индекса и навигации (их нет в БД). */
+export function getStaticMaps(): { slug: string; name: string }[] {
+  return Object.values(EFT_MAP_CONFIG)
+    .filter((c) => c.staticMap && c.svgFile)
+    .map((c) => ({ slug: c.slug, name: c.displayName ?? c.slug }));
 }
 
 /** Все интерактивные карты с SVG-подложкой (для скрипта заливки и индекса). */

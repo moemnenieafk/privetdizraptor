@@ -18,7 +18,8 @@ const SRC_CDN = "https://assets.tarkov.dev/maps/svg";
 const LOCAL_DIR = "public/images/maps/eft";
 
 async function main() {
-  const targets = Object.values(EFT_MAP_CONFIG).filter((c) => c.svgFile);
+  // Статичные карты (наш арт) живут в /public, в Storage/CDN их не льём.
+  const targets = Object.values(EFT_MAP_CONFIG).filter((c) => c.svgFile && !c.staticMap);
   console.log(`карт с SVG-подложкой: ${targets.length}`);
 
   mkdirSync(LOCAL_DIR, { recursive: true });

@@ -42,11 +42,15 @@ export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, o
         >
           <ArrowLeft className="h-3.5 w-3.5" />
         </Link>
-        <button type="button" onClick={onSearchToggle} title="Поиск (Ctrl+F)" className={searchBtnCls}>
-          <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
-        </button>
-        {searchOpen && (
-          <MapSearch markers={data.markers} quests={quests} apiRef={apiRef} anchorRef={anchorRef} onClose={onSearchClose} />
+        {!data.config.staticMap && (
+          <>
+            <button type="button" onClick={onSearchToggle} title="Поиск (Ctrl+F)" className={searchBtnCls}>
+              <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
+            </button>
+            {searchOpen && (
+              <MapSearch markers={data.markers} quests={quests} apiRef={apiRef} anchorRef={anchorRef} onClose={onSearchClose} />
+            )}
+          </>
         )}
       </div>
 
