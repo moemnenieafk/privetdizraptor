@@ -123,9 +123,13 @@ def main():
         try:
             mr = comp["MeshRenderer"].read()
             mat = mr.m_Materials[0].read()
-            _cols = mat.m_SavedProperties.m_Colors
-            _cols = _cols.items() if hasattr(_cols, "items") else _cols
-            if any(ck in ("_HeatColor1", "_HeatColor2", "_HeatSize") for ck, _ in _cols):
+            # стекло детектим по ИМЕНИ ШЕЙДЕРА (не по _HeatColor — это термал-свойства,
+            # которые есть у тканей/брони/риг → ложные срабатывания и порча рендера тинтом)
+            try:
+                _sn = (getattr(mat.m_Shader.read(), "m_Name", "") or "").lower()
+            except Exception:
+                _sn = ""
+            if any(g in _sn for g in ("glass", "refract", "distort", "moonshine")):
                 is_glass = True
             tex = mat.m_SavedProperties.m_TexEnvs
             tex = tex.items() if hasattr(tex, "items") else tex
