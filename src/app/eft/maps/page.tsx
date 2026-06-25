@@ -1,13 +1,16 @@
 import Link from 'next/link';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { getEftInteractiveMapsWithNames } from '@/db/maps';
+import { getStaticMaps } from '@/data/eft-map-config';
 import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 // Динамический индекс: список карт = интерактивные карты из БД (imageKey задан).
 // Добавили/убрали карту серверным кроном → страница сама обновилась.
 export default async function MapsPage() {
-  const maps = await getEftInteractiveMapsWithNames();
-  const sorted = [...maps].sort((a, b) => mapOrderIndex(a.slug) - mapOrderIndex(b.slug));
+  const dbMaps = await getEftInteractiveMapsWithNames();
+  // + статичные карты (наш арт, не в БД), без дублей по slug.
+  const staticMaps = getStaticMaps().filter((s) => !dbMaps.some((m) => m.slug === s.slug));
+  const sorted = [...dbMaps, ...staticMaps].sort((a, b) => mapOrderIndex(a.slug) - mapOrderIndex(b.slug));
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
 import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
-import { getMapConfig } from '@/data/eft-map-config';
+import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
 import { questsForMap } from '@/lib/map-quests';
@@ -23,6 +23,30 @@ export default async function MapPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { quest: focusQuestId } = await searchParams;
   const config = getMapConfig(slug);
+
+  // Статичная карта (наш собственный арт в /public): подложка с зумом/паном, БЕЗ маркеров,
+  // слоёв и поиска. Не ходит в БД и не зависит от tarkov.dev-геометрии.
+  if (config?.staticMap && config.svgFile) {
+    const view: MapView = {
+      slug,
+      name: config.displayName ?? slug,
+      imageUrl: `/images/maps/eft/${slug}.svg`,
+      author: config.author,
+      authorLink: config.authorLink,
+      raidDuration: null,
+      players: null,
+      minPlayerLevel: null,
+      maxPlayerLevel: null,
+      config,
+      markers: [],
+    };
+    const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
+    return (
+      <main className="w-full px-4 pt-4 pb-8 xl:px-8">
+        <MapFrame data={view} navMaps={navMaps} quests={[]} bosses={[]} questZones={[]} />
+      </main>
+    );
+  }
 
   if (config?.svgFile && config.transform) {
     const data = await getEftMapData(slug);
@@ -78,7 +102,7 @@ export default async function MapPage({ params, searchParams }: Props) {
         markers,
       };
 
-      const navMaps = await getEftInteractiveMapsWithNames();
+      const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
       const quests = questsForMap(slug);
 
       return (
