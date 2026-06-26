@@ -54,6 +54,29 @@ const SHEBUKA = "Shebuka";
 const SHEBUKA_LINK = "https://github.com/the-hideout/tarkov-dev-svg-maps/";
 
 export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
+  "the-lab": {
+    slug: "the-lab",
+    svgFile: "Labs.svg",
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    minZoom: 2,
+    maxZoom: 6,
+    // Проекция портирована из tarkov.dev maps.json (вариант the-lab). Значения калибровались
+    // под растровые тайлы labs_v4 — при визуальной сверке маркеров может потребоваться
+    // svgBounds-override (как у reserve). Слои сверены по Labs.svg напрямую (2026-06-26).
+    transform: [0.575, 281.2, 0.575, 193.7],
+    coordinateRotation: 270,
+    bounds: [
+      [-80, -477],
+      [-287, -193],
+    ],
+    heightRange: [-0.9, 3],
+    svgLayer: "First_Level",
+    layers: [
+      { name: "Технический", svgLayer: "Technical_Level", show: false, height: [-1000, -0.9] },
+      { name: "2-й уровень", svgLayer: "Second_Level", show: false, height: [3, 1000] },
+    ],
+  },
   customs: {
     slug: "customs",
     svgFile: "Customs.svg",
