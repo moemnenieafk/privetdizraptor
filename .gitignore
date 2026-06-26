@@ -60,3 +60,12 @@ ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules
+
+# Local working/non-project files (reverse-engineering tools, asset dumps, scratch).
+# Имя папки начинается с "!", поэтому экранируем — иначе git трактует "!" как "не игнорировать".
+\!non-related/
+
+# Render-pipeline стейджинг (webp по человекочитаемым именам ДО заливки в Supabase) — артефакт, не исходник.
+public/images/items/frago/
+# Отчёты find-missing (tsv/json выгрузки) — генерятся, в репо не держим.
+/scripts/reports/
