@@ -64,6 +64,7 @@ ds-bundle/
 # Local working/non-project files (reverse-engineering tools, asset dumps, scratch).
 # Имя папки начинается с "!", поэтому экранируем — иначе git трактует "!" как "не игнорировать".
 \!non-related/
+\!future-requests/
 
 # Render-pipeline стейджинг (webp по человекочитаемым именам ДО заливки в Supabase) — артефакт, не исходник.
 public/images/items/frago/
