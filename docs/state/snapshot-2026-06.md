@@ -37,7 +37,7 @@ CTA — портал-агрегатор для хардкорных extraction-�
 NIGHTFALL-счётчики ниже — **автоматические**: их пересчитывает `scripts/sync-style-debt.mjs` (pre-commit хук) из `src/`. Руками не править — перезапишутся. Эталоны: `font-mono`→`font-blender-medium`, `rounded-[Npx]`→`rounded-xs`, сырой HEX→токены.
 
 <!-- debt:auto -->
-**NIGHTFALL** (авто): `any` — 11 шт / 4 файлов · `font-mono` — 7 файлов · сырой HEX `[#…]` — 4 шт / 1 файлов · `rounded-[Npx]` — 6 шт · v3-синтаксис (`bg-gradient-to-*`, `bg-[var(…)]`) — ✅ нет.
+**NIGHTFALL** (авто): any — 11 шт / 4 файлов · font-mono — 7 файлов · сырой HEX в произвольных значениях — 4 шт / 1 файлов · произвольный rounded в px — 6 шт · v3-утечки (gradient-направление, var() в bg) — ✅ нет.
 <!-- /debt:auto -->
 
 ## Техдолг
