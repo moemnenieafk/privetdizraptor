@@ -13,7 +13,7 @@ type: roadmap
 ## Ближайшее (разблокировать / закрыть)
 1. ✅ ~~[[supabase-jwt-fix]]~~ — решено архитектурно (service-role роуты + Drizzle, не client-RLS), 2026-06-28.
 2. ✅ ~~[[claude-md-version]] — выровнять CLAUDE.md под Next 16.~~ сделано 2026-06-28
-3. [[style-debt]] — закрыть стиль-долг (быстрая победа). · ✅ ~~[[dead-routes-cleanup]]~~ почищено 2026-06-28
+3. ✅ ~~[[style-debt]]~~ — закрыт 2026-06-28 (font-mono/rounded/HEX/any → 0). · ✅ ~~[[dead-routes-cleanup]]~~ почищено 2026-06-28
 
 ## Горизонт (развитие)
 - [[maps-v2-scope]] — добить карты как киллер-фичу.
