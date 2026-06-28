@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
-import { changeEmail, changeUsername, uploadAvatar } from '@/lib/cta-api';
-import type { Me } from '@/lib/auth/me';
+import { changeEmail, changeSocial, changeUsername, uploadAvatar } from '@/lib/cta-api';
+import type { Me, SocialPlatform } from '@/lib/auth/me';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
@@ -17,7 +17,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type TabId = 'profile' | 'security' | 'linking' | 'billing' | 'prostatus';
-type ViewId = 'avatar' | 'username' | 'email' | 'subscription' | 'password' | '2fa' | 'plan';
+type ViewId = 'avatar' | 'username' | 'email' | 'subscription' | 'password' | '2fa' | 'plan' | 'social';
 
 interface NavTab {
   id: TabId;
@@ -37,11 +37,11 @@ const NAV_TABS: NavTab[] = [
 
 const PLATFORMS = [
   // Бренд-цвета внешних платформ — это ДАННЫЕ, не часть NIGHTFALL → HEX тут ок,
-  // рендерим фон inline-стилем (см. ниже), без арбитрарных Tailwind-классов.
-  { id: 'twitch',  name: 'TWITCH',  linked: true,  handle: 'v4dyatv',     color: '#9146FF' },
-  { id: 'youtube', name: 'YOUTUBE', linked: false,  handle: '',            color: '#FF0000' },
-  { id: 'discord', name: 'DISCORD', linked: true,   handle: 'V4DYA#2476', color: '#5865F2' },
-  { id: 'steam',   name: 'STEAM',   linked: false,  handle: '',            color: '#A3BCCE' },
+  // рендерим фон inline-стилем. Привязка/хендл — РЕАЛЬНЫЕ из профиля (me.socials).
+  { id: 'twitch',  name: 'TWITCH',  color: '#9146FF' },
+  { id: 'youtube', name: 'YOUTUBE', color: '#FF0000' },
+  { id: 'discord', name: 'DISCORD', color: '#5865F2' },
+  { id: 'steam',   name: 'STEAM',   color: '#A3BCCE' },
 ] as const;
 
 const GAMES = [
@@ -850,7 +850,7 @@ function SecurityPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
   );
 }
 
-function LinkingPanel() {
+function LinkingPanel({ me, onNavigate }: { me: Me; onNavigate: (v: ViewId) => void }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded border border-lines-hover bg-card-menu px-6 py-5">
@@ -863,43 +863,48 @@ function LinkingPanel() {
       </div>
 
       <div className="rounded border border-lines-hover bg-card-menu px-6">
-        {PLATFORMS.map((platform) => (
-          <div
-            key={platform.id}
-            className="flex items-center gap-4 border-b border-lines-hover py-5 last:border-b-0"
-          >
+        {PLATFORMS.map((platform) => {
+          const handle = me.socials[platform.id];
+          const linked = !!handle;
+          return (
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-lines-hover"
-              style={{ backgroundColor: `${platform.color}1a` }}
+              key={platform.id}
+              className="flex items-center gap-4 border-b border-lines-hover py-5 last:border-b-0"
             >
-              <span
-                className="font-blender-medium text-xs"
-                style={{ color: platform.color }}
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-lines-hover"
+                style={{ backgroundColor: `${platform.color}1a` }}
               >
-                {platform.name.slice(0, 2)}
-              </span>
+                <span
+                  className="font-blender-medium text-xs"
+                  style={{ color: platform.color }}
+                >
+                  {platform.name.slice(0, 2)}
+                </span>
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
+                  {platform.name}
+                </span>
+                <span className="font-blender-book text-sm text-text-secondary">
+                  {linked ? (
+                    <>
+                      Аккаунт привязан:{' '}
+                      <span className="text-(--primary)">{handle}</span>
+                    </>
+                  ) : (
+                    'Аккаунт не привязан'
+                  )}
+                </span>
+              </div>
+              <RowBtn
+                label={linked ? 'Изменить' : 'Привязать'}
+                variant="default"
+                onClick={() => onNavigate('social')}
+              />
             </div>
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
-                {platform.name}
-              </span>
-              <span className="font-blender-book text-sm text-text-secondary">
-                {platform.linked ? (
-                  <>
-                    Аккаунт привязан:{' '}
-                    <span className="text-(--primary)">{platform.handle}</span>
-                  </>
-                ) : (
-                  'Аккаунт не привязан'
-                )}
-              </span>
-            </div>
-            <RowBtn
-              label={platform.linked ? 'Отвязать' : 'Привязать'}
-              variant={platform.linked ? 'danger' : 'default'}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -945,6 +950,72 @@ function ProStatusPanel() {
   );
 }
 
+// Связанные аккаунты: ручные хендлы соцсетей. Пустое поле = отвязать.
+function SocialView({ onBack, me }: { onBack: () => void; me: Me }) {
+  const router = useRouter();
+  const PLATS: SocialPlatform[] = ['twitch', 'youtube', 'discord', 'steam'];
+  const [handles, setHandles] = useState<Record<SocialPlatform, string>>({
+    twitch: me.socials.twitch ?? '',
+    youtube: me.socials.youtube ?? '',
+    discord: me.socials.discord ?? '',
+    steam: me.socials.steam ?? '',
+  });
+  const [status, setStatus] = useState<'idle' | 'saving' | 'done'>('idle');
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setStatus('saving');
+    for (const p of PLATS) {
+      const next = handles[p].trim();
+      if (next === (me.socials[p] ?? '')) continue; // шлём только изменённые
+      const r = await changeSocial(p, next);
+      if (!r.ok) {
+        setError(r.error ?? 'Не удалось сохранить');
+        setStatus('idle');
+        return;
+      }
+    }
+    setStatus('done');
+    router.refresh();
+    setTimeout(onBack, 1000);
+  };
+
+  return (
+    <form onSubmit={submit} className="flex flex-col">
+      <BackBtn onClick={onBack} />
+      <div className="flex flex-col items-center gap-5">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <SubTitle>Связанные аккаунты</SubTitle>
+          <p className="font-blender-book text-xs leading-relaxed text-text-muted max-w-xs">
+            Введите ваши хендлы. Пустое поле отвяжет аккаунт.
+          </p>
+        </div>
+        <div className="flex w-full max-w-md flex-col gap-3">
+          {PLATS.map((p) => (
+            <FormInput
+              key={p}
+              placeholder={`${p} — ваш хендл`}
+              value={handles[p]}
+              onChange={(v) => setHandles((h) => ({ ...h, [p]: v }))}
+              disabled={status === 'done'}
+              maxLength={32}
+            />
+          ))}
+          <Feedback error={error} success={status === 'done' ? 'Сохранено' : null} />
+        </div>
+        <FormActions
+          onCancel={onBack}
+          submitting={status === 'saving'}
+          disabled={status === 'done'}
+          label="Сохранить"
+        />
+      </div>
+    </form>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function AccountCenter({ me }: { me: Me }) {
@@ -973,11 +1044,12 @@ export function AccountCenter({ me }: { me: Me }) {
     if (activeView === 'password')      return <PasswordView onBack={goBack} />;
     if (activeView === '2fa')           return <TwoFAView onBack={goBack} />;
     if (activeView === 'plan')          return <PlanView onBack={goBack} />;
+    if (activeView === 'social')        return <SocialView onBack={goBack} me={me} />;
 
     switch (activeTab) {
       case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} />;
       case 'security':  return <SecurityPanel onNavigate={navigate} />;
-      case 'linking':   return <LinkingPanel />;
+      case 'linking':   return <LinkingPanel onNavigate={navigate} me={me} />;
       case 'billing':   return <BillingPanel onNavigate={navigate} />;
       case 'prostatus': return <ProStatusPanel />;
     }

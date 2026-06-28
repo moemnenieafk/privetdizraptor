@@ -392,6 +392,12 @@ export const profiles = pgTable("profiles", {
   // Кулдаун смены логина (Фаза 2-идентичность): когда username менялся в последний раз.
   // Колонка additive — заводится через supabase/account-identity.sql (db:sql, без db:push).
   usernameChangedAt: timestamp("username_changed_at", { withTimezone: true }),
+  // Соц-привязки (account-real-data slice 1): хендлы вводятся вручную, NULL = не привязано.
+  // Колонки additive — заводятся через supabase/account-social.sql (db:sql, без db:push).
+  twitch: text("twitch"),
+  youtube: text("youtube"),
+  discord: text("discord"),
+  steam: text("steam"),
   role: text("role").notNull().default("user"), // 'user' | 'admin' (слой 5, CMS)
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

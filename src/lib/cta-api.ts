@@ -5,6 +5,7 @@
 // абсолютный URL, в браузере — относительный.
 import type { ItemProperties } from "@/db/schema";
 import type { PlayerProfile } from "@/store/usePlayerStore";
+import type { SocialPlatform } from "@/lib/auth/me";
 
 /* ───────────────── DTO (общая форма ответа API) ───────────────── */
 export interface CtaEftItem {
@@ -180,6 +181,16 @@ export async function changeUsername(username: string): Promise<AccountResult> {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username }),
+  });
+  return res.ok ? { ok: true } : { ok: false, error: await readError(res) };
+}
+
+// Привязать/отвязать соц-аккаунт (ручной хендл; пустой = отвязать).
+export async function changeSocial(platform: SocialPlatform, handle: string): Promise<AccountResult> {
+  const res = await fetch(`${baseUrl()}/api/account/social`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ platform, handle }),
   });
   return res.ok ? { ok: true } : { ok: false, error: await readError(res) };
 }
