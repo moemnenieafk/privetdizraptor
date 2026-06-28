@@ -34,11 +34,15 @@ export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, o
     <div className="relative flex items-center gap-3 px-3.5 h-14 bg-card-menu shrink-0 overflow-x-auto scrollbar-hidden">
       {/* Слева — поиск (top-left освобождён под выпадашку результатов) */}
       <div ref={anchorRef} className="relative flex flex-1 items-center gap-2">
-        <button type="button" onClick={onSearchToggle} title="Поиск (Ctrl+F)" className={searchBtnCls}>
-          <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
-        </button>
-        {searchOpen && (
-          <MapSearch markers={data.markers} quests={quests} apiRef={apiRef} anchorRef={anchorRef} onClose={onSearchClose} />
+        {!data.config.staticMap && (
+          <>
+            <button type="button" onClick={onSearchToggle} title="Поиск (Ctrl+F)" className={searchBtnCls}>
+              <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
+            </button>
+            {searchOpen && (
+              <MapSearch markers={data.markers} quests={quests} apiRef={apiRef} anchorRef={anchorRef} onClose={onSearchClose} />
+            )}
+          </>
         )}
       </div>
 

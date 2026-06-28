@@ -160,6 +160,8 @@ export function MapViewerClient({
   const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null }[]>([]);
   const svgGroupsRef = useRef<Map<string, SVGGElement> | null>(null);
   const activeFloorRef = useRef(activeFloor);
+  // Загрузчик подложки (для статичных мульти-этажных карт: смена этажа = смена SVG).
+  const loadImageRef = useRef<((url: string) => void) | null>(null);
 
   const [vis, setVis] = useState<Record<LayerKey, boolean>>({
     extract: true,
@@ -177,6 +179,8 @@ export function MapViewerClient({
   }, [data.markers]);
 
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
+  // Статичная карта (наш арт): только подложка + зум/пан, без маркер-UI (слои/фракция/легенда/поиск).
+  const isStatic = !!data.config.staticMap;
 
   // Применить этаж: затемнить чужие <g>-слои SVG + спрятать маркеры вне диапазона высоты.
   const applyFloor = useCallback(
@@ -236,19 +240,26 @@ export function MapViewerClient({
     // SVG-подложка живёт в DOM (инлайн-svgOverlay, не <img>) → <g>-группы этажей доступны
     // для затемнения/блюра. При сбое загрузки — фолбэк на растровый overlay (без этажей).
     let cancelledSvg = false;
-    if (cfg.bounds) {
-      const viewBounds = bb(cfg.bounds);
-      const imgBounds = cfg.svgBounds ? bb(cfg.svgBounds) : viewBounds;
-      map.setMaxBounds(scaledBounds(cfg.bounds, 1.5));
+    let overlay: L.Layer | null = null;
+    const imgBounds: L.LatLngBounds | null = cfg.bounds
+      ? cfg.svgBounds
+        ? bb(cfg.svgBounds)
+        : bb(cfg.bounds)
+      : null;
 
-      fetch(data.imageUrl)
+    // Грузит SVG-подложку инлайном (svgOverlay → <g>-группы этажей доступны для затемнения).
+    // Для статичных мульти-этажных карт вызывается повторно при смене этажа — меняет подложку.
+    const loadImage = (url: string) => {
+      if (!imgBounds || !mapRef.current) return;
+      fetch(url)
         .then((r) => r.text())
         .then((txt) => {
           if (cancelledSvg || !mapRef.current) return;
           const doc = new DOMParser().parseFromString(txt, 'image/svg+xml');
           const svgEl = doc.documentElement as unknown as SVGSVGElement;
           if (svgEl.nodeName.toLowerCase() !== 'svg') throw new Error('bad svg');
-          L.svgOverlay(svgEl, imgBounds, { interactive: false, className: 'cta-map-svg' }).addTo(map);
+          if (overlay) overlay.remove();
+          overlay = L.svgOverlay(svgEl, imgBounds, { interactive: false, className: 'cta-map-svg' }).addTo(map);
           const gmap = new Map<string, SVGGElement>();
           for (const fl of floors) {
             if (!fl.svgLayer) continue;
@@ -263,10 +274,16 @@ export function MapViewerClient({
         })
         .catch(() => {
           if (cancelledSvg || !mapRef.current) return;
-          L.imageOverlay(data.imageUrl, imgBounds, { interactive: false, className: 'cta-map-svg' }).addTo(map);
+          if (overlay) overlay.remove();
+          overlay = L.imageOverlay(url, imgBounds, { interactive: false, className: 'cta-map-svg' }).addTo(map);
         });
+    };
+    loadImageRef.current = loadImage;
 
-      map.fitBounds(viewBounds);
+    if (cfg.bounds) {
+      map.setMaxBounds(scaledBounds(cfg.bounds, 1.5));
+      if (!isStatic) loadImage(data.imageUrl); // статичная карта: подложку грузит эффект этажа
+      map.fitBounds(bb(cfg.bounds));
     }
 
     // слои маркеров
@@ -307,7 +324,10 @@ export function MapViewerClient({
     }
 
     map.on('click', () => setSel(null));
-    requestAnimationFrame(() => map.invalidateSize());
+    // Гард от StrictMode-гонки: rAF мог сработать уже после размонтирования (map.remove()).
+    requestAnimationFrame(() => {
+      if (mapRef.current === map) map.invalidateSize();
+    });
     applyFloorRef.current(activeFloorRef.current); // первичный фильтр маркеров по этажу
 
     // Императивный API для фрейма (поиск, перелёт/подсветка зоны квеста).
@@ -339,10 +359,18 @@ export function MapViewerClient({
       highlightRef.current = null;
       svgGroupsRef.current = null;
       markersRef.current = [];
+      loadImageRef.current = null;
       map.remove();
       mapRef.current = null;
     };
-  }, [data, onReady, floors]);
+  }, [data, onReady, floors, isStatic]);
+
+  // Статичная мульти-этажная карта: у каждого этажа своя SVG-подложка → смена этажа меняет overlay.
+  useEffect(() => {
+    if (!isStatic) return;
+    const url = floors[activeFloor]?.image ?? data.imageUrl;
+    if (url) loadImageRef.current?.(url);
+  }, [activeFloor, isStatic, floors, data.imageUrl]);
 
   const rootCls = [
     'cta-map-root absolute inset-0 overflow-hidden bg-(--color-base)',
@@ -368,6 +396,8 @@ export function MapViewerClient({
     <div className={rootCls}>
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
+      {!isStatic && (
+        <>
       {/* Правый верх: переключение спавнов (Все/ЧВК/Дикие) над панелью слоёв */}
       <div className="absolute top-3 right-3 z-[500] flex flex-col items-end gap-2">
         {/* Фракция — фильтр выходов/спавнов по стороне */}
@@ -435,6 +465,8 @@ export function MapViewerClient({
           </div>
         </div>
       ) : null}
+        </>
+      )}
 
       {/* Зум + атрибуция */}
       <div className="absolute right-3 bottom-3 z-[500] flex flex-col items-end gap-2">

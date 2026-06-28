@@ -390,8 +390,10 @@ export async function syncEftMapsGeometry(): Promise<SyncMapsResult> {
           mapId: m.id,
           gameId,
           normalizedName: m.normalizedName,
-          imageKey: cfg?.svgFile ? `maps/eft/${m.normalizedName}.svg` : null,
-          imageFormat: cfg?.svgFile ? "svg" : null,
+          // Статичные карты (наш арт в /public) НЕ зеркалятся в Storage → imageKey null,
+          // чтобы они не попадали в БД-индекс интерактивных карт (рендерятся отдельной веткой).
+          imageKey: cfg?.svgFile && !cfg.staticMap ? `maps/eft/${m.normalizedName}.svg` : null,
+          imageFormat: cfg?.svgFile && !cfg.staticMap ? "svg" : null,
           author: cfg?.author ?? null,
           authorLink: cfg?.authorLink ?? null,
           raidDuration: m.raidDuration ?? null,

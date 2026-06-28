@@ -216,7 +216,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         iconUrl: '/icons/eft/maps-icon.svg',
         path: '/eft/maps',
         children: [
-          { id: 'lab', label: 'ЛАБОРАТОРИЯ', iconUrl: '/icons/eft/01-maps/lab-map-icon.svg', path: '/eft/maps/lab' },
+          { id: 'lab', label: 'ЛАБОРАТОРИЯ', iconUrl: '/icons/eft/01-maps/lab-map-icon.svg', path: '/eft/maps/the-lab' },
           { id: 'groundzero', label: 'ЭПИЦЕНТР', iconUrl: '/icons/eft/01-maps/groundzero-map-icon.svg', path: '/eft/maps/groundzero' },
           { id: 'streets', label: 'УЛИЦЫ ТАРКОВА', iconUrl: '/icons/eft/01-maps/streets-map-icon.svg', path: '/eft/maps/streets' },
           { id: 'interchange', label: 'РАЗВЯЗКА', iconUrl: '/icons/eft/01-maps/interchange-map-icon.svg', path: '/eft/maps/interchange' },
