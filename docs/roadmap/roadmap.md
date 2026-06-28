@@ -11,7 +11,7 @@ type: roadmap
 - Эпик [[fix-maps]] разбит на 7 подзадач; первая волна — [[maps-ui-fixes]] (быстрые UI-фиксы).
 
 ## Ближайшее (разблокировать / закрыть)
-1. 🔴 [[supabase-jwt-fix]] — снять блокер аккаунта.
+1. ✅ ~~[[supabase-jwt-fix]]~~ — решено архитектурно (service-role роуты + Drizzle, не client-RLS), 2026-06-28.
 2. ✅ ~~[[claude-md-version]] — выровнять CLAUDE.md под Next 16.~~ сделано 2026-06-28
 3. [[style-debt]] — закрыть стиль-долг (быстрая победа). · ✅ ~~[[dead-routes-cleanup]]~~ почищено 2026-06-28
 
