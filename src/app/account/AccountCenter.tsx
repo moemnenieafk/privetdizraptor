@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
-import { changeEmail, changeSocial, changeUsername, uploadAvatar } from '@/lib/cta-api';
+import { changeEmail, changeSocial, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 
@@ -700,6 +700,64 @@ function PlanView({ onBack }: { onBack: () => void }) {
 
 // ─── Tab panels ───────────────────────────────────────────────────────────────
 
+// Сброс прогресса по игре. 2-кликовый confirm (необратимо): клик → «Точно?» → сброс.
+// Чистит БД (route) + localStorage-сторы прогресса + reload — иначе localStorage вернёт прогресс.
+const PROGRESS_KEYS = ['cta-quest-progress', 'cta-barter-gamification', 'cta-hideout', 'player-profile-storage'];
+
+function GameResetCard({ game }: { game: (typeof GAMES)[number] }) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  const onReset = async () => {
+    if (busy) return;
+    if (!confirming) {
+      setConfirming(true);
+      timer.current = setTimeout(() => setConfirming(false), 4000);
+      return;
+    }
+    setBusy(true);
+    const r = await resetCtaProgress();
+    if (r.ok) {
+      PROGRESS_KEYS.forEach((k) => localStorage.removeItem(k));
+      window.location.reload();
+      return;
+    }
+    setBusy(false);
+    setConfirming(false);
+  };
+
+  return (
+    <div className="flex w-52 flex-col gap-3 rounded border border-lines-hover bg-(--color-base) p-4">
+      <div className="flex h-10 items-center justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={game.logo}
+          alt={game.title}
+          className="max-h-full w-auto object-contain opacity-70"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+            const next = e.currentTarget.nextElementSibling as HTMLElement | null;
+            if (next) next.style.removeProperty('display');
+          }}
+        />
+        <span className="hidden font-blender-medium text-xs uppercase tracking-widest text-text-muted">
+          {game.title}
+        </span>
+      </div>
+      <RowBtn
+        label={busy ? 'Сброс…' : confirming ? 'Точно сбросить?' : 'Сброс прогресса'}
+        variant="danger"
+        onClick={onReset}
+      />
+      <p className="font-blender-book text-type-caption leading-relaxed text-text-muted opacity-70">
+        Внимание! После сброса данные нельзя восстановить. Прогресс ЧВК: задания, бартер, настройки в игре.
+      </p>
+    </div>
+  );
+}
+
 function ProfilePanel({ onNavigate, me, stats }: { onNavigate: (v: ViewId) => void; me: Me; stats: AccountStats }) {
   const profiles = usePlayerStore((s) => s.profiles);
   const activeProfileId = usePlayerStore((s) => s.activeProfileId);
@@ -794,31 +852,7 @@ function ProfilePanel({ onNavigate, me, stats }: { onNavigate: (v: ViewId) => vo
         </p>
         <div className="flex flex-wrap gap-4">
           {GAMES.map((game) => (
-            <div
-              key={game.id}
-              className="flex w-52 flex-col gap-3 rounded border border-lines-hover bg-(--color-base) p-4"
-            >
-              <div className="flex h-10 items-center justify-center">
-                { }
-                <img
-                  src={game.logo}
-                  alt={game.title}
-                  className="max-h-full w-auto object-contain opacity-70"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const next = e.currentTarget.nextElementSibling as HTMLElement | null;
-                    if (next) next.style.removeProperty('display');
-                  }}
-                />
-                <span className="hidden font-blender-medium text-xs uppercase tracking-widest text-text-muted">
-                  {game.title}
-                </span>
-              </div>
-              <RowBtn label="Сброс прогресса" variant="danger" />
-              <p className="font-blender-book text-type-caption leading-relaxed text-text-muted opacity-70">
-                Внимание! После сброса данные нельзя восстановить. Прогресс ЧВК: задания, бартер, настройки в игре.
-              </p>
-            </div>
+            <GameResetCard key={game.id} game={game} />
           ))}
         </div>
       </div>

@@ -222,3 +222,9 @@ export async function uploadAvatar(file: Blob): Promise<AccountResult & { url?: 
   const json = (await res.json().catch(() => null)) as { url?: string } | null;
   return { ok: true, url: json?.url };
 }
+
+// Сбросить ВЕСЬ прогресс ЧВК (EFT) текущего юзера. Необратимо (чистит quest/barter/profiles).
+export async function resetCtaProgress(): Promise<AccountResult> {
+  const res = await fetch(`${baseUrl()}/api/account/reset-progress`, { method: "POST" });
+  return res.ok ? { ok: true } : { ok: false, error: await readError(res) };
+}
