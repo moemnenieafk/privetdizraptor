@@ -161,6 +161,8 @@ export interface EftPriceIndexInfo {
   normalizedName: string;
   types?: string[];
   lastLowPrice?: number;
+  avg24hPrice?: number;
+  changeLast48hPercent?: number;
   backgroundColor?: string;
   bsgCategoryId?: string;
 }
@@ -175,6 +177,8 @@ export async function getEftPriceIndex(): Promise<Map<string, EftPriceIndexInfo>
           normalizedName: prices.normalizedName,
           types: prices.types,
           lastLowPrice: prices.lastLowPrice,
+          avg24hPrice: prices.avg24hPrice,
+          changeLast48hPercent: prices.changeLast48hPercent,
           backgroundColor: prices.backgroundColor,
           bsgCategoryId: prices.bsgCategoryId,
         })
@@ -188,6 +192,8 @@ export async function getEftPriceIndex(): Promise<Map<string, EftPriceIndexInfo>
           normalizedName: r.normalizedName ?? "",
           types: r.types ?? undefined,
           lastLowPrice: r.lastLowPrice ?? undefined,
+          avg24hPrice: r.avg24hPrice ?? undefined,
+          changeLast48hPercent: r.changeLast48hPercent ?? undefined,
           backgroundColor: r.backgroundColor ?? undefined,
           bsgCategoryId: r.bsgCategoryId ?? undefined,
         },

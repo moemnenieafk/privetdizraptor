@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { items } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
-import { getEftPriceMapFromDb } from "@/db/prices";
+import { getEftPriceIndex } from "@/db/prices";
 import { getEftTraders } from "@/db/landing";
 
 export type FleaItem = {
@@ -25,16 +25,16 @@ export type TarkovContextData = {
 export async function fetchTarkovContext(): Promise<TarkovContextData> {
   try {
     const gameId = await eftGameId();
-    const [itemRows, priceMap, traderRows] = await Promise.all([
+    const [itemRows, priceIndex, traderRows] = await Promise.all([
       db.select({ inGameId: items.inGameId, name: items.name }).from(items).where(eq(items.gameId, gameId)),
-      getEftPriceMapFromDb(),
+      getEftPriceIndex(),
       getEftTraders(),
     ]);
     const nameMap = new Map(itemRows.map((r) => [r.inGameId, r.name]));
 
-    // Тикер барахолки — топ по абсолютному изменению за 48ч
+    // Тикер барахолки — топ по абсолютному изменению за 48ч (лёгкий индекс, без sellFor)
     const flea: FleaItem[] = [];
-    for (const [id, px] of priceMap) {
+    for (const [id, px] of priceIndex) {
       if (px.avg24hPrice == null || px.avg24hPrice <= 0 || px.changeLast48hPercent == null) continue;
       flea.push({ name: nameMap.get(id) ?? id, avg24hPrice: px.avg24hPrice, changeLast48hPercent: px.changeLast48hPercent });
     }
