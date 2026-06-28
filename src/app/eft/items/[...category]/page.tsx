@@ -13,6 +13,26 @@ interface Props {
   params: Promise<{ category: string[] }>;
 }
 
+// ISR: категории пререндерятся (см. generateStaticParams), цены освежаются раз в час.
+// Рантайм-чтение прайс-карты (5.5 МБ) убрано — на билде memoTTL читает её один раз на все
+// категории; на проде страница отдаётся статикой. dynamicParams=true (дефолт) → редкие
+// непрописанные пути всё равно отрендерятся on-demand.
+export const revalidate = 3600;
+
+// Пререндер всех путей категорий из меню EFT (иначе catch-all рендерится динамически).
+export function generateStaticParams(): { category: string[] }[] {
+  const PREFIX = '/eft/items/';
+  const out: { category: string[] }[] = [];
+  const walk = (nodes: MenuItem[]) => {
+    for (const n of nodes) {
+      if (n.path && n.path.startsWith(PREFIX)) out.push({ category: n.path.slice(PREFIX.length).split('/') });
+      if (n.children) walk(n.children);
+    }
+  };
+  walk(HEADER_DICTIONARY['eft'].menuItems);
+  return out;
+}
+
 // Рекурсивный поиск узла в дереве меню
 function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null {
   for (const item of items) {

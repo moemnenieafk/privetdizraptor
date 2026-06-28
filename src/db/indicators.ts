@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./index";
 import { barters, crafts, items, prices } from "./schema";
 import { eftGameId } from "./eft";
+import { memoTTL } from "../lib/server-cache";
 import { itemIconUrl } from "../lib/item-icon";
 import {
   buildBarterData,
@@ -36,9 +37,14 @@ const EMPTY: DbIndicators = {
   gpCoinBarters: {},
 };
 
+// In-memory кэш: на билде 76 категорий читают индикаторы (вкл. sellFor/buyFor всех, ~5.5 МБ)
+// 1 раз, не 76× — иначе пререндер = сотни МБ билд-egress. На проде — per-instance TTL (1ч).
+const INDICATORS_TTL_MS = 60 * 60 * 1000;
+
 /** Бартер/крафт/GP-индикаторы из нашей БД. Никогда не бросает (пустые карты при сбое). */
 export async function getEftIndicatorsFromDb(): Promise<DbIndicators> {
   try {
+    return await memoTTL("eft-indicators", INDICATORS_TTL_MS, async () => {
     const gameId = await eftGameId();
     const [barterRows, craftRows, itemRows, priceRows] = await Promise.all([
       db.select().from(barters).where(eq(barters.gameId, gameId)),
@@ -135,6 +141,7 @@ export async function getEftIndicatorsFromDb(): Promise<DbIndicators> {
     }
 
     return { barterDataMap, barterUnlockMap, craftDataMap, gpCoinBarters };
+    });
   } catch (e) {
     console.error("[getEftIndicatorsFromDb]", e);
     return EMPTY;

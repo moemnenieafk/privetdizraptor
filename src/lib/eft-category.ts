@@ -12,6 +12,7 @@ import { itemIconUrl } from "@/lib/item-icon";
 import type { CtaVendorOffer } from "@/lib/eft-prices";
 import type { CategoryItem } from "@/app/eft/items/[...category]/ItemsCategoryClient";
 import { EFT_QUESTS } from "@/data/quests";
+import { memoTTL } from "@/lib/server-cache";
 
 interface EnrichedItem {
   id: string;
@@ -31,7 +32,12 @@ interface EnrichedItem {
 }
 
 /* ───────────────── обогащённый каталог из нашей БД ───────────────── */
+// In-memory кэш: на билде 76 категорий читают каталог+цены 1 раз (дедуп), не 76× —
+// иначе пререндер = сотни МБ билд-egress. На проде — per-instance TTL (1ч).
+const ENRICHED_TTL_MS = 60 * 60 * 1000;
+
 async function loadEnriched(): Promise<EnrichedItem[]> {
+  return memoTTL("eft-enriched-catalog", ENRICHED_TTL_MS, async () => {
   const gameId = await eftGameId();
   const [rows, priceMap] = await Promise.all([
     db
@@ -69,6 +75,7 @@ async function loadEnriched(): Promise<EnrichedItem[]> {
       sellFor: px?.sellFor ?? [],
       buyFor: px?.buyFor ?? [],
     };
+  });
   });
 }
 
