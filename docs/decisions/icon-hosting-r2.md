@@ -1,11 +1,12 @@
 ---
-status: 🟡 в процессе
+status: ✅ сделано
 affects: icons, infra, egress
 date: 2026-06-28
+done: 2026-06-28
 ---
 # Иконки предметов → Cloudflare R2 (уход от egress Supabase)
 
-**Статус:** 🟡 код + заливка готовы, ждёт прод-переключения (Vercel env)
+**Статус:** ✅ сделано (2026-06-28) — прод раздаёт 5044 иконки с R2 (5044/5044, 0 с Supabase), egress-источник закрыт. Коммит `ddd1e70`.
 **Затрагивает:** `src/lib/item-icon.ts` · `scripts/upload-icons-r2.ts` · Supabase Storage · Cloudflare R2
 
 ## Контекст
@@ -24,10 +25,12 @@ date: 2026-06-28
 - **Заливка:** `scripts/upload-icons-r2.ts` (`npm run db:upload-icons-r2`) — sharp-пережатие на лету + PutObject в R2 (`cta-media/items/eft/{id}.webp`) с `Cache-Control: public, max-age=31536000, immutable`. Бакет публичный через `r2.dev`.
 - **URL:** `itemIconUrl()` берёт базу из `NEXT_PUBLIC_ICON_BASE_URL` (R2). Фолбэк → Supabase `cta-media` → локальный `/public`. Переключение = одна env-переменная, обратимо.
 
-## Осталось (V4DYA)
-- [ ] Добавить `NEXT_PUBLIC_ICON_BASE_URL=https://pub-0969…r2.dev` в **Vercel env** (Production+Preview) → **redeploy**.
-- [ ] Проверить прод: иконки грузятся с `pub-…r2.dev`, egress Supabase падает.
-- [ ] (Позже) почистить иконки в Supabase Storage, если R2 стабилен — освободить место/трафик.
+## Сделано на проде
+- [x] `NEXT_PUBLIC_ICON_BASE_URL` в Vercel env + redeploy (V4DYA).
+- [x] Прод проверен: 5044/5044 иконок с `pub-…r2.dev`, 0 с Supabase.
+
+## Осталось (позже, без спешки)
+- [ ] Почистить иконки в Supabase Storage, когда убедимся, что R2 стабилен — освободить место/трафик.
 
 ## Бэклог
 - Кастомный домен для R2 вместо `r2.dev` (когда будет домен проекта) — `r2.dev` rate-limited, для прод-нагрузки лучше свой CDN-домен.
