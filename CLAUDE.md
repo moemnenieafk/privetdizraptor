@@ -14,9 +14,10 @@ Consult before planning architecture or styling:
 - `CHANGELOG.md` — historical context
 
 ## 3. TECH STACK
-- **Framework:** Next.js 14 (App Router). Default to Server Components.
-- **State:** Zustand — strictly in `src/store/`
+- **Framework:** Next.js 16 (App Router, React 19 + react-compiler). Default to Server Components.
+- **State:** Zustand 5 — strictly in `src/store/`
 - **Styling:** Tailwind CSS v4
+- **Backend:** Drizzle ORM + Postgres/Supabase (auth/storage/db) — см. правило BACKEND AUTONOMY (§4.11) и скилл `cta-backend`.
 - **Architecture (FSD-lite):**
   - `src/components/ui/` — dumb atoms, no client state
   - `src/components/features/` — smart logic, Zustand allowed

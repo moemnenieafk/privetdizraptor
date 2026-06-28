@@ -10,7 +10,7 @@ version: v0.2.0
 CTA — портал-агрегатор для хардкорных extraction-шутеров. Сейчас один гейм — **Escape from Tarkov (EFT)**; архитектура и БД заложены мультигейминговыми (`games` + catch-all `[game]`).
 
 ## Стек (фактический)
-- **Next.js 16.2.7** (App Router, RSC по умолчанию) — ⚠️ не 14, как в CLAUDE.md
+- **Next.js 16.2.7** (App Router, RSC по умолчанию) — ✅ синхронно с CLAUDE.md (2026-06-28)
 - **React 19.2.7** + `babel-plugin-react-compiler` (компилятор включён)
 - **Tailwind CSS v4** (`@tailwindcss/postcss`)
 - **Zustand 5** — 9 сторов
@@ -38,7 +38,7 @@ CTA — портал-агрегатор для хардкорных extraction-�
 
 ## Техдолг
 - 🔴 **Supabase JWT ES256** — asymmetric user-токены не валидируются Storage/PostgREST → `auth.uid()=NULL` → RLS режет аватар. Фикс: переключить JWT Keys в Supabase Dashboard.
-- CLAUDE.md устарел по версии (Next 14 → 16)
+- ~~CLAUDE.md устарел по версии (Next 14 → 16)~~ ✅ закрыто 2026-06-28 ([[claude-md-version]])
 - Живые цены flea — единственная рантайм-зависимость от tarkov.dev (только в кроне; на страницах вызовов быть не должно — правило BACKEND AUTONOMY)
 - Мёртвые route-папки · захардкоженные данные AccountCenter · стиль-долг · дубликат хука
 - `db:push --force` — опасная необратимая операция, владелец схемы = одна сессия
