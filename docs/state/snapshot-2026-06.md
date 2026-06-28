@@ -28,11 +28,11 @@ CTA — портал-агрегатор для хардкорных extraction-�
 
 ## Заглушки ⛔
 - `SectionPlaceholder`/`PlaceholderPage` в 7 местах
-- Пустые route-папки без `page.tsx`: `eft/ammo`, `eft/crafts`, 11× `eft/maps/{customs…woods}`
+- ~~Пустые route-папки: `eft/ammo`, `eft/crafts`, 11× `eft/maps/{customs…woods}`~~ ✅ снесены 2026-06-28 ([[dead-routes-cleanup]])
 - `AccountCenter` — захардкоженные даты активности и соц-привязки
 
 ## Отклонения от правил
-**FSD-lite:** `PlaceholderPage.tsx` и `useIntersectionObserver.ts` в корне `components/` · дубликат хука (`hooks/` + `components/`) · page-компоненты колоцированы в `app/` · CSS раздроблён (`icons.css` + `data/globals.css`) · `graphify-out/` попал в `src/`.
+**FSD-lite:** `PlaceholderPage.tsx` и `useIntersectionObserver.ts` в корне `components/` · дубликат хука (`hooks/` + `components/`) · page-компоненты колоцированы в `app/` · CSS раздроблён (`icons.css` + `data/globals.css`).
 
 **NIGHTFALL:** `any` — 8 шт / 4 файла · `font-mono` — 7 файлов (должно быть `font-blender-medium`) · сырой HEX в Tailwind-классах (`bg-[#9146FF]/10` и т.п.) · `rounded-[Npx]` — 6 шт (должно быть `rounded-xs`). ✅ v3-синтаксиса (`bg-gradient-to-*`, `bg-[var(--token)]`) нет.
 
@@ -40,7 +40,7 @@ CTA — портал-агрегатор для хардкорных extraction-�
 - 🔴 **Supabase JWT ES256** — asymmetric user-токены не валидируются Storage/PostgREST → `auth.uid()=NULL` → RLS режет аватар. Фикс: переключить JWT Keys в Supabase Dashboard.
 - ~~CLAUDE.md устарел по версии (Next 14 → 16)~~ ✅ закрыто 2026-06-28 ([[claude-md-version]])
 - Живые цены flea — единственная рантайм-зависимость от tarkov.dev (только в кроне; на страницах вызовов быть не должно — правило BACKEND AUTONOMY)
-- Мёртвые route-папки · захардкоженные данные AccountCenter · стиль-долг · дубликат хука
+- Захардкоженные данные AccountCenter · стиль-долг · дубликат хука
 - `db:push --force` — опасная необратимая операция, владелец схемы = одна сессия
 
 ## Точки входа (для ассистента)

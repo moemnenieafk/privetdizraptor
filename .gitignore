@@ -70,3 +70,6 @@ ds-bundle/
 public/images/items/frago/
 # Отчёты find-missing (tsv/json выгрузки) — генерятся, в репо не держим.
 /scripts/reports/
+
+# graphify — генерируемый граф кода (корневой = живой, src/ = старый артефакт). Не версионируем.
+graphify-out/
