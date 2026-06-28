@@ -7,7 +7,7 @@
 // getEftPriceMapFromDb() — чистое чтение нашей таблицы `prices`.
 //
 // Импорты относительные (не @/), чтобы модуль грузился и под tsx-скриптом.
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, inArray } from "drizzle-orm";
 import { db } from "./index";
 import { prices } from "./schema";
 import { eftGameId } from "./eft";
@@ -73,6 +73,23 @@ export async function syncEftPrices(): Promise<SyncResult> {
  * Карта inGameId → экономика/мета из НАШЕЙ таблицы `prices` (чтение, рантайм).
  * Никогда не бросает: пустая Map → список рендерится из каталога без цен.
  */
+// Строка таблицы prices → EftPriceInfo (единый маппер для всех чтений — DRY).
+function mapPriceRow(r: typeof prices.$inferSelect): EftPriceInfo {
+  return {
+    normalizedName: r.normalizedName ?? "",
+    bsgCategoryId: r.bsgCategoryId ?? undefined,
+    backgroundColor: r.backgroundColor ?? undefined,
+    types: r.types ?? undefined,
+    lastLowPrice: r.lastLowPrice ?? undefined,
+    avg24hPrice: r.avg24hPrice ?? undefined,
+    changeLast48hPercent: r.changeLast48hPercent ?? undefined,
+    low24hPrice: r.low24hPrice ?? undefined,
+    high24hPrice: r.high24hPrice ?? undefined,
+    sellFor: (r.sellFor ?? []) as CtaVendorOffer[],
+    buyFor: (r.buyFor ?? []) as CtaVendorOffer[],
+  };
+}
+
 // 1ч — совпадает с почасовым крон-синком цен; ≤1ч «несвежесть» приемлема.
 const PRICES_TTL_MS = 60 * 60 * 1000;
 
@@ -82,26 +99,102 @@ export async function getEftPriceMapFromDb(): Promise<Map<string, EftPriceInfo>>
       const gameId = await eftGameId();
       return db.select().from(prices).where(eq(prices.gameId, gameId));
     });
+    return new Map(rows.map((r) => [r.inGameId, mapPriceRow(r)]));
+  } catch (e) {
+    console.error("[getEftPriceMapFromDb]", e);
+    return new Map();
+  }
+}
+
+/** Цены по конкретным id (WHERE inGameId IN ...) — лёгкая выборка вместо всей таблицы. */
+export async function getEftPricesByIds(ids: string[]): Promise<Map<string, EftPriceInfo>> {
+  if (ids.length === 0) return new Map();
+  try {
+    const gameId = await eftGameId();
+    const uniq = [...new Set(ids)];
+    const rows = await db
+      .select()
+      .from(prices)
+      .where(and(eq(prices.gameId, gameId), inArray(prices.inGameId, uniq)));
+    return new Map(rows.map((r) => [r.inGameId, mapPriceRow(r)]));
+  } catch (e) {
+    console.error("[getEftPricesByIds]", e);
+    return new Map();
+  }
+}
+
+/** Цены всех предметов одной BSG-категории — для блока «похожие предметы» (выборка по категории). */
+export async function getEftPricesByCategory(bsgCategoryId: string): Promise<Map<string, EftPriceInfo>> {
+  try {
+    const gameId = await eftGameId();
+    const rows = await db
+      .select()
+      .from(prices)
+      .where(and(eq(prices.gameId, gameId), eq(prices.bsgCategoryId, bsgCategoryId)));
+    return new Map(rows.map((r) => [r.inGameId, mapPriceRow(r)]));
+  } catch (e) {
+    console.error("[getEftPricesByCategory]", e);
+    return new Map();
+  }
+}
+
+/** slug (normalizedName) → { id, цена } одним запросом — для детали (без скана всей карты). */
+export async function getEftPriceBySlug(
+  slug: string,
+): Promise<{ id: string; price: EftPriceInfo } | null> {
+  try {
+    const gameId = await eftGameId();
+    const [row] = await db
+      .select()
+      .from(prices)
+      .where(and(eq(prices.gameId, gameId), eq(prices.normalizedName, slug)))
+      .limit(1);
+    return row ? { id: row.inGameId, price: mapPriceRow(row) } : null;
+  } catch (e) {
+    console.error("[getEftPriceBySlug]", e);
+    return null;
+  }
+}
+
+/** Лёгкий индекс (без sellFor/buyFor) по всем предметам — для корпуса поиска. ~0.5 МБ, in-memory кэш. */
+export interface EftPriceIndexInfo {
+  normalizedName: string;
+  types?: string[];
+  lastLowPrice?: number;
+  backgroundColor?: string;
+  bsgCategoryId?: string;
+}
+
+export async function getEftPriceIndex(): Promise<Map<string, EftPriceIndexInfo>> {
+  try {
+    const rows = await memoTTL("eft-price-index", PRICES_TTL_MS, async () => {
+      const gameId = await eftGameId();
+      return db
+        .select({
+          inGameId: prices.inGameId,
+          normalizedName: prices.normalizedName,
+          types: prices.types,
+          lastLowPrice: prices.lastLowPrice,
+          backgroundColor: prices.backgroundColor,
+          bsgCategoryId: prices.bsgCategoryId,
+        })
+        .from(prices)
+        .where(eq(prices.gameId, gameId));
+    });
     return new Map(
       rows.map((r) => [
         r.inGameId,
         {
           normalizedName: r.normalizedName ?? "",
-          bsgCategoryId: r.bsgCategoryId ?? undefined,
-          backgroundColor: r.backgroundColor ?? undefined,
           types: r.types ?? undefined,
           lastLowPrice: r.lastLowPrice ?? undefined,
-          avg24hPrice: r.avg24hPrice ?? undefined,
-          changeLast48hPercent: r.changeLast48hPercent ?? undefined,
-          low24hPrice: r.low24hPrice ?? undefined,
-          high24hPrice: r.high24hPrice ?? undefined,
-          sellFor: (r.sellFor ?? []) as CtaVendorOffer[],
-          buyFor: (r.buyFor ?? []) as CtaVendorOffer[],
-        } satisfies EftPriceInfo,
+          backgroundColor: r.backgroundColor ?? undefined,
+          bsgCategoryId: r.bsgCategoryId ?? undefined,
+        },
       ]),
     );
   } catch (e) {
-    console.error("[getEftPriceMapFromDb]", e);
+    console.error("[getEftPriceIndex]", e);
     return new Map();
   }
 }

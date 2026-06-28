@@ -3,7 +3,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { items, itemProperties, prices, barters, crafts } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
-import { getEftPriceMapFromDb } from '@/db/prices';
+import { getEftPriceBySlug, getEftPricesByIds, getEftPricesByCategory } from '@/db/prices';
 import { itemIconUrl } from '@/lib/item-icon';
 import { EFT_QUESTS } from '@/data/quests';
 import { BreadcrumbsSetter } from '@/components/features/items/BreadcrumbsSetter';
@@ -210,15 +210,12 @@ interface DetailData {
 
 async function getEftItemDetail(slug: string): Promise<DetailData | null> {
   const gameId = await eftGameId();
-  const priceMap = await getEftPriceMapFromDb();
 
-  // slug = normalizedName → inGameId
-  let mainId: string | undefined;
-  for (const [id, p] of priceMap) {
-    if (p.normalizedName === slug) { mainId = id; break; }
-  }
-  if (!mainId) return null;
-  const px = priceMap.get(mainId)!;
+  // slug = normalizedName → inGameId + цена главного предмета (без скана всей карты 5.5 МБ)
+  const main = await getEftPriceBySlug(slug);
+  if (!main) return null;
+  const mainId = main.id;
+  const px = main.price;
 
   const [base] = await db
     .select({
@@ -243,6 +240,20 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     db.select().from(barters).where(eq(barters.gameId, gameId)),
     db.select().from(crafts).where(eq(crafts.gameId, gameId)),
   ]);
+
+  // Лёгкие поля (фон/normalizedName) нужны только для предметов, участвующих в бартерах/
+  // крафтах ЭТОГО предмета — собираем их id и берём цены по id (не всю таблицу 5.5 МБ).
+  const slotIds = new Set<string>([mainId]);
+  const addSlots = (req: { itemId: string }[], rew: { itemId: string }[]) => {
+    if (req.some((s) => s.itemId === mainId) || rew.some((s) => s.itemId === mainId)) {
+      for (const s of req) slotIds.add(s.itemId);
+      for (const s of rew) slotIds.add(s.itemId);
+    }
+  };
+  for (const b of barterRows) addSlots(b.requiredItems, b.rewardItems);
+  for (const c of craftRows) addSlots(c.requiredItems, c.rewardItems);
+  const priceMap = await getEftPricesByIds([...slotIds]);
+
   const slotItem = (id: string) => {
     const i = itemInfo.get(id);
     return {
@@ -355,9 +366,9 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
   // Похожие предметы (та же BSG-категория)
   let similar: EftItemData[] = [];
   if (px.bsgCategoryId) {
-    const simIds = [...priceMap.entries()]
-      .filter(([id, p]) => p.bsgCategoryId === px.bsgCategoryId && id !== mainId)
-      .map(([id]) => id);
+    const simPrices = await getEftPricesByCategory(px.bsgCategoryId);
+    simPrices.delete(mainId);
+    const simIds = [...simPrices.keys()];
     if (simIds.length) {
       const propRows = await db
         .select({ inGameId: items.inGameId, propertiesRaw: itemProperties.propertiesRaw })
@@ -367,7 +378,7 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
       const propsById = new Map(propRows.map((r) => [r.inGameId, r.propertiesRaw]));
       const sims: SimItemRaw[] = simIds
         .map((id) => {
-          const p = priceMap.get(id)!;
+          const p = simPrices.get(id)!;
           const i = itemInfo.get(id);
           return {
             id,

@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { items } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
-import { getEftPriceMapFromDb } from '@/db/prices';
+import { getEftPriceIndex, getEftPricesByIds } from '@/db/prices';
 import { itemIconUrl } from '@/lib/item-icon';
 import { searchItems } from '@/lib/search-engine';
 import { EFT_QUESTS } from '@/data/quests';
@@ -27,16 +27,16 @@ export async function searchEftItemsAction(query: string): Promise<SearchItemRes
 
   // Каталог и цены — из НАШЕЙ Supabase (рантайм без api.tarkov.dev).
   const gameId = await eftGameId();
-  const [itemRows, priceMap] = await Promise.all([
+  const [itemRows, priceIndex] = await Promise.all([
     db
       .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName, width: items.gridWidth, height: items.gridHeight })
       .from(items)
       .where(eq(items.gameId, gameId)),
-    getEftPriceMapFromDb(),
+    getEftPriceIndex(),
   ]);
 
   const eftItems: EftItem[] = itemRows.map((r) => {
-    const px = priceMap.get(r.inGameId);
+    const px = priceIndex.get(r.inGameId);
     return {
       id: r.inGameId,
       normalizedName: px?.normalizedName ?? '',
@@ -55,8 +55,11 @@ export async function searchEftItemsAction(query: string): Promise<SearchItemRes
   const top = searchItems(eftItems, query).slice(0, 12);
   if (top.length === 0) return [];
 
+  // Тяжёлые sellFor нужны только для показанных 12 — берём по id, а не всю таблицу.
+  const sellMap = await getEftPricesByIds(top.map((it) => it.id));
+
   return top.map((it): SearchItemResult => {
-    const sells: CtaVendorOffer[] = priceMap.get(it.id)?.sellFor ?? [];
+    const sells: CtaVendorOffer[] = sellMap.get(it.id)?.sellFor ?? [];
 
     const traderSells = sells.filter((s) => !isFlea(s.vendor) && rubVal(s) > 0);
     const bestTrader = traderSells.length
