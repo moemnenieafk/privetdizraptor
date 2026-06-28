@@ -12,6 +12,7 @@ import { db } from "./index";
 import { prices } from "./schema";
 import { eftGameId } from "./eft";
 import { getEftPriceMap, type EftPriceInfo, type CtaVendorOffer } from "../lib/eft-prices";
+import { memoTTL } from "../lib/server-cache";
 
 export interface SyncResult {
   items: number;
@@ -72,10 +73,15 @@ export async function syncEftPrices(): Promise<SyncResult> {
  * Карта inGameId → экономика/мета из НАШЕЙ таблицы `prices` (чтение, рантайм).
  * Никогда не бросает: пустая Map → список рендерится из каталога без цен.
  */
+// 1ч — совпадает с почасовым крон-синком цен; ≤1ч «несвежесть» приемлема.
+const PRICES_TTL_MS = 60 * 60 * 1000;
+
 export async function getEftPriceMapFromDb(): Promise<Map<string, EftPriceInfo>> {
   try {
-    const gameId = await eftGameId();
-    const rows = await db.select().from(prices).where(eq(prices.gameId, gameId));
+    const rows = await memoTTL("eft-price-rows", PRICES_TTL_MS, async () => {
+      const gameId = await eftGameId();
+      return db.select().from(prices).where(eq(prices.gameId, gameId));
+    });
     return new Map(
       rows.map((r) => [
         r.inGameId,

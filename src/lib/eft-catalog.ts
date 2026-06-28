@@ -10,6 +10,7 @@ import { db } from "@/db";
 import { items, itemCategories, itemProperties } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
 import type { CategoryItemProperties } from "@/app/eft/items/[...category]/ItemsCategoryClient";
+import { memoTTL } from "@/lib/server-cache";
 
 export interface EftCatalogItem {
   id: string; // 24-символьный BSG inGameId
@@ -84,9 +85,13 @@ export function mapProps(p: unknown): CategoryItemProperties {
 }
 
 /** Весь каталог EFT (все предметы) из Supabase, отсортированный по имени. */
+// 24ч — каталог меняется только через ETL (db:etl), не в рантайме.
+const CATALOG_TTL_MS = 24 * 60 * 60 * 1000;
+
 export async function getEftCatalog(): Promise<EftCatalogItem[]> {
-  const gameId = await eftGameId();
-  const rows = await db
+  const rows = await memoTTL("eft-catalog-rows", CATALOG_TTL_MS, async () => {
+    const gameId = await eftGameId();
+    return db
     .select({
       id: items.inGameId,
       name: items.name,
@@ -103,6 +108,7 @@ export async function getEftCatalog(): Promise<EftCatalogItem[]> {
     .leftJoin(itemProperties, eq(itemProperties.itemId, items.id))
     .where(eq(items.gameId, gameId))
     .orderBy(asc(items.name));
+  });
 
   return rows.map((r) => ({
     id: r.id,
