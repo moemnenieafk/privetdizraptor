@@ -92,8 +92,8 @@ export default function StreamStatus() {
         rel="noopener noreferrer"
         role={isLive ? 'button' : undefined}
         onClick={isLive ? (e) => { e.preventDefault(); handleButtonClick(); } : undefined}
-        className={`group flex items-center justify-center gap-2 w-40 h-10 rounded transition-all duration-500
-          fixed right-4 top-4 z-70 ${isQuestFullscreen ? 'invisible pointer-events-none' : ''}
+        className={`group relative flex shrink-0 items-center justify-center gap-2 w-40 h-10 rounded transition-all duration-500
+          ${isQuestFullscreen ? 'invisible pointer-events-none' : ''}
           ${isLoading
             ? 'border border-neutral-800 bg-black/20'
             : `${s.border} ${s.bg} ${s.shadow} hover:brightness-125`

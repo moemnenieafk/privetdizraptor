@@ -368,50 +368,53 @@ export function MapViewerClient({
     <div className={rootCls}>
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
-      {/* Фракция (фильтр выходов по стороне) — заголовок/статы/назад живут во фрейме */}
-      <div className="absolute top-3 left-3 z-[500] inline-flex w-fit overflow-hidden rounded-sm border border-lines-hover bg-(--color-base)/80 backdrop-blur-md">
-        {(['all', 'pmc', 'scav'] as Faction[]).map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => setFaction(f)}
-            className={`px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest transition-colors ${
-              faction === f ? 'bg-(--primary) text-(--color-base)' : 'text-text-muted hover:text-(--primary)'
-            }`}
-          >
-            {{ all: 'Все', pmc: 'ЧВК', scav: 'Дикие' }[f]}
-          </button>
-        ))}
-      </div>
-
-      {/* Панель слоёв */}
-      <div className="absolute top-3 right-3 z-[500] w-52 rounded-sm border border-lines-hover bg-(--color-base)/80 backdrop-blur-md">
-        <div className="flex items-center gap-2 border-b border-lines-hover px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
-          <Layers className="h-3.5 w-3.5" /> Слои
+      {/* Правый верх: переключение спавнов (Все/ЧВК/Дикие) над панелью слоёв */}
+      <div className="absolute top-3 right-3 z-[500] flex flex-col items-end gap-2">
+        {/* Фракция — фильтр выходов/спавнов по стороне */}
+        <div className="inline-flex w-fit overflow-hidden rounded-sm border border-lines-hover bg-(--color-base)/80 backdrop-blur-md">
+          {(['all', 'pmc', 'scav'] as Faction[]).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFaction(f)}
+              className={`px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest transition-colors ${
+                faction === f ? 'bg-(--primary) text-(--color-base)' : 'text-text-muted hover:text-(--primary)'
+              }`}
+            >
+              {{ all: 'Все', pmc: 'ЧВК', scav: 'Дикие' }[f]}
+            </button>
+          ))}
         </div>
-        <div className="flex flex-col p-1.5">
-          {LAYER_META.map(({ key, label, Icon }) => {
-            const on = vis[key];
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setVis((p) => ({ ...p, [key]: !p[key] }))}
-                className={`group flex items-center gap-2.5 rounded-xs px-2.5 py-2 text-left transition-colors ${
-                  on ? 'text-text-primary hover:bg-card-menu' : 'text-text-muted/60 hover:bg-card-menu'
-                }`}
-              >
-                <Icon className={`h-4 w-4 ${on ? 'text-(--primary)' : 'text-text-muted/50'}`} />
-                <span className="flex-1 font-blender-medium text-sm uppercase tracking-wider">{label}</span>
-                <span className="font-blender-medium text-type-caption text-text-muted tabular-nums">{counts[key]}</span>
-                <span
-                  className={`h-3.5 w-3.5 rounded-full border transition-colors ${
-                    on ? 'border-(--primary) bg-(--primary)' : 'border-lines-hover bg-transparent'
+
+        {/* Панель слоёв */}
+        <div className="w-52 rounded-sm border border-lines-hover bg-(--color-base)/80 backdrop-blur-md">
+          <div className="flex items-center gap-2 border-b border-lines-hover px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
+            <Layers className="h-3.5 w-3.5" /> Слои
+          </div>
+          <div className="flex flex-col p-1.5">
+            {LAYER_META.map(({ key, label, Icon }) => {
+              const on = vis[key];
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setVis((p) => ({ ...p, [key]: !p[key] }))}
+                  className={`group flex items-center gap-2.5 rounded-xs px-2.5 py-2 text-left transition-colors ${
+                    on ? 'text-text-primary hover:bg-card-menu' : 'text-text-muted/60 hover:bg-card-menu'
                   }`}
-                />
-              </button>
-            );
-          })}
+                >
+                  <Icon className={`h-4 w-4 ${on ? 'text-(--primary)' : 'text-text-muted/50'}`} />
+                  <span className="flex-1 font-blender-medium text-sm uppercase tracking-wider">{label}</span>
+                  <span className="font-blender-medium text-type-caption text-text-muted tabular-nums">{counts[key]}</span>
+                  <span
+                    className={`h-3.5 w-3.5 rounded-full border transition-colors ${
+                      on ? 'border-(--primary) bg-(--primary)' : 'border-lines-hover bg-transparent'
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

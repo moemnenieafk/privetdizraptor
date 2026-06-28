@@ -1,8 +1,6 @@
 'use client';
 
 import { useRef } from 'react';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { MapNavStrip } from './MapNavStrip';
 import { MapSearch } from './MapSearch';
 import type { MapView } from './map-types';
@@ -34,14 +32,8 @@ export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, o
 
   return (
     <div className="relative flex items-center gap-3 px-3.5 h-14 bg-card-menu shrink-0 overflow-x-auto scrollbar-hidden">
-      <div ref={anchorRef} className="relative flex shrink-0 items-center gap-2">
-        <Link
-          href="/eft/maps"
-          title="Все карты"
-          className="flex h-7 w-7 items-center justify-center rounded border border-lines-hover text-text-secondary transition-colors hover:border-(--primary)/40 hover:text-(--primary)"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-        </Link>
+      {/* Слева — поиск (top-left освобождён под выпадашку результатов) */}
+      <div ref={anchorRef} className="relative flex flex-1 items-center gap-2">
         <button type="button" onClick={onSearchToggle} title="Поиск (Ctrl+F)" className={searchBtnCls}>
           <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
         </button>
@@ -50,15 +42,15 @@ export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, o
         )}
       </div>
 
-      <div className="h-7 w-px shrink-0 bg-lines-hover" />
-
-      <h1 className="shrink-0 whitespace-nowrap font-blender-medium text-lg uppercase leading-none tracking-widest text-text-primary">
-        {data.name}
-      </h1>
-
-      <div className="flex min-w-0 flex-1 items-center justify-end">
+      {/* По центру — навигация по картам */}
+      <div className="flex shrink-0 items-center justify-center">
         <MapNavStrip maps={navMaps} activeSlug={data.slug} />
       </div>
+
+      {/* Справа — название карты */}
+      <h1 className="flex flex-1 items-center justify-end whitespace-nowrap font-blender-medium text-lg uppercase leading-none tracking-widest text-text-primary">
+        {data.name}
+      </h1>
     </div>
   );
 }

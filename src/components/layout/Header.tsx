@@ -9,6 +9,7 @@ import { HeaderNavigation } from './header-modules/HeaderNavigation';
 import { GameLogo } from './header-modules/GameLogo';
 import { BurgerMenu } from './header-modules/BurgerMenu';
 import { PlayerTelemetry } from './header-modules/PlayerTelemetry';
+import StreamStatus from './header-modules/StreamStatus';
 import { TacticalSearch } from './header-modules/TacticalSearch';
 import NewbieButton from './header-modules/NewbieButton';
 import NewbieModal from './header-modules/NewbieModal';
@@ -43,6 +44,7 @@ export function Header() {
 
           {showFeatures && (
             <div className="ml-auto flex items-center gap-3">
+              <StreamStatus />
               <PlayerTelemetry />
               <BurgerMenu menuItems={menuItems} />
             </div>

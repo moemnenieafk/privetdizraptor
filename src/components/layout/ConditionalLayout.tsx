@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import { Header } from './Header';
 import Footer from './Footer';
-import StreamStatus from './header-modules/StreamStatus';
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,12 +12,11 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  const hideFooter = pathname?.startsWith('/eft/questmap');
+  const hideFooter = pathname?.startsWith('/eft/questmap') || pathname?.startsWith('/eft/maps');
 
   return (
     <>
       <Header />
-      <StreamStatus />
       <main className="flex-grow flex flex-col w-full">{children}</main>
       {!hideFooter && <Footer />}
     </>
