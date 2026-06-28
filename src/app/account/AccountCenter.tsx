@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-rea
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
 import { changeEmail, changeSocial, changeUsername, uploadAvatar } from '@/lib/cta-api';
-import type { Me, SocialPlatform } from '@/lib/auth/me';
+import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
@@ -700,7 +700,7 @@ function PlanView({ onBack }: { onBack: () => void }) {
 
 // ─── Tab panels ───────────────────────────────────────────────────────────────
 
-function ProfilePanel({ onNavigate, me }: { onNavigate: (v: ViewId) => void; me: Me }) {
+function ProfilePanel({ onNavigate, me, stats }: { onNavigate: (v: ViewId) => void; me: Me; stats: AccountStats }) {
   const profiles = usePlayerStore((s) => s.profiles);
   const activeProfileId = usePlayerStore((s) => s.activeProfileId);
   const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0];
@@ -766,6 +766,19 @@ function ProfilePanel({ onNavigate, me }: { onNavigate: (v: ViewId) => void; me:
           ) : (
             <span className="font-blender-book text-sm text-text-muted">Стандартный доступ</span>
           )}
+        </FlatRow>
+
+        <FlatRow label="Участник с">
+          <span className="font-blender-medium text-sm text-text-secondary">
+            {me.createdAt ? new Date(me.createdAt).toLocaleDateString('ru-RU') : '—'}
+          </span>
+        </FlatRow>
+
+        <FlatRow label="Статистика">
+          <span className="font-blender-book text-type-caption text-text-muted">Квестов:</span>
+          <span className="font-blender-medium text-sm text-text-secondary">{stats.questsCompleted}</span>
+          <span className="font-blender-book text-type-caption text-text-muted">· Бартеров:</span>
+          <span className="font-blender-medium text-sm text-text-secondary">{stats.bartersConfirmed}</span>
         </FlatRow>
       </div>
 
@@ -833,18 +846,15 @@ function SecurityPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         label="Пароль"
         action={<RowBtn onClick={() => onNavigate('password')} />}
       >
-        <span className="font-blender-book text-type-caption text-text-muted">Последнее изменение пароля:</span>
-        <span className="font-blender-medium text-xs text-text-secondary">10.06.2026</span>
-        <span className="font-blender-medium text-xs text-text-muted">15:10</span>
+        <span className="font-blender-book text-type-caption text-text-muted">Последнее изменение:</span>
+        <span className="font-blender-medium text-xs text-text-muted">—</span>
       </FlatRow>
 
       <FlatRow
         label="Двухфакторная аутентификация"
         action={<RowBtn onClick={() => onNavigate('2fa')} />}
       >
-        <span className="font-blender-book text-type-caption text-text-muted">Привязана</span>
-        <span className="font-blender-medium text-xs text-text-secondary">10.06.2026</span>
-        <span className="font-blender-medium text-xs text-text-muted">15:30</span>
+        <span className="font-blender-medium text-xs text-text-muted">Не настроено</span>
       </FlatRow>
     </div>
   );
@@ -917,9 +927,7 @@ function BillingPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         label="Выбранный тариф"
         action={<RowBtn onClick={() => onNavigate('plan')} />}
       >
-        <span className="font-blender-book text-type-caption text-text-muted">Последнее изменение:</span>
-        <span className="font-blender-medium text-xs text-text-secondary">10.06.2026</span>
-        <span className="font-blender-medium text-xs text-text-muted">15:10</span>
+        <span className="font-blender-medium text-xs text-text-muted">Не настроено</span>
       </FlatRow>
     </div>
   );
@@ -1018,7 +1026,7 @@ function SocialView({ onBack, me }: { onBack: () => void; me: Me }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function AccountCenter({ me }: { me: Me }) {
+export function AccountCenter({ me, stats }: { me: Me; stats: AccountStats }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [activeView, setActiveView] = useState<ViewId | null>(null);
@@ -1047,7 +1055,7 @@ export function AccountCenter({ me }: { me: Me }) {
     if (activeView === 'social')        return <SocialView onBack={goBack} me={me} />;
 
     switch (activeTab) {
-      case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} />;
+      case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} stats={stats} />;
       case 'security':  return <SecurityPanel onNavigate={navigate} />;
       case 'linking':   return <LinkingPanel onNavigate={navigate} me={me} />;
       case 'billing':   return <BillingPanel onNavigate={navigate} />;
