@@ -5,7 +5,7 @@ import { and, eq, isNotNull } from 'drizzle-orm';
 import { db } from './index';
 import { barters, items } from './schema';
 import { eftGameId } from './eft';
-import { getEftPriceMapFromDb } from './prices';
+import { getEftPriceIndex } from './prices';
 import { itemIconUrl } from '@/lib/item-icon';
 import type { QuestBarterLite } from '@/types/quest';
 
@@ -13,10 +13,10 @@ import type { QuestBarterLite } from '@/types/quest';
 export async function getBartersByQuest(): Promise<Record<string, QuestBarterLite[]>> {
   try {
     const gameId = await eftGameId();
-    const [rows, itemRows, priceMap] = await Promise.all([
+    const [rows, itemRows, priceIndex] = await Promise.all([
       db.select().from(barters).where(and(eq(barters.gameId, gameId), isNotNull(barters.taskUnlockId))),
       db.select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName }).from(items).where(eq(items.gameId, gameId)),
-      getEftPriceMapFromDb(),
+      getEftPriceIndex(),
     ]);
     const nameMap = new Map(itemRows.map((r) => [r.inGameId, r]));
 
@@ -34,7 +34,7 @@ export async function getBartersByQuest(): Promise<Record<string, QuestBarterLit
             id: s.itemId,
             name: i?.name ?? s.itemId,
             shortName: i?.shortName ?? '',
-            normalizedName: priceMap.get(s.itemId)?.normalizedName ?? undefined,
+            normalizedName: priceIndex.get(s.itemId)?.normalizedName ?? undefined,
             image: itemIconUrl(s.itemId),
             count: s.count,
           };
