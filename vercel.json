@@ -1,5 +1,6 @@
 {
   "crons": [
     { "path": "/api/cron/sync-prices", "schedule": "0 5 * * *" }
-  ]
+  ],
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ':(exclude)docs/'"
 }
