@@ -36,10 +36,12 @@ const NAV_TABS: NavTab[] = [
 ];
 
 const PLATFORMS = [
-  { id: 'twitch',  name: 'TWITCH',  linked: true,  handle: 'v4dyatv',     color: '#9146FF', bg: 'bg-[#9146FF]/10' },
-  { id: 'youtube', name: 'YOUTUBE', linked: false,  handle: '',            color: '#FF0000', bg: 'bg-[#FF0000]/10' },
-  { id: 'discord', name: 'DISCORD', linked: true,   handle: 'V4DYA#2476', color: '#5865F2', bg: 'bg-[#5865F2]/10' },
-  { id: 'steam',   name: 'STEAM',   linked: false,  handle: '',            color: '#A3BCCE', bg: 'bg-[#A3BCCE]/10' },
+  // Бренд-цвета внешних платформ — это ДАННЫЕ, не часть NIGHTFALL → HEX тут ок,
+  // рендерим фон inline-стилем (см. ниже), без арбитрарных Tailwind-классов.
+  { id: 'twitch',  name: 'TWITCH',  linked: true,  handle: 'v4dyatv',     color: '#9146FF' },
+  { id: 'youtube', name: 'YOUTUBE', linked: false,  handle: '',            color: '#FF0000' },
+  { id: 'discord', name: 'DISCORD', linked: true,   handle: 'V4DYA#2476', color: '#5865F2' },
+  { id: 'steam',   name: 'STEAM',   linked: false,  handle: '',            color: '#A3BCCE' },
 ] as const;
 
 const GAMES = [
@@ -755,7 +757,7 @@ function ProfilePanel({ onNavigate, me }: { onNavigate: (v: ViewId) => void; me:
             <>
               <div className="flex h-5 items-center gap-1 rounded border border-tactical-amber/30 bg-tactical-amber/10 px-1.5">
                 <div className="h-3 w-3 icon-mask icon-account_prostatus_icon bg-tactical-amber" />
-                <span className="font-mono text-type-caption tracking-wider text-tactical-amber">PRO</span>
+                <span className="font-blender-medium text-type-caption tracking-wider text-tactical-amber">PRO</span>
               </div>
               <span className="font-blender-book text-sm text-tactical-amber">
                 Полный доступ ко всем функциям
@@ -832,8 +834,8 @@ function SecurityPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         action={<RowBtn onClick={() => onNavigate('password')} />}
       >
         <span className="font-blender-book text-type-caption text-text-muted">Последнее изменение пароля:</span>
-        <span className="font-mono text-xs text-text-secondary">10.06.2026</span>
-        <span className="font-mono text-xs text-text-muted">15:10</span>
+        <span className="font-blender-medium text-xs text-text-secondary">10.06.2026</span>
+        <span className="font-blender-medium text-xs text-text-muted">15:10</span>
       </FlatRow>
 
       <FlatRow
@@ -841,8 +843,8 @@ function SecurityPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         action={<RowBtn onClick={() => onNavigate('2fa')} />}
       >
         <span className="font-blender-book text-type-caption text-text-muted">Привязана</span>
-        <span className="font-mono text-xs text-text-secondary">10.06.2026</span>
-        <span className="font-mono text-xs text-text-muted">15:30</span>
+        <span className="font-blender-medium text-xs text-text-secondary">10.06.2026</span>
+        <span className="font-blender-medium text-xs text-text-muted">15:30</span>
       </FlatRow>
     </div>
   );
@@ -867,7 +869,8 @@ function LinkingPanel() {
             className="flex items-center gap-4 border-b border-lines-hover py-5 last:border-b-0"
           >
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded border border-lines-hover ${platform.bg}`}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-lines-hover"
+              style={{ backgroundColor: `${platform.color}1a` }}
             >
               <span
                 className="font-blender-medium text-xs"
@@ -910,8 +913,8 @@ function BillingPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         action={<RowBtn onClick={() => onNavigate('plan')} />}
       >
         <span className="font-blender-book text-type-caption text-text-muted">Последнее изменение:</span>
-        <span className="font-mono text-xs text-text-secondary">10.06.2026</span>
-        <span className="font-mono text-xs text-text-muted">15:10</span>
+        <span className="font-blender-medium text-xs text-text-secondary">10.06.2026</span>
+        <span className="font-blender-medium text-xs text-text-muted">15:10</span>
       </FlatRow>
     </div>
   );
@@ -929,7 +932,7 @@ function ProStatusPanel() {
             PRO
           </span>
           <div className="flex h-5 items-center rounded border border-tactical-amber/40 bg-tactical-amber/10 px-2">
-            <span className="font-mono text-type-caption tracking-widest text-tactical-amber">
+            <span className="font-blender-medium text-type-caption tracking-widest text-tactical-amber">
               Активен
             </span>
           </div>

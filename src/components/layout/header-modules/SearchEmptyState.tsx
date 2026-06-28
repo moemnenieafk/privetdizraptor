@@ -11,7 +11,7 @@ export function SearchEmptyState() {
         <h3 className="mb-1 font-blender-medium text-lg uppercase tracking-widest text-text-primary">
           Данные не найдены
         </h3>
-        <p className="max-w-xs font-mono text-type-caption text-text-muted">
+        <p className="max-w-xs font-blender-medium text-type-caption text-text-muted">
           По вашему запросу нет совпадений. Попробуйте изменить параметры поиска или использовать игровой сленг.
         </p>
       </div>

@@ -1282,7 +1282,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                       src={traderImg(task.trader.normalizedName)}
                       alt={task.trader.name}
                       width={16} height={16}
-                      className="rounded-[1px] shrink-0"
+                      className="rounded-xs shrink-0"
                     />
                     <button
                       className="text-type-caption font-blender-medium uppercase tracking-widest truncate max-w-36 text-text-secondary hover:text-text-primary transition-colors duration-150"

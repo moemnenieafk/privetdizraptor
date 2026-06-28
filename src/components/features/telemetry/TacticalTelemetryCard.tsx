@@ -20,12 +20,12 @@ export async function TacticalTelemetryCard({ data }: TacticalTelemetryCardProps
         <h2 className="text-lg uppercase tracking-widest text-zinc-100">
           {data.designation}
         </h2>
-        <span className="font-mono text-xs text-zinc-500">
+        <span className="font-blender-medium text-xs text-zinc-500">
           SYS_ID:{data.id}
         </span>
       </header>
 
-      <div className="flex flex-col gap-2 font-mono text-sm">
+      <div className="flex flex-col gap-2 font-blender-medium text-sm">
         <div className="flex items-center justify-between">
           <span className="text-zinc-500">STATUS</span>
           <span

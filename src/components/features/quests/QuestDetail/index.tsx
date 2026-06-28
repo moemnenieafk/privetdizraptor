@@ -94,7 +94,7 @@ function ObjectiveRow({ obj, checked, onToggle }: { obj: TaskObjective; checked:
               alt={obj.trader.name}
               width={12}
               height={12}
-              className="rounded-[1px] shrink-0"
+              className="rounded-xs shrink-0"
             />
             <span className="text-xs font-blender-medium text-text-secondary">
               {obj.trader.name} — ЛВЛ. {obj.level}
@@ -251,7 +251,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters }: Prop
             </Link>
             {onClose && (
               <button onClick={onClose} className="shrink-0 h-7 w-7 flex items-center justify-center transition-opacity hover:opacity-80" aria-label="Закрыть">
-                <div className="flex h-3 w-4 items-center justify-center rounded-[1px] bg-danger-dim">
+                <div className="flex h-3 w-4 items-center justify-center rounded-xs bg-danger-dim">
                   <div className="h-2 w-2 icon-mask icon-eft-profile-btn-close text-zinc-100" />
                 </div>
               </button>

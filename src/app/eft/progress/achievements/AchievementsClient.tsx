@@ -136,7 +136,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                 <p className="text-sm text-text-secondary mb-6 flex-grow">{ach.description}</p>
                 <div className="flex items-center justify-between pt-3 border-t border-lines-hover mt-auto">
                   <span className="text-type-caption tracking-widest uppercase text-(--rarity-color)">{rarity.label}</span>
-                  <span className="text-xs font-mono text-text-muted">{(ach.playersCompletedPercent ?? 0).toFixed(1)}% игроков</span>
+                  <span className="text-xs font-blender-medium text-text-muted">{(ach.playersCompletedPercent ?? 0).toFixed(1)}% игроков</span>
                 </div>
               </div>
             );
@@ -172,7 +172,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                               <td className="px-4 py-3 text-text-secondary hidden md:table-cell">{ach.description}</td>
                               <td className={`px-4 py-3 text-right ${rarity.rarityClass}`}>
                                   <div className="flex flex-col items-end">
-                                      <span className="font-mono text-xs text-(--rarity-color)">{(ach.playersCompletedPercent ?? 0).toFixed(1)}%</span>
+                                      <span className="font-blender-medium text-xs text-(--rarity-color)">{(ach.playersCompletedPercent ?? 0).toFixed(1)}%</span>
                                       <span className="text-type-caption tracking-widest uppercase text-(--rarity-color)">{rarity.label}</span>
                                   </div>
                               </td>

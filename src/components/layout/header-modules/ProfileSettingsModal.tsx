@@ -194,7 +194,7 @@ export function ProfileSettingsModal({ isOpen, onClose, edition, setEdition, fac
           
           {/* Кнопка закрытия */}
           <button onClick={onClose} className="absolute right-0 top-0 h-7 w-7 flex items-center justify-center transition-opacity hover:opacity-80">
-            <div className="flex h-3 w-4 items-center justify-center rounded-[1px] bg-danger-dim">
+            <div className="flex h-3 w-4 items-center justify-center rounded-xs bg-danger-dim">
               <div className="h-2 w-2 icon-mask icon-eft-profile-btn-close text-zinc-100" />
             </div>
           </button>

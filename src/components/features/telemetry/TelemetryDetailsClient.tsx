@@ -31,7 +31,7 @@ function MetricRow({ label, value, valueClassName, isLast }: MetricRowProps) {
   return (
     <div className={`flex items-center justify-between ${isLast ? 'pt-1' : 'border-b border-lines-hover pb-2'}`}>
       <span className="font-blender-book text-sm text-text-secondary">{label}</span>
-      <span className={`font-mono text-xs ${valueClassName || 'text-text-primary'}`}>{value}</span>
+      <span className={`font-blender-medium text-xs ${valueClassName || 'text-text-primary'}`}>{value}</span>
     </div>
   );
 }
@@ -56,7 +56,7 @@ export default function TelemetryDetailsClient({ id }: TelemetryDetailsClientPro
   }
 
   if (!profile?.metrics) {
-    return <div className="mt-3 text-center font-mono text-type-caption uppercase tracking-widest text-text-muted">Данные недоступны</div>;
+    return <div className="mt-3 text-center font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">Данные недоступны</div>;
   }
 
   const metrics = profile.metrics;
