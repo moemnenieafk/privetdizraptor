@@ -34,7 +34,11 @@ CTA — портал-агрегатор для хардкорных extraction-�
 ## Отклонения от правил
 **FSD-lite:** `PlaceholderPage.tsx` и `useIntersectionObserver.ts` в корне `components/` · дубликат хука (`hooks/` + `components/`) · page-компоненты колоцированы в `app/` · CSS раздроблён (`icons.css` + `data/globals.css`).
 
-**NIGHTFALL:** `any` — 8 шт / 4 файла · `font-mono` — 7 файлов (должно быть `font-blender-medium`) · сырой HEX в Tailwind-классах (`bg-[#9146FF]/10` и т.п.) · `rounded-[Npx]` — 6 шт (должно быть `rounded-xs`). ✅ v3-синтаксиса (`bg-gradient-to-*`, `bg-[var(--token)]`) нет.
+NIGHTFALL-счётчики ниже — **автоматические**: их пересчитывает `scripts/sync-style-debt.mjs` (pre-commit хук) из `src/`. Руками не править — перезапишутся. Эталоны: `font-mono`→`font-blender-medium`, `rounded-[Npx]`→`rounded-xs`, сырой HEX→токены.
+
+<!-- debt:auto -->
+**NIGHTFALL** (авто): `any` — 11 шт / 4 файлов · `font-mono` — 7 файлов · сырой HEX `[#…]` — 4 шт / 1 файлов · `rounded-[Npx]` — 6 шт · v3-синтаксис (`bg-gradient-to-*`, `bg-[var(…)]`) — ✅ нет.
+<!-- /debt:auto -->
 
 ## Техдолг
 - 🔴 **Supabase JWT ES256** — asymmetric user-токены не валидируются Storage/PostgREST → `auth.uid()=NULL` → RLS режет аватар. Фикс: переключить JWT Keys в Supabase Dashboard.
