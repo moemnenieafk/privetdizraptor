@@ -1,5 +1,12 @@
 export type ItemCategoryType = 'armor' | 'weapon' | 'ammo' | 'meds' | 'container' | 'headset' | 'common';
 
+/** Минимальная форма оффера покупки (для фильтра «Доступно мне»). */
+export interface ItemBuyOffer {
+  vendor?: { normalizedName?: string; name?: string; minTraderLevel?: number };
+  minTraderLevel?: number;
+  loyaltyLevel?: number;
+}
+
 export interface BaseItemMetadata {
   id: string;
   normalizedName: string;
@@ -10,6 +17,8 @@ export interface BaseItemMetadata {
   fleaPrice: number | null;
   gridWidth: number;
   gridHeight: number;
+  types?: string[];
+  buyFor?: ItemBuyOffer[];
 }
 
 export interface ArmorMetrics extends BaseItemMetadata {

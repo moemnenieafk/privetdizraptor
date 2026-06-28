@@ -33,7 +33,7 @@ export const useItemsFilter = (initialItems: TarkovItem[]) => {
 
       // Фильтр "Только для бартера" (ищет 'barter' в массиве типов GraphQL от tarkov.dev)
        
-      const itemTypes = (item as any).types as string[] | undefined;
+      const itemTypes = item.types;
       if (barterOnly && (!itemTypes || !itemTypes.includes("barter"))) return false;
 
       // Логика фильтрации по классу брони
@@ -47,7 +47,7 @@ export const useItemsFilter = (initialItems: TarkovItem[]) => {
       if (availableOnly) {
         // Ищем все предложения о покупке (buyFor - покупаем у торговцев)
          
-        const buyOffers = (item as any).buyFor as any[];
+        const buyOffers = item.buyFor;
         if (!buyOffers || !Array.isArray(buyOffers) || buyOffers.length === 0) {
           return false; // Предмет вообще нельзя купить напрямую
         }
@@ -91,8 +91,8 @@ export const useItemsFilter = (initialItems: TarkovItem[]) => {
             if (b.fleaPrice === null) return -1;
             return b.fleaPrice - a.fleaPrice;
           case "vps_desc": {
-            const areaA = ((a as any).width || 1) * ((a as any).height || 1);
-            const areaB = ((b as any).width || 1) * ((b as any).height || 1);
+            const areaA = (a.gridWidth || 1) * (a.gridHeight || 1);
+            const areaB = (b.gridWidth || 1) * (b.gridHeight || 1);
             const vpsA = a.fleaPrice ? a.fleaPrice / areaA : -1;
             const vpsB = b.fleaPrice ? b.fleaPrice / areaB : -1;
             return vpsB - vpsA;

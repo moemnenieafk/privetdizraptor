@@ -76,7 +76,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
         <div className="flex w-full sm:w-auto items-center gap-2">
           <select 
             value={filterType} 
-            onChange={(e) => setFilterType(e.target.value as any)}
+            onChange={(e) => setFilterType(e.target.value as typeof filterType)}
             className="flex-1 sm:flex-none bg-(--color-base) text-text-secondary text-type-label font-blender-medium uppercase tracking-wider border border-lines-hover rounded h-10 px-3 focus:outline-none focus:border-(--primary) cursor-pointer"
           >
             <option value="all">Все типы</option>
@@ -85,7 +85,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           </select>
           <select 
             value={sortOrder} 
-            onChange={(e) => setSortOrder(e.target.value as any)}
+            onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
             className="flex-1 sm:flex-none bg-(--color-base) text-text-secondary text-type-label font-blender-medium uppercase tracking-wider border border-lines-hover rounded h-10 px-3 focus:outline-none focus:border-(--primary) cursor-pointer"
           >
             <option value="rare">Сначала редкие</option>

@@ -9,6 +9,7 @@ import { ItemGridSize } from "@/components/ui/ItemGridSize";
 import { getTarkovBackgroundColor } from "@/lib/tarkov-colors";
 import { formatCompactNumber } from "@/lib/formatters";
 import { itemIconUrl } from "@/lib/item-icon";
+import type { CategoryItemProperties } from "@/app/eft/items/[...category]/ItemsCategoryClient";
 
 interface Vendor { name: string; normalizedName?: string }
 
@@ -24,7 +25,7 @@ export interface ItemTileProps {
     image512pxLink?: string;
     types?: string[];
      
-    properties?: any;
+    properties?: CategoryItemProperties;
     eco: {
       bestSell: { price: number; vendor?: Vendor };
       bestBuy?: { price?: number; priceRUB?: number; currency?: string; vendor?: Vendor };

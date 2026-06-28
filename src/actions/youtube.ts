@@ -22,20 +22,21 @@ export async function fetchLatestYouTubeVideos(): Promise<YouTubeVideo[]> {
   }
 
   try {
+    type YtItem = { id: { videoId: string }; snippet: { title: string; publishedAt: string } };
     const videoPromises = CHANNELS.map(async (channelId) => {
       // Ищем последние 3 видео с каждого канала. revalidate: 3600 кэширует ответ на 1 час (3600 секунд)
       const res = await fetch(
         `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet,id&order=date&maxResults=3&type=video`,
         { next: { revalidate: 3600 } }
       );
-      const data = await res.json();
-      return data.items || [];
+      const data = (await res.json()) as { items?: YtItem[] };
+      return data.items ?? [];
     });
 
     const results = await Promise.all(videoPromises);
     
     // Объединяем результаты с обоих каналов
-    const allVideos = results.flat().map((item: any) => ({
+    const allVideos = results.flat().map((item) => ({
       id: item.id.videoId,
       url: `https://www.youtube.com/embed/${item.id.videoId}`,
       title: item.snippet.title,
