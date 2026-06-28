@@ -247,11 +247,14 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     authorLink: SHEBUKA_LINK,
     minZoom: 2,
     maxZoom: 6,
+    // Калибровка ЦТА (2026-06-28): upstream bounds Terminal не совпадают с координатами маркеров
+    // (спавны z∈[480,1306], x∈[-1472,-808]) — карта новая, у tarkov-dev не выверена. bounds заданы
+    // по bbox спавнов (offset/margin на выравнивание не влияет — сокращается fitBounds'ом).
     transform: [0.2, 0, 0.2, 0],
     coordinateRotation: 180,
     bounds: [
-      [463, -580],
-      [-433, 475],
+      [-1605, 315],
+      [-675, 1471],
     ],
     heightRange: null,
     svgLayer: "Ground_Level",
