@@ -1,0 +1,49 @@
+{
+  // Узел C (VS Code) цепи синхронизации — REVIEW-шаг в один клик.
+  // Запуск: Terminal → Run Task… (или Ctrl+Shift+P → «Run Task»). Dev-сервер = Ctrl+Shift+B.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "▶ Dev-сервер (REVIEW диффа)",
+      "detail": "npm run dev — поднять Next.js, визуально сверить изменения перед коммитом",
+      "type": "shell",
+      "command": "npm run dev",
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "review" }
+    },
+    {
+      "label": "🏗 Build (проверка типов)",
+      "detail": "npm run build — отловить тип-ошибки/сборку до коммита",
+      "type": "shell",
+      "command": "npm run build",
+      "problemMatcher": ["$tsc"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "🧹 Lint",
+      "detail": "npm run lint — next lint",
+      "type": "shell",
+      "command": "npm run lint",
+      "problemMatcher": ["$eslint-stylish"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "📊 Стиль-долг: проверить (debt:check)",
+      "detail": "Сверить NIGHTFALL-счётчики в snapshot с src/ (exit 1 если устарели). Не пишет.",
+      "type": "shell",
+      "command": "npm run debt:check",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "✍ Стиль-долг: пересчитать (debt:sync)",
+      "detail": "Пересчитать и переписать авто-блок стиль-долга в snapshot из src/.",
+      "type": "shell",
+      "command": "npm run debt:sync",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    }
+  ]
+}
