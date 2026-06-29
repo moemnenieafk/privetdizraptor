@@ -292,6 +292,12 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     staticMap: true,
     displayName: "Лаборатория",
     groundName: "1-й уровень",
+    raid: {
+      duration: 35,
+      players: "8-10",
+      entryCost: "Ключ-карта TerraGroup Labs (~130 000 ₽)",
+      spawns: "35-45% — Рейдеры (2-4)",
+    },
     author: "V4DYA",
     authorLink: null,
     // CRS.Simple по viewBox 5500×4200; transform-identity (маркеров нет → калибровка не нужна).
