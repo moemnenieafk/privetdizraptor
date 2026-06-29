@@ -299,6 +299,44 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       { name: "2-й уровень", show: false, image: "the-lab-2" },
     ],
   },
+  icebreaker: {
+    // Подложка адаптирована с tarkov-market (их векторный план Ледокола), перекрашена под NIGHTFALL-токены.
+    // Один SVG, 14 палуб = <g>-группы (svgLayer); переключение этажей — затемнением групп (как the-lab,
+    // но без поэтажных файлов). Маркеров пока нет (v1). Апгрейд до интерактива: tarkov.dev-маркеры + калибровка transform.
+    // ⚠️ Имена/уровни палуб — best-effort (точно знаю −1/0/1/2/5 с панели tarkov-market), остальное под ревью V4DYA.
+    slug: "icebreaker",
+    svgFile: "icebreaker.svg",
+    staticMap: true,
+    displayName: "Ледокол",
+    groundName: "Главный / Лазарет",
+    author: "tarkov-market",
+    authorLink: null,
+    minZoom: -5,
+    maxZoom: 2,
+    transform: [1, 0, 1, 0],
+    coordinateRotation: 0,
+    bounds: [
+      [0, 0],
+      [5000, 8400],
+    ],
+    heightRange: null,
+    svgLayer: "main_infirmary",
+    layers: [
+      { name: "-3 · Автоматика", svgLayer: "lower_automation", show: false },
+      { name: "-2 · Машинное отделение", svgLayer: "engine_room", show: false },
+      { name: "-1 · Топливные насосы", svgLayer: "fuel_pumps", show: false },
+      { name: "0 · Склад / Охрана", svgLayer: "storage_security", show: false },
+      { name: "2 · Вертолётная площадка", svgLayer: "helipad", show: false },
+      { name: "3 · Столовая / Спортзал", svgLayer: "gym_canteen", show: false },
+      { name: "4 · Каюты (4)", svgLayer: "accomodation_4", show: false },
+      { name: "5 · Каюты (5)", svgLayer: "accomodation_5", show: false },
+      { name: "6 · Каюты (6)", svgLayer: "accomodation_6", show: false },
+      { name: "7 · Палуба офицеров", svgLayer: "officers_deck", show: false },
+      { name: "8 · Лестницы", svgLayer: "stairs_blocked", show: false },
+      { name: "9 · Мостик", svgLayer: "bridge", show: false },
+      { name: "10 · Крыша мостика", svgLayer: "bridge_roof", show: false },
+    ],
+  },
 };
 
 /** Этаж карты для UI-переключателя: имя, id <g>-группы SVG (или null) и диапазон высоты. */
@@ -336,7 +374,7 @@ export function buildMapFloors(cfg: EftMapConfig): MapFloor[] {
 /** Числовая метка этажа: наземный (i=0) = 1, иначе число из имени, подземные → −1. Одна точка правды для свитчера и хоткеев. */
 export function floorLevel(f: MapFloor, i: number): number {
   if (i === 0) return 1;
-  const n = f.name.match(/(\d+)/)?.[1];
+  const n = f.name.match(/(-?\d+)/)?.[1];
   return n ? Number(n) : -1;
 }
 

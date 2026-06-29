@@ -365,12 +365,13 @@ export function MapViewerClient({
     };
   }, [data, onReady, floors, isStatic]);
 
-  // Статичная мульти-этажная карта: у каждого этажа своя SVG-подложка → смена этажа меняет overlay.
+  // Статичная мульти-этажная карта: либо свой SVG-файл на этаж (the-lab), либо ОДИН SVG со
+  // слоями-этажами (<g>, как Ледокол) — этаж без своего image не перегружаем, видимостью рулит applyFloor.
   useEffect(() => {
     if (!isStatic) return;
-    const url = floors[activeFloor]?.image ?? data.imageUrl;
-    if (url) loadImageRef.current?.(url);
-  }, [activeFloor, isStatic, floors, data.imageUrl]);
+    const img = floors[activeFloor]?.image;
+    if (img) loadImageRef.current?.(img);
+  }, [activeFloor, isStatic, floors]);
 
   const rootCls = [
     'cta-map-root absolute inset-0 overflow-hidden bg-(--color-base)',
