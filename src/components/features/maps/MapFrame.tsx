@@ -6,7 +6,7 @@ import { MapTopBar } from './MapTopBar';
 import { MapBottomBar } from './MapBottomBar';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
 import { useFullscreen } from '@/hooks/useFullscreen';
-import { buildMapFloors } from '@/data/eft-map-config';
+import { buildMapFloors, orderFloorsByLevel } from '@/data/eft-map-config';
 import type { MapView } from './map-types';
 import type { MapViewerApi, MapBossStat, MapQuestLite, MapQuestZone } from './map-frame-types';
 
@@ -35,6 +35,7 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
   const [activeFloor, setActiveFloor] = useState(0);
   const [ready, setReady] = useState(false);
   const apiRef = useRef<MapViewerApi | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
 
   const handleReady = useCallback((api: MapViewerApi) => {
     apiRef.current = api;
@@ -43,6 +44,20 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
 
   const questIds = useMemo(() => quests.map((q) => q.id), [quests]);
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
+  const floorOrder = useMemo(() => orderFloorsByLevel(floors), [floors]);
+
+  // Шаг по визуальному стеку этажей: dir −1 = вверх (выше уровень), +1 = вниз. Без зацикливания.
+  const stepFloor = useCallback(
+    (dir: -1 | 1) => {
+      setActiveFloor((cur) => {
+        const pos = floorOrder.indexOf(cur);
+        if (pos < 0) return cur;
+        const next = Math.min(Math.max(pos + dir, 0), floorOrder.length - 1);
+        return floorOrder[next];
+      });
+    },
+    [floorOrder],
+  );
 
   // Сброс этажа при смене карты — коррекция стейта при смене пропа (без эффекта).
   const [prevSlug, setPrevSlug] = useState(data.slug);
@@ -78,6 +93,40 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
     return () => window.removeEventListener('keydown', handler);
   }, [isFullscreen, searchOpen, exit]);
 
+  // Хоткеи этажей (только мульти-этаж): ↑/↓ и +/− (осн. клавиатура + NumPad).
+  useEffect(() => {
+    if (floors.length <= 1) return;
+    const handler = (e: KeyboardEvent) => {
+      if (searchOpen) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return; // не перехватываем Ctrl+± (зум браузера) и пр.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+      let dir: -1 | 0 | 1 = 0;
+      if (e.key === 'ArrowUp' || e.key === '+' || e.key === '=') dir = -1;
+      else if (e.key === 'ArrowDown' || e.key === '-') dir = 1;
+      if (dir === 0) return;
+      e.preventDefault();
+      stepFloor(dir);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [floors.length, searchOpen, stepFloor]);
+
+  // Alt + колёсико над вьюпортом → смена этажа. Capture + non-passive: перехват до зума Leaflet.
+  useEffect(() => {
+    if (floors.length <= 1) return;
+    const el = viewportRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.altKey || e.ctrlKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      stepFloor(e.deltaY < 0 ? -1 : 1);
+    };
+    el.addEventListener('wheel', onWheel, { capture: true, passive: false });
+    return () => el.removeEventListener('wheel', onWheel, { capture: true });
+  }, [floors.length, stepFloor]);
+
   const frameCls = isFullscreen
     ? 'fixed inset-0 z-[100] flex flex-col bg-(--color-base)'
     : 'relative flex h-[80vh] min-h-[600px] w-full flex-col overflow-hidden rounded-lg border border-lines-hover bg-(--color-base)';
@@ -93,7 +142,7 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
         onSearchClose={() => setSearchOpen(false)}
         apiRef={apiRef}
       />
-      <div className="relative min-h-0 flex-1">
+      <div ref={viewportRef} className="relative min-h-0 flex-1">
         <MapViewerLoader data={data} onReady={handleReady} activeFloor={activeFloor} />
         {floors.length > 1 && (
           <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />

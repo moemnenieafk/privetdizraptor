@@ -333,6 +333,21 @@ export function buildMapFloors(cfg: EftMapConfig): MapFloor[] {
   return [ground, ...extra];
 }
 
+/** Числовая метка этажа: наземный (i=0) = 1, иначе число из имени, подземные → −1. Одна точка правды для свитчера и хоткеев. */
+export function floorLevel(f: MapFloor, i: number): number {
+  if (i === 0) return 1;
+  const n = f.name.match(/(\d+)/)?.[1];
+  return n ? Number(n) : -1;
+}
+
+/** Индексы этажей в порядке визуального стека переключателя: сверху вниз (выше уровень — выше). */
+export function orderFloorsByLevel(floors: MapFloor[]): number[] {
+  return floors
+    .map((f, i) => ({ i, lvl: floorLevel(f, i) }))
+    .sort((a, b) => b.lvl - a.lvl)
+    .map((x) => x.i);
+}
+
 /** slug → конфиг (или undefined, если карта не интерактивная / нет SVG-подложки). */
 export function getMapConfig(slug: string): EftMapConfig | undefined {
   return EFT_MAP_CONFIG[slug];
