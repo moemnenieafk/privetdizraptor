@@ -60,6 +60,17 @@ export interface EftMapConfig {
   svgLayer: string | null;
   /** Дополнительные этажи (мульти-этаж, v2). */
   layers: MapLayerConfig[];
+  /** Инфо о рейде для нижней панели (статик-карты; у интерактивных — из БД mapAssets). */
+  raid?: MapRaidInfo;
+}
+
+/** Параметры рейда для нижней панели статик-карты (наши кураторские данные). */
+export interface MapRaidInfo {
+  duration?: number; // минуты
+  players?: string; // "1-3"
+  entryCost?: string; // "400 000 ₽"
+  exitCost?: string; // "2500 €"
+  spawns?: string; // сводка спавнов
 }
 
 const SHEBUKA = "Shebuka";
@@ -309,6 +320,13 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     staticMap: true,
     displayName: "Ледокол",
     groundName: "Главный / Лазарет",
+    raid: {
+      duration: 50,
+      players: "1-3",
+      entryCost: "400 000 ₽",
+      exitCost: "2500 €",
+      spawns: "100% — Отступники, Black Division, Босс — Wedge",
+    },
     author: "tarkov-market",
     authorLink: null,
     minZoom: -5,

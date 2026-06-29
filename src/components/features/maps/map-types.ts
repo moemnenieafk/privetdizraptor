@@ -31,6 +31,10 @@ export interface MapView {
   players: string | null;
   minPlayerLevel: number | null;
   maxPlayerLevel: number | null;
+  /** Статик-карты: стоимость входа/выхода + сводка спавнов для нижней панели. */
+  entryCost?: string | null;
+  exitCost?: string | null;
+  spawns?: string | null;
   config: EftMapConfig;
   markers: MapViewMarker[];
 }
