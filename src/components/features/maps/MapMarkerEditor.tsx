@@ -198,7 +198,13 @@ export function MapMarkerEditor({
       >
         <GripVertical className="h-3.5 w-3.5 shrink-0 opacity-60" />
         <span className="flex-1 truncate">Маркеры · {floorName}</span>
-        <button type="button" onClick={onClose} className="shrink-0 text-text-muted transition-colors hover:text-(--primary)" aria-label="Закрыть">
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={onClose}
+          className="shrink-0 text-text-muted transition-colors hover:text-(--primary)"
+          aria-label="Закрыть"
+        >
           <X className="h-4 w-4" />
         </button>
       </div>
