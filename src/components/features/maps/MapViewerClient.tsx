@@ -10,6 +10,7 @@ import {
   Layers,
   LocateFixed,
   Minus,
+  Pencil,
   Plus,
   TriangleAlert,
   X,
@@ -180,11 +181,12 @@ export function MapViewerClient({
   });
   const [faction, setFaction] = useState<Faction>('all');
   const [sel, setSel] = useState<'pmc' | 'scav' | null>(null);
-  // Дев-режим редактора маркеров (?edit=1) + живой инстанс карты для него.
-  const [editMode] = useState(
+  // Дев-режим редактора маркеров: тоггл «Правка» (стартовое значение из ?edit=1) + инстанс карты.
+  const [editing, setEditing] = useState(
     () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edit') === '1',
   );
   const [mapInst, setMapInst] = useState<L.Map | null>(null);
+  const staticLayerRef = useRef<L.LayerGroup | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<LayerKey, number> = { extract: 0, spawn: 0, transit: 0, hazard: 0 };
@@ -306,16 +308,15 @@ export function MapViewerClient({
     markersRef.current = [];
     if (isStatic) {
       // Статик-карта: ручные маркеры (наши данные) одним слоем, фильтр по индексу этажа.
-      // В режиме редактора их рисует MapMarkerEditor (рабочий набор) — здесь пропускаем.
-      if (!editMode) {
-        const manualGroup = L.layerGroup().addTo(map);
-        for (const m of data.markers) {
-          if (!m.position) continue;
-          const marker = L.marker(ll(m.position), { icon: iconFor(m), riseOnHover: true });
-          marker.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
-          marker.addTo(manualGroup);
-          markersRef.current.push({ marker, top: null, bottom: null, floor: m.floor ?? null });
-        }
+      // Слой в ref → в режиме «Правка» прячется (editing-эффект), его заменяет редактор.
+      const manualGroup = L.layerGroup().addTo(map);
+      staticLayerRef.current = manualGroup;
+      for (const m of data.markers) {
+        if (!m.position) continue;
+        const marker = L.marker(ll(m.position), { icon: iconFor(m), riseOnHover: true });
+        marker.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
+        marker.addTo(manualGroup);
+        markersRef.current.push({ marker, top: null, bottom: null, floor: m.floor ?? null });
       }
     } else {
       const groups: Record<LayerKey, L.LayerGroup> = {
@@ -392,9 +393,10 @@ export function MapViewerClient({
       loadImageRef.current = null;
       map.remove();
       mapRef.current = null;
+      staticLayerRef.current = null;
       setMapInst(null);
     };
-  }, [data, onReady, floors, isStatic, editMode]);
+  }, [data, onReady, floors, isStatic]);
 
   // Статичная мульти-этажная карта: либо свой SVG-файл на этаж (the-lab), либо ОДИН SVG со
   // слоями-этажами (<g>, как Ледокол) — этаж без своего image не перегружаем, видимостью рулит applyFloor.
@@ -403,6 +405,20 @@ export function MapViewerClient({
     const img = floors[activeFloor]?.image;
     if (img) loadImageRef.current?.(img);
   }, [activeFloor, isStatic, floors]);
+
+  // «Правка»: прячем боевой слой маркеров (его заменяет редактор), возвращаем при выходе.
+  useEffect(() => {
+    if (!isStatic) return;
+    const l = staticLayerRef.current;
+    const m = mapRef.current;
+    if (!l || !m) return;
+    if (editing) {
+      m.removeLayer(l);
+    } else {
+      m.addLayer(l);
+      applyFloorRef.current(activeFloorRef.current);
+    }
+  }, [editing, isStatic, mapInst]);
 
   const rootCls = [
     'cta-map-root absolute inset-0 overflow-hidden bg-(--color-base)',
@@ -427,6 +443,20 @@ export function MapViewerClient({
   return (
     <div className={rootCls}>
       <div ref={containerRef} className="absolute inset-0 z-0" />
+
+      {isStatic ? (
+        <button
+          type="button"
+          onClick={() => setEditing((v) => !v)}
+          className={`absolute top-3 right-3 z-[550] flex items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors ${
+            editing
+              ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+              : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
+          }`}
+        >
+          <Pencil className="h-3.5 w-3.5" /> Правка
+        </button>
+      ) : null}
 
       {!isStatic && (
         <>
@@ -520,13 +550,15 @@ export function MapViewerClient({
         ) : null}
       </div>
 
-      {editMode && mapInst ? (
+      {isStatic && mapInst ? (
         <MapMarkerEditor
           map={mapInst}
           activeFloor={activeFloor}
           slug={data.slug}
           floorName={floors[activeFloor]?.name ?? '—'}
           initial={data.markers}
+          editing={editing}
+          onClose={() => setEditing(false)}
         />
       ) : null}
     </div>
