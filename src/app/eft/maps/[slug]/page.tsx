@@ -3,6 +3,7 @@ import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
 import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
 import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
+import { getManualMarkers } from '@/data/map-markers';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
 import { questsForMap } from '@/lib/map-quests';
@@ -27,6 +28,21 @@ export default async function MapPage({ params, searchParams }: Props) {
   // Статичная карта (наш собственный арт в /public): подложка с зумом/паном, БЕЗ маркеров,
   // слоёв и поиска. Не ходит в БД и не зависит от tarkov.dev-геометрии.
   if (config?.staticMap && config.svgFile) {
+    // Ручные маркеры (редактор ?edit=1) — наши кураторские данные, не из tarkov.dev.
+    const markers: MapViewMarker[] = getManualMarkers(slug).map((m) => ({
+      id: m.id,
+      type: m.type,
+      position: { x: m.x, y: 0, z: m.z },
+      outline: null,
+      top: null,
+      bottom: null,
+      label: m.label ?? null,
+      faction: m.faction ?? null,
+      sides: null,
+      categories: null,
+      meta: null,
+      floor: m.floor,
+    }));
     const view: MapView = {
       slug,
       name: config.displayName ?? slug,
@@ -38,7 +54,7 @@ export default async function MapPage({ params, searchParams }: Props) {
       minPlayerLevel: null,
       maxPlayerLevel: null,
       config,
-      markers: [],
+      markers,
     };
     const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
     return (

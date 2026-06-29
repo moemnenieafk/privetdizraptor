@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapLegend } from './MapLegend';
+import { MapMarkerEditor } from './MapMarkerEditor';
 import type { MapView, MapViewMarker } from './map-types';
 import type { MapViewerApi } from './map-frame-types';
 
@@ -105,12 +106,20 @@ function iconFor(m: MapViewMarker): L.DivIcon {
         iconSize: [22, 22],
         iconAnchor: [11, 11],
       });
-    default:
+    case 'hazard':
       return L.divIcon({
         className: 'cta-di',
         html: `<div class="cta-mk cta-hazard">⚠</div>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9],
+      });
+    default:
+      // прочие типы (ручные: lock/switch/loot/…) — нейтральная точка
+      return L.divIcon({
+        className: 'cta-di',
+        html: `<div class="cta-mk cta-spawn ss-all"></div>`,
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
       });
   }
 }
@@ -157,7 +166,7 @@ export function MapViewerClient({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const highlightRef = useRef<L.Polygon | null>(null);
-  const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null }[]>([]);
+  const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null }[]>([]);
   const svgGroupsRef = useRef<Map<string, SVGGElement> | null>(null);
   const activeFloorRef = useRef(activeFloor);
   // Загрузчик подложки (для статичных мульти-этажных карт: смена этажа = смена SVG).
@@ -171,6 +180,11 @@ export function MapViewerClient({
   });
   const [faction, setFaction] = useState<Faction>('all');
   const [sel, setSel] = useState<'pmc' | 'scav' | null>(null);
+  // Дев-режим редактора маркеров (?edit=1) + живой инстанс карты для него.
+  const [editMode] = useState(
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edit') === '1',
+  );
+  const [mapInst, setMapInst] = useState<L.Map | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<LayerKey, number> = { extract: 0, spawn: 0, transit: 0, hazard: 0 };
@@ -195,11 +209,12 @@ export function MapViewerClient({
       }
       const range = fl?.height ?? null;
       const isGround = idx === 0;
-      for (const { marker, top, bottom } of markersRef.current) {
+      for (const { marker, top, bottom, floor } of markersRef.current) {
         const el = marker.getElement();
         if (!el) continue;
         let visible: boolean;
-        if (top == null && bottom == null) visible = isGround; // без высоты → только наземный
+        if (floor != null) visible = floor === idx; // статик: ручные маркеры по индексу этажа
+        else if (top == null && bottom == null) visible = isGround; // без высоты → только наземный
         else if (!range) visible = true; // этаж без диапазона → показать всё
         else visible = (top ?? bottom ?? 0) >= range[0] && (bottom ?? top ?? 0) <= range[1];
         el.style.display = visible ? '' : 'none';
@@ -236,6 +251,7 @@ export function MapViewerClient({
       maxBoundsViscosity: 0.6,
     });
     mapRef.current = map;
+    setMapInst(map);
 
     // SVG-подложка живёт в DOM (инлайн-svgOverlay, не <img>) → <g>-группы этажей доступны
     // для затемнения/блюра. При сбое загрузки — фолбэк на растровый overlay (без этажей).
@@ -287,40 +303,54 @@ export function MapViewerClient({
     }
 
     // слои маркеров
-    const groups: Record<LayerKey, L.LayerGroup> = {
-      extract: L.layerGroup().addTo(map),
-      spawn: L.layerGroup().addTo(map),
-      transit: L.layerGroup().addTo(map),
-      hazard: L.layerGroup().addTo(map),
-    };
-
     markersRef.current = [];
-    for (const m of data.markers) {
-      if (!m.position) continue;
-      const key = m.type as LayerKey;
-      if (!groups[key]) continue;
-      const marker = L.marker(ll(m.position), { icon: iconFor(m), riseOnHover: true });
-      marker.bindTooltip(tooltipFor(m), {
-        className: 'cta-tip',
-        direction: 'top',
-        offset: [0, -8],
-        opacity: 1,
-      });
-      // полигон зоны выхода — на ховер
-      if (m.type === 'extract' && m.outline && m.outline.length > 2) {
-        const poly = L.polygon(m.outline.map(ll), {
-          className: `cta-ex-zone ef-${(m.faction || 'all').toLowerCase()}`,
-          interactive: false,
+    if (isStatic) {
+      // Статик-карта: ручные маркеры (наши данные) одним слоем, фильтр по индексу этажа.
+      // В режиме редактора их рисует MapMarkerEditor (рабочий набор) — здесь пропускаем.
+      if (!editMode) {
+        const manualGroup = L.layerGroup().addTo(map);
+        for (const m of data.markers) {
+          if (!m.position) continue;
+          const marker = L.marker(ll(m.position), { icon: iconFor(m), riseOnHover: true });
+          marker.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
+          marker.addTo(manualGroup);
+          markersRef.current.push({ marker, top: null, bottom: null, floor: m.floor ?? null });
+        }
+      }
+    } else {
+      const groups: Record<LayerKey, L.LayerGroup> = {
+        extract: L.layerGroup().addTo(map),
+        spawn: L.layerGroup().addTo(map),
+        transit: L.layerGroup().addTo(map),
+        hazard: L.layerGroup().addTo(map),
+      };
+      for (const m of data.markers) {
+        if (!m.position) continue;
+        const key = m.type as LayerKey;
+        if (!groups[key]) continue;
+        const marker = L.marker(ll(m.position), { icon: iconFor(m), riseOnHover: true });
+        marker.bindTooltip(tooltipFor(m), {
+          className: 'cta-tip',
+          direction: 'top',
+          offset: [0, -8],
+          opacity: 1,
         });
-        marker.on('mouseover', () => poly.addTo(groups.extract));
-        marker.on('mouseout', () => poly.remove());
+        // полигон зоны выхода — на ховер
+        if (m.type === 'extract' && m.outline && m.outline.length > 2) {
+          const poly = L.polygon(m.outline.map(ll), {
+            className: `cta-ex-zone ef-${(m.faction || 'all').toLowerCase()}`,
+            interactive: false,
+          });
+          marker.on('mouseover', () => poly.addTo(groups.extract));
+          marker.on('mouseout', () => poly.remove());
+        }
+        if (m.type === 'spawn') {
+          const k = spawnKind(m);
+          if (k === 'pmc' || k === 'scav') marker.on('click', () => setSel((p) => (p === k ? null : k)));
+        }
+        marker.addTo(groups[key]);
+        markersRef.current.push({ marker, top: m.top, bottom: m.bottom });
       }
-      if (m.type === 'spawn') {
-        const k = spawnKind(m);
-        if (k === 'pmc' || k === 'scav') marker.on('click', () => setSel((p) => (p === k ? null : k)));
-      }
-      marker.addTo(groups[key]);
-      markersRef.current.push({ marker, top: m.top, bottom: m.bottom });
     }
 
     map.on('click', () => setSel(null));
@@ -362,8 +392,9 @@ export function MapViewerClient({
       loadImageRef.current = null;
       map.remove();
       mapRef.current = null;
+      setMapInst(null);
     };
-  }, [data, onReady, floors, isStatic]);
+  }, [data, onReady, floors, isStatic, editMode]);
 
   // Статичная мульти-этажная карта: либо свой SVG-файл на этаж (the-lab), либо ОДИН SVG со
   // слоями-этажами (<g>, как Ледокол) — этаж без своего image не перегружаем, видимостью рулит applyFloor.
@@ -488,6 +519,16 @@ export function MapViewerClient({
           </span>
         ) : null}
       </div>
+
+      {editMode && mapInst ? (
+        <MapMarkerEditor
+          map={mapInst}
+          activeFloor={activeFloor}
+          slug={data.slug}
+          floorName={floors[activeFloor]?.name ?? '—'}
+          initial={data.markers}
+        />
+      ) : null}
     </div>
   );
 }

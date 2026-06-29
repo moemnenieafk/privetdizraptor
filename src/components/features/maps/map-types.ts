@@ -14,6 +14,8 @@ export interface MapViewMarker {
   sides: string[] | null;
   categories: string[] | null;
   meta: Record<string, unknown> | null;
+  /** Статик-карты (ручные маркеры): индекс этажа для фильтра вместо game-Y top/bottom. */
+  floor?: number | null;
 }
 
 /** Полный пакет данных одной карты для интерактивного вьюера. */
