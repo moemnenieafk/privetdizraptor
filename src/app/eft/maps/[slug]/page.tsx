@@ -42,6 +42,7 @@ export default async function MapPage({ params, searchParams }: Props) {
       categories: null,
       meta: null,
       floor: m.floor,
+      category: m.category ?? null,
     }));
     const view: MapView = {
       slug,

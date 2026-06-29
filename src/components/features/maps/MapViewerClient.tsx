@@ -18,6 +18,8 @@ import {
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapLegend } from './MapLegend';
 import { MapMarkerEditor } from './MapMarkerEditor';
+import { manualMarkerIcon } from './manual-marker-icon';
+import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
 import type { MapViewerApi } from './map-frame-types';
 
@@ -313,8 +315,9 @@ export function MapViewerClient({
       staticLayerRef.current = manualGroup;
       for (const m of data.markers) {
         if (!m.position) continue;
-        const marker = L.marker(ll(m.position), { icon: iconFor(m), riseOnHover: true });
-        marker.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
+        const marker = L.marker(ll(m.position), { icon: manualMarkerIcon(m), riseOnHover: true });
+        const tip = m.label || (m.category ? categoryLabel(m.category) : null) || m.type;
+        marker.bindTooltip(tip, { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
         marker.addTo(manualGroup);
         markersRef.current.push({ marker, top: null, bottom: null, floor: m.floor ?? null });
       }

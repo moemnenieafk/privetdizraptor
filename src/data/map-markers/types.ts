@@ -8,7 +8,7 @@
  */
 export interface ManualMapMarker {
   id: string;
-  /** extract | spawn | transit | hazard | lock | switch | … (рендер — iconFor в MapViewerClient). */
+  /** extract | spawn | transit | hazard | lock | switch | loot | container. */
   type: string;
   /** Индекс этажа (buildMapFloors): 0 = наземный. */
   floor: number;
@@ -17,4 +17,6 @@ export interface ManualMapMarker {
   label?: string;
   /** Для выходов: 'pmc' | 'scav' | 'all'. */
   faction?: string;
+  /** Под-категория (spawn/loot/container) — ключ из data/map-markers/categories.ts. */
+  category?: string;
 }

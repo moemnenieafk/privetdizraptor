@@ -5,39 +5,34 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Copy, GripVertical, Trash2, X } from 'lucide-react';
 import type { MapViewMarker } from './map-types';
 import type { ManualMapMarker } from '@/data/map-markers';
+import { manualMarkerIcon } from './manual-marker-icon';
+import {
+  CONTAINER_CATEGORIES,
+  LOOT_CATEGORIES,
+  SPAWN_CATEGORIES,
+  categoryLabel,
+  defaultCategory,
+  type CategoryGroup,
+} from '@/data/map-markers/categories';
 
 /**
- * Дев-инструмент расстановки маркеров на СТАТИК-карте (тоггл кнопкой «Правка»).
- * Клик по карте → маркер выбранного типа на текущем этаже; режим «Удалить» → клик по маркеру стирает.
- * Экспорт → TS в буфер (вставить в `src/data/map-markers/{slug}.ts`). Не пишет в БД — данные в git.
+ * Дев-инструмент расстановки маркеров на СТАТИК-карте (тоггл «Правка»).
+ * Клик ставит маркер выбранного типа/категории на текущий этаж; режим «Удалить» → клик стирает.
+ * Экспорт → TS в буфер (вставить в src/data/map-markers/{slug}.ts). Данные в git, не в БД.
  * Панель перетаскивается за шапку в пределах фрейма карты.
  */
 
 const TYPES: { key: string; label: string; color: string }[] = [
   { key: 'extract', label: 'Выход', color: '#5FB85B' },
   { key: 'spawn', label: 'Спавн', color: '#E6A23C' },
+  { key: 'loot', label: 'Лут', color: '#E68E25' },
+  { key: 'container', label: 'Контейнер', color: '#9A8866' },
   { key: 'transit', label: 'Переход', color: '#5FA8D8' },
   { key: 'hazard', label: 'Опасн.', color: '#E5484D' },
   { key: 'lock', label: 'Замок', color: '#BDA550' },
   { key: 'switch', label: 'Рычаг', color: '#C26BE0' },
-  { key: 'loot', label: 'Лут', color: '#9696A1' },
 ];
 const colorOf = (t: string): string => TYPES.find((x) => x.key === t)?.color ?? '#9696A1';
-const camel = (s: string): string => s.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-
-function editIcon(m: ManualMapMarker, del: boolean): L.DivIcon {
-  const c = colorOf(m.type);
-  return L.divIcon({
-    className: 'cta-edit-di',
-    html: `<span style="display:block;width:14px;height:14px;border-radius:50%;background:${c};border:2px solid #141416;box-shadow:0 0 0 1px ${c}${
-      del ? ',0 0 8px 2px #E5484D' : ''
-    };cursor:${del ? 'pointer' : 'default'}"></span>${
-      m.label ? `<span style="position:absolute;left:18px;top:0;font-size:10px;color:#F2F2F2;text-shadow:0 1px 3px #000;white-space:nowrap">${m.label}</span>` : ''
-    }`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-  });
-}
 
 function fromView(initial: MapViewMarker[]): ManualMapMarker[] {
   return initial
@@ -50,6 +45,7 @@ function fromView(initial: MapViewMarker[]): ManualMapMarker[] {
       z: m.position!.z,
       label: m.label ?? undefined,
       faction: m.faction ?? undefined,
+      category: m.category ?? undefined,
     }));
 }
 
@@ -72,6 +68,7 @@ export function MapMarkerEditor({
 }) {
   const [markers, setMarkers] = useState<ManualMapMarker[]>(() => fromView(initial));
   const [type, setType] = useState('extract');
+  const [category, setCategory] = useState('');
   const [label, setLabel] = useState('');
   const [faction, setFaction] = useState('all');
   const [copied, setCopied] = useState(false);
@@ -80,11 +77,9 @@ export function MapMarkerEditor({
 
   const layerRef = useRef<L.LayerGroup | null>(null);
   const delRef = useRef<(id: string) => void>(() => {});
-
-  // Живой снимок полей для обработчика клика по карте (без переподписки на каждый ввод).
-  const stateRef = useRef({ type, label, faction, activeFloor, editing, delMode });
+  const stateRef = useRef({ type, category, label, faction, activeFloor, editing, delMode });
   useEffect(() => {
-    stateRef.current = { type, label, faction, activeFloor, editing, delMode };
+    stateRef.current = { type, category, label, faction, activeFloor, editing, delMode };
   });
 
   const del = useCallback((id: string) => setMarkers((prev) => prev.filter((p) => p.id !== id)), []);
@@ -92,21 +87,28 @@ export function MapMarkerEditor({
     delRef.current = del;
   });
 
-  // Клик по карте → новый маркер на текущем этаже (только в режиме правки и НЕ в режиме удаления).
+  const pickType = (t: string): void => {
+    setType(t);
+    setCategory(defaultCategory(t));
+  };
+
+  // Клик по карте → новый маркер (только в правке и НЕ в режиме удаления).
   useEffect(() => {
     const onClick = (e: L.LeafletMouseEvent) => {
       const s = stateRef.current;
       if (!s.editing || s.delMode) return;
       const x = Math.round(e.latlng.lng * 10) / 10;
       const z = Math.round(e.latlng.lat * 10) / 10;
+      const hasCat = s.type === 'spawn' || s.type === 'loot' || s.type === 'container';
       const m: ManualMapMarker = {
-        id: `${s.type}-${Math.round(x)}-${Math.round(z)}-f${s.activeFloor}`,
+        id: `${s.type}-${s.category || s.faction}-${Math.round(x)}-${Math.round(z)}-f${s.activeFloor}`,
         type: s.type,
         floor: s.activeFloor,
         x,
         z,
         ...(s.label ? { label: s.label } : {}),
         ...(s.type === 'extract' ? { faction: s.faction } : {}),
+        ...(hasCat && s.category ? { category: s.category } : {}),
       };
       setMarkers((prev) => [...prev.filter((p) => p.id !== m.id), m]);
     };
@@ -116,7 +118,7 @@ export function MapMarkerEditor({
     };
   }, [map]);
 
-  // Имперактивный рендер маркеров текущего этажа (только в режиме правки).
+  // Имперактивный рендер маркеров текущего этажа (только в правке).
   useEffect(() => {
     if (!layerRef.current) layerRef.current = L.layerGroup().addTo(map);
     const lg = layerRef.current;
@@ -124,7 +126,7 @@ export function MapMarkerEditor({
     if (!editing) return;
     for (const m of markers) {
       if (m.floor !== activeFloor) continue;
-      const mk = L.marker([m.z, m.x], { icon: editIcon(m, delMode), interactive: delMode, keyboard: false });
+      const mk = L.marker([m.z, m.x], { icon: manualMarkerIcon(m, delMode), interactive: delMode, keyboard: false });
       if (delMode)
         mk.on('click', (ev) => {
           L.DomEvent.stopPropagation(ev);
@@ -151,7 +153,7 @@ export function MapMarkerEditor({
   const onMove = (e: React.PointerEvent) => {
     if (!drag.current) return;
     const size = map.getSize();
-    const nx = Math.max(0, Math.min(drag.current.px + (e.clientX - drag.current.sx), size.x - 260));
+    const nx = Math.max(0, Math.min(drag.current.px + (e.clientX - drag.current.sx), size.x - 348));
     const ny = Math.max(0, Math.min(drag.current.py + (e.clientY - drag.current.sy), size.y - 56));
     setPos({ x: nx, y: ny });
   };
@@ -166,12 +168,14 @@ export function MapMarkerEditor({
       .sort((a, b) => a.floor - b.floor || a.type.localeCompare(b.type))
       .map((m) => {
         const parts = [`id: ${JSON.stringify(m.id)}`, `type: ${JSON.stringify(m.type)}`, `floor: ${m.floor}`, `x: ${m.x}`, `z: ${m.z}`];
-        if (m.label) parts.push(`label: ${JSON.stringify(m.label)}`);
+        if (m.category) parts.push(`category: ${JSON.stringify(m.category)}`);
         if (m.faction) parts.push(`faction: ${JSON.stringify(m.faction)}`);
+        if (m.label) parts.push(`label: ${JSON.stringify(m.label)}`);
         return `  { ${parts.join(', ')} },`;
       })
       .join('\n');
-    const ts = `import type { ManualMapMarker } from './types';\n\n// Ручные маркеры (редактор «Правка»). Новая карта — зарегистрируй массив в ./index.ts.\nexport const ${camel(slug)}Markers: ManualMapMarker[] = [\n${rows}\n];\n`;
+    const camel = slug.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+    const ts = `import type { ManualMapMarker } from './types';\n\n// Ручные маркеры (редактор «Правка»). Новая карта — зарегистрируй массив в ./index.ts.\nexport const ${camel}Markers: ManualMapMarker[] = [\n${rows}\n];\n`;
     void navigator.clipboard.writeText(ts).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
@@ -181,12 +185,10 @@ export function MapMarkerEditor({
   if (!editing) return null;
 
   const onFloor = markers.filter((m) => m.floor === activeFloor);
+  const groups: CategoryGroup[] | null = type === 'loot' ? LOOT_CATEGORIES : type === 'container' ? CONTAINER_CATEGORIES : null;
 
   return (
-    <div
-      className="absolute z-[600] w-65 rounded-sm border border-(--primary)/60 bg-(--color-base)/95 backdrop-blur-md"
-      style={{ left: pos.x, top: pos.y }}
-    >
+    <div className="absolute z-[600] w-87 rounded-sm border border-(--primary)/60 bg-(--color-base)/95 backdrop-blur-md" style={{ left: pos.x, top: pos.y }}>
       {/* Шапка — drag handle */}
       <div
         onPointerDown={onDown}
@@ -202,12 +204,13 @@ export function MapMarkerEditor({
       </div>
 
       <div className="flex flex-col gap-2 p-2.5">
+        {/* Тип маркера */}
         <div className="flex flex-wrap gap-1">
           {TYPES.map((t) => (
             <button
               key={t.key}
               type="button"
-              onClick={() => setType(t.key)}
+              onClick={() => pickType(t.key)}
               className={`rounded-xs px-2 py-1 font-blender-medium text-xs uppercase tracking-wider transition-colors ${
                 type === t.key ? 'text-(--color-base)' : 'text-text-secondary hover:text-text-primary'
               }`}
@@ -218,13 +221,7 @@ export function MapMarkerEditor({
           ))}
         </div>
 
-        <input
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder="Подпись (опц.)"
-          className="rounded-xs border border-lines-hover bg-card-menu px-2 py-1 font-blender-book text-sm text-text-primary placeholder:text-text-muted"
-        />
-
+        {/* Под-категория */}
         {type === 'extract' ? (
           <div className="flex gap-1">
             {(['all', 'pmc', 'scav'] as const).map((f) => (
@@ -232,7 +229,7 @@ export function MapMarkerEditor({
                 key={f}
                 type="button"
                 onClick={() => setFaction(f)}
-                className={`rounded-xs px-2 py-1 font-blender-medium text-xs uppercase transition-colors ${
+                className={`rounded-xs px-2 py-1 font-blender-medium text-type-micro uppercase transition-colors ${
                   faction === f ? 'bg-(--primary) text-(--color-base)' : 'text-text-muted hover:text-(--primary)'
                 }`}
               >
@@ -242,8 +239,60 @@ export function MapMarkerEditor({
           </div>
         ) : null}
 
-        <p className="font-blender-book text-xs text-text-muted">
-          {delMode ? 'Режим удаления — клик по маркеру стирает его.' : `Клик по карте — поставить «${TYPES.find((t) => t.key === type)?.label}» на «${floorName}».`}
+        {type === 'spawn' ? (
+          <div className="flex flex-wrap gap-1">
+            {SPAWN_CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => setCategory(c.key)}
+                className={`rounded-xs px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide transition-colors ${
+                  category === c.key ? 'bg-(--primary) text-(--color-base)' : 'border border-lines-hover text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {groups ? (
+          <div className="scrollbar-compact flex max-h-44 flex-col gap-1.5 overflow-y-auto pr-1">
+            {groups.map((g) => (
+              <div key={g.group}>
+                <div className="px-0.5 font-blender-medium text-type-micro uppercase tracking-wider text-text-muted">{g.group}</div>
+                <div className="mt-0.5 flex flex-wrap gap-1">
+                  {g.items.map((it) => {
+                    const on = category === it.key;
+                    return (
+                      <button
+                        key={it.key}
+                        type="button"
+                        onClick={() => setCategory(it.key)}
+                        className={`flex items-center gap-1 rounded-xs px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide transition-colors ${
+                          on ? 'bg-(--primary) text-(--color-base)' : 'border border-lines-hover text-text-secondary hover:text-text-primary'
+                        }`}
+                      >
+                        {it.icon ? <span className={`icon-mask ${it.icon} h-3 w-3 shrink-0`} style={{ color: on ? 'var(--color-base)' : '#9696A1' }} /> : null}
+                        {it.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <input
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="Подпись (опц.)"
+          className="rounded-xs border border-lines-hover bg-card-menu px-2 py-1 font-blender-book text-sm text-text-primary placeholder:text-text-muted"
+        />
+
+        <p className="font-blender-book text-type-micro text-text-muted">
+          {delMode ? 'Режим удаления — клик по маркеру стирает его.' : `Клик по карте — поставить на «${floorName}».`}
         </p>
 
         <div className="scrollbar-compact max-h-40 overflow-y-auto">
@@ -253,7 +302,7 @@ export function MapMarkerEditor({
             onFloor.map((m) => (
               <div key={m.id} className="flex items-center gap-2 py-0.5 font-blender-book text-xs text-text-secondary">
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colorOf(m.type) }} />
-                <span className="flex-1 truncate">{m.label || m.type}</span>
+                <span className="flex-1 truncate">{m.label || (m.category ? categoryLabel(m.category) : null) || m.type}</span>
                 <button type="button" onClick={() => del(m.id)} className="shrink-0 text-text-muted transition-colors hover:text-failure" aria-label="Удалить маркер">
                   <X className="h-3.5 w-3.5" />
                 </button>
