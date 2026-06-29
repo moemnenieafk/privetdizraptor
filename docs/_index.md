@@ -24,21 +24,14 @@ SORT status ASC, date ASC
 ```
 
 **Гигиена кода**
-- [[dead-routes-cleanup]] — снести пустые route-папки (ammo, crafts, 11×maps) и `graphify-out`
 - [[fsd-lite-normalize]] — вынести `PlaceholderPage` + хук из корня `components/`, слить дубликат хука
-- [[css-consolidation]] — собрать раздробленный CSS, убрать `globals.css` из `data/`
-
-**Стиль-долг (NIGHTFALL)**
-- [[style-debt]] — `any`×8, `font-mono`×7, сырой HEX, `rounded-[Npx]`×6 → `/tw-fix` + `/refactor`
 
 **Блокеры**
 - [[supabase-jwt-fix]] — критичный: ES256 ломает загрузку аватара (RLS режет `auth.uid()`)
-- [[claude-md-version]] — CLAUDE.md заявляет Next 14, по факту Next 16
 
 **Развитие**
 - [[maps-v2-scope]] — карты: больше типов маркеров, зоны квестов, локации без подложки
 - [[multigaming-second-game]] — когда и как добавить вторую игру
-- [[account-real-data]] — убрать захардкоженные даты/соц-привязки из AccountCenter
 
 ## 🎯 Видение
 - [[roadmap]] — горизонт и приоритеты: что разрабатываю/улучшаю дальше
@@ -46,3 +39,17 @@ SORT status ASC, date ASC
 ## 🗂 Шаблоны
 - [[decision]] — шаблон решения (за/против)
 - [[feature]] — шаблон фичи
+
+## ✅ Сделано
+Архив исполненных решений — файлы в `decisions/done/`, статусы дублирует борд выше.
+
+> [!success]- Развернуть архив (9) · свежие сверху
+> - [[css-consolidation]] — Собрать раздробленный CSS · 2026-06-29
+> - [[account-real-data]] — AccountCenter: реальные данные · 2026-06-29
+> - [[dead-routes-cleanup]] — Снести мёртвые route-папки · 2026-06-28
+> - [[style-debt]] — Стиль-долг (NIGHTFALL) · 2026-06-28
+> - [[claude-md-version]] — CLAUDE.md: Next 14 → 16 · 2026-06-28
+> - [[icon-hosting-r2]] — Иконки предметов → Cloudflare R2 · 2026-06-28
+> - [[db-egress-reduction]] — Снижение DB-egress (кэш + пререндер) · 2026-06-28
+> - [[maps-ui-fixes]] — Карты: быстрые UI-фиксы · 2026-06-28
+> - [[vercel-skip-docs-builds]] — Vercel: пропуск билда для docs-пушей · 2026-06-28

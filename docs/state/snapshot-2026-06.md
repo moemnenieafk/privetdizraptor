@@ -32,12 +32,12 @@ CTA — портал-агрегатор для хардкорных extraction-�
 - `AccountCenter` — захардкоженные даты активности и соц-привязки
 
 ## Отклонения от правил
-**FSD-lite:** `PlaceholderPage.tsx` и `useIntersectionObserver.ts` в корне `components/` · дубликат хука (`hooks/` + `components/`) · page-компоненты колоцированы в `app/` · CSS раздроблён (`icons.css` + `data/globals.css`).
+**FSD-lite:** `PlaceholderPage.tsx` и `useIntersectionObserver.ts` в корне `components/` · дубликат хука (`hooks/` + `components/`) · page-компоненты колоцированы в `app/` · ~~CSS раздроблён (`icons.css` + `data/globals.css`)~~ ✅ снят мёртвый дубль 2026-06-29 ([[css-consolidation]]).
 
 NIGHTFALL-счётчики ниже — **автоматические**: их пересчитывает `scripts/sync-style-debt.mjs` (pre-commit хук) из `src/`. Руками не править — перезапишутся. Эталоны: `font-mono`→`font-blender-medium`, `rounded-[Npx]`→`rounded-xs`, сырой HEX→токены.
 
 <!-- debt:auto -->
-**NIGHTFALL** (авто): any — 11 шт / 4 файлов · font-mono — 7 файлов · сырой HEX в произвольных значениях — 4 шт / 1 файлов · произвольный rounded в px — 6 шт · v3-утечки (gradient-направление, var() в bg) — ✅ нет.
+**NIGHTFALL** (авто): any — 0 шт / 0 файлов · font-mono — 0 файлов · сырой HEX в произвольных значениях — 0 шт / 0 файлов · произвольный rounded в px — 2 шт · v3-утечки (gradient-направление, var() в bg) — ✅ нет.
 <!-- /debt:auto -->
 
 ## Техдолг
