@@ -180,6 +180,13 @@ export function MapMarkerEditor({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
+    // Дев: дублируем экспорт файлом на диск (буфер ненадёжен в авто-режиме) → читается извне.
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([ts], { type: 'text/plain' }));
+    a.download = `${slug}-markers.ts`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }, [markers, slug]);
 
   if (!editing) return null;
