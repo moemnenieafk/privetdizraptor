@@ -361,6 +361,28 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       { name: "10 · Крыша мостика", svgLayer: "bridge_roof", show: false },
     ],
   },
+  labyrinth: {
+    // Подложка адаптирована с tarkov-market, перекрашена под NIGHTFALL. ОДНОЭТАЖНАЯ
+    // (svgLayer:null, layers:[] → нет переключателя). Маркеров пока нет (v1).
+    // tarkov.dev знает её как `the-labyrinth` — для апгрейда до интерактива в v2.
+    slug: "labyrinth",
+    svgFile: "labyrinth.svg",
+    staticMap: true,
+    displayName: "Лабиринт",
+    author: "tarkov-market",
+    authorLink: null,
+    minZoom: -4,
+    maxZoom: 3,
+    transform: [1, 0, 1, 0],
+    coordinateRotation: 0,
+    bounds: [
+      [0, 0],
+      [3300, 3200],
+    ],
+    heightRange: null,
+    svgLayer: null,
+    layers: [],
+  },
 };
 
 /** Этаж карты для UI-переключателя: имя, id <g>-группы SVG (или null) и диапазон высоты. */
