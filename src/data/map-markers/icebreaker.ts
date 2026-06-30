@@ -11,8 +11,8 @@ import type { ManualMapMarker } from './types';
  * Квесты (выбран ВАРИАНТ 1 — «представительно», не полное лут-облако):
  *   • Судовая электрика — 4 цели сняты с tarkov-market (objectiveId best-effort).
  *   • Замена масла — 3 представит. точки на Лазарете сняты реально (АМГ-10 — лут-облако 10+).
- *   • Мирный атом — 3 точки ОЦЕНКА (журнал ЯЭУ спавнится на нижней палубе у реактора;
- *     реальную съёмку прервал БСОД) → доснять/выверить в редакторе, малый приоритет.
+ *   • Мирный атом — 3 представит. точки в Central Control Room на палубе Склад/Охрана (floor 4);
+ *     журнал ЯЭУ «on tables» (источник tarkov-market), точный пиксель — под ревью в редакторе.
  * Классы спавнов (отступник↔blackdiv), плотность и objectiveId квестов — под ревью V4DYA.
  */
 export const icebreakerMarkers: ManualMapMarker[] = [
@@ -98,8 +98,10 @@ export const icebreakerMarkers: ManualMapMarker[] = [
   { id: 'quest-om-2517-5735-f0', type: 'quest', floor: 0, x: 2517, z: 5735, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
   { id: 'quest-om-2548-5520-f0', type: 'quest', floor: 0, x: 2548, z: 5520, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
   { id: 'quest-om-2292-3815-f0', type: 'quest', floor: 0, x: 2292, z: 3815, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
-  // Мирный атом (69ce1f84…): спавны Журнала контроля ЯЭУ (1 objectiveId на все), 3 шт. ⚠ ЧЕРНОВЫЕ позиции.
-  { id: 'quest-pa-2308-4642-f0', type: 'quest', floor: 0, x: 2308, z: 4642, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
-  { id: 'quest-pa-2433-4642-f0', type: 'quest', floor: 0, x: 2433, z: 4642, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
-  { id: 'quest-pa-2412-3517-f0', type: 'quest', floor: 0, x: 2412, z: 3517, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
+  // Мирный атом (69ce1f84…): Журнал контроля ЯЭУ — ЛУТ-СПАВН, «on tables» в Central Control Room.
+  //   Источник tarkov-market: журнал на палубе СКЛАД/ОХРАНА (floor 4), облако ~6 точек. Ниже — 3
+  //   представительные в зоне диспетчерской (этаж исправлен 0→4; кластер у репера Судовая Ц4 2548/3407).
+  { id: 'quest-pa-2470-3460-f4', type: 'quest', floor: 4, x: 2470, z: 3460, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: журнал ЯЭУ (диспетчерская)' },
+  { id: 'quest-pa-2548-3400-f4', type: 'quest', floor: 4, x: 2548, z: 3400, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: журнал ЯЭУ (диспетчерская)' },
+  { id: 'quest-pa-2625-3455-f4', type: 'quest', floor: 4, x: 2625, z: 3455, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: журнал ЯЭУ (диспетчерская)' },
 ];
