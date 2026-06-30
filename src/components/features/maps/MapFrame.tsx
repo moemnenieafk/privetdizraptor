@@ -127,9 +127,13 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
     return () => el.removeEventListener('wheel', onWheel, { capture: true });
   }, [floors.length, stepFloor]);
 
+  // Дефолт-фрейм (решение maps-frame-size): эталон 1100×768 на FullHD — ширина max-w-275 (=1100px,
+  // как контент шапки), высота max-h-192 (=768px). Ниже FullHD высота ужимается под вьюпорт
+  // (≈220px = шапка + отступы main), чтобы хедер+фрейм влезали без скролла; min-h-105 (=420px) — пол.
+  // Fullscreen — без изменений.
   const frameCls = isFullscreen
     ? 'fixed inset-0 z-[100] flex flex-col bg-(--color-base)'
-    : 'relative flex h-[80vh] min-h-[600px] w-full flex-col overflow-hidden rounded-lg border border-lines-hover bg-(--color-base)';
+    : 'relative mx-auto flex h-[calc(100svh-220px)] max-h-192 min-h-105 w-full max-w-275 flex-col overflow-hidden rounded-lg border border-lines-hover bg-(--color-base)';
 
   return (
     <div className={frameCls}>
