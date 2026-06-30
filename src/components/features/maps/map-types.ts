@@ -18,6 +18,9 @@ export interface MapViewMarker {
   floor?: number | null;
   /** Статик-карты: под-категория (spawn/loot/container) для иконки/подписи. */
   category?: string | null;
+  /** Статик-карты (quest-маркеры): привязка к квесту/цели — клик и deep-link. */
+  questId?: string | null;
+  objectiveId?: string | null;
 }
 
 /** Полный пакет данных одной карты для интерактивного вьюера. */

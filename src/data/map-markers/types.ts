@@ -19,4 +19,8 @@ export interface ManualMapMarker {
   faction?: string;
   /** Под-категория (spawn/loot/container) — ключ из data/map-markers/categories.ts. */
   category?: string;
+  /** type='quest': BSG-id квеста (привязка к деталке/QuestMap). */
+  questId?: string;
+  /** type='quest': id конкретной цели (objective) квеста. */
+  objectiveId?: string;
 }

@@ -16,6 +16,7 @@ const TYPE_COLOR: Record<string, string> = {
   switch: '#C26BE0',
   loot: '#E68E25',
   container: '#9A8866',
+  quest: '#E0C24A',
 };
 
 const LOOT_ICON = new Map(LOOT_CATEGORIES.flatMap((g) => g.items).map((i) => [i.key, i.icon ?? '']));
@@ -33,7 +34,7 @@ export interface ManualMarkerLike {
 export function manualMarkerIcon(m: ManualMarkerLike, del = false): L.DivIcon {
   const color = TYPE_COLOR[m.type] ?? '#9696A1';
   const lootIcon = m.type === 'loot' && m.category ? LOOT_ICON.get(m.category) : undefined;
-  const glyph = m.type === 'transit' ? '⇄' : m.type === 'hazard' ? '⚠' : '';
+  const glyph = m.type === 'transit' ? '⇄' : m.type === 'hazard' ? '⚠' : m.type === 'quest' ? '!' : '';
 
   let inner: string;
   if (lootIcon) {

@@ -318,6 +318,9 @@ export function MapViewerClient({
         const marker = L.marker(ll(m.position), { icon: manualMarkerIcon(m), riseOnHover: true });
         const tip = m.label || (m.category ? categoryLabel(m.category) : null) || m.type;
         marker.bindTooltip(tip, { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
+        if (m.type === 'quest' && m.questId) {
+          marker.on('click', () => window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener'));
+        }
         marker.addTo(manualGroup);
         markersRef.current.push({ marker, top: null, bottom: null, floor: m.floor ?? null });
       }

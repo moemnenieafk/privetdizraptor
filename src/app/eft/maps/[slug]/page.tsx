@@ -29,7 +29,8 @@ export default async function MapPage({ params, searchParams }: Props) {
   // слоёв и поиска. Не ходит в БД и не зависит от tarkov.dev-геометрии.
   if (config?.staticMap && config.svgFile) {
     // Ручные маркеры (редактор ?edit=1) — наши кураторские данные, не из tarkov.dev.
-    const markers: MapViewMarker[] = getManualMarkers(slug).map((m) => ({
+    const manual = getManualMarkers(slug);
+    const markers: MapViewMarker[] = manual.map((m) => ({
       id: m.id,
       type: m.type,
       position: { x: m.x, y: 0, z: m.z },
@@ -43,7 +44,13 @@ export default async function MapPage({ params, searchParams }: Props) {
       meta: null,
       floor: m.floor,
       category: m.category ?? null,
+      questId: m.questId ?? null,
+      objectiveId: m.objectiveId ?? null,
     }));
+    // Quest-маркеры → зоны для deep-link ?quest= (перелёт к цели квеста на карте).
+    const questZones: MapQuestZone[] = manual
+      .filter((m) => m.type === 'quest' && m.questId)
+      .map((m) => ({ questId: m.questId as string, position: { x: m.x, z: m.z }, outline: [] }));
     const view: MapView = {
       slug,
       name: config.displayName ?? slug,
@@ -63,7 +70,7 @@ export default async function MapPage({ params, searchParams }: Props) {
     const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
     return (
       <main className="w-full px-4 pt-4 pb-8 xl:px-8">
-        <MapFrame data={view} navMaps={navMaps} quests={[]} bosses={[]} questZones={[]} />
+        <MapFrame data={view} navMaps={navMaps} quests={[]} bosses={[]} questZones={questZones} focusQuestId={focusQuestId} />
       </main>
     );
   }
