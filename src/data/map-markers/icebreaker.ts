@@ -89,10 +89,12 @@ export const icebreakerMarkers: ManualMapMarker[] = [
   { id: 'quest-se-c2-2496-3392-f0', type: 'quest', floor: 0, x: 2496, z: 3392, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e5594c6dd4d9e12fa3de0d', label: 'Судовая электрика: автоматика под машинным' },
   { id: 'quest-se-c3-2149-4010-f4', type: 'quest', floor: 4, x: 2149, z: 4010, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e559525afcf4e746e98e33', label: 'Судовая электрика: автоматика у кладовой' },
   { id: 'quest-se-c4-2548-3407-f4', type: 'quest', floor: 4, x: 2548, z: 3407, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e559bf4b53b554a2779130', label: 'Судовая электрика: взлом в диспетчерской' },
-  // Замена масла (69ce1de0…): спавны АМГ-10 (1 objectiveId на все). ⚠ ЧЕРНОВЫЕ позиции (оценка, не сверены).
-  { id: 'quest-om-2308-5668-f0', type: 'quest', floor: 0, x: 2308, z: 5668, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
-  { id: 'quest-om-2538-5505-f0', type: 'quest', floor: 0, x: 2538, z: 5505, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
-  { id: 'quest-om-2183-3872-f0', type: 'quest', floor: 0, x: 2183, z: 3872, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
+  // Замена масла (69ce1de0…): АМГ-10 — ЛУТ-СПАВН (предмет сыпется во МНОГО мест: ~3 на Лазарете +
+  //   ~7 на Складе + др. палубы = облако 10+, НЕ 4). Ниже — 3 представительных точки на Лазарете
+  //   (сняты реально с tarkov-market). Полнота облака — решение V4DYA (см. развилку в чате/решении).
+  { id: 'quest-om-2517-5735-f0', type: 'quest', floor: 0, x: 2517, z: 5735, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
+  { id: 'quest-om-2548-5520-f0', type: 'quest', floor: 0, x: 2548, z: 5520, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
+  { id: 'quest-om-2292-3815-f0', type: 'quest', floor: 0, x: 2292, z: 3815, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
   // Мирный атом (69ce1f84…): спавны Журнала контроля ЯЭУ (1 objectiveId на все), 3 шт. ⚠ ЧЕРНОВЫЕ позиции.
   { id: 'quest-pa-2308-4642-f0', type: 'quest', floor: 0, x: 2308, z: 4642, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
   { id: 'quest-pa-2433-4642-f0', type: 'quest', floor: 0, x: 2433, z: 4642, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
