@@ -126,7 +126,7 @@ export function MapMarkerEditor({
     if (!editing) return;
     for (const m of markers) {
       if (m.floor !== activeFloor) continue;
-      const mk = L.marker([m.z, m.x], { icon: manualMarkerIcon(m, delMode), interactive: delMode, keyboard: false });
+      const mk = L.marker([m.z, m.x], { icon: manualMarkerIcon(m, delMode, true), interactive: delMode, keyboard: false });
       if (delMode)
         mk.on('click', (ev) => {
           L.DomEvent.stopPropagation(ev);

@@ -31,7 +31,7 @@ export interface ManualMarkerLike {
   faction?: string | null;
 }
 
-export function manualMarkerIcon(m: ManualMarkerLike, del = false): L.DivIcon {
+export function manualMarkerIcon(m: ManualMarkerLike, del = false, showLabel = false): L.DivIcon {
   const color = TYPE_COLOR[m.type] ?? '#9696A1';
   const lootIcon = m.type === 'loot' && m.category ? LOOT_ICON.get(m.category) : undefined;
   const glyph = m.type === 'transit' ? '⇄' : m.type === 'hazard' ? '⚠' : m.type === 'quest' ? '!' : '';
@@ -45,7 +45,7 @@ export function manualMarkerIcon(m: ManualMarkerLike, del = false): L.DivIcon {
     const radius = m.type === 'container' ? '2px' : '50%';
     inner = `<span style="display:block;width:13px;height:13px;border-radius:${radius};background:${color};border:2px solid #141416;box-shadow:0 0 0 1px ${color}${del ? ',0 0 8px 2px #E5484D' : ''}"></span>`;
   }
-  const labelHtml = m.label
+  const labelHtml = showLabel && m.label
     ? `<span style="position:absolute;left:20px;top:0;font-size:10px;color:#F2F2F2;text-shadow:0 1px 3px #000;white-space:nowrap">${esc(m.label)}</span>`
     : '';
 
