@@ -80,4 +80,18 @@ export const icebreakerMarkers: ManualMapMarker[] = [
   { id: 'loot-keycards-2565-3253-f12', type: 'loot', floor: 12, x: 2565, z: 3253, category: 'keycards' },
   // floor 13 — Крыша мостика (10); цилиндры/круги = вентиляция (не маркеры)
   { id: 'lock-hatch-2536-3300-f13', type: 'lock', floor: 13, x: 2536, z: 3300, label: 'Люк (Hatch)' },
+  // === QUEST-маркеры (побочная цепочка Ледокола) — показаны на палубе «Лазарет» у tarkov-market ===
+  // Судовая электрика (69e55832…), 4 цели; objectiveId — best-effort по позиции, под ревью V4DYA.
+  { id: 'quest-se-c1-2433-4620-f0', type: 'quest', floor: 0, x: 2433, z: 4620, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e5593e3f425636f1d762d9', label: 'Судовая электрика: у машинного' },
+  { id: 'quest-se-c2-2183-4017-f0', type: 'quest', floor: 0, x: 2183, z: 4017, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e5594c6dd4d9e12fa3de0d', label: 'Судовая электрика: под машинным' },
+  { id: 'quest-se-c3-2807-4017-f0', type: 'quest', floor: 0, x: 2807, z: 4017, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e559525afcf4e746e98e33', label: 'Судовая электрика: у кладовой' },
+  { id: 'quest-se-c4-2558-3392-f0', type: 'quest', floor: 0, x: 2558, z: 3392, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e559bf4b53b554a2779130', label: 'Судовая электрика: диспетчерская' },
+  // Замена масла (69ce1de0…): спавны АМГ-10 (1 objectiveId на все); снято 3 из 4, 4-й уточнить.
+  { id: 'quest-om-2308-5668-f0', type: 'quest', floor: 0, x: 2308, z: 5668, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
+  { id: 'quest-om-2538-5505-f0', type: 'quest', floor: 0, x: 2538, z: 5505, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
+  { id: 'quest-om-2183-3872-f0', type: 'quest', floor: 0, x: 2183, z: 3872, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
+  // Мирный атом (69ce1f84…): спавны Журнала контроля ЯЭУ (1 objectiveId на все), 3 шт.
+  { id: 'quest-pa-2308-4642-f0', type: 'quest', floor: 0, x: 2308, z: 4642, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
+  { id: 'quest-pa-2433-4642-f0', type: 'quest', floor: 0, x: 2433, z: 4642, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
+  { id: 'quest-pa-2412-3517-f0', type: 'quest', floor: 0, x: 2412, z: 3517, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
 ];
