@@ -6,9 +6,11 @@ import type { ManualMapMarker } from './types';
  * buildMapFloors (0 = «Лазарет»). tarkov.dev по карте даёт только спавны/боссов → вручную.
  * Метод/гочи: скилл .claude/skills/import-external-map-markers.
  *
- * СТАТУС (2026-06-30, прервано отключением света): 53 маркера, этажи 0,1,2,4,5,6,7,8,9,10,12,13.
- * НЕ сняты: floor 3 (−1 Топливные), floor 11 (Лестница — закрыто, вероятно пусто). Квесты — не начаты.
- * Классы спавнов (отступник↔blackdiv) и плотность — под ревью V4DYA.
+ * СТАТУС: 53 базовых маркера (этажи 0,1,2,4,5,6,7,8,9,10,12,13) + квест-цепочка (см. ниже).
+ * НЕ сняты: floor 3 (−1 Топливные), floor 11 (Лестница — закрыто, вероятно пусто).
+ * Квесты: Судовая электрика — позиции сняты с tarkov-market (4 цели). Замена масла + Мирный атом —
+ *   ПОЗИЦИИ ЧЕРНОВЫЕ (оценка, не сверены) → доснять/выверить в редакторе.
+ * Классы спавнов (отступник↔blackdiv), плотность и objectiveId квестов — под ревью V4DYA.
  */
 export const icebreakerMarkers: ManualMapMarker[] = [
   // floor 0 — Лазарет · нижняя секция (Laboratory / Wardr.)
@@ -81,16 +83,17 @@ export const icebreakerMarkers: ManualMapMarker[] = [
   // floor 13 — Крыша мостика (10); цилиндры/круги = вентиляция (не маркеры)
   { id: 'lock-hatch-2536-3300-f13', type: 'lock', floor: 13, x: 2536, z: 3300, label: 'Люк (Hatch)' },
   // === QUEST-маркеры (побочная цепочка Ледокола) — показаны на палубе «Лазарет» у tarkov-market ===
-  // Судовая электрика (69e55832…), 4 цели; objectiveId — best-effort по позиции, под ревью V4DYA.
-  { id: 'quest-se-c1-2433-4620-f0', type: 'quest', floor: 0, x: 2433, z: 4620, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e5593e3f425636f1d762d9', label: 'Судовая электрика: у машинного' },
-  { id: 'quest-se-c2-2183-4017-f0', type: 'quest', floor: 0, x: 2183, z: 4017, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e5594c6dd4d9e12fa3de0d', label: 'Судовая электрика: под машинным' },
-  { id: 'quest-se-c3-2807-4017-f0', type: 'quest', floor: 0, x: 2807, z: 4017, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e559525afcf4e746e98e33', label: 'Судовая электрика: у кладовой' },
-  { id: 'quest-se-c4-2558-3392-f0', type: 'quest', floor: 0, x: 2558, z: 3392, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e559bf4b53b554a2779130', label: 'Судовая электрика: диспетчерская' },
-  // Замена масла (69ce1de0…): спавны АМГ-10 (1 objectiveId на все); снято 3 из 4, 4-й уточнить.
+  // Судовая электрика (69e55832…), 4 цели. Позиции сняты автономно с tarkov-market (identичный арт):
+  // Ц1/Ц2 на палубе Лазарет (floor 0, у Engine Room), Ц3/Ц4 на палубе Склад/Охрана (floor 4). objectiveId — best-effort по описанию.
+  { id: 'quest-se-c1-2558-4617-f0', type: 'quest', floor: 0, x: 2558, z: 4617, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e5593e3f425636f1d762d9', label: 'Судовая электрика: автоматика у машинного' },
+  { id: 'quest-se-c2-2496-3392-f0', type: 'quest', floor: 0, x: 2496, z: 3392, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e5594c6dd4d9e12fa3de0d', label: 'Судовая электрика: автоматика под машинным' },
+  { id: 'quest-se-c3-2149-4010-f4', type: 'quest', floor: 4, x: 2149, z: 4010, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e559525afcf4e746e98e33', label: 'Судовая электрика: автоматика у кладовой' },
+  { id: 'quest-se-c4-2548-3407-f4', type: 'quest', floor: 4, x: 2548, z: 3407, questId: '69e5583240c3e6c8ba0edbd5', objectiveId: '69e559bf4b53b554a2779130', label: 'Судовая электрика: взлом в диспетчерской' },
+  // Замена масла (69ce1de0…): спавны АМГ-10 (1 objectiveId на все). ⚠ ЧЕРНОВЫЕ позиции (оценка, не сверены).
   { id: 'quest-om-2308-5668-f0', type: 'quest', floor: 0, x: 2308, z: 5668, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
   { id: 'quest-om-2538-5505-f0', type: 'quest', floor: 0, x: 2538, z: 5505, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
   { id: 'quest-om-2183-3872-f0', type: 'quest', floor: 0, x: 2183, z: 3872, questId: '69ce1de03e15cd80bd06f6c9', objectiveId: '69ce1e2614b1a16885f61da4', label: 'Замена масла: спавн АМГ-10' },
-  // Мирный атом (69ce1f84…): спавны Журнала контроля ЯЭУ (1 objectiveId на все), 3 шт.
+  // Мирный атом (69ce1f84…): спавны Журнала контроля ЯЭУ (1 objectiveId на все), 3 шт. ⚠ ЧЕРНОВЫЕ позиции.
   { id: 'quest-pa-2308-4642-f0', type: 'quest', floor: 0, x: 2308, z: 4642, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
   { id: 'quest-pa-2433-4642-f0', type: 'quest', floor: 0, x: 2433, z: 4642, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
   { id: 'quest-pa-2412-3517-f0', type: 'quest', floor: 0, x: 2412, z: 3517, questId: '69ce1f84ebbdbf36a200627c', objectiveId: '69ce1f84ebbdbf36a200627e', label: 'Мирный атом: спавн журнала' },
