@@ -38,6 +38,8 @@ export interface EftMapConfig {
    * напрямую (Next), без Storage/CDN и без записи в map_assets (синк её пропускает).
    */
   staticMap?: boolean;
+  /** Показывать ТОЛЬКО активную палубу: соседние <g>-этажи полностью скрыты (Ледокол — палубы стопкой, иначе сливаются). */
+  soloFloors?: boolean;
   /** Отображаемое имя (для статичных карт — их нет в БД, имя берём отсюда). */
   displayName?: string;
   /** Имя наземного этажа в переключателе (по умолчанию «Поверхность»). */
@@ -324,6 +326,7 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     slug: "icebreaker",
     svgFile: "icebreaker.svg",
     staticMap: true,
+    soloFloors: true,
     displayName: "Ледокол",
     groundName: "Главный / Лазарет",
     raid: {

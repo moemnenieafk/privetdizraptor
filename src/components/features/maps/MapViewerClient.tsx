@@ -431,6 +431,7 @@ export function MapViewerClient({
     vis.hazard ? '' : 'hide-hazard',
     `fac-${faction}`,
     sel ? `sel-${sel}` : '',
+    data.config.soloFloors ? 'solo-floors' : '',
   ]
     .filter(Boolean)
     .join(' ');
