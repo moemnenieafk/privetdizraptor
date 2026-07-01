@@ -55,6 +55,12 @@
   --color-kappa: #BDA550;        /* Kappa secure container color */
   --color-lightkeeper: #2ED399;  /* Lightkeeper color */
 
+  /* Achievement rarity (выверено V4DYA по градации Таркова, 2026-07-02). Подложка плитки = /30. */
+  --color-rarity-legendary:  #BDA550; /* Легендарное — цвет Каппы (= --color-kappa) */
+  --color-rarity-rare:       #4C2A55; /* Редкое — тёмный фиолет (ТОЛЬКО подложка плитки) */
+  --color-rarity-rare-badge: #A069AF; /* Редкое — светлый фиолет для бейджа/текста (читаемость) */
+  /* Обычное — серый text-secondary (#9696A1), отдельный токен не нужен */
+
   /* Цвета торговцев EFT */
   --trader-prapor:      #4B5320;
   --trader-therapist:   #45998B;

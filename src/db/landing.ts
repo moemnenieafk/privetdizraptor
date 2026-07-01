@@ -40,7 +40,11 @@ export async function pruneStale(
   return { deleted: res.count, skipped: false };
 }
 
-interface RawAchievement { id: string; name?: string; description?: string; hidden?: boolean; playersCompletedPercent?: number }
+interface RawAchievement {
+  id: string; name?: string; description?: string; hidden?: boolean; playersCompletedPercent?: number;
+  rarity?: string | null; normalizedRarity?: string | null; side?: string | null; normalizedSide?: string | null;
+  adjustedPlayersCompletedPercent?: number | null;
+}
 interface RawMap { id: string; name?: string; normalizedName?: string }
 interface RawTrader { name?: string; normalizedName: string; resetTime?: string | null; levels?: { level: number; requiredPlayerLevel: number }[] }
 interface RawResponse {
@@ -50,7 +54,7 @@ interface RawResponse {
 
 const QUERY = `
   query {
-    achievements(lang: ru) { id name description hidden playersCompletedPercent }
+    achievements(lang: ru) { id name description hidden playersCompletedPercent rarity normalizedRarity side normalizedSide adjustedPlayersCompletedPercent }
     maps(lang: ru) { id name normalizedName }
     traders(lang: ru) { name normalizedName resetTime levels { level requiredPlayerLevel } }
   }
@@ -91,12 +95,18 @@ export async function syncEftLandingData(): Promise<SyncLandingResult> {
       .values(a.map((x) => ({
         id: x.id, gameId, name: x.name ?? "—", description: x.description ?? null,
         hidden: x.hidden ?? null, playersCompletedPercent: x.playersCompletedPercent ?? null,
+        rarity: x.rarity ?? null, normalizedRarity: x.normalizedRarity ?? null,
+        side: x.side ?? null, normalizedSide: x.normalizedSide ?? null,
+        adjustedPlayersCompletedPercent: x.adjustedPlayersCompletedPercent ?? null,
       })))
       .onConflictDoUpdate({
         target: achievements.id,
         set: {
           name: sql`excluded.name`, description: sql`excluded.description`,
           hidden: sql`excluded.hidden`, playersCompletedPercent: sql`excluded.players_completed_percent`,
+          rarity: sql`excluded.rarity`, normalizedRarity: sql`excluded.normalized_rarity`,
+          side: sql`excluded.side`, normalizedSide: sql`excluded.normalized_side`,
+          adjustedPlayersCompletedPercent: sql`excluded.adjusted_players_completed_percent`,
           syncedAt: sql`now()`,
         },
       });
@@ -143,19 +153,46 @@ export async function syncEftLandingData(): Promise<SyncLandingResult> {
 
 /* ───────────────── читалки (рантайм, чистое чтение нашей БД) ───────────────── */
 
-export interface AchievementDTO { id: string; name: string; description: string; hidden: boolean; playersCompletedPercent: number }
+export interface AchievementDTO {
+  id: string; name: string; description: string; hidden: boolean; playersCompletedPercent: number;
+  rarity: string; normalizedRarity: string; side: string; normalizedSide: string;
+  adjustedPlayersCompletedPercent: number;
+}
+
+function toAchievementDTO(r: typeof achievements.$inferSelect): AchievementDTO {
+  return {
+    id: r.id, name: r.name, description: r.description ?? "",
+    hidden: r.hidden ?? false, playersCompletedPercent: r.playersCompletedPercent ?? 0,
+    rarity: r.rarity ?? "", normalizedRarity: r.normalizedRarity ?? "",
+    side: r.side ?? "", normalizedSide: r.normalizedSide ?? "",
+    adjustedPlayersCompletedPercent: r.adjustedPlayersCompletedPercent ?? 0,
+  };
+}
 
 export async function getEftAchievements(): Promise<AchievementDTO[]> {
   try {
     const gameId = await eftGameId();
     const rows = await db.select().from(achievements).where(eq(achievements.gameId, gameId));
-    return rows.map((r) => ({
-      id: r.id, name: r.name, description: r.description ?? "",
-      hidden: r.hidden ?? false, playersCompletedPercent: r.playersCompletedPercent ?? 0,
-    }));
+    return rows.map(toAchievementDTO);
   } catch (e) {
     console.error("[getEftAchievements]", e);
     return [];
+  }
+}
+
+/** Одно достижение по id (для детальной страницы). null — если не найдено. */
+export async function getEftAchievement(id: string): Promise<AchievementDTO | null> {
+  try {
+    const gameId = await eftGameId();
+    const [row] = await db
+      .select()
+      .from(achievements)
+      .where(and(eq(achievements.gameId, gameId), eq(achievements.id, id)))
+      .limit(1);
+    return row ? toAchievementDTO(row) : null;
+  } catch (e) {
+    console.error("[getEftAchievement]", e);
+    return null;
   }
 }
 

@@ -246,6 +246,13 @@ export const achievements = pgTable("achievements", {
   description: text("description"),
   hidden: boolean("hidden"),
   playersCompletedPercent: real("players_completed_percent"),
+  // Официальные метаданные BSG (зеркалим из tarkov.dev): редкость (3 тира) + фракция.
+  // normalized* — стабильные англ. слаги для логики/цветов; rarity/side — ru-лейблы для показа.
+  rarity: text("rarity"), // "Обычные" | "Редкие" | "Легендарные"
+  normalizedRarity: text("normalized_rarity"), // "common" | "rare" | "legendary"
+  side: text("side"), // "ЧВК" | "Диких" | "Всё"
+  normalizedSide: text("normalized_side"), // "pmc" | "scavs" | "all"
+  adjustedPlayersCompletedPercent: real("adjusted_players_completed_percent"),
   syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
