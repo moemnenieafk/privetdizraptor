@@ -1244,7 +1244,7 @@ export function ItemsCategoryClient({
 
       {/* Skeleton — сетка */}
       {isLoading && viewMode === 'grid' && (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 animate-[fade-in-up_0.3s_ease-out]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 max-sm:justify-items-center [&>*]:max-sm:max-w-64 animate-[fade-in-up_0.3s_ease-out]">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="tactical-card-base p-4 flex flex-col h-62.5 animate-pulse border-lines-hover">
               <div className="flex justify-between items-start mb-4">
@@ -1286,7 +1286,7 @@ export function ItemsCategoryClient({
       {/* Вид: сетка */}
       {!isLoading && viewMode === 'grid' && processedItems.length > 0 && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 max-sm:justify-items-center [&>*]:max-sm:max-w-64">
             {displayedItems.map((item) => {
               const eftItem = toEftItem(
                 item,

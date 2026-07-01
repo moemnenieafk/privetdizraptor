@@ -100,6 +100,11 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     description: 'Дополнительные поручения и контракты от торговцев, необходимые для прокачки репутации.',
     iconClass: 'icon-eft-quests-side',
   },
+  'eft-quests-events': {
+    title: 'События',
+    description: 'Временные внутриигровые события и сезонные активности Escape from Tarkov.',
+    iconClass: 'icon-eft-quests',
+  },
   'eft-items-loot-rate': {
     title: 'Рейтинг предметов',
     description: 'Актуальный рейтинг ценности лута. Узнайте, какие предметы стоит выносить из рейда в первую очередь для максимальной выгоды.',

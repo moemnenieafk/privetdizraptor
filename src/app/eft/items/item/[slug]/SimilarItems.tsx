@@ -14,7 +14,7 @@ export function SimilarItems({ items }: SimilarItemsProps) {
 
   return (
     <SectionPanel title="Похожие предметы" icon={<Boxes className="w-4 h-4" />} noDivider smallTitle bare>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4 max-sm:justify-items-center [&>*]:max-sm:max-w-64">
         {items.map((item) => (
           <EftItemTile.Root key={item.id} item={item}>
             <EftItemTile.Header />

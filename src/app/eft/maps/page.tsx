@@ -17,14 +17,14 @@ export default async function MapsPage() {
       <div className="w-full max-w-275 px-4 xl:px-0 mx-auto">
         <PageHeader pageId="eft-maps" />
         <div className="w-full max-w-275 mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-7 justify-items-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-7 justify-items-center">
             {sorted.map((m, i) => {
               const icon = mapIconClass(m.slug);
               return (
                 <Link
                   key={m.slug}
                   href={`/eft/maps/${m.slug}`}
-                  className="group flex flex-col items-center justify-center gap-4 p-4 w-40 h-40 bg-card-menu border border-lines-hover rounded transition-all duration-300 hover:border-primary hover:shadow-[0_0_15px] hover:shadow-primary/20 animate-[fade-in-up_0.5s_both]"
+                  className="group flex flex-col items-center justify-center gap-4 p-4 w-35 h-35 sm:w-40 sm:h-40 bg-card-menu border border-lines-hover rounded transition-all duration-300 hover:border-primary hover:shadow-[0_0_15px] hover:shadow-primary/20 animate-[fade-in-up_0.5s_both]"
                   style={{ animationDelay: `${i * 30}ms` }}
                 >
                   {icon ? (
@@ -32,7 +32,7 @@ export default async function MapsPage() {
                   ) : (
                     <span className="font-blender-medium text-2xl text-text-secondary uppercase">{m.name.slice(0, 2)}</span>
                   )}
-                  <span className="font-blender-medium text-type-label text-text-secondary uppercase tracking-widest transition-colors duration-300 group-hover:text-primary text-center">
+                  <span className="font-blender-medium text-type-micro sm:text-type-label text-text-secondary uppercase tracking-widest transition-colors duration-300 group-hover:text-primary text-center">
                     {m.name}
                   </span>
                 </Link>
