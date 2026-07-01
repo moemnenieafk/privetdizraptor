@@ -1,5 +1,6 @@
-﻿import { PageHeader } from '@/components/ui/PageHeader';
-import React from 'react';
+import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
+import { getQuestsNav } from '@/lib/quests-nav';
+import { QuestsHubNav } from '@/components/features/quests/QuestsHubNav';
 import { HubCard } from '@/components/ui/HubCard';
 
 // Статичный список сюжетных заданий с путями иконок и описаниями
@@ -17,26 +18,35 @@ const STORY_QUESTS = [
 ];
 
 export default function LoreQuestsPage() {
+  const { sections, children } = getQuestsNav('/eft/quests/lore-quests');
+  const pageContent = PAGE_CONTENT_DICTIONARY['eft-quests-lore-quests'];
 
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <PageHeader pageId="eft-quests-lore-quests" />
-        
+        <QuestsHubNav
+          iconClass={pageContent?.iconClass}
+          title={pageContent?.title ?? 'Сюжетные'}
+          description={pageContent?.description}
+          tabs={sections}
+          subTabs={children}
+          subLabel="Истории"
+        />
+
         {/* Сетка Middle HubCard (по 3 в ряд) */}
         <div className="tactical-grid">
           {STORY_QUESTS.map((quest, index) => (
-              <HubCard
-                key={quest.id}
-                gameId="eft"
-                id={quest.id}
-                title={quest.title}
-                description={quest.description}
-                href={quest.href}
-                iconPath={quest.iconPath}
-                variant="rectangle" // Прямоугольные карточки среднего размера
-                index={index}
-              />
+            <HubCard
+              key={quest.id}
+              gameId="eft"
+              id={quest.id}
+              title={quest.title}
+              description={quest.description}
+              href={quest.href}
+              iconPath={quest.iconPath}
+              variant="rectangle" // Прямоугольные карточки среднего размера
+              index={index}
+            />
           ))}
         </div>
       </div>

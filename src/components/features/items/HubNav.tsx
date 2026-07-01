@@ -65,10 +65,10 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
   const categories = tabs ?? DEFAULT_CATEGORIES;
 
   return (
-    <div className="w-full max-w-275 mx-auto flex flex-col lg:flex-row justify-between lg:items-center gap-6 lg:gap-12 mb-8 lg:mb-12">
+    <div className="w-full max-w-275 mx-auto flex flex-col lg:flex-row justify-between lg:items-end gap-6 lg:gap-12 mb-8 lg:mb-12">
 
       {/* Left Block: Icon + Title + Description */}
-      <div className="flex items-center gap-4 lg:gap-7">
+      <div className="flex items-end gap-4 lg:gap-7">
         <div className="w-21 h-21 shrink-0 bg-(--color-darkbase) rounded-md flex items-center justify-center">
           <div className="text-(--primary) [&>svg]:fill-current [&>path]:fill-current">
             {iconUrl ? (
@@ -110,7 +110,7 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
 
         {/* Section Label + Divider */}
         <div className="flex items-center gap-3">
-          <span className="shrink-0 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted">
+          <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
             Навигация по разделу
           </span>
           <div className="flex-1 h-px bg-lines-hover" />

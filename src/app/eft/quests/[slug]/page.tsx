@@ -4,6 +4,8 @@ import { getSectionPlaceholder } from '@/lib/section-nav';
 import { getStoryQuest } from '@/data/story-quests';
 import { StoryQuestGuide } from '@/components/features/quests/StoryQuestGuide';
 import { QuestTraderList } from '@/components/features/quests/QuestTraderList';
+import { getQuestsSiblings } from '@/lib/quests-nav';
+import type { QuestsNavRow } from '@/components/features/quests/QuestsNavBar';
 import { EFT_QUESTS } from '@/data/quests';
 import type { TaskRaw } from '@/types/quest';
 
@@ -39,8 +41,14 @@ function traderTasks(slug: string): TaskRaw[] {
 export default async function QuestSlugPage({ params }: Props) {
   const { slug } = await params;
 
+  const { sections, siblings, parentLabel } = getQuestsSiblings(`/eft/quests/${slug}`);
+  const navRows: QuestsNavRow[] = [
+    { label: 'Навигация по разделу', tabs: sections },
+    { label: parentLabel, tabs: siblings },
+  ];
+
   const story = getStoryQuest(slug);
-  if (story) return <StoryQuestGuide chapter={story} />;
+  if (story) return <StoryQuestGuide chapter={story} navRows={navRows} />;
 
   if (TRADER_SLUGS.has(slug)) {
     const tasks = traderTasks(slug);
@@ -50,6 +58,8 @@ export default async function QuestSlugPage({ params }: Props) {
           tasks={tasks}
           traderNormalized={slug === 'btr-driver' ? 'btrdriver' : slug}
           title={tasks[0].trader.name}
+          navSections={sections}
+          navTraders={siblings}
         />
       );
     }

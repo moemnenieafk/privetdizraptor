@@ -63,7 +63,7 @@ export function SectionPlaceholder({ title, description, iconUrl, iconClass, tab
           {tabs && tabs.length > 0 && (
             <div className="flex w-full flex-col gap-4 lg:max-w-125">
               <div className="flex items-center gap-3">
-                <span className="shrink-0 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted">
+                <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
                   Навигация по разделу
                 </span>
                 <div className="flex-1 h-px bg-lines-hover" />

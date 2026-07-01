@@ -4,6 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import { EFT_QUESTS } from '@/data/quests';
 import { getBartersByQuest } from '@/db/barter-quest';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
+import { QuestsNavBar, type QuestsNavRow } from '@/components/features/quests/QuestsNavBar';
+import { getQuestsSiblings } from '@/lib/quests-nav';
 import type { TaskRaw } from '@/types/quest';
 
 interface Props {
@@ -24,6 +26,13 @@ export default async function QuestTaskPage({ params }: Props) {
 
   const bartersByQuest = await getBartersByQuest();
 
+  const traderSlug = task.trader.normalizedName;
+  const { sections, siblings, parentLabel } = getQuestsSiblings(`/eft/quests/${traderSlug}`);
+  const navRows: QuestsNavRow[] = [
+    { label: 'Навигация по разделу', tabs: sections },
+    { label: parentLabel, tabs: siblings },
+  ];
+
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-3xl px-4">
@@ -34,6 +43,7 @@ export default async function QuestTaskPage({ params }: Props) {
           <ArrowLeft className="h-3.5 w-3.5" />
           Квесты
         </Link>
+        <QuestsNavBar rows={navRows} activeHref={`/eft/quests/${traderSlug}`} />
         <QuestDetail task={normalizeTrader(task)} variant="page" barters={bartersByQuest[task.id]} />
       </div>
     </main>

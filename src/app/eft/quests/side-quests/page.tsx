@@ -1,5 +1,6 @@
-﻿import { PageHeader } from '@/components/ui/PageHeader';
-import React from 'react';
+import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
+import { getQuestsNav } from '@/lib/quests-nav';
+import { QuestsHubNav } from '@/components/features/quests/QuestsHubNav';
 import { HubCard } from '@/components/ui/HubCard';
 
 // Данные для карточек торговцев
@@ -84,11 +85,21 @@ const TRADERS_CARDS = [
 ];
 
 export default function SideQuestsPage() {
+  const { sections, children } = getQuestsNav('/eft/quests/side-quests');
+  const pageContent = PAGE_CONTENT_DICTIONARY['eft-quests-side-quests'];
+
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <PageHeader pageId="eft-quests-side-quests" />
-        
+        <QuestsHubNav
+          iconClass={pageContent?.iconClass}
+          title={pageContent?.title ?? 'Побочные'}
+          description={pageContent?.description}
+          tabs={sections}
+          subTabs={children}
+          subLabel="Торговцы"
+        />
+
         {/* Сетка карточек торговцев */}
         <div className="tactical-grid">
           {TRADERS_CARDS.map((card, index) => (

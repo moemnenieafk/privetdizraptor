@@ -1,4 +1,5 @@
 import type { StoryQuestChapter, StorySection } from '@/types/story-quest';
+import { QuestsNavBar, type QuestsNavRow } from '@/components/features/quests/QuestsNavBar';
 
 function youtubeEmbed(url: string): string | null {
   const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
@@ -95,10 +96,12 @@ function SectionBlock({ section }: { section: StorySection }) {
   );
 }
 
-export function StoryQuestGuide({ chapter }: { chapter: StoryQuestChapter }) {
+export function StoryQuestGuide({ chapter, navRows }: { chapter: StoryQuestChapter; navRows?: QuestsNavRow[] }) {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-16">
       <div className="w-full max-w-275 px-4 xl:px-0">
+
+        {navRows && <QuestsNavBar rows={navRows} />}
 
         {/* HERO — заглушка (изображение появится позже) */}
         <header className="relative mb-10 overflow-hidden rounded-md border border-lines-hover bg-(--color-darkbase)">
