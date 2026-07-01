@@ -44,7 +44,6 @@ export function Header() {
 
           {showFeatures && (
             <div className="ml-auto flex items-center gap-3">
-              <StreamStatus />
               <PlayerTelemetry />
               <BurgerMenu menuItems={menuItems} />
             </div>
@@ -70,6 +69,9 @@ export function Header() {
           </div>
         )}
       </header>
+
+      {/* Плавающий оверлей стрима — вне потока хедер-бара, сам себя позиционирует (fixed, правый-низ) */}
+      {showFeatures && <StreamStatus />}
 
       <NewbieModal isOpen={isNewbieModalOpen} onClose={() => setIsNewbieModalOpen(false)} />
     </>

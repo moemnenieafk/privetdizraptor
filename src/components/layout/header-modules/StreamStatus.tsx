@@ -84,7 +84,10 @@ export default function StreamStatus() {
   const s = isLive ? liveS : offlineS;
 
   return (
-    <>
+    // Плавающий оверлей: вынесен из потока хедера, прибит к правому-нижнему углу.
+    // Вертикальный стек — кнопка-индикатор сверху, окно стрима под ней.
+    // Обёртка кликопрозрачна (pointer-events-none), интерактив — на детях (-auto).
+    <div className="fixed bottom-4 right-4 z-70 flex flex-col items-end gap-2 pointer-events-none">
       {/* ═══ Кнопка-индикатор стрима ═══ */}
       <a
         href={isLive ? undefined : 'https://twitch.tv/fullkamen'}
@@ -92,8 +95,8 @@ export default function StreamStatus() {
         rel="noopener noreferrer"
         role={isLive ? 'button' : undefined}
         onClick={isLive ? (e) => { e.preventDefault(); handleButtonClick(); } : undefined}
-        className={`group relative flex shrink-0 items-center justify-center gap-2 w-40 h-10 rounded transition-all duration-500
-          ${isQuestFullscreen ? 'invisible pointer-events-none' : ''}
+        className={`group relative flex shrink-0 items-center justify-center gap-2 w-10 sm:w-40 h-10 rounded transition-all duration-500
+          ${isQuestFullscreen ? 'invisible pointer-events-none' : 'pointer-events-auto'}
           ${isLoading
             ? 'border border-neutral-800 bg-black/20'
             : `${s.border} ${s.bg} ${s.shadow} hover:brightness-125`
@@ -103,11 +106,11 @@ export default function StreamStatus() {
         {isLive && !isLoading && (
           <>
             <div
-              className="absolute -left-7 top-1/2 -translate-y-1/2 w-6.5 h-6.25 opacity-50 transition-opacity duration-300 group-hover:opacity-100 icon-bg"
+              className="hidden sm:block absolute -left-7 top-1/2 -translate-y-1/2 w-6.5 h-6.25 opacity-50 transition-opacity duration-300 group-hover:opacity-100 icon-bg"
               style={{ backgroundImage: 'url(/icons/hexagon-left.svg)' }}
             />
             <div
-              className="absolute -right-7 top-1/2 -translate-y-1/2 w-6.5 h-6.25 opacity-50 transition-opacity duration-300 group-hover:opacity-100 icon-bg"
+              className="hidden sm:block absolute -right-7 top-1/2 -translate-y-1/2 w-6.5 h-6.25 opacity-50 transition-opacity duration-300 group-hover:opacity-100 icon-bg"
               style={{ backgroundImage: 'url(/icons/hexagon-right.svg)' }}
             />
           </>
@@ -116,7 +119,7 @@ export default function StreamStatus() {
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="h-1 w-1 rounded-full bg-neutral-600 animate-pulse" />
-            <div className="h-2 w-20 bg-neutral-800 rounded animate-pulse" />
+            <div className="hidden sm:block h-2 w-20 bg-neutral-800 rounded animate-pulse" />
           </div>
         ) : (
           <div className="flex items-center justify-center gap-2 z-10">
@@ -126,7 +129,7 @@ export default function StreamStatus() {
               )}
               <span className={`relative inline-flex rounded-full h-1 w-1 ${s.dot} ${s.glow}`} />
             </div>
-            <span className={`text-sm font-blender-medium uppercase leading-4 ${s.textColor}`}>
+            <span className={`hidden sm:inline text-sm font-blender-medium uppercase leading-4 ${s.textColor}`}>
               {s.text}
             </span>
           </div>
@@ -135,7 +138,7 @@ export default function StreamStatus() {
 
       {/* ═══ Окно стрима ═══ */}
       {isStreamOpen && !isQuestFullscreen && (
-        <div className="fixed bottom-4 right-4 z-70">
+        <div className="pointer-events-auto">
           {/* Шапка окна — скрывается при минимизации */}
           <div
             className={`transition-[max-height,opacity] duration-300 ease-out overflow-hidden ${
@@ -182,7 +185,7 @@ export default function StreamStatus() {
       {isStreamOpen && !isStreamVisible && !isQuestFullscreen && (
         <button
           onClick={() => setIsStreamVisible(true)}
-          className="fixed bottom-4 right-4 z-70 flex items-center gap-1.5 h-7 px-2.5 rounded-sm border border-lines-hover bg-card-menu transition-colors hover:border-online group/expand"
+          className="pointer-events-auto flex items-center gap-1.5 h-7 px-2.5 rounded-sm border border-lines-hover bg-card-menu transition-colors hover:border-online group/expand"
         >
           <span className="h-1 w-1 shrink-0 rounded-full bg-online animate-pulse" />
           <span className="mt-0.5 text-type-caption font-blender-medium uppercase text-text-secondary transition-colors group-hover/expand:text-online">
@@ -190,6 +193,6 @@ export default function StreamStatus() {
           </span>
         </button>
       )}
-    </>
+    </div>
   );
 }
