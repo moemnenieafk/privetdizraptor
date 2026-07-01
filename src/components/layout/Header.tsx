@@ -44,8 +44,10 @@ export function Header() {
 
           {showFeatures && (
             <div className="ml-auto flex items-center gap-3">
-              <PlayerTelemetry />
-              <BurgerMenu menuItems={menuItems} />
+              <div className="hidden xl:block">
+                <PlayerTelemetry />
+              </div>
+              <BurgerMenu menuItems={menuItems} onOpenNewbie={() => setIsNewbieModalOpen(true)} />
             </div>
           )}
         </div>
@@ -54,16 +56,18 @@ export function Header() {
         {showFeatures && (
           <div className="px-4 xl:px-0 max-w-275 mx-auto">
             <div className="flex items-center gap-7 pb-3">
-              <GameLogo gameId={gameId} />
+              <div className="hidden xl:flex shrink-0">
+                <GameLogo gameId={gameId} />
+              </div>
               <div className="flex-1 min-w-0 flex justify-center">
                 <TacticalSearch />
               </div>
-              <div className="hidden sm:flex shrink-0">
+              <div className="hidden xl:flex shrink-0">
                 <NewbieButton onClick={() => setIsNewbieModalOpen(true)} />
               </div>
             </div>
 
-            <div className="pb-3">
+            <div className="hidden xl:block pb-3">
               <Breadcrumbs />
             </div>
           </div>

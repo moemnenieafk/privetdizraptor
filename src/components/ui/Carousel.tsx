@@ -7,9 +7,18 @@ import type { EmblaOptionsType } from 'embla-carousel';
 type CarouselProps = {
   children: React.ReactNode;
   options?: EmblaOptionsType;
+  /** Класс размера слайда. По умолчанию — крупные карточки главной (не менять для главной). */
+  slideClassName?: string;
+  /** Вертикальный паддинг вьюпорта (место под ховер-тени карточек). */
+  viewportPadClassName?: string;
 };
 
-export const Carousel: React.FC<CarouselProps> = ({ children, options }) => {
+export const Carousel: React.FC<CarouselProps> = ({
+  children,
+  options,
+  slideClassName = "flex-[0_0_80vw] sm:flex-[0_0_348px] mr-[16px] sm:mr-[28px]",
+  viewportPadClassName = "py-[42px]",
+}) => {
   const emblaOptions: EmblaOptionsType = useMemo(() => ({
     loop: true,
     align: "center", // Карточка EFT будет по центру на всех экранах
@@ -62,11 +71,10 @@ export const Carousel: React.FC<CarouselProps> = ({ children, options }) => {
       <div className="embla w-full">
         {/* Вьюпорт должен быть на всю ширину экрана (w-full) с overflow-hidden, чтобы внутренний алгоритм 
             Embla правильно рассчитал количество клонируемых слайдов (loop) для краев больших мониторов */}
-        <div className="embla__viewport cursor-grab active:cursor-grabbing w-full overflow-hidden py-[42px]" ref={emblaRef}>
+        <div className={`embla__viewport cursor-grab active:cursor-grabbing w-full overflow-hidden ${viewportPadClassName}`} ref={emblaRef}>
           <div className="embla__container flex" style={{ backfaceVisibility: "hidden" }}>
             {React.Children.map(children, (child) => (
-              <div className="embla__slide flex-[0_0_80vw] sm:flex-[0_0_348px] min-w-0 mr-[16px] sm:mr-[28px] flex justify-center">
-                {/* Адаптивный размер: на мобилках 80vw и отступ 16px, на ПК строго 348px и 28px */}
+              <div className={`embla__slide ${slideClassName} min-w-0 flex justify-center`}>
                 {child}
               </div>
             ))}
