@@ -61,3 +61,14 @@ done: 2026-06-28
 | `bb171a0^..bb171a0` (v2) | docs-only | 0 | SKIP ✅ |
 
 Коммит этого фикса правит `vercel.json` (= не `docs/`) → сам триггерит прод-билд и доставляет застрявший спринт. Привычка «пушить docs отдельно от code» больше НЕ обязательна, но безвредна.
+
+---
+
+## v3 — вынос в скрипт + fetch (2026-07-01)
+На первом же деплое v2 всплыл `fatal: bad object a17bd58…`: этот релиз влил 20 коммитов разом, `PREVIOUS_SHA` отпрыгнул за глубину **shallow-клона** Vercel → объекта нет локально. Fail-safe сработал (git error → BUILD, прод собрался `2a8e97d`), но лог грязный, и docs-экономия на больших релизах терялась бы зря.
+
+**Фикс:** логика вынесена в `scripts/vercel-ignore.sh`; `vercel.json` → `"ignoreCommand": "bash scripts/vercel-ignore.sh"`. Скрипт, если `PREVIOUS_SHA` нет в клоне, **подтягивает** его (`git fetch --depth=1 origin $PREV`, иначе `--unshallow`), и лишь при полном провале — fail-safe BUILD. Плюс `echo`-логи — в билд-логе видно, почему skip/build.
+
+`.gitattributes`: `*.sh text eol=lf` — иначе CRLF (autocrlf=true на Windows) сломал бы shebang на Linux-Vercel.
+
+Проверено локально на реальных SHA: пустой PREV → BUILD; PREV=HEAD (нет изменений) → SKIP; PREV с кодом в диапазоне → BUILD.

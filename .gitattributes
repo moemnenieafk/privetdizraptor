@@ -16,6 +16,9 @@
 *.yml     text
 *.yaml    text
 
+# Shell-скрипты (напр. Vercel ignoreCommand) — строго LF, иначе shebang ломается на Linux
+*.sh      text eol=lf
+
 # Указываем бинарные файлы, которые Git не должен изменять
 *.png     binary
 *.jpg     binary

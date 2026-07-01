@@ -2,5 +2,5 @@
   "crons": [
     { "path": "/api/cron/sync-prices", "schedule": "0 5 * * *" }
   ],
-  "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- ':(exclude)docs/'"
+  "ignoreCommand": "bash scripts/vercel-ignore.sh"
 }
