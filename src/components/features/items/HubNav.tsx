@@ -117,10 +117,10 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
         </div>
 
         {/* Categories + Traders: на мобиле стекируются, на lg — side by side */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:gap-6">
+        <div className="flex flex-col gap-3.5 lg:flex-row lg:gap-6">
 
           {/* Category Buttons */}
-          <div className="flex flex-wrap gap-2 w-full lg:w-64">
+          <div className="flex flex-wrap gap-3.5 lg:gap-2 w-full lg:w-64">
             {categories.map((cat) => {
               const isActive =
                 pathname === cat.href ||
@@ -157,7 +157,7 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
           </div>
 
           {/* Trader Toggle Buttons */}
-          <div className="flex flex-wrap gap-2 w-full lg:flex-1">
+          <div className="flex flex-wrap gap-3.5 lg:gap-2 w-full lg:flex-1">
             {TRADERS.map((trader) => {
               const isActive = selectedTraders.length === 0 || selectedTraders.includes(trader.id);
               return (

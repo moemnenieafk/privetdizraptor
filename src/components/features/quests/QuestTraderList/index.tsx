@@ -93,16 +93,17 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-16">
       <div className="w-full max-w-275 px-4 xl:px-0">
 
-        {/* Шапка: фото + (2 ряда трейдер | навигация). Обе половины выровнены по НИЗУ — строки совпадают. */}
-        <header className="mb-8 flex items-end gap-4 lg:gap-7">
-          <div className="relative h-21 w-21 shrink-0 overflow-hidden rounded-md border border-lines-hover bg-(--color-darkbase)">
-            <Image src={traderImg(traderNormalized)} alt={title} fill className="object-cover" sizes="84px" />
-          </div>
+        {/* Шапка: [левая 522: фото + трейдер/фильтры] + gap 28 + [правая 522: навигация]. Мобилка — вертикальный стек. */}
+        <header className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-[28px]">
 
-          <div className="flex flex-1 flex-col gap-6 lg:flex-row lg:items-end">
+          {/* Левая колонка 522 */}
+          <div className="flex items-end gap-4 lg:gap-7 w-full lg:w-[522px] lg:shrink-0">
+            <div className="relative h-21 w-21 shrink-0 overflow-hidden rounded-md border border-lines-hover bg-(--color-darkbase)">
+              <Image src={traderImg(traderNormalized)} alt={title} fill className="object-cover" sizes="84px" />
+            </div>
 
-            {/* LEFT: ряд 1 (имя + всего + Каппа/Смотритель) / ряд 2 (статус-фильтры) */}
-            <div className="flex flex-1 flex-col gap-2">
+            {/* Текст: ряд 1 (имя + всего + Каппа/Смотритель) / ряд 2 (статус-фильтры) */}
+            <div className="flex flex-1 flex-col gap-2 lg:min-w-0">
               <div className="flex h-9 items-center gap-3">
                 <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
                   {title}
@@ -132,7 +133,7 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
                 </div>
               </div>
 
-              <div className="grid h-9 grid-cols-3 items-center gap-2">
+              <div className="grid grid-cols-1 gap-3.5 lg:h-9 lg:grid-cols-3 lg:gap-2 lg:items-center">
                 {FILTERS.map((f) => {
                   const isOn = filter === f.key;
                   return (
@@ -150,31 +151,31 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
                 })}
               </div>
             </div>
+          </div>
 
-            {/* RIGHT: метка + две сетки 6×2 (разделы | торговцы). Низ выровнен с рядом статус-фильтров. */}
-            {hasNav && (
-              <div className="flex shrink-0 flex-col gap-2">
+          {/* Правая колонка 522: навигация (метка + 2 дива 6×2) */}
+          {hasNav && (
+            <div className="flex w-full flex-col gap-2 lg:w-[522px] lg:shrink-0">
                 <div className="flex items-center gap-3">
                   <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
                     Навигация по разделу
                   </span>
                   <div className="h-px flex-1 bg-lines-hover" />
                 </div>
-                <div className="flex gap-6">
+                <div className="flex flex-wrap lg:flex-nowrap gap-3.5 lg:gap-2">
                   {navSections && navSections.length > 0 && (
-                    <div className="grid w-max grid-cols-6 gap-2">
+                    <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-2">
                       {navSections.map((t) => <QuestNavTab key={t.id} tab={t} />)}
                     </div>
                   )}
                   {navTraders && navTraders.length > 0 && (
-                    <div className="grid w-max grid-cols-6 gap-2">
+                    <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-2">
                       {navTraders.map((t) => <QuestNavTab key={t.id} tab={t} />)}
                     </div>
                   )}
                 </div>
               </div>
             )}
-          </div>
         </header>
 
         {/* Сетка карточек QuestNode (фикс. ширина 348px) */}
