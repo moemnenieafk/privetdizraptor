@@ -320,3 +320,5 @@
   .icon-feedback { mask-image: url('/icons/feedback.svg'); -webkit-mask-image: url('/icons/feedback.svg'); }
   .icon-info-label { mask-image: url('/icons/info-label.svg'); -webkit-mask-image: url('/icons/info-label.svg'); }
   .icon-questnode-connection-line { mask-image: url('/icons/questnode-connection-line.svg'); -webkit-mask-image: url('/icons/questnode-connection-line.svg'); }
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-eft-library { mask-image: url('/icons/eft/04-progression/hideout-modules/library.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/library.svg'); }

@@ -12,7 +12,7 @@
 //
 // ГОЧА иконок: normalizedName станций — kebab-case (bitcoin-farm), файлы масок —
 // snake_case + спец-кейсы (medstation→med_station, illumination→illumitation-опечатка,
-// intelligence-center→intelligence_centre; library — файла нет → фолбэк).
+// intelligence-center→intelligence_centre).
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus, ArrowRight, Hammer, Check, Maximize2 } from 'lucide-react';
@@ -27,7 +27,6 @@ const ICON_OVERRIDES: Record<string, string> = {
   'intelligence-center': 'intelligence_centre', // UK-спеллинг файла
 };
 function stationIconClass(normalizedName: string): string {
-  if (normalizedName === 'library') return 'icon-eft-prog-hideout'; // файла иконки нет
   const file = ICON_OVERRIDES[normalizedName] ?? normalizedName.replace(/-/g, '_');
   return `icon-eft-${file}`;
 }
