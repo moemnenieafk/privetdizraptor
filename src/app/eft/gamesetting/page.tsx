@@ -68,6 +68,23 @@ const CODEX_HUB_CARDS = [
     iconPath: '/icons/eft/05-gamesetting/theory-riddles.svg',
     variant: 'rectangle' as const,
   },
+  // Переехали из «Прогресса» (навигация headerConfig уже здесь; роуты прежние).
+  {
+    id: 'achievements',
+    title: 'Достижения',
+    description: 'Отслеживайте свои внутриигровые достижения, от сюжетных вех до уникальных испытаний.',
+    href: '/eft/progress/achievements',
+    iconPath: '/icons/eft/04-progression/achievments.svg',
+    variant: 'rectangle' as const,
+  },
+  {
+    id: 'prestige',
+    title: 'Престиж',
+    description: 'Продемонстрируйте свой опыт и получите уникальные награды после достижения максимального уровня.',
+    href: '/eft/progress/prestige',
+    iconPath: '/icons/eft/04-progression/prestige.svg',
+    variant: 'rectangle' as const,
+  },
 ];
 
 export default function CodexHubPage() {

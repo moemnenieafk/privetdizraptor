@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { getEftAchievement, getEftMaps, getEftTraders } from "@/db/landing";
 import { resolveAchievementHint } from "@/lib/achievement-hints";
 import { AchievementDetail } from "./AchievementDetail";
+import { DynamicCrumbSetter } from "@/components/ui/DynamicCrumbSetter";
 
 // Достижения зеркалятся из tarkov.dev кроном; читаем нашу БД (рантайм без внешнего API).
 export default async function AchievementDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +22,7 @@ export default async function AchievementDetailPage({ params }: { params: Promis
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
+      <DynamicCrumbSetter label={ach.hidden ? "Скрытое достижение" : ach.name} />
       <div className="mx-auto w-full max-w-275 px-4 xl:px-0">
         <div className="mb-6">
           <Link

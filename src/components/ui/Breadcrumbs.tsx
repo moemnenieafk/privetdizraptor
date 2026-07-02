@@ -10,7 +10,11 @@ import { useBreadcrumbStore } from '@/store/useBreadcrumbStore';
 const ROOT_OVERRIDES: Record<string, string | null> = {
   eft: 'EFT',
   item: null, // routing artifact — no breadcrumb
+  task: null, // routing artifact (/eft/quests/task/[id]) — no breadcrumb
 };
+
+// BSG-идентификатор (24 hex) — сырой параметр динамического роута, в крошках не показываем.
+const BSG_ID_RE = /^[a-f0-9]{24}$/i;
 
 function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null {
   for (const node of items) {
@@ -23,9 +27,17 @@ function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null 
   return null;
 }
 
-function resolveLabel(segment: string, fullPath: string, menuItems: MenuItem[]): string | null {
+// Приоритет резолва: ROOT_OVERRIDES → узел дерева навигации (точный path) →
+// словарь breadcrumbNames (сегмент → русский лейбл; карты/категории/слаги) → сырой сегмент.
+function resolveLabel(
+  segment: string,
+  fullPath: string,
+  menuItems: MenuItem[],
+  names: Record<string, string>,
+): string | null {
   if (segment in ROOT_OVERRIDES) return ROOT_OVERRIDES[segment];
-  return findNodeByPath(menuItems, fullPath)?.label ?? segment;
+  if (BSG_ID_RE.test(segment)) return null; // сырой id — скрываем (деталь назовёт себя сама)
+  return findNodeByPath(menuItems, fullPath)?.label ?? names[segment] ?? segment;
 }
 
 export function Breadcrumbs() {
@@ -33,7 +45,9 @@ export function Breadcrumbs() {
   const dynamicCrumbs = useBreadcrumbStore((s) => s.dynamicCrumbs);
 
   const segments = (pathname ?? '').split('/').filter(Boolean);
-  const menuItems = HEADER_DICTIONARY['eft']?.menuItems ?? [];
+  const cfg = HEADER_DICTIONARY['eft'];
+  const menuItems = cfg?.menuItems ?? [];
+  const names = cfg?.breadcrumbNames ?? {};
 
   if (segments.length <= 1) return null;
 
@@ -49,14 +63,18 @@ export function Breadcrumbs() {
   const staticCrumbs = staticSegments
     .map((segment, index) => {
       const path = `/${staticSegments.slice(0, index + 1).join('/')}`;
-      const label = resolveLabel(segment, path, menuItems);
+      const label = resolveLabel(segment, path, menuItems, names);
       return label !== null ? { label, href: path } : null;
     })
     .filter((c): c is { label: string; href: string } => c !== null);
 
+  // dynamicCrumbs (useBreadcrumbStore) — имя сущности с детальной страницы
+  // (предмет / достижение / …): приклеиваем к статическому префиксу.
   const allCrumbs = isDynamicItemPage
     ? [...staticCrumbs, ...dynamicCrumbs]
-    : staticCrumbs;
+    : dynamicCrumbs.length > 0 && BSG_ID_RE.test(segments[segments.length - 1] ?? '')
+      ? [...staticCrumbs, ...dynamicCrumbs]
+      : staticCrumbs;
 
   if (allCrumbs.length <= 1) return null;
 

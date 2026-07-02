@@ -2,24 +2,9 @@
 import React from 'react';
 import { HubCard } from '@/components/ui/HubCard';
 
-// Данные для карточек навигации раздела "Прогресс"
+// Данные для карточек навигации раздела "Прогресс".
+// Достижения и Престиж переехали в «Кодекс» (/eft/gamesetting) — карточки там.
 const PROGRESS_HUB_CARDS = [
-  {
-    id: 'achievements',
-    title: 'Достижения',
-    description: 'Отслеживайте свои внутриигровые достижения, от сюжетных вех до уникальных испытаний.',
-    href: '/eft/progress/achievements',
-    iconPath: '/icons/eft/04-progression/achievments.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'prestige',
-    title: 'Престиж',
-    description: 'Продемонстрируйте свой опыт и получите уникальные награды после достижения максимального уровня.',
-    href: '/eft/progress/prestige',
-    iconPath: '/icons/eft/04-progression/prestige.svg',
-    variant: 'rectangle' as const,
-  },
   {
     id: 'hideout',
     title: 'Убежище ЧВК',
