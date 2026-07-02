@@ -156,7 +156,8 @@ export async function syncEftHideout(): Promise<SyncHideoutResult> {
 /* ───────────────── чтение для UI: агрегатор «нужно для убежища» ───────────────── */
 
 // Валюты — не «собираемые» предметы, в шопинг-лист не включаем (₽/€/$).
-const CURRENCY_IDS = new Set([
+// Экспорт: tracking-digest помечает валюту «стеком за 1 шт.» в дайджесте трекинга.
+export const CURRENCY_IDS = new Set([
   "5449016a4bdc2d6f028b456f", // ₽ Roubles
   "569668774bdc2da2298b4568", // € Euros
   "5696686a4bdc2da3298b456a", // $ Dollars

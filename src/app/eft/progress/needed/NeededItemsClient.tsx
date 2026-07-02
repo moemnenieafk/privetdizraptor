@@ -41,6 +41,7 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
   const itemProgress = useQuestStore((s) => s.itemProgress);
   const incrementItem = useQuestStore((s) => s.incrementItem);
   const decrementItem = useQuestStore((s) => s.decrementItem);
+  const setItemCount = useQuestStore((s) => s.setItemCount);
 
   const [onlyFir, setOnlyFir] = useState(false);
   const [hideDone, setHideDone] = useState(false);
@@ -100,7 +101,7 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
       {/* Фильтры */}
       <div className="flex flex-wrap gap-2">
         {[
-          { on: onlyFir, set: () => setOnlyFir((v) => !v), label: 'Только FIR' },
+          { on: onlyFir, set: () => setOnlyFir((v) => !v), label: 'Только найденное в рейде' },
           { on: hideDone, set: () => setHideDone((v) => !v), label: 'Скрыть готовые' },
         ].map((f) => (
           <button
@@ -138,7 +139,7 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className={`truncate text-sm font-blender-medium ${done ? 'text-text-muted line-through' : 'text-text-primary'}`}>{a.itemName}</span>
-                    {a.firAny && <span className="shrink-0 text-type-caption font-blender-medium uppercase tracking-widest text-(--primary)">FIR</span>}
+                    {a.firAny && <span className="shrink-0 text-type-caption font-blender-medium uppercase tracking-widest text-(--primary)">Найдено в рейде</span>}
                   </div>
                   <div className="mt-1 h-1 w-full max-w-60 overflow-hidden rounded-full bg-lines-hover">
                     <div className={`h-full ${done ? 'bg-success' : 'bg-(--primary)'}`} style={{ width: `${pct}%` }} />
@@ -157,7 +158,7 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
                       <li key={`${s.questId}-${s.objectiveId}`} className="flex items-center gap-2 text-sm">
                         <span className="min-w-0 flex-1 truncate text-text-secondary font-blender-book">
                           <span className="text-text-muted">{s.trader}</span> · {s.questName}
-                          {s.fir && <span className="ml-1 text-type-caption uppercase tracking-widest text-(--primary)">FIR</span>}
+                          {s.fir && <span className="ml-1 text-type-caption uppercase tracking-widest text-(--primary)">Найдено в рейде</span>}
                         </span>
                         <div className="flex shrink-0 items-center gap-1.5">
                           <button
@@ -165,7 +166,21 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
                             onClick={() => decrementItem(s.questId, s.objectiveId)}
                             className="flex h-6 w-6 items-center justify-center rounded-xs border border-lines-hover text-text-secondary hover:border-(--primary) hover:text-(--primary)"
                           >−</button>
-                          <span className="w-10 text-center text-text-primary tabular-nums">{s.found}/{s.needed}</span>
+                          {/* Ручной ввод: для больших количеств (деньги/патроны) кликать ± нереально */}
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={s.needed}
+                            value={s.found}
+                            onChange={(e) => {
+                              const v = Math.max(0, Math.min(s.needed, Math.floor(Number(e.target.value) || 0)));
+                              setItemCount(s.questId, s.objectiveId, v);
+                            }}
+                            onFocus={(e) => e.currentTarget.select()}
+                            className="h-6 w-20 rounded-xs border border-lines-hover bg-(--color-base) text-center font-blender-medium text-xs tabular-nums text-text-primary focus:border-(--primary) focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                          />
+                          <span className="whitespace-nowrap text-text-muted tabular-nums">/ {s.needed}</span>
                           <button
                             type="button"
                             onClick={() => incrementItem(s.questId, s.objectiveId, s.needed)}

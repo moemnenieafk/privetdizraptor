@@ -9,6 +9,9 @@ import { changeEmail, changeSocial, changeUsername, uploadAvatar, resetCtaProgre
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
 import type { AchievementView } from '@/lib/achievement-visuals';
 import type { AchievementHint } from '@/lib/achievement-hints';
+import type { QuestsDigestData } from '@/lib/tracking-digest';
+import type { HideoutNeed, HideoutStationInfo } from '@/db/hideout';
+import { PROGRESS_KEYS } from '@/lib/progress-storage';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 import { TrackingPanel } from './TrackingPanel';
 
@@ -706,7 +709,7 @@ function PlanView({ onBack }: { onBack: () => void }) {
 
 // Сброс прогресса по игре. 2-кликовый confirm (необратимо): клик → «Точно?» → сброс.
 // Чистит БД (route) + localStorage-сторы прогресса + reload — иначе localStorage вернёт прогресс.
-const PROGRESS_KEYS = ['cta-quest-progress', 'cta-barter-gamification', 'cta-hideout', 'player-profile-storage', 'cta-achievement-progress'];
+// Ключи — общий модуль progress-storage (тот же список у заглавного сброса в «Трекинге»).
 
 function GameResetCard({ game }: { game: (typeof GAMES)[number] }) {
   const [confirming, setConfirming] = useState(false);
@@ -1071,11 +1074,17 @@ export function AccountCenter({
   stats,
   achievements,
   hints,
+  questsDigest,
+  hideoutNeeds,
+  hideoutStations,
 }: {
   me: Me;
   stats: AccountStats;
   achievements: AchievementView[];
   hints: Record<string, AchievementHint>;
+  questsDigest: QuestsDigestData;
+  hideoutNeeds: HideoutNeed[];
+  hideoutStations: HideoutStationInfo[];
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('profile');
@@ -1106,7 +1115,7 @@ export function AccountCenter({
 
     switch (activeTab) {
       case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} stats={stats} />;
-      case 'tracking':  return <TrackingPanel achievements={achievements} hints={hints} />;
+      case 'tracking':  return <TrackingPanel achievements={achievements} hints={hints} questsDigest={questsDigest} hideoutNeeds={hideoutNeeds} hideoutStations={hideoutStations} />;
       case 'security':  return <SecurityPanel onNavigate={navigate} />;
       case 'linking':   return <LinkingPanel onNavigate={navigate} me={me} />;
       case 'billing':   return <BillingPanel onNavigate={navigate} />;

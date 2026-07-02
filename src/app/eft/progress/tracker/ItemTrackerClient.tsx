@@ -202,7 +202,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                       </span>
                       {group.foundInRaid && (
                         <span className="text-type-caption font-blender-medium uppercase text-(--primary)">
-                          FiR
+                          Найдено в рейде
                         </span>
                       )}
                     </div>

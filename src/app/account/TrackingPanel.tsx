@@ -16,7 +16,19 @@ import { achievementIconUrl, ACHIEVEMENT_ICON_FALLBACK } from '@/lib/achievement
 import type { AchievementHint } from '@/lib/achievement-hints';
 import { AchievementTrackToggle } from '@/components/features/achievements/AchievementTrackToggle';
 import { AchievementResetControl } from '@/components/features/achievements/AchievementResetControl';
+import { ResetControl } from '@/components/features/tracking/ResetControl';
 import { MiniChip } from '@/components/features/achievements/HintChips';
+import { resetCtaProgress } from '@/lib/cta-api';
+import { clearProgressStorage } from '@/lib/progress-storage';
+import { ProfileSettingsForm } from '@/components/layout/header-modules/ProfileSettingsModal';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { TrackingHideoutDigest } from './TrackingHideoutDigest';
+import { TrackingPrestigeDigest } from './TrackingPrestigeDigest';
+import type { HideoutStationInfo } from '@/db/hideout';
+import type { QuestsDigestData } from '@/lib/tracking-digest';
+import type { HideoutNeed } from '@/db/hideout';
+import { TrackingQuestsDigest } from './TrackingQuestsDigest';
+import { TrackingItemsDigest } from './TrackingItemsDigest';
 
 // Реестр игр вкладки (мультиигровая статистика): новые игры добавляются записью сюда.
 // available=false → таб-заглушка «скоро» (трекинг подключается по мере готовности страниц).
@@ -27,6 +39,18 @@ const TRACKING_GAMES = [
 ] as const;
 
 type TrackingGameId = (typeof TRACKING_GAMES)[number]['id'];
+
+// Домены трекинга внутри игры (суб-табы). Порядок утверждён V4DYA (2026-07-03).
+const TRACKING_DOMAINS = [
+  { id: 'pmc', label: 'Профиль ЧВК', iconClass: 'icon-eft-profile-settings' },
+  { id: 'quests', label: 'Задания', iconClass: 'icon-eft-quests' },
+  { id: 'items', label: 'Предметы', iconClass: 'icon-eft-prog-items-needed' },
+  { id: 'hideout', label: 'Убежище', iconClass: 'icon-eft-prog-hideout' },
+  { id: 'achievements', label: 'Достижения', iconClass: 'icon-eft-prog-achievements' },
+  { id: 'prestige', label: 'Престиж', iconClass: 'icon-eft-prog-prestige' },
+] as const;
+
+type TrackingDomainId = (typeof TRACKING_DOMAINS)[number]['id'];
 
 const MAX_CHIPS = 4;
 
@@ -125,9 +149,15 @@ function WatchCard({ a, hint }: { a: AchievementView; hint?: AchievementHint }) 
 export function TrackingPanel({
   achievements,
   hints,
+  questsDigest,
+  hideoutNeeds,
+  hideoutStations,
 }: {
   achievements: AchievementView[];
   hints: Record<string, AchievementHint>;
+  questsDigest: QuestsDigestData;
+  hideoutNeeds: HideoutNeed[];
+  hideoutStations: HideoutStationInfo[];
 }) {
   // mounted-гард: persist-стор читаем только на клиенте (иначе hydration mismatch).
   const [mounted, setMounted] = useState(false);
@@ -170,7 +200,14 @@ export function TrackingPanel({
   );
 
   const [activeGame, setActiveGame] = useState<TrackingGameId>('eft');
+  const [activeDomain, setActiveDomain] = useState<TrackingDomainId>('pmc');
   const game = TRACKING_GAMES.find((g) => g.id === activeGame) ?? TRACKING_GAMES[0];
+
+  // Профиль ЧВК: та же форма, что в модалке хедера — байндинг 1:1 на usePlayerStore.
+  const profiles = usePlayerStore((s) => s.profiles);
+  const activeProfileId = usePlayerStore((s) => s.activeProfileId);
+  const updateProfile = usePlayerStore((s) => s.updateProfile);
+  const activeProfile = profiles.find((p) => p.id === activeProfileId) || profiles[0];
 
   return (
     <div className="flex flex-col gap-4">
@@ -207,11 +244,92 @@ export function TrackingPanel({
 
       {/* ── Секция активной игры ── */}
       <div className="rounded border border-lines-hover bg-card-menu p-6">
-        <div className="mb-6 flex items-center gap-3 border-b border-lines-hover pb-4">
+        <div className="mb-4 flex items-center justify-between gap-3 border-b border-lines-hover pb-4">
           <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">
             {game.title}
           </span>
-          <span className="ml-auto font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
+          {/* Заглавный сброс: ВСЁ по игре (та же механика, что GameResetCard в Профиле) */}
+          <ResetControl
+            buttonLabel="СБРОС ПРОГРЕССА ИГРЫ"
+            buttonTitle={`Сбросить весь прогресс: ${game.title}`}
+            modalTitle="Подтверждение полного сброса игры"
+            onConfirm={() => {
+              void (async () => {
+                const r = await resetCtaProgress();
+                if (r.ok) {
+                  clearProgressStorage();
+                  window.location.reload();
+                }
+              })();
+            }}
+          >
+            <p>
+              Вы действительно хотите сбросить <span className="text-zinc-100">ВЕСЬ</span> прогресс
+              в {game.title}?
+            </p>
+            <p>
+              Будут очищены: задания, счётчики предметов, достижения, прогресс бартера, уровни
+              убежища и игровые профили ЧВК. Данные удаляются и из облака —{' '}
+              <span className="text-zinc-100">восстановить их нельзя</span>.
+            </p>
+            <p className="text-text-muted">Выполняется автоматически после вайпа</p>
+          </ResetControl>
+        </div>
+
+        {/* ── Суб-табы доменов ── */}
+        <div className="mb-6 flex flex-wrap gap-1.5">
+          {TRACKING_DOMAINS.map((d) => {
+            const isActive = d.id === activeDomain;
+            return (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => setActiveDomain(d.id)}
+                className={`group flex h-9 items-center gap-2 rounded border px-3 transition-all duration-200 ${
+                  isActive
+                    ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] text-(--primary)'
+                    : 'border-lines-hover bg-(--color-base) text-text-muted hover:border-text-secondary hover:text-text-primary'
+                }`}
+              >
+                <span
+                  className={`h-4 w-4 shrink-0 icon-mask ${d.iconClass} ${
+                    isActive ? 'bg-(--primary)' : 'bg-text-muted group-hover:bg-text-primary'
+                  }`}
+                />
+                <span className="font-blender-medium text-type-caption uppercase tracking-widest">
+                  {d.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {activeDomain === 'pmc' && (
+          <div className="mx-auto w-full max-w-96">
+            <ProfileSettingsForm
+              edition={activeProfile?.edition || 'Standard'} setEdition={(val) => activeProfile && updateProfile(activeProfile.id, { edition: val })}
+              faction={activeProfile?.faction || 'BEAR'} setFaction={(val) => activeProfile && updateProfile(activeProfile.id, { faction: val })}
+              mode={activeProfile?.mode || 'PVP'} setMode={(val) => activeProfile && updateProfile(activeProfile.id, { mode: val })}
+              nickname={activeProfile?.nickname || ''} setNickname={(val) => activeProfile && updateProfile(activeProfile.id, { nickname: val })}
+              level={activeProfile?.level || '1'} setLevel={(val) => activeProfile && updateProfile(activeProfile.id, { level: val })}
+              prestige={activeProfile?.prestige || '0'} setPrestige={(val) => activeProfile && updateProfile(activeProfile.id, { prestige: val })}
+              traderLevels={activeProfile?.traderLevels || {}} setTraderLevels={(val) => activeProfile && updateProfile(activeProfile.id, { traderLevels: val })}
+            />
+          </div>
+        )}
+        {activeDomain === 'quests' && <TrackingQuestsDigest digest={questsDigest} />}
+        {activeDomain === 'items' && (
+          <TrackingItemsDigest itemRequirements={questsDigest.itemRequirements} />
+        )}
+        {activeDomain === 'hideout' && (
+          <TrackingHideoutDigest stations={hideoutStations} hideoutNeeds={hideoutNeeds} />
+        )}
+        {activeDomain === 'prestige' && <TrackingPrestigeDigest />}
+
+        {activeDomain === 'achievements' && (
+        <>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
             Достижения:{' '}
             <span className="text-success">{mounted ? doneTotal : 0}</span>
             <span className="text-text-muted"> / {total}</span>
@@ -289,6 +407,8 @@ export function TrackingPanel({
             })}
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
