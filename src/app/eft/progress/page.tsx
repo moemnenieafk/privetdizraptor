@@ -54,7 +54,7 @@ const PROGRESS_HUB_CARDS = [
   },
   {
     id: 'needed',
-    title: 'Нужные предметы',
+    title: 'Важные предметы',
     description: 'Полный список всех предметов, необходимых для выполнения заданий и постройки убежища.',
     href: '/eft/progress/needed',
     iconPath: '/icons/eft/04-progression/items-needed.svg',

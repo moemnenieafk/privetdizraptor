@@ -1,5 +1,6 @@
 ---
-status: 🟡 исполнено, на приёмке
+status: ✅ сделано
+done: 2026-07-03
 affects: account, tracking, items
 date: 2026-07-03
 ---
@@ -31,9 +32,9 @@ date: 2026-07-03
 3. `tsc` → приёмка → коммит (общий с [[tracking-side-quests]]).
 
 ## Критерий готовности
-- [ ] `tsc` чисто; ± во вкладке двигает `itemProgress` (и наоборот — синк со страницей tracker/needed)
-- [ ] Убежище учитывает построенные уровни из `useHideoutStore`
-- [ ] Цифры сходятся с `/eft/progress/needed`
+- [x] `tsc` чисто; ± во вкладке двигает `itemProgress` (и наоборот — синк со страницей tracker/needed)
+- [x] Убежище учитывает построенные уровни из `useHideoutStore`
+- [x] Цифры сходятся с `/eft/progress/needed`
 
 ## Гарды
 - Сторы/БД/API не трогаем — чистая агрегация. Коммит по «ок».

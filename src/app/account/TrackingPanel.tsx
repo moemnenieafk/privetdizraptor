@@ -22,7 +22,7 @@ import { resetCtaProgress } from '@/lib/cta-api';
 import { clearProgressStorage } from '@/lib/progress-storage';
 import { ProfileSettingsForm } from '@/components/layout/header-modules/ProfileSettingsModal';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { TrackingHideoutDigest } from './TrackingHideoutDigest';
+import { HideoutBuildTracker } from '@/components/features/hideout/HideoutBuildTracker';
 import { TrackingPrestigeDigest } from './TrackingPrestigeDigest';
 import type { HideoutStationInfo } from '@/db/hideout';
 import type { QuestsDigestData } from '@/lib/tracking-digest';
@@ -296,7 +296,7 @@ export function TrackingPanel({
                     isActive ? 'bg-(--primary)' : 'bg-text-muted group-hover:bg-text-primary'
                   }`}
                 />
-                <span className="font-blender-medium text-type-caption uppercase tracking-widest">
+                <span className="font-blender-medium text-type-micro uppercase tracking-widest">
                   {d.label}
                 </span>
               </button>
@@ -305,7 +305,8 @@ export function TrackingPanel({
         </div>
 
         {activeDomain === 'pmc' && (
-          <div className="mx-auto w-full max-w-96">
+          /* Ширина 1:1 как в модалке хедера (w-87 = 348px) — форму не растягиваем */
+          <div className="mx-auto w-full max-w-87">
             <ProfileSettingsForm
               edition={activeProfile?.edition || 'Standard'} setEdition={(val) => activeProfile && updateProfile(activeProfile.id, { edition: val })}
               faction={activeProfile?.faction || 'BEAR'} setFaction={(val) => activeProfile && updateProfile(activeProfile.id, { faction: val })}
@@ -322,7 +323,7 @@ export function TrackingPanel({
           <TrackingItemsDigest itemRequirements={questsDigest.itemRequirements} />
         )}
         {activeDomain === 'hideout' && (
-          <TrackingHideoutDigest stations={hideoutStations} hideoutNeeds={hideoutNeeds} />
+          <HideoutBuildTracker stations={hideoutStations} hideoutNeeds={hideoutNeeds} />
         )}
         {activeDomain === 'prestige' && <TrackingPrestigeDigest />}
 

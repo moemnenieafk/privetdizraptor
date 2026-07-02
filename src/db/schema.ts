@@ -278,12 +278,12 @@ export const traders = pgTable("traders", {
 /* ───────────────── hideout_upgrades (self-mirror tarkov.dev) ───────────────── */
 /**
  * Зеркало требований апгрейдов убежища из tarkov.dev. 1 строка на (игра, станция, уровень).
- * Разблокирует «Нужные предметы» (агрегатор предметов убежища) и гейты craft-profit.
+ * Разблокирует «Важные предметы» (агрегатор предметов убежища) и гейты craft-profit.
  * itemRequirements — {itemId, count} (валюта-рубли тоже идёт предметом); имя/иконка/цена
  * подтягиваются join'ом к items/prices при чтении. Ключи (станция+уровень) стабильны
  * между вайпами, поэтому синк — чистый upsert без прюна. Наполняет `db:sync-hideout`.
  */
-export type HideoutItemReq = { itemId: string; count: number };
+export type HideoutItemReq = { itemId: string; count: number; fir?: boolean };
 export type HideoutModuleReq = { station: string; level: number };
 export type HideoutTraderReq = { trader: string; level: number };
 export type HideoutSkillReq = { skill: string; level: number };

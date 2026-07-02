@@ -1,6 +1,6 @@
 // Self-mirror требований апгрейдов убежища из tarkov.dev в нашу Supabase.
 // Цены/имена НЕ храним — itemRequirements это {itemId, count}; подтянутся из
-// `items` + `prices` при чтении («Нужные предметы», гейты craft-profit).
+// `items` + `prices` при чтении («Важные предметы», гейты craft-profit).
 //
 // Источник трогает только syncEftHideout() — CLI `npm run db:sync-hideout`.
 // Ключи (станция+уровень) стабильны между вайпами → чистый upsert без прюна.
@@ -10,6 +10,7 @@ import { db } from "./index";
 import {
   hideoutUpgrades,
   items,
+  prices,
   type HideoutItemReq,
   type HideoutModuleReq,
   type HideoutTraderReq,
@@ -23,6 +24,7 @@ const ENDPOINT = "https://api.tarkov.dev/graphql";
 interface RawItemReq {
   count?: number;
   item?: { id?: string } | null;
+  attributes?: { name?: string; value?: string }[] | null;
 }
 interface RawStationReq {
   level?: number;
@@ -62,7 +64,7 @@ const QUERY = `
       levels {
         level
         constructionTime
-        itemRequirements { count item { id } }
+        itemRequirements { count item { id } attributes { name value } }
         stationLevelRequirements { level station { normalizedName } }
         traderRequirements { level trader { normalizedName } }
         skillRequirements { name level }
@@ -74,7 +76,12 @@ const QUERY = `
 const toItems = (arr?: RawItemReq[]): HideoutItemReq[] =>
   (arr ?? [])
     .filter((s): s is RawItemReq & { item: { id: string } } => !!s.item?.id)
-    .map((s) => ({ itemId: s.item.id, count: s.count ?? 1 }));
+    .map((s) => {
+      const fir = (s.attributes ?? []).some(
+        (a) => a?.name === 'foundInRaid' && String(a?.value).toLowerCase() === 'true',
+      );
+      return { itemId: s.item.id, count: s.count ?? 1, ...(fir ? { fir: true } : {}) };
+    });
 
 const toStations = (arr?: RawStationReq[]): HideoutModuleReq[] =>
   (arr ?? [])
@@ -168,11 +175,15 @@ export interface HideoutNeedSource {
   stationName: string;
   level: number;
   count: number;
+  /** Требуется «найдено в рейде». */
+  fir?: boolean;
 }
 export interface HideoutNeed {
   itemId: string;
   itemName: string;
   itemShort: string;
+  /** normalizedName из зеркала prices — для кросс-линка на карточку предмета. */
+  slug?: string;
   total: number;
   sources: HideoutNeedSource[];
 }
@@ -197,22 +208,38 @@ export async function getHideoutNeeds(): Promise<HideoutNeed[]> {
         map.get(req.itemId) ??
         { itemId: req.itemId, itemName: "", itemShort: "", total: 0, sources: [] };
       a.total += req.count;
-      a.sources.push({ station: r.stationNormalizedName, stationName: r.stationName, level: r.level, count: req.count });
+      a.sources.push({
+        station: r.stationNormalizedName,
+        stationName: r.stationName,
+        level: r.level,
+        count: req.count,
+        ...(req.fir ? { fir: true } : {}),
+      });
       map.set(req.itemId, a);
     }
   }
 
   const ids = [...map.keys()];
   if (ids.length > 0) {
-    const itemRows = await db
-      .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName })
-      .from(items)
-      .where(and(eq(items.gameId, gameId), inArray(items.inGameId, ids)));
+    const [itemRows, priceRows] = await Promise.all([
+      db
+        .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName })
+        .from(items)
+        .where(and(eq(items.gameId, gameId), inArray(items.inGameId, ids))),
+      // slug (normalizedName) — для кросс-линка на карточку предмета.
+      db
+        .select({ inGameId: prices.inGameId, normalizedName: prices.normalizedName })
+        .from(prices)
+        .where(and(eq(prices.gameId, gameId), inArray(prices.inGameId, ids))),
+    ]);
     const byId = new Map(itemRows.map((i) => [i.inGameId, i]));
+    const slugById = new Map(priceRows.map((p) => [p.inGameId, p.normalizedName]));
     for (const a of map.values()) {
       const it = byId.get(a.itemId);
       a.itemName = it?.name ?? a.itemId;
       a.itemShort = it?.shortName ?? "";
+      const slug = slugById.get(a.itemId);
+      if (slug) a.slug = slug;
     }
   }
 

@@ -46,7 +46,7 @@ const EFT_HUB_CARDS = [
   },
   {
     id: 'needed',
-    title: 'Нужные предметы',
+    title: 'Важные предметы',
     description: 'Предметы необходимые в заданиях',
     href: '/eft/progress/needed',
     iconPath: '/icons/eft/04-progression/items-needed.svg',

@@ -1,5 +1,6 @@
 ---
-status: 🟡 исполнено, на приёмке
+status: ✅ сделано
+done: 2026-07-03
 affects: account, tracking
 date: 2026-07-03
 ---
