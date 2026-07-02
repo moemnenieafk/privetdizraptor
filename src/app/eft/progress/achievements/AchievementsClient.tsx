@@ -12,6 +12,7 @@ import {
 import { achievementIconUrl, ACHIEVEMENT_ICON_FALLBACK } from "@/lib/achievement-icon";
 import { useAchievementStore } from "@/store/useAchievementStore";
 import { AchievementTrackToggle } from "@/components/features/achievements/AchievementTrackToggle";
+import { AchievementResetControl } from "@/components/features/achievements/AchievementResetControl";
 
 interface AchievementsClientProps {
   initialData: AchievementView[];
@@ -243,6 +244,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
             </>
           )}
         </span>
+        <AchievementResetControl />
       </div>
 
       {processed.length === 0 ? (

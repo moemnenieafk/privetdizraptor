@@ -15,12 +15,18 @@ import { rarityMeta, type AchievementView, type AchRarity } from '@/lib/achievem
 import { achievementIconUrl, ACHIEVEMENT_ICON_FALLBACK } from '@/lib/achievement-icon';
 import type { AchievementHint } from '@/lib/achievement-hints';
 import { AchievementTrackToggle } from '@/components/features/achievements/AchievementTrackToggle';
+import { AchievementResetControl } from '@/components/features/achievements/AchievementResetControl';
 import { MiniChip } from '@/components/features/achievements/HintChips';
 
-// Реестр игр вкладки (мультигейм: новые игры добавляются записью сюда).
+// Реестр игр вкладки (мультиигровая статистика): новые игры добавляются записью сюда.
+// available=false → таб-заглушка «скоро» (трекинг подключается по мере готовности страниц).
 const TRACKING_GAMES = [
-  { id: 'eft', logo: '/images/games/eft-logo.webp', title: 'Escape From Tarkov' },
+  { id: 'eft', logo: '/games/eft/eft-logo.svg', title: 'Escape From Tarkov', available: true },
+  { id: 'abi', logo: '/games/abi/abi-logo.svg', title: 'Arena Breakout: Infinite', available: false },
+  { id: 'gzw', logo: '/games/gzw/gzw-logo.svg', title: 'Gray Zone Warfare', available: false },
 ] as const;
+
+type TrackingGameId = (typeof TRACKING_GAMES)[number]['id'];
 
 const MAX_CHIPS = 4;
 
@@ -163,25 +169,46 @@ export function TrackingPanel({
     [achievements, completedSet],
   );
 
-  const game = TRACKING_GAMES[0];
+  const [activeGame, setActiveGame] = useState<TrackingGameId>('eft');
+  const game = TRACKING_GAMES.find((g) => g.id === activeGame) ?? TRACKING_GAMES[0];
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Секция игры (мультигейм-ready: одна секция на игру) ── */}
+      {/* ── Табы игр (мультиигровая статистика; недоступные — «скоро») ── */}
+      <div className="flex flex-wrap gap-2">
+        {TRACKING_GAMES.map((g) => {
+          const isActive = g.id === activeGame;
+          return (
+            <button
+              key={g.id}
+              type="button"
+              disabled={!g.available}
+              onClick={() => g.available && setActiveGame(g.id)}
+              title={g.available ? g.title : `${g.title} — скоро`}
+              className={`group relative flex h-12 items-center justify-center rounded border px-5 transition-all duration-200 ${
+                isActive
+                  ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]'
+                  : g.available
+                    ? 'border-lines-hover bg-card-menu hover:border-text-secondary'
+                    : 'cursor-not-allowed border-lines-hover bg-card-menu opacity-40'
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={g.logo} alt={g.title} className={`h-6 w-auto object-contain ${isActive ? 'opacity-100' : 'opacity-60 group-hover:opacity-90'}`} />
+              {!g.available && (
+                <span className="absolute -top-1.5 right-2 rounded-xs bg-(--color-base) px-1 text-type-micro uppercase tracking-widest text-text-muted">
+                  скоро
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Секция активной игры ── */}
       <div className="rounded border border-lines-hover bg-card-menu p-6">
         <div className="mb-6 flex items-center gap-3 border-b border-lines-hover pb-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={game.logo}
-            alt={game.title}
-            className="h-8 w-auto object-contain opacity-70"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              const next = e.currentTarget.nextElementSibling as HTMLElement | null;
-              if (next) next.style.removeProperty('display');
-            }}
-          />
-          <span className="hidden font-blender-medium text-xs uppercase tracking-widest text-text-muted">
+          <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">
             {game.title}
           </span>
           <span className="ml-auto font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
@@ -189,6 +216,7 @@ export function TrackingPanel({
             <span className="text-success">{mounted ? doneTotal : 0}</span>
             <span className="text-text-muted"> / {total}</span>
           </span>
+          <AchievementResetControl />
         </div>
 
         {/* ── Вотчлист «отслеживаю» ── */}
