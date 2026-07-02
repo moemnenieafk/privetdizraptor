@@ -7,7 +7,10 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
 import { changeEmail, changeSocial, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
+import type { AchievementView } from '@/lib/achievement-visuals';
+import type { AchievementHint } from '@/lib/achievement-hints';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
+import { TrackingPanel } from './TrackingPanel';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // зеркалит серверный EMAIL_RE
@@ -16,7 +19,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type TabId = 'profile' | 'security' | 'linking' | 'billing' | 'prostatus';
+type TabId = 'profile' | 'tracking' | 'security' | 'linking' | 'billing' | 'prostatus';
 type ViewId = 'avatar' | 'username' | 'email' | 'subscription' | 'password' | '2fa' | 'plan' | 'social';
 
 interface NavTab {
@@ -29,6 +32,7 @@ interface NavTab {
 
 const NAV_TABS: NavTab[] = [
   { id: 'profile',   label: 'Профиль',      iconClass: 'icon-account_profile_icon' },
+  { id: 'tracking',  label: 'Трекинг',      iconClass: 'icon-eft-progress' },
   { id: 'security',  label: 'Безопасность', iconClass: 'icon-account_security_icon' },
   { id: 'linking',   label: 'Спецсвязь',    iconClass: 'icon-account_linking_icon' },
   { id: 'billing',   label: 'Платежи',      iconClass: 'icon-account_billing_icon' },
@@ -1062,7 +1066,17 @@ function SocialView({ onBack, me }: { onBack: () => void; me: Me }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function AccountCenter({ me, stats }: { me: Me; stats: AccountStats }) {
+export function AccountCenter({
+  me,
+  stats,
+  achievements,
+  hints,
+}: {
+  me: Me;
+  stats: AccountStats;
+  achievements: AchievementView[];
+  hints: Record<string, AchievementHint>;
+}) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [activeView, setActiveView] = useState<ViewId | null>(null);
@@ -1092,6 +1106,7 @@ export function AccountCenter({ me, stats }: { me: Me; stats: AccountStats }) {
 
     switch (activeTab) {
       case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} stats={stats} />;
+      case 'tracking':  return <TrackingPanel achievements={achievements} hints={hints} />;
       case 'security':  return <SecurityPanel onNavigate={navigate} />;
       case 'linking':   return <LinkingPanel onNavigate={navigate} me={me} />;
       case 'billing':   return <BillingPanel onNavigate={navigate} />;

@@ -35,6 +35,8 @@ export interface RarityMeta {
   borderClass: string;
   /** класс подложки-тинта плитки (полупрозрачный оверлей /30) */
   tintClass: string;
+  /** заливка прогресс-бара тира (вкладка «Трекинг») */
+  barClass: string;
 }
 
 // Цвета выверены V4DYA по градации Таркова (2026-07-02). Токены в globals.css, менять — здесь.
@@ -48,6 +50,7 @@ const RARITY: Record<AchRarity, RarityMeta> = {
     badgeClass: "border border-text-secondary/50 bg-text-secondary/10 text-text-secondary",
     borderClass: "border-lines-hover",
     tintClass: "bg-text-secondary/10",
+    barClass: "bg-text-secondary",
   },
   rare: {
     key: "rare",
@@ -56,6 +59,7 @@ const RARITY: Record<AchRarity, RarityMeta> = {
     badgeClass: "border border-rarity-rare-badge/50 bg-rarity-rare-badge/10 text-rarity-rare-badge",
     borderClass: "border-rarity-rare/40",
     tintClass: "bg-rarity-rare/30",
+    barClass: "bg-rarity-rare-badge",
   },
   legendary: {
     key: "legendary",
@@ -64,6 +68,7 @@ const RARITY: Record<AchRarity, RarityMeta> = {
     badgeClass: "border border-rarity-legendary/50 bg-rarity-legendary/10 text-rarity-legendary",
     borderClass: "border-rarity-legendary/70",
     tintClass: "bg-rarity-legendary/30",
+    barClass: "bg-rarity-legendary",
   },
 };
 
