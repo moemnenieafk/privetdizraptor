@@ -1,11 +1,12 @@
 ---
-status: 🟡 Фаза 1 ✅ принята
+status: ✅ Фазы 1-2 сделаны
 affects: achievements
 date: 2026-07-02
+done: 2026-07-02
 ---
 # Эпик: Раздел «Достижения» — редизайн + SMART-детали + трекинг
 
-**Статус:** 🟡 Фаза 1a + 1b ✅ ИСПОЛНЕНЫ и ПРИНЯТЫ V4DYA (2026-07-02), закоммичены → [[#Исполнено (2026-07-02) — Фаза 1a + 1b]]. Фаза 2 (трекинг игрока) — впереди.
+**Статус:** ✅ Фаза 1 (редизайн+SMART) закоммичена `b004a58`; Фаза 2 (трекинг игрока) ИСПОЛНЕНА 2026-07-02 (миграция применена) → [[#Исполнено — Фаза 2 (2026-07-02)]]. Развилки закрыты V4DYA. Дальнейшее (богатая вкладка в Аккаунт Центре, кураторка hint-оверрайдов) — по мере надобности.
 **Затрагивает:** `eft/progress/achievements/*` · `db/landing.ts` · `db/schema.ts` (Фаза 1a + 2) · крон `api/cron/sync-prices` · новый `features/achievements/*` · новый `lib/achievement-hints.ts` + `data/achievement-hints.ts` · Фаза 2: `store/useAchievementStore.ts` + `api/eft/achievement-progress` + `providers/ProgressSync.tsx` + `account/*`
 
 ## Цель
@@ -135,6 +136,19 @@ date: 2026-07-02
 **Доработки по приёмке (V4DYA, 2026-07-02):** легендарное → #BDA550 (Каппа); рарный бейдж → светлый #A069AF (тёмный #4C2A55 только подложка плитки); медиаконтейнер иконки без фона (иконка плавает); все бейджи `text-type-micro`; «фракция + %» = `text-primary/70`; обводка бейджей фракции `text-primary/25`; глазик/«Скрытое» = `text-primary/50`; статы «Выполнили/С поправкой» = `text-primary/50`; hold-to-reveal на карточке.
 
 **Открытый мелкий вопрос:** лейбл scavs — «Дикие» (сейчас) vs «Дикий».
+
+## Исполнено — Фаза 2 (2026-07-02)
+Ручной трекинг достижений (публичного API «ачивки игрока» в EFT нет). Зеркало трекера квестов. `tsc` чист; миграция применена (`db:push`→`db:sql`, RLS восстановлен).
+
+- **БД:** таблица `achievement_progress` (PK user+game, `completed_ids`/`tracked_ids` jsonb) + `supabase/achievement-progress-rls.sql` (owner-only).
+- **Стор:** `src/store/useAchievementStore.ts` (`completed`+`tracked`, persist `cta-achievement-progress`).
+- **API:** `src/app/api/eft/achievement-progress/route.ts` (GET/PUT из сессии) + `getCtaAchievementProgress`/`saveCtaAchievementProgress` в `cta-api.ts`.
+- **Синк:** `src/components/providers/AchievementSync.tsx` (гидрация на логине + дебаунс-сейв), смонтирован в `app/layout.tsx`.
+- **UI:** `src/components/features/achievements/AchievementTrackToggle.tsx` — compact «выполнено» ✓ в шапке плитки, full «выполнено+отслеживаю» на детали. Фильтр «скрыть выполненные», счётчик выполненных. mounted-гард от hydration-mismatch. Цвет выполненного = `--color-success`.
+- **Аккаунт Центр:** стата «Достижений: N» (`getAccountStats` + `achievement_progress`); сброс прогресса чистит таблицу + ключ localStorage.
+- **Доработка фильтров (V4DYA):** панель фильтров переведена на стиль раздела «Предметы» — плоский бар + кастомные `FilterDropdown` (портирован из `CategoryControlBar`), прозрачные тогглы/переключатель вида.
+
+**Не сделано (осознанно, на потом):** отдельная вкладка «Достижения» в Аккаунт Центре с разбивкой по редкости; кураторка ручных hint-оверрайдов сверх авто-38/110.
 
 ---
 *Процесс: [[engineering-loop]]*

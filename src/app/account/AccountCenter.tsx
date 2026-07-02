@@ -702,7 +702,7 @@ function PlanView({ onBack }: { onBack: () => void }) {
 
 // Сброс прогресса по игре. 2-кликовый confirm (необратимо): клик → «Точно?» → сброс.
 // Чистит БД (route) + localStorage-сторы прогресса + reload — иначе localStorage вернёт прогресс.
-const PROGRESS_KEYS = ['cta-quest-progress', 'cta-barter-gamification', 'cta-hideout', 'player-profile-storage'];
+const PROGRESS_KEYS = ['cta-quest-progress', 'cta-barter-gamification', 'cta-hideout', 'player-profile-storage', 'cta-achievement-progress'];
 
 function GameResetCard({ game }: { game: (typeof GAMES)[number] }) {
   const [confirming, setConfirming] = useState(false);
@@ -837,6 +837,8 @@ function ProfilePanel({ onNavigate, me, stats }: { onNavigate: (v: ViewId) => vo
           <span className="font-blender-medium text-sm text-text-secondary">{stats.questsCompleted}</span>
           <span className="font-blender-book text-type-caption text-text-muted">· Бартеров:</span>
           <span className="font-blender-medium text-sm text-text-secondary">{stats.bartersConfirmed}</span>
+          <span className="font-blender-book text-type-caption text-text-muted">· Достижений:</span>
+          <span className="font-blender-medium text-sm text-text-secondary">{stats.achievementsCompleted}</span>
         </FlatRow>
       </div>
 

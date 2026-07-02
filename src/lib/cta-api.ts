@@ -105,6 +105,31 @@ export async function saveCtaProgress(p: ProgressPayload): Promise<boolean> {
   return res.ok;
 }
 
+/* ───────────────── трекинг достижений (Фаза 2) ───────────────── */
+// Форма 1:1 повторяет persisted-поля useAchievementStore.
+export interface AchievementProgressPayload {
+  completedIds: string[];
+  trackedIds: string[];
+}
+
+// Трекинг достижений текущего пользователя из сессии. null — не авторизован.
+export async function getCtaAchievementProgress(): Promise<AchievementProgressPayload | null> {
+  const res = await fetch(`${baseUrl()}/api/eft/achievement-progress`, { cache: "no-store" });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`CTA API /eft/achievement-progress → ${res.status}`);
+  return res.json() as Promise<AchievementProgressPayload>;
+}
+
+// Сохранить трекинг достижений. false — не авторизован/ошибка.
+export async function saveCtaAchievementProgress(p: AchievementProgressPayload): Promise<boolean> {
+  const res = await fetch(`${baseUrl()}/api/eft/achievement-progress`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(p),
+  });
+  return res.ok;
+}
+
 /* ───────────────── прогресс бартера / геймификация (слой 4c) ───────────────── */
 // Форма 1:1 повторяет persisted-поля useGamificationStore.
 export interface BarterProgressPayload {

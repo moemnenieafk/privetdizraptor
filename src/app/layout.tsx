@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ProgressSync } from "@/components/providers/ProgressSync";
+import { AchievementSync } from "@/components/providers/AchievementSync";
 import { PlayerProfileSync } from "@/components/providers/PlayerProfileSync";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
@@ -40,6 +41,7 @@ export default function RootLayout({
         <div className="relative z-10 flex min-h-screen flex-col">
           <ThemeProvider>
             <ProgressSync />
+            <AchievementSync />
             <PlayerProfileSync />
             <ConditionalLayout>
               {children}

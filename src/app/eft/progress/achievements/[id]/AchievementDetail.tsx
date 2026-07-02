@@ -3,6 +3,7 @@ import { EyeOff, MapPin, Users, Swords, Map as MapIcon, ChevronRight } from "luc
 import { type AchievementView, rarityMeta, sideLabel } from "@/lib/achievement-visuals";
 import { achievementIconUrl } from "@/lib/achievement-icon";
 import type { AchievementHint, HintKind, HintLink } from "@/lib/achievement-hints";
+import { AchievementTrackToggle } from "@/components/features/achievements/AchievementTrackToggle";
 
 const KIND_ICON: Record<HintKind, typeof MapPin> = {
   boss: Swords,
@@ -117,6 +118,10 @@ export function AchievementDetail({ ach, hint }: { ach: AchievementView; hint: A
               {ach.adjustedPlayersCompletedPercent > 0 && (
                 <Stat label="С поправкой" value={`${ach.adjustedPlayersCompletedPercent.toFixed(2)}%`} />
               )}
+            </div>
+
+            <div className="mt-5">
+              <AchievementTrackToggle id={ach.id} variant="full" />
             </div>
           </div>
         </div>

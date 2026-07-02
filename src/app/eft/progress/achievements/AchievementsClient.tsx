@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, X, LayoutGrid, List, Eye, EyeOff } from "lucide-react";
+import { Search, X, LayoutGrid, List, Eye, EyeOff, Check, ChevronDown } from "lucide-react";
 import {
   type AchievementView,
   rarityMeta,
@@ -10,6 +10,8 @@ import {
   RARITY_RANK,
 } from "@/lib/achievement-visuals";
 import { achievementIconUrl, ACHIEVEMENT_ICON_FALLBACK } from "@/lib/achievement-icon";
+import { useAchievementStore } from "@/store/useAchievementStore";
+import { AchievementTrackToggle } from "@/components/features/achievements/AchievementTrackToggle";
 
 interface AchievementsClientProps {
   initialData: AchievementView[];
@@ -26,6 +28,91 @@ function onImgError(e: React.SyntheticEvent<HTMLImageElement>) {
   img.src = ACHIEVEMENT_ICON_FALLBACK;
 }
 
+const RARITY_OPTS: readonly { key: RarityFilter; label: string }[] = [
+  { key: "any", label: "Редкость: все" },
+  { key: "legendary", label: "Легендарное" },
+  { key: "rare", label: "Редкое" },
+  { key: "common", label: "Обычное" },
+];
+const SIDE_OPTS: readonly { key: SideFilter; label: string }[] = [
+  { key: "any", label: "Фракция: все" },
+  { key: "pmc", label: "ЧВК" },
+  { key: "scavs", label: "Дикие" },
+  { key: "all", label: "Общие" },
+];
+const VIS_OPTS: readonly { key: Visibility; label: string }[] = [
+  { key: "all", label: "Все типы" },
+  { key: "visible", label: "Открытые" },
+  { key: "hidden", label: "Скрытые" },
+];
+const SORT_OPTS: readonly { key: SortOrder; label: string }[] = [
+  { key: "tier", label: "По редкости" },
+  { key: "rarest", label: "Сначала редчайшие" },
+  { key: "common", label: "Сначала частые" },
+];
+
+// Кастомный дропдаун в стиле CategoryControlBar раздела «Предметы» (плоский, без коробки).
+function FilterDropdown<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: readonly { key: T; label: string }[];
+  onChange: (key: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const current = options.find((o) => o.key === value) ?? options[0];
+
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-10 items-center gap-2 bg-transparent px-3 font-blender-medium text-type-caption uppercase tracking-wider text-zinc-400 transition-colors duration-200 hover:text-zinc-200"
+      >
+        <span className="whitespace-nowrap">{current.label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-full overflow-hidden rounded border border-lines-hover bg-card-menu py-1 shadow-lg">
+          {options.map((opt) => {
+            const isSelected = opt.key === value;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => {
+                  onChange(opt.key);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center gap-2 px-3 py-2 font-blender-medium text-type-caption uppercase tracking-wider transition-colors duration-150 ${
+                  isSelected ? "text-(--primary)" : "text-zinc-500 hover:text-zinc-200"
+                }`}
+              >
+                <span className="whitespace-nowrap">{opt.label}</span>
+                {isSelected && <Check className="ml-auto h-3 w-3 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AchievementsClient({ initialData }: AchievementsClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>("any");
@@ -35,6 +122,13 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   // «Зажать глазик» — раскрыть скрытое достижение на карточке, пока удерживаешь.
   const [revealedId, setRevealedId] = useState<string | null>(null);
+  const [hideCompleted, setHideCompleted] = useState(false);
+  // mounted-гард: трекинг из localStorage применяем только на клиенте (иначе hydration mismatch).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const completedIds = useAchievementStore((s) => s.completedIds);
+  const completedSet = useMemo(() => new Set(completedIds), [completedIds]);
+  const completedCount = mounted ? completedIds.length : 0;
 
   const processed = useMemo(() => {
     let data = [...initialData];
@@ -49,6 +143,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
     if (sideFilter !== "any") data = data.filter((a) => a.normalizedSide === sideFilter);
     if (visibility === "visible") data = data.filter((a) => !a.hidden);
     if (visibility === "hidden") data = data.filter((a) => a.hidden);
+    if (mounted && hideCompleted) data = data.filter((a) => !completedSet.has(a.id));
 
     data.sort((a, b) => {
       if (sortOrder === "tier") {
@@ -63,25 +158,26 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
     });
 
     return data;
-  }, [initialData, searchQuery, rarityFilter, sideFilter, visibility, sortOrder]);
+  }, [initialData, searchQuery, rarityFilter, sideFilter, visibility, sortOrder, mounted, hideCompleted, completedSet]);
 
   return (
     <div className="flex w-full flex-col gap-6">
-      {/* ── Тактическая панель управления ── */}
-      <div className="flex flex-col items-center justify-between gap-4 rounded border border-lines-hover bg-card-menu p-4 shadow-lg sm:flex-row">
-        <div className="relative flex h-10 w-full items-center rounded border border-lines-hover bg-(--color-base) px-3 transition-colors focus-within:border-(--primary) sm:flex-1">
+      {/* ── Панель фильтров (стиль раздела «Предметы») ── */}
+      <div className="flex w-full flex-wrap items-center gap-2 py-3">
+        {/* Поиск — тянется на всё свободное место */}
+        <div className="relative flex h-10 min-w-36 flex-1 items-center rounded border border-lines-hover bg-(--color-base) px-3 transition-colors focus-within:border-(--primary)">
           <Search className="mr-2 h-4 w-4 shrink-0 text-text-muted" />
           <input
             type="text"
-            placeholder="ПОИСК ДОСТИЖЕНИЙ..."
+            placeholder="ФИЛЬТР ДОСТИЖЕНИЙ..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent font-blender-medium text-type-label uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
+            className="w-full bg-transparent font-blender-medium text-xs uppercase tracking-wider text-text-primary placeholder:text-text-muted focus:outline-none"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="ml-2 shrink-0 text-text-muted hover:text-text-primary"
+              className="ml-2 shrink-0 text-text-muted hover:text-(--primary)"
               aria-label="Очистить поиск"
             >
               <X className="h-4 w-4" />
@@ -89,70 +185,50 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           )}
         </div>
 
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <select
-            value={rarityFilter}
-            onChange={(e) => setRarityFilter(e.target.value as RarityFilter)}
-            className="h-10 flex-1 cursor-pointer rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary focus:border-(--primary) focus:outline-none sm:flex-none"
-          >
-            <option value="any">Редкость: все</option>
-            <option value="legendary">Легендарное</option>
-            <option value="rare">Редкое</option>
-            <option value="common">Обычное</option>
-          </select>
-          <select
-            value={sideFilter}
-            onChange={(e) => setSideFilter(e.target.value as SideFilter)}
-            className="h-10 flex-1 cursor-pointer rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary focus:border-(--primary) focus:outline-none sm:flex-none"
-          >
-            <option value="any">Фракция: все</option>
-            <option value="pmc">ЧВК</option>
-            <option value="scavs">Дикие</option>
-            <option value="all">Общие</option>
-          </select>
-          <select
-            value={visibility}
-            onChange={(e) => setVisibility(e.target.value as Visibility)}
-            className="h-10 flex-1 cursor-pointer rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary focus:border-(--primary) focus:outline-none sm:flex-none"
-          >
-            <option value="all">Все типы</option>
-            <option value="visible">Открытые</option>
-            <option value="hidden">Скрытые</option>
-          </select>
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-            className="h-10 flex-1 cursor-pointer rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary focus:border-(--primary) focus:outline-none sm:flex-none"
-          >
-            <option value="tier">По редкости</option>
-            <option value="rarest">Сначала редчайшие</option>
-            <option value="common">Сначала частые</option>
-          </select>
+        <FilterDropdown value={rarityFilter} options={RARITY_OPTS} onChange={setRarityFilter} />
+        <FilterDropdown value={sideFilter} options={SIDE_OPTS} onChange={setSideFilter} />
+        <FilterDropdown value={visibility} options={VIS_OPTS} onChange={setVisibility} />
 
-          <div className="mx-1 hidden h-6 w-px bg-lines-hover sm:block" />
+        <div className="h-6 w-px shrink-0 bg-lines-hover" />
 
-          <div className="flex items-center gap-1 rounded border border-lines-hover bg-(--color-base) p-1">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${
-                viewMode === "grid" ? "bg-primary/20 text-(--primary)" : "text-text-muted hover:bg-lines-hover"
-              }`}
-              title="Плитка"
-              aria-label="Плитка"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode("table")}
-              className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${
-                viewMode === "table" ? "bg-primary/20 text-(--primary)" : "text-text-muted hover:bg-lines-hover"
-              }`}
-              title="Список"
-              aria-label="Список"
-            >
-              <List className="h-4 w-4" />
-            </button>
-          </div>
+        <FilterDropdown value={sortOrder} options={SORT_OPTS} onChange={setSortOrder} />
+
+        {/* Скрыть выполненные */}
+        <button
+          type="button"
+          onClick={() => setHideCompleted((v) => !v)}
+          title="Скрыть выполненные"
+          aria-pressed={hideCompleted}
+          className={`flex h-10 shrink-0 items-center gap-1.5 bg-transparent px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
+            hideCompleted ? "text-success" : "text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          <Check className="h-4 w-4 shrink-0" />
+          <span className="hidden md:block">Скрыть</span>
+        </button>
+
+        <div className="h-6 w-px shrink-0 bg-lines-hover" />
+
+        {/* Переключатель вида */}
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`flex h-8 w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
+              viewMode === "grid" ? "text-(--primary)" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+            title="Сетка"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("table")}
+            className={`flex h-8 w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
+              viewMode === "table" ? "text-(--primary)" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+            title="Список"
+          >
+            <List className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
@@ -160,6 +236,12 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
       <div className="flex items-center justify-between px-1">
         <span className="text-type-caption uppercase tracking-widest text-text-muted">
           Достижений: <span className="font-blender-medium text-text-secondary">{processed.length}</span> из {initialData.length}
+          {completedCount > 0 && (
+            <>
+              {" · выполнено "}
+              <span className="font-blender-medium text-success">{completedCount}</span>
+            </>
+          )}
         </span>
       </div>
 
@@ -200,6 +282,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                     >
                       {a.name}
                     </h3>
+                    <div className="flex shrink-0 items-center gap-1">
                     {a.hidden && (
                       <span
                         role="button"
@@ -234,6 +317,8 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
                         {revealed ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </span>
                     )}
+                      <AchievementTrackToggle id={a.id} variant="compact" />
+                    </div>
                   </div>
 
                   <p className={`line-clamp-2 text-sm text-text-secondary ${a.hidden && !revealed ? "select-none blur-[3px]" : ""}`}>

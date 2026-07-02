@@ -442,6 +442,29 @@ export const questProgress = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
 );
 
+/* ─────────────────────── achievement_progress ─────────────────────── */
+/**
+ * Фаза 2 достижений — облачный трекинг достижений игрока (замена localStorage).
+ * Одна строка на пользователя+игру; поля 1:1 повторяют persisted-форму
+ * useAchievementStore (completed/tracked). Публичного API «ачивки игрока» в EFT
+ * нет → трекинг ручной (как квесты). user_id → profiles.id с каскадом.
+ */
+export const achievementProgress = pgTable(
+  "achievement_progress",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    completedIds: jsonb("completed_ids").$type<string[]>().notNull(),
+    trackedIds: jsonb("tracked_ids").$type<string[]>().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
+);
+
 /* ─────────────────────── barter_progress ─────────────────────── */
 /**
  * Слой 4c — облачный прогресс геймификации «Прибыль бартера» (замена localStorage).

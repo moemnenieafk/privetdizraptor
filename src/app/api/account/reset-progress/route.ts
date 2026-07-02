@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { questProgress, barterProgress, playerProfiles } from "@/db/schema";
+import { questProgress, barterProgress, playerProfiles, achievementProgress } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +25,7 @@ export async function POST(): Promise<NextResponse> {
       db.delete(questProgress).where(and(eq(questProgress.userId, user.id), eq(questProgress.gameId, gameId))),
       db.delete(barterProgress).where(and(eq(barterProgress.userId, user.id), eq(barterProgress.gameId, gameId))),
       db.delete(playerProfiles).where(and(eq(playerProfiles.userId, user.id), eq(playerProfiles.gameId, gameId))),
+      db.delete(achievementProgress).where(and(eq(achievementProgress.userId, user.id), eq(achievementProgress.gameId, gameId))),
     ]);
     return NextResponse.json({ ok: true });
   } catch (e) {
