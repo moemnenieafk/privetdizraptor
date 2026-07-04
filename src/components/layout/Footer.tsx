@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useFeedback } from "@/components/providers/FeedbackProvider";
 
 const BUILD_VERSION = "v0.2.0-beta";
 
@@ -20,6 +21,7 @@ type PingState = "idle" | "ok" | "err";
 export default function Footer() {
   const [ping, setPing] = useState<number | null>(null);
   const [pingState, setPingState] = useState<PingState>("idle");
+  const { openFeedback } = useFeedback();
 
   useEffect(() => {
     const t0 = performance.now();
@@ -172,9 +174,18 @@ export default function Footer() {
           <span className="font-blender-medium text-type-caption tracking-[0.25em] uppercase text-text-muted opacity-50">
             © 2026 ЦТА · ЦЕНТР ТАКТИЧЕСКОЙ АДАПТАЦИИ · ВСЕ ПРАВА ЗАЩИЩЕНЫ
           </span>
-          <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted opacity-30">
-            {BUILD_VERSION} · NIGHTFALL DS
-          </span>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => openFeedback()}
+              className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted transition-colors hover:text-(--primary)"
+            >
+              [ СООБЩИТЬ ОБ ОШИБКЕ ]
+            </button>
+            <span className="font-blender-medium text-type-caption tracking-[0.2em] uppercase text-text-muted opacity-30">
+              {BUILD_VERSION} · NIGHTFALL DS
+            </span>
+          </div>
         </div>
 
       </div>

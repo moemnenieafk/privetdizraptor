@@ -39,6 +39,7 @@
   .icon-eft-quests-therapist { background-image: url('/images/traders/eft/therapist.webp'); }
   
   .icon-eft-quests-events { mask-image: url('/icons/eft/02-quests/ingame-events.svg'); -webkit-mask-image: url('/icons/eft/02-quests/ingame-events.svg'); }
+  .icon-eft-difficulty-skull { mask-image: url('/icons/eft/02-quests/difficulty-skull.svg'); -webkit-mask-image: url('/icons/eft/02-quests/difficulty-skull.svg'); }
   .icon-eft-quests-lore { mask-image: url('/icons/eft/02-quests/lore-quests.svg'); -webkit-mask-image: url('/icons/eft/02-quests/lore-quests.svg'); }
   .icon-eft-quests-eliminate { mask-image: url('/icons/eft/02-quests/quest-eliminate.svg'); -webkit-mask-image: url('/icons/eft/02-quests/quest-eliminate.svg'); }
   .icon-eft-quests-investigate { mask-image: url('/icons/eft/02-quests/quest-investigate.svg'); -webkit-mask-image: url('/icons/eft/02-quests/quest-investigate.svg'); }
@@ -322,3 +323,6 @@
   .icon-questnode-connection-line { mask-image: url('/icons/questnode-connection-line.svg'); -webkit-mask-image: url('/icons/questnode-connection-line.svg'); }
   /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
   .icon-eft-library { mask-image: url('/icons/eft/04-progression/hideout-modules/library.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/library.svg'); }
+
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-eft-quest-clue { mask-image: url('/icons/eft/02-quests/quest-clue.svg'); -webkit-mask-image: url('/icons/eft/02-quests/quest-clue.svg'); }

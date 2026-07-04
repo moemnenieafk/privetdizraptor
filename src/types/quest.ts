@@ -99,6 +99,10 @@ export interface QuestNodeData {
   chainRole?: 'ancestor' | 'descendant' | 'self' | null;
   pinned?: boolean;
   barterCount?: number; // сколько бартеров открывает квест
+  /** Иконка-маска шапки вместо фото трейдера (карты сюжетных историй: убежище/барахолка/локации). */
+  headerIconClass?: string;
+  /** Спрятать кнопку-скрепку (карты сюжетных историй — пины не поддерживаются). */
+  hidePin?: boolean;
   onToggle: (id: string) => void;
   onForceComplete: (id: string) => void;
   onSelect: (task: TaskRaw) => void;

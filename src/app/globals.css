@@ -73,6 +73,8 @@
   --trader-ref:         #B49634;
   --trader-lightkeeper: #2ED399;
   --trader-btrdriver:   #5F6345;
+  /* Псевдо-«трейдер» сюжетных карт: фирменный стальной цвет истории «Борей» (постер Figma). */
+  --trader-boreas:      #80ACBF;
 
   --color-primary: var(--primary);
   
@@ -452,7 +454,6 @@ html {
   /* Для SVG (позволяет перекрашивать иконку через background-color) */
   .icon-mask {
     display: inline-block;
-    background-color: currentColor;
     mask-size: contain;
     mask-repeat: no-repeat;
     mask-position: center;
@@ -470,6 +471,14 @@ html {
   }}
 
   @layer components {
+  /* Дефолтный цвет заливки icon-mask — currentColor (красится через text-*).
+     Лежит в components, а НЕ в utilities: иначе перебивает bg-* утилиты
+     (гоча «белые черепки»: правило в @layer utilities объявлено ПОЗЖЕ
+     сгенерированных Tailwind-утилит и выигрывало у любого bg-*). */
+  .icon-mask {
+    background-color: currentColor;
+  }
+
   /* Единый стиль для пунктов навигации (100% заливка при наведении/активности) */
   .tactical-menu-item {
     @apply transition-colors duration-300 ease-out cursor-pointer;

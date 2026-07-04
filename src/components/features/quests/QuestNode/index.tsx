@@ -25,6 +25,7 @@ function getObjectiveIcon(obj: TaskObjective): string {
 function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const {
     task, status, dimmed, isSubgraphTarget, isMapTarget, freshlyUnlocked, pinned, chainRole, barterCount = 0,
+    headerIconClass, hidePin,
     onToggle, onForceComplete, onSelect, onHover, onPin,
   } = data;
 
@@ -133,6 +134,9 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
       <div className="relative z-10 flex flex-col">
 
         <header className="flex items-center gap-2 px-4 pt-4 pb-3">
+          {headerIconClass ? (
+            <span className={`h-8 w-8 shrink-0 icon-mask ${headerIconClass} bg-text-primary`} />
+          ) : (
           <img
             src={task.id.startsWith('story-')
               ? `/icons/eft/02-quests/${task.id}.svg`
@@ -142,6 +146,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
             className="rounded-xs shrink-0"
             alt={task.trader.name}
           />
+          )}
           <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
             {task.trader.name}
           </span>
@@ -276,6 +281,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
                 : 'ВЫПОЛНЕНО?'}
             </span>
           </button>
+          {!hidePin && (
           <button
             data-no-pan
             onClick={e => { e.stopPropagation(); onPin(task.id); }}
@@ -287,6 +293,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
           >
             <Paperclip className={`w-4 h-4 ${pinned ? 'text-(--color-darkbase)' : 'text-text-secondary'}`} />
           </button>
+          )}
         </footer>
 
       </div>

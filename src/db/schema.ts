@@ -551,7 +551,42 @@ export const rateLimits = pgTable("rate_limits", {
   windowStart: timestamp("window_start", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/* ─────────────────────── feedback (форма «Сообщить об ошибке») ─────────────────────── */
+/**
+ * Обращения пользователей «Сообщение об ошибке или неточности данных» (Figma 1588:1322).
+ * Форма глобальная, «намертво» цепляет текущий URL страницы (pageUrl). Бэкенд-онли:
+ * пишет только серверная owner-роль (Drizzle через API-роут), читает — CMS/админ.
+ * RLS включён без policy (supabase/feedback.sql) — anon/authenticated прямого доступа нет
+ * (паттерн rate_limits). SMTP отложен (hosting-vercel-first) → сперва копим в БД, письмо
+ * прикрутим позже (Edge Function). Вложения (≤5 шт × ≤500 КБ) храним инлайн в jsonb как
+ * base64 — без ручного bucket'а; при росте объёма мигрируем в Storage cta-feedback.
+ */
+export type FeedbackAttachment = {
+  name: string;
+  type: string; // MIME
+  size: number; // байт
+  dataBase64: string; // содержимое файла
+};
+
+export const feedback = pgTable(
+  "feedback",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pageUrl: text("page_url").notNull(), // намертво привязанная страница-источник
+    email: text("email").notNull(),
+    message: text("message").notNull(),
+    attachments: jsonb("attachments").$type<FeedbackAttachment[]>().notNull().default([]),
+    userId: uuid("user_id"), // profiles.id, если залогинен (без FK — обращения переживают удаление аккаунта)
+    userAgent: text("user_agent"),
+    status: text("status").notNull().default("new"), // 'new' | 'read' | 'resolved' (для CMS)
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("feedback_status_created_idx").on(t.status, t.createdAt)],
+);
+
 /* ───────────────── inferred types (для использования в коде) ───────────────── */
+export type FeedbackRow = typeof feedback.$inferSelect;
+export type NewFeedbackRow = typeof feedback.$inferInsert;
 export type PlayerProfileRow = typeof playerProfiles.$inferSelect;
 export type NewPlayerProfileRow = typeof playerProfiles.$inferInsert;
 export type BarterProgressRow = typeof barterProgress.$inferSelect;

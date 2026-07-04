@@ -90,6 +90,7 @@ export function ResetControl({
   modalTitle,
   onConfirm,
   children,
+  buttonClassName,
 }: {
   /** текст на кнопке (uppercase; на мобилке скрывается — остаётся иконка) */
   buttonLabel: string;
@@ -97,6 +98,8 @@ export function ResetControl({
   modalTitle: string;
   onConfirm: () => void;
   children: React.ReactNode;
+  /** переопределение стиля кнопки (напр. неприметный вариант в конце лестницы) — метка видна всегда */
+  buttonClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -106,10 +109,17 @@ export function ResetControl({
         type="button"
         onClick={() => setOpen(true)}
         title={buttonTitle}
-        className="flex h-7 shrink-0 items-center justify-center gap-2 rounded border border-danger bg-danger/10 px-2.5 opacity-60 transition-all hover:bg-danger/20 hover:opacity-100 focus:outline-none"
+        className={
+          buttonClassName ??
+          'flex h-7 shrink-0 items-center justify-center gap-2 rounded border border-danger bg-danger/10 px-2.5 opacity-60 transition-all hover:bg-danger/20 hover:opacity-100 focus:outline-none'
+        }
       >
         <div className="h-3 w-3 icon-mask icon-eft-profile-reset text-danger" />
-        <span className="hidden text-xs font-blender-medium leading-3 text-danger sm:inline">{buttonLabel}</span>
+        <span
+          className={`text-xs font-blender-medium leading-3 text-danger ${buttonClassName ? '' : 'hidden sm:inline'}`}
+        >
+          {buttonLabel}
+        </span>
       </button>
 
       <ResetModal isOpen={open} onClose={() => setOpen(false)} onConfirm={onConfirm} title={modalTitle}>

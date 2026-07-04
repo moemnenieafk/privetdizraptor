@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
-import { getStoryQuest } from '@/data/story-quests';
-import { StoryQuestGuide } from '@/components/features/quests/StoryQuestGuide';
+import { STORY_WALKTHROUGHS } from '@/data/story-walkthroughs';
+import { StoryWalkthroughView } from '@/components/features/quests/StoryWalkthrough';
+import { QuestsHubNav } from '@/components/features/quests/QuestsHubNav';
+import { getEftPricesByIds } from '@/db/prices';
 import { QuestTraderList } from '@/components/features/quests/QuestTraderList';
 import { getQuestsSiblings } from '@/lib/quests-nav';
-import type { QuestsNavRow } from '@/components/features/quests/QuestsNavBar';
 import { EFT_QUESTS } from '@/data/quests';
 import type { TaskRaw } from '@/types/quest';
 
@@ -42,13 +43,44 @@ export default async function QuestSlugPage({ params }: Props) {
   const { slug } = await params;
 
   const { sections, siblings, parentLabel } = getQuestsSiblings(`/eft/quests/${slug}`);
-  const navRows: QuestsNavRow[] = [
-    { label: 'Навигация по разделу', tabs: sections },
-    { label: parentLabel, tabs: siblings },
-  ];
 
-  const story = getStoryQuest(slug);
-  if (story) return <StoryQuestGuide chapter={story} navRows={navRows} />;
+  // Walkthrough-гайд нового дизайна (Figma story-boreas-step01): все истории — из реестра.
+  const walkthrough = STORY_WALKTHROUGHS[slug];
+  if (walkthrough) {
+    // Актуальные цены предметов условий — из НАШЕГО зеркала (RSC).
+    const itemIds = walkthrough.steps.flatMap((s) =>
+      s.blocks.flatMap((b) => [
+        ...(b.priceNote ? [b.priceNote.itemId] : []),
+        ...(b.condition?.item ? [b.condition.item.id] : []),
+      ]),
+    );
+    const priceMap = await getEftPricesByIds([...new Set(itemIds)]);
+    const priceByItemId: Record<string, number | null> = {};
+    for (const id of itemIds) {
+      const p = priceMap.get(id);
+      priceByItemId[id] = p?.lastLowPrice ?? p?.avg24hPrice ?? null;
+    }
+
+    return (
+      <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
+        <div className="mx-auto w-full max-w-275 px-4 xl:px-0">
+          {/* Единая навигация раздела «Задания» — как на побочных (QuestsHubNav):
+              слева иконка+заголовок+счётчик шагов, справа разделы + истории-соседи. */}
+          <QuestsHubNav
+            iconUrl={walkthrough.iconUrl}
+            title={walkthrough.title}
+            count={walkthrough.steps.length}
+            description={`Прохождение сюжета по шагам · сложность: ${walkthrough.difficulty.label}`}
+            tabs={sections}
+            subTabs={siblings}
+            subLabel={parentLabel}
+            activeHref={`/eft/quests/${slug}`}
+          />
+          <StoryWalkthroughView story={walkthrough} priceByItemId={priceByItemId} />
+        </div>
+      </main>
+    );
+  }
 
   if (TRADER_SLUGS.has(slug)) {
     const tasks = traderTasks(slug);

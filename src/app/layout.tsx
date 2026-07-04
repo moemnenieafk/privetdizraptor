@@ -6,6 +6,7 @@ import { AchievementSync } from "@/components/providers/AchievementSync";
 import { PlayerProfileSync } from "@/components/providers/PlayerProfileSync";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import { FeedbackProvider } from "@/components/providers/FeedbackProvider";
 
 export const metadata: Metadata = {
   title: "ЦТА Хаб",
@@ -43,9 +44,11 @@ export default function RootLayout({
             <ProgressSync />
             <AchievementSync />
             <PlayerProfileSync />
-            <ConditionalLayout>
-              {children}
-            </ConditionalLayout>
+            <FeedbackProvider>
+              <ConditionalLayout>
+                {children}
+              </ConditionalLayout>
+            </FeedbackProvider>
             <ScrollToTop />
           </ThemeProvider>
         </div>

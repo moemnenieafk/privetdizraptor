@@ -26,7 +26,7 @@ const ICON_OVERRIDES: Record<string, string> = {
   illumination: 'illumitation', // опечатка в имени файла — оставлена как есть
   'intelligence-center': 'intelligence_centre', // UK-спеллинг файла
 };
-function stationIconClass(normalizedName: string): string {
+export function stationIconClass(normalizedName: string): string {
   const file = ICON_OVERRIDES[normalizedName] ?? normalizedName.replace(/-/g, '_');
   return `icon-eft-${file}`;
 }
