@@ -192,11 +192,11 @@ export default function FeedbackModal({
             </button>
             <span className="font-blender-book text-xs leading-tight text-text-primary">
               Отправляя сообщение об ошибке, вы соглашаетесь с{' '}
-              <a href="/terms" target="_blank" rel="noreferrer" className="underline hover:text-(--primary)">
+              <a href="/legal/terms" target="_blank" rel="noreferrer" className="underline hover:text-(--primary)">
                 Условиями использования
               </a>{' '}
               и{' '}
-              <a href="/privacy" target="_blank" rel="noreferrer" className="underline hover:text-(--primary)">
+              <a href="/legal/privacy" target="_blank" rel="noreferrer" className="underline hover:text-(--primary)">
                 Политикой конфиденциальности ЦТА
               </a>
               .

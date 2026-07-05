@@ -24,6 +24,11 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
     searchPlaceholder: 'ГЛОБАЛЬНЫЙ ТАКТИЧЕСКИЙ ПОИСК...',
     breadcrumbNames: {
       eft: 'EFT',
+      legal: 'Правовые документы',
+      terms: 'Условия использования',
+      privacy: 'Политика конфиденциальности',
+      offer: 'Оферта',
+      eula: 'Пользовательское соглашение',
       'price-slot': 'Цена за слот',
       'loot-rate': 'Рейтинг предметов',
       headphones: 'Наушники',

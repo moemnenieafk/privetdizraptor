@@ -61,24 +61,32 @@ export default function StreamStatus() {
     }
   };
 
+  // Редизайн (эпик E12, фрейм 1661-2505): LIVE = красный «ON AIR LIVE» + гекс-скобки,
+  // OFFLINE = серый «STREAM OFFLINE». Красный/серый — токены danger/text-muted.
   const liveS = {
-    border: 'border border-neutral-500',
-    bg: 'bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,_rgba(107,153,99,0.20)_0%,_rgba(107,153,99,0)_100%)]',
-    shadow: 'shadow-[0_0_4px_rgba(107,153,99,0.17),0_0_8px_rgba(107,153,99,0.21)]',
-    dot: 'bg-online',
-    text: 'СТРИМ ОНЛАЙН',
-    glow: 'shadow-[0_0_6px_2px_rgba(107,153,99,0.61),0_0_19px_2px_rgba(107,153,99,1),inset_0_1px_1px_rgba(255,255,255,0.35)]',
-    textColor: 'text-online',
+    border: 'border-[0.5px] border-danger',
+    bg: 'bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,_rgba(194,67,57,0.25)_0%,_rgba(194,67,57,0)_100%)]',
+    shadow: 'shadow-[0_0_4px_rgba(194,67,57,0.21),0_0_2px_rgba(194,67,57,0.17)]',
+    dot: 'bg-danger',
+    dotSize: 'size-2',
+    ping: 'bg-danger',
+    text: 'ON AIR LIVE',
+    textSize: 'text-base',
+    glow: 'shadow-[0_0_6px_2px_rgba(194,67,57,0.55),0_0_16px_2px_rgba(194,67,57,0.9),inset_0_1px_1px_rgba(255,255,255,0.25)]',
+    textColor: 'text-white',
   };
 
   const offlineS = {
-    border: 'border border-neutral-800',
-    bg: 'bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,_rgba(194,67,57,0.20)_0%,_rgba(194,67,57,0)_100%)]',
+    border: 'border-[0.5px] border-lines-hover',
+    bg: 'bg-[radial-gradient(ellipse_50%_50%_at_50%_50%,_rgba(84,84,92,0.20)_0%,_rgba(84,84,92,0)_100%)]',
     shadow: '',
-    dot: 'bg-danger',
-    text: 'СТРИМ ОФФЛАЙН',
+    dot: 'bg-text-muted',
+    dotSize: 'size-1',
+    ping: 'bg-text-muted',
+    text: 'STREAM OFFLINE',
+    textSize: 'text-sm',
     glow: '',
-    textColor: 'text-danger',
+    textColor: 'text-text-muted',
   };
 
   const s = isLive ? liveS : offlineS;
@@ -95,23 +103,23 @@ export default function StreamStatus() {
         rel="noopener noreferrer"
         role={isLive ? 'button' : undefined}
         onClick={isLive ? (e) => { e.preventDefault(); handleButtonClick(); } : undefined}
-        className={`group relative flex shrink-0 items-center justify-center gap-2 w-10 sm:w-40 h-10 rounded transition-all duration-500
+        className={`group relative flex shrink-0 items-center justify-center gap-2 w-10 sm:w-40 h-10 rounded-sm transition-all duration-500
           ${isQuestFullscreen ? 'invisible pointer-events-none' : 'pointer-events-auto'}
           ${isLoading
-            ? 'border border-neutral-800 bg-black/20'
-            : `${s.border} ${s.bg} ${s.shadow} hover:brightness-125`
+            ? 'border-[0.5px] border-lines-hover bg-darkbase'
+            : `${s.border} ${s.bg} ${s.shadow} bg-darkbase hover:brightness-125`
           }`}
       >
-        {/* Декоративные гексагоны по бокам (только ОНЛАЙН) */}
+        {/* Гекс-скобки вплотную к пилюле (только LIVE, десктоп), красные */}
         {isLive && !isLoading && (
           <>
-            <div
-              className="hidden sm:block absolute -left-7 top-1/2 -translate-y-1/2 w-6.5 h-6.25 opacity-50 transition-opacity duration-300 group-hover:opacity-100 icon-bg"
-              style={{ backgroundImage: 'url(/icons/hexagon-left.svg)' }}
+            <span
+              className="icon-mask hidden sm:block absolute -left-6 top-1/2 -translate-y-1/2 size-6 text-danger transition-opacity duration-300 opacity-80 group-hover:opacity-100"
+              style={{ maskImage: 'url(/icons/hexagon-left.svg)', WebkitMaskImage: 'url(/icons/hexagon-left.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }}
             />
-            <div
-              className="hidden sm:block absolute -right-7 top-1/2 -translate-y-1/2 w-6.5 h-6.25 opacity-50 transition-opacity duration-300 group-hover:opacity-100 icon-bg"
-              style={{ backgroundImage: 'url(/icons/hexagon-right.svg)' }}
+            <span
+              className="icon-mask hidden sm:block absolute -right-6 top-1/2 -translate-y-1/2 size-6 text-danger transition-opacity duration-300 opacity-80 group-hover:opacity-100"
+              style={{ maskImage: 'url(/icons/hexagon-right.svg)', WebkitMaskImage: 'url(/icons/hexagon-right.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }}
             />
           </>
         )}
@@ -123,13 +131,13 @@ export default function StreamStatus() {
           </div>
         ) : (
           <div className="flex items-center justify-center gap-2 z-10">
-            <div className="relative flex h-1 w-1 shrink-0 items-center justify-center">
+            <div className="relative flex size-2 shrink-0 items-center justify-center">
               {isLive && (
-                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-online opacity-75" />
+                <span className={`animate-ping absolute inline-flex size-2 rounded-full ${s.ping} opacity-75`} />
               )}
-              <span className={`relative inline-flex rounded-full h-1 w-1 ${s.dot} ${s.glow}`} />
+              <span className={`relative inline-flex rounded-full ${s.dotSize} ${s.dot} ${s.glow}`} />
             </div>
-            <span className={`hidden sm:inline text-sm font-blender-medium uppercase leading-4 ${s.textColor}`}>
+            <span className={`hidden sm:inline ${s.textSize} font-blender-medium uppercase leading-4 ${s.textColor}`}>
               {s.text}
             </span>
           </div>

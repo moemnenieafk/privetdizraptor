@@ -1,5 +1,5 @@
 === ПОЛНЫЙ ОТЧЕТ ПО ИКОНКАМ ПРОЕКТА ===
-Всего физических иконок в базе (public/icons): 282
+Всего физических иконок в базе (public/icons): 310
 
 ----------------------------------------
 ИКОНКА: account_billing_icon.svg
@@ -36,6 +36,7 @@
   - /src/styles/icons.css
   - /src/app/account/AccountCenter.tsx
   - /src/app/account/AccountHeader.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: account_security_icon.svg
 ПУТЬ:   public/icons/account_center/account_security_icon.svg
@@ -45,6 +46,18 @@
   - /src/styles/icons.css
   - /src/app/account/AccountCenter.tsx
 ----------------------------------------
+ИКОНКА: CTA-logo-default.svg
+ПУТЬ:   public/icons/CTA-logo-default.svg
+КЛАСС CSS: .icon-cta-logo-default (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: CTA-logo-hover.svg
+ПУТЬ:   public/icons/CTA-logo-hover.svg
+КЛАСС CSS: .icon-cta-logo-hover (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
 ИКОНКА: decrement-icon.svg
 ПУТЬ:   public/icons/decrement-icon.svg
 КЛАСС CSS: .icon-decrement-icon
@@ -53,6 +66,113 @@
   - /src/styles/icons.css
   - /src/components/features/quests/QuestItemTracker/index.tsx
 ----------------------------------------
+ИКОНКА: codex.svg
+ПУТЬ:   public/icons/eft/00-nav/codex.svg
+КЛАСС CSS: .icon-eft-codex
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: comlink-icon.svg
+ПУТЬ:   public/icons/eft/00-nav/comlink-icon.svg
+КЛАСС CSS: .icon-eft-comlink-icon
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/footerConfig.ts
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: loot-tier.svg
+ПУТЬ:   public/icons/eft/00-nav/loot-tier.svg
+КЛАСС CSS: .icon-eft-items-loot-tier
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Предметы
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/headerConfig.ts
+  - /src/data/map-marker-icons.ts
+  - /src/styles/icons.css
+  - /src/app/eft/items/loot-rate/page.tsx
+  - /src/components/features/items/HubNav.tsx
+  - /src/components/ui/PageHeader.tsx
+  - /src/data/pageContent.ts
+----------------------------------------
+ИКОНКА: maps-icon.svg
+ПУТЬ:   public/icons/eft/00-nav/maps-icon.svg
+КЛАСС CSS: .icon-eft-maps
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Карты
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/app/eft/page.tsx
+  - /src/data/headerConfig.ts
+  - /src/styles/icons.css
+  - /src/components/features/quests/StoryWalkthrough/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/pageContent.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+  - /src/data/story-walkthroughs/types.ts
+  - /src/data/story-walkthroughs/unknowns.ts
+  - /src/data/story-walkthroughs/witness.ts
+----------------------------------------
+ИКОНКА: progress-icon.svg
+ПУТЬ:   public/icons/eft/00-nav/progress-icon.svg
+КЛАСС CSS: .icon-eft-progress
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Прогресс
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/headerConfig.ts
+  - /src/styles/icons.css
+  - /src/app/account/AccountCenter.tsx
+  - /src/data/pageContent.ts
+----------------------------------------
+ИКОНКА: quests-icon.svg
+ПУТЬ:   public/icons/eft/00-nav/quests-icon.svg
+КЛАСС CSS: .icon-eft-quests
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Задания
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/headerConfig.ts
+  - /src/styles/icons.css
+  - /src/app/account/TrackingPanel.tsx
+  - /src/app/eft/items/item/[slug]/ItemDetailLayout.tsx
+  - /src/app/eft/progress/quests/QuestMapClient.tsx
+  - /src/app/eft/progress/tracker/ItemTrackerClient.tsx
+  - /src/app/eft/quests/[slug]/map/page.tsx
+  - /src/components/features/hideout/HideoutBuildTracker.tsx
+  - /src/components/features/items/EftItemTile/Indicator.tsx
+  - /src/components/features/items/EftItemTile/Pricing.tsx
+  - /src/components/features/items/EftItemTile/tooltips/QuestTooltip.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
+  - /src/components/features/quests/QuestItemTracker/index.tsx
+  - /src/components/features/quests/QuestNode/index.tsx
+  - /src/components/features/quests/QuestsHubNav.tsx
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/ProfileSettingsModal.tsx
+  - /src/data/pageContent.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+  - /src/data/story-walkthroughs/types.ts
+  - /src/data/story-walkthroughs/unknowns.ts
+  - /src/data/story-walkthroughs/witness.ts
+----------------------------------------
+ИКОНКА: videos-icon.svg
+ПУТЬ:   public/icons/eft/00-nav/videos-icon.svg
+КЛАСС CSS: .icon-eft-videos
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Видео
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/headerConfig.ts
+  - /src/styles/icons.css
+  - /src/data/pageContent.ts
+----------------------------------------
 ИКОНКА: customs-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/customs-map-icon.svg
 КЛАСС CSS: .icon-eft-maps-customs
@@ -60,7 +180,8 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/witness.ts
 ----------------------------------------
 ИКОНКА: end-of-line-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/end-of-line-map-icon.svg
@@ -70,6 +191,7 @@
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
   - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
 ----------------------------------------
 ИКОНКА: factory-day-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/factory-day-map-icon.svg
@@ -85,7 +207,8 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/unknowns.ts
 ----------------------------------------
 ИКОНКА: factory-night-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/factory-night-map-icon.svg
@@ -108,7 +231,8 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/tour.ts
 ----------------------------------------
 ИКОНКА: groundzero-night-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/groundzero-night-map-icon.svg
@@ -124,7 +248,8 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/boreas.ts
 ----------------------------------------
 ИКОНКА: interchange-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/interchange-map-icon.svg
@@ -133,7 +258,11 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
 ----------------------------------------
 ИКОНКА: lab-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/lab-map-icon.svg
@@ -142,7 +271,12 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+  - /src/data/story-walkthroughs/unknowns.ts
 ----------------------------------------
 ИКОНКА: labyrinth-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/labyrinth-map-icon.svg
@@ -151,7 +285,8 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
 ----------------------------------------
 ИКОНКА: lighthouse-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/lighthouse-map-icon.svg
@@ -160,7 +295,12 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/ticket.ts
 ----------------------------------------
 ИКОНКА: openworld-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/openworld-map-icon.svg
@@ -169,7 +309,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
 ----------------------------------------
 ИКОНКА: reserve-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/reserve-map-icon.svg
@@ -178,7 +318,9 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/ticket.ts
 ----------------------------------------
 ИКОНКА: shoreline-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/shoreline-map-icon.svg
@@ -187,7 +329,15 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+  - /src/data/story-walkthroughs/unknowns.ts
+  - /src/data/story-walkthroughs/witness.ts
 ----------------------------------------
 ИКОНКА: streets-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/streets-map-icon.svg
@@ -196,7 +346,12 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/unknowns.ts
+  - /src/data/story-walkthroughs/witness.ts
 ----------------------------------------
 ИКОНКА: terminal-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/terminal-map-icon.svg
@@ -205,7 +360,8 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/ticket.ts
 ----------------------------------------
 ИКОНКА: transits-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/transits-map-icon.svg
@@ -213,8 +369,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: ПЕРЕХОДЫ
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
 ----------------------------------------
 ИКОНКА: woods-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/woods-map-icon.svg
@@ -223,7 +380,22 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+----------------------------------------
+ИКОНКА: difficulty-skull.svg
+ПУТЬ:   public/icons/eft/02-quests/difficulty-skull.svg
+КЛАСС CSS: .icon-eft-difficulty-skull
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/components/features/quests/StoryWalkthrough/index.tsx
 ----------------------------------------
 ИКОНКА: ingame-events.svg
 ПУТЬ:   public/icons/eft/02-quests/ingame-events.svg
@@ -231,7 +403,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: События
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/page.tsx
-  - /src/app/eft/quests/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -240,10 +411,23 @@
 КЛАСС CSS: .icon-eft-quests-lore
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Задания
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
   - /src/data/pageContent.ts
+----------------------------------------
+ИКОНКА: quest-call-trader.svg
+ПУТЬ:   public/icons/eft/02-quests/quest-call-trader.svg
+КЛАСС CSS: .icon-eft-quest-call-trader
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: quest-clue.svg
+ПУТЬ:   public/icons/eft/02-quests/quest-clue.svg
+КЛАСС CSS: .icon-eft-quest-clue
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: quest-eliminate.svg
 ПУТЬ:   public/icons/eft/02-quests/quest-eliminate.svg
@@ -251,8 +435,14 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
 ----------------------------------------
 ИКОНКА: quest-investigate.svg
 ПУТЬ:   public/icons/eft/02-quests/quest-investigate.svg
@@ -260,8 +450,19 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+  - /src/data/story-walkthroughs/unknowns.ts
+  - /src/data/story-walkthroughs/witness.ts
 ----------------------------------------
 ИКОНКА: quest-loot.svg
 ПУТЬ:   public/icons/eft/02-quests/quest-loot.svg
@@ -270,8 +471,17 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
   - /src/components/features/items/EftItemTile/tooltips/QuestTooltip.tsx
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+  - /src/data/story-walkthroughs/unknowns.ts
+  - /src/data/story-walkthroughs/witness.ts
 ----------------------------------------
 ИКОНКА: quest-modify.svg
 ПУТЬ:   public/icons/eft/02-quests/quest-modify.svg
@@ -279,8 +489,15 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/unknowns.ts
 ----------------------------------------
 ИКОНКА: quest-survive.svg
 ПУТЬ:   public/icons/eft/02-quests/quest-survive.svg
@@ -288,8 +505,10 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
 ----------------------------------------
 ИКОНКА: quest-trader-reputation.svg
 ПУТЬ:   public/icons/eft/02-quests/quest-trader-reputation.svg
@@ -297,28 +516,42 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
 ----------------------------------------
 ИКОНКА: quest-visit.svg
 ПУТЬ:   public/icons/eft/02-quests/quest-visit.svg
 КЛАСС CSS: .icon-eft-quests-visit
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
+  - /src/data/story-walkthroughs/ticket.ts
 ----------------------------------------
 ИКОНКА: side-quests.svg
 ПУТЬ:   public/icons/eft/02-quests/side-quests.svg
 КЛАСС CSS: .icon-eft-quests-side
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Побочные
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/quests/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/eft/items/item/[slug]/ItemDetailLayout.tsx
+  - /src/components/features/hideout/HideoutBuildTracker.tsx
   - /src/components/features/items/EftItemTile/Indicator.tsx
   - /src/data/pageContent.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/ticket.ts
 ----------------------------------------
 ИКОНКА: story-accidental-witness.svg
 ПУТЬ:   public/icons/eft/02-quests/story-accidental-witness.svg
@@ -327,6 +560,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/witness.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: story-batya.svg
@@ -336,6 +570,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/batya.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: story-blue-fire.svg
@@ -345,6 +580,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: story-boreas.svg
@@ -354,6 +590,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/boreas.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: story-falling-skies.svg
@@ -363,7 +600,9 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
   - /src/styles/icons.css
+  - /src/data/story-walkthroughs/boreas-map.ts
 ----------------------------------------
 ИКОНКА: story-the-labyrinth.svg
 ПУТЬ:   public/icons/eft/02-quests/story-the-labyrinth.svg
@@ -372,6 +611,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: story-the-ticket.svg
@@ -381,7 +621,10 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/ticket.ts
   - /src/styles/icons.css
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
 ----------------------------------------
 ИКОНКА: story-the-unheard.svg
 ПУТЬ:   public/icons/eft/02-quests/story-the-unheard.svg
@@ -390,6 +633,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/unknowns.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: story-they-are-already-here.svg
@@ -399,6 +643,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/already-here.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: story-tour.svg
@@ -408,6 +653,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/quests/lore-quests/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/story-walkthroughs/tour.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: currency-dollar.svg
@@ -429,9 +675,14 @@
 КЛАСС CSS: .icon-eft-currency-ruble
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
+  - /src/components/layout/header-modules/SearchItemCard.tsx
   - /src/styles/icons.css
+  - /src/app/eft/items/item/[slug]/ItemPriceBlock.tsx
+  - /src/components/features/barter/StashSummary.tsx
   - /src/components/features/items/CategoryControlBar.tsx
   - /src/components/features/items/EftItemTile/Pricing.tsx
+  - /src/components/features/quests/StoryWalkthrough/index.tsx
+  - /src/data/story-walkthroughs/boreas-map.ts
 ----------------------------------------
 ИКОНКА: cases.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/containers/cases.svg
@@ -440,6 +691,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: secure-containers.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/containers/secure-containers.svg
@@ -448,6 +700,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: containers.svg
@@ -457,8 +710,10 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
+  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: infoitems.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/infoitems.svg
@@ -468,6 +723,7 @@
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: key-cards.svg
@@ -477,6 +733,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: marked-keys.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/keys/mechanical-keys/marked-keys.svg
@@ -485,6 +742,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: quest-keys.svg
@@ -494,6 +752,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: mechanical-keys.svg
@@ -502,7 +761,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Ключи
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: keys.svg
@@ -513,8 +774,10 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
+  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: injectors.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/meds/injectors.svg
@@ -523,6 +786,8 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: injury-treatment.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/meds/injury-treatment.svg
@@ -531,6 +796,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: medkits.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/meds/medkits.svg
@@ -539,6 +805,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: pills.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/meds/pills.svg
@@ -547,6 +814,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: meds.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/meds.svg
@@ -558,6 +826,7 @@
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: drinks.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/provisions/drinks.svg
@@ -566,6 +835,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: food.svg
@@ -575,6 +845,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: provisions.svg
@@ -587,6 +858,7 @@
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: special-equipment.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/special-equipment.svg
@@ -606,7 +878,9 @@
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/SearchItemCard.tsx
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: armor-class-1.svg
 ПУТЬ:   public/icons/eft/03-items/gear/armor-class-1.svg
@@ -665,7 +939,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-backpacks.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-backpacks.svg
@@ -675,7 +951,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-gearcomps.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-gearcomps.svg
@@ -685,7 +963,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-headphones.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-headphones.svg
@@ -695,7 +975,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-helmets.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-helmets.svg
@@ -705,7 +987,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-masks.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-masks.svg
@@ -715,7 +999,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-tactical-rigs.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-tactical-rigs.svg
@@ -725,7 +1011,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-visors.svg
 ПУТЬ:   public/icons/eft/03-items/gear/cat-visors.svg
@@ -735,7 +1023,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: gear.svg
 ПУТЬ:   public/icons/eft/03-items/gear.svg
@@ -754,6 +1044,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: cat-ammo.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-ammo.svg
@@ -764,7 +1055,9 @@
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-grenades.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-grenades.svg
@@ -774,7 +1067,9 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-gunmods.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-gunmods.svg
@@ -785,7 +1080,9 @@
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: cat-knifes.svg
 ПУТЬ:   public/icons/eft/03-items/guns/cat-knifes.svg
@@ -794,6 +1091,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: cat-special-weapon.svg
@@ -803,6 +1101,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: auxiliary-parts.svg
@@ -1121,8 +1420,11 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
+  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
+  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: loot-tier.svg
 ПУТЬ:   public/icons/eft/03-items/loot-tier.svg
@@ -1130,6 +1432,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Предметы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/app/eft/items/loot-rate/page.tsx
   - /src/components/features/items/HubNav.tsx
@@ -1261,8 +1564,10 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Цена за слот
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/page.tsx
+  - /src/components/layout/header-modules/SearchItemCard.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/eft/items/item/[slug]/ItemPriceBlock.tsx
   - /src/components/features/items/CategoryControlBar.tsx
   - /src/components/features/items/EftItemTile/Pricing.tsx
   - /src/data/pageContent.ts
@@ -1282,9 +1587,10 @@
 КЛАСС CSS: .icon-eft-prog-achievements
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Достижения
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/page.tsx
+  - /src/app/eft/gamesetting/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/account/TrackingPanel.tsx
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: building-materials.svg
@@ -1293,7 +1599,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Стройматериалы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: electronics.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/electronics.svg
@@ -1301,7 +1609,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Электроника
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: energy-elements.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/energy-elements.svg
@@ -1309,7 +1619,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Элементы питания
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: flammable-materials.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/flammable-materials.svg
@@ -1317,7 +1629,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Г.С.М.
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: household-materials.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/household-materials.svg
@@ -1325,7 +1639,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Хозтовары
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: medical-supplies.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/medical-supplies.svg
@@ -1333,7 +1649,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Медматериалы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: others.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/others.svg
@@ -1341,7 +1659,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Предметы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: tools.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/tools.svg
@@ -1349,7 +1669,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Инструменты
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: valuables.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit/valuables.svg
@@ -1357,7 +1679,9 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Ценности
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/data/map-markers/categories.ts
 ----------------------------------------
 ИКОНКА: barter-profit.svg
 ПУТЬ:   public/icons/eft/04-progression/barter-profit.svg
@@ -1368,7 +1692,10 @@
   - /src/app/eft/progress/page.tsx
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
+  - /src/lib/item-category.ts
   - /src/styles/icons.css
+  - /src/app/eft/items/item/[slug]/ItemDetailLayout.tsx
+  - /src/components/features/barter/VerdictCard.tsx
   - /src/components/features/items/CategoryControlBar.tsx
   - /src/components/features/items/EftItemTile/Indicator.tsx
   - /src/components/features/items/EftItemTile/tooltips/BarterTooltip.tsx
@@ -1393,6 +1720,7 @@
   - /src/app/eft/progress/hideout/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/eft/items/item/[slug]/ItemDetailLayout.tsx
   - /src/components/features/items/EftItemTile/Indicator.tsx
   - /src/components/features/items/EftItemTile/tooltips/CraftTooltip.tsx
   - /src/data/pageContent.ts
@@ -1440,7 +1768,6 @@
 КЛАСС CSS: .icon-eft-air_filtering_unit
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: bitcoin_farm.svg
@@ -1448,7 +1775,6 @@
 КЛАСС CSS: .icon-eft-bitcoin_farm
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: booze_generator.svg
@@ -1456,7 +1782,6 @@
 КЛАСС CSS: .icon-eft-booze_generator
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: cultist_circle.svg
@@ -1464,7 +1789,6 @@
 КЛАСС CSS: .icon-eft-cultist_circle
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: defective_wall.svg
@@ -1472,7 +1796,6 @@
 КЛАСС CSS: .icon-eft-defective_wall
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: gear_rack.svg
@@ -1480,7 +1803,6 @@
 КЛАСС CSS: .icon-eft-gear_rack
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: generator.svg
@@ -1488,7 +1810,6 @@
 КЛАСС CSS: .icon-eft-booze_generator
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: gym.svg
@@ -1496,7 +1817,6 @@
 КЛАСС CSS: .icon-eft-gym
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: hall_of_fame.svg
@@ -1504,7 +1824,6 @@
 КЛАСС CSS: .icon-eft-hall_of_fame
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: heating.svg
@@ -1512,7 +1831,6 @@
 КЛАСС CSS: .icon-eft-heating
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: illumitation.svg
@@ -1527,7 +1845,6 @@
 КЛАСС CSS: .icon-eft-intelligence_centre
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: lavatory.svg
@@ -1535,7 +1852,13 @@
 КЛАСС CSS: .icon-eft-lavatory
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: library.svg
+ПУТЬ:   public/icons/eft/04-progression/hideout-modules/library.svg
+КЛАСС CSS: .icon-eft-library
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: med_station.svg
@@ -1543,7 +1866,6 @@
 КЛАСС CSS: .icon-eft-med_station
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: nutrition_unit.svg
@@ -1558,7 +1880,6 @@
 КЛАСС CSS: .icon-eft-rest_space
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: scav_case.svg
@@ -1566,7 +1887,6 @@
 КЛАСС CSS: .icon-eft-scav_case
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: security.svg
@@ -1574,7 +1894,6 @@
 КЛАСС CSS: .icon-eft-security
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: shooting_range.svg
@@ -1582,7 +1901,6 @@
 КЛАСС CSS: .icon-eft-shooting_range
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: solar_power.svg
@@ -1590,7 +1908,6 @@
 КЛАСС CSS: .icon-eft-solar_power
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: stash.svg
@@ -1598,7 +1915,6 @@
 КЛАСС CSS: .icon-eft-stash
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: vents.svg
@@ -1607,8 +1923,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: События
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/page.tsx
-  - /src/app/eft/progress/hideout/modules/page.tsx
-  - /src/app/eft/quests/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -1617,7 +1931,6 @@
 КЛАСС CSS: .icon-eft-water_collector
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: weapon_rack.svg
@@ -1625,7 +1938,6 @@
 КЛАСС CSS: .icon-eft-weapon_rack
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: workbench.svg
@@ -1633,7 +1945,6 @@
 КЛАСС CSS: .icon-eft-workbench
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/hideout/modules/page.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: hideout-modules.svg
@@ -1645,17 +1956,23 @@
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/account/TrackingPanel.tsx
+  - /src/app/eft/items/item/[slug]/ItemModules.tsx
+  - /src/components/features/quests/StoryQuestMap/index.tsx
+  - /src/components/features/quests/StoryWalkthrough/index.tsx
   - /src/data/pageContent.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
 ----------------------------------------
 ИКОНКА: items-needed.svg
 ПУТЬ:   public/icons/eft/04-progression/items-needed.svg
 КЛАСС CSS: .icon-eft-prog-items-needed
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Нужные предметы
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Важные предметы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/page.tsx
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/account/TrackingPanel.tsx
   - /src/components/features/items/EftItemTile/tooltips/QuestTooltip.tsx
 ----------------------------------------
 ИКОНКА: items-tracker.svg
@@ -1673,9 +1990,10 @@
 КЛАСС CSS: .icon-eft-prog-prestige
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Престиж
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/app/eft/progress/page.tsx
+  - /src/app/eft/gamesetting/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/account/TrackingPanel.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: quest-map.svg
@@ -1687,6 +2005,8 @@
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/account/TrackingQuestsDigest.tsx
+  - /src/components/features/quests/StoryWalkthrough/index.tsx
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: audiotapes.svg
@@ -1694,6 +2014,8 @@
 КЛАСС CSS: .icon-eft-lore-audiotapes
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Материалы
 ИСПОЛЬЗУЕТСЯ В:
+  - /src/app/eft/gamesetting/materials/page.tsx
+  - /src/data/codex/audiotapes.ts
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -1702,7 +2024,9 @@
 КЛАСС CSS: .icon-eft-lore-bosses
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Персонажи
 ИСПОЛЬЗУЕТСЯ В:
+  - /src/app/eft/gamesetting/characters/page.tsx
   - /src/data/headerConfig.ts
+  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: characters.svg
@@ -1720,6 +2044,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Корпорации
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/gamesetting/page.tsx
+  - /src/data/codex/corporations.ts
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -1728,7 +2053,9 @@
 КЛАСС CSS: .icon-eft-lore-docs
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Материалы
 ИСПОЛЬЗУЕТСЯ В:
+  - /src/app/eft/gamesetting/materials/page.tsx
   - /src/app/eft/gamesetting/page.tsx
+  - /src/data/codex/docs-notes.ts
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -1738,6 +2065,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Фракции
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/gamesetting/page.tsx
+  - /src/data/codex/factions.ts
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -1747,6 +2075,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Локации
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/gamesetting/page.tsx
+  - /src/data/codex/locations.ts
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -1756,9 +2085,12 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Кодекс
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/gamesetting/page.tsx
+  - /src/data/codex/lore.ts
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/types/codex.ts
   - /src/components/layout/header-modules/NewbieModal.tsx
+  - /src/components/ui/SectionPlaceholder.tsx
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: theory-riddles.svg
@@ -1767,6 +2099,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Теории и загадки
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/gamesetting/page.tsx
+  - /src/data/codex/theories.ts
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -1776,6 +2109,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Хронология
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/gamesetting/page.tsx
+  - /src/data/codex/timeline.ts
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
@@ -1784,6 +2118,7 @@
 КЛАСС CSS: .icon-eft-lore-traders
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Торговцы
 ИСПОЛЬЗУЕТСЯ В:
+  - /src/app/eft/gamesetting/characters/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
   - /src/components/features/items/CategoryControlBar.tsx
@@ -1880,9 +2215,11 @@
 ----------------------------------------
 ИКОНКА: find-in-raid.svg
 ПУТЬ:   public/icons/eft/find-in-raid.svg
-КЛАСС CSS: .icon-eft-find-in-raid (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-find-in-raid
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/components/features/quests/QuestDetail/index.tsx
 ----------------------------------------
 ИКОНКА: player-level-group-1.webp
 ПУТЬ:   public/icons/eft/lvl-icons/player-level-group-1.webp
@@ -1988,8 +2325,21 @@
   - /src/app/eft/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/components/features/quests/StoryWalkthrough/index.tsx
+  - /src/data/map-icons.ts
   - /src/data/pageContent.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+  - /src/data/story-walkthroughs/types.ts
+  - /src/data/story-walkthroughs/unknowns.ts
+  - /src/data/story-walkthroughs/witness.ts
 ----------------------------------------
 ИКОНКА: prestige-1.webp
 ПУТЬ:   public/icons/eft/prestige/prestige-1.webp
@@ -2049,6 +2399,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: BTN_account-centre.svg
 ПУТЬ:   public/icons/eft/profile-pannel/BTN_account-centre.svg
@@ -2072,7 +2424,10 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestResetModal/index.tsx
+  - /src/components/features/tracking/ResetControl.tsx
+  - /src/components/layout/header-modules/FeedbackModal.tsx
   - /src/components/layout/header-modules/NewbieModal.tsx
   - /src/components/layout/header-modules/ProfileResetModal.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
@@ -2132,10 +2487,15 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/app/account/TrackingQuestsDigest.tsx
+  - /src/app/eft/items/item/[slug]/QuestCard.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
   - /src/components/features/quests/QuestStatusBar/index.tsx
+  - /src/components/features/quests/QuestTraderList/index.tsx
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/SearchQuestCard.tsx
 ----------------------------------------
 ИКОНКА: LB_icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/LB_icon.svg
@@ -2151,10 +2511,14 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/app/account/TrackingQuestsDigest.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
   - /src/components/features/quests/QuestStatusBar/index.tsx
+  - /src/components/features/quests/QuestTraderList/index.tsx
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
+  - /src/components/layout/header-modules/SearchQuestCard.tsx
 ----------------------------------------
 ИКОНКА: login-icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/login-icon.svg
@@ -2162,6 +2526,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: logout-icon.svg
@@ -2170,6 +2535,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: loot-mark-unheard.svg
@@ -2195,6 +2561,7 @@
   - /src/styles/icons.css
   - /src/components/features/quests/QuestFilterBar/index.tsx
   - /src/components/features/quests/QuestResetModal/index.tsx
+  - /src/components/features/tracking/ResetControl.tsx
   - /src/components/layout/header-modules/ProfileResetModal.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
@@ -2204,6 +2571,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/app/account/TrackingPanel.tsx
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
@@ -2213,6 +2582,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
@@ -2222,6 +2592,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/features/quests/QuestDetail/index.tsx
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
@@ -2231,6 +2603,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/app/account/TrackingPanel.tsx
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
@@ -2256,6 +2630,8 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+  - /src/components/layout/header-modules/MobileMenuStats.tsx
+  - /src/components/layout/header-modules/PlayerTelemetry.tsx
 ----------------------------------------
 ИКОНКА: warning-attention-icon.svg
 ПУТЬ:   public/icons/eft/profile-pannel/warning-attention-icon.svg
@@ -2264,6 +2640,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
   - /src/components/features/quests/QuestResetModal/index.tsx
+  - /src/components/features/tracking/ResetControl.tsx
   - /src/components/layout/header-modules/ProfileDeleteModal.tsx
   - /src/components/layout/header-modules/ProfileResetModal.tsx
 ----------------------------------------
@@ -2274,6 +2651,7 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/account/AccountCenter.tsx
   - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: quests-icon.svg
@@ -2283,17 +2661,34 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/app/account/TrackingPanel.tsx
+  - /src/app/eft/items/item/[slug]/ItemDetailLayout.tsx
   - /src/app/eft/progress/quests/QuestMapClient.tsx
   - /src/app/eft/progress/tracker/ItemTrackerClient.tsx
+  - /src/app/eft/quests/[slug]/map/page.tsx
+  - /src/components/features/hideout/HideoutBuildTracker.tsx
   - /src/components/features/items/EftItemTile/Indicator.tsx
   - /src/components/features/items/EftItemTile/Pricing.tsx
   - /src/components/features/items/EftItemTile/tooltips/QuestTooltip.tsx
-  - /src/components/features/quests/QuestDrawer/index.tsx
+  - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestItemTracker/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
+  - /src/components/features/quests/QuestsHubNav.tsx
   - /src/components/layout/header-modules/PlayerTelemetry.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
   - /src/data/pageContent.ts
+  - /src/data/story-walkthroughs/already-here.ts
+  - /src/data/story-walkthroughs/batya.ts
+  - /src/data/story-walkthroughs/blue-fire.ts
+  - /src/data/story-walkthroughs/boreas-map.ts
+  - /src/data/story-walkthroughs/boreas.ts
+  - /src/data/story-walkthroughs/heaven-on-fire.ts
+  - /src/data/story-walkthroughs/labyrinth.ts
+  - /src/data/story-walkthroughs/ticket.ts
+  - /src/data/story-walkthroughs/tour.ts
+  - /src/data/story-walkthroughs/types.ts
+  - /src/data/story-walkthroughs/unknowns.ts
+  - /src/data/story-walkthroughs/witness.ts
 ----------------------------------------
 ИКОНКА: search-icon.svg
 ПУТЬ:   public/icons/eft/search-icon.svg
@@ -2302,7 +2697,10 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/TacticalSearch.tsx
   - /src/styles/icons.css
+  - /src/components/features/maps/MapSearch.tsx
+  - /src/components/features/maps/MapTopBar.tsx
   - /src/components/features/quests/QuestFilterBar/index.tsx
+  - /src/components/features/quests/QuestSearch/index.tsx
 ----------------------------------------
 ИКОНКА: soldier-animation-end-frame.svg
 ПУТЬ:   public/icons/eft/soldier-animation-end-frame.svg
@@ -2352,6 +2750,13 @@
   - /src/styles/icons.css
   - /src/data/pageContent.ts
 ----------------------------------------
+ИКОНКА: feedback.svg
+ПУТЬ:   public/icons/feedback.svg
+КЛАСС CSS: .icon-feedback
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
 ИКОНКА: hexagon-left.svg
 ПУТЬ:   public/icons/hexagon-left.svg
 КЛАСС CSS: .icon-hexagon-left
@@ -2375,3 +2780,111 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
   - /src/components/features/quests/QuestItemTracker/index.tsx
+----------------------------------------
+ИКОНКА: info-label.svg
+ПУТЬ:   public/icons/info-label.svg
+КЛАСС CSS: .icon-info-label
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/components/features/quests/StoryWalkthrough/index.tsx
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: questnode-connection-line.svg
+ПУТЬ:   public/icons/questnode-connection-line.svg
+КЛАСС CSS: .icon-questnode-connection-line
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: boosty-icon.svg
+ПУТЬ:   public/icons/socialplatforms/boosty-icon.svg
+КЛАСС CSS: .icon-boosty-icon
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: discord-icon.svg
+ПУТЬ:   public/icons/socialplatforms/discord-icon.svg
+КЛАСС CSS: .icon-discord-icon
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: reddit-icon.svg
+ПУТЬ:   public/icons/socialplatforms/reddit-icon.svg
+КЛАСС CSS: .icon-reddit-icon
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: telegram-icon.svg
+ПУТЬ:   public/icons/socialplatforms/telegram-icon.svg
+КЛАСС CSS: .icon-telegram-icon
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: vkcom-icon.svg
+ПУТЬ:   public/icons/socialplatforms/vkcom-icon.svg
+КЛАСС CSS: .icon-vkcom-icon
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: xcom-icon.svg
+ПУТЬ:   public/icons/socialplatforms/xcom-icon.svg
+КЛАСС CSS: .icon-xcom-icon
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: btn-twitch-default.svg
+ПУТЬ:   public/icons/streamingplatforms/btn-twitch-default.svg
+КЛАСС CSS: .icon-btn-twitch-default
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: btn-twitch-hover.svg
+ПУТЬ:   public/icons/streamingplatforms/btn-twitch-hover.svg
+КЛАСС CSS: .icon-btn-twitch-hover
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: btn-vklive-default.svg
+ПУТЬ:   public/icons/streamingplatforms/btn-vklive-default.svg
+КЛАСС CSS: .icon-btn-vklive-default
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: btn-vklive-hover.svg
+ПУТЬ:   public/icons/streamingplatforms/btn-vklive-hover.svg
+КЛАСС CSS: .icon-btn-vklive-hover
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: btn-youtube-default.svg
+ПУТЬ:   public/icons/streamingplatforms/btn-youtube-default.svg
+КЛАСС CSS: .icon-btn-youtube-default
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/data/footerConfig.ts
+----------------------------------------
+ИКОНКА: btn-youtube-hover.svg
+ПУТЬ:   public/icons/streamingplatforms/btn-youtube-hover.svg
+КЛАСС CSS: .icon-btn-youtube-hover
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
