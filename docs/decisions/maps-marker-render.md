@@ -28,3 +28,21 @@ date: 2026-07-02
 
 ## Вывод
 *(выбрать A/B + решить группировку слоёв и стратегию loose loot)* → затем Claude Code. Зависимая: [[the-lab-parity]].
+
+---
+
+## Расширение: иконки от V4DYA + «на поток» (2026-07-06)
+V4DYA дорисовал маркер-иконки: `public/images/maps/eft/markers/` (webp 512, для карты) + `public/icons/eft/01-maps/markers/` (svg). Задача: сверить + системный резолвер.
+
+**Решения V4DYA (2026-07-06):** объём — **фазами** (сначала готовое: контейнеры/выходы/спавны/замки/стационарки; loot_loose с кластеризацией — отдельно); пробелы (loot_loose/quest_zone/hazard без своих иконок) — **generic пока**, PNG→webp конвертнуть.
+
+**Сверка ассетов ↔ данные `map_markers` (1000+ маркеров):**
+- Типы в данных: loot_container 596 (**29 видов**), loot_loose 156, spawn 119, quest_zone 42, lock 38, extract 36, boss 5, hazard 5, transit 3.
+- Иконки: 31 webp контейнеров (✅ покрывают 29), 7 svg exfil, 3 svg lock, 3 svg spawn, 2 png stationary, 1 png spawn-btr80.
+- **Ключ маппинга = `linkedItemId`** (не label — label не различает под-виды). Контейнеры НЕ в нашем каталоге items (свои BSG-id world-объектов); имя берём из marker.`label` (ru).
+
+**Архитектура «на поток»:** резолвер `markerIconUrl(marker)` (type + linkedItemId/faction/categories/подвид → путь к иконке) заменяет плоский `MAP_MARKER_ICONS`; таблица `linkedItemId → файл` по 29 контейнерам; рендер иконками вместо CSS-фигур; легенда из резолвера.
+
+**⚠️ Блокер сверки (нужен V4DYA):** 4 id с label «Оружейный ящик» (`5909d5ef/5909d76c/5909d89086/5909d7cf`) → 4 размера (4x4/5x2/5x5/6x3); 3 id «Куртка» (`578f8778/5914944186/5937ef2b`) → jacket/jacket-worker-blue. Нужен маппинг id→вариант (какой id какой размер/вид). Остальные ~22 — однозначно по label.
+
+**Файлы-иконки без маркера в текущих данных** (либо карты ещё не синканы, либо запас): airdrop, laborant, common-fund-stash, plastic-suitcase, civilian-body, cash-register-tar2-2, wooden-toolbox, jacket-worker-blue.
