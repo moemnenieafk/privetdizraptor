@@ -74,7 +74,6 @@ export function PlayerTelemetry() {
   const [contextMenuProfileId, setContextMenuProfileId] = useState<string | null>(null);
   const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
   const [isProgressOpen, setIsProgressOpen] = useState(false);
-  const [isModeOpen, setIsModeOpen] = useState(false);
   const telemetryRef = useRef<HTMLDivElement>(null);
 
   // Закрытие выпадающих меню при клике/тапе вне виджета
@@ -82,14 +81,13 @@ export function PlayerTelemetry() {
     setIsProfileMenuOpen(false);
     setContextMenuProfileId(null);
     setIsProgressOpen(false);
-    setIsModeOpen(false);
-  }, isProfileMenuOpen || contextMenuProfileId !== null || isProgressOpen || isModeOpen);
+  }, isProfileMenuOpen || contextMenuProfileId !== null || isProgressOpen);
 
   const levelGroup = getLevelGroup(Number(activeProfile?.level) || 1);
   const activeEd = EDITIONS[activeProfile?.edition || 'Standard'];
 
   return (
-    <div ref={telemetryRef} className={`relative flex flex-col bg-(--color-base) rounded-sm border border-lines-hover transition-all duration-300 ${isAuthenticated ? 'h-15 w-55' : 'h-9 w-55'}`}>
+    <div ref={telemetryRef} className={`relative flex flex-col bg-(--color-base) rounded-sm border border-lines-hover transition-all duration-300 ${isAuthenticated ? 'h-15 w-40' : 'h-9 w-40'}`}>
 
       {/* СЕКЦИЯ 4: Верхняя панель (Только для авторизованных) */}
       {isAuthenticated && (
@@ -332,33 +330,8 @@ export function PlayerTelemetry() {
         {/* Вертикальный разделитель */}
         <div className="w-px h-6 bg-lines-hover shrink-0" />
 
-        {/* СЕКЦИЯ 2: Блок режима */}
-        <div
-          className={`group relative flex h-full w-19 cursor-pointer items-center justify-center gap-1.5 transition-colors ${activeProfile?.mode === 'PVP' ? 'hover:bg-mode-pvp/25' : 'hover:bg-mode-pve/25'}`}
-          onClick={() => setIsModeOpen((v) => !v)}
-        >
-          <div className="flex items-center gap-1.5">
-            <div className={`w-4.5 h-4.5 icon-bg transition-colors ${activeProfile?.mode === 'PVP' ? 'icon-eft-profile-pvp' : 'icon-eft-profile-pve'}`} />
-            <span className={`text-xs font-blender-medium uppercase leading-none transition-colors ${activeProfile?.mode === 'PVP' ? 'text-mode-pvp' : 'text-mode-pve'}`}>{activeProfile?.mode}</span>
-          </div>
-
-          {/* Выпадающий список Режимов */}
-          <div className={`absolute top-[calc(100%+4px)] -left-px flex-col w-16.5 bg-card-menu border border-lines-hover rounded-sm z-20 shadow-lg ${isModeOpen ? 'flex' : 'hidden group-hover:flex'}`}>
-            {/* Невидимый мост для мыши */}
-            <div className="absolute -top-2 left-0 h-2 w-full bg-transparent" />
-            <div onClick={(e) => { e.stopPropagation(); activeProfile && updateProfile(activeProfile.id, { mode: 'PVE' }); setIsModeOpen(false); }} className="flex items-center justify-center gap-1 py-1.5 hover:bg-mode-pve/25 transition-colors cursor-pointer">
-              <div className="w-4.5 h-4.5 icon-bg icon-eft-profile-pve transition-colors" />
-              <span className="text-mode-pve text-xs font-blender-medium uppercase leading-none transition-colors">PVE</span>
-            </div>
-            <div onClick={(e) => { e.stopPropagation(); activeProfile && updateProfile(activeProfile.id, { mode: 'PVP' }); setIsModeOpen(false); }} className="flex items-center justify-center gap-1 py-1.5 hover:bg-mode-pvp/25 transition-colors cursor-pointer">
-              <div className="w-4.5 h-4.5 icon-bg icon-eft-profile-pvp transition-colors" />
-              <span className="text-mode-pvp text-xs font-blender-medium uppercase leading-none transition-colors">PVP</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Вертикальный разделитель */}
-        <div className="w-px h-6 bg-lines-hover shrink-0" />
+        {/* СЕКЦИЯ 2 (выбор режима PvP/PvE) — убрана из телеметрии (pred-mvp).
+            Режим по-прежнему меняется в ProfileSettingsModal. */}
 
         {/* СЕКЦИЯ 3: Блок авторизации */}
         <div className="flex w-19 h-full items-center justify-center rounded-br-sm">

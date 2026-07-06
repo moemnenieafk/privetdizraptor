@@ -184,7 +184,7 @@ export function HeaderNavigation({ menuItems }: HeaderNavigationProps) {
   const faction = activeProfile?.faction || 'BEAR';
 
   return (
-    <nav className="flex h-9 items-center gap-3.5">
+    <nav className="flex h-9 w-full items-center justify-between">
       {menuItems.map((item) => {
         return <NavItem key={item.id} item={item} pathname={pathname || ''} faction={faction} />;
       })}
