@@ -7,7 +7,7 @@ export function PlatformLogo() {
       <Link href="/" className="block transition-transform hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
         <div className="relative h-14 w-40">
           <Image
-            src="/images/cta-logo.svg"
+            src="/icons/CTA-logo-hover.svg"
             alt="ЦТА Лого"
             fill
             className="object-contain"

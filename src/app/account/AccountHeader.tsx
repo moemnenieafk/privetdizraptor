@@ -17,7 +17,7 @@ export function AccountHeader() {
 
       {/* Left: Logo */}
       <Link href="/" className="shrink-0 transition-all hover:brightness-125 focus-visible:outline-none">
-        <Image src="/images/cta-logo.svg" alt="ЦТА" width={130} height={46} priority />
+        <Image src="/icons/CTA-logo-hover.svg" alt="ЦТА" width={130} height={46} className="object-contain" priority />
       </Link>
 
       {/* Center: Icon + Title */}
