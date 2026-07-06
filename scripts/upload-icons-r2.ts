@@ -1,7 +1,7 @@
-// Пережимает иконки предметов (public/images/items/eft/{id}.webp, 512px-оригиналы)
-// до 256px/q80 и заливает в Cloudflare R2 (S3-совместимый, бакет cta-media, ключ
-// items/eft/{id}.webp) с immutable-кэшем на год. R2 не берёт плату за egress —
-// уводим раздачу иконок с Supabase Storage (см. решение icon-hosting-r2).
+// Заливает иконки предметов (public/images/items/eft/{id}.webp, 512px-оригиналы)
+// в Cloudflare R2 (S3-совместимый, бакет cta-media, ключ items/eft/512/{id}.webp)
+// в полном 512px/q80 с immutable-кэшем на год. Путь версионирован (…/512/) —
+// новый URL обходит immutable-кэш старых 256px-иконок. R2 не берёт плату за egress.
 //
 // Запуск:  npx tsx scripts/upload-icons-r2.ts            (все 5044)
 //          npx tsx scripts/upload-icons-r2.ts --limit=5  (тест на 5 файлах)
@@ -20,8 +20,8 @@ if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) 
 }
 
 const SRC_DIR = "public/images/items/eft";
-const PREFIX = "items/eft";
-const MAX_PX = 256;
+const PREFIX = "items/eft/512";
+const MAX_PX = 512;
 const QUALITY = 80;
 const CONCURRENCY = 12;
 const CACHE_CONTROL = "public, max-age=31536000, immutable";
