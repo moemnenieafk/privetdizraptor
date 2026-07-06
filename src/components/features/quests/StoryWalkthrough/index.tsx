@@ -221,6 +221,8 @@ export function StoryWalkthroughView({
   const activeChoice = mounted ? branchChoice[storyBranchKey(story.slug, active.n)] : undefined;
   const activeSubs = subsFor(step, activeChoice);
   const activeSub = active.sub ? activeSubs.find((x) => x.id === active.sub) ?? null : null;
+  // Активная ветка-выбор (шаг-развилка + выбранный путь) — фолбэк медиа для «выбора».
+  const activeBranch = step.branches && activeChoice ? step.branches.find((x) => x.id === activeChoice) : undefined;
   const view = activeSub
     ? { title: activeSub.title, intro: activeSub.intro, blocks: activeSub.blocks, subId: activeSub.id }
     : { title: null, intro: step.intro, blocks: step.blocks, subId: undefined };
@@ -282,14 +284,18 @@ export function StoryWalkthroughView({
     if (target) setActive(target);
   };
 
-  // Медиа: у каждого шага; фолбэк — арт истории (или CSS-заглушка, если арта нет).
-  const media = step.media ?? {
+  // Медиа по приоритету: под-этап → ветка-выбор → шаг → дефолт (обе заглушки).
+  // Фолбэк — арт истории (или CSS-заглушка, если арта нет).
+  const media = activeSub?.media ?? activeBranch?.media ?? step.media ?? {
     poster: story.heroImage ?? '',
     posterTitle: story.title,
     posterSub: 'ИСТОРИЯ',
     video: false,
     videoUrl: undefined,
     screenshots: [],
+    // Дефолт для шагов/подэтапов без своего медиа: обе заглушки, пока нет контента.
+    videoSoon: true,
+    screenshotsSoon: true,
   };
   const mediaSrc = shot === null ? media.poster : media.screenshots[shot];
   // Декор постера: свой арт (Борей — якорь) или иконка-маска истории; цвет градиента тайтла.
@@ -657,6 +663,17 @@ export function StoryWalkthroughView({
                         <Play className="h-9 w-9 fill-current text-text-primary" />
                       </span>
                     ))}
+                  {/* Заглушка «видео скоро» — пока нет реального video/videoUrl */}
+                  {!media.video && media.videoSoon && (
+                    <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
+                      <span className="flex h-24 w-24 items-center justify-center rounded-full border border-dashed border-lines-hover bg-black/40 backdrop-blur-xs">
+                        <Play className="h-9 w-9 fill-current text-text-muted opacity-40" />
+                      </span>
+                      <span className="rounded-xs bg-black/50 px-2 py-0.5 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+                        Видео скоро
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
               {media.screenshots.length > 0 && (
@@ -696,6 +713,24 @@ export function StoryWalkthroughView({
                     <img src={s} alt="" loading="lazy" className="h-full w-full object-cover" />
                   </button>
                 ))}
+              </div>
+            )}
+            {/* Заглушка «скриншоты скоро» — плитки-плейсхолдеры, пока галереи нет */}
+            {media.screenshots.length === 0 && media.screenshotsSoon && (
+              <div className="flex h-24 flex-col gap-2 sm:h-[302px] sm:w-44">
+                <div className="flex flex-1 flex-wrap content-start gap-2 overflow-hidden">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="flex h-10.5 w-19 shrink-0 items-center justify-center rounded-xs border border-dashed border-lines-hover bg-card-menu"
+                    >
+                      <span className={`h-5 w-5 icon-mask ${story.iconClass} bg-text-muted opacity-30`} />
+                    </div>
+                  ))}
+                </div>
+                <span className="shrink-0 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+                  Скриншоты скоро
+                </span>
               </div>
             )}
           </div>

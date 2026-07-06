@@ -347,8 +347,17 @@
   /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
   .icon-cta-logo-default { mask-image: url('/icons/CTA-logo-default.svg'); -webkit-mask-image: url('/icons/CTA-logo-default.svg'); }
   .icon-cta-logo-hover { mask-image: url('/icons/CTA-logo-hover.svg'); -webkit-mask-image: url('/icons/CTA-logo-hover.svg'); }
-  .icon-eft-eod---icon { mask-image: url('/icons/eft/edition/EOD%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/EOD%20-%20icon.svg'); }
-  .icon-eft-lb---icon { mask-image: url('/icons/eft/edition/LB%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/LB%20-%20icon.svg'); }
-  .icon-eft-pfe---icon { mask-image: url('/icons/eft/edition/PFE%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/PFE%20-%20icon.svg'); }
-  .icon-eft-s---icon { mask-image: url('/icons/eft/edition/S%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/S%20-%20icon.svg'); }
-  .icon-eft-tue---icon { mask-image: url('/icons/eft/edition/TUE%20-%20icon.svg'); -webkit-mask-image: url('/icons/eft/edition/TUE%20-%20icon.svg'); }
+  /* === АВТОМАТИЧЕСКИ СГЕНЕРИРОВАННЫЕ КЛАССЫ === */
+  .icon-eft-exfil-point-nobackpack { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-nobackpack.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-nobackpack.svg'); }
+  .icon-eft-exfil-point-paidcar { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-paidcar.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-paidcar.svg'); }
+  .icon-eft-exfil-point-paidhely { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-paidhely.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-paidhely.svg'); }
+  .icon-eft-exfil-point-pmc-1 { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-pmc-1.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-pmc-1.svg'); }
+  .icon-eft-exfil-point-pmc { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-pmc.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-pmc.svg'); }
+  .icon-eft-exfil-point-scav { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-scav.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-scav.svg'); }
+  .icon-eft-exfil-point-spare { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-spare.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-spare.svg'); }
+  .icon-eft-lock-keycard-pannel { mask-image: url('/icons/eft/01-maps/markers/lock/lock-keycard-pannel.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/lock/lock-keycard-pannel.svg'); }
+  .icon-eft-lock-mechanical-marked { mask-image: url('/icons/eft/01-maps/markers/lock/lock-mechanical-marked.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/lock/lock-mechanical-marked.svg'); }
+  .icon-eft-lock-mechanical { mask-image: url('/icons/eft/01-maps/markers/lock/lock-mechanical.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/lock/lock-mechanical.svg'); }
+  .icon-eft-spawn-boss-add { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg'); }
+  .icon-eft-spawn-pmc { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-pmc.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-pmc.svg'); }
+  .icon-eft-spawn-scav { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-scav.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-scav.svg'); }

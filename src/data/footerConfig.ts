@@ -37,31 +37,31 @@ export const STREAMERS: Streamer[] = [
     id: "fullkamen",
     name: "Фуллкамень",
     twitchLogin: "fullkamen",
-    channelUrl: "https://twitch.tv/fullkamen",
+    channelUrl: "https://www.twitch.tv/fullkamen",
     avatar: "/images/footer/fullkamen-avatar.png",
     wordmark: "/images/footer/fullkamen-wordmark.svg",
     wordmarkWidth: 156,
     wordmarkHeight: 21,
     thumb: "/images/footer/fullkamen-thumb.png",
     platforms: [
-      { kind: "youtube", href: "#" }, // TODO youtube-канал Фуллкамень
-      { kind: "twitch", href: "https://twitch.tv/fullkamen" },
+      { kind: "youtube", href: "https://www.youtube.com/@fullkamen" },
+      { kind: "twitch", href: "https://www.twitch.tv/fullkamen" },
     ],
   },
   {
     id: "v4dya",
     name: "V4DYA",
     twitchLogin: "v4dyatv",
-    channelUrl: "https://twitch.tv/v4dyatv",
+    channelUrl: "https://www.twitch.tv/v4dyatv",
     avatar: "/images/footer/v4dya-avatar.png",
     wordmark: "/images/footer/v4dya-wordmark.svg",
     wordmarkWidth: 108,
     wordmarkHeight: 14,
     thumb: "/images/footer/v4dya-thumb.png",
     platforms: [
-      { kind: "vklive", href: "#" },  // TODO VK Live V4DYA
-      { kind: "youtube", href: "#" }, // TODO youtube-канал V4DYA
-      { kind: "twitch", href: "https://twitch.tv/v4dyatv" },
+      { kind: "vklive", href: "https://live.vkvideo.ru/v4dya" },
+      { kind: "youtube", href: "https://www.youtube.com/@v4dya-tv" },
+      { kind: "twitch", href: "https://www.twitch.tv/v4dyatv" },
     ],
   },
 ];
@@ -76,15 +76,15 @@ export interface SocialLink {
 
 export const SOCIAL_LINKS: SocialLink[] = [
   { label: "Telegram", href: "https://t.me/fullkamen", icon: "/images/footer/social/telegram.svg" },
-  { label: "Discord",  href: "#", icon: "/images/footer/social/discord.svg" }, // TODO Discord-инвайт
+  { label: "Discord",  href: "https://discord.gg/rYc6hpfvez", icon: "/images/footer/social/discord.svg" },
   { label: "VK",       href: "#", icon: "/images/footer/social/vk.svg"      }, // TODO VK-сообщество
-  { label: "Boosty",   href: "#", icon: "/images/footer/social/boosty.svg"  }, // TODO Boosty
+  { label: "Boosty",   href: "https://boosty.to/fullkamen", icon: "/images/footer/social/boosty.svg"  },
   { label: "X",        href: "#", icon: "/images/footer/social/xcom.svg"    }, // TODO X (Twitter)
   { label: "Reddit",   href: "#", icon: "/images/footer/social/reddit.svg"  }, // TODO Reddit
 ];
 
 // ── Кнопка «Поддержка» (Boosty) ─────────────────────────────────────
-export const SUPPORT_LINK = { label: "Поддержка", href: "#" }; // TODO Boosty-донат
+export const SUPPORT_LINK = { label: "Поддержка", href: "https://boosty.to/fullkamen" };
 
 // ── Доп-ссылки (правая колонка) ─────────────────────────────────────
 export interface FooterLink {
@@ -105,10 +105,3 @@ export const LEGAL_LINKS: FooterLink[] = [
   { label: "Политика конфиденциальности", href: "/legal/privacy"  },
   { label: "Пользовательское соглашение", href: "/legal/eula"     },
 ];
-
-// Пункт навигации «Связь» — добавляется к game-nav из headerConfig.
-export const COMLINK_ITEM = {
-  label: "Связь",
-  href: "#", // TODO страница/модалка контактов
-  iconUrl: "/icons/eft/00-nav/comlink-icon.svg",
-};

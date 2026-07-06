@@ -10,6 +10,7 @@ export const TOUR_WALKTHROUGH: StoryWalkthrough = {
   title: 'Тур',
   iconUrl: '/icons/eft/02-quests/story-tour.svg',
   iconClass: 'icon-eft-quests-story-tour',
+  heroImage: '/images/quests/eft/story/banners/01-tour-hero-art.webp',
   difficulty: { skulls: 2, label: 'ЛЁГКАЯ' },
   requirement: {
     note: ['Стартует автоматически', 'после создания персонажа'],
@@ -28,6 +29,7 @@ export const TOUR_WALKTHROUGH: StoryWalkthrough = {
         video: true,
         videoUrl: 'https://www.youtube.com/watch?v=5HTLMMw2yn8',
         screenshots: [],
+        screenshotsSoon: true, // заглушка «скриншоты скоро»
       },
       blocks: [
         {

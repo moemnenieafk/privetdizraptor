@@ -31,6 +31,13 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       eula: 'Пользовательское соглашение',
       'price-slot': 'Цена за слот',
       'loot-rate': 'Рейтинг предметов',
+      comlink: 'Связь',
+      'find-partner': 'Поиск напарника',
+      candidates: 'Кандидаты',
+      'sherpa-exchange': 'Биржа шерпов',
+      masterclasses: 'Мастер-классы',
+      blog: 'Новостной блог',
+      'game-updates': 'Обновления игры',
       headphones: 'Наушники',
       helmets: 'Шлемы',
       masks: 'Маски',
@@ -583,7 +590,23 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           { id: 'v-news', label: 'Новости', path: '/eft/videos/news', iconUrl: '/icons/eft/06-videos/video-news.svg' },
           { id: 'v-streams', label: 'Стримы', path: '/eft/videos/streams', iconUrl: '/icons/eft/06-videos/live-streams.svg' }
         ]
-      },      
+      },
+      // ВЕТКА: СВЯЗЬ (сообщество) — навигируемые смарт-заглушки (MVP), реал — отдельный эпик.
+      // TODO: свои иконки подпунктов (пока общий comlink-icon).
+      {
+        id: 'comlink',
+        label: 'Связь',
+        path: '/eft/comlink',
+        iconUrl: '/icons/eft/00-nav/comlink-icon.svg',
+        children: [
+          { id: 'cl-find-partner', label: 'Поиск напарника', path: '/eft/comlink/find-partner', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
+          { id: 'cl-candidates', label: 'Кандидаты', path: '/eft/comlink/candidates', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
+          { id: 'cl-sherpa', label: 'Биржа шерпов', path: '/eft/comlink/sherpa-exchange', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
+          { id: 'cl-masterclasses', label: 'Мастер-классы', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
+          { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
+          { id: 'cl-game-updates', label: 'Обновления игры', path: '/eft/comlink/game-updates', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' }
+        ]
+      },
     ],
     currencySymbol: '₽',
   },

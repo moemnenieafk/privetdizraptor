@@ -4,15 +4,15 @@
 
 import type { StoryWalkthrough } from './types';
 
-const SHOTS = Array.from({ length: 9 }, (_, i) => `/images/quests/eft/story/boreas/shots/shot-0${i + 1}.png`);
+const SHOTS = Array.from({ length: 9 }, (_, i) => `/images/quests/eft/story/10-boreas/shots/shot-0${i + 1}.webp`);
 
 export const BOREAS_WALKTHROUGH: StoryWalkthrough = {
   slug: 'boreas',
   title: 'Борей',
   iconUrl: '/icons/eft/02-quests/story-boreas.svg',
   iconClass: 'icon-eft-quests-story-boreas',
-  heroImage: '/images/quests/eft/story/story-icebreaker.png',
-  posterDecor: { image: '/images/quests/eft/story/boreas/anchor.svg', gradientTo: '#80ACBF' },
+  heroImage: '/images/quests/eft/story/banners/10-icebreaker-hero-art.webp',
+  posterDecor: { gradientTo: '#80ACBF' },
   hasMap: true,
   // Шкала из 7 черепов: skulls = заполненные (danger), остальные пустые (lines-hover).
   difficulty: { skulls: 6, label: 'ЭКСТРИМ' },
@@ -27,10 +27,10 @@ export const BOREAS_WALKTHROUGH: StoryWalkthrough = {
       title: 'Активация задания',
       intro: 'Для активации цепочки выполнения сюжетного задания “Борей”, существует несколько способов:',
       media: {
-        poster: '/images/quests/eft/story/boreas/poster.png',
+        poster: '',
         posterTitle: 'БОРЕЙ',
         posterSub: 'ПРОХОЖДЕНИЕ СЮЖЕТА',
-        video: true,
+        videoSoon: true, // заглушка «видео скоро», пока нет video/videoUrl
         screenshots: SHOTS,
       },
       blocks: [

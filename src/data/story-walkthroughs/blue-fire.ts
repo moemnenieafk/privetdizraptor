@@ -10,6 +10,7 @@ export const BLUE_FIRE_WALKTHROUGH: StoryWalkthrough = {
   title: 'Синий Огонь',
   iconUrl: '/icons/eft/02-quests/story-blue-fire.svg',
   iconClass: 'icon-eft-quests-story-bluefire',
+  heroImage: '/images/quests/eft/story/banners/06-bluefire-hero-art.webp',
   difficulty: { skulls: 5, label: 'СЛОЖНАЯ' },
   requirement: {
     note: ['Прочитать «Листовку по гражданской', 'обороне МЧС» (Лес или Развязка)'],
@@ -28,6 +29,7 @@ export const BLUE_FIRE_WALKTHROUGH: StoryWalkthrough = {
         video: true,
         videoUrl: 'https://www.youtube.com/watch?v=y1QgiNaLE4E',
         screenshots: [],
+        screenshotsSoon: true, // заглушка «скриншоты скоро»
       },
       blocks: [
         {

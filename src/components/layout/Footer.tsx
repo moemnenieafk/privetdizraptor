@@ -6,12 +6,12 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { getHeaderConfig } from "@/data/headerConfig";
 import { SupportButton } from "@/components/ui/SupportButton";
+import { useStreamDockStore } from "@/store/useStreamDockStore";
 import {
   STREAMERS,
   SOCIAL_LINKS,
   ADDITIONAL_LINKS,
   LEGAL_LINKS,
-  COMLINK_ITEM,
   streamPlatformIcon,
   type Streamer,
 } from "@/data/footerConfig";
@@ -19,29 +19,33 @@ import {
 const BUILD_VERSION = "v0.2.0-beta";
 
 type PingState = "idle" | "ok" | "err";
+type ChannelInfo = { isLive: boolean; avatar?: string };
 
 export default function Footer() {
   const [ping, setPing] = useState<number | null>(null);
   const [pingState, setPingState] = useState<PingState>("idle");
-  const [liveChannels, setLiveChannels] = useState<Record<string, boolean>>({});
+  const [channels, setChannels] = useState<Record<string, ChannelInfo>>({});
+  const [twitchParent, setTwitchParent] = useState<string | null>(null);
   const pathname = usePathname();
 
-  // Навигация — из ЕДИНОГО источника (headerConfig), game-aware, + футер-пункт «Связь».
-  const { menuItems } = getHeaderConfig(pathname || "/");
-  const navItems = [
-    ...menuItems
-      .filter((item) => item.path)
-      .map((item) => ({ href: item.path as string, label: item.label, iconUrl: item.iconUrl })),
-    { href: COMLINK_ITEM.href, label: COMLINK_ITEM.label, iconUrl: COMLINK_ITEM.iconUrl },
-  ];
+  // parent-домен для Twitch-эмбеда: точный hostname (localhost / vercel / прод) без конфига.
+  useEffect(() => setTwitchParent(window.location.hostname), []);
 
-  // Live-статус Twitch-каналов (наш прокси, 30с-кэш).
+  // Навигация — из ЕДИНОГО источника (headerConfig), game-aware («Связь» уже там веткой).
+  const { menuItems } = getHeaderConfig(pathname || "/");
+  const navItems = menuItems
+    .filter((item) => item.path)
+    .map((item) => ({ href: item.path as string, label: item.label, iconUrl: item.iconUrl }));
+
+  // Live-статус + актуальные аватары Twitch-каналов (наш прокси, 30с-кэш).
   useEffect(() => {
     fetch("/api/twitch-status", { cache: "no-store" })
       .then((r) => r.json())
-      .then((d: { channels?: { login: string; isLive: boolean }[] }) => {
+      .then((d: { channels?: { login: string; isLive: boolean; avatar?: string }[] }) => {
         if (d.channels) {
-          setLiveChannels(Object.fromEntries(d.channels.map((c) => [c.login, c.isLive])));
+          setChannels(
+            Object.fromEntries(d.channels.map((c) => [c.login, { isLive: c.isLive, avatar: c.avatar }])),
+          );
         }
       })
       .catch(() => {});
@@ -114,7 +118,13 @@ export default function Footer() {
           {/* ── Center: streamer cards (макс 348px; в ряд с md, чтобы на узких не переполнять) ── */}
           <div className="flex w-full flex-col items-center gap-6 md:flex-row md:items-stretch md:justify-center xl:w-auto xl:gap-6">
             {STREAMERS.map((s) => (
-              <StreamerCard key={s.id} streamer={s} live={liveChannels[s.twitchLogin]} />
+              <StreamerCard
+                key={s.id}
+                streamer={s}
+                live={channels[s.twitchLogin]?.isLive}
+                avatar={channels[s.twitchLogin]?.avatar}
+                parent={twitchParent}
+              />
             ))}
           </div>
 
@@ -212,29 +222,54 @@ export default function Footer() {
 }
 
 // ── Стример-карточка: аватар + имя + LIVE/OFFLINE + платформы + превью-арт ──
-function StreamerCard({ streamer, live }: { streamer: Streamer; live: boolean | undefined }) {
+function StreamerCard({
+  streamer,
+  live,
+  avatar,
+  parent,
+}: {
+  streamer: Streamer;
+  live: boolean | undefined;
+  avatar: string | undefined;
+  parent: string | null;
+}) {
   const loaded = live !== undefined;
+  // Актуальный аватар с Twitch (helix/users), фолбэк — статик из конфига.
+  const avatarSrc = avatar ?? streamer.avatar;
+  // LIVE-бейдж = триггер разворота свёрнутого дока этого канала (StreamDock).
+  const expandDock = useStreamDockStore((s) => s.expand);
   return (
     <div className="flex w-full min-w-0 max-w-87 flex-col gap-4 md:flex-1 xl:flex-none">
       {/* Header row */}
       <div className="flex items-center gap-3.5">
-        <span className="relative block size-9 shrink-0 overflow-hidden rounded-full border border-lines-hover">
-          <Image src={streamer.avatar} alt={streamer.name} fill className="object-cover" />
-        </span>
+        <a
+          href={streamer.channelUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`${streamer.name} на Twitch`}
+          className="relative block size-9 shrink-0 overflow-hidden rounded-full border border-lines-hover transition-colors hover:border-(--primary)"
+        >
+          <Image src={avatarSrc} alt={streamer.name} fill sizes="36px" className="object-cover" />
+        </a>
 
         <div className="flex min-w-0 flex-1 items-center gap-3.5">
-          <Image
-            src={streamer.wordmark}
-            alt={streamer.name}
-            width={streamer.wordmarkWidth}
-            height={streamer.wordmarkHeight}
-            className="shrink-0"
-          />
+          <a href={streamer.channelUrl} target="_blank" rel="noreferrer" className="shrink-0">
+            <Image
+              src={streamer.wordmark}
+              alt={streamer.name}
+              width={streamer.wordmarkWidth}
+              height={streamer.wordmarkHeight}
+            />
+          </a>
           {live ? (
-            <span className="flex h-4 items-center justify-center gap-1 rounded-xs border-[0.5px] border-danger bg-danger/25 px-1">
+            <button
+              onClick={() => expandDock(streamer.twitchLogin)}
+              title="Развернуть окно стрима"
+              className="flex h-4 items-center justify-center gap-1 rounded-xs border-[0.5px] border-danger bg-danger/25 px-1 transition-[filter] hover:brightness-125"
+            >
               <span className="size-1 rounded-full bg-danger" />
               <span className="font-blender-medium text-type-micro uppercase tracking-[0.14em] text-white">live</span>
-            </span>
+            </button>
           ) : (
             <span className="flex h-4 items-center justify-center rounded-xs border-[0.5px] border-text-muted px-1">
               <span className={`font-blender-medium text-type-micro uppercase tracking-[0.14em] text-text-muted ${loaded ? "" : "animate-pulse"}`}>
@@ -271,21 +306,32 @@ function StreamerCard({ streamer, live }: { streamer: Streamer; live: boolean | 
         </div>
       </div>
 
-      {/* Preview art (static) → канал */}
-      <a
-        href={streamer.channelUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="group relative block aspect-[348/196] w-full overflow-hidden rounded-sm border border-lines-hover bg-darkbase"
-      >
-        <Image
-          src={streamer.thumb}
-          alt={`${streamer.name} — стрим`}
-          fill
-          sizes="(max-width: 640px) 100vw, 348px"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      </a>
+      {/* В эфире → встроенный плеер Twitch (muted, click-to-play); оффлайн → статик-арт. */}
+      {live && parent ? (
+        <div className="relative aspect-[348/196] w-full overflow-hidden rounded-sm border border-lines-hover bg-black">
+          <iframe
+            src={`https://player.twitch.tv/?channel=${streamer.twitchLogin}&parent=${parent}&muted=true&autoplay=false`}
+            title={`${streamer.name} — Twitch`}
+            allowFullScreen
+            className="absolute inset-0 size-full"
+          />
+        </div>
+      ) : (
+        <a
+          href={streamer.channelUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="group relative block aspect-[348/196] w-full overflow-hidden rounded-sm border border-lines-hover bg-darkbase"
+        >
+          <Image
+            src={streamer.thumb}
+            alt={`${streamer.name} — стрим`}
+            fill
+            sizes="(max-width: 640px) 100vw, 348px"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </a>
+      )}
     </div>
   );
 }

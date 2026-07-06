@@ -10,6 +10,7 @@ export const HEAVEN_ON_FIRE_WALKTHROUGH: StoryWalkthrough = {
   title: 'Небеса в огне',
   iconUrl: '/icons/eft/02-quests/story-falling-skies.svg',
   iconClass: 'icon-eft-quests-story-falling',
+  heroImage: '/images/quests/eft/story/banners/02-falling-skies-hero-art.webp',
   difficulty: { skulls: 4, label: 'СРЕДНЯЯ' },
   requirement: {
     note: ['Завершена глава «Тур»', 'Лояльность Прапора 2 ур.'],
@@ -28,6 +29,7 @@ export const HEAVEN_ON_FIRE_WALKTHROUGH: StoryWalkthrough = {
         video: true,
         videoUrl: 'https://www.youtube.com/watch?v=cSSXGs1p1VY',
         screenshots: [],
+        screenshotsSoon: true, // заглушка «скриншоты скоро»
       },
       blocks: [
         {

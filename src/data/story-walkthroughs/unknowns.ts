@@ -10,6 +10,7 @@ export const UNKNOWNS_WALKTHROUGH: StoryWalkthrough = {
   title: 'Неизвестные',
   iconUrl: '/icons/eft/02-quests/story-the-unheard.svg',
   iconClass: 'icon-eft-quests-story-unheard',
+  heroImage: '/images/quests/eft/story/banners/05-the-unheard-hero-art.webp',
   difficulty: { skulls: 6, label: 'ЭКСТРИМ' },
   requirement: {
     note: ['Поднять записку в офисе', 'TerraGroup на Улицах Таркова', '(или автозапуск после «Они уже здесь»)'],
@@ -21,6 +22,14 @@ export const UNKNOWNS_WALKTHROUGH: StoryWalkthrough = {
       title: 'Активация задания',
       intro:
         'Глава раскрывает самую зловещую тайну TerraGroup — протокол «Очищение» и синтетический топливный катализатор Blue Ice, вокруг которого выстроена деятельность Неизвестных.',
+      media: {
+        poster: '',
+        posterTitle: 'НЕИЗВЕСТНЫЕ',
+        posterSub: 'ПРОХОЖДЕНИЕ СЮЖЕТА',
+        videoSoon: true,       // заглушка «видео скоро»
+        screenshotsSoon: true, // заглушка «скриншоты скоро»
+        screenshots: [],
+      },
       blocks: [
         {
           text: [

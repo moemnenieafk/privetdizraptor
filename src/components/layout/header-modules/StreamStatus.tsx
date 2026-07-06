@@ -1,14 +1,16 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
+import { useStreamDockStore } from '@/store/useStreamDockStore';
 
+// Плавающая кнопка-индикатор статуса стрима (правый-нижний угол).
+// Сам плеер живёт в StreamDock (features/streams). Здесь — ТОЛЬКО индикатор LIVE/OFFLINE
+// и триггер: клик по LIVE разворачивает fullkamen-док (если юзер его свернул в 1×1).
 export default function StreamStatus() {
   const [isLive, setIsLive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isStreamOpen, setIsStreamOpen] = useState(false);
-  const [isStreamVisible, setIsStreamVisible] = useState(true);
-  const [hostname, setHostname] = useState('localhost');
   const [isQuestFullscreen, setIsQuestFullscreen] = useState(false);
+  const expandDock = useStreamDockStore((s) => s.expand);
 
   useEffect(() => {
     const check = () =>
@@ -25,8 +27,6 @@ export default function StreamStatus() {
   }, []);
 
   useEffect(() => {
-    setHostname(window.location.hostname);
-
     let mounted = true;
 
     const fetchStreamStatus = async () => {
@@ -50,16 +50,6 @@ export default function StreamStatus() {
       clearInterval(interval);
     };
   }, []);
-
-  const handleButtonClick = () => {
-    if (!isLive) return;
-    if (!isStreamOpen) {
-      setIsStreamOpen(true);
-      setIsStreamVisible(true);
-    } else {
-      setIsStreamVisible((v) => !v);
-    }
-  };
 
   // Редизайн (эпик E12, фрейм 1661-2505): LIVE = красный «ON AIR LIVE» + гекс-скобки,
   // OFFLINE = серый «STREAM OFFLINE». Красный/серый — токены danger/text-muted.
@@ -92,17 +82,17 @@ export default function StreamStatus() {
   const s = isLive ? liveS : offlineS;
 
   return (
-    // Плавающий оверлей: вынесен из потока хедера, прибит к правому-нижнему углу.
-    // Вертикальный стек — кнопка-индикатор сверху, окно стрима под ней.
-    // Обёртка кликопрозрачна (pointer-events-none), интерактив — на детях (-auto).
+    // Плавающий оверлей: прибит к правому-нижнему углу. Обёртка кликопрозрачна
+    // (pointer-events-none), интерактив — на кнопке (-auto).
     <div className="fixed bottom-4 right-4 z-70 flex flex-col items-end gap-2 pointer-events-none">
       {/* ═══ Кнопка-индикатор стрима ═══ */}
       <a
-        href={isLive ? undefined : 'https://twitch.tv/fullkamen'}
+        href={isLive ? undefined : 'https://www.twitch.tv/fullkamen'}
         target={isLive ? undefined : '_blank'}
         rel="noopener noreferrer"
         role={isLive ? 'button' : undefined}
-        onClick={isLive ? (e) => { e.preventDefault(); handleButtonClick(); } : undefined}
+        onClick={isLive ? (e) => { e.preventDefault(); expandDock('fullkamen'); } : undefined}
+        title={isLive ? 'Развернуть окно стрима' : undefined}
         className={`group relative flex shrink-0 items-center justify-center gap-2 w-10 sm:w-40 h-10 rounded-sm transition-all duration-500
           ${isQuestFullscreen ? 'invisible pointer-events-none' : 'pointer-events-auto'}
           ${isLoading
@@ -143,64 +133,6 @@ export default function StreamStatus() {
           </div>
         )}
       </a>
-
-      {/* ═══ Окно стрима ═══ */}
-      {isStreamOpen && !isQuestFullscreen && (
-        <div className="pointer-events-auto">
-          {/* Шапка окна — скрывается при минимизации */}
-          <div
-            className={`transition-[max-height,opacity] duration-300 ease-out overflow-hidden ${
-              isStreamVisible ? 'max-h-10 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
-            }`}
-          >
-            <div className="flex items-center justify-between bg-card-menu border-t border-l border-r border-lines-hover px-3 h-8 rounded-t-sm">
-              <span className="text-type-caption font-blender-medium uppercase tracking-wider text-text-secondary">
-                Стрим Fullkamen
-              </span>
-              <button
-                onClick={() => setIsStreamVisible(false)}
-                title="Свернуть (зритель сохраняется)"
-                className="flex h-5 w-5 items-center justify-center text-text-muted transition-colors hover:text-text-primary"
-              >
-                <span className="text-base font-blender-medium leading-none">—</span>
-              </button>
-            </div>
-          </div>
-
-          {/*
-            iframe всегда загружен после открытия.
-            При минимизации — 1×1px: Twitch считает зрителя, но видео не видно.
-          */}
-          <div
-            style={
-              isStreamVisible
-                ? { width: 320, height: 180 }
-                : { width: 1, height: 1, overflow: 'hidden' }
-            }
-          >
-            <iframe
-              src={`https://player.twitch.tv/?channel=fullkamen&parent=${hostname}&autoplay=true`}
-              width="320"
-              height="180"
-              allowFullScreen
-              className="block"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Кнопка развернуть — показывается когда окно свёрнуто в 1px */}
-      {isStreamOpen && !isStreamVisible && !isQuestFullscreen && (
-        <button
-          onClick={() => setIsStreamVisible(true)}
-          className="pointer-events-auto flex items-center gap-1.5 h-7 px-2.5 rounded-sm border border-lines-hover bg-card-menu transition-colors hover:border-online group/expand"
-        >
-          <span className="h-1 w-1 shrink-0 rounded-full bg-online animate-pulse" />
-          <span className="mt-0.5 text-type-caption font-blender-medium uppercase text-text-secondary transition-colors group-hover/expand:text-online">
-            Развернуть стрим
-          </span>
-        </button>
-      )}
     </div>
   );
 }

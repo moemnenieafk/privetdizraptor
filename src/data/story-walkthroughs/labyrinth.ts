@@ -10,6 +10,7 @@ export const LABYRINTH_WALKTHROUGH: StoryWalkthrough = {
   title: 'Лабиринт',
   iconUrl: '/icons/eft/02-quests/story-the-labyrinth.svg',
   iconClass: 'icon-eft-quests-story-labyrinth',
+  heroImage: '/images/quests/eft/story/banners/09-labyrinth-hero-art.webp',
   difficulty: { skulls: 6, label: 'ЭКСТРИМ' },
   requirement: {
     note: ['Линейка Механика до квеста «Второе дно»', 'Ключ от помещения ООО КНОССОС', 'Ключ-карты Лабрис от Егеря'],
@@ -28,6 +29,7 @@ export const LABYRINTH_WALKTHROUGH: StoryWalkthrough = {
         video: true,
         videoUrl: 'https://www.youtube.com/watch?v=NgL9BOaAFqs',
         screenshots: [],
+        screenshotsSoon: true, // заглушка «скриншоты скоро»
       },
       blocks: [
         {

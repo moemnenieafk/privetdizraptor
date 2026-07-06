@@ -10,6 +10,7 @@ export const WITNESS_WALKTHROUGH: StoryWalkthrough = {
   title: 'Случайный свидетель',
   iconUrl: '/icons/eft/02-quests/story-accidental-witness.svg',
   iconClass: 'icon-eft-quests-story-accidental',
+  heroImage: '/images/quests/eft/story/banners/08-accidental-witness-hero-art.webp',
   difficulty: { skulls: 4, label: 'СРЕДНЯЯ' },
   requirement: {
     note: ['Белый Logan «ВЕРНИ ДОЛГ» на Таможне', 'или записка на двери комнаты 110'],
@@ -28,6 +29,7 @@ export const WITNESS_WALKTHROUGH: StoryWalkthrough = {
         video: true,
         videoUrl: 'https://www.youtube.com/watch?v=lf_PCnb-T5A',
         screenshots: [],
+        screenshotsSoon: true, // заглушка «скриншоты скоро»
       },
       blocks: [
         {

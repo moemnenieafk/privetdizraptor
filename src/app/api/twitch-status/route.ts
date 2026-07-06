@@ -10,20 +10,30 @@ let tokenExpiresAt: number = 0;
 
 // Каналы ЦТА. Первый — основной (его live дублируется в поле `isLive` для обратной
 // совместимости со StreamStatus). Один client_credentials-токен обслуживает все каналы:
-// helix/streams публичный, per-channel авторизация не нужна.
+// helix/streams и helix/users публичны, per-channel авторизация не нужна.
 const CHANNELS = [
   { login: 'fullkamen', label: 'Фуллкамень' },
   { login: 'v4dyatv', label: 'v4dyatv' },
 ] as const;
 
-type ChannelStatus = { login: string; label: string; isLive: boolean };
+type ChannelStatus = {
+  login: string;
+  label: string;
+  isLive: boolean;
+  avatar?: string;
+  displayName?: string;
+};
+
+type ProfileMap = Record<string, { avatar?: string; displayName?: string }>;
 
 // Ответ всегда содержит и `isLive` (основной канал), и массив `channels`.
-function payload(liveLogins: Set<string>, error?: string) {
+function payload(liveLogins: Set<string>, profiles: ProfileMap = {}, error?: string) {
   const channels: ChannelStatus[] = CHANNELS.map((c) => ({
     login: c.login,
     label: c.label,
     isLive: liveLogins.has(c.login),
+    avatar: profiles[c.login]?.avatar,
+    displayName: profiles[c.login]?.displayName,
   }));
   return {
     isLive: channels[0]?.isLive ?? false,
@@ -42,7 +52,7 @@ export async function GET() {
 
   if (!CLIENT_ID || !CLIENT_SECRET) {
     console.error("Twitch API credentials are not configured in .env.local");
-    return NextResponse.json(payload(empty, "Server configuration error"), { status: 500 });
+    return NextResponse.json(payload(empty, {}, "Server configuration error"), { status: 500 });
   }
 
   try {
@@ -55,7 +65,7 @@ export async function GET() {
       if (!authResponse.ok) {
         const errorData = await authResponse.json();
         console.error("Twitch Auth Error:", errorData);
-        return NextResponse.json(payload(empty, "Twitch authentication failed"), { status: authResponse.status });
+        return NextResponse.json(payload(empty, {}, "Twitch authentication failed"), { status: authResponse.status });
       }
       const authData = await authResponse.json();
       cachedToken = authData.access_token;
@@ -63,21 +73,25 @@ export async function GET() {
       tokenExpiresAt = Date.now() + (authData.expires_in * 1000) - 60000;
     }
 
-    // 2. Проверяем статус всех каналов одним запросом (helix принимает несколько user_login)
-    const query = CHANNELS.map((c) => `user_login=${encodeURIComponent(c.login)}`).join('&');
-    const streamResponse = await fetch(
-      `https://api.twitch.tv/helix/streams?${query}`,
-      {
-        headers: {
-          'Client-ID': CLIENT_ID,
-          'Authorization': `Bearer ${cachedToken}`,
-        },
-      }
-    );
+    const headers = {
+      'Client-ID': CLIENT_ID,
+      'Authorization': `Bearer ${cachedToken}`,
+    };
+
+    // 2. Параллельно: live-статус (helix/streams, param=user_login) и профили
+    //    (helix/users, param=login) — из последних берём АКТУАЛЬНЫЙ аватар с Twitch.
+    const streamsQuery = CHANNELS.map((c) => `user_login=${encodeURIComponent(c.login)}`).join('&');
+    const usersQuery = CHANNELS.map((c) => `login=${encodeURIComponent(c.login)}`).join('&');
+
+    const [streamResponse, userResponse] = await Promise.all([
+      fetch(`https://api.twitch.tv/helix/streams?${streamsQuery}`, { headers }),
+      fetch(`https://api.twitch.tv/helix/users?${usersQuery}`, { headers }),
+    ]);
+
     if (!streamResponse.ok) {
       const errorData = await streamResponse.json();
       console.error("Twitch Stream API Error:", errorData);
-      return NextResponse.json(payload(empty, "Failed to fetch stream status"), { status: streamResponse.status });
+      return NextResponse.json(payload(empty, {}, "Failed to fetch stream status"), { status: streamResponse.status });
     }
     const streamData = await streamResponse.json();
 
@@ -86,10 +100,21 @@ export async function GET() {
       (streamData.data ?? []).map((s: { user_login?: string }) => (s.user_login ?? '').toLowerCase())
     );
 
-    return NextResponse.json(payload(liveLogins));
+    // Профили — НЕ критично: при ошибке отдаём без аватаров (фронт откатится на статик).
+    const profiles: ProfileMap = {};
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      const users = (userData.data ?? []) as { login?: string; profile_image_url?: string; display_name?: string }[];
+      for (const u of users) {
+        const login = (u.login ?? '').toLowerCase();
+        if (login) profiles[login] = { avatar: u.profile_image_url, displayName: u.display_name };
+      }
+    }
+
+    return NextResponse.json(payload(liveLogins, profiles));
   } catch (e: unknown) {
     console.error("Twitch API request failed:", e);
     // В случае ошибки (например, неверные ключи) возвращаем оффлайн
-    return NextResponse.json(payload(empty, "Internal server error"), { status: 500 });
+    return NextResponse.json(payload(empty, {}, "Internal server error"), { status: 500 });
   }
 }

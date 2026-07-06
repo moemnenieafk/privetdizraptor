@@ -30,11 +30,30 @@ export interface WalkthroughBlock {
   condition?: WalkthroughCondition;
 }
 
+/** Медиа шага/под-шага/ветки: постер + галерея + (видео | заглушки). Общий тип для всех уровней. */
+export interface StoryMedia {
+  poster: string;
+  /** Надписи постера (название истории + подпись). */
+  posterTitle: string;
+  posterSub: string;
+  /** Есть видеоролик — рендерить Play-оверлей. */
+  video?: boolean;
+  /** Ссылка на видеогайд — Play становится кликабельным (новая вкладка). */
+  videoUrl?: string;
+  screenshots: string[];
+  /** Заглушка «видео скоро» — приглушённый Play-плейсхолдер, пока нет video/videoUrl. */
+  videoSoon?: boolean;
+  /** Заглушка «скриншоты скоро» — плитки-плейсхолдеры, пока screenshots пуст. */
+  screenshotsSoon?: boolean;
+}
+
 /** Под-шаг лестницы (вложенный уровень; id — стабильный суффикс ключей прогресса). */
 export interface WalkthroughSubStep {
   id: string;
   title: string;
   intro?: string;
+  /** Своё медиа под-этапа (видео+скрины именно этого под-шага); нет — наследует ветку/шаг. */
+  media?: StoryMedia;
   blocks: WalkthroughBlock[];
 }
 
@@ -45,6 +64,8 @@ export interface WalkthroughBranch {
   title: string;
   /** Короткое пояснение выбора (под заголовком варианта). */
   note?: string;
+  /** Своё медиа ветки-выбора (фолбэк для её под-шагов, если у них своего нет). */
+  media?: StoryMedia;
   substeps: WalkthroughSubStep[];
 }
 
@@ -54,17 +75,7 @@ export interface WalkthroughStep {
   /** Иконка торговца-квестодателя (фото /images/traders/eft/<x>.webp). */
   traderPhoto?: string;
   intro?: string;
-  media?: {
-    poster: string;
-    /** Надписи постера (название истории + подпись). */
-    posterTitle: string;
-    posterSub: string;
-    /** Есть видеоролик — рендерить Play-оверлей. */
-    video?: boolean;
-    /** Ссылка на видеогайд — Play становится кликабельным (новая вкладка). */
-    videoUrl?: string;
-    screenshots: string[];
-  };
+  media?: StoryMedia;
   blocks: WalkthroughBlock[];
   /** Простая вложенность: под-шаги раскрываются в лестнице, когда шаг активен. */
   substeps?: WalkthroughSubStep[];

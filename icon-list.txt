@@ -1,5 +1,5 @@
 === ПОЛНЫЙ ОТЧЕТ ПО ИКОНКАМ ПРОЕКТА ===
-Всего физических иконок в базе (public/icons): 310
+Всего физических иконок в базе (public/icons): 324
 
 ----------------------------------------
 ИКОНКА: account_billing_icon.svg
@@ -48,15 +48,19 @@
 ----------------------------------------
 ИКОНКА: CTA-logo-default.svg
 ПУТЬ:   public/icons/CTA-logo-default.svg
-КЛАСС CSS: .icon-cta-logo-default (Автоматически добавлено)
+КЛАСС CSS: .icon-cta-logo-default
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/components/layout/Footer.tsx
 ----------------------------------------
 ИКОНКА: CTA-logo-hover.svg
 ПУТЬ:   public/icons/CTA-logo-hover.svg
-КЛАСС CSS: .icon-cta-logo-hover (Автоматически добавлено)
+КЛАСС CSS: .icon-cta-logo-hover
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+  - /src/components/layout/Footer.tsx
 ----------------------------------------
 ИКОНКА: decrement-icon.svg
 ПУТЬ:   public/icons/decrement-icon.svg
@@ -76,9 +80,10 @@
 ИКОНКА: comlink-icon.svg
 ПУТЬ:   public/icons/eft/00-nav/comlink-icon.svg
 КЛАСС CSS: .icon-eft-comlink-icon
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Связь
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/data/footerConfig.ts
+  - /src/data/comlinkSections.ts
+  - /src/data/headerConfig.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: loot-tier.svg
@@ -301,6 +306,94 @@
   - /src/data/story-walkthroughs/boreas-map.ts
   - /src/data/story-walkthroughs/boreas.ts
   - /src/data/story-walkthroughs/ticket.ts
+----------------------------------------
+ИКОНКА: exfil-point-nobackpack.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-nobackpack.svg
+КЛАСС CSS: .icon-eft-exfil-point-nobackpack (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: exfil-point-paidcar.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-paidcar.svg
+КЛАСС CSS: .icon-eft-exfil-point-paidcar (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: exfil-point-paidhely.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-paidhely.svg
+КЛАСС CSS: .icon-eft-exfil-point-paidhely (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: exfil-point-pmc-1.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc-1.svg
+КЛАСС CSS: .icon-eft-exfil-point-pmc-1 (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: exfil-point-pmc.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc.svg
+КЛАСС CSS: .icon-eft-exfil-point-pmc (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: exfil-point-scav.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-scav.svg
+КЛАСС CSS: .icon-eft-exfil-point-scav (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: exfil-point-spare.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-spare.svg
+КЛАСС CSS: .icon-eft-exfil-point-spare (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: lock-keycard-pannel.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/lock/lock-keycard-pannel.svg
+КЛАСС CSS: .icon-eft-lock-keycard-pannel (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: lock-mechanical-marked.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/lock/lock-mechanical-marked.svg
+КЛАСС CSS: .icon-eft-lock-mechanical-marked (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: lock-mechanical.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/lock/lock-mechanical.svg
+КЛАСС CSS: .icon-eft-lock-mechanical (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: customs-map-icon.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/loot/customs-map-icon.svg
+КЛАСС CSS: .icon-eft-maps-customs
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: ТАМОЖНЯ
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/headerConfig.ts
+  - /src/styles/icons.css
+  - /src/data/map-icons.ts
+  - /src/data/story-walkthroughs/witness.ts
+----------------------------------------
+ИКОНКА: spawn-boss-add.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg
+КЛАСС CSS: .icon-eft-spawn-boss-add (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: spawn-pmc.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-pmc.svg
+КЛАСС CSS: .icon-eft-spawn-pmc (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: spawn-scav.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-scav.svg
+КЛАСС CSS: .icon-eft-spawn-scav (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
 ИКОНКА: openworld-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/openworld-map-icon.svg
@@ -2708,6 +2801,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/NewbieButton.tsx
+  - /src/components/ui/SupportButton.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: soldier-animation-start-frame.svg
@@ -2716,6 +2810,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/NewbieButton.tsx
+  - /src/components/ui/SupportButton.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: tarkov-city-bg-default.svg
@@ -2724,6 +2819,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/NewbieButton.tsx
+  - /src/components/ui/SupportButton.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: tarkov-city-bg-hover.svg
@@ -2732,6 +2828,7 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/layout/header-modules/NewbieButton.tsx
+  - /src/components/ui/SupportButton.tsx
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: USEC-faction-icon.svg
@@ -2802,7 +2899,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: discord-icon.svg
 ПУТЬ:   public/icons/socialplatforms/discord-icon.svg
@@ -2810,7 +2906,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: reddit-icon.svg
 ПУТЬ:   public/icons/socialplatforms/reddit-icon.svg
@@ -2818,7 +2913,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: telegram-icon.svg
 ПУТЬ:   public/icons/socialplatforms/telegram-icon.svg
@@ -2826,7 +2920,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: vkcom-icon.svg
 ПУТЬ:   public/icons/socialplatforms/vkcom-icon.svg
@@ -2834,7 +2927,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: xcom-icon.svg
 ПУТЬ:   public/icons/socialplatforms/xcom-icon.svg
@@ -2842,7 +2934,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: btn-twitch-default.svg
 ПУТЬ:   public/icons/streamingplatforms/btn-twitch-default.svg
@@ -2850,7 +2941,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: btn-twitch-hover.svg
 ПУТЬ:   public/icons/streamingplatforms/btn-twitch-hover.svg
@@ -2865,7 +2955,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: btn-vklive-hover.svg
 ПУТЬ:   public/icons/streamingplatforms/btn-vklive-hover.svg
@@ -2880,7 +2969,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
-  - /src/data/footerConfig.ts
 ----------------------------------------
 ИКОНКА: btn-youtube-hover.svg
 ПУТЬ:   public/icons/streamingplatforms/btn-youtube-hover.svg

@@ -81,7 +81,7 @@ export const BOREAS_MAP: StoryQuestMapData = {
     {
       id: 'loc-woods', kind: 'location', x: 512, y: 724,
       title: 'ЛЕС', mapIcon: 'icon-eft-maps-woods',
-      item: { id: '', name: 'Набор инструментов', count: 1, loot: true },
+      item: { id: '590c2e1186f77425357b6124', name: 'Набор инструментов', count: 1, loot: true },
       tasks: [
         { text: 'Найти оборудование под вышкой сотовой связи на локации Лес', icon: 'icon-eft-quests-visit' },
         { text: 'Починить оборудование под вышкой сотовой связи на локации Лес', icon: 'icon-eft-quests-modify' },
@@ -92,7 +92,7 @@ export const BOREAS_MAP: StoryQuestMapData = {
     {
       id: 'loc-lighthouse', kind: 'location', x: 512, y: 1228,
       title: 'МАЯК', mapIcon: 'icon-eft-maps-lighthouse',
-      item: { id: '', name: 'Распоряжение Paradigm Shipping', count: 1, loot: true },
+      item: { id: '69bb4499957ebbdeb600393f', name: 'Распоряжение Paradigm Shipping', count: 1, loot: true },
       tasks: [
         { text: 'Найти документацию Paradigm Shipping', icon: 'icon-eft-quests-investigate' },
         { text: 'Рассказать Механику про «Борей»', icon: 'icon-eft-quests-investigate' },
@@ -125,21 +125,21 @@ export const BOREAS_MAP: StoryQuestMapData = {
       id: 'fs-kept', kind: 'branch', x: 768, y: 2452,
       title: 'НЕБЕСА В ОГНЕ', iconClass: 'icon-eft-quests-story-falling',
       tasks: [{ text: 'Вы оставили кейс себе', icon: 'icon-eft-quests-investigate' }],
-      item: { id: '', name: 'Бронированный кейс', count: 1 },
+      item: { id: '68fa8e253666e2fd5b00a626', name: 'Бронированный кейс', count: 1 },
       conditionKey: 'boreas|map|fs-kept',
     },
     {
       id: 'fs-hidden', kind: 'branch', x: 1280, y: 2452,
       title: 'НЕБЕСА В ОГНЕ', iconClass: 'icon-eft-quests-story-falling',
       tasks: [{ text: 'Вы сказали Прапору, что не нашли кейс в самолете', icon: 'icon-eft-quests-investigate' }],
-      item: { id: '', name: 'Бронированный кейс', count: 1 },
+      item: { id: '68fa8e253666e2fd5b00a626', name: 'Бронированный кейс', count: 1 },
       conditionKey: 'boreas|map|fs-hidden',
     },
     {
       id: 'fs-given', kind: 'branch', x: 1792, y: 2452,
       title: 'НЕБЕСА В ОГНЕ', iconClass: 'icon-eft-quests-story-falling',
       tasks: [{ text: 'Вы отдали кейс Прапору', icon: 'icon-eft-quests-investigate' }],
-      item: { id: '', name: 'Бронированный кейс', count: 1, loot: true },
+      item: { id: '68fa8e253666e2fd5b00a626', name: 'Бронированный кейс', count: 1, loot: true },
       conditionKey: 'boreas|map|fs-given',
     },
 
@@ -148,14 +148,14 @@ export const BOREAS_MAP: StoryQuestMapData = {
       id: 'prapor-items', kind: 'ask', x: 768, y: 2918,
       title: 'ПРАПОР', traderPhoto: '/images/traders/eft/prapor.webp',
       tasks: [{ text: 'Передать Прапору необходимые предметы', icon: 'icon-eft-quests-investigate' }],
-      item: { id: '', name: 'Военный фильтр питания', count: 3, loot: true },
+      item: { id: '5d0378d486f77420421a5ff4', name: 'Военный фильтр питания', count: 3, loot: true },
       conditionKey: 'boreas|map|prapor-items',
     },
     {
       id: 'prapor-kill', kind: 'ask', x: 1280, y: 2918,
       title: 'ПРАПОР', traderPhoto: '/images/traders/eft/prapor.webp',
       tasks: [{ text: 'Убить любые цели на Резерве', icon: 'icon-eft-quests-eliminate', count: 30 }],
-      item: { id: '', name: 'Военный фильтр питания', count: 3, loot: true },
+      item: { id: '5d0378d486f77420421a5ff4', name: 'Военный фильтр питания', count: 3, loot: true },
       conditionKey: 'boreas|map|prapor-kill',
     },
   ],

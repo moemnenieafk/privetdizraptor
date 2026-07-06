@@ -10,6 +10,7 @@ export const ALREADY_HERE_WALKTHROUGH: StoryWalkthrough = {
   title: 'Они уже здесь',
   iconUrl: '/icons/eft/02-quests/story-they-are-already-here.svg',
   iconClass: 'icon-eft-quests-story-alreadyhere',
+  heroImage: '/images/quests/eft/story/banners/07-already-here-hero-art.webp',
   difficulty: { skulls: 5, label: 'СЛОЖНАЯ' },
   requirement: {
     note: ['Найти «Записку о Глазе Мира»', 'в меченых комнатах или', 'на острове Диких (Берег)'],
@@ -28,6 +29,7 @@ export const ALREADY_HERE_WALKTHROUGH: StoryWalkthrough = {
         video: true,
         videoUrl: 'https://www.youtube.com/watch?v=3pGpUgCeaUQ',
         screenshots: [],
+        screenshotsSoon: true, // заглушка «скриншоты скоро»
       },
       blocks: [
         {

@@ -10,6 +10,7 @@ export const TICKET_WALKTHROUGH: StoryWalkthrough = {
   title: 'Билет',
   iconUrl: '/icons/eft/02-quests/story-the-ticket.svg',
   iconClass: 'icon-eft-quests-story-ticket',
+  heroImage: '/images/quests/eft/story/banners/03-ticket-hero-art.webp',
   difficulty: { skulls: 6, label: 'ЭКСТРИМ' },
   requirement: {
     station: { normalizedName: 'intelligence-center', name: 'Разведцентр', level: 1 },
@@ -28,7 +29,7 @@ export const TICKET_WALKTHROUGH: StoryWalkthrough = {
         posterSub: 'ПРОХОЖДЕНИЕ СЮЖЕТА',
         video: true,
         videoUrl: 'https://www.youtube.com/watch?v=R3qZa0B8gWk',
-        screenshots: [],
+        screenshots: ['/images/quests/eft/story/03-ticket/step1_1.webp'],
       },
       blocks: [
         {
@@ -50,6 +51,16 @@ export const TICKET_WALKTHROUGH: StoryWalkthrough = {
       title: 'Судьба кейса',
       intro:
         'Сюжет расходится на два пути в зависимости от того, отдан ли бронированный кейс из «Небес в огне» Прапору или оставлен себе. Выберите ветку, соответствующую вашему решению.',
+      media: {
+        poster: '',
+        posterTitle: 'БИЛЕТ',
+        posterSub: 'ПРОХОЖДЕНИЕ СЮЖЕТА',
+        videoSoon: true, // видео шага пока нет
+        screenshots: [
+          '/images/quests/eft/story/03-ticket/step2_1.webp',
+          '/images/quests/eft/story/03-ticket/step2_2.webp',
+        ],
+      },
       blocks: [
         {
           text: [

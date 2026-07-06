@@ -25,6 +25,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        // Аватары/профильные картинки Twitch (helix/users → profile_image_url)
+        protocol: 'https',
+        hostname: 'static-cdn.jtvnw.net',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   reactCompiler: true,

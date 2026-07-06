@@ -6,6 +6,7 @@ import { AchievementSync } from "@/components/providers/AchievementSync";
 import { PlayerProfileSync } from "@/components/providers/PlayerProfileSync";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import { StreamDockLayer } from "@/components/features/streams/StreamDock";
 import { FeedbackProvider } from "@/components/providers/FeedbackProvider";
 
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ export default function RootLayout({
               </ConditionalLayout>
             </FeedbackProvider>
             <ScrollToTop />
+            <StreamDockLayer />
           </ThemeProvider>
         </div>
       </body>

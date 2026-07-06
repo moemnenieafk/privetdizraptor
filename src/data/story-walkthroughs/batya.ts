@@ -11,6 +11,7 @@ export const BATYA_WALKTHROUGH: StoryWalkthrough = {
   title: 'Батя',
   iconUrl: '/icons/eft/02-quests/story-batya.svg',
   iconClass: 'icon-eft-quests-story-batya',
+  heroImage: '/images/quests/eft/story/banners/04-batya-hero-art.webp',
   difficulty: { skulls: 5, label: 'СЛОЖНАЯ' },
   requirement: {
     note: ['Доступ к Маяку', 'Найти один из скрытых маркеров отряда', '(Таможня / Резерв / Берег / Лес)'],
@@ -22,6 +23,14 @@ export const BATYA_WALKTHROUGH: StoryWalkthrough = {
       title: 'Активация задания',
       intro:
         'Трагическая история элитного спецотряда BEAR «Богатыри» под командованием офицера с позывным Воевода. Квест активируется любым из четырёх равнозначных способов — пути сразу сходятся:',
+      media: {
+        poster: '',
+        posterTitle: 'БАТЯ',
+        posterSub: 'ПРОХОЖДЕНИЕ СЮЖЕТА',
+        videoSoon: true,       // заглушка «видео скоро»
+        screenshotsSoon: true, // заглушка «скриншоты скоро»
+        screenshots: [],
+      },
       blocks: [
         {
           text: ['Четыре альтернативных триггера — достаточно любого:'],
