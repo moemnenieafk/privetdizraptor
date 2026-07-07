@@ -13,6 +13,14 @@ export interface MapViewMarker {
   faction: string | null;
   sides: string[] | null;
   categories: string[] | null;
+  /** Привязка к предмету (контейнер/лут/выход-transferItem/ключ замка) — иконка + кросс-линк. */
+  linkedItemId?: string | null;
+  /** Спавн предмета (loot_loose): тарковский цвет фона слота (blue/yellow/violet…) для плитки. */
+  itemBg?: string | null;
+  /** Выход: имя нужного предмета (transferItem) — для выбора иконки (кодовое слово). */
+  transferItemName?: string | null;
+  /** loose loot: slug категории предмета (barter/provisions/injectors/keys/poster/container/other) — для под-слоя. */
+  lootCat?: string | null;
   meta: Record<string, unknown> | null;
   /** Статик-карты (ручные маркеры): индекс этажа для фильтра вместо game-Y top/bottom. */
   floor?: number | null;

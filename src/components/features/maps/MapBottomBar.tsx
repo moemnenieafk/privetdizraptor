@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, Footprints, LogIn, LogOut, Skull, Users } from 'lucide-react';
+import { Clock, Footprints, LogIn, LogOut, Users } from 'lucide-react';
 import { FullscreenToggleButton } from '@/components/ui/FullscreenToggleButton';
 import { useMapQuestProgress } from './useMapQuestProgress';
 import type { MapView } from './map-types';
@@ -12,9 +12,11 @@ interface Props {
   bosses: MapBossStat[];
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
+  /** Клик по боссу → подлёт к его возможным спавнам. */
+  onBossClick?: (boss: MapBossStat) => void;
 }
 
-export function MapBottomBar({ data, questIds, bosses, isFullscreen, onToggleFullscreen }: Props) {
+export function MapBottomBar({ data, questIds, bosses, isFullscreen, onToggleFullscreen, onBossClick }: Props) {
   const quest = useMapQuestProgress(questIds);
 
   return (
@@ -33,18 +35,26 @@ export function MapBottomBar({ data, questIds, bosses, isFullscreen, onToggleFul
         <>
           <div className="h-7 w-px shrink-0 bg-lines-hover" />
           <div className="flex min-w-0 shrink items-center gap-2 overflow-x-auto scrollbar-hidden">
-            <Skull className="h-3.5 w-3.5 shrink-0 text-(--primary)" />
-            {bosses.map((b) => (
-              <span
-                key={b.id}
-                className="flex shrink-0 items-center gap-1 whitespace-nowrap font-blender-medium text-type-caption text-text-secondary"
-              >
-                {b.name}
-                {b.spawnChance != null && (
-                  <span className="text-(--primary)">{Math.round(b.spawnChance * 100)}%</span>
-                )}
-              </span>
-            ))}
+            <span className="icon-mask icon-eft-lore-bosses h-4 w-4 shrink-0 text-(--primary)" />
+            {bosses.map((b) => {
+              const clickable = b.spawns.length > 0 && !!onBossClick;
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  disabled={!clickable}
+                  onClick={() => clickable && onBossClick?.(b)}
+                  title={clickable ? 'Показать спавны на карте' : undefined}
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xs font-blender-medium text-type-caption text-text-secondary transition-colors ${
+                    clickable ? 'cursor-pointer hover:text-(--primary)' : 'cursor-default'
+                  }`}
+                >
+                  {b.icon && <img src={b.icon} alt="" width={28} height={28} className="h-7 w-7 shrink-0 rounded-xs object-contain" />}
+                  {b.name}
+                  {b.spawnChance != null && <span className="text-(--primary)">{Math.round(b.spawnChance * 100)}%</span>}
+                </button>
+              );
+            })}
           </div>
         </>
       )}

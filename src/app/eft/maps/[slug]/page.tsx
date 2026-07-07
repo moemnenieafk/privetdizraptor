@@ -2,6 +2,9 @@ import { notFound } from 'next/navigation';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
 import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
+import { getEftPriceIndex } from '@/db/prices';
+import { getEftCatalog } from '@/lib/eft-catalog';
+import { bossIconUrl } from '@/data/map-marker-icons';
 import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
 import { getManualMarkers } from '@/data/map-markers';
 import { mapImageUrl } from '@/lib/map-image';
@@ -15,8 +18,20 @@ interface Props {
   searchParams: Promise<{ quest?: string }>;
 }
 
-// v1 интерактива: выходы / спавны / переходы / опасности (остальное — за галочкой, v2).
-const V1_TYPES = new Set(['extract', 'spawn', 'transit', 'hazard']);
+// Рендерим все позиционированные типы маркеров (слои включаются в drawer'е «Слои»).
+// boss — position=null (спавн по зоне) → не на холст, отдельным блоком статистики.
+const RENDER_TYPES = new Set([
+  'extract',
+  'spawn',
+  'transit',
+  'hazard',
+  'lock',
+  'switch',
+  'loot_container',
+  'loot_loose',
+  'stationary_weapon',
+  'quest_zone',
+]);
 
 // Детальная карта локации. Есть интерактивные данные + конфиг проекции → Leaflet-фрейм,
 // иначе — умная заглушка (карты без SVG-подложки / не интерактивные).
@@ -78,8 +93,12 @@ export default async function MapPage({ params, searchParams }: Props) {
   if (config?.svgFile && config.transform) {
     const data = await getEftMapData(slug);
     if (data?.asset.imageKey) {
+      // Прайс-индекс — тарковский цвет фона слота предмета (для плиток loose loot);
+      // каталог — slug категории предмета (для под-слоёв «Случайной добычи»).
+      const [priceIndex, catalog] = await Promise.all([getEftPriceIndex(), getEftCatalog()]);
+      const lootCatById = new Map(catalog.map((i) => [i.id, i.category]));
       const markers: MapViewMarker[] = data.markers
-        .filter((m) => V1_TYPES.has(m.type))
+        .filter((m) => RENDER_TYPES.has(m.type) && m.position)
         .map((m) => ({
           id: m.id,
           type: m.type,
@@ -91,18 +110,42 @@ export default async function MapPage({ params, searchParams }: Props) {
           faction: m.faction ?? null,
           sides: m.sides ?? null,
           categories: m.categories ?? null,
+          linkedItemId: m.linkedItemId ?? null,
+          itemBg: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.backgroundColor ?? null) : null,
+          lootCat: m.type === 'loot_loose' && m.linkedItemId ? (lootCatById.get(m.linkedItemId) ?? 'other') : null,
+          transferItemName:
+            m.type === 'extract'
+              ? ((m.meta as { transferItem?: { name?: string } } | null)?.transferItem?.name ?? null)
+              : null,
           meta: m.meta ?? null,
         }));
 
       // Боссы — отдельным блоком статистики (position=null, на холсте не рисуются).
+      // Зоны спавнов: zoneName (label спавн-маркера) → точки. Босс.spawnLocations[].spawnKey
+      // совпадает с zoneName → резолвим возможные спавны босса для подлёта по клику.
+      const spawnZonePos = new Map<string, { x: number; z: number }[]>();
+      for (const m of data.markers) {
+        if (m.type !== 'spawn' || !m.position || !m.label) continue;
+        const arr = spawnZonePos.get(m.label) ?? [];
+        arr.push({ x: m.position.x, z: m.position.z });
+        spawnZonePos.set(m.label, arr);
+      }
+
       const bosses: MapBossStat[] = data.markers
         .filter((m) => m.type === 'boss')
         .map((m) => {
-          const meta = m.meta as { spawnChance?: number } | null;
+          const meta = m.meta as
+            | { spawnChance?: number; bossNormalizedName?: string; spawnLocations?: { spawnKey?: string }[] }
+            | null;
+          const spawns = (meta?.spawnLocations ?? []).flatMap((loc) =>
+            loc.spawnKey ? (spawnZonePos.get(loc.spawnKey) ?? []) : [],
+          );
           return {
             id: m.id,
             name: m.label ?? '—',
             spawnChance: typeof meta?.spawnChance === 'number' ? meta.spawnChance : null,
+            icon: bossIconUrl(meta?.bossNormalizedName),
+            spawns,
           };
         });
 

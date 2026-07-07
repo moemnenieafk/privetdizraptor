@@ -8,6 +8,8 @@ export interface MapViewerApi {
   fitView(): void;
   /** Переключить видимость слоя маркеров (extract/spawn/transit/hazard). */
   toggleLayer(key: string): void;
+  /** Подлёт к набору точек (fit + пульс-подсветка) — спавны босса и т.п. */
+  focusPoints(points: { x: number; z: number }[]): void;
 }
 
 /** Статистика босса для BottomBar. */
@@ -15,6 +17,10 @@ export interface MapBossStat {
   id: string;
   name: string;
   spawnChance: number | null;
+  /** Иконка босса (`/images/bosses/eft/…`) или null (нет ассета → лейбл без иконки). */
+  icon: string | null;
+  /** Точки возможных спавнов босса (spawnLocations ∩ spawn-зоны) — для подлёта по клику. */
+  spawns: { x: number; z: number }[];
 }
 
 /** Квест с объективом на карте (для поиска и прогресса). */

@@ -6,6 +6,7 @@ import { Copy, GripVertical, Trash2, X } from 'lucide-react';
 import type { MapViewMarker } from './map-types';
 import type { ManualMapMarker } from '@/data/map-markers';
 import { manualMarkerIcon } from './manual-marker-icon';
+import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
 import {
   CONTAINER_CATEGORIES,
   LOOT_CATEGORIES,
@@ -22,17 +23,40 @@ import {
  * Панель перетаскивается за шапку в пределах фрейма карты.
  */
 
-const TYPES: { key: string; label: string; color: string }[] = [
-  { key: 'extract', label: 'Выход', color: '#5FB85B' },
-  { key: 'spawn', label: 'Спавн', color: '#E6A23C' },
-  { key: 'loot', label: 'Лут', color: '#E68E25' },
-  { key: 'container', label: 'Контейнер', color: '#9A8866' },
-  { key: 'transit', label: 'Переход', color: '#5FA8D8' },
-  { key: 'hazard', label: 'Опасн.', color: '#E5484D' },
-  { key: 'lock', label: 'Замок', color: '#BDA550' },
-  { key: 'switch', label: 'Рычаг', color: '#C26BE0' },
+const TYPES: { key: string; label: string }[] = [
+  { key: 'extract', label: 'Выход' },
+  { key: 'spawn', label: 'Спавн' },
+  { key: 'loot', label: 'Лут' },
+  { key: 'container', label: 'Контейнер' },
+  { key: 'transit', label: 'Переход' },
+  { key: 'hazard', label: 'Опасн.' },
+  { key: 'lock', label: 'Замок' },
+  { key: 'switch', label: 'Рычаг' },
+  { key: 'stationary', label: 'Стационарка' },
 ];
-const colorOf = (t: string): string => TYPES.find((x) => x.key === t)?.color ?? '#9696A1';
+
+/** Мини-иконка типа для кнопки палитры (webp → <img>, svg → mask цветом типа). */
+function TypeGlyph({ type, active }: { type: string; active: boolean }): React.ReactElement | null {
+  const icon = markerIconUrl({ type, faction: 'all', category: defaultCategory(type) || undefined });
+  if (!icon) return null;
+  if (icon.mode === 'img') return <img src={icon.url} alt="" className="h-3.5 w-3.5 shrink-0 object-contain" />;
+  return (
+    <span
+      className="h-3.5 w-3.5 shrink-0"
+      style={{
+        backgroundColor: active ? 'var(--color-base)' : markerColor(type),
+        maskImage: `url(${icon.url})`,
+        WebkitMaskImage: `url(${icon.url})`,
+        maskSize: 'contain',
+        WebkitMaskSize: 'contain',
+        maskRepeat: 'no-repeat',
+        WebkitMaskRepeat: 'no-repeat',
+        maskPosition: 'center',
+        WebkitMaskPosition: 'center',
+      }}
+    />
+  );
+}
 
 function fromView(initial: MapViewMarker[]): ManualMapMarker[] {
   return initial
@@ -224,11 +248,12 @@ export function MapMarkerEditor({
               key={t.key}
               type="button"
               onClick={() => pickType(t.key)}
-              className={`rounded-xs px-2 py-1 font-blender-medium text-xs uppercase tracking-wider transition-colors ${
+              className={`flex items-center gap-1 rounded-xs px-2 py-1 font-blender-medium text-xs uppercase tracking-wider transition-colors ${
                 type === t.key ? 'text-(--color-base)' : 'text-text-secondary hover:text-text-primary'
               }`}
-              style={type === t.key ? { backgroundColor: t.color } : undefined}
+              style={type === t.key ? { backgroundColor: markerColor(t.key) } : undefined}
             >
+              <TypeGlyph type={t.key} active={type === t.key} />
               {t.label}
             </button>
           ))}
@@ -314,7 +339,7 @@ export function MapMarkerEditor({
           ) : (
             onFloor.map((m) => (
               <div key={m.id} className="flex items-center gap-2 py-0.5 font-blender-book text-xs text-text-secondary">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colorOf(m.type) }} />
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: markerColor(m.type) }} />
                 <span className="flex-1 truncate">{m.label || (m.category ? categoryLabel(m.category) : null) || m.type}</span>
                 <button type="button" onClick={() => del(m.id)} className="shrink-0 text-text-muted transition-colors hover:text-failure" aria-label="Удалить маркер">
                   <X className="h-3.5 w-3.5" />

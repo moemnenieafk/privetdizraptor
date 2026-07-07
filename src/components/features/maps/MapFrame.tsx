@@ -42,6 +42,10 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
     setReady(true);
   }, []);
 
+  const focusBoss = useCallback((boss: MapBossStat) => {
+    apiRef.current?.focusPoints(boss.spawns);
+  }, []);
+
   const questIds = useMemo(() => quests.map((q) => q.id), [quests]);
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
   const floorOrder = useMemo(() => orderFloorsByLevel(floors), [floors]);
@@ -158,6 +162,7 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
         bosses={bosses}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggle}
+        onBossClick={focusBoss}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 === ПОЛНЫЙ ОТЧЕТ ПО ИКОНКАМ ПРОЕКТА ===
-Всего физических иконок в базе (public/icons): 324
+Всего физических иконок в базе (public/icons): 333
 
 ----------------------------------------
 ИКОНКА: account_billing_icon.svg
@@ -59,6 +59,8 @@
 КЛАСС CSS: .icon-cta-logo-hover
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
+  - /src/app/account/AccountHeader.tsx
+  - /src/components/layout/header-modules/PlatformLogo.tsx
   - /src/styles/icons.css
   - /src/components/layout/Footer.tsx
 ----------------------------------------
@@ -92,7 +94,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Предметы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/app/eft/items/loot-rate/page.tsx
   - /src/components/features/items/HubNav.tsx
@@ -307,93 +308,170 @@
   - /src/data/story-walkthroughs/boreas.ts
   - /src/data/story-walkthroughs/ticket.ts
 ----------------------------------------
+ИКОНКА: exfil-point-codeword.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-codeword.svg
+КЛАСС CSS: .icon-eft-exfil-point-codeword
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
 ИКОНКА: exfil-point-nobackpack.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-nobackpack.svg
-КЛАСС CSS: .icon-eft-exfil-point-nobackpack (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-exfil-point-nobackpack
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: exfil-point-paidcar.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-paidcar.svg
-КЛАСС CSS: .icon-eft-exfil-point-paidcar (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-exfil-point-paidcar
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: exfil-point-paidhely.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-paidhely.svg
-КЛАСС CSS: .icon-eft-exfil-point-paidhely (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-exfil-point-paidhely
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: exfil-point-pmc-1.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc-1.svg
-КЛАСС CSS: .icon-eft-exfil-point-pmc-1 (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-exfil-point-pmc-1
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: exfil-point-pmc-greenflare.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc-greenflare.svg
+КЛАСС CSS: .icon-eft-exfil-point-pmc-greenflare (Автоматически добавлено)
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
 ИКОНКА: exfil-point-pmc.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc.svg
-КЛАСС CSS: .icon-eft-exfil-point-pmc (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-exfil-point-pmc
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: exfil-point-scav.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-scav.svg
-КЛАСС CSS: .icon-eft-exfil-point-scav (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-exfil-point-scav
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: exfil-point-spare.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-spare.svg
-КЛАСС CSS: .icon-eft-exfil-point-spare (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-exfil-point-spare
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: lock-keycard-pannel.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/lock/lock-keycard-pannel.svg
-КЛАСС CSS: .icon-eft-lock-keycard-pannel (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-lock-keycard-pannel
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: lock-mechanical-marked.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/lock/lock-mechanical-marked.svg
-КЛАСС CSS: .icon-eft-lock-mechanical-marked (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-lock-mechanical-marked
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: lock-mechanical.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/lock/lock-mechanical.svg
-КЛАСС CSS: .icon-eft-lock-mechanical (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-lock-mechanical
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
-----------------------------------------
-ИКОНКА: customs-map-icon.svg
-ПУТЬ:   public/icons/eft/01-maps/markers/loot/customs-map-icon.svg
-КЛАСС CSS: .icon-eft-maps-customs
-НАЗВАНИЕ РАЗДЕЛА МЕНЮ: ТАМОЖНЯ
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/data/map-icons.ts
-  - /src/data/story-walkthroughs/witness.ts
+----------------------------------------
+ИКОНКА: loot-random-luck.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/loot/loot-random-luck.svg
+КЛАСС CSS: .icon-eft-loot-random-luck
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/map-marker-icons.ts
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: quest-maker.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/quest/quest-maker.svg
+КЛАСС CSS: .icon-eft-quest-maker
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/map-marker-icons.ts
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: spawn-black-division.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-black-division.svg
+КЛАСС CSS: .icon-eft-spawn-black-division
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: spawn-boss-add.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg
-КЛАСС CSS: .icon-eft-spawn-boss-add (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-spawn-boss-add
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/map-marker-icons.ts
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: spawn-boss-sniper.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-boss-sniper.svg
+КЛАСС CSS: .icon-eft-spawn-boss-sniper
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: spawn-pmc.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-pmc.svg
-КЛАСС CSS: .icon-eft-spawn-pmc (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-spawn-pmc
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: spawn-scav-sniper.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-scav-sniper.svg
+КЛАСС CSS: .icon-eft-spawn-scav-sniper
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: spawn-scav.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-scav.svg
-КЛАСС CSS: .icon-eft-spawn-scav (Автоматически добавлено)
+КЛАСС CSS: .icon-eft-spawn-scav
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
-⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: switch-button.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/switch/switch-button.svg
+КЛАСС CSS: .icon-eft-switch-button
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: switch-lever.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/switch/switch-lever.svg
+КЛАСС CSS: .icon-eft-switch-lever
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/map-marker-icons.ts
+  - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: transition-point.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/transition-point.svg
+КЛАСС CSS: .icon-eft-transition-point
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/data/map-marker-icons.ts
+  - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: openworld-map-icon.svg
 ПУТЬ:   public/icons/eft/01-maps/openworld-map-icon.svg
@@ -462,7 +540,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: ПЕРЕХОДЫ
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/data/map-icons.ts
 ----------------------------------------
@@ -621,7 +698,6 @@
 КЛАСС CSS: .icon-eft-quests-visit
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/features/quests/QuestNode/index.tsx
@@ -803,7 +879,6 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/data/pageContent.ts
   - /src/lib/item-category.ts
@@ -854,7 +929,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Ключи
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
@@ -867,7 +941,6 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/data/pageContent.ts
   - /src/lib/item-category.ts
@@ -965,15 +1038,13 @@
 ----------------------------------------
 ИКОНКА: equipment.svg
 ПУТЬ:   public/icons/eft/03-items/equipment.svg
-КЛАСС CSS: .icon-eft-items-equipment
+КЛАСС CSS: .icon-eft-eq-special
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Спецоборудование
 ИСПОЛЬЗУЕТСЯ В:
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/components/layout/header-modules/SearchItemCard.tsx
   - /src/data/pageContent.ts
-  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: armor-class-1.svg
 ПУТЬ:   public/icons/eft/03-items/gear/armor-class-1.svg
@@ -1513,7 +1584,6 @@
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/components/features/items/HubNav.tsx
   - /src/data/headerConfig.ts
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/data/map-markers/categories.ts
   - /src/data/pageContent.ts
@@ -1525,7 +1595,6 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Предметы
 ИСПОЛЬЗУЕТСЯ В:
   - /src/data/headerConfig.ts
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
   - /src/app/eft/items/loot-rate/page.tsx
   - /src/components/features/items/HubNav.tsx
@@ -1847,14 +1916,13 @@
 ----------------------------------------
 ИКОНКА: gun-loadouts.svg
 ПУТЬ:   public/icons/eft/04-progression/gun-loadouts.svg
-КЛАСС CSS: .icon-eft-prog-gun-loadouts
+КЛАСС CSS: .icon-eft-loadouts-my
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Сборки оружия
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/progress/loadouts/page.tsx
   - /src/app/eft/progress/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/data/pageContent.ts
 ----------------------------------------
 ИКОНКА: air_filtering_unit.svg
 ПУТЬ:   public/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg
@@ -2119,7 +2187,6 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/gamesetting/characters/page.tsx
   - /src/data/headerConfig.ts
-  - /src/data/map-marker-icons.ts
   - /src/styles/icons.css
 ----------------------------------------
 ИКОНКА: characters.svg
@@ -2676,7 +2743,6 @@
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
   - /src/components/layout/header-modules/MobileMenuStats.tsx
-  - /src/components/layout/header-modules/PlayerTelemetry.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: PVP_icon.svg
@@ -2687,7 +2753,6 @@
   - /src/styles/icons.css
   - /src/components/features/quests/QuestDetail/index.tsx
   - /src/components/layout/header-modules/MobileMenuStats.tsx
-  - /src/components/layout/header-modules/PlayerTelemetry.tsx
   - /src/components/layout/header-modules/ProfileSettingsModal.tsx
 ----------------------------------------
 ИКОНКА: S_icon.svg

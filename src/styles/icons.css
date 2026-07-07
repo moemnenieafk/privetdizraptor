@@ -53,6 +53,8 @@
   .icon-eft-exfil-point-pmc-1 { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-pmc-1.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-pmc-1.svg'); }
   .icon-eft-exfil-point-scav { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-scav.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-scav.svg'); }
   .icon-eft-exfil-point-spare { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-spare.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-spare.svg'); }
+  .icon-eft-exfil-point-codeword { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-codeword.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-codeword.svg'); }
+  .icon-eft-exfil-point-pmc-greenflare { mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-pmc-greenflare.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/exfil-point-pmc-greenflare.svg'); }
   /* — lock — замки / ключи — */
   .icon-eft-lock-keycard-pannel { mask-image: url('/icons/eft/01-maps/markers/lock/lock-keycard-pannel.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/lock/lock-keycard-pannel.svg'); }
   .icon-eft-lock-mechanical { mask-image: url('/icons/eft/01-maps/markers/lock/lock-mechanical.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/lock/lock-mechanical.svg'); }
@@ -61,8 +63,18 @@
   .icon-eft-spawn-boss-add { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg'); }
   .icon-eft-spawn-pmc { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-pmc.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-pmc.svg'); }
   .icon-eft-spawn-scav { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-scav.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-scav.svg'); }
+  .icon-eft-spawn-black-division { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-black-division.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-black-division.svg'); }
+  .icon-eft-spawn-boss-sniper { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-sniper.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-sniper.svg'); }
+  .icon-eft-spawn-scav-sniper { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-scav-sniper.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-scav-sniper.svg'); }
   /* — loot — лут (иконка «удачного лута») — */
   .icon-eft-loot-random-luck { mask-image: url('/icons/eft/01-maps/markers/loot/loot-random-luck.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/loot/loot-random-luck.svg'); }
+  /* — quest — квест — */
+  .icon-eft-quest-maker { mask-image: url('/icons/eft/01-maps/markers/quest/quest-maker.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/quest/quest-maker.svg'); }
+  /* — switch — переключатель, кнопка, рычаг — */
+  .icon-eft-switch-button { mask-image: url('/icons/eft/01-maps/markers/switch/switch-button.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/switch/switch-button.svg'); }
+  .icon-eft-switch-lever { mask-image: url('/icons/eft/01-maps/markers/switch/switch-lever.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/switch/switch-lever.svg'); }
+   /* — transit — переходы — */
+  .icon-eft-transition-point { mask-image: url('/icons/eft/01-maps/markers/transition-point.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/transition-point.svg'); }
 
   /* ═══ EFT Квесты и Торговцы (02-quests) ═══ */
   .icon-eft-difficulty-skull { mask-image: url('/icons/eft/02-quests/difficulty-skull.svg'); -webkit-mask-image: url('/icons/eft/02-quests/difficulty-skull.svg'); }

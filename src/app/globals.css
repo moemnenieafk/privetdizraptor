@@ -603,6 +603,34 @@ html {
 .cta-tip-h.t-hazard { color: #E5484D; }
 .cta-tip-sub { font-family: var(--font-blender-book); font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
 
+/* пропорциональный зум маркеров: масштаб от --marker-scale (задаётся по zoom карты) */
+.cta-mk-scale { transform: scale(var(--marker-scale, 1)); transform-origin: center center; }
+
+/* пульс-подсветка точки (спавны босса / ПКМ-цикл по слою) */
+.cta-flash {
+  width: 26px; height: 26px; border-radius: 9999px;
+  border: 2px solid var(--primary);
+  background: color-mix(in srgb, var(--primary) 30%, transparent);
+  animation: cta-flash-pulse 0.9s ease-out infinite;
+}
+@keyframes cta-flash-pulse {
+  0% { transform: scale(0.5); opacity: 1; }
+  70% { transform: scale(1.6); opacity: 0.25; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* грид-кластер loose loot */
+.cta-cluster {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--primary) 88%, transparent);
+  color: var(--color-base);
+  border: 2px solid color-mix(in srgb, var(--color-base) 60%, transparent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  font-family: var(--font-blender-medium); font-size: 12px; text-align: center;
+  cursor: pointer;
+}
+
 /* легенда */
 .cta-legend { width: 11px; height: 11px; display: inline-block; }
 .lg-extract { background: #5FB85B; border-radius: 9999px; box-shadow: 0 0 6px #5FB85B; }
