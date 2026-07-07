@@ -73,3 +73,7 @@ public/images/items/frago/
 
 # graphify — генерируемый граф кода (корневой = живой, src/ = старый артефакт). Не версионируем.
 graphify-out/
+
+# Локальные экспорты карт (генерятся scripts/export-maps-svg.ts) и внешние ресёрч-тулзы
+map-exports/
+!for-deep-research/

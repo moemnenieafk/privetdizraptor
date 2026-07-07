@@ -17,11 +17,11 @@ const leafKeys = (i: LayerItem): string[] => (i.children ? i.children.map((c) =>
 function LayerGlyph({ item }: { item: LayerItem }): React.ReactElement {
   const icon = markerIconUrl(item.sample);
   const color = markerColor(item.sample.type);
-  if (icon?.mode === 'img') return <img src={icon.url} alt="" className="h-4 w-4 shrink-0 object-contain" />;
+  if (icon?.mode === 'img') return <img src={icon.url} alt="" className="h-8 w-8 shrink-0 object-contain" />;
   if (icon?.mode === 'mask')
     return (
       <span
-        className="h-4 w-4 shrink-0"
+        className="h-6 w-6 shrink-0"
         style={{
           backgroundColor: color,
           maskImage: `url(${icon.url})`,
@@ -35,7 +35,7 @@ function LayerGlyph({ item }: { item: LayerItem }): React.ReactElement {
         }}
       />
     );
-  return <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />;
+  return <span className="h-4 w-4 shrink-0 rounded-full" style={{ backgroundColor: color }} />;
 }
 
 function Box({ state }: { state: 'on' | 'off' | 'partial' }): React.ReactElement {

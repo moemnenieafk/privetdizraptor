@@ -1,5 +1,5 @@
 === ПОЛНЫЙ ОТЧЕТ ПО ИКОНКАМ ПРОЕКТА ===
-Всего физических иконок в базе (public/icons): 333
+Всего физических иконок в базе (public/icons): 336
 
 ----------------------------------------
 ИКОНКА: account_billing_icon.svg
@@ -338,14 +338,20 @@
 ----------------------------------------
 ИКОНКА: exfil-point-pmc-1.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc-1.svg
-КЛАСС CSS: .icon-eft-exfil-point-pmc-1
+КЛАСС CSS: .icon-eft-exfil-point-pmc-1 (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
+----------------------------------------
+ИКОНКА: exfil-point-pmc-greenflare.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc-greenflare.svg
+КЛАСС CSS: .icon-eft-exfil-point-pmc-greenflare
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
 ----------------------------------------
-ИКОНКА: exfil-point-pmc-greenflare.svg
-ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc-greenflare.svg
-КЛАСС CSS: .icon-eft-exfil-point-pmc-greenflare (Автоматически добавлено)
+ИКОНКА: exfil-point-pmc-redrebel.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/exfil/exfil-point-pmc-redrebel.svg
+КЛАСС CSS: .icon-eft-exfil-point-pmc-redrebel (Автоматически добавлено)
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
@@ -435,6 +441,12 @@
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
 ИСПОЛЬЗУЕТСЯ В:
   - /src/styles/icons.css
+----------------------------------------
+ИКОНКА: spawn-rogue.svg
+ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-rogue.svg
+КЛАСС CSS: .icon-eft-spawn-rogue (Автоматически добавлено)
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+⚠️ ВНИМАНИЕ: Ссылки на иконку не найдены в коде! (Или путь в коде отличается от реального)
 ----------------------------------------
 ИКОНКА: spawn-scav-sniper.svg
 ПУТЬ:   public/icons/eft/01-maps/markers/spawn/spawn-scav-sniper.svg
@@ -862,6 +874,13 @@
   - /src/styles/icons.css
   - /src/data/map-markers/categories.ts
 ----------------------------------------
+ИКОНКА: loot-containers.svg
+ПУТЬ:   public/icons/eft/03-items/equipment/containers/loot-containers.svg
+КЛАСС CSS: .icon-eft-loot-containers
+НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Не в меню
+ИСПОЛЬЗУЕТСЯ В:
+  - /src/styles/icons.css
+----------------------------------------
 ИКОНКА: secure-containers.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/containers/secure-containers.svg
 КЛАСС CSS: .icon-eft-eq-secure
@@ -874,14 +893,12 @@
 ----------------------------------------
 ИКОНКА: containers.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/containers.svg
-КЛАСС CSS: .icon-eft-eq-containers
+КЛАСС CSS: .icon-eft-loot-containers
 НАЗВАНИЕ РАЗДЕЛА МЕНЮ: Контейнеры
 ИСПОЛЬЗУЕТСЯ В:
   - /src/app/eft/items/loot-rate/LootRateClient.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
-  - /src/data/pageContent.ts
-  - /src/lib/item-category.ts
 ----------------------------------------
 ИКОНКА: infoitems.svg
 ПУТЬ:   public/icons/eft/03-items/equipment/infoitems.svg
@@ -2188,6 +2205,7 @@
   - /src/app/eft/gamesetting/characters/page.tsx
   - /src/data/headerConfig.ts
   - /src/styles/icons.css
+  - /src/components/features/maps/MapBottomBar.tsx
 ----------------------------------------
 ИКОНКА: characters.svg
 ПУТЬ:   public/icons/eft/05-gamesetting/characters.svg

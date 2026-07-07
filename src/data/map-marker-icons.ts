@@ -47,10 +47,10 @@ const CONTAINER_LABEL_FILE: Record<string, string> = {
   'Выдвижной ящик': 'drawer',
   'Кассовый аппарат': 'cash-register',
   'Гранатный ящик': 'wooden-grenade-box',
-  'Труп Дикого': 'dead-scav',
+  'Труп Дикого': 'dead-pmc', // арт «dead-pmc» = балаклава с крестиками = Дикий
   'Закопанная бочка': 'burried-barrel-cache',
   'Медсумка СМУ06': 'medbag-smu06',
-  'Труп ЧВК': 'dead-pmc',
+  'Труп ЧВК': 'dead-scav', // арт «dead-scav» = кепка+маска = ЧВК
   'Схрон в земле': 'ground-cache',
   'Ящик технического снабжения': 'wooden-technical-supply-crate',
   'Патронный ящик': 'wooden-ammo-box',
@@ -89,8 +89,8 @@ const CONTAINER_CATEGORY_FILE: Record<string, string> = {
   'ration-crate': 'wooden-ration-supply-crate',
   suitcase: 'plastic-suitcase',
   airdrop: 'airdrop',
-  'corpse-pmc': 'dead-pmc',
-  'corpse-scav': 'dead-scav',
+  'corpse-pmc': 'dead-scav', // кепка+маска = ЧВК
+  'corpse-scav': 'dead-pmc', // балаклава с крестиками = Дикий
   'corpse-civ': 'civilian-body',
   'buried-barrel': 'burried-barrel-cache',
   'ground-cache': 'ground-cache',
@@ -227,6 +227,7 @@ const BOSS_ICON: Record<string, string> = {
   kollontay: 'kollontai',
   kollontai: 'kollontai',
   partisan: 'partisan',
+  reshala: 'reshala',
   sanitar: 'sanitar',
   'cultist-priest': 'sektant',
   cultist: 'sektant',
