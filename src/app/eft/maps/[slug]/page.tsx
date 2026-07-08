@@ -4,7 +4,7 @@ import { getSectionPlaceholder } from '@/lib/section-nav';
 import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
 import { getEftPriceIndex } from '@/db/prices';
 import { getEftCatalog } from '@/lib/eft-catalog';
-import { bossIconUrl, bossPortraitKey } from '@/data/map-marker-icons';
+import { bossIconUrl, bossPortraitKey, GOONS_FILES } from '@/data/map-marker-icons';
 import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
 import { getManualMarkers } from '@/data/map-markers';
 import { mapImageUrl } from '@/lib/map-image';
@@ -153,6 +153,7 @@ export default async function MapPage({ params, searchParams }: Props) {
         if (n > 2) dropSpawn.add(m.id);
       }
 
+      const goonsKeys = new Set<string>(GOONS_FILES);
       const markers: MapViewMarker[] = data.markers
         .filter((m) => RENDER_TYPES.has(m.type) && m.position && !dropSpawn.has(m.id))
         .map((m) => ({
@@ -169,6 +170,7 @@ export default async function MapPage({ params, searchParams }: Props) {
           linkedItemId: m.linkedItemId ?? null,
           spawnFaction: m.type === 'spawn' && m.label ? (zoneFaction.get(m.label) ?? null) : null,
           bossKey: bossPortraitOf.get(m.id) ?? null,
+          category: goonsKeys.has(bossPortraitOf.get(m.id) ?? '') ? 'goons' : null,
           itemBg: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.backgroundColor ?? null) : null,
           itemSlug: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.normalizedName ?? null) : null,
           lootCat: m.type === 'loot_loose' && m.linkedItemId ? (lootCatById.get(m.linkedItemId) ?? 'other') : null,
