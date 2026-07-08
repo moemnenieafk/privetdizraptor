@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
+import { markerIconUrl, markerColor, GOONS_FILES } from '@/data/map-marker-icons';
 import { LOOT_CATEGORIES } from '@/data/map-markers/categories';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
@@ -28,6 +28,8 @@ export interface ManualMarkerLike {
   categories?: string[] | null;
   /** loose loot: id предмета для иконки из нашей базы. */
   linkedItemId?: string | null;
+  /** спавн-босс (редактор, category='boss'): файл-портрет в /images/bosses/eft. */
+  bossKey?: string | null;
   /** loose loot: тарковский цвет фона слота (blue/yellow/violet…). */
   itemBg?: string | null;
   /** выход: имя нужного предмета (transferItem) — для codeword-иконки. */
@@ -39,12 +41,21 @@ export function manualMarkerIcon(m: ManualMarkerLike, del = false, showLabel = f
   const glow = del ? ';outline:2px solid #E5484D' : '';
 
   const isLooseItem = (m.type === 'loot_loose' || m.type === 'loot') && !!m.linkedItemId;
+  const isGoons = m.type === 'spawn' && m.category === 'goons';
   const lootIcon = !isLooseItem && m.type === 'loot' && m.category ? LOOT_ICON.get(m.category) : undefined;
-  const resolved = isLooseItem || lootIcon ? null : markerIconUrl(m);
+  const resolved = isLooseItem || isGoons || lootIcon ? null : markerIconUrl(m);
 
   let inner: string;
   let box: number;
-  if (isLooseItem) {
+  if (isGoons) {
+    // Goons — трио боссов (Рыцарь/Биг Пайп/Бёрдай): 3 портрета внахлёст.
+    box = 44;
+    const imgs = GOONS_FILES.map(
+      (f, i) =>
+        `<img src="/images/bosses/eft/${f}.webp" width="20" height="20" style="display:block;width:20px;height:20px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8))${i > 0 ? ';margin-left:-6px' : ''}${glow}" alt="" />`,
+    ).join('');
+    inner = `<span style="display:flex;align-items:center;justify-content:center">${imgs}</span>`;
+  } else if (isLooseItem) {
     // Плитка предмета: иконка из нашей базы на тарковском цвет-фоне слота.
     box = 30;
     const bg = getTarkovBackgroundColor(m.itemBg ?? undefined);

@@ -15,8 +15,11 @@ import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
 const leafKeys = (i: LayerItem): string[] => (i.children ? i.children.map((c) => c.key) : [i.key]);
 
 function LayerGlyph({ item }: { item: LayerItem }): React.ReactElement {
-  const icon = markerIconUrl(item.sample);
   const color = markerColor(item.sample.type);
+  // Иконка нашей таксономии (loose-категории) — CSS-маска, приоритет над резолвером.
+  if (item.iconClass)
+    return <span className={`icon-mask ${item.iconClass} h-6 w-6 shrink-0`} style={{ color }} />;
+  const icon = markerIconUrl(item.sample);
   if (icon?.mode === 'img') return <img src={icon.url} alt="" className="h-8 w-8 shrink-0 object-contain" />;
   if (icon?.mode === 'mask')
     return (

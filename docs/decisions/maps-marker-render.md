@@ -104,7 +104,56 @@ V4DYA дорисовал маркер-иконки: `public/images/maps/eft/mark
 - **Пульс-подсветка** `.cta-flash` (пульсирующее кольцо, гаснет ~2.6с) — общая для обеих фич (`flashPoints`).
 Проверено (customs): ПКМ «Дикий» цикл перескакивает между спавнами; клик «Решала» подлетает к его зонам. `tsc` чист.
 
+# SPT items.json разобрать и сказать что можно вытащить
 Ну во первых вот файл - !for-deep-research\item.json - удалось вытащить SPT файл с позициями как ты просил. Попробуй синхронизировать его с нашими позициями и правильно поставить позиции weapon box - или контейнеров Оружейный контейнер.
+
+## ✅ Фаза F (2026-07-08) — дизамбигуация weaponbox/jacket по world-id (SPT-сверка)
+**Разбор `!for-deep-research/item.json`:** это НЕ позиции, а конфиг SPT (`configs/item.json`) — blacklist/bossItems/пресеты/handbookPriceOverride. Координат нет. Реальные позиции — в `SPT_Data/database/locations/<map>/{staticContainers,looseLoot}.json`, размеры сеток — в `templates/items.json`.
+**Решён блокер Фазы C** (4 id «Оружейный ящик» / 3 id «Куртка»). Сверка с SPT `templates/items.json` дала id→вид:
+- terraWBox: `5909d5ef…`=5×2, `5909d76c…e53d2adf`=6×3, `5909d7cf…ee57d75a`=4×4, `5909d89086…591234a0`=5×5.
+- jacket: `578f8778…`=обычная, `5937ef2b…`=жёлтая квестовая (→generic jacket), `5914944186…`=рабочая (`jacket-worker-blue`).
+**Код:** `map-marker-icons.ts` — `MarkerIconInput.linkedItemId` + таблица `CONTAINER_ITEM_FILE` (приоритет над label в `containerFile`). `map-layers.ts` — 4 под-слоя размеров weaponbox + «Куртка рабочего» (sample по `linkedItemId`). Иконки под все варианты уже были у V4DYA. `tsc` чист.
+**Открыто:** нужен ли импорт SPT-координат как доп.источника (сейчас позиции 1:1 из tarkov.dev) — ждёт решения V4DYA.
+
+**Сравнение покрытия SPT vs tarkov.dev (bigmap):** SPT сервер-БД **НЕ хранит XYZ контейнеров** — в `staticContainers.json` все `Position=0,0,0`, `statics.json` — только `groupId` (координаты в клиентских бандлах). Значит SPT НЕ источник позиций контейнеров → tarkov.dev остаётся единственным. НО: `looseLoot.json` (1768 точек на bigmap с реальными XYZ) и `base.json.SpawnPointParams` (318 спавнов с зонами) — заметно полнее tarkov.dev; потенциальный доп.источник для loose loot / спавнов, если решим (отдельный бэкенд-подсприн).
+
+## ✅ Фаза G (2026-07-08) — под-виды выходов (SPT PassageRequirement → иконки + слои)
+Классификация выходов сверена с SPT `base.json` (все карты). Единый `extractSubtype(m)` в `map-marker-icons.ts` (точка правды для иконки, слоя, легенды):
+- **paidcar** (`exfil-point-paidcar`) — платный В-Выход: RU-label `^В-Выход` ∥ transferItem=валюта (SPT `TransferItem`+Рубли). 7 карт.
+- **codeword** (`exfil-point-codeword`) — transferItem «Записка с кодовым словом …» ∥ **«Карта минных полей …»** (Маяк/Резерв/Лес — добавлено).
+- **redrebel** (`exfil-point-pmc-redrebel`) — SPT `Reference/Alpinist`: «Тропа альпиниста» (Берег), «Спуск со скалы» (Резерв), «Тропа через перевал» (Маяк).
+- **nobackpack** (`exfil-point-nobackpack`) — SPT `Empty/EXFIL_tip_backpack`: «Вентиляционная шахта» (Лаба/Стриты), «Трубопровод отопления» (Резерв). ⚠️ SPT-список может быть неполным — ждёт сверки V4DYA.
+- **greenflare** — «(Сигнал)», без изменений.
+`map-layers.ts` — группа «Выходы» = 8 под-слоёв (ЧВК/Дикий/Общий/Платный/Кодовое слово/Альпинист/Без рюкзака/Зелёный сигнал); `layerKeyForMarker` через `extractSubtype`; пустые скрыты drawer'ом. `tsc` чист. Проброс `transferItemName` уже был (Фаза C).
+**Решение V4DYA:** список nobackpack оставляем 2 вида (SPT-полный).
+
+## ✅ Фаза H, Шаг 1 (2026-07-08) — спавн-иконки фракций rogue/black-division (по boss-зонам)
+tarkov.dev спавны различают только `player/bot/boss/botpmc`+sides — отдельного rogue/black-division НЕТ. Но `boss.meta.spawnLocations[].spawnKey` == `spawn.zoneName` (label). Сверка: **rogue** = босс Маяка (7 зон: Zone_Blockpost/RoofContainers/…), **black-div** = Терминал (много Zone1BD…). Эти зоны реально присутствуют как spawn-маркеры (Zone_Blockpost x6, Zone_Hellicopter x7).
+**Код:** `page.tsx` — карта `zoneName→фракция` (rogue/black-division) по boss-маркерам, проброс `spawnFaction` в спавны. `map-types.ts`+`map-marker-icons.ts` — поле `spawnFaction`, `spawnSubkind` возвращает rogue/black-division (иконки `spawn-rogue`/`spawn-black-division`). `map-layers.ts` — под-слои «Отступники (Rogue)» / «Black Division». `MapViewerClient` — тултипы. `tsc` чист.
+**Решения V4DYA (Шаг 2):** спавн-кластеры дикий/ЧВК → резать до 1-2 на зону; босс = 1 портрет + свита boss-add; порядок — dev-tool первым.
+
+## ✅ Фаза H, Шаг 2а (2026-07-08) — dev-tool «Правка»: иконки категорий + боссы webp + Goons
+- **`map-marker-icons.ts`** — `SPAWN_CATEGORY_KIND` (категории редактора pmc/scav/sniper/rogue/blackdiv/escort/raider/cleanup/boss/goons/cultist/smuggler → под-вид). `spawnSubkind` учитывает `m.category`. Спавн с `bossKey` → webp-портрет `/images/bosses/eft/{key}.webp`. Экспорт `BOSS_ROSTER` (17 боссов, key=basename) + `GOONS_FILES` (bigpipe/birdeye/knight).
+- **`manual-marker-icon.ts`** — спец-рендер Goons (3 портрета внахлёст); поле `bossKey`.
+- **`MapMarkerEditor.tsx`** — при category='boss' пикер 17 боссов (webp-превью) → `bossKey`; проброс в маркер, экспорт TS, id, `fromView`. Ростер/резолвер решают «боссы=webp», «Goons=3 картинки».
+- **types** — `ManualMapMarker.bossKey`, `MapViewMarker.bossKey`; static-path в `page.tsx` пробрасывает. `tsc` чист.
+- Теперь Ледокол размечается вручную: rogue/black-division/boss(портрет)/goons ставятся с корректными иконками.
+## ✅ Фаза H, Шаг 2б (2026-07-08) — синканные карты: босс-портрет на зону + свита + рез скоплений
+- **`page.tsx`** — карта `zoneName→bossKey` (портрет «настоящего» босса, не rogue/black-div) из `boss.meta.spawnLocations`. **Один портрет-маркер на зону** (первый boss-спавн зоны → `bossKey`=webp), прочие boss-точки зоны = свита (spawn-boss-add). **Рез скоплений:** Дикий/ЧВК > 2 на зону → `dropSpawn` (не рисуем); боссов/свиту/снайпера/rogue/black-div не режем. `bossPortraitKey` в резолвере (normalizedName→basename).
+- Портрет и свита остаются в под-слое «Босс» (spawnSubkind игнорит bossKey → layerKey `spawn-boss`). Партизан-роумер (spawnLocations пуст) — портрета на карте нет, остаётся в нижней панели (кнопка подлёта disabled, Фаза E). `tsc` чист.
+- **Осталось/подумать:** Goons на синканных картах = один портрет (knight), не трио (трио — только ручной редактор); порог реза (2) — при необходимости настроить; клик-кросслинки маркеров на страницы (предмет/квест).
+
+## ✅ Фаза I (2026-07-08) — loose loot: кросс-линки + иконки категорий + предмет-иконка в редакторе
+1. **Кросс-линк случайной добычи → страница предмета.** `MapViewMarker.itemSlug` (=normalizedName из `getEftPriceIndex()`); клик по одиночному loose-маркеру → `/eft/items/item/{slug}` (синк + статик-ветки `MapViewerClient`). page.tsx проставляет itemSlug.
+2. **Иконки категорий loose loot в drawer** из нашей таксономии. `LayerItem.iconClass`; `LOOSE_SUBLAYERS` → `icon-eft-*` (Бартер/Провизия/Инъекторы/Ключи/Постеры→infoitems/Кейсы/Другое→items-equipment); `LayerGlyph` рендерит CSS-маску (приоритет над резолвером). ГОЧА: класс `icon-eft-items-loot` НЕ существует (есть `-loot-tier`) → давал сплошной квадрат; поправлено при live-проверке.
+3. **Газовый резак «Огонёк BBQ-S43»** (id `67ab3d4b83869afd170fdd3f`). Лабиринт — уже loose loot (10 точек, синк → плитка предмета + линк из п.1). Ледокол (статик) — редактор получил поле **«ID предмета»** для type='loot' (превью `itemIconUrl`, экспорт `linkedItemId`); `ManualMapMarker.linkedItemId`, static-path грузит price-индекс для bg+slug. `tsc` чист.
+**Список правок карты — пройден полностью** (осталось из заметки: иконки замков кодовые-панели/интерком — отдельная мелкая пачка).
+
+## ✅ Фаза J (2026-07-08) — иконки замков (кодовая панель + интерком/ключ-карта)
+V4DYA дал 2 PNG → сконвертил в webp (`sharp`, q92), PNG удалил: `markers/lock/lock-keycard-pannel.webp`, `lock-standard-security-keypad.webp`. **Гоча:** tarkov.dev `lockType` = door/container/trunk/switch (ЧТО заперто, не механизм) → механизм читаем по имени ключа. Резолвер `lockKind(m)`: keycard/интерком (имя ключа ~ карт/пропуск/keycard/интерком) → `lock-keycard-pannel.webp`; меченый → `lock-mechanical-marked.svg`; прочее → стандартный `lock-standard-security-keypad.webp`. `tsc` чист. (Старые svg lock-mechanical/lock-keycard-pannel остались как ассеты, не удалял.)
+
+## ✅ Live-проверка (2026-07-08, Маяк + Ледокол, Chrome)
+JS-аудит DOM + скриншоты. **Работает:** выходы Платный/Кодовое слово/Альпинист (иконки+счётчики верны); Отступники (Rogue) 7 своей иконкой; drawer-иконки категорий loose loot из нашей базы; замки = новый keypad-webp (27 шт); **босс-портреты НА карте** (knight/zryachiy webp) + нижняя панель (Партизан-роумер только там); **0 битых** изображений. Редактор Ледокола: все категории спавнов, пикер 17 боссов (webp-превью), поле «ID предмета» с живым превью (газовый резак). Фикс по ходу: Постеры/Другое иконки (см. Фаза I гоча).
 
 ## Правки по карте:
 - добавил иконку спавна Отступников Rogue фракции на маяке и ледоколе они есть .icon-eft-spawn-rogue

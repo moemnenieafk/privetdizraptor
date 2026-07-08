@@ -19,6 +19,10 @@ export interface ManualMapMarker {
   faction?: string;
   /** Под-категория (spawn/loot/container) — ключ из data/map-markers/categories.ts. */
   category?: string;
+  /** type='spawn', category='boss': файл-портрет босса (basename в /images/bosses/eft, напр. 'reshala'). */
+  bossKey?: string;
+  /** type='loot': BSG-id предмета — иконка-плитка из нашей базы + клик-линк (напр. газовый резак). */
+  linkedItemId?: string;
   /** type='quest': BSG-id квеста (привязка к деталке/QuestMap). */
   questId?: string;
   /** type='quest': id конкретной цели (objective) квеста. */

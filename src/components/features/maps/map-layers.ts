@@ -1,5 +1,5 @@
 import type { MapViewMarker } from './map-types';
-import { spawnSubkind, containerFile, type MarkerIconInput } from '@/data/map-marker-icons';
+import { spawnSubkind, containerFile, extractSubtype, type MarkerIconInput } from '@/data/map-marker-icons';
 
 /**
  * Таксономия СЛОЁВ интерактивной карты — единая точка правды для рендера (группировка
@@ -14,6 +14,8 @@ export interface LayerItem {
   label: string;
   sample: MarkerIconInput;
   defaultOff?: boolean;
+  /** CSS-маска класс (icon-eft-*) из нашей таксономии — приоритет над резолвером (loose-категории). */
+  iconClass?: string;
   /** раскрываемый узел: дети-листья (сам узел слоем не является — тумблер всех детей). */
   children?: LayerItem[];
 }
@@ -24,12 +26,16 @@ export interface LayerGroup {
 }
 
 /* ── Контейнеры: файл иконки → ru-подпись (дедуп по файлу; пустые скрывает drawer) ── */
-const CONTAINER_SUBLAYERS: { file: string; label: string }[] = [
+const CONTAINER_SUBLAYERS: { file: string; label: string; item?: string }[] = [
   { file: 'sportsbag', label: 'Спортивная сумка' },
-  { file: 'weaponbox-5x5', label: 'Оружейный ящик' },
+  { file: 'weaponbox-5x2', label: 'Оружейный ящик 5×2', item: '5909d5ef86f77467974efbd8' },
+  { file: 'weaponbox-6x3', label: 'Оружейный ящик 6×3', item: '5909d76c86f77471e53d2adf' },
+  { file: 'weaponbox-4x4', label: 'Оружейный ящик 4×4', item: '5909d7cf86f77470ee57d75a' },
+  { file: 'weaponbox-5x5', label: 'Оружейный ящик 5×5', item: '5909d89086f77472591234a0' },
   { file: 'toolbox', label: 'Ящик с инструментами' },
   { file: 'wooden-crate', label: 'Деревянный ящик' },
   { file: 'jacket', label: 'Куртка' },
+  { file: 'jacket-worker-blue', label: 'Куртка рабочего', item: '5914944186f774189e5e76c2' },
   { file: 'pc-block', label: 'Системный блок' },
   { file: 'drawer', label: 'Выдвижной ящик' },
   { file: 'cash-register', label: 'Кассовый аппарат' },
@@ -52,28 +58,22 @@ const CONTAINER_SUBLAYERS: { file: string; label: string }[] = [
   { file: 'common-fund-stash', label: 'Схрон' },
 ];
 
-/* ── Случайная добыча: slug категории предмета (item_categories) → ru-подпись ── */
-const LOOSE_SUBLAYERS: { slug: string; label: string }[] = [
-  { slug: 'barter', label: 'Бартер' },
-  { slug: 'provisions', label: 'Провизия' },
-  { slug: 'injectors', label: 'Инъекторы' },
-  { slug: 'keys', label: 'Ключи' },
-  { slug: 'poster', label: 'Постеры' },
-  { slug: 'container', label: 'Кейсы' },
-  { slug: 'other', label: 'Другое' },
+/* ── Случайная добыча: slug категории предмета (item_categories) → ru-подпись + иконка нашей таксономии ── */
+const LOOSE_SUBLAYERS: { slug: string; label: string; iconClass: string }[] = [
+  { slug: 'barter', label: 'Бартер', iconClass: 'icon-eft-barter-others' },
+  { slug: 'provisions', label: 'Провизия', iconClass: 'icon-eft-eq-provisions' },
+  { slug: 'injectors', label: 'Инъекторы', iconClass: 'icon-eft-eq-injectors' },
+  { slug: 'keys', label: 'Ключи', iconClass: 'icon-eft-eq-keys' },
+  { slug: 'poster', label: 'Постеры', iconClass: 'icon-eft-eq-infoitems' },
+  { slug: 'container', label: 'Кейсы', iconClass: 'icon-eft-eq-cases' },
+  { slug: 'other', label: 'Другое', iconClass: 'icon-eft-items-equipment' },
 ];
-
-/** Фракция выхода → под-слой. */
-const extractFaction = (m: MapViewMarker): 'pmc' | 'scav' | 'shared' => {
-  const f = (m.faction ?? '').toLowerCase();
-  return f === 'pmc' ? 'pmc' : f === 'scav' ? 'scav' : 'shared';
-};
 
 /** Ключ под-слоя (листа) для маркера, или null — тип не отображается слоем. */
 export function layerKeyForMarker(m: MapViewMarker): string | null {
   switch (m.type) {
     case 'extract':
-      return `extract-${extractFaction(m)}`;
+      return `extract-${extractSubtype(m)}`;
     case 'spawn':
       return `spawn-${spawnSubkind(m)}`;
     case 'transit':
@@ -105,6 +105,11 @@ export const LAYER_GROUPS: LayerGroup[] = [
       { key: 'extract-pmc', label: 'ЧВК', sample: { type: 'extract', faction: 'pmc' } },
       { key: 'extract-scav', label: 'Дикий', sample: { type: 'extract', faction: 'scav' } },
       { key: 'extract-shared', label: 'Общий', sample: { type: 'extract', faction: 'all' } },
+      { key: 'extract-paidcar', label: 'Платный (машина)', sample: { type: 'extract', label: 'В-Выход' } },
+      { key: 'extract-codeword', label: 'Кодовое слово', sample: { type: 'extract', transferItemName: 'кодовым словом' } },
+      { key: 'extract-redrebel', label: 'Альпинист (Red Rebel)', sample: { type: 'extract', label: 'Тропа альпиниста' } },
+      { key: 'extract-nobackpack', label: 'Без рюкзака', sample: { type: 'extract', label: 'Вентиляционная шахта' } },
+      { key: 'extract-greenflare', label: 'Зелёный сигнал', sample: { type: 'extract', label: '(Сигнал)' } },
     ],
   },
   {
@@ -114,6 +119,8 @@ export const LAYER_GROUPS: LayerGroup[] = [
       { key: 'spawn-scav', label: 'Дикий', sample: { type: 'spawn', faction: 'scav' } },
       { key: 'spawn-sniper', label: 'Снайпер Дикого', sample: { type: 'spawn', categories: ['sniper'] } },
       { key: 'spawn-boss', label: 'Босс', sample: { type: 'spawn', categories: ['boss'] } },
+      { key: 'spawn-rogue', label: 'Отступники (Rogue)', sample: { type: 'spawn', spawnFaction: 'rogue' } },
+      { key: 'spawn-black-division', label: 'Black Division', sample: { type: 'spawn', spawnFaction: 'black-division' } },
     ],
   },
   {
@@ -133,7 +140,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
         children: CONTAINER_SUBLAYERS.map((c) => ({
           key: `container-${c.file}`,
           label: c.label,
-          sample: { type: 'loot_container', label: c.label } as MarkerIconInput,
+          sample: { type: 'loot_container', label: c.label, linkedItemId: c.item } as MarkerIconInput,
         })),
       },
       {
@@ -145,6 +152,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
           key: `loose-${c.slug}`,
           label: c.label,
           sample: { type: 'loot_loose' } as MarkerIconInput,
+          iconClass: c.iconClass,
           defaultOff: true,
         })),
       },
