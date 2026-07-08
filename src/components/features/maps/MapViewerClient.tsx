@@ -349,6 +349,12 @@ export function MapViewerClient({
         if (!grp) continue;
         const marker = L.marker(ll(m.position), { icon: markerDivIcon(m), riseOnHover: true });
         marker.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
+        // Кросс-линк: квест-зона → задача, контейнер/лут с привязкой → предмет (как на статик-картах).
+        if (m.type === 'quest' && m.questId) {
+          marker.on('click', () => window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener'));
+        } else if (m.itemSlug) {
+          marker.on('click', () => window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener'));
+        }
         // Полигон зоны выхода — на ховер.
         if (m.type === 'extract' && m.outline && m.outline.length > 2) {
           const poly = L.polygon(m.outline.map(ll), {
