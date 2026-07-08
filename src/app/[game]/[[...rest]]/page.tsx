@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { GAMES_DATA } from '@/data/games';
-import { PlaceholderPage } from '@/components/PlaceholderPage';
+import { PlaceholderPage } from '@/components/ui/PlaceholderPage';
 
 interface Props {
   params: Promise<{ game: string; rest?: string[] }>;
