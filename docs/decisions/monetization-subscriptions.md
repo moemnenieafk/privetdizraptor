@@ -24,6 +24,7 @@ date: 2026-07-04
 ### E5 — Boosty `L` ⚠keys ⚠db 🔒E3,E4
 - Связь: подписка/донат на Boosty → уровень доступа на сайте (OAuth/webhook, сопоставление тиров Boosty ↔ наши).
 - ⚠ ключи Boosty, вебхук-эндпоинт, запись в `subscriptions`.
+- 🔎 Рельс: рассмотреть **ЮKassa** рядом с Boosty — у Boosty активация с задержкой (кэш), ЮKassa даёт мгновенный премиум (прецедент tarkov.help). Детали → [[deep-research-subscription-monetization]].
 
 ## Результаты research (E3) — 2026-07-08
 
