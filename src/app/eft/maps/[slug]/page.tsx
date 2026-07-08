@@ -33,6 +33,9 @@ const RENDER_TYPES = new Set([
   'quest_zone',
 ]);
 
+// Порог прореживания: макс. обычных PMC/Scav-спавнов на зону (боссы/свита/снайпер/rogue не режутся).
+const SPAWN_CAP_PER_ZONE = 2;
+
 // Детальная карта локации. Есть интерактивные данные + конфиг проекции → Leaflet-фрейм,
 // иначе — умная заглушка (карты без SVG-подложки / не интерактивные).
 export default async function MapPage({ params, searchParams }: Props) {
@@ -128,7 +131,7 @@ export default async function MapPage({ params, searchParams }: Props) {
       }
 
       // Один портрет-маркер на зону (первый boss-спавн зоны) → webp; прочие boss-точки = свита (boss-add).
-      // Скопления Диких/ЧВК режем до 2 маркеров на зону (боссы/свита/снайпер/rogue не режем).
+      // Скопления Диких/ЧВК режем до SPAWN_CAP_PER_ZONE на зону (боссы/свита/снайпер/rogue не режем).
       const bossPortraitOf = new Map<string, string>();
       const portraitZoneUsed = new Set<string>();
       const dropSpawn = new Set<string>();
@@ -150,7 +153,7 @@ export default async function MapPage({ params, searchParams }: Props) {
         const kind = side === 'pmc' || side === 'botpmc' ? 'pmc' : 'scav';
         const n = (spawnCount.get(`${kind}|${zone}`) ?? 0) + 1;
         spawnCount.set(`${kind}|${zone}`, n);
-        if (n > 2) dropSpawn.add(m.id);
+        if (n > SPAWN_CAP_PER_ZONE) dropSpawn.add(m.id);
       }
 
       const goonsKeys = new Set<string>(GOONS_FILES);
