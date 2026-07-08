@@ -4,7 +4,7 @@ import { getSectionPlaceholder } from '@/lib/section-nav';
 import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
 import { getEftPriceIndex } from '@/db/prices';
 import { getEftCatalog } from '@/lib/eft-catalog';
-import { bossIconUrl } from '@/data/map-marker-icons';
+import { bossIconUrl, bossPortraitKey } from '@/data/map-marker-icons';
 import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
 import { getManualMarkers } from '@/data/map-markers';
 import { mapImageUrl } from '@/lib/map-image';
@@ -45,6 +45,8 @@ export default async function MapPage({ params, searchParams }: Props) {
   if (config?.staticMap && config.svgFile) {
     // Ручные маркеры (редактор ?edit=1) — наши кураторские данные, не из tarkov.dev.
     const manual = getManualMarkers(slug);
+    // Прайс-индекс нужен только если есть маркеры с привязкой к предмету (иконка-плитка + линк).
+    const priceIndex = manual.some((m) => m.linkedItemId) ? await getEftPriceIndex() : null;
     const markers: MapViewMarker[] = manual.map((m) => ({
       id: m.id,
       type: m.type,
@@ -59,6 +61,10 @@ export default async function MapPage({ params, searchParams }: Props) {
       meta: null,
       floor: m.floor,
       category: m.category ?? null,
+      bossKey: m.bossKey ?? null,
+      linkedItemId: m.linkedItemId ?? null,
+      itemBg: m.linkedItemId ? (priceIndex?.get(m.linkedItemId)?.backgroundColor ?? null) : null,
+      itemSlug: m.linkedItemId ? (priceIndex?.get(m.linkedItemId)?.normalizedName ?? null) : null,
       questId: m.questId ?? null,
       objectiveId: m.objectiveId ?? null,
     }));
@@ -97,8 +103,58 @@ export default async function MapPage({ params, searchParams }: Props) {
       // каталог — slug категории предмета (для под-слоёв «Случайной добычи»).
       const [priceIndex, catalog] = await Promise.all([getEftPriceIndex(), getEftCatalog()]);
       const lootCatById = new Map(catalog.map((i) => [i.id, i.category]));
+
+      // Зона спавна (zoneName == spawn.label) → фракция по владельцу-боссу: rogue (Маяк),
+      // black-division (Терминал) рисуются своей иконкой спавна вместо generic boss-add.
+      const BOSS_SPAWN_FACTION: Record<string, 'rogue' | 'black-division'> = {
+        rogue: 'rogue',
+        'black-div': 'black-division',
+      };
+      const zoneFaction = new Map<string, 'rogue' | 'black-division'>();
+      // Зона → basename портрета «настоящего» босса (не rogue/black-division фракции).
+      const zoneBoss = new Map<string, string>();
+      for (const m of data.markers) {
+        if (m.type !== 'boss') continue;
+        const bm = m.meta as { bossNormalizedName?: string; spawnLocations?: { spawnKey?: string }[] } | null;
+        const nn = bm?.bossNormalizedName ?? undefined;
+        const fac = nn ? BOSS_SPAWN_FACTION[nn] : undefined;
+        if (fac) {
+          for (const loc of bm?.spawnLocations ?? []) if (loc.spawnKey) zoneFaction.set(loc.spawnKey, fac);
+          continue;
+        }
+        const key = bossPortraitKey(nn);
+        if (!key) continue;
+        for (const loc of bm?.spawnLocations ?? []) if (loc.spawnKey) zoneBoss.set(loc.spawnKey, key);
+      }
+
+      // Один портрет-маркер на зону (первый boss-спавн зоны) → webp; прочие boss-точки = свита (boss-add).
+      // Скопления Диких/ЧВК режем до 2 маркеров на зону (боссы/свита/снайпер/rogue не режем).
+      const bossPortraitOf = new Map<string, string>();
+      const portraitZoneUsed = new Set<string>();
+      const dropSpawn = new Set<string>();
+      const spawnCount = new Map<string, number>();
+      for (const m of data.markers) {
+        if (m.type !== 'spawn' || !m.position) continue;
+        const zone = m.label ?? '';
+        const cats = m.categories ?? [];
+        if (cats.includes('boss')) {
+          const key = zoneBoss.get(zone);
+          if (key && !portraitZoneUsed.has(zone)) {
+            bossPortraitOf.set(m.id, key);
+            portraitZoneUsed.add(zone);
+          }
+          continue;
+        }
+        if (cats.includes('sniper') || zoneFaction.has(zone)) continue;
+        const side = (m.sides ?? [])[0]?.toLowerCase();
+        const kind = side === 'pmc' || side === 'botpmc' ? 'pmc' : 'scav';
+        const n = (spawnCount.get(`${kind}|${zone}`) ?? 0) + 1;
+        spawnCount.set(`${kind}|${zone}`, n);
+        if (n > 2) dropSpawn.add(m.id);
+      }
+
       const markers: MapViewMarker[] = data.markers
-        .filter((m) => RENDER_TYPES.has(m.type) && m.position)
+        .filter((m) => RENDER_TYPES.has(m.type) && m.position && !dropSpawn.has(m.id))
         .map((m) => ({
           id: m.id,
           type: m.type,
@@ -111,7 +167,10 @@ export default async function MapPage({ params, searchParams }: Props) {
           sides: m.sides ?? null,
           categories: m.categories ?? null,
           linkedItemId: m.linkedItemId ?? null,
+          spawnFaction: m.type === 'spawn' && m.label ? (zoneFaction.get(m.label) ?? null) : null,
+          bossKey: bossPortraitOf.get(m.id) ?? null,
           itemBg: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.backgroundColor ?? null) : null,
+          itemSlug: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.normalizedName ?? null) : null,
           lootCat: m.type === 'loot_loose' && m.linkedItemId ? (lootCatById.get(m.linkedItemId) ?? 'other') : null,
           transferItemName:
             m.type === 'extract'

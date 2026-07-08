@@ -32,8 +32,14 @@ export interface MarkerIconInput {
   categories?: string[] | null;
   /** синканные спавны: стороны (pmc/scav) — приоритетнее faction. */
   sides?: string[] | null;
+  /** спавны: фракция по владельцу-боссу зоны (rogue/black-division) — приоритет над категорией. */
+  spawnFaction?: string | null;
+  /** ручной спавн-босс (редактор, category='boss'): файл-портрет в /images/bosses/eft. */
+  bossKey?: string | null;
   /** выходы: имя нужного предмета (transferItem) — «Записка с кодовым словом …» → codeword-иконка. */
   transferItemName?: string | null;
+  /** контейнер/лут: id мира из tarkov.dev (== SPT terraWBox/jacket tpl) — дизамбигуация под-вида. */
+  linkedItemId?: string | null;
 }
 
 /* ── КОНТЕЙНЕРЫ ── synced-маркеры приходят с ru-`label`, ручные (редактор) — с `category`-ключом. */
@@ -98,13 +104,48 @@ const CONTAINER_CATEGORY_FILE: Record<string, string> = {
 };
 const CONTAINER_FALLBACK = 'wooden-crate';
 
+/* ── Дизамбигуация по world-id (tarkov.dev lootContainer.id == SPT tpl): под-виды,
+   неразличимые по ru-`label`. Оружейные ящики (terraWBox) → 4 размера сетки; куртки → вид. */
+const CONTAINER_ITEM_FILE: Record<string, string> = {
+  '5909d5ef86f77467974efbd8': 'weaponbox-5x2', // terraWBoxLong
+  '5909d76c86f77471e53d2adf': 'weaponbox-6x3', // terraWBoxLongBig
+  '5909d7cf86f77470ee57d75a': 'weaponbox-4x4', // terraWBoxSquare
+  '5909d89086f77472591234a0': 'weaponbox-5x5', // terraWBoxSquareBig
+  '578f8778245977358849a9b5': 'jacket', // Jacket (обычная)
+  '5937ef2b86f77408a47244b3': 'jacket', // jacket_yellow_quest — своей иконки нет → generic
+  '5914944186f774189e5e76c2': 'jacket-worker-blue', // jacket_key204 (рабочая)
+};
+
 export const containerFile = (m: MarkerIconInput): string =>
+  (m.linkedItemId ? CONTAINER_ITEM_FILE[m.linkedItemId] : undefined) ??
   (m.label ? CONTAINER_LABEL_FILE[m.label] : undefined) ??
   (m.category ? CONTAINER_CATEGORY_FILE[m.category] : undefined) ??
   CONTAINER_FALLBACK;
 
-/** Подвид спавна (сторона/бот) → файл. sniper в данных = снайпер-дикий. */
-export const spawnSubkind = (m: MarkerIconInput): 'pmc' | 'scav' | 'sniper' | 'boss' => {
+/** Категории спавна редактора «Правка» → под-вид резолвера (иконка). goons — спец-рендер в builder'е. */
+const SPAWN_CATEGORY_KIND: Record<string, SpawnSubkind> = {
+  pmc: 'pmc',
+  scav: 'scav',
+  sniper: 'sniper',
+  rogue: 'rogue',
+  blackdiv: 'black-division',
+  smuggler: 'scav', // контрабандисты — по иконке как дикие
+  escort: 'boss', // свита босса = boss-add
+  raider: 'boss', // налётчики = boss-add
+  cleanup: 'boss', // команда зачистки = boss-add
+  boss: 'boss', // generic до выбора конкретного (bossKey → портрет)
+  goons: 'boss', // 3 портрета (спец-рендер), fallback boss-add
+  cultist: 'boss', // до выбора sektant через bossKey
+};
+
+/** Подвид спавна (сторона/бот/фракция) → файл. sniper в данных = снайпер-дикий. */
+export type SpawnSubkind = 'pmc' | 'scav' | 'sniper' | 'boss' | 'rogue' | 'black-division';
+export const spawnSubkind = (m: MarkerIconInput): SpawnSubkind => {
+  const sf = (m.spawnFaction ?? '').toLowerCase();
+  if (sf === 'rogue') return 'rogue';
+  if (sf === 'black-division') return 'black-division';
+  const cat = (m.category ?? '').toLowerCase();
+  if (cat && SPAWN_CATEGORY_KIND[cat]) return SPAWN_CATEGORY_KIND[cat];
   const c = (m.categories ?? []).map((x) => x.toLowerCase());
   if (c.includes('sniper') || m.category === 'sniper') return 'sniper';
   if (c.includes('boss') || m.category === 'boss') return 'boss';
@@ -112,31 +153,76 @@ export const spawnSubkind = (m: MarkerIconInput): 'pmc' | 'scav' | 'sniper' | 'b
   if (f === 'pmc' || f === 'botpmc') return 'pmc';
   return 'scav';
 };
-const SPAWN_FILE: Record<string, string> = {
+const SPAWN_FILE: Record<SpawnSubkind | 'boss-sniper', string> = {
   pmc: 'spawn-pmc',
   scav: 'spawn-scav',
   sniper: 'spawn-scav-sniper',
   boss: 'spawn-boss-add',
   'boss-sniper': 'spawn-boss-sniper',
+  rogue: 'spawn-rogue',
   'black-division': 'spawn-black-division',
 };
 
-const exfilFile = (m: MarkerIconInput): string => {
-  // Выход «(Сигнал)» — активируется зелёным сигнальным патроном (РСП-30 / 26x75 зелёный).
-  if (/\(сигнал\)/i.test(m.label ?? '')) return 'exfil-point-pmc-greenflare';
-  // Выход по кодовому слову («Записка с кодовым словом …») → своя иконка, приоритет над фракцией.
-  if (/кодов|codeword/i.test(m.transferItemName ?? '')) return 'exfil-point-codeword';
-  const f = (m.faction ?? 'all').toLowerCase();
-  if (f === 'pmc') return 'exfil-point-pmc';
-  if (f === 'scav') return 'exfil-point-scav';
-  return 'exfil-point-spare';
+/** Под-вид выхода — единая точка правды для иконки, слоя и легенды. */
+export type ExtractSubtype =
+  | 'greenflare'
+  | 'codeword'
+  | 'paidcar'
+  | 'redrebel'
+  | 'nobackpack'
+  | 'pmc'
+  | 'scav'
+  | 'shared';
+
+/* Спец-выходы, НЕ выводимые из полей tarkov.dev (Alpinist / no-backpack). Классификация
+   сверена с SPT `base.json` PassageRequirement (Reference=Alpinist, Empty=EXFIL_tip_backpack).
+   Ключ = RU-`label` выхода (синк lang:ru); имена уникальны меж карт. */
+const EXTRACT_NAME_SUBTYPE: Record<string, ExtractSubtype> = {
+  'Тропа альпиниста': 'redrebel', // Берег
+  'Спуск со скалы': 'redrebel', // Резерв
+  'Тропа через перевал': 'redrebel', // Маяк
+  'Вентиляционная шахта': 'nobackpack', // Лаборатория + Стриты
+  'Трубопровод отопления': 'nobackpack', // Резерв (Heating Pipe — ползком без рюкзака)
 };
 
-const lockFile = (hint: string): string => {
-  const h = hint.toLowerCase();
-  if (h.includes('карт') || h.includes('keycard') || h.includes('панел')) return 'lock-keycard-pannel';
-  if (h.includes('мечен') || h.includes('marked')) return 'lock-mechanical-marked';
-  return 'lock-mechanical';
+/** Классификатор выхода → под-вид (приоритет спец-условий над фракцией). */
+export function extractSubtype(m: MarkerIconInput): ExtractSubtype {
+  const label = (m.label ?? '').trim();
+  // «(Сигнал)» — активация зелёным сигнальным патроном (РСП-30 / 26x75).
+  if (/\(сигнал\)/i.test(label)) return 'greenflare';
+  // Требует предмет-пропуск: «Записка с кодовым словом …» ИЛИ «Карта минных полей …».
+  if (/кодов|codeword|минных полей/i.test(m.transferItemName ?? '')) return 'codeword';
+  // Платный В-Выход (машина): все RU-имена начинаются с «В-Выход», требуют валюту.
+  if (/^в-?выход/i.test(label) || /рубл|доллар|евро/i.test(m.transferItemName ?? '')) return 'paidcar';
+  const byName = EXTRACT_NAME_SUBTYPE[label];
+  if (byName) return byName;
+  const f = (m.faction ?? 'all').toLowerCase();
+  if (f === 'pmc') return 'pmc';
+  if (f === 'scav') return 'scav';
+  return 'shared';
+}
+
+const EXTRACT_FILE: Record<ExtractSubtype, string> = {
+  greenflare: 'exfil-point-pmc-greenflare',
+  codeword: 'exfil-point-codeword',
+  paidcar: 'exfil-point-paidcar',
+  redrebel: 'exfil-point-pmc-redrebel',
+  nobackpack: 'exfil-point-nobackpack',
+  pmc: 'exfil-point-pmc',
+  scav: 'exfil-point-scav',
+  shared: 'exfil-point-spare',
+};
+
+const exfilFile = (m: MarkerIconInput): string => EXTRACT_FILE[extractSubtype(m)];
+
+/* Механизм замка по имени ключа (lockType в данных = что заперто: door/container/trunk/switch,
+   а НЕ механизм). keycard/intercom и marked различаем по имени ключа; прочее — стандартный keypad. */
+type LockKind = 'keycard' | 'marked' | 'keypad';
+const lockKind = (m: MarkerIconInput): LockKind => {
+  const h = (m.category || m.label || '').toLowerCase();
+  if (h.includes('карт') || h.includes('keycard') || h.includes('пропуск') || h.includes('интерком')) return 'keycard';
+  if (h.includes('мечен') || h.includes('marked')) return 'marked';
+  return 'keypad';
 };
 
 /** Главный резолвер: маркер → иконка (url + режим + размер) или `null` (нет арта → плейсхолдер). */
@@ -146,14 +232,21 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       return { url: `${SVG}/exfil/${exfilFile(m)}.svg`, mode: 'img', size: 30 };
 
     case 'spawn':
+      // Ручной спавн-босс (редактор): конкретный webp-портрет вместо иконки спавна.
+      if (m.bossKey) return { url: `/images/bosses/eft/${m.bossKey}.webp`, mode: 'img', size: 42 };
       return { url: `${SVG}/spawn/${SPAWN_FILE[spawnSubkind(m)]}.svg`, mode: 'img', size: 28 };
 
     // явные под-виды (для драйвера слоёв: boss/boss-sniper/black-division)
     case 'boss':
       return { url: `${SVG}/spawn/spawn-boss-add.svg`, mode: 'img', size: 30 };
 
-    case 'lock':
-      return { url: `${SVG}/lock/${lockFile(m.category || m.label || '')}.svg`, mode: 'img', size: 26 };
+    case 'lock': {
+      const lk = lockKind(m);
+      // Ключ-карта/интерком и стандартная кодовая панель — цветной webp-арт V4DYA; меченый — svg.
+      if (lk === 'marked') return { url: `${SVG}/lock/lock-mechanical-marked.svg`, mode: 'img', size: 26 };
+      const file = lk === 'keycard' ? 'lock-keycard-pannel' : 'lock-standard-security-keypad';
+      return { url: `${WEBP}/lock/${file}.webp`, mode: 'img', size: 30 };
+    }
 
     case 'switch':
       return { url: `${SVG}/switch/switch-lever.svg`, mode: 'img', size: 26 };
@@ -239,10 +332,40 @@ const BOSS_ICON: Record<string, string> = {
   zryachiy: 'zryachiy',
 };
 
+/** Ростер боссов для пикера редактора (category='boss'): key = basename webp в /images/bosses/eft. */
+export const BOSS_ROSTER: { key: string; label: string }[] = [
+  { key: 'reshala', label: 'Решала' },
+  { key: 'gluhar', label: 'Глухарь' },
+  { key: 'killa', label: 'Килла' },
+  { key: 'shturman', label: 'Штурман' },
+  { key: 'sanitar', label: 'Санитар' },
+  { key: 'tagilla', label: 'Тагилла' },
+  { key: 'zryachiy', label: 'Зрячий' },
+  { key: 'kaban', label: 'Кабан' },
+  { key: 'kollontai', label: 'Коллонтай' },
+  { key: 'partisan', label: 'Партизан' },
+  { key: 'sektant', label: 'Культист' },
+  { key: 'knight', label: 'Рыцарь' },
+  { key: 'bigpipe', label: 'Биг Пайп' },
+  { key: 'birdeye', label: 'Бёрдай' },
+  { key: 'shadowoftagilla', label: 'Тень Тагиллы' },
+  { key: 'vengefulkilla', label: 'Мстительный Килла' },
+  { key: 'thewedge', label: 'Клин' },
+];
+
+/** Goons — трио боссов (общий спавн): 3 портрета для спец-рендера маркера. */
+export const GOONS_FILES = ['bigpipe', 'birdeye', 'knight'] as const;
+
 export function bossIconUrl(normalizedName?: string | null): string | null {
   if (!normalizedName) return null;
   const file = BOSS_ICON[normalizedName.toLowerCase()];
   return file ? `/images/bosses/eft/${file}.webp` : null;
+}
+
+/** normalizedName босса → basename webp-портрета (для портрета на зоне спавна), или null. */
+export function bossPortraitKey(normalizedName?: string | null): string | null {
+  if (!normalizedName) return null;
+  return BOSS_ICON[normalizedName.toLowerCase()] ?? null;
 }
 
 export interface LegendEntry {

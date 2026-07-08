@@ -15,8 +15,14 @@ export interface MapViewMarker {
   categories: string[] | null;
   /** Привязка к предмету (контейнер/лут/выход-transferItem/ключ замка) — иконка + кросс-линк. */
   linkedItemId?: string | null;
+  /** Спавн: фракция по владельцу-боссу зоны (rogue/black-division) — своя иконка спавна. */
+  spawnFaction?: 'rogue' | 'black-division' | null;
+  /** Ручной спавн-босс: файл-портрет босса (basename в /images/bosses/eft). */
+  bossKey?: string | null;
   /** Спавн предмета (loot_loose): тарковский цвет фона слота (blue/yellow/violet…) для плитки. */
   itemBg?: string | null;
+  /** loose loot: slug (normalizedName) предмета — клик-линк на /eft/items/item/{slug}. */
+  itemSlug?: string | null;
   /** Выход: имя нужного предмета (transferItem) — для выбора иконки (кодовое слово). */
   transferItemName?: string | null;
   /** loose loot: slug категории предмета (barter/provisions/injectors/keys/poster/container/other) — для под-слоя. */

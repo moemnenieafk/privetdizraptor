@@ -6,7 +6,8 @@ import { Copy, GripVertical, Trash2, X } from 'lucide-react';
 import type { MapViewMarker } from './map-types';
 import type { ManualMapMarker } from '@/data/map-markers';
 import { manualMarkerIcon } from './manual-marker-icon';
-import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
+import { markerIconUrl, markerColor, BOSS_ROSTER } from '@/data/map-marker-icons';
+import { itemIconUrl } from '@/lib/item-icon';
 import {
   CONTAINER_CATEGORIES,
   LOOT_CATEGORIES,
@@ -70,6 +71,8 @@ function fromView(initial: MapViewMarker[]): ManualMapMarker[] {
       label: m.label ?? undefined,
       faction: m.faction ?? undefined,
       category: m.category ?? undefined,
+      bossKey: m.bossKey ?? undefined,
+      linkedItemId: m.linkedItemId ?? undefined,
     }));
 }
 
@@ -93,6 +96,8 @@ export function MapMarkerEditor({
   const [markers, setMarkers] = useState<ManualMapMarker[]>(() => fromView(initial));
   const [type, setType] = useState('extract');
   const [category, setCategory] = useState('');
+  const [bossKey, setBossKey] = useState('');
+  const [itemId, setItemId] = useState('');
   const [label, setLabel] = useState('');
   const [faction, setFaction] = useState('all');
   const [copied, setCopied] = useState(false);
@@ -101,9 +106,9 @@ export function MapMarkerEditor({
 
   const layerRef = useRef<L.LayerGroup | null>(null);
   const delRef = useRef<(id: string) => void>(() => {});
-  const stateRef = useRef({ type, category, label, faction, activeFloor, editing, delMode });
+  const stateRef = useRef({ type, category, bossKey, itemId, label, faction, activeFloor, editing, delMode });
   useEffect(() => {
-    stateRef.current = { type, category, label, faction, activeFloor, editing, delMode };
+    stateRef.current = { type, category, bossKey, itemId, label, faction, activeFloor, editing, delMode };
   });
 
   const del = useCallback((id: string) => setMarkers((prev) => prev.filter((p) => p.id !== id)), []);
@@ -114,6 +119,8 @@ export function MapMarkerEditor({
   const pickType = (t: string): void => {
     setType(t);
     setCategory(defaultCategory(t));
+    setBossKey('');
+    setItemId('');
   };
 
   // Клик по карте → новый маркер (только в правке и НЕ в режиме удаления).
@@ -124,8 +131,10 @@ export function MapMarkerEditor({
       const x = Math.round(e.latlng.lng * 10) / 10;
       const z = Math.round(e.latlng.lat * 10) / 10;
       const hasCat = s.type === 'spawn' || s.type === 'loot' || s.type === 'container';
+      const withBoss = s.type === 'spawn' && s.category === 'boss' && s.bossKey;
+      const withItem = s.type === 'loot' && s.itemId.trim();
       const m: ManualMapMarker = {
-        id: `${s.type}-${s.category || s.faction}-${Math.round(x)}-${Math.round(z)}-f${s.activeFloor}`,
+        id: `${s.type}-${s.category || s.faction}${withBoss ? `-${s.bossKey}` : ''}${withItem ? `-${s.itemId.trim()}` : ''}-${Math.round(x)}-${Math.round(z)}-f${s.activeFloor}`,
         type: s.type,
         floor: s.activeFloor,
         x,
@@ -133,6 +142,8 @@ export function MapMarkerEditor({
         ...(s.label ? { label: s.label } : {}),
         ...(s.type === 'extract' ? { faction: s.faction } : {}),
         ...(hasCat && s.category ? { category: s.category } : {}),
+        ...(withBoss ? { bossKey: s.bossKey } : {}),
+        ...(withItem ? { linkedItemId: s.itemId.trim() } : {}),
       };
       setMarkers((prev) => [...prev.filter((p) => p.id !== m.id), m]);
     };
@@ -193,6 +204,8 @@ export function MapMarkerEditor({
       .map((m) => {
         const parts = [`id: ${JSON.stringify(m.id)}`, `type: ${JSON.stringify(m.type)}`, `floor: ${m.floor}`, `x: ${m.x}`, `z: ${m.z}`];
         if (m.category) parts.push(`category: ${JSON.stringify(m.category)}`);
+        if (m.bossKey) parts.push(`bossKey: ${JSON.stringify(m.bossKey)}`);
+        if (m.linkedItemId) parts.push(`linkedItemId: ${JSON.stringify(m.linkedItemId)}`);
         if (m.faction) parts.push(`faction: ${JSON.stringify(m.faction)}`);
         if (m.label) parts.push(`label: ${JSON.stringify(m.label)}`);
         return `  { ${parts.join(', ')} },`;
@@ -294,6 +307,29 @@ export function MapMarkerEditor({
           </div>
         ) : null}
 
+        {/* Пикер конкретного босса (портрет webp) — только для category='boss'. */}
+        {type === 'spawn' && category === 'boss' ? (
+          <div className="scrollbar-compact flex max-h-28 flex-wrap gap-1 overflow-y-auto pr-1">
+            {BOSS_ROSTER.map((b) => {
+              const on = bossKey === b.key;
+              return (
+                <button
+                  key={b.key}
+                  type="button"
+                  onClick={() => setBossKey(on ? '' : b.key)}
+                  title={b.label}
+                  className={`flex items-center gap-1 rounded-xs px-1 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide transition-colors ${
+                    on ? 'bg-(--primary) text-(--color-base)' : 'border border-lines-hover text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  <img src={`/images/bosses/eft/${b.key}.webp`} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                  {b.label}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+
         {groups ? (
           <div className="scrollbar-compact flex max-h-44 flex-col gap-1.5 overflow-y-auto pr-1">
             {groups.map((g) => (
@@ -319,6 +355,28 @@ export function MapMarkerEditor({
                 </div>
               </div>
             ))}
+          </div>
+        ) : null}
+
+        {/* Привязка к предмету (loot): BSG-id → иконка-плитка из базы + клик-линк (напр. газовый резак). */}
+        {type === 'loot' ? (
+          <div className="flex items-center gap-1.5">
+            {itemId.trim() ? (
+              <img
+                src={itemIconUrl(itemId.trim())}
+                alt=""
+                className="h-6 w-6 shrink-0 rounded-xs object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : null}
+            <input
+              value={itemId}
+              onChange={(e) => setItemId(e.target.value)}
+              placeholder="ID предмета (иконка из базы, опц.)"
+              className="min-w-0 flex-1 rounded-xs border border-lines-hover bg-card-menu px-2 py-1 font-blender-book text-sm text-text-primary placeholder:text-text-muted"
+            />
           </div>
         ) : null}
 

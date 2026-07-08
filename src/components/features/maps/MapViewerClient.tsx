@@ -65,6 +65,7 @@ const esc = (s: string): string =>
   s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
 
 const spawnKind = (m: MapViewMarker): string => {
+  if (m.spawnFaction) return m.spawnFaction;
   const c = m.categories ?? [];
   if (c.includes('boss')) return 'boss';
   if (c.includes('sniper')) return 'sniper';
@@ -87,7 +88,16 @@ function tooltipFor(m: MapViewMarker): string {
     }
     case 'spawn': {
       const k = spawnKind(m);
-      const kn = { pmc: 'Спавн ЧВК', scav: 'Спавн Диких', boss: 'Спавн босса', sniper: 'Снайпер', all: 'Спавн' }[k] ?? 'Спавн';
+      const kn =
+        {
+          pmc: 'Спавн ЧВК',
+          scav: 'Спавн Диких',
+          boss: 'Спавн босса',
+          sniper: 'Снайпер',
+          rogue: 'Спавн Отступников',
+          'black-division': 'Спавн Black Division',
+          all: 'Спавн',
+        }[k] ?? 'Спавн';
       return `${head('t-spawn', kn)}${m.label ? sub(m.label) : ''}`;
     }
     case 'transit':
@@ -306,6 +316,8 @@ export function MapViewerClient({
         marker.bindTooltip(tip, { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
         if (m.type === 'quest' && m.questId) {
           marker.on('click', () => window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener'));
+        } else if (m.itemSlug) {
+          marker.on('click', () => window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener'));
         }
         marker.addTo(manualGroup);
         markersRef.current.push({ marker, top: null, bottom: null, floor: m.floor ?? null });
@@ -370,6 +382,8 @@ export function MapViewerClient({
               const m = arr[0];
               const mk = L.marker(ll(m.position!), { icon: markerDivIcon(m), riseOnHover: true });
               mk.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
+              // Кросс-линк на страницу предмета (случайная добыча связана с каталогом по id).
+              if (m.itemSlug) mk.on('click', () => window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener'));
               mk.addTo(grp);
             } else {
               let sx = 0;
