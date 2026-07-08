@@ -23,10 +23,19 @@ export function MapViewerLoader({
   data,
   onReady,
   activeFloor,
+  onRequestFloor,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
   activeFloor?: number;
+  onRequestFloor?: (idx: number) => void;
 }) {
-  return <MapViewerClient data={data} onReady={onReady} activeFloor={activeFloor} />;
+  return (
+    <MapViewerClient
+      data={data}
+      onReady={onReady}
+      activeFloor={activeFloor}
+      onRequestFloor={onRequestFloor}
+    />
+  );
 }

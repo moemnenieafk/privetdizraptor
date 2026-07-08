@@ -151,7 +151,12 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
         apiRef={apiRef}
       />
       <div ref={viewportRef} className="relative min-h-0 flex-1">
-        <MapViewerLoader data={data} onReady={handleReady} activeFloor={activeFloor} />
+        <MapViewerLoader
+          data={data}
+          onReady={handleReady}
+          activeFloor={activeFloor}
+          onRequestFloor={setActiveFloor}
+        />
         {floors.length > 1 && (
           <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />
         )}

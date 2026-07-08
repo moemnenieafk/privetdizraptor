@@ -7,6 +7,7 @@ import { LocateFixed, Minus, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
+import { PlayerTrackerButton } from './PlayerTracker';
 import { manualMarkerIcon } from './manual-marker-icon';
 import { ALL_LAYER_ITEMS, defaultLayerVisibility, layerKeyForMarker } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
@@ -139,10 +140,12 @@ export function MapViewerClient({
   data,
   onReady,
   activeFloor = 0,
+  onRequestFloor,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
   activeFloor?: number;
+  onRequestFloor?: (idx: number) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -601,6 +604,13 @@ export function MapViewerClient({
           onCycle={cycleToLayer}
         />
       )}
+
+      <PlayerTrackerButton
+        mapRef={mapRef}
+        config={data.config}
+        floors={floors}
+        onRequestFloor={onRequestFloor}
+      />
 
       {/* Зум + атрибуция */}
       <div className="absolute right-3 bottom-3 z-[500] flex flex-col items-end gap-2">
