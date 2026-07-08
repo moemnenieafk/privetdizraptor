@@ -53,14 +53,20 @@ export function floorIndexForHeight(floors: MapFloor[], y: number): number {
   return best;
 }
 
+// .values() (async-итератор папки) ещё не во всех DOM-либах — объявляем узко, без any.
+interface DirHandleWithValues {
+  values(): AsyncIterableIterator<FileSystemHandle>;
+}
+
 /** Самый свежий .png в папке (по lastModified). */
 export async function readNewestScreenshot(
   handle: FileSystemDirectoryHandle,
 ): Promise<NewestShot | null> {
   let newest: NewestShot | null = null;
-  for await (const entry of handle.values()) {
+  const dir = handle as unknown as DirHandleWithValues;
+  for await (const entry of dir.values()) {
     if (entry.kind !== 'file' || !entry.name.toLowerCase().endsWith('.png')) continue;
-    const file = await entry.getFile();
+    const file = await (entry as FileSystemFileHandle).getFile();
     if (!newest || file.lastModified > newest.lastModified) {
       newest = { name: entry.name, lastModified: file.lastModified };
     }
