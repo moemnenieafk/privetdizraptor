@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { HideoutLevelsPanel, type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
+import type { StashOverlay } from '@/lib/stash-overlay';
 
 export interface HideoutNeedItem {
   itemId: string;
@@ -15,7 +16,7 @@ export interface HideoutNeedItem {
 
 type SortKey = 'total' | 'name';
 
-export function HideoutNeededClient({ needs, stations }: { needs: HideoutNeedItem[]; stations: HideoutStationInfo[] }) {
+export function HideoutNeededClient({ needs, stations, overlay }: { needs: HideoutNeedItem[]; stations: HideoutStationInfo[]; overlay?: Map<string, StashOverlay> }) {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('total');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -95,6 +96,7 @@ export function HideoutNeededClient({ needs, stations }: { needs: HideoutNeedIte
       <div className="overflow-hidden rounded-md border border-lines-hover divide-y divide-lines-hover">
         {visible.map((n) => {
           const expanded = expandedId === n.itemId;
+          const ov = overlay?.get(n.itemId);
           return (
             <div key={n.itemId}>
               <button
@@ -111,6 +113,12 @@ export function HideoutNeededClient({ needs, stations }: { needs: HideoutNeedIte
                   <span className="text-type-caption text-text-muted font-blender-book">
                     {n.sources.length} {n.sources.length === 1 ? 'апгрейд' : 'апгрейд(ов)'}
                   </span>
+                  {ov && ov.stashToHideout > 0 && (
+                    <span className="mt-0.5 block text-type-caption font-blender-book text-text-muted">
+                      в стэше {ov.stashToHideout} · докупить{' '}
+                      <span className="tabular-nums text-(--primary)">{ov.hideoutToObtain}</span>
+                    </span>
+                  )}
                 </div>
                 <span className="shrink-0 text-sm font-blender-medium tabular-nums text-text-secondary">×{n.total.toLocaleString('ru-RU')}</span>
                 <span className={`shrink-0 text-type-caption ${expanded ? 'text-(--primary)' : 'text-text-muted'}`}>{expanded ? '▾' : '▸'}</span>

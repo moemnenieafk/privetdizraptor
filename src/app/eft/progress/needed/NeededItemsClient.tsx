@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuestStore } from '@/store/useQuestStore';
+import type { StashOverlay } from '@/lib/stash-overlay';
 
 export interface NeededReq {
   questId: string;
@@ -36,7 +37,7 @@ interface Agg {
   sources: AggSource[];
 }
 
-export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
+export function NeededItemsClient({ reqs, overlay }: { reqs: NeededReq[]; overlay?: Map<string, StashOverlay> }) {
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const itemProgress = useQuestStore((s) => s.itemProgress);
   const incrementItem = useQuestStore((s) => s.incrementItem);
@@ -83,6 +84,17 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
     return { needed, found, pct: needed > 0 ? Math.round((found / needed) * 100) : 0, items: aggs.length };
   }, [aggs]);
 
+  const stashSummary = useMemo(() => {
+    if (!overlay) return null;
+    let inStash = 0;
+    let toObtain = 0;
+    for (const ov of overlay.values()) {
+      inStash += ov.stashToQuest;
+      toObtain += ov.questSoftToObtain;
+    }
+    return inStash > 0 ? { inStash, toObtain } : null;
+  }, [overlay]);
+
   return (
     <div className="flex flex-col gap-5">
       {/* Общий прогресс */}
@@ -96,6 +108,12 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
         <div className="h-2 overflow-hidden rounded-full bg-lines-hover">
           <div className="h-full bg-(--primary) transition-all" style={{ width: `${overall.pct}%` }} />
         </div>
+        {stashSummary && (
+          <p className="mt-2 text-type-caption font-blender-book text-text-muted">
+            С учётом стэша (не-FiR): зачтено <span className="tabular-nums text-text-secondary">{stashSummary.inStash}</span> · докупить{' '}
+            <span className="tabular-nums text-(--primary)">{stashSummary.toObtain}</span>
+          </p>
+        )}
       </div>
 
       {/* Фильтры */}
@@ -125,6 +143,7 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
           const expanded = expandedId === a.itemId;
           const done = a.found >= a.needed;
           const pct = a.needed > 0 ? Math.round((a.found / a.needed) * 100) : 0;
+          const ov = overlay?.get(a.itemId);
           return (
             <div key={a.itemId}>
               <button
@@ -144,6 +163,14 @@ export function NeededItemsClient({ reqs }: { reqs: NeededReq[] }) {
                   <div className="mt-1 h-1 w-full max-w-60 overflow-hidden rounded-full bg-lines-hover">
                     <div className={`h-full ${done ? 'bg-success' : 'bg-(--primary)'}`} style={{ width: `${pct}%` }} />
                   </div>
+                  {ov && ov.stashToQuest > 0 && (
+                    <div className="mt-1 flex items-center gap-1.5 text-type-caption font-blender-book">
+                      <span className="text-text-muted">в стэше</span>
+                      <span className="tabular-nums text-text-secondary">{ov.stashToQuest}</span>
+                      <span className="text-text-muted">· докупить</span>
+                      <span className="tabular-nums text-(--primary)">{ov.questSoftToObtain}</span>
+                    </div>
+                  )}
                 </div>
                 <span className={`shrink-0 text-sm font-blender-medium tabular-nums ${done ? 'text-success' : 'text-text-secondary'}`}>
                   {a.found}/{a.needed}

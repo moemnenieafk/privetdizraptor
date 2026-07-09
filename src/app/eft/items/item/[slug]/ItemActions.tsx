@@ -65,11 +65,9 @@ export function ItemActions({ itemId }: ItemActionsProps) {
           <span className={`font-blender-medium text-sm tabular-nums ${count === 0 ? 'text-(--text-muted)' : 'text-text-primary'}`}>
             {count}
           </span>
-          {count === 0 && (
-            <span className="font-blender-book text-type-caption uppercase tracking-wider text-(--text-muted)">
-              Нет в наличии
-            </span>
-          )}
+          <span className="font-blender-book text-type-caption uppercase tracking-wider text-(--text-muted)">
+            в стэше
+          </span>
         </div>
 
         <button
