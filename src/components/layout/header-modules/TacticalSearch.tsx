@@ -7,10 +7,13 @@ import { getHeaderConfig, type MenuItem } from '@/data/headerConfig';
 import Link from 'next/link';
 import { searchEftItemsAction, searchQuestsAction } from '@/actions/search-actions';
 import { SearchItemCard } from './SearchItemCard';
+import { SearchItemRow } from './SearchItemRow';
 import { SearchQuestCard, questResultHref } from './SearchQuestCard';
 import type { SearchItemResult, QuestSearchResult } from '@/types/search';
 import { SearchEmptyState } from './SearchEmptyState';
+import { DataViewToggle } from '@/components/ui/DataViewToggle';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { useSearchViewStore } from '@/store/useSearchViewStore';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
 // Хелпер: должна ли иконка сохранять свои оригинальные цвета (без CSS-маски)
@@ -59,6 +62,10 @@ export function TacticalSearch() {
     const profile = state.profiles.find((p) => p.id === state.activeProfileId) || state.profiles[0];
     return profile?.faction || 'BEAR';
   });
+
+  // Режим выдачи предметов: плитка (дефолт) или список. Persist в Zustand.
+  const itemView = useSearchViewStore((s) => s.itemView);
+  const setItemView = useSearchViewStore((s) => s.setItemView);
 
   // Получаем динамический конфиг для текущего раздела
   const config = getHeaderConfig(pathname || '');
@@ -399,24 +406,36 @@ export function TacticalSearch() {
             {/* СЕКЦИЯ: ПРЕДМЕТЫ EFT */}
             {itemResults.length > 0 && (
               <div className="py-2 border-t border-lines-hover/50">
-                <div className="px-4 py-1.5 bg-base/50 border-b border-lines-hover/50 mb-1">
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5 bg-base/50 border-b border-lines-hover/50 mb-1 sm:px-4">
                   <span className="text-type-caption font-blender-medium tracking-widest uppercase text-text-muted">
                     База предметов EFT
                   </span>
+                  {/* Тумблер: плитка (дефолт) ⇄ список */}
+                  <DataViewToggle view={itemView} onChange={setItemView} />
                 </div>
-                <div className="px-4 pb-4">
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2 mt-4">
-                    {/* Выводим до 12 карточек с помощью нового компонента */}
+                <div className="px-2 pb-3 sm:px-4 sm:pb-4">
+                  <div
+                    className={
+                      itemView === 'grid'
+                        ? 'grid grid-cols-2 gap-2 mt-3 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:mt-4'
+                        : 'flex flex-col gap-1.5 mt-3 sm:grid sm:grid-cols-2 sm:gap-2 sm:mt-4'
+                    }
+                  >
+                    {/* До 12 результатов; вид зависит от выбранного режима */}
                 {itemResults.slice(0, 12).map((item, idx) => {
                   const globalIndex = filteredResults.length + questResults.length + idx;
                   const isSelected = selectedIndex === globalIndex;
                   return (
-                    <div 
-                      key={item.id} 
+                    <div
+                      key={item.id}
                       id={`search-result-${globalIndex}`}
-                      className={`transition-all duration-200 rounded-lg ${isSelected ? 'ring-2 ring-(--primary) scale-[1.03] shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_40%,transparent)]' : ''}`}
+                      className={`transition-all duration-200 ${itemView === 'grid' ? 'rounded-lg' : 'rounded-md'} ${isSelected ? `ring-2 ring-(--primary) shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_40%,transparent)] ${itemView === 'grid' ? 'scale-[1.03]' : ''}` : ''}`}
                     >
-                      <SearchItemCard item={item} onSelect={() => { saveSearch(query); setIsOpen(false); }} />
+                      {itemView === 'grid' ? (
+                        <SearchItemCard item={item} onSelect={() => { saveSearch(query); setIsOpen(false); }} />
+                      ) : (
+                        <SearchItemRow item={item} onSelect={() => { saveSearch(query); setIsOpen(false); }} />
+                      )}
                     </div>
                   );
                 })}
@@ -427,9 +446,9 @@ export function TacticalSearch() {
 
             {/* СОСТОЯНИЕ: ЗАГРУЗКА — скелетон-сетка карточек (без спиннеров) */}
             {isPending && itemResults.length === 0 && (
-              <div className="px-4 pt-3 pb-4 border-t border-lines-hover/50">
+              <div className="px-2 pt-3 pb-4 border-t border-lines-hover/50 sm:px-4">
                 <div className="mb-3 h-3 w-40 rounded-xs bg-lines-hover/50 animate-pulse" />
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div
                       key={i}

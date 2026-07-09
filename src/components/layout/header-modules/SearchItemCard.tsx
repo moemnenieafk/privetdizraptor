@@ -70,7 +70,7 @@ export const SearchItemCard = ({ item, onSelect }: SearchItemCardProps) => {
     <Link
       href={`/eft/items/item/${item.normalizedName}`}
       onClick={onSelect}
-      className="group/card flex aspect-square w-full flex-col overflow-hidden rounded-md border border-lines-hover bg-linear-to-b from-card-menu to-(--color-base) transition-colors duration-200 hover:border-(--primary)"
+      className="group/card flex w-full flex-col overflow-hidden rounded-md border border-lines-hover bg-linear-to-b from-card-menu to-(--color-base) transition-colors duration-200 hover:border-(--primary)"
     >
       {/* Шапка: shortName + иконка категории (из раздела «Предметы») */}
       <div className="flex shrink-0 items-center justify-between gap-2 px-2 pt-1.5 pb-0.5">
@@ -89,8 +89,8 @@ export const SearchItemCard = ({ item, onSelect }: SearchItemCardProps) => {
         />
       </div>
 
-      {/* Изображение на подложке редкости (заполняет середину) */}
-      <div className="relative mx-2 mt-0.5 min-h-0 flex-1 overflow-hidden rounded-sm border border-lines-hover">
+      {/* Изображение на подложке редкости — компактная высота, не растягиваем на всю карточку */}
+      <div className="relative mx-2 mt-0.5 aspect-4/3 overflow-hidden rounded-sm border border-lines-hover">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }}
@@ -101,7 +101,7 @@ export const SearchItemCard = ({ item, onSelect }: SearchItemCardProps) => {
           alt={item.shortName}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 z-10 h-full w-full object-contain p-2 drop-shadow-lg transition-transform duration-300 group-hover/card:scale-105"
+          className="absolute inset-0 z-10 h-full w-full object-contain p-1.5 drop-shadow-lg transition-transform duration-300 group-hover/card:scale-105"
           onError={(e) => {
             const t = e.currentTarget;
             if (!t.dataset.triedApi) {
@@ -118,7 +118,7 @@ export const SearchItemCard = ({ item, onSelect }: SearchItemCardProps) => {
       {/* Две колонки цен — без разделителей */}
       <div className="grid shrink-0 grid-cols-2 gap-2 px-2 pt-1 pb-2">
         {/* ПРОДАЖА (лучший торговец) */}
-        <div className="flex flex-col gap-1">
+        <div className="flex min-w-0 flex-col gap-1">
           <span className="text-type-micro font-blender-medium tracking-widest uppercase text-text-muted">
             Продажа
           </span>
@@ -134,7 +134,7 @@ export const SearchItemCard = ({ item, onSelect }: SearchItemCardProps) => {
         </div>
 
         {/* БАРАХОЛКА */}
-        <div className="flex flex-col gap-1">
+        <div className="flex min-w-0 flex-col gap-1">
           <span className="text-type-micro font-blender-medium tracking-widest uppercase text-text-muted">
             Барахолка
           </span>
