@@ -36,7 +36,7 @@ export function MapFloorSwitcher({ floors, active, onChange }: Props) {
 
       <div
         title={floors[active]?.name}
-        className="flex h-8 w-8 items-center justify-center border-b border-lines-hover font-blender-medium text-sm tabular-nums text-(--primary)"
+        className="flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center border-b border-lines-hover font-blender-medium text-sm tabular-nums text-(--primary)"
       >
         {level}
       </div>

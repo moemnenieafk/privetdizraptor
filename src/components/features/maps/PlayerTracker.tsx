@@ -172,7 +172,7 @@ export function PlayerTrackerButton(props: TrackerOpts) {
           type="button"
           onClick={toggleFollow}
           aria-label="Следовать за игроком"
-          className={`flex h-8 w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
+          className={`flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
             follow
               ? 'border-(--primary) bg-(--primary) text-(--color-base)'
               : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'

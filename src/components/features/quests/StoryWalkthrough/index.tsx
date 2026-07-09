@@ -678,13 +678,13 @@ export function StoryWalkthroughView({
               )}
               {media.screenshots.length > 0 && (
                 <div className="absolute bottom-2 right-2 flex gap-2">
-                  <button type="button" aria-label="Назад" onClick={() => nav(-1)} className="flex h-9 w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)">
+                  <button type="button" aria-label="Назад" onClick={() => nav(-1)} className="flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)">
                     <ChevronLeft className="h-5 w-5" />
                   </button>
-                  <button type="button" aria-label="Вперёд" onClick={() => nav(1)} className="flex h-9 w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)">
+                  <button type="button" aria-label="Вперёд" onClick={() => nav(1)} className="flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)">
                     <ChevronRight className="h-5 w-5" />
                   </button>
-                  <a href={mediaSrc ?? '#'} target="_blank" rel="noreferrer" aria-label="Увеличить" className="flex h-9 w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)">
+                  <a href={mediaSrc ?? '#'} target="_blank" rel="noreferrer" aria-label="Увеличить" className="flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)">
                     <ZoomIn className="h-5 w-5" />
                   </a>
                 </div>
