@@ -346,7 +346,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           })}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-lines-hover bg-card-menu/20">
+        <div className="overflow-x-auto scrollbar-hidden rounded-lg border border-lines-hover bg-card-menu/20">
           <table className="w-full text-sm">
             <thead className="bg-card-menu/50">
               <tr>
