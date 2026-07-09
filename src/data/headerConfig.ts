@@ -364,7 +364,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
                 children: [
                   { id: 'i-cont-cases', label: 'Кейсы', path: '/eft/items/gear/containers/cases', iconUrl: '/icons/eft/03-items/equipment/containers/cases.svg' },
                   { id: 'i-cont-secure', label: 'Защищенные', path: '/eft/items/gear/containers/secure', iconUrl: '/icons/eft/03-items/equipment/containers/secure-containers.svg' },
-                  { id: 'i-loot-containers', label: 'Лут-контейнеры', path: '/eft/loot-containers', iconClass: 'icon-eft-loot-containers' }
+                  { id: 'i-loot-containers', label: 'Лут-контейнеры', path: '/eft/loot-containers', iconUrl: '/icons/eft/03-items/equipment/containers/loot-containers.svg' }
                 ]
               },
               { id: 'i-gear-components', label: 'Компоненты', path: '/eft/items/gear/components', iconUrl: '/icons/eft/03-items/gear/cat-gearcomps.svg' }
