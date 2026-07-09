@@ -314,6 +314,12 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             label: 'События',
             path: '/eft/quests/events',
             iconUrl: '/icons/eft/02-quests/ingame-events.svg'
+          },
+          {
+            id: 'quest-map',
+            label: 'Карта заданий',
+            path: '/eft/questmap',
+            iconUrl: '/icons/eft/04-progression/quest-map.svg'
           }
         ]
       },
@@ -539,7 +545,6 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           },
           { id: 'p-tracker', label: 'Трекер предметов', path: '/eft/progress/tracker', iconUrl: '/icons/eft/04-progression/items-tracker.svg' },
           { id: 'p-needed', label: 'Важные предметы', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
-          { id: 'p-questmap', label: 'Карта заданий', path: '/eft/questmap', iconUrl: '/icons/eft/04-progression/quest-map.svg' },
           { id: 'p-loot-rate', label: 'Рейтинг предметов', path: '/eft/items/loot-rate', iconUrl: '/icons/eft/03-items/loot-tier.svg' },
           { id: 'p-price-slot', label: 'Цена за слот', path: '/eft/items/price-slot', iconUrl: '/icons/eft/03-items/price-per-slot.svg' }
         ]
