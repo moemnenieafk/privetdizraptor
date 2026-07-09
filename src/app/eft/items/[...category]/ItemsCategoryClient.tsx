@@ -22,6 +22,8 @@ import { useQuestStore } from '@/store/useQuestStore';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
 import { FavoritesStrip } from '@/components/features/items/FavoritesStrip';
 import { CompareDrawer } from '@/components/features/items/CompareDrawer';
+import { ItemCard } from '@/components/features/items/ItemCard';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -448,6 +450,133 @@ function AdvancedFiltersPanel({
       </div>
     </div>
   );
+}
+
+// ─── Mobile card specs (профильные колонки → чипы карточки) ────────────────────
+
+function penaltyStr(p: CategoryItemProperties): string {
+  const parts: string[] = [];
+  if (p.ergoPenalty) parts.push(`Эрго -${p.ergoPenalty}`);
+  if (p.speedPenalty) parts.push(`Скор -${p.speedPenalty}%`);
+  if (p.turnPenalty) parts.push(`Повор -${p.turnPenalty}%`);
+  return parts.length ? parts.join(' · ') : '—';
+}
+
+/** Пер-категорийные профильные статы для мобильной карточки — зеркалит колонки таблицы (без цен). */
+function getCardSpecs(item: ProcessedItem, slug: string): { label: string; value: string }[] {
+  const p = item.properties || {};
+  const cls = p.class ? `Класс ${p.class}` : 'Нет';
+
+  if (slug === 'headphones') {
+    return [{
+      label: 'Слух',
+      value: p.distanceModifier != null
+        ? `+${Math.round((p.distanceModifier - 1) * 100)}%`
+        : p.ambientVolume ? `${p.ambientVolume} dB` : '—',
+    }];
+  }
+  if (slug === 'helmets') {
+    return [
+      { label: 'Класс', value: cls },
+      { label: 'Шум', value: p.deafening || 'Н/Д' },
+      { label: 'Наушники', value: p.blocksHeadset ? 'Блок.' : 'Нет' },
+      { label: 'Прочн', value: fmt(p.durability) },
+      { label: 'Штрафы', value: penaltyStr(p) },
+    ];
+  }
+  if (slug === 'armor') {
+    return [
+      { label: 'Класс', value: cls },
+      { label: 'Тип', value: p.armorType ? (ARMOR_TYPE_RU[p.armorType] ?? p.armorType) : '—' },
+      { label: 'Прочн', value: fmt(p.durability) },
+      { label: 'Штрафы', value: penaltyStr(p) },
+      { label: 'Вес', value: item.weight != null ? `${item.weight} кг` : '—' },
+    ];
+  }
+  if (slug === 'components') {
+    return [
+      { label: 'Класс', value: cls },
+      { label: 'Тип', value: p.armorType ? (ARMOR_TYPE_RU[p.armorType] ?? p.armorType) : '—' },
+      { label: 'Прочн', value: fmt(p.durability) },
+      { label: 'Штрафы', value: penaltyStr(p) },
+    ];
+  }
+  if (slug === 'eyewear' || slug === 'facecovers' || slug === 'masks') {
+    return [
+      { label: 'Класс', value: cls },
+      { label: 'Защита', value: p.blindnessProtection != null ? `${Math.round(p.blindnessProtection * 100)}%` : '—' },
+      { label: 'Штрафы', value: penaltyStr(p) },
+    ];
+  }
+  if (slug === 'rigs') {
+    return [
+      { label: 'Класс', value: p.class ? `Класс ${p.class}` : 'Без брони' },
+      { label: 'Вмест', value: p.capacity != null ? `${p.capacity} слот.` : '—' },
+      { label: 'Прочн', value: p.class ? fmt(p.durability) : '—' },
+      { label: 'Штрафы', value: penaltyStr(p) },
+    ];
+  }
+  if (slug === 'backpacks') {
+    return [
+      { label: 'Слоты', value: p.capacity != null ? `${p.capacity} слот.` : '—' },
+      { label: 'Вес', value: item.weight != null ? `${item.weight} кг` : '—' },
+      { label: 'Слот/кг', value: (p.capacity && item.weight) ? `${(p.capacity / item.weight).toFixed(1)}` : '—' },
+    ];
+  }
+  if (CONTAINER_SLUGS.has(slug)) {
+    return [
+      { label: 'Вмест', value: p.capacity != null ? `${p.capacity} слот.` : '—' },
+      { label: 'Размер', value: `${item.width}×${item.height}` },
+      { label: 'Соотн', value: p.capacity ? `${(p.capacity / (item.width * item.height)).toFixed(1)}x` : '—' },
+    ];
+  }
+  if (GUN_SLUGS.has(slug)) {
+    return [
+      { label: 'Калибр', value: p.caliber?.replace('Caliber', '') || '—' },
+      { label: 'Эрго', value: p.ergonomics != null ? String(p.ergonomics) : '—' },
+      { label: 'Отдача', value: (p.recoilVertical || p.recoilHorizontal) ? `${p.recoilVertical}/${p.recoilHorizontal}` : '—' },
+      { label: 'RPM', value: p.fireRate ? String(p.fireRate) : '—' },
+      { label: 'Размер', value: `${item.width}×${item.height}` },
+    ];
+  }
+  if (slug === 'ammo') {
+    const pen = Number(p.penetrationPower) || 0;
+    const frag = p.fragmentationChance != null ? Number(p.fragmentationChance) : null;
+    return [
+      { label: 'Калибр', value: p.caliber?.replace('Caliber', '') || '—' },
+      { label: 'Урон', value: p.damage != null ? String(p.damage) : '—' },
+      { label: 'Проб', value: p.penetrationPower != null ? String(p.penetrationPower) : '—' },
+      { label: 'Урон бр', value: p.armorDamage ? `${p.armorDamage}%` : '—' },
+      { label: 'Фрагм', value: pen < 20 ? 'Блок.' : frag !== null ? `${Math.round(frag * 100)}%` : '—' },
+    ];
+  }
+  if (slug === 'grenades') {
+    return [
+      { label: 'Тип', value: p.type || '—' },
+      { label: 'Осколки', value: p.fragments != null ? String(p.fragments) : '—' },
+      { label: 'Взрыв', value: p.fuse != null ? `${p.fuse} с` : '—' },
+      { label: 'Радиус', value: p.maxExplosionDistance != null ? `${p.maxExplosionDistance} м` : '—' },
+    ];
+  }
+  if (slug === 'sights') {
+    return [
+      { label: 'Эрго', value: p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : String(p.ergonomics)) : '—' },
+      { label: 'Увелич', value: formatZoomLevels(p.zoomLevels ?? undefined) },
+      { label: 'Дальн', value: p.sightingRange ? `${p.sightingRange} м` : '—' },
+    ];
+  }
+  if (slug === 'pistolgrips') {
+    return [
+      { label: 'Эрго', value: p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : String(p.ergonomics)) : '—' },
+    ];
+  }
+  if (ERGO_RECOIL_MOD_SLUGS.has(slug)) {
+    return [
+      { label: 'Эрго', value: p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : String(p.ergonomics)) : '—' },
+      { label: 'Отдача', value: p.recoilModifier != null ? `${(p.recoilModifier * 100).toFixed(1)}%` : '—' },
+    ];
+  }
+  return [{ label: 'Размер', value: `${item.width}×${item.height}` }];
 }
 
 // ─── Table row ────────────────────────────────────────────────────────────────
@@ -888,6 +1017,7 @@ export function ItemsCategoryClient({
   const [activeEyewearSubtype, setActiveEyewearSubtype] = useState<EyewearSubtype | 'all'>('all');
   const [visibleCount, setVisibleCount] = useState(100);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 639px)');
   const slug = categorySlug || '';
 
   const availableCalibers = useMemo(() => {
@@ -1099,7 +1229,7 @@ export function ItemsCategoryClient({
   const tableVirtualizer = useVirtualizer({
     count: !isLoading && viewMode === 'table' ? processedItems.length : 0,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 57,
+    estimateSize: () => (isMobile ? 150 : 57),
     overscan: 8,
   });
   const virtualTableRows = tableVirtualizer.getVirtualItems();
@@ -1107,6 +1237,11 @@ export function ItemsCategoryClient({
   const tablePaddingBottom = virtualTableRows.length > 0
     ? tableVirtualizer.getTotalSize() - virtualTableRows[virtualTableRows.length - 1].end
     : 0;
+
+  // Card-reflow на мобилке: смена высоты строка↔карточка — сброс замеров
+  useEffect(() => {
+    tableVirtualizer.measure();
+  }, [isMobile, tableVirtualizer]);
 
   // Возврат со страницы предмета (?focus=<id>): прокрутить к предмету и подсветить.
   useEffect(() => {
@@ -1328,6 +1463,34 @@ export function ItemsCategoryClient({
       {/* Вид: таблица */}
       {!isLoading && viewMode === 'table' && processedItems.length > 0 && (
         <div ref={tableContainerRef} className="overflow-auto max-h-[calc(100vh-260px)]">
+          {isMobile ? (
+            <div className="relative">
+              {tablePaddingTop > 0 && <div style={{ height: tablePaddingTop }} />}
+              {virtualTableRows.map((virtualRow) => {
+                const item = processedItems[virtualRow.index];
+                const sell = item.eco.bestSell as { price: number; priceRUB?: number };
+                return (
+                  <ItemCard
+                    key={item.id}
+                    data-index={virtualRow.index}
+                    ref={tableVirtualizer.measureElement}
+                    href={`/eft/items/item/${item.normalizedName}`}
+                    iconLink={item.image512pxLink}
+                    shortName={item.shortName}
+                    name={item.name}
+                    backgroundColor={item.backgroundColor}
+                    stats={[
+                      { label: 'Покупка', value: item.eco.minPrice },
+                      { label: 'Продажа', value: sell.priceRUB ?? sell.price, tone: 'positive' },
+                      { label: 'Выг/слот', value: item.eco.vps, tone: 'accent' },
+                    ]}
+                    specs={getCardSpecs(item, categorySlug || '')}
+                  />
+                );
+              })}
+              {tablePaddingBottom > 0 && <div style={{ height: tablePaddingBottom }} />}
+            </div>
+          ) : (
           <table className="w-full text-sm text-left whitespace-nowrap font-blender-book">
             <thead className="sticky top-0 z-10 bg-(--color-base) border-b border-lines-hover">
               <tr>
@@ -1461,6 +1624,7 @@ export function ItemsCategoryClient({
               {tablePaddingBottom > 0 && <tr><td style={{ height: tablePaddingBottom }} colSpan={dynamicColCount} /></tr>}
             </tbody>
           </table>
+          )}
         </div>
       )}
 
