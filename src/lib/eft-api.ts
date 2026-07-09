@@ -70,13 +70,19 @@ export async function getAllEftItems(): Promise<EftItem[]> {
  * Используется только для топ-результатов поиска — чтобы не раздувать
  * часовой кэш основной базы (~2500 предметов) вложенными прайсами вендоров.
  */
-export async function getEftItemsPricing(ids: string[]): Promise<Map<string, SellOffer[]>> {
+export interface ItemPricing {
+  normalizedName: string;
+  sellFor: SellOffer[];
+}
+
+export async function getEftItemsPricing(ids: string[]): Promise<Map<string, ItemPricing>> {
   if (ids.length === 0) return new Map();
 
   const query = `
     query {
       items(ids: ${JSON.stringify(ids)}, lang: ru) {
         id
+        normalizedName
         sellFor {
           price
           priceRUB
@@ -101,8 +107,8 @@ export async function getEftItemsPricing(ids: string[]): Promise<Map<string, Sel
     return new Map();
   }
 
-  const items = (json.data?.items ?? []) as Array<{ id: string; sellFor: SellOffer[] | null }>;
-  return new Map(items.map((it) => [it.id, it.sellFor ?? []]));
+  const items = (json.data?.items ?? []) as Array<{ id: string; normalizedName: string | null; sellFor: SellOffer[] | null }>;
+  return new Map(items.map((it) => [it.id, { normalizedName: it.normalizedName ?? '', sellFor: it.sellFor ?? [] }]));
 }
 
 export interface AmmoItem {

@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { LOOT_CONTAINERS, containerBySlug, containerImage } from '@/data/loot-containers';
 import { getContainerLoot } from '@/data/loot/container-loot';
-import { getEftItemsPricing, type SellOffer } from '@/lib/eft-api';
+import { getEftItemsPricing, type ItemPricing } from '@/lib/eft-api';
+import { itemIconUrl } from '@/lib/item-icon';
 
 export function generateStaticParams() {
   return LOOT_CONTAINERS.map((c) => ({ slug: c.slug }));
@@ -22,16 +23,16 @@ export default async function LootContainerPage({ params }: { params: Promise<{ 
 
   const loot = getContainerLoot(container.slug);
 
-  let prices = new Map<string, SellOffer[]>();
+  let prices = new Map<string, ItemPricing>();
   if (loot && loot.items.length > 0) {
     try {
       prices = await getEftItemsPricing(loot.items.map((i) => i.tpl));
     } catch {
-      prices = new Map<string, SellOffer[]>();
+      prices = new Map<string, ItemPricing>();
     }
   }
   const bestSell = (tpl: string): number => {
-    const offers = prices.get(tpl);
+    const offers = prices.get(tpl)?.sellFor;
     if (!offers) return 0;
     return offers.reduce((max, o) => Math.max(max, o.priceRUB ?? 0), 0);
   };
@@ -78,9 +79,28 @@ export default async function LootContainerPage({ params }: { params: Promise<{ 
                 <tbody>
                   {loot.items.map((it) => {
                     const value = bestSell(it.tpl);
+                    const slug = prices.get(it.tpl)?.normalizedName ?? '';
+                    const cell = (
+                      <>
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xs border border-lines-hover bg-card-menu">
+                          <img src={itemIconUrl(it.tpl)} alt="" loading="lazy" className="h-8 w-8 object-contain" />
+                        </span>
+                        <span className="font-blender-book text-text-primary transition-colors group-hover:text-(--primary)">
+                          {it.name}
+                        </span>
+                      </>
+                    );
                     return (
-                      <tr key={it.tpl} className="border-b border-lines-hover/50 last:border-0">
-                        <td className="px-4 py-2 font-blender-book text-text-primary">{it.name}</td>
+                      <tr key={it.tpl} className="border-b border-lines-hover/50 transition-colors last:border-0 hover:bg-card-menu/40">
+                        <td className="px-4 py-2">
+                          {slug ? (
+                            <Link href={`/eft/items/item/${slug}`} className="group flex items-center gap-3">
+                              {cell}
+                            </Link>
+                          ) : (
+                            <div className="flex items-center gap-3">{cell}</div>
+                          )}
+                        </td>
                         <td className="px-4 py-2 text-right font-blender-medium text-xs text-(--primary)">{it.prob}%</td>
                         <td className="px-4 py-2 text-right font-blender-medium text-xs text-text-secondary">
                           {value > 0 ? `${value.toLocaleString('ru-RU')} ₽` : '—'}
@@ -92,7 +112,7 @@ export default async function LootContainerPage({ params }: { params: Promise<{ 
               </table>
             </div>
             <p className="mt-3 font-blender-book text-xs text-text-muted">
-              Шансы — из игровых данных (SPT). Ценность — лучшая цена продажи (tarkov.dev), обновляется автоматически.
+              Шансы — из игровых данных (SPT). Ценность — лучшая цена продажи (tarkov.dev), обновляется автоматически. Нажми на предмет — откроется его страница с полными ценами.
             </p>
           </>
         ) : (
