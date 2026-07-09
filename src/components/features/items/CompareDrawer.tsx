@@ -10,9 +10,11 @@ import { itemIconUrl } from '@/lib/item-icon';
 
 interface CompareDrawerProps {
   items: CategoryItem[];
+  categorySlug?: string;
+  getSpecs?: (item: CategoryItem) => { label: string; value: string }[];
 }
 
-export function CompareDrawer({ items }: CompareDrawerProps) {
+export function CompareDrawer({ items, categorySlug, getSpecs }: CompareDrawerProps) {
   const compareIds = useItemsStore((s) => s.compareIds);
   const clearCompare = useItemsStore((s) => s.clearCompare);
   const toggleCompare = useItemsStore((s) => s.toggleCompare);
@@ -91,15 +93,18 @@ export function CompareDrawer({ items }: CompareDrawerProps) {
                   <p className="truncate font-blender-medium text-type-caption uppercase tracking-wider text-text-primary">
                     {item.shortName}
                   </p>
-                  <p className="font-blender-book text-type-caption text-text-muted">
-                    {item.width}×{item.height}
-                  </p>
                 </div>
 
-                {/* Prices */}
+                {/* Профильные характеристики категории */}
                 <div className="space-y-0.5">
+                  {(getSpecs?.(item) ?? []).map((sp) => (
+                    <div key={sp.label} className="flex items-center justify-between gap-1">
+                      <span className="font-blender-book text-type-caption text-text-muted">{sp.label}</span>
+                      <span className="truncate font-blender-medium text-type-caption text-text-secondary">{sp.value}</span>
+                    </div>
+                  ))}
                   {bestSell && (
-                    <div className="flex items-center justify-between gap-1">
+                    <div className="flex items-center justify-between gap-1 border-t border-lines-hover/50 pt-0.5">
                       <span className="font-blender-book text-type-caption text-text-muted">Продажа</span>
                       <span className="font-blender-medium text-type-caption text-(--primary)">
                         {formatCompactNumber(bestSell.price)} ₽
@@ -118,7 +123,7 @@ export function CompareDrawer({ items }: CompareDrawerProps) {
 
                 {/* Remove button */}
                 <button
-                  onClick={() => toggleCompare(item.id)}
+                  onClick={() => toggleCompare(item.id, categorySlug ?? '')}
                   className="mt-auto font-blender-medium text-type-caption uppercase tracking-wider text-text-muted transition-colors hover:text-red-400"
                 >
                   Убрать

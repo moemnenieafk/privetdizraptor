@@ -5,7 +5,9 @@ interface ItemsStore {
   toggleTrader: (id: string) => void;
   clearTraders: () => void;
   compareIds: string[];
-  toggleCompare: (id: string) => void;
+  /** Категория текущего сравнения (slug каталога). Жёсткий скоуп: сравниваем внутри одной. */
+  compareCategory: string | null;
+  toggleCompare: (id: string, categorySlug: string) => void;
   clearCompare: () => void;
   /** Последний просмотренный раздел каталога — куда вернуть со страницы предмета. */
   catalogReturnPath: string | null;
@@ -25,15 +27,21 @@ export const useItemsStore = create<ItemsStore>((set) => ({
   clearTraders: () => set({ selectedTraders: [] }),
 
   compareIds: [],
-  toggleCompare: (id) =>
+  compareCategory: null,
+  toggleCompare: (id, categorySlug) =>
     set((state) => {
+      // Смена категории — начинаем сравнение заново (жёсткий скоуп: только внутри одной).
+      if (state.compareCategory !== categorySlug) {
+        return { compareCategory: categorySlug, compareIds: [id] };
+      }
       if (state.compareIds.includes(id)) {
-        return { compareIds: state.compareIds.filter((c) => c !== id) };
+        const next = state.compareIds.filter((c) => c !== id);
+        return { compareIds: next, compareCategory: next.length ? categorySlug : null };
       }
       if (state.compareIds.length >= MAX_COMPARE) return state;
       return { compareIds: [...state.compareIds, id] };
     }),
-  clearCompare: () => set({ compareIds: [] }),
+  clearCompare: () => set({ compareIds: [], compareCategory: null }),
 
   catalogReturnPath: null,
   setCatalogReturnPath: (path) => set({ catalogReturnPath: path }),

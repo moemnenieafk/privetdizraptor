@@ -3,7 +3,7 @@
 import React, { useMemo, useRef, useState, useEffect, memo, forwardRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { PackageX, Coins, ChevronUp, ChevronDown, Check, X } from 'lucide-react';
+import { PackageX, Coins, ChevronUp, ChevronDown, Check, X, Scale } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Badge as SemanticBadge, getArmorClassColor } from '@/components/features/items/Badge';
 import { EftItemTile } from '@/components/features/items/EftItemTile';
@@ -587,6 +587,8 @@ const CategoryTableRow = memo(forwardRef<
 >(function CategoryTableRow({ item, categorySlug, gpCount, highlighted, ...props }, ref) {
   const slug = categorySlug || '';
   const p = item.properties || {};
+  const isComparing = useItemsStore((s) => s.compareIds.includes(item.id));
+  const toggleCompare = useItemsStore((s) => s.toggleCompare);
 
   // Подсветка лучшей цены продажи (amber)
   const tSell = item.eco.bestTraderSell?.price || 0;
@@ -609,6 +611,19 @@ const CategoryTableRow = memo(forwardRef<
       <td className="px-3 py-2 border-r border-lines-hover/50">
         <div className="relative w-12 h-12 mx-auto bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
+          <button
+            type="button"
+            onClick={() => toggleCompare(item.id, slug)}
+            aria-label={isComparing ? 'Убрать из сравнения' : 'В сравнение'}
+            title={isComparing ? 'Убрать из сравнения' : 'В сравнение'}
+            className={`absolute left-0.5 top-0.5 z-20 flex h-5 w-5 items-center justify-center rounded-xs border transition-colors ${
+              isComparing
+                ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_25%,transparent)] text-(--primary)'
+                : 'border-lines-hover bg-(--color-base)/70 text-text-muted opacity-0 group-hover:opacity-100 hover:border-(--primary) hover:text-(--primary)'
+            }`}
+          >
+            <Scale className="h-3 w-3" />
+          </button>
           { }
           <img
             src={itemIconUrl(item.id)}
@@ -1629,7 +1644,11 @@ export function ItemsCategoryClient({
       )}
 
       {/* Сравнение — выезжающий снизу drawer */}
-      <CompareDrawer items={initialData} />
+      <CompareDrawer
+        items={initialData}
+        categorySlug={categorySlug}
+        getSpecs={(it) => getCardSpecs({ ...it, eco: getEconomics(it) }, categorySlug || '')}
+      />
 
       {/* Toast: фильтры сохранены */}
       {isSaved && (
