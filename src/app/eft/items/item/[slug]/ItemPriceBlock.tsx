@@ -67,14 +67,14 @@ function EmptyValue() {
   );
 }
 
-// ─── Карточка-ячейка ────────────────────────────────────────────────────────
+// ─── Строка-ячейка: лейбл слева, иконка + цена справа ────────────────────────
 function PriceCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2 rounded border border-lines-hover bg-card-menu p-5">
+    <div className="flex items-center justify-between gap-4 rounded border border-lines-hover bg-card-menu px-5 py-3">
       <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
         {label}
       </span>
-      <div className="flex min-h-12 items-center justify-between gap-3">{children}</div>
+      <div className="flex min-h-12 shrink-0 items-center justify-end gap-3">{children}</div>
     </div>
   );
 }
@@ -97,7 +97,7 @@ export function ItemPriceBlock({ buyFor = [], sellFor = [], slots, buyLevelRequi
   const fleaSellVps = fleaSell ? Math.floor(rub(fleaSell) / safeSlots) : 0;
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="flex flex-col gap-2">
       {/* ── Купить у торговца ── */}
       <PriceCard label="Купить у торговца">
         {bestTraderBuy ? (
