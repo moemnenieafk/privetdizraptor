@@ -30,6 +30,7 @@ import type { QuestsDigestData } from '@/lib/tracking-digest';
 import type { HideoutNeed } from '@/db/hideout';
 import { TrackingQuestsDigest } from './TrackingQuestsDigest';
 import { TrackingItemsDigest } from './TrackingItemsDigest';
+import { TrackingStoryDigest } from './TrackingStoryDigest';
 
 // Реестр игр вкладки (мультиигровая статистика): новые игры добавляются записью сюда.
 // available=false → таб-заглушка «скоро» (трекинг подключается по мере готовности страниц).
@@ -46,6 +47,7 @@ type TrackingGameId = (typeof TRACKING_GAMES)[number]['id'];
 const TRACKING_DOMAINS = [
   { id: 'pmc', label: 'Профиль ЧВК', iconClass: 'icon-eft-profile-settings' },
   { id: 'quests', label: 'Задания', iconClass: 'icon-eft-quests' },
+  { id: 'story', label: 'Истории', iconClass: 'icon-eft-quests-lore' },
   { id: 'items', label: 'Предметы', iconClass: 'icon-eft-prog-items-needed' },
   { id: 'favorites', label: 'Избранное', iconClass: '' },
   { id: 'hideout', label: 'Убежище', iconClass: 'icon-eft-prog-hideout' },
@@ -330,6 +332,7 @@ export function TrackingPanel({
           </div>
         )}
         {activeDomain === 'quests' && <TrackingQuestsDigest digest={questsDigest} />}
+        {activeDomain === 'story' && <TrackingStoryDigest />}
         {activeDomain === 'items' && (
           <TrackingItemsDigest itemRequirements={questsDigest.itemRequirements} />
         )}
