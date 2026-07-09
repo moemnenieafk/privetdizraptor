@@ -46,7 +46,7 @@ export function AccountHeader() {
 
         <Link
           href="/"
-          className="flex h-9 w-9 items-center justify-center rounded border border-lines-hover bg-card-menu transition-all hover:border-(--primary) focus-visible:outline-none"
+          className="flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded border border-lines-hover bg-card-menu transition-all hover:border-(--primary) focus-visible:outline-none"
           title="На главную"
         >
           <div className="h-4 w-4 icon-mask icon-account_profile_icon bg-text-muted" />
