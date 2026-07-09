@@ -251,7 +251,7 @@ export function CategoryControlBar({
       <div className="flex shrink-0 items-center gap-1">
         <button
           onClick={() => onViewModeChange('grid')}
-          className={`flex h-8 w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
+          className={`flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
             viewMode === 'grid'
               ? 'text-(--primary)'
               : 'text-zinc-500 hover:text-zinc-300'
@@ -262,7 +262,7 @@ export function CategoryControlBar({
         </button>
         <button
           onClick={() => onViewModeChange('table')}
-          className={`flex h-8 w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
+          className={`flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
             viewMode === 'table'
               ? 'text-(--primary)'
               : 'text-zinc-500 hover:text-zinc-300'
@@ -276,7 +276,7 @@ export function CategoryControlBar({
       {/* Сохранить фильтры — дискета */}
       <button
         onClick={onSaveFilters}
-        className={`flex h-8 w-8 shrink-0 items-center justify-center bg-transparent outline-none transition-colors duration-200 focus-visible:outline-none ${
+        className={`flex h-11 w-11 lg:h-8 lg:w-8 shrink-0 items-center justify-center bg-transparent outline-none transition-colors duration-200 focus-visible:outline-none ${
           isSaved
             ? 'text-nvg-green'
             : 'text-zinc-500 hover:text-zinc-300'

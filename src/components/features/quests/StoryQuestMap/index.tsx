@@ -214,7 +214,7 @@ export function StoryQuestMap({ map }: { map: StoryQuestMapData }) {
           type="button"
           aria-label="Приблизить"
           onClick={() => viewportRef.current?.zoomIn()}
-          className="flex h-9 w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+          className="flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
         >
           <Plus className="h-4 w-4" />
         </button>
@@ -222,7 +222,7 @@ export function StoryQuestMap({ map }: { map: StoryQuestMapData }) {
           type="button"
           aria-label="Отдалить"
           onClick={() => viewportRef.current?.zoomOut()}
-          className="flex h-9 w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+          className="flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
         >
           <Minus className="h-4 w-4" />
         </button>

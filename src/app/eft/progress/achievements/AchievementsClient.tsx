@@ -214,7 +214,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
         <div className="flex shrink-0 items-center gap-1">
           <button
             onClick={() => setViewMode("grid")}
-            className={`flex h-8 w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
+            className={`flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
               viewMode === "grid" ? "text-(--primary)" : "text-zinc-500 hover:text-zinc-300"
             }`}
             title="Сетка"
@@ -223,7 +223,7 @@ export function AchievementsClient({ initialData }: AchievementsClientProps) {
           </button>
           <button
             onClick={() => setViewMode("table")}
-            className={`flex h-8 w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
+            className={`flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
               viewMode === "table" ? "text-(--primary)" : "text-zinc-500 hover:text-zinc-300"
             }`}
             title="Список"

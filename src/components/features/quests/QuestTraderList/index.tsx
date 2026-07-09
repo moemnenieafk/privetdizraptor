@@ -116,7 +116,7 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
                     type="button"
                     onClick={() => setFilterKappa((v) => !v)}
                     title="Только квесты для Каппы"
-                    className="flex h-9 w-9 items-center justify-center rounded border transition-colors"
+                    className="flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded border transition-colors"
                     style={filterKappa ? { borderColor: 'var(--color-kappa)', backgroundColor: 'var(--color-kappa)' } : { borderColor: 'var(--color-kappa)' }}
                   >
                     <span className="icon-mask icon-eft-profile-kappa h-5 w-5" style={{ backgroundColor: filterKappa ? 'var(--color-darkbase)' : 'var(--color-kappa)' }} />
@@ -125,7 +125,7 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
                     type="button"
                     onClick={() => setFilterLK((v) => !v)}
                     title="Только квесты для Смотрителя"
-                    className="flex h-9 w-9 items-center justify-center rounded border transition-colors"
+                    className="flex h-11 w-11 lg:h-9 lg:w-9 items-center justify-center rounded border transition-colors"
                     style={filterLK ? { borderColor: 'var(--color-lightkeeper)', backgroundColor: 'var(--color-lightkeeper)' } : { borderColor: 'var(--color-lightkeeper)' }}
                   >
                     <span className="icon-mask icon-eft-profile-lightkeeper h-5 w-5" style={{ backgroundColor: filterLK ? 'var(--color-darkbase)' : 'var(--color-lightkeeper)' }} />
