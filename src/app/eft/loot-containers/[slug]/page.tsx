@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { LOOT_CONTAINERS, containerBySlug, containerImage } from '@/data/loot-containers';
 import { getContainerLoot } from '@/data/loot/container-loot';
-import { getEftItemsPricing, type ItemPricing } from '@/lib/eft-api';
+import { getEftPricesByIds } from '@/db/prices';
+import type { EftPriceInfo } from '@/lib/eft-prices';
 import { itemIconUrl } from '@/lib/item-icon';
 
 export function generateStaticParams() {
@@ -23,12 +24,12 @@ export default async function LootContainerPage({ params }: { params: Promise<{ 
 
   const loot = getContainerLoot(container.slug);
 
-  let prices = new Map<string, ItemPricing>();
+  let prices = new Map<string, EftPriceInfo>();
   if (loot && loot.items.length > 0) {
     try {
-      prices = await getEftItemsPricing(loot.items.map((i) => i.tpl));
+      prices = await getEftPricesByIds(loot.items.map((i) => i.tpl));
     } catch {
-      prices = new Map<string, ItemPricing>();
+      prices = new Map<string, EftPriceInfo>();
     }
   }
   const bestSell = (tpl: string): number => {
@@ -112,7 +113,7 @@ export default async function LootContainerPage({ params }: { params: Promise<{ 
               </table>
             </div>
             <p className="mt-3 font-blender-book text-xs text-text-muted">
-              Шансы — из игровых данных (SPT). Ценность — лучшая цена продажи (tarkov.dev), обновляется автоматически. Нажми на предмет — откроется его страница с полными ценами.
+              Шансы — из игровых данных (SPT). Ценность — лучшая цена продажи из базы ЦТА (синхронизируется в фоне). Нажми на предмет — откроется его страница с полными ценами.
             </p>
           </>
         ) : (
