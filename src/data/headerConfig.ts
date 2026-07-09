@@ -323,6 +323,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/items',
         iconUrl: '/icons/eft/03-items/loot-tier.svg',
         children: [
+          { id: 'i-loot-containers', label: 'Лут-контейнеры', path: '/eft/loot-containers', iconClass: 'icon-eft-loot-containers' },
           // 1. БАРТЕР
           {
             id: 'i-barter',
