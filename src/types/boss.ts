@@ -28,6 +28,8 @@ export interface Boss {
   totalHp?: number;
   health?: BossHealthPart[];
   armor?: string;
+  /** normalizedName (slug) предметов брони из таблицы items — для иконок + линка. */
+  armorItems?: string[];
   weapon?: string;
   followers?: string;
   spawns?: BossSpawn[];

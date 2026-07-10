@@ -2,6 +2,7 @@
 
 import {
   MANNEQUIN_ORDER,
+  MANNEQUIN_VIEWBOX,
   PART_PATHS,
   partOpacity,
   type BodyPartLabel,
@@ -26,7 +27,7 @@ export function BodyMannequin({
   className,
 }: BodyMannequinProps) {
   return (
-    <svg viewBox="0 0 256 512" className={className} role="img" aria-label="Распределение HP по частям тела">
+    <svg viewBox={MANNEQUIN_VIEWBOX} className={className} role="img" aria-label="Распределение HP по частям тела">
       {MANNEQUIN_ORDER.map((label) => {
         const isActive = active === label;
         const isDimmed = active !== null && !isActive;

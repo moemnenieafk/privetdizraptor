@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Boss } from '@/types/boss';
 import { BossBodyDamage } from './BossBodyDamage';
+import { BossArmorLoadout } from './BossArmorLoadout';
 
 function InfoRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
@@ -52,6 +53,9 @@ export function BossDetail({ boss }: { boss: Boss }) {
               <InfoRow label="Оружие" value={boss.weapon} />
               <InfoRow label="Сопровождение" value={boss.followers} />
             </div>
+            {boss.armorItems && boss.armorItems.length > 0 && (
+              <BossArmorLoadout slugs={boss.armorItems} caption="Носимая броня" />
+            )}
           </div>
         </div>
 
