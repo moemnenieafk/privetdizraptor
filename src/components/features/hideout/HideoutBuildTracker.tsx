@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus, ArrowRight, Hammer, Check, Maximize2 } from 'lucide-react';
 import { useHideoutStore, hideoutItemKey } from '@/store/useHideoutStore';
+import { FillMedia } from '@/components/ui/FillMedia';
 import { itemIconUrl } from '@/lib/item-icon';
 import type { HideoutNeed, HideoutStationInfo } from '@/db/hideout';
 import { ResetControl } from '@/components/features/tracking/ResetControl';
@@ -301,45 +302,28 @@ export function HideoutBuildTracker({
                         return (
                           <div
                             key={it.itemId}
-                            role="button"
-                            tabIndex={0}
-                            title={done ? `${it.name} — собрано` : `${it.name} — клик: +1 материал`}
-                            onClick={() => !done && setItemProgress(key, got + 1)}
-                            onKeyDown={(e) => {
-                              if ((e.key === 'Enter' || e.key === ' ') && !done) {
-                                e.preventDefault();
-                                setItemProgress(key, got + 1);
-                              }
-                            }}
                             className={`group relative select-none rounded-lg border p-2.5 transition-all duration-150 ${
                               done
                                 ? 'border-success/50 bg-success/5'
-                                : 'cursor-pointer border-lines-hover bg-card-menu/40 hover:border-(--primary)'
+                                : 'border-lines-hover bg-card-menu/40'
                             }`}
                           >
-                            {/* Медиаконтейнер (единый стиль QuestItemTracker) + вертикальный бак */}
-                            <div className="relative mx-auto h-13.25 w-13.25">
-                              <div className="absolute inset-0 overflow-hidden rounded-sm border border-lines-hover">
-                                <div className="absolute inset-0 bg-(--color-darkbase)" />
-                                {/* Вертикальная заливка-бак: материалы «наливаются» снизу */}
-                                <div
-                                  className={`absolute inset-x-0 bottom-0 transition-[height] duration-300 ease-out ${done ? 'bg-success/35' : 'bg-(--primary)/30'}`}
-                                  style={{ height: `${pct}%` }}
-                                />
-                                <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]" />
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={itemIconUrl(it.itemId)}
-                                  alt={it.name}
-                                  loading="lazy"
-                                  className="absolute inset-0 z-10 h-full w-full object-contain p-1 transition-transform duration-150 group-hover:scale-105"
-                                />
-                              </div>
-                              {done && (
-                                <span className="absolute -right-1 -top-1 z-20 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-success text-(--color-base)">
-                                  <Check className="h-3 w-3" />
-                                </span>
-                              )}
+                            {/* Медиа-бак: тап = +1 материал, вертикальный драг = залив (FillMedia) */}
+                            <FillMedia
+                              imageSrc={itemIconUrl(it.itemId)}
+                              alt={it.name}
+                              pct={pct}
+                              done={done}
+                              className="mx-auto"
+                              imgClassName="transition-transform duration-150 group-hover:scale-105"
+                              imgLoading="lazy"
+                              interactive={{
+                                value: got,
+                                max: it.count,
+                                onChange: (n) => setItemProgress(key, n),
+                                onTap: done ? undefined : () => setItemProgress(key, got + 1),
+                              }}
+                            >
                               {/* FIR-галочка на медиаконтейнере */}
                               {it.fir && !done && (
                                 <span
@@ -350,7 +334,7 @@ export function HideoutBuildTracker({
                                 </span>
                               )}
 
-                              {/* − материал: по вертикальному центру контейнера, слева (при ховере) */}
+                              {/* − материал: слева от бака (при ховере) */}
                               {got > 0 && (
                                 <button
                                   type="button"
@@ -366,7 +350,7 @@ export function HideoutBuildTracker({
                                 </button>
                               )}
 
-                              {/* Карточка предмета: по вертикальному центру контейнера, справа (при ховере) */}
+                              {/* Ссылка на предмет: справа от бака (при ховере) */}
                               {it.slug && (
                                 <Link
                                   href={`/eft/items/item/${it.slug}`}
@@ -378,7 +362,7 @@ export function HideoutBuildTracker({
                                   <Maximize2 className="h-3 w-3" />
                                 </Link>
                               )}
-                            </div>
+                            </FillMedia>
 
                             <p className="mt-2 line-clamp-2 text-center text-type-micro uppercase leading-tight tracking-wider text-text-secondary">
                               {it.name}

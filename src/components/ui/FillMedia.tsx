@@ -3,8 +3,8 @@
 // Медиаконтейнер предмета с вертикальной заливкой-«баком» (паттерн модулей убежища).
 // Опциональный интерактив: вертикальный ОТНОСИТЕЛЬНЫЙ драг с захватом указателя —
 // тянешь пальцем по всему экрану (не только по иконке 53px), значение прилипает к
-// круглым величинам под масштаб required. Клавиатура: ↑/↓ ±1, PgUp/PgDn ±шаг, Home/End.
-// Дамб-атом: доменного стейта нет, только value/onChange.
+// круглым величинам под масштаб required. Тап без движения → onTap (напр. +1).
+// Клавиатура: ↑/↓ ±1, PgUp/PgDn ±шаг, Home/End. children — оверлеи (FIR, −1, ссылка).
 import { useCallback, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 
@@ -12,6 +12,8 @@ interface FillMediaInteractive {
   value: number;
   max: number;
   onChange: (next: number) => void;
+  /** Тап без перетаскивания (напр. +1 материал). Не задан → тап игнорируется. */
+  onTap?: () => void;
 }
 
 interface FillMediaProps {
@@ -22,9 +24,17 @@ interface FillMediaProps {
   done?: boolean;
   /** Если задан — контейнер становится вертикальным слайдером-баком. */
   interactive?: FillMediaInteractive;
+  /** Доп. классы внешнего контейнера (напр. mx-auto). */
+  className?: string;
+  /** Доп. классы <img> (напр. hover-scale). */
+  imgClassName?: string;
+  imgLoading?: 'lazy' | 'eager';
+  /** Оверлеи поверх медиа: FIR-бейдж, −1, ссылка на предмет. */
+  children?: React.ReactNode;
 }
 
-const DRAG_RANGE = 200; // px вертикального хода на полный диапазон
+const DRAG_RANGE = 200;    // px вертикального хода на полный диапазон
+const MOVE_THRESHOLD = 4;  // px, после которых жест считается драгом, а не тапом
 
 function niceStep(max: number): number {
   if (max <= 10) return 1;
@@ -45,9 +55,20 @@ function snap(value: number, max: number): number {
   return Math.round(value / step) * step;
 }
 
-export function FillMedia({ imageSrc, alt, pct, done = false, interactive }: FillMediaProps) {
+export function FillMedia({
+  imageSrc,
+  alt,
+  pct,
+  done = false,
+  interactive,
+  className,
+  imgClassName,
+  imgLoading,
+  children,
+}: FillMediaProps) {
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ startY: number; startValue: number } | null>(null);
+  const moved = useRef(false);
 
   const applyDelta = useCallback((clientY: number) => {
     if (!interactive || !drag.current) return;
@@ -62,14 +83,18 @@ export function FillMedia({ imageSrc, alt, pct, done = false, interactive }: Fil
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     drag.current = { startY: e.clientY, startValue: interactive.value };
+    moved.current = false;
     setDragging(true);
   };
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (dragging) applyDelta(e.clientY);
+    if (!dragging || !drag.current) return;
+    if (Math.abs(e.clientY - drag.current.startY) > MOVE_THRESHOLD) moved.current = true;
+    if (moved.current) applyDelta(e.clientY);
   };
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging) return;
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+    if (!moved.current) interactive?.onTap?.();
     drag.current = null;
     setDragging(false);
   };
@@ -106,7 +131,7 @@ export function FillMedia({ imageSrc, alt, pct, done = false, interactive }: Fil
     : {};
 
   return (
-    <div className="relative h-13.25 w-13.25 shrink-0">
+    <div className={`relative h-13.25 w-13.25 shrink-0 ${className ?? ''}`}>
       <div
         {...sliderProps}
         className={`absolute inset-0 overflow-hidden rounded-sm border transition-colors ${interactive ? 'cursor-ns-resize focus:border-(--primary) focus:outline-none' : ''} ${dragging ? 'border-(--primary)' : 'border-lines-hover'}`}
@@ -120,7 +145,12 @@ export function FillMedia({ imageSrc, alt, pct, done = false, interactive }: Fil
           <div className={`absolute inset-x-0 h-px ${done ? 'bg-success' : 'bg-(--primary)'}`} style={{ bottom: `${pct}%` }} />
         )}
         <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]" />
-        <img src={imageSrc} alt={alt} className="pointer-events-none absolute inset-0 z-10 h-full w-full object-contain p-1" />
+        <img
+          src={imageSrc}
+          alt={alt}
+          loading={imgLoading}
+          className={`pointer-events-none absolute inset-0 z-10 h-full w-full object-contain p-1 ${imgClassName ?? ''}`}
+        />
       </div>
 
       {done && (
@@ -128,6 +158,8 @@ export function FillMedia({ imageSrc, alt, pct, done = false, interactive }: Fil
           <Check className="h-3 w-3" />
         </span>
       )}
+
+      {children}
 
       {dragging && interactive && (
         <span className="absolute -top-6 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-xs border border-(--primary)/50 bg-(--color-base) px-1.5 py-0.5 text-xs font-blender-medium tabular-nums text-(--primary)">
