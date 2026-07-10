@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Boss } from '@/types/boss';
+import { BossBodyDamage } from './BossBodyDamage';
 
 function InfoRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
@@ -13,8 +14,6 @@ function InfoRow({ label, value }: { label: string; value?: string }) {
 }
 
 export function BossDetail({ boss }: { boss: Boss }) {
-  const maxHp = boss.health && boss.health.length > 0 ? Math.max(...boss.health.map((h) => h.hp)) : 0;
-
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-16">
       <div className="w-full max-w-275 px-4 xl:px-0">
@@ -61,17 +60,7 @@ export function BossDetail({ boss }: { boss: Boss }) {
           <section className="mb-10">
             <h2 className="mb-1 text-lg font-blender-medium uppercase tracking-widest text-text-primary">HP по частям тела</h2>
             <p className="mb-4 text-type-caption text-text-muted font-blender-book">По данным tarkov.dev / сообщества (актуально для текущего патча).</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {boss.health.map((h) => (
-                <div key={h.part} className="flex items-center gap-3">
-                  <span className="w-28 shrink-0 text-sm text-text-secondary font-blender-book">{h.part}</span>
-                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-lines-hover">
-                    <div className="h-full bg-(--primary)" style={{ width: `${maxHp > 0 ? (h.hp / maxHp) * 100 : 0}%` }} />
-                  </div>
-                  <span className="w-10 shrink-0 text-right text-sm font-blender-medium text-text-primary">{h.hp}</span>
-                </div>
-              ))}
-            </div>
+            <BossBodyDamage health={boss.health} />
           </section>
         )}
 
