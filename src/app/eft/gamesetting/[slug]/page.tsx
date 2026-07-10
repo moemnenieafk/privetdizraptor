@@ -17,5 +17,6 @@ export default async function CodexSlugPage({ params }: Props) {
 
   const data = getSectionPlaceholder(`/eft/gamesetting/${slug}`);
   if (!data) notFound();
-  return <SectionPlaceholder {...data} />;
+  // Табы переключения теперь даёт layout Кодекса — не дублируем их в шапке заглушки.
+  return <SectionPlaceholder {...data} tabs={undefined} />;
 }
