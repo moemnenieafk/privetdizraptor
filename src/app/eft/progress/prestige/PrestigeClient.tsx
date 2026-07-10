@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { PrestigePath } from '@/components/features/prestige/PrestigePath';
 import {
   PRESTIGE_LEVELS,
   PRESTIGE_RESETS,
@@ -90,6 +91,9 @@ export function PrestigeClient() {
           })}
         </ul>
       </nav>
+
+      {/* Путь к Престижу — геймификация */}
+      <PrestigePath variant="full" />
 
       {/* Showcase-рендеры активного набора */}
       <section>

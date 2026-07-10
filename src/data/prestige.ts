@@ -211,3 +211,43 @@ export const PRESTIGE_COSMETICS: string[] = [
   '/icons/eft/prestige/reward/small/684abdd07b2090d3020a1d19.webp',
   '/icons/eft/prestige/reward/small/684abdd6e361378c540d21e9.webp',
 ];
+
+// ── Геймификация: трекуемые цели престижа («Путь к Престижу»).
+// kind='level' — авто-чек по телеметрии; 'flag' — ручной чекпойнт; 'count' — тап-счётчик.
+// Только престижи 1-4 (у 5-6 нет квестов). Ключи id стабильны — не переименовывать.
+export type PrestigeObjective =
+  | { id: string; kind: 'level'; label: string; minLevel: number }
+  | { id: string; kind: 'flag'; label: string }
+  | { id: string; kind: 'count'; label: string; target: number };
+
+export const PRESTIGE_OBJECTIVES: Record<number, PrestigeObjective[]> = {
+  1: [
+    { id: 'lvl', kind: 'level', label: 'Уровень ЧВК 25', minLevel: 25 },
+    { id: 'scavs', kind: 'flag', label: 'Убить Диких' },
+    { id: 'lab', kind: 'flag', label: 'Лаборатория: выжить' },
+    { id: 'figs', kind: 'count', label: 'Фигурки: BEAR/Дикий/Килла/Прапор', target: 4 },
+  ],
+  2: [
+    { id: 'lvl', kind: 'level', label: 'Уровень ЧВК 30', minLevel: 30 },
+    { id: 'pmc', kind: 'flag', label: 'Убить бойцов ЧВК' },
+    { id: 'lab', kind: 'flag', label: 'Лаборатория: выжить' },
+    { id: 'figs', kind: 'count', label: 'Фигурки (по 2, найденные в рейде)', target: 8 },
+  ],
+  3: [
+    { id: 'lvl', kind: 'level', label: 'Уровень ЧВК 35', minLevel: 35 },
+    { id: 'pmc', kind: 'flag', label: 'Убить ЧВК и Рейдеров' },
+    { id: 'transit', kind: 'flag', label: 'Переход Лаборатория → Улицы' },
+    { id: 'streets', kind: 'flag', label: 'Выжить и выйти на Улицах' },
+    { id: 'figs', kind: 'count', label: 'Фигурки (по 3, найденные в рейде)', target: 12 },
+  ],
+  4: [
+    { id: 'lvl', kind: 'level', label: 'Уровень ЧВК 40', minLevel: 40 },
+    { id: 'pmc', kind: 'flag', label: 'Убить ЧВК и Отступников' },
+    { id: 'transit', kind: 'flag', label: 'Переходы: Лаба → Улицы → Развязка' },
+    { id: 'labyrinth', kind: 'count', label: 'Лимитированная фигурка (Лабиринт)', target: 1 },
+    { id: 'figs', kind: 'count', label: 'Фигурки (по 3, найденные в рейде)', target: 12 },
+  ],
+};
+
+/** Есть ли отслеживаемый путь к следующему престижу (квесты только у 1-4). */
+export const PRESTIGE_MAX_ACTIVE = 4;

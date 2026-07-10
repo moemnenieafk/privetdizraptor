@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { ArrowRight, Check, Maximize2 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { PRESTIGE_LEVELS } from '@/data/prestige';
+import { PrestigePath } from '@/components/features/prestige/PrestigePath';
 
 // Метка-заголовок блока с линией (rule-micro-labels).
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,10 @@ export function TrackingPrestigeDigest() {
           Раздел «Престиж»
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>
+      </div>
+
+      <div className="mb-5">
+        <PrestigePath variant="compact" />
       </div>
 
       <SectionLabel>Лестница престижей</SectionLabel>
