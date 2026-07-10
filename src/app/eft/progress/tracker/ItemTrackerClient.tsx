@@ -1,7 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo } from 'react';
+import { Check } from 'lucide-react';
 import { useQuestStore, getActiveItemRequirements } from '@/store/useQuestStore';
+import { QtyControl } from '@/components/ui/QtyControl';
 import type { TaskRaw } from '@/types/quest';
 
 const TRADER_SLUG: Record<string, string> = { 'btr-driver': 'btrdriver' };
@@ -31,8 +33,7 @@ interface Props {
 export function ItemTrackerClient({ initialTasks }: Props) {
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const itemProgress    = useQuestStore((s) => s.itemProgress);
-  const incrementItem   = useQuestStore((s) => s.incrementItem);
-  const decrementItem   = useQuestStore((s) => s.decrementItem);
+  const setItemCount    = useQuestStore((s) => s.setItemCount);
 
   const [query, setQuery]           = useState('');
   const [sortMode, setSortMode]     = useState<SortMode>('progress');
@@ -107,14 +108,14 @@ export function ItemTrackerClient({ initialTasks }: Props) {
       {/* Controls row */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Search */}
-        <div className="relative flex-1 min-w-48 max-w-72">
-          <span className="icon-bg icon-eft-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted pointer-events-none" />
+        <div className="relative min-w-48 max-w-72 flex-1">
+          <span className="icon-bg icon-eft-search absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 pointer-events-none text-text-muted" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск предмета..."
-            className="w-full pl-7 pr-3 h-7 rounded-xs border border-lines-hover bg-card-menu text-type-caption font-blender-book text-text-primary placeholder:text-text-muted focus:outline-none focus:border-(--primary)/60 transition-colors"
+            className="h-7 w-full rounded-xs border border-lines-hover bg-card-menu pl-7 pr-3 text-type-caption font-blender-book text-text-primary transition-colors placeholder:text-text-muted focus:border-(--primary)/60 focus:outline-none"
           />
         </div>
 
@@ -122,7 +123,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
         <select
           value={sortMode}
           onChange={(e) => setSortMode(e.target.value as SortMode)}
-          className="h-7 px-2 rounded-xs border border-lines-hover bg-card-menu text-type-caption font-blender-medium uppercase text-text-secondary focus:outline-none focus:border-(--primary)/60 cursor-pointer"
+          className="h-7 cursor-pointer rounded-xs border border-lines-hover bg-card-menu px-2 text-type-caption font-blender-medium uppercase text-text-secondary focus:border-(--primary)/60 focus:outline-none"
         >
           <option value="progress">По прогрессу</option>
           <option value="name">По названию</option>
@@ -132,21 +133,21 @@ export function ItemTrackerClient({ initialTasks }: Props) {
         {/* Filter chips */}
         <button
           onClick={() => setFilterFiR((v) => !v)}
-          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-xs border text-type-caption font-blender-medium uppercase tracking-wider transition-colors cursor-pointer ${
+          className={`flex h-7 cursor-pointer items-center gap-1.5 rounded-xs border px-2.5 text-type-caption font-blender-medium uppercase tracking-wider transition-colors ${
             filterFiR
-              ? 'bg-(--primary)/15 border-(--primary)/50 text-(--primary)'
+              ? 'border-(--primary)/50 bg-(--primary)/15 text-(--primary)'
               : 'border-lines-hover bg-card-menu text-text-muted hover:border-(--primary)/30 hover:text-text-secondary'
           }`}
         >
-          <span className="icon-bg icon-eft-fir w-3 h-3" />
+          <span className="icon-bg icon-eft-fir h-3 w-3" />
           Найдено в рейде
         </button>
 
         <button
           onClick={() => setFilterDone((v) => !v)}
-          className={`flex items-center gap-1.5 h-7 px-2.5 rounded-xs border text-type-caption font-blender-medium uppercase tracking-wider transition-colors cursor-pointer ${
+          className={`flex h-7 cursor-pointer items-center gap-1.5 rounded-xs border px-2.5 text-type-caption font-blender-medium uppercase tracking-wider transition-colors ${
             filterDone
-              ? 'bg-(--primary)/15 border-(--primary)/50 text-(--primary)'
+              ? 'border-(--primary)/50 bg-(--primary)/15 text-(--primary)'
               : 'border-lines-hover bg-card-menu text-text-muted hover:border-(--primary)/30 hover:text-text-secondary'
           }`}
         >
@@ -160,44 +161,60 @@ export function ItemTrackerClient({ initialTasks }: Props) {
 
       {/* Cards grid */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-text-muted">
-          <span className="icon-bg icon-eft-quests-active w-8 h-8 opacity-30" />
+        <div className="flex flex-col items-center justify-center gap-3 py-20 text-text-muted">
+          <span className="icon-bg icon-eft-quests-active h-8 w-8 opacity-30" />
           <p className="text-type-caption font-blender-medium uppercase tracking-widest">
             {query ? 'Предметы не найдены' : 'Все предметы собраны'}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((group) => {
             const pct = group.totalNeeded > 0
               ? Math.round((group.totalFound / group.totalNeeded) * 100)
               : 0;
             const done = group.totalFound >= group.totalNeeded;
+            const single = group.quests.length === 1;
+
+            const fillAll  = () => group.quests.forEach((q) => setItemCount(q.questId, q.objectiveId, q.needed));
+            const clearAll = () => group.quests.forEach((q) => setItemCount(q.questId, q.objectiveId, 0));
 
             return (
               <div
                 key={group.item.id}
                 className={`flex flex-col gap-2.5 rounded-xs border p-3 transition-colors ${
-                  done
-                    ? 'border-success/30 bg-success/5'
-                    : 'border-lines-hover bg-card-menu'
+                  done ? 'border-success/30 bg-success/5' : 'border-lines-hover bg-card-menu'
                 }`}
               >
-                {/* Header */}
+                {/* Header — медиаконтейнер с вертикальной заливкой (бак модулей убежища) */}
                 <div className="flex items-start gap-2.5">
-                  <img
-                    src={group.item.image512pxLink}
-                    alt={group.item.name}
-                    width={40}
-                    height={40}
-                    className="rounded-xs object-contain bg-lines-hover/30 shrink-0"
-                  />
-                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    <span className="text-type-caption font-blender-medium uppercase text-text-primary leading-tight line-clamp-2">
+                  <div className="relative h-13.25 w-13.25 shrink-0">
+                    <div className="absolute inset-0 overflow-hidden rounded-sm border border-lines-hover">
+                      <div className="absolute inset-0 bg-(--color-darkbase)" />
+                      <div
+                        className={`absolute inset-x-0 bottom-0 transition-[height] duration-300 ease-out ${done ? 'bg-success/35' : 'bg-(--primary)/30'}`}
+                        style={{ height: `${pct}%` }}
+                      />
+                      <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]" />
+                      <img
+                        src={group.item.image512pxLink}
+                        alt={group.item.name}
+                        className="absolute inset-0 z-10 h-full w-full object-contain p-1"
+                      />
+                    </div>
+                    {done && (
+                      <span className="absolute -right-1 -top-1 z-20 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-success text-(--color-base)">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-type-caption font-blender-medium uppercase leading-tight line-clamp-2 text-text-primary">
                       {group.item.name}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-type-caption font-blender-medium uppercase text-text-muted border border-lines-hover rounded-xs px-1 py-px">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-xs border border-lines-hover px-1 py-px text-type-caption font-blender-medium uppercase text-text-muted">
                         {group.item.shortName}
                       </span>
                       {group.foundInRaid && (
@@ -207,13 +224,14 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                       )}
                     </div>
                   </div>
-                  {/* Total progress badge */}
-                  <div className={`shrink-0 text-type-caption font-blender-medium tabular-nums ${done ? 'text-success' : 'text-text-primary'}`}>
-                    {group.totalFound} <span className="text-text-muted text-type-caption">/ {group.totalNeeded}</span>
+
+                  {/* Total progress */}
+                  <div className={`shrink-0 text-xs font-blender-medium tabular-nums ${done ? 'text-success' : 'text-text-primary'}`}>
+                    {group.totalFound} <span className="text-text-muted">/ {group.totalNeeded}</span>
                   </div>
                 </div>
 
-                {/* Progress bar */}
+                {/* Horizontal bar — быстрый скан */}
                 <div className="h-0.5 w-full rounded-full bg-lines-hover">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${done ? 'bg-success' : 'bg-(--primary)'}`}
@@ -221,53 +239,76 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                   />
                 </div>
 
-                {/* Quest list */}
-                <div className="flex flex-col gap-1.5">
-                  {group.quests.map((quest) => {
-                    const questDone = quest.found >= quest.needed;
-                    return (
-                      <div key={`${quest.questId}-${quest.objectiveId}`} className="flex items-center gap-2">
-                        <img
-                          src={traderImg(quest.traderNormalizedName)}
-                          alt={quest.traderNormalizedName}
-                          width={12}
-                          height={12}
-                          className="rounded-xs shrink-0 opacity-70"
-                        />
-                        <span
-                          className={`flex-1 text-type-caption font-blender-book truncate ${
-                            questDone ? 'line-through text-text-muted' : 'text-text-secondary'
-                          }`}
-                        >
-                          {quest.questName}
-                        </span>
-                        <span className="text-type-caption font-blender-medium text-text-muted shrink-0">
-                          ×{quest.needed}
-                        </span>
-                        {/* Counter */}
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={() => decrementItem(quest.questId, quest.objectiveId)}
-                            disabled={quest.found <= 0}
-                            className="flex items-center justify-center w-5 h-5 rounded-xs border border-lines-hover bg-lines-hover/50 text-text-secondary hover:border-(--primary)/50 hover:text-(--primary) disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-blender-medium cursor-pointer"
-                          >
-                            −
-                          </button>
-                          <span className={`text-type-caption font-blender-medium w-6 text-center tabular-nums ${questDone ? 'text-success' : 'text-text-primary'}`}>
-                            {quest.found}
-                          </span>
-                          <button
-                            onClick={() => incrementItem(quest.questId, quest.objectiveId, quest.needed)}
-                            disabled={quest.found >= quest.needed}
-                            className="flex items-center justify-center w-5 h-5 rounded-xs border border-lines-hover bg-lines-hover/50 text-text-secondary hover:border-(--primary)/50 hover:text-(--primary) disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-blender-medium cursor-pointer"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                {single ? (
+                  /* Один квест → крупный ввод прямо в карточке (лечит ×N кликов) */
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <img src={traderImg(group.quests[0].traderNormalizedName)} alt="" width={12} height={12} className="shrink-0 rounded-xs opacity-70" />
+                      <span className={`truncate text-type-caption font-blender-book ${done ? 'text-text-muted line-through' : 'text-text-secondary'}`}>
+                        {group.quests[0].questName}
+                      </span>
+                    </div>
+                    <QtyControl
+                      value={group.quests[0].found}
+                      max={group.quests[0].needed}
+                      onChange={(n) => setItemCount(group.quests[0].questId, group.quests[0].objectiveId, n)}
+                      size="md"
+                      showMax
+                      showClear
+                    />
+                  </div>
+                ) : (
+                  /* Несколько квестов → агрегатные действия + строки */
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">Задания</span>
+                      <span className="h-px flex-1 bg-lines-hover" />
+                      <button
+                        onClick={fillAll}
+                        disabled={done}
+                        className="h-6 cursor-pointer rounded-xs border border-(--primary)/50 bg-(--primary)/15 px-2 text-type-caption font-blender-medium uppercase tracking-wider text-(--primary) transition-colors hover:bg-(--primary)/25 disabled:cursor-not-allowed disabled:opacity-30"
+                      >
+                        Всё
+                      </button>
+                      <button
+                        onClick={clearAll}
+                        disabled={group.totalFound === 0}
+                        className="h-6 cursor-pointer rounded-xs border border-lines-hover px-2 text-type-caption font-blender-medium uppercase tracking-wider text-text-muted transition-colors hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-30"
+                      >
+                        Сброс
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      {group.quests.map((quest) => {
+                        const questDone = quest.found >= quest.needed;
+                        return (
+                          <div key={`${quest.questId}-${quest.objectiveId}`} className="flex items-center gap-2">
+                            <img
+                              src={traderImg(quest.traderNormalizedName)}
+                              alt={quest.traderNormalizedName}
+                              width={12}
+                              height={12}
+                              className="shrink-0 rounded-xs opacity-70"
+                            />
+                            <span className={`flex-1 truncate text-type-caption font-blender-book ${questDone ? 'text-text-muted line-through' : 'text-text-secondary'}`}>
+                              {quest.questName}
+                            </span>
+                            <span className="shrink-0 text-type-caption font-blender-medium text-text-muted">
+                              ×{quest.needed}
+                            </span>
+                            <QtyControl
+                              value={quest.found}
+                              max={quest.needed}
+                              onChange={(n) => setItemCount(quest.questId, quest.objectiveId, n)}
+                              size="sm"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}
