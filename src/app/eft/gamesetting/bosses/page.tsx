@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { BOSSES } from '@/data/bosses';
+import { SectionHubNav } from '@/components/features/navigation/SectionHubNav';
 
 export const metadata: Metadata = { title: 'Боссы Таркова | Кодекс ЦТА' };
 
@@ -9,14 +10,14 @@ export const metadata: Metadata = { title: 'Боссы Таркова | Коде
 export default function BossesIndexPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
+      <SectionHubNav
+        rootPath="/eft/gamesetting"
+        variant="full"
+        title="Боссы Таркова"
+        description="Досье на боссов локаций: характеристики, HP по зонам, тактика и достоверный лор."
+        iconUrl="/icons/eft/05-gamesetting/bosses.svg"
+      />
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <header className="mb-8">
-          <h1 className="text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">Боссы Таркова</h1>
-          <p className="mt-2 text-sm text-text-secondary font-blender-book">
-            Досье на боссов локаций: характеристики, HP по зонам, тактика и достоверный лор.
-          </p>
-        </header>
-
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {BOSSES.map((b) => (
             <Link

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
+import { getSectionHubNav } from '@/lib/section-hub-nav';
 import { getCodexArticle } from '@/data/codex';
 import { CodexArticle } from '@/components/features/codex/CodexArticle';
 
@@ -17,6 +18,7 @@ export default async function CodexSlugPage({ params }: Props) {
 
   const data = getSectionPlaceholder(`/eft/gamesetting/${slug}`);
   if (!data) notFound();
-  // Табы переключения теперь даёт layout Кодекса — не дублируем их в шапке заглушки.
-  return <SectionPlaceholder {...data} tabs={undefined} />;
+  // Шапка-переключатель по всем разделам «Кодекса» (единый ряд, как full-навигация индексов).
+  const { sections } = getSectionHubNav('/eft/gamesetting', `/eft/gamesetting/${slug}`);
+  return <SectionPlaceholder {...data} tabs={sections} />;
 }
