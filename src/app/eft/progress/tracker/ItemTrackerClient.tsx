@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Check } from 'lucide-react';
 import { useQuestStore, getActiveItemRequirements } from '@/store/useQuestStore';
+import { FillMedia } from '@/components/ui/FillMedia';
 import { QtyControl } from '@/components/ui/QtyControl';
 import type { TaskRaw } from '@/types/quest';
 
@@ -188,26 +188,21 @@ export function ItemTrackerClient({ initialTasks }: Props) {
               >
                 {/* Header — медиаконтейнер с вертикальной заливкой (бак модулей убежища) */}
                 <div className="flex items-start gap-2.5">
-                  <div className="relative h-13.25 w-13.25 shrink-0">
-                    <div className="absolute inset-0 overflow-hidden rounded-sm border border-lines-hover">
-                      <div className="absolute inset-0 bg-(--color-darkbase)" />
-                      <div
-                        className={`absolute inset-x-0 bottom-0 transition-[height] duration-300 ease-out ${done ? 'bg-success/35' : 'bg-(--primary)/30'}`}
-                        style={{ height: `${pct}%` }}
-                      />
-                      <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]" />
-                      <img
-                        src={group.item.image512pxLink}
-                        alt={group.item.name}
-                        className="absolute inset-0 z-10 h-full w-full object-contain p-1"
-                      />
-                    </div>
-                    {done && (
-                      <span className="absolute -right-1 -top-1 z-20 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-success text-(--color-base)">
-                        <Check className="h-3 w-3" />
-                      </span>
-                    )}
-                  </div>
+                  <FillMedia
+                    imageSrc={group.item.image512pxLink}
+                    alt={group.item.name}
+                    pct={pct}
+                    done={done}
+                    interactive={
+                      single
+                        ? {
+                            value: group.quests[0].found,
+                            max: group.quests[0].needed,
+                            onChange: (n) => setItemCount(group.quests[0].questId, group.quests[0].objectiveId, n),
+                          }
+                        : undefined
+                    }
+                  />
 
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-type-caption font-blender-medium uppercase leading-tight line-clamp-2 text-text-primary">
