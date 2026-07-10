@@ -218,36 +218,48 @@ export const PRESTIGE_COSMETICS: string[] = [
 export type PrestigeObjective =
   | { id: string; kind: 'level'; label: string; minLevel: number }
   | { id: string; kind: 'flag'; label: string }
-  | { id: string; kind: 'count'; label: string; target: number };
+  | { id: string; kind: 'count'; label: string; target: number; items?: string[] };
 
 export const PRESTIGE_OBJECTIVES: Record<number, PrestigeObjective[]> = {
   1: [
     { id: 'lvl', kind: 'level', label: 'Уровень ЧВК 25', minLevel: 25 },
     { id: 'scavs', kind: 'flag', label: 'Убить Диких' },
     { id: 'lab', kind: 'flag', label: 'Лаборатория: выжить' },
-    { id: 'figs', kind: 'count', label: 'Фигурки: BEAR/Дикий/Килла/Прапор', target: 4 },
+    { id: 'figs', kind: 'count', label: 'Фигурки: BEAR/Дикий/Килла/Прапор', target: 4 , items: ['655c652d60d0ac437100fed7', '655c673673a43e23e857aebd', '66572c82ad599021091c6118', '68f25c64b2b53abd200b954f'] },
   ],
   2: [
     { id: 'lvl', kind: 'level', label: 'Уровень ЧВК 30', minLevel: 30 },
     { id: 'pmc', kind: 'flag', label: 'Убить бойцов ЧВК' },
     { id: 'lab', kind: 'flag', label: 'Лаборатория: выжить' },
-    { id: 'figs', kind: 'count', label: 'Фигурки (по 2, найденные в рейде)', target: 8 },
+    { id: 'figs', kind: 'count', label: 'Фигурки (по 2, найденные в рейде)', target: 8 , items: ['655c652d60d0ac437100fed7', '655c673673a43e23e857aebd', '66572c82ad599021091c6118', '68f25c64b2b53abd200b954f'] },
   ],
   3: [
     { id: 'lvl', kind: 'level', label: 'Уровень ЧВК 35', minLevel: 35 },
     { id: 'pmc', kind: 'flag', label: 'Убить ЧВК и Рейдеров' },
     { id: 'transit', kind: 'flag', label: 'Переход Лаборатория → Улицы' },
     { id: 'streets', kind: 'flag', label: 'Выжить и выйти на Улицах' },
-    { id: 'figs', kind: 'count', label: 'Фигурки (по 3, найденные в рейде)', target: 12 },
+    { id: 'figs', kind: 'count', label: 'Фигурки (по 3, найденные в рейде)', target: 12 , items: ['655c652d60d0ac437100fed7', '655c673673a43e23e857aebd', '66572c82ad599021091c6118', '68f25c64b2b53abd200b954f'] },
   ],
   4: [
     { id: 'lvl', kind: 'level', label: 'Уровень ЧВК 40', minLevel: 40 },
     { id: 'pmc', kind: 'flag', label: 'Убить ЧВК и Отступников' },
     { id: 'transit', kind: 'flag', label: 'Переходы: Лаба → Улицы → Развязка' },
     { id: 'labyrinth', kind: 'count', label: 'Лимитированная фигурка (Лабиринт)', target: 1 },
-    { id: 'figs', kind: 'count', label: 'Фигурки (по 3, найденные в рейде)', target: 12 },
+    { id: 'figs', kind: 'count', label: 'Фигурки (по 3, найденные в рейде)', target: 12 , items: ['655c652d60d0ac437100fed7', '655c673673a43e23e857aebd', '66572c82ad599021091c6118', '68f25c64b2b53abd200b954f'] },
   ],
 };
 
 /** Есть ли отслеживаемый путь к следующему престижу (квесты только у 1-4). */
 export const PRESTIGE_MAX_ACTIVE = 4;
+
+
+// Реальные предметы-фигурки для целей престижа (есть в каталоге → страница + «где найти»).
+export const PRESTIGE_FIGURINE_NAMES: Record<string, string> = {
+  '655c652d60d0ac437100fed7': 'BEAR',
+  '655c673673a43e23e857aebd': 'Дикий',
+  '66572c82ad599021091c6118': 'Килла',
+  '68f25c64b2b53abd200b954f': 'Прапор',
+};
+
+/** Все id, которые надо резолвить в slug для линков (API /api/eft/prestige-items). */
+export const PRESTIGE_LINKABLE_ITEM_IDS: string[] = Object.keys(PRESTIGE_FIGURINE_NAMES);

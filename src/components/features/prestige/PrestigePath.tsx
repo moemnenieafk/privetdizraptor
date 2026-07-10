@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, Minus, Plus, RotateCcw } from 'lucide-react';
+import { ArrowRight, Check, MapPin, Minus, Plus, RotateCcw } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePrestigeProgressStore, prestigeObjKey } from '@/store/usePrestigeProgressStore';
 import { computePrestigePath, type ObjectiveState } from '@/lib/prestige-progress';
-import { PRESTIGE_OBJECTIVES, PRESTIGE_MAX_ACTIVE, PRESTIGE_SHOWCASE } from '@/data/prestige';
+import { PRESTIGE_OBJECTIVES, PRESTIGE_MAX_ACTIVE, PRESTIGE_SHOWCASE, PRESTIGE_FIGURINE_NAMES } from '@/data/prestige';
 import { ProgressRing } from '@/components/ui/ProgressRing';
+import { useItemLinks, type ItemLinkMap } from './useItemLinks';
 
 function ObjectiveRow({
   state,
   objKey,
+  links,
 }: {
   state: ObjectiveState;
   objKey: string;
+  links: ItemLinkMap;
 }) {
   const incCount = usePrestigeProgressStore((s) => s.incCount);
   const decCount = usePrestigeProgressStore((s) => s.decCount);
@@ -31,7 +34,8 @@ function ObjectiveRow({
   );
 
   return (
-    <li className="flex items-center gap-3">
+    <li className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-3">
       {check}
       <span className={`min-w-0 flex-1 text-sm font-blender-book ${state.done ? 'text-text-muted line-through' : 'text-text-secondary'}`}>
         {state.label}
@@ -80,6 +84,35 @@ function ObjectiveRow({
           </button>
         </span>
       )}
+      </div>
+
+      {state.items && state.items.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5 pl-8">
+          {state.items.map((id) => {
+            const slug = links[id];
+            const name = PRESTIGE_FIGURINE_NAMES[id] ?? id.slice(0, 6);
+            const cls =
+              'flex items-center gap-1 rounded-xs border px-1.5 py-0.5 text-type-micro font-blender-medium uppercase tracking-widest transition-colors';
+            return (
+              <li key={id}>
+                {slug ? (
+                  <Link
+                    href={`/eft/items/item/${slug}`}
+                    title={`${name}: страница предмета и где найти`}
+                    className={`${cls} border-lines-hover text-text-secondary hover:border-(--primary) hover:text-(--primary)`}
+                  >
+                    <MapPin className="size-3" /> {name}
+                  </Link>
+                ) : (
+                  <span className={`${cls} border-lines-hover/50 text-text-muted`} title="Нет в каталоге">
+                    {name}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </li>
   );
 }
@@ -97,6 +130,7 @@ export function PrestigePath({ variant = 'full' }: { variant?: 'full' | 'compact
 
   const values = usePrestigeProgressStore((s) => s.values);
   const resetLevel = usePrestigeProgressStore((s) => s.resetLevel);
+  const links = useItemLinks();
 
   const nextPrestige = playerPrestige + 1;
   const objectives = PRESTIGE_OBJECTIVES[nextPrestige] ?? [];
@@ -160,7 +194,7 @@ export function PrestigePath({ variant = 'full' }: { variant?: 'full' | 'compact
       {/* Цели с тап-счётчиками */}
       <ul className="mt-4 flex flex-col gap-2.5 border-t border-lines-hover pt-4">
         {path.objectives.map((s) => (
-          <ObjectiveRow key={s.id} state={s} objKey={prestigeObjKey(profileId, nextPrestige, s.id)} />
+          <ObjectiveRow key={s.id} state={s} objKey={prestigeObjKey(profileId, nextPrestige, s.id)} links={links} />
         ))}
       </ul>
 

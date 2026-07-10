@@ -9,6 +9,8 @@ export interface ObjectiveState {
   done: boolean;
   /** Доля выполнения 0..1 (для count — частичная). */
   ratio: number;
+  /** id предметов-целей (фигурки) для кросс-линка на страницу предмета. */
+  items?: string[];
 }
 
 export interface PrestigePathState {
@@ -55,6 +57,7 @@ export function evalObjective(
     target: obj.target,
     done: current >= obj.target,
     ratio: obj.target > 0 ? current / obj.target : 1,
+    items: obj.items,
   };
 }
 
