@@ -7,7 +7,7 @@ import { useMapUiStore } from '@/store/useMapUiStore';
 export interface MapPickerItem {
   id: string;
   name: string;
-  iconClass: string | null;
+  iconClass: string | null | undefined;
   questCount?: number;
 }
 
