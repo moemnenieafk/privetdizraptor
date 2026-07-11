@@ -15,7 +15,7 @@ interface MobileMapBarProps {
 
 /**
  * Верхняя панель карты (mobile-only) в стиле нижнего бара. Раскладка на 3 зоны:
- * слева — поиск, по центру — карта, справа — позиция + слои.
+ * слева — условия рейда + поиск, по центру — карта, справа — позиция + слои.
  * Кнопки как FullscreenToggleButton (rounded border border-lines-hover), 28×28.
  */
 export function MobileMapBar({
@@ -38,8 +38,11 @@ export function MobileMapBar({
 
   return (
     <div className="absolute inset-x-0 top-0 z-[560] flex h-14 items-center bg-card-menu px-3.5 lg:hidden">
-      {/* Слева — поиск */}
-      <div className="flex flex-1 justify-start">
+      {/* Слева — условия рейда + поиск */}
+      <div className="flex flex-1 items-center justify-start gap-2">
+        <button aria-label="Условия рейда" onClick={() => openSheet('raid')} className={cell(activeSheet === 'raid')}>
+          <span className="icon-mask icon-eft-lore-docs h-4 w-4" />
+        </button>
         <button aria-label="Поиск" onClick={() => openSheet('search')} className={cell(activeSheet === 'search')}>
           <Search className="size-4" strokeWidth={2} />
         </button>
