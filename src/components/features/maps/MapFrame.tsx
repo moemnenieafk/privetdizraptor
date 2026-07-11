@@ -1,6 +1,6 @@
 'use client';
-import { Map as MapIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 import { MobileMapToolbar } from '@/components/features/maps/MobileMapToolbar';
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
@@ -63,7 +63,10 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
   const floorOrder = useMemo(() => orderFloorsByLevel(floors), [floors]);
 
   const mobileMaps = useMemo(
-    () => navMaps.map((m) => ({ id: m.slug, name: m.name, icon: <MapIcon className="size-8" /> })),
+    () =>
+      [...navMaps]
+        .sort((a, b) => mapOrderIndex(a.slug) - mapOrderIndex(b.slug))
+        .map((m) => ({ id: m.slug, name: m.name, iconClass: mapIconClass(m.slug) })),
     [navMaps],
   );
 
