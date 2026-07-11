@@ -34,16 +34,16 @@ export function MapPickerSheet({ maps, activeMapId, onSelect }: MapPickerSheetPr
                   onSelect(m.id);
                   close();
                 }}
-                className={`flex h-14 w-full items-center gap-3 rounded-xs border px-3 ${active ? 'border-(--primary) bg-(--surface-raised)' : 'border-(--border) bg-(--surface)'}`}
+                className={`flex h-14 w-full items-center gap-3 rounded-xs border px-3 ${active ? 'border-(--primary) bg-(--color-base)' : 'border-lines-hover bg-(--color-base)'}`}
               >
-                <span className={`flex size-8 shrink-0 items-center justify-center ${active ? 'text-(--primary)' : 'text-(--text-muted)'}`}>
+                <span className={`flex size-8 shrink-0 items-center justify-center ${active ? 'text-(--primary)' : 'text-(--color-muted)'}`}>
                   {m.icon}
                 </span>
-                <span className={`flex-1 text-left font-blender-medium text-sm uppercase tracking-widest ${active ? 'text-(--primary)' : 'text-(--text)'}`}>
+                <span className={`flex-1 text-left font-blender-medium text-sm uppercase tracking-widest ${active ? 'text-(--primary)' : 'text-(--color-text)'}`}>
                   {m.name}
                 </span>
                 {typeof m.questCount === 'number' && m.questCount > 0 && (
-                  <span className="font-blender-medium text-xs text-(--text-muted)">{m.questCount} зад.</span>
+                  <span className="font-blender-medium text-xs text-(--color-muted)">{m.questCount} зад.</span>
                 )}
                 {active && <Check className="size-5 text-(--primary)" strokeWidth={2} />}
               </button>
