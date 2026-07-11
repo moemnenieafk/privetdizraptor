@@ -4,6 +4,7 @@ import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
 import { MapSearchSheet, type MapSearchResult } from '@/components/features/maps/MapSearchSheet';
+import { MapQuestSheet } from '@/components/features/maps/MapQuestSheet';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapViewerLoader } from './MapViewerLoader';
@@ -193,9 +194,10 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
         />
       </div>
 
-      {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) */}
+      {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) / нижнего бара */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
       <MapSearchSheet results={searchResults} onQueryChange={setSearchQuery} onResultClick={goToResult} />
+      <MapQuestSheet quests={quests} mapSlug={data.slug} />
 
       <div ref={viewportRef} className="relative min-h-0 flex-1">
         <MapViewerLoader
