@@ -5,7 +5,9 @@ import { getEftPricesByIds } from '@/db/prices';
 import { PRESTIGE_LINKABLE_ITEM_IDS } from '@/data/prestige';
 
 export const runtime = 'nodejs';
-export const revalidate = 3600;
+// Резолв item→slug идёт в рантайме (БД доступна), а не на билде:
+// иначе Next статически пререндерит роут и дёргает БД во время сборки.
+export const dynamic = 'force-dynamic';
 
 export async function GET(): Promise<NextResponse> {
   try {
