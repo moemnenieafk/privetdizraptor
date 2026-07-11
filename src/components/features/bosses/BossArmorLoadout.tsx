@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
-import { items } from '@/db/schema';
+import { items, prices } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
@@ -9,14 +9,15 @@ import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 interface ArmorRow {
   inGameId: string;
   slug: string | null;
+  backgroundColor: string | null;
   name: string;
   shortName: string | null;
-  backgroundColor: string | null;
 }
 
 /**
- * Броня босса иконками из БД (таблица items) с линком на страницу предмета.
- * Async server component: тянет предметы по normalizedName, порядок сохраняет как в slugs.
+ * Броня босса иконками с линком на страницу предмета.
+ * slug/фон берём из prices (normalizedName), имя — из items, связка по inGameId.
+ * Async server component; порядок сохраняем как в slugs, ненайденное отбрасываем.
  */
 export async function BossArmorLoadout({ slugs, caption }: { slugs: string[]; caption?: string }) {
   if (slugs.length === 0) return null;
@@ -24,14 +25,15 @@ export async function BossArmorLoadout({ slugs, caption }: { slugs: string[]; ca
   const gameId = await eftGameId();
   const rows: ArmorRow[] = await db
     .select({
-      inGameId: items.inGameId,
-      slug: items.normalizedName,
+      inGameId: prices.inGameId,
+      slug: prices.normalizedName,
+      backgroundColor: prices.backgroundColor,
       name: items.name,
       shortName: items.shortName,
-      backgroundColor: items.backgroundColor,
     })
-    .from(items)
-    .where(and(eq(items.gameId, gameId), inArray(items.normalizedName, slugs)));
+    .from(prices)
+    .innerJoin(items, and(eq(items.inGameId, prices.inGameId), eq(items.gameId, prices.gameId)))
+    .where(and(eq(prices.gameId, gameId), inArray(prices.normalizedName, slugs)));
 
   const bySlug = new Map(rows.map((r) => [r.slug, r]));
   const ordered = slugs
