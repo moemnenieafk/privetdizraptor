@@ -175,7 +175,7 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
   }, [floors.length, stepFloor]);
 
   const frameCls = isFullscreen
-    ? 'fixed inset-0 z-[100] flex flex-col bg-(--color-base)'
+    ? 'fixed inset-0 z-[200] flex flex-col bg-(--color-base)'
     : 'relative mx-auto flex h-[calc(100svh-220px)] max-h-192 min-h-105 w-full max-w-275 flex-col overflow-hidden rounded-lg border border-lines-hover bg-(--color-base)';
 
   return (
