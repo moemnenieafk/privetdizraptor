@@ -1,8 +1,8 @@
 'use client';
+import { Map as MapIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { MobileMapToolbar } from '@/components/features/map/MobileMapToolbar';
 import { MapPickerSheet } from '@/components/features/map/MapPickerSheet';
-import { MapQuestSheet } from '@/components/features/map/MapQuestSheet';
-import { MapSearchSheet } from '@/components/features/map/MapSearchSheet';
 import { MapFloatingControls } from '@/components/features/map/MapFloatingControls';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapViewerLoader } from './MapViewerLoader';
@@ -28,12 +28,16 @@ interface Props {
   focusQuestId?: string;
 }
 
+// FLAG: подтверди роут карты. Предполагаю /eft/maps/[slug].
+const mapHref = (slug: string) => `/eft/maps/${slug}`;
+
 /**
  * Единая оболочка карты локации (паттерн фрейма QuestMap): TopBar (поиск + навигация),
  * вьюпорт (Leaflet) и BottomBar (статистика + fullscreen). Владеет fullscreen/поиском и
  * клавиатурой (Ctrl+F / Esc); вьюер общается через императивный MapViewerApi (onReady).
  */
 export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuestId }: Props) {
+  const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeFloor, setActiveFloor] = useState(0);
@@ -53,6 +57,11 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
   const questIds = useMemo(() => quests.map((q) => q.id), [quests]);
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
   const floorOrder = useMemo(() => orderFloorsByLevel(floors), [floors]);
+
+  const mobileMaps = useMemo(
+    () => navMaps.map((m) => ({ id: m.slug, name: m.name, icon: <MapIcon className="size-8" /> })),
+    [navMaps],
+  );
 
   // Шаг по визуальному стеку этажей: dir −1 = вверх (выше уровень), +1 = вниз. Без зацикливания.
   const stepFloor = useCallback(
@@ -145,15 +154,24 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
 
   return (
     <div className={frameCls}>
-      <MapTopBar
-        data={data}
-        navMaps={navMaps}
-        quests={quests}
-        searchOpen={searchOpen}
-        onSearchToggle={() => setSearchOpen((v) => !v)}
-        onSearchClose={() => setSearchOpen(false)}
-        apiRef={apiRef}
-      />
+      {/* Десктопный тулбар — прячем на мобилке (лента иконок + поиск живут здесь) */}
+      <div className="hidden lg:block">
+        <MapTopBar
+          data={data}
+          navMaps={navMaps}
+          quests={quests}
+          searchOpen={searchOpen}
+          onSearchToggle={() => setSearchOpen((v) => !v)}
+          onSearchClose={() => setSearchOpen(false)}
+          apiRef={apiRef}
+        />
+      </div>
+
+      {/* MOBILE-ONLY хром */}
+      <MobileMapToolbar activeMapName={data.name} activeMapIcon={<MapIcon className="size-6" />} />
+      <MapFloatingControls isFullscreen={isFullscreen} onToggleFullscreen={toggle} />
+      <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
+
       <div ref={viewportRef} className="relative min-h-0 flex-1">
         <MapViewerLoader
           data={data}
