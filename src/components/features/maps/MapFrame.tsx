@@ -4,8 +4,6 @@ import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 import { MobileMapToolbar } from '@/components/features/maps/MobileMapToolbar';
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
-import { MapQuestSheet } from '@/components/features/maps/MapQuestSheet';
-import { MapSearchSheet } from '@/components/features/maps/MapSearchSheet';
 import { MapFloatingControls } from '@/components/features/maps/MapFloatingControls';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -32,7 +30,6 @@ interface Props {
   focusQuestId?: string;
 }
 
-// FLAG: подтверди роут карты. Предполагаю /eft/maps/[slug].
 const mapHref = (slug: string) => `/eft/maps/${slug}`;
 
 /**
@@ -69,6 +66,8 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
         .map((m) => ({ id: m.slug, name: m.name, iconClass: mapIconClass(m.slug) })),
     [navMaps],
   );
+
+  const activeIconClass = mapIconClass(data.slug);
 
   // Шаг по визуальному стеку этажей: dir −1 = вверх (выше уровень), +1 = вниз. Без зацикливания.
   const stepFloor = useCallback(
@@ -175,7 +174,16 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
       </div>
 
       {/* MOBILE-ONLY хром */}
-      <MobileMapToolbar activeMapName={data.name} activeMapIcon={<MapIcon className="size-6" />} />
+      <MobileMapToolbar
+        activeMapName={data.name}
+        activeMapIcon={
+          activeIconClass ? (
+            <span className={`icon-mask ${activeIconClass} h-6 w-6`} />
+          ) : (
+            <span className="font-blender-medium text-sm uppercase leading-none">{data.name.slice(0, 3)}</span>
+          )
+        }
+      />
       <MapFloatingControls isFullscreen={isFullscreen} onToggleFullscreen={toggle} />
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
 
