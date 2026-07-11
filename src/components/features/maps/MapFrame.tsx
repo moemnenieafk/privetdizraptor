@@ -4,7 +4,6 @@ import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 import { MobileMapToolbar } from '@/components/features/maps/MobileMapToolbar';
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
-import { MapFloatingControls } from '@/components/features/maps/MapFloatingControls';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapViewerLoader } from './MapViewerLoader';
@@ -36,6 +35,9 @@ const mapHref = (slug: string) => `/eft/maps/${slug}`;
  * Единая оболочка карты локации (паттерн фрейма QuestMap): TopBar (поиск + навигация),
  * вьюпорт (Leaflet) и BottomBar (статистика + fullscreen). Владеет fullscreen/поиском и
  * клавиатурой (Ctrl+F / Esc); вьюер общается через императивный MapViewerApi (onReady).
+ *
+ * Мобилка: десктопный TopBar скрыт, вместо него компактная иконка-линейка
+ * (карта-дропдаун + фуллскрин) в левом-верхнем углу. ПОЗИЦИЯ/СЛОИ/зум рисует сам вьюер.
  */
 export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuestId }: Props) {
   const router = useRouter();
@@ -173,7 +175,7 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
         />
       </div>
 
-      {/* MOBILE-ONLY хром */}
+      {/* MOBILE-ONLY хром: компактная иконка-линейка сверху-слева + дропдаун карт */}
       <MobileMapToolbar
         activeMapName={data.name}
         activeMapIcon={
@@ -183,8 +185,9 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
             <span className="font-blender-medium text-sm uppercase leading-none">{data.name.slice(0, 3)}</span>
           )
         }
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggle}
       />
-      <MapFloatingControls isFullscreen={isFullscreen} onToggleFullscreen={toggle} />
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
 
       <div ref={viewportRef} className="relative min-h-0 flex-1">
