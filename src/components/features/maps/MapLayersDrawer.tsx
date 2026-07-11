@@ -10,6 +10,9 @@ import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
  * раскрывает панель — дерево чекбоксов. 3 уровня: группа → под-слой ИЛИ раскрываемый узел
  * (Контейнеры/Случайная добыча) с детьми-типами. Чекбокс группы/узла вкл/выкл всех потомков
  * (частичное — «минус»). Пустые под-слои скрываются. У каждого — иконка (резолвер) + счётчик.
+ *
+ * Открытие управляемое: на мобилке триггер живёт в MobileMapBar (open/onOpenChange приходят
+ * из MapViewerClient), десктопный триггер-стопка скрыт на узких экранах (hidden lg:flex).
  */
 
 const leafKeys = (i: LayerItem): string[] => (i.children ? i.children.map((c) => c.key) : [i.key]);
@@ -60,6 +63,8 @@ export function MapLayersDrawer({
   onToggle,
   onSetGroup,
   onCycle,
+  open: openProp,
+  onOpenChange,
 }: {
   vis: Record<string, boolean>;
   counts: Record<string, number>;
@@ -67,12 +72,17 @@ export function MapLayersDrawer({
   onSetGroup: (keys: string[], value: boolean) => void;
   /** ПКМ по строке слоя: подлёт к ближайшему объекту, повтор — к следующему по циклу. */
   onCycle: (keys: string[]) => void;
+  /** Управляемое открытие (мобильная панель). Без пропа — внутренний стейт (десктоп). */
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
 }) {
   const cycle = (e: React.MouseEvent, keys: string[]) => {
     e.preventDefault();
     onCycle(keys);
   };
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openProp ?? internalOpen;
+  const setOpen = (v: boolean) => (onOpenChange ? onOpenChange(v) : setInternalOpen(v));
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ containers: true, loose: true });
 
   const countOf = (i: LayerItem): number => leafKeys(i).reduce((s, k) => s + (counts[k] ?? 0), 0);
@@ -144,8 +154,8 @@ export function MapLayersDrawer({
     <>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        className={`absolute top-3 right-3 z-[520] flex items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors ${
+        onClick={() => setOpen(!open)}
+        className={`absolute top-3 right-3 z-[520] hidden items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors lg:flex ${
           open
             ? 'border-(--primary) bg-(--primary) text-(--color-base)'
             : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
