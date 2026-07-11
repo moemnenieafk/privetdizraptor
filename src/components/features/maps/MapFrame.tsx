@@ -2,8 +2,8 @@
 import { useRouter } from 'next/navigation';
 import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
-import { MobileMapToolbar } from '@/components/features/maps/MobileMapToolbar';
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
+import { MapSearchSheet, type MapSearchResult } from '@/components/features/maps/MapSearchSheet';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapViewerLoader } from './MapViewerLoader';
@@ -31,18 +31,18 @@ interface Props {
 
 const mapHref = (slug: string) => `/eft/maps/${slug}`;
 
+const searchKind = (t: string): MapSearchResult['kind'] =>
+  t === 'extract' ? 'extract' : t === 'quest_zone' ? 'quest' : 'marker';
+
 /**
- * Единая оболочка карты локации (паттерн фрейма QuestMap): TopBar (поиск + навигация),
- * вьюпорт (Leaflet) и BottomBar (статистика + fullscreen). Владеет fullscreen/поиском и
- * клавиатурой (Ctrl+F / Esc); вьюер общается через императивный MapViewerApi (onReady).
- *
- * Мобилка: десктопный TopBar скрыт, вместо него компактная иконка-линейка
- * (карта-дропдаун + фуллскрин) в левом-верхнем углу. ПОЗИЦИЯ/СЛОИ/зум рисует сам вьюер.
+ * Оболочка карты. Десктоп: TopBar (поиск + навигация). Мобилка: панель 4 иконок живёт
+ * в самом вьюере (MobileMapBar), здесь — только шиты (карты + поиск), которые она открывает.
  */
 export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuestId }: Props) {
   const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeFloor, setActiveFloor] = useState(0);
   const [ready, setReady] = useState(false);
   const apiRef = useRef<MapViewerApi | null>(null);
@@ -69,7 +69,29 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
     [navMaps],
   );
 
-  const activeIconClass = mapIconClass(data.slug);
+  // Поиск по маркерам локации (мобильный шит). Клик — перелёт к маркеру.
+  const searchResults = useMemo<MapSearchResult[]>(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+    const out: MapSearchResult[] = [];
+    for (let i = 0; i < data.markers.length; i++) {
+      const m = data.markers[i];
+      if (!m.position) continue;
+      const label = m.label ?? '';
+      if (!label || !label.toLowerCase().includes(query)) continue;
+      out.push({ id: String(i), label, kind: searchKind(m.type) });
+      if (out.length >= 40) break;
+    }
+    return out;
+  }, [searchQuery, data.markers]);
+
+  const goToResult = useCallback(
+    (r: MapSearchResult) => {
+      const m = data.markers[Number(r.id)];
+      if (m?.position) apiRef.current?.flyTo(m.position, 5);
+    },
+    [data.markers],
+  );
 
   // Шаг по визуальному стеку этажей: dir −1 = вверх (выше уровень), +1 = вниз. Без зацикливания.
   const stepFloor = useCallback(
@@ -152,10 +174,6 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
     return () => el.removeEventListener('wheel', onWheel, { capture: true });
   }, [floors.length, stepFloor]);
 
-  // Дефолт-фрейм (решение maps-frame-size): эталон 1100×768 на FullHD — ширина max-w-275 (=1100px,
-  // как контент шапки), высота max-h-192 (=768px). Ниже FullHD высота ужимается под вьюпорт
-  // (≈220px = шапка + отступы main), чтобы хедер+фрейм влезали без скролла; min-h-105 (=420px) — пол.
-  // Fullscreen — без изменений.
   const frameCls = isFullscreen
     ? 'fixed inset-0 z-[100] flex flex-col bg-(--color-base)'
     : 'relative mx-auto flex h-[calc(100svh-220px)] max-h-192 min-h-105 w-full max-w-275 flex-col overflow-hidden rounded-lg border border-lines-hover bg-(--color-base)';
@@ -175,20 +193,9 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
         />
       </div>
 
-      {/* MOBILE-ONLY хром: компактная иконка-линейка сверху-слева + дропдаун карт */}
-      <MobileMapToolbar
-        activeMapName={data.name}
-        activeMapIcon={
-          activeIconClass ? (
-            <span className={`icon-mask ${activeIconClass} h-6 w-6`} />
-          ) : (
-            <span className="font-blender-medium text-sm uppercase leading-none">{data.name.slice(0, 3)}</span>
-          )
-        }
-        isFullscreen={isFullscreen}
-        onToggleFullscreen={toggle}
-      />
+      {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
+      <MapSearchSheet results={searchResults} onQueryChange={setSearchQuery} onResultClick={goToResult} />
 
       <div ref={viewportRef} className="relative min-h-0 flex-1">
         <MapViewerLoader
