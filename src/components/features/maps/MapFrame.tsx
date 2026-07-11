@@ -1,9 +1,13 @@
 'use client';
 import { Map as MapIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { MobileMapToolbar } from '@/components/features/map/MobileMapToolbar';
-import { MapPickerSheet } from '@/components/features/map/MapPickerSheet';
-import { MapFloatingControls } from '@/components/features/map/MapFloatingControls';
+
+import { MobileMapToolbar } from '@/components/features/maps/MobileMapToolbar';
+import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
+import { MapQuestSheet } from '@/components/features/maps/MapQuestSheet';
+import { MapSearchSheet } from '@/components/features/maps/MapSearchSheet';
+import { MapFloatingControls } from '@/components/features/maps/MapFloatingControls';
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapViewerLoader } from './MapViewerLoader';
 import { MapTopBar } from './MapTopBar';
