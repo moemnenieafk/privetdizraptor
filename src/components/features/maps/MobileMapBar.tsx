@@ -16,7 +16,7 @@ interface MobileMapBarProps {
 /**
  * Верхняя панель карты (mobile-only) в стиле нижнего бара. Раскладка на 3 зоны:
  * слева — поиск, по центру — карта, справа — позиция + слои.
- * Кнопки как FullscreenToggleButton (rounded border border-lines-hover), 56×56 под тач.
+ * Кнопки как FullscreenToggleButton (rounded border border-lines-hover), 28×28.
  */
 export function MobileMapBar({
   activeMapIconClass,
@@ -30,7 +30,7 @@ export function MobileMapBar({
   const activeSheet = useMapUiStore((s) => s.activeSheet);
 
   const cell = (active: boolean) =>
-    `flex size-14 shrink-0 items-center justify-center rounded border transition-colors ${
+    `flex size-7 shrink-0 items-center justify-center rounded border transition-colors ${
       active
         ? 'border-(--primary) text-(--primary)'
         : 'border-lines-hover text-(--color-text-secondary) hover:border-(--primary)/40 hover:text-(--primary)'
@@ -41,7 +41,7 @@ export function MobileMapBar({
       {/* Слева — поиск */}
       <div className="flex flex-1 justify-start">
         <button aria-label="Поиск" onClick={() => openSheet('search')} className={cell(activeSheet === 'search')}>
-          <Search className="size-6" strokeWidth={2} />
+          <Search className="size-4" strokeWidth={2} />
         </button>
       </div>
 
@@ -49,5 +49,30 @@ export function MobileMapBar({
       <div className="flex flex-1 justify-center">
         <button aria-label={`Карта: ${activeMapName}`} onClick={() => openSheet('maps')} className={cell(activeSheet === 'maps')}>
           {activeMapIconClass ? (
-            <span className={`icon-mask ${activeMapIconClass} size-7`} />
+            <span className={`icon-mask ${activeMapIconClass} size-4`} />
           ) : (
+            <span className="font-blender-medium text-[10px] uppercase leading-none">{activeMapName.slice(0, 3)}</span>
+          )}
+        </button>
+      </div>
+
+      {/* Справа — позиция + слои */}
+      <div className="flex flex-1 items-center justify-end gap-2">
+        <button
+          aria-label={tracker.active ? 'Слежение включено' : 'Определить позицию'}
+          onClick={tracker.toggle}
+          disabled={!tracker.supported && !tracker.active}
+          className={`${cell(tracker.active)} disabled:cursor-not-allowed disabled:opacity-40`}
+        >
+          <Crosshair className={`size-4 ${tracker.requesting ? 'animate-pulse' : ''}`} strokeWidth={2} />
+        </button>
+
+        {hasLayers && (
+          <button aria-label="Слои карты" onClick={onLayersToggle} className={cell(layersOpen)}>
+            <Layers className="size-4" strokeWidth={2} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
