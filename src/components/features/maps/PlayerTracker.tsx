@@ -38,7 +38,17 @@ interface TrackerOpts {
   onRequestFloor?: (idx: number) => void;
 }
 
-function useEftTracker({ mapRef, config, floors, onRequestFloor }: TrackerOpts) {
+/** Внешний контракт трекера — им управляют и десктоп-кнопка, и мобильная панель (единый инстанс). */
+export interface TrackerControls {
+  active: boolean;
+  follow: boolean;
+  requesting: boolean;
+  supported: boolean;
+  toggle: () => void;
+  toggleFollow: () => void;
+}
+
+export function useEftTracker({ mapRef, config, floors, onRequestFloor }: TrackerOpts): TrackerControls {
   const { active, follow, status, setActive, setFollow, setStatus, setPose } = useTrackingStore();
 
   const markerRef = useRef<L.Marker | null>(null);
@@ -156,23 +166,29 @@ function useEftTracker({ mapRef, config, floors, onRequestFloor }: TrackerOpts) 
     [],
   );
 
-  return { active, follow, status, toggle, toggleFollow: () => setFollow(!follow) };
+  const supported =
+    typeof window !== 'undefined' && 'showDirectoryPicker' in window && Boolean(config.transform);
+
+  return {
+    active,
+    follow,
+    requesting: status.kind === 'requesting',
+    supported,
+    toggle,
+    toggleFollow: () => setFollow(!follow),
+  };
 }
 
-export function PlayerTrackerButton(props: TrackerOpts) {
-  const { active, follow, status, toggle, toggleFollow } = useEftTracker(props);
-  const supported =
-    typeof window !== 'undefined' && 'showDirectoryPicker' in window && Boolean(props.config.transform);
-  const requesting = status.kind === 'requesting';
-
+/** Десктоп-кнопка «Позиция» (презентационная, единый инстанс трекера приходит пропсами). Скрыта на мобилке. */
+export function PlayerTrackerButton({ active, follow, requesting, supported, toggle, toggleFollow }: TrackerControls) {
   return (
-    <div className="absolute top-3 right-28 z-[550] flex items-center gap-2">
+    <div className="absolute top-3 right-28 z-[550] hidden items-center gap-2 lg:flex">
       {active && (
         <button
           type="button"
           onClick={toggleFollow}
           aria-label="Следовать за игроком"
-          className={`flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
+          className={`flex h-8 w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
             follow
               ? 'border-(--primary) bg-(--primary) text-(--color-base)'
               : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
