@@ -20,7 +20,7 @@ export function BossBodyDamage({ health }: { health: BossHealthPart[] }) {
 
   return (
     <div className="flex flex-col items-center gap-8 md:flex-row md:items-start md:gap-10">
-      <div className="w-40 shrink-0 sm:w-48">
+      <div className="w-56 shrink-0 sm:w-52">
         <BodyMannequin
           values={values}
           max={max}

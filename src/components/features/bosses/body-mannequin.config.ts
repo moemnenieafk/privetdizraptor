@@ -13,7 +13,7 @@ export type BodyPartLabel =
   | 'Левая нога'
   | 'Правая нога';
 
-export const MANNEQUIN_VIEWBOX = '0 0 1376 3132';
+export const MANNEQUIN_VIEWBOX = '395 1055 574 1213';
 
 /** Порядок отрисовки = порядок строк HP-панели. */
 export const MANNEQUIN_ORDER: readonly BodyPartLabel[] = [
