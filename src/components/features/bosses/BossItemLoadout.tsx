@@ -6,7 +6,7 @@ import { eftGameId } from '@/db/eft';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 
-interface ArmorRow {
+interface LoadoutRow {
   inGameId: string;
   slug: string | null;
   backgroundColor: string | null;
@@ -15,15 +15,15 @@ interface ArmorRow {
 }
 
 /**
- * Броня босса иконками с линком на страницу предмета.
+ * Предметы босса (броня/оружие) иконками с линком на страницу предмета.
  * slug/фон берём из prices (normalizedName), имя — из items, связка по inGameId.
  * Async server component; порядок сохраняем как в slugs, ненайденное отбрасываем.
  */
-export async function BossArmorLoadout({ slugs, caption }: { slugs: string[]; caption?: string }) {
+export async function BossItemLoadout({ slugs, caption }: { slugs: string[]; caption?: string }) {
   if (slugs.length === 0) return null;
 
   const gameId = await eftGameId();
-  const rows: ArmorRow[] = await db
+  const rows: LoadoutRow[] = await db
     .select({
       inGameId: prices.inGameId,
       slug: prices.normalizedName,
@@ -38,7 +38,7 @@ export async function BossArmorLoadout({ slugs, caption }: { slugs: string[]; ca
   const bySlug = new Map(rows.map((r) => [r.slug, r]));
   const ordered = slugs
     .map((s) => bySlug.get(s))
-    .filter((r): r is ArmorRow => Boolean(r && r.slug));
+    .filter((r): r is LoadoutRow => Boolean(r && r.slug));
 
   if (ordered.length === 0) return null;
 

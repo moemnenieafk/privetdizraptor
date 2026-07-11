@@ -31,6 +31,8 @@ export interface Boss {
   /** normalizedName (slug) предметов брони из таблицы items — для иконок + линка. */
   armorItems?: string[];
   weapon?: string;
+  /** normalizedName (slug) оружия босса — для иконок + линка. */
+  weaponItems?: string[];
   followers?: string;
   spawns?: BossSpawn[];
   lore: string;

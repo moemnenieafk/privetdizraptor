@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Boss } from '@/types/boss';
 import { BossBodyDamage } from './BossBodyDamage';
-import { BossArmorLoadout } from './BossArmorLoadout';
+import { BossItemLoadout } from './BossItemLoadout';
 
 function InfoRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
@@ -53,8 +53,15 @@ export function BossDetail({ boss }: { boss: Boss }) {
               <InfoRow label="Оружие" value={boss.weapon} />
               <InfoRow label="Сопровождение" value={boss.followers} />
             </div>
-            {boss.armorItems && boss.armorItems.length > 0 && (
-              <BossArmorLoadout slugs={boss.armorItems} caption="Носимая броня" />
+            {((boss.armorItems && boss.armorItems.length > 0) || (boss.weaponItems && boss.weaponItems.length > 0)) && (
+              <div className="flex flex-col gap-4 sm:flex-row sm:gap-8">
+                {boss.armorItems && boss.armorItems.length > 0 && (
+                  <BossItemLoadout slugs={boss.armorItems} caption="Носимая броня" />
+                )}
+                {boss.weaponItems && boss.weaponItems.length > 0 && (
+                  <BossItemLoadout slugs={boss.weaponItems} caption="Оружие" />
+                )}
+              </div>
             )}
           </div>
         </div>
