@@ -308,7 +308,7 @@ export function HideoutBuildTracker({
                                 : 'border-lines-hover bg-card-menu/40'
                             }`}
                           >
-                            {/* Медиа-бак: тап = +1 материал, вертикальный драг = залив (FillMedia) */}
+                            {/* Медиа-бак: клик = +1 материал (точный ввод — кнопками ниже) */}
                             <FillMedia
                               imageSrc={itemIconUrl(it.itemId)}
                               alt={it.name}
@@ -317,12 +317,8 @@ export function HideoutBuildTracker({
                               className="mx-auto"
                               imgClassName="transition-transform duration-150 group-hover:scale-105"
                               imgLoading="lazy"
-                              interactive={{
-                                value: got,
-                                max: it.count,
-                                onChange: (n) => setItemProgress(key, n),
-                                onTap: done ? undefined : () => setItemProgress(key, got + 1),
-                              }}
+                              onTap={done ? undefined : () => setItemProgress(key, got + 1)}
+                              tapTitle={done ? `${it.name} — собрано` : `${it.name} — клик: +1 материал`}
                             >
                               {/* FIR-галочка на медиаконтейнере */}
                               {it.fir && !done && (

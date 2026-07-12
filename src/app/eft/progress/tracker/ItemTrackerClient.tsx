@@ -257,15 +257,6 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                     alt={group.item.name}
                     pct={pct}
                     done={done}
-                    interactive={
-                      single
-                        ? {
-                            value: group.quests[0].found,
-                            max: group.quests[0].needed,
-                            onChange: (n) => setItemCount(group.quests[0].questId, group.quests[0].objectiveId, n),
-                          }
-                        : undefined
-                    }
                   />
 
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
