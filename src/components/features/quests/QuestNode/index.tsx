@@ -1,10 +1,11 @@
-﻿'use client';
+'use client';
 
 import { memo, useRef, useState, useEffect } from 'react';
 import type { QuestNodeData } from '@/types/quest';
 import type { TaskObjective, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { getQuestHeroImg } from '@/lib/quest-utils';
 import { Paperclip, ArrowLeftRight } from 'lucide-react';
 
 function getObjectiveIcon(obj: TaskObjective): string {
@@ -49,16 +50,20 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
     setIsHolding(false);
   };
 
+  const [heroFailed, setHeroFailed] = useState(false);
+
   const itemProgress  = useQuestStore(s => s.itemProgress);
   const incrementItem = useQuestStore(s => s.incrementItem);
 
   const nn         = task.trader.normalizedName;
   const traderColor = `var(${traderCssVar(nn)})`;
 
+  // Подложка ноды: радиальный градиент из левого верхнего угла в цвет торговца (спека Figma).
+  // Насыщенность в углу — 56%, уход в чёрный.
   const gradientBg = {
-    active:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 15%, transparent), #000000)`,
-    locked:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 6%, transparent), #000000)`,
-    completed: `radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--color-success) 10%, transparent), #000000)`,
+    active:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 56%, transparent), #000000)`,
+    locked:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 22%, transparent), #000000)`,
+    completed: `radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--color-success) 36%, transparent), #000000)`,
   }[status];
 
   const borderStyle: React.CSSProperties = status === 'active'
@@ -174,6 +179,20 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
             )}
           </div>
         </header>
+
+        {/* Hero-баннер квеста — визуальная идентификация (как в QuestDetail).
+            Если картинки для квеста нет, блок не рендерится (onError). */}
+        {!heroFailed && (
+          <div className="relative mx-4 mb-3 h-24 shrink-0 overflow-hidden rounded-xs">
+            <img
+              src={getQuestHeroImg(task.id)}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={() => setHeroFailed(true)}
+            />
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
+          </div>
+        )}
 
         <h3 className="px-4 pb-3 font-blender-medium text-sm leading-tight text-text-primary">
           {task.name}
