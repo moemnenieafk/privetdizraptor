@@ -22,11 +22,17 @@ interface QtyControlProps {
 
 const clamp = (n: number, max: number): number => Math.max(0, Math.min(max, n));
 
-/** Повтор действия по удержанию с ускорением (240ms → 30ms). */
+/**
+ * Повтор действия по удержанию с ускорением (240ms → 30ms).
+ * ВАЖНО: step держим в ref — иначе таймер замыкается на устаревшем value
+ * и повтор бесконечно пишет одно и то же число (значение «залипает»).
+ */
 function useHoldRepeat(step: () => void) {
   const delay = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loop = useRef<ReturnType<typeof setTimeout> | null>(null);
   const speed = useRef(240);
+  const stepRef = useRef(step);
+  stepRef.current = step;
 
   const stop = useCallback(() => {
     if (delay.current) clearTimeout(delay.current);
@@ -34,15 +40,15 @@ function useHoldRepeat(step: () => void) {
   }, []);
 
   const start = useCallback(() => {
-    step();
+    stepRef.current();
     speed.current = 240;
     const tick = () => {
-      step();
+      stepRef.current();
       speed.current = Math.max(30, speed.current * 0.8);
       loop.current = setTimeout(tick, speed.current);
     };
     delay.current = setTimeout(tick, 400);
-  }, [step]);
+  }, []);
 
   useEffect(() => stop, [stop]);
   return { onPointerDown: start, onPointerUp: stop, onPointerLeave: stop, onPointerCancel: stop };

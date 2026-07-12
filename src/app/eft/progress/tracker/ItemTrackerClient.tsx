@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuestStore, getActiveItemRequirements } from '@/store/useQuestStore';
 import { FillMedia } from '@/components/ui/FillMedia';
 import { QtyControl } from '@/components/ui/QtyControl';
@@ -68,10 +68,12 @@ export function ItemTrackerClient({ initialTasks }: Props) {
     return [...map.values()];
   }, [activeItems, taskMap]);
 
-  const filtered = useMemo(() => {
+  // Пул: фильтры, не зависящие от прогресса. «Незавершённые» и сортировка
+  // применяются ТОЛЬКО в снимке порядка (см. ниже) — иначе карточка прыгает
+  // под пальцем на каждом +/− и исчезает при 100%.
+  const pool = useMemo(() => {
     let list = grouped;
-    if (filterFiR)  list = list.filter((g) => g.foundInRaid);
-    if (filterDone) list = list.filter((g) => g.totalFound < g.totalNeeded);
+    if (filterFiR) list = list.filter((g) => g.foundInRaid);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
@@ -80,16 +82,60 @@ export function ItemTrackerClient({ initialTasks }: Props) {
           g.item.shortName.toLowerCase().includes(q),
       );
     }
-    return [...list].sort((a, b) => {
-      if (sortMode === 'name')    return a.item.name.localeCompare(b.item.name, 'ru');
-      if (sortMode === 'count')   return b.totalNeeded - a.totalNeeded;
-      // progress: started (0 < found < total) first, then unstarted
-      const aPct = a.totalFound / (a.totalNeeded || 1);
-      const bPct = b.totalFound / (b.totalNeeded || 1);
-      if (bPct !== aPct) return bPct - aPct;
-      return a.item.name.localeCompare(b.item.name, 'ru');
-    });
-  }, [grouped, filterFiR, filterDone, query, sortMode]);
+    return list;
+  }, [grouped, filterFiR, query]);
+
+  const poolById = useMemo(
+    () => new Map(pool.map((g) => [g.item.id, g])),
+    [pool],
+  );
+  const poolSignature = useMemo(
+    () => pool.map((g) => g.item.id).join('|'),
+    [pool],
+  );
+
+  // Актуальный прогресс читаем из ref, чтобы он НЕ был зависимостью пересортировки.
+  const poolRef = useRef(pool);
+  poolRef.current = pool;
+
+  const buildOrder = (): string[] => {
+    const list = poolRef.current.filter(
+      (g) => !filterDone || g.totalFound < g.totalNeeded,
+    );
+    return [...list]
+      .sort((a, b) => {
+        if (sortMode === 'name')  return a.item.name.localeCompare(b.item.name, 'ru');
+        if (sortMode === 'count') return b.totalNeeded - a.totalNeeded;
+        const aPct = a.totalFound / (a.totalNeeded || 1);
+        const bPct = b.totalFound / (b.totalNeeded || 1);
+        if (bPct !== aPct) return bPct - aPct;
+        return a.item.name.localeCompare(b.item.name, 'ru');
+      })
+      .map((g) => g.item.id);
+  };
+
+  // Снимок порядка. Пересобирается при смене сортировки/фильтров/поиска/состава —
+  // но не при изменении счётчиков.
+  const [order, setOrder] = useState<string[]>(buildOrder);
+  useEffect(() => {
+    setOrder(buildOrder());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poolSignature, sortMode, filterFiR, filterDone]);
+
+  // Рендерим по снимку; новые предметы дописываем в хвост, чтобы не пропали.
+  const filtered = useMemo(() => {
+    const inOrder = order
+      .map((id) => poolById.get(id))
+      .filter((g): g is GroupedItem => Boolean(g));
+    const seen = new Set(order);
+    const fresh = pool.filter((g) => !seen.has(g.item.id));
+    return [...inOrder, ...fresh];
+  }, [order, poolById, pool]);
+
+  // Собранные, которые «залипли» в снимке из-за фильтра «Незавершённые».
+  const staleDone = filterDone
+    ? filtered.filter((g) => g.totalFound >= g.totalNeeded).length
+    : 0;
 
   const totalItems     = grouped.length;
   const completedItems = grouped.filter((g) => g.totalFound >= g.totalNeeded).length;
@@ -153,6 +199,15 @@ export function ItemTrackerClient({ initialTasks }: Props) {
         >
           Незавершённые
         </button>
+
+        {staleDone > 0 && (
+          <button
+            onClick={() => setOrder(buildOrder())}
+            className="flex h-7 cursor-pointer items-center gap-1.5 rounded-xs border border-success/50 bg-success/10 px-2.5 text-type-caption font-blender-medium uppercase tracking-wider text-success transition-colors hover:bg-success/20"
+          >
+            Убрать собранные ({staleDone})
+          </button>
+        )}
 
         <span className="ml-auto text-type-caption font-blender-medium uppercase text-text-muted">
           {filtered.length} предметов
