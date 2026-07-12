@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -1037,7 +1037,11 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     setSelectedNodes(next);
   }, [initialTasks]);
 
-  const containerCls   = isFullscreen ? 'fixed inset-0 z-[100] flex flex-col bg-(--color-base) overflow-hidden' : 'relative flex flex-col w-275 h-192 mx-auto outline outline-2 outline-(--color-lines-hover) rounded-lg overflow-hidden';
+  // Фрейм: на мобилке тянется по вьюпорту (как MapFrame карт локаций), на десктопе — эталон 1100×768.
+  // z-[200] в фуллскрине перекрывает бургер-меню (у него бэкдроп z-100).
+  const containerCls   = isFullscreen
+    ? 'fixed inset-0 z-[200] flex flex-col bg-(--color-base) overflow-hidden'
+    : 'relative mx-auto flex h-[calc(100svh-220px)] max-h-192 min-h-105 w-full max-w-275 flex-col overflow-hidden rounded-lg outline outline-2 outline-(--color-lines-hover)';
   const containerStyle = isFullscreen ? undefined : undefined;
 
   return (
@@ -1195,7 +1199,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           </QuestMapViewport>
 
           {/* Drag mode controls */}
-          <div className="absolute top-2 right-2 z-40 flex gap-1.5" data-no-pan>
+          {/* Дев-режим расстановки нод — только десктоп */}
+          <div className="absolute top-2 right-2 z-40 hidden gap-1.5 lg:flex" data-no-pan>
             <button
               onClick={() => { setIsDragMode(v => !v); setSnapPreview(null); setSelectedNodes(new Set()); setGroupPreview(new Map()); }}
               className={`h-7 px-2.5 rounded-xs text-type-caption font-blender-medium uppercase tracking-widest border transition-colors duration-150 ${
