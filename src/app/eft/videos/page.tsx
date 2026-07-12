@@ -1,56 +1,62 @@
-﻿import { PageHeader } from '@/components/ui/PageHeader';
-import React from 'react';
+import { Suspense } from 'react';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { HubCard } from '@/components/ui/HubCard';
+import { VIDEO_CATEGORIES } from '@/data/video-catalog';
+import { getVideoCatalog } from '@/lib/twitch-vods';
+import { VideoArchive } from '@/components/features/videos/VideoArchive';
+import { VideoCardSkeleton } from '@/components/features/videos/VideoCard';
 
-// Данные для карточек навигации раздела "Видео"
-const VIDEOS_HUB_CARDS = [
-  {
-    id: 'guides',
-    title: 'Гайды',
-    description: 'Подробные видеоруководства по квестам, механикам и сборкам оружия.',
-    href: '/eft/videos/guides',
-    iconPath: '/icons/eft/06-videos/video-guides.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'advices',
-    title: 'Советы',
-    description: 'Короткие и полезные видеосоветы для новичков и опытных игроков.',
-    href: '/eft/videos/advices',
-    iconPath: '/icons/eft/06-videos/video-advices.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'news',
-    title: 'Новости',
-    description: 'Официальные новости, анонсы и обзоры обновлений от разработчиков.',
-    href: '/eft/videos/news',
-    iconPath: '/icons/eft/06-videos/video-news.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'streams',
-    title: 'Стримы',
-    description: 'Прямые трансляции и записи лучших игровых моментов от сообщества.',
-    href: '/eft/videos/streams',
-    iconPath: '/icons/eft/06-videos/live-streams.svg',
-    variant: 'rectangle' as const,
-  },
-];
+// Хаб раздела «Видео»: карточки категорий + сквозная выдача всего архива.
+// ISR: страница пересобирается раз в час, каталог под ней кэширован тем же TTL.
+export const revalidate = 3600;
 
-export default function VideosHubPage() {
+export default async function VideosHubPage() {
+  const { videos, errors } = await getVideoCatalog();
+
+  const countBySlug = videos.reduce<Record<string, number>>((acc, v) => {
+    acc[v.category] = (acc[v.category] ?? 0) + 1;
+    return acc;
+  }, {});
+
   return (
-    <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
+    <main className="flex w-full animate-[fade-in_0.5s_ease-out_both] flex-col items-center justify-start pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <PageHeader pageId="eft-videos" />
-        
-        {/* Сетка HubCard */}
+        <PageHeader pageId="eft-videos" count={videos.length} />
+
         <div className="tactical-grid">
-          {VIDEOS_HUB_CARDS.map((card, index) => (
-            <HubCard key={card.id} gameId="eft" {...card} index={index} />
+          {VIDEO_CATEGORIES.map((cat, index) => (
+            <HubCard
+              key={cat.slug}
+              gameId="eft"
+              id={cat.slug}
+              title={cat.title}
+              description={cat.description}
+              href={`/eft/videos/${cat.slug}`}
+              iconPath={cat.iconPath}
+              badgeText={countBySlug[cat.slug] ? String(countBySlug[cat.slug]) : undefined}
+              variant="rectangle"
+              index={index}
+            />
           ))}
+        </div>
+
+        {/* Весь архив одним потоком — «главная» видеоленты, фильтры общие */}
+        <div className="mt-10">
+          <Suspense fallback={<ArchiveSkeleton />}>
+            <VideoArchive videos={videos} errors={errors} showContinue />
+          </Suspense>
         </div>
       </div>
     </main>
+  );
+}
+
+function ArchiveSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <VideoCardSkeleton key={i} />
+      ))}
+    </div>
   );
 }
