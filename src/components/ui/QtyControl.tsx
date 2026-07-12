@@ -127,20 +127,24 @@ export function QtyControl({ value, max, onChange, size = 'sm', showMax = false,
         <Plus className="h-3 w-3" />
       </button>
 
-      {showMax && !done && (
+      {/* ВАЖНО: Макс/Сброс всегда в разметке (disabled, не размонтируются).
+          Иначе ширина контрола меняется на каждом +/− и кнопки уезжают из-под пальца. */}
+      {showMax && (
         <button
           type="button"
+          disabled={done}
           onClick={() => onChange(max)}
-          className="h-6 cursor-pointer rounded-xs border border-(--primary)/50 bg-(--primary)/15 px-2 text-type-caption font-blender-medium uppercase tracking-wider text-(--primary) transition-colors hover:bg-(--primary)/25"
+          className="h-6 shrink-0 cursor-pointer rounded-xs border border-(--primary)/50 bg-(--primary)/15 px-2 text-type-caption font-blender-medium uppercase tracking-wider text-(--primary) transition-colors hover:bg-(--primary)/25 disabled:cursor-not-allowed disabled:opacity-30"
         >
           Макс
         </button>
       )}
-      {showClear && value > 0 && (
+      {showClear && (
         <button
           type="button"
+          disabled={value <= 0}
           onClick={() => onChange(0)}
-          className="h-6 cursor-pointer rounded-xs border border-lines-hover px-2 text-type-caption font-blender-medium uppercase tracking-wider text-text-muted transition-colors hover:text-text-secondary"
+          className="h-6 shrink-0 cursor-pointer rounded-xs border border-lines-hover px-2 text-type-caption font-blender-medium uppercase tracking-wider text-text-muted transition-colors hover:text-text-secondary disabled:cursor-not-allowed disabled:opacity-30"
         >
           Сброс
         </button>

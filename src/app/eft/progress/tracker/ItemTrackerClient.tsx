@@ -65,6 +65,15 @@ export function ItemTrackerClient({ initialTasks }: Props) {
       if (foundInRaid) g.foundInRaid = true;
       g.quests.push({ questId, questName, objectiveId, needed, found, traderNormalizedName });
     }
+    // Порядок строк заданий фиксируем детерминированно — чтобы строки не
+    // менялись местами между рендерами (у квестов бывают одинаковые названия).
+    for (const g of map.values()) {
+      g.quests.sort(
+        (a, b) =>
+          a.questName.localeCompare(b.questName, 'ru') ||
+          a.objectiveId.localeCompare(b.objectiveId),
+      );
+    }
     return [...map.values()];
   }, [activeItems, taskMap]);
 
