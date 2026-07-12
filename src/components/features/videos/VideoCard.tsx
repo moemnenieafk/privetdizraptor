@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Bookmark, Check, Play, Twitch } from 'lucide-react';
+import { Bookmark, Check, Play } from 'lucide-react';
 import type { Video } from '@/types/video';
 import { useVideoStore } from '@/store/useVideoStore';
 import {
@@ -21,6 +21,23 @@ import {
  * Клик по карточке ведёт на /eft/videos/[category]/[id]; если есть прогресс —
  * страница сама подхватит таймкод.
  */
+
+/**
+ * Глиф Twitch. lucide-react больше не поставляет бренд-иконки, поэтому
+ * держим свой inline-SVG — ноль новых зависимостей, цвет наследуется.
+ */
+function TwitchGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M4.3 3 3 6.3v13.4h4.6V22h2.5l2.3-2.3h3.7L21 15.1V3H4.3Zm15 11.1-2.6 2.6h-3.7l-2.3 2.3v-2.3H7.4V4.6h11.9v9.5ZM15.6 7.7v4.6h-1.5V7.7h1.5Zm-4.1 0v4.6H10V7.7h1.5Z" />
+    </svg>
+  );
+}
 
 interface VideoCardProps {
   video: Video;
@@ -69,7 +86,13 @@ export function VideoCard({ video, view = 'grid', index = 0 }: VideoCardProps) {
             isTable ? 'size-7' : 'size-11'
           }`}
         >
-          <Play className={isTable ? 'size-3 fill-current text-(--primary)' : 'size-4 fill-current text-(--primary)'} />
+          <Play
+            className={
+              isTable
+                ? 'size-3 fill-current text-(--primary)'
+                : 'size-4 fill-current text-(--primary)'
+            }
+          />
         </span>
       </div>
 
@@ -79,9 +102,9 @@ export function VideoCard({ video, view = 'grid', index = 0 }: VideoCardProps) {
       </span>
 
       {/* Источник: Twitch помечаем, YouTube — дефолт, не шумим */}
-      {video.source === 'twitch' && (
+      {video.source === 'twitch' && !watched && (
         <span className="absolute left-1 top-1 flex size-5 items-center justify-center rounded-xs bg-(--color-base)/85">
-          <Twitch className="size-3 text-[#A970FF]" />
+          <TwitchGlyph className="size-3 text-[#A970FF]" />
         </span>
       )}
 
@@ -89,9 +112,11 @@ export function VideoCard({ video, view = 'grid', index = 0 }: VideoCardProps) {
       {watched && (
         <span className="absolute left-1 top-1 flex h-5 items-center gap-1 rounded-xs border border-nvg-green/50 bg-(--color-base)/85 px-1">
           <Check className="size-3 stroke-3 text-nvg-green" />
-          <span className="font-blender-medium text-type-micro uppercase tracking-widest text-nvg-green">
-            {isTable ? '' : 'Просмотрено'}
-          </span>
+          {!isTable && (
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-nvg-green">
+              Просмотрено
+            </span>
+          )}
         </span>
       )}
 
@@ -108,9 +133,9 @@ export function VideoCard({ video, view = 'grid', index = 0 }: VideoCardProps) {
   const meta = (
     <div className={`flex min-w-0 flex-1 flex-col ${isTable ? 'gap-1' : 'gap-1.5'}`}>
       <h3
-        className={`font-blender-medium leading-tight uppercase tracking-wide transition-colors duration-200 group-hover:text-(--primary) ${
+        className={`line-clamp-2 font-blender-medium text-sm leading-tight uppercase tracking-wide transition-colors duration-200 group-hover:text-(--primary) ${
           watched ? 'text-text-secondary' : 'text-text-primary'
-        } ${isTable ? 'line-clamp-2 text-sm' : 'line-clamp-2 text-sm'}`}
+        }`}
       >
         {video.title}
       </h3>
@@ -170,7 +195,11 @@ export function VideoCardSkeleton({ view = 'grid' }: { view?: 'grid' | 'table' }
         isTable ? 'items-center gap-3' : 'flex-col gap-3'
       }`}
     >
-      <div className={`shrink-0 rounded-sm bg-(--color-darkbase) ${isTable ? 'w-32 aspect-video sm:w-40' : 'w-full aspect-video'}`} />
+      <div
+        className={`shrink-0 rounded-sm bg-(--color-darkbase) ${
+          isTable ? 'w-32 aspect-video sm:w-40' : 'w-full aspect-video'
+        }`}
+      />
       <div className="flex w-full flex-col gap-2 px-1 pb-1">
         <div className="h-3 w-full rounded-xs bg-(--color-darkbase)" />
         <div className="h-3 w-2/3 rounded-xs bg-(--color-darkbase)" />
