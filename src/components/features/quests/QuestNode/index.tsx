@@ -4,7 +4,8 @@ import { memo, useRef, useState, useEffect } from 'react';
 import type { QuestNodeData } from '@/types/quest';
 import type { TaskObjective, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
-import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { traderImg } from '@/lib/trader-utils';
+import { TRADER_COLORS } from '@/data/traderColors';
 import { getQuestHeroImg } from '@/lib/quest-utils';
 import { Paperclip, ArrowLeftRight } from 'lucide-react';
 
@@ -56,7 +57,9 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const incrementItem = useQuestStore(s => s.incrementItem);
 
   const nn         = task.trader.normalizedName;
-  const traderColor = `var(${traderCssVar(nn)})`;
+  // Цвет берём из JS-палитры, а не из var(--trader-*): Tailwind v4 вырезает неиспользуемые
+  // @theme-переменные из сборки, и в рантайме они не резолвятся (градиент/рамка отваливались).
+  const traderColor = TRADER_COLORS[nn] ?? TRADER_COLORS.stories;
 
   // Подложка ноды (спека Figma 1142:1622): радиальный градиент из левого верхнего угла
   // в цвет торговца, уход в чёрный. Насыщенность в углу — 56%.
