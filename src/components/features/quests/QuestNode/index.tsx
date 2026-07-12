@@ -58,15 +58,12 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const nn         = task.trader.normalizedName;
   const traderColor = `var(${traderCssVar(nn)})`;
 
-  // Подложка ноды (спека Figma 1142:1622): радиальный градиент из левого верхнего угла —
-  // цвет торговца 56% → прозрачность, поверх чёрной базы.
-  const gradientFor = (c: string, strength: number) =>
-    `radial-gradient(ellipse 120% 100% at 0% 0%, color-mix(in srgb, ${c} ${strength}%, transparent) 0%, transparent 100%), #000000`;
-
+  // Подложка ноды (спека Figma 1142:1622): радиальный градиент из левого верхнего угла
+  // в цвет торговца, уход в чёрный. Насыщенность в углу — 56%.
   const gradientBg = {
-    active:    gradientFor(traderColor, 56),
-    locked:    gradientFor(traderColor, 22),
-    completed: gradientFor('var(--color-success)', 36),
+    active:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 56%, transparent), #000000)`,
+    locked:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 22%, transparent), #000000)`,
+    completed: `radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--color-success) 36%, transparent), #000000)`,
   }[status];
 
   const borderStyle: React.CSSProperties = status === 'active'
