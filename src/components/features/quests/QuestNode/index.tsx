@@ -58,12 +58,15 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const nn         = task.trader.normalizedName;
   const traderColor = `var(${traderCssVar(nn)})`;
 
-  // Подложка ноды: радиальный градиент из левого верхнего угла в цвет торговца (спека Figma).
-  // Насыщенность в углу — 56%, уход в чёрный.
+  // Подложка ноды (спека Figma 1142:1622): радиальный градиент из левого верхнего угла —
+  // цвет торговца 56% → прозрачность, поверх чёрной базы.
+  const gradientFor = (c: string, strength: number) =>
+    `radial-gradient(ellipse 120% 100% at 0% 0%, color-mix(in srgb, ${c} ${strength}%, transparent) 0%, transparent 100%), #000000`;
+
   const gradientBg = {
-    active:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 56%, transparent), #000000)`,
-    locked:    `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 22%, transparent), #000000)`,
-    completed: `radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--color-success) 36%, transparent), #000000)`,
+    active:    gradientFor(traderColor, 56),
+    locked:    gradientFor(traderColor, 22),
+    completed: gradientFor('var(--color-success)', 36),
   }[status];
 
   const borderStyle: React.CSSProperties = status === 'active'
@@ -180,23 +183,26 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
           </div>
         </header>
 
-        {/* Hero-баннер квеста — визуальная идентификация (как в QuestDetail).
-            Если картинки для квеста нет, блок не рендерится (onError). */}
-        {!heroFailed && (
-          <div className="relative mx-4 mb-3 h-24 shrink-0 overflow-hidden rounded-xs">
-            <img
-              src={getQuestHeroImg(task.id)}
-              alt=""
-              className="h-full w-full object-cover"
-              onError={() => setHeroFailed(true)}
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
-          </div>
-        )}
-
-        <h3 className="px-4 pb-3 font-blender-medium text-sm leading-tight text-text-primary">
-          {task.name}
-        </h3>
+        {/* Hero-баннер + название в один ряд (спека Figma: картинка 144×81 слева, заголовок справа).
+            Если картинки для квеста нет — остаётся только название на всю ширину. */}
+        <div className="flex items-center gap-3.5 px-4 pb-3">
+          {!heroFailed && (
+            <div
+              className="relative h-[81px] w-36 shrink-0 overflow-hidden rounded-xs border"
+              style={{ borderColor: 'rgba(0,0,0,0.5)' }}
+            >
+              <img
+                src={getQuestHeroImg(task.id)}
+                alt=""
+                className="h-full w-full object-cover"
+                onError={() => setHeroFailed(true)}
+              />
+            </div>
+          )}
+          <h3 className="min-w-0 flex-1 font-blender-medium text-lg leading-none text-text-primary">
+            {task.name}
+          </h3>
+        </div>
 
         {barterCount > 0 && (
           <div className="px-4 pb-2">
