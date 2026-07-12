@@ -33,8 +33,8 @@ interface FillMediaProps {
   children?: React.ReactNode;
 }
 
-const DRAG_RANGE = 200;    // px вертикального хода на полный диапазон
-const MOVE_THRESHOLD = 4;  // px, после которых жест считается драгом, а не тапом
+const DRAG_RANGE = 200;     // px вертикального хода на полный диапазон
+const MOVE_THRESHOLD = 10;  // px, после которых жест считается драгом, а не тапом
 
 function niceStep(max: number): number {
   if (max <= 10) return 1;
@@ -46,9 +46,12 @@ function niceStep(max: number): number {
 }
 
 function snap(value: number, max: number): number {
+  // Мелкие диапазоны (2, 7, 8 шт.) — без магнитов: их допуск перекрывал бы
+  // половину шкалы и драг всегда прилипал к 0 или max.
+  if (max <= 20) return Math.round(value);
   const step = niceStep(max);
   const magnets = [0, max, max * 0.25, max * 0.5, max * 0.75];
-  const tol = Math.max(step, max * 0.03);
+  const tol = Math.max(step, max * 0.02);
   for (const m of magnets) {
     if (Math.abs(value - m) <= tol) return Math.round(m);
   }
@@ -88,8 +91,16 @@ export function FillMedia({
   };
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging || !drag.current) return;
-    if (Math.abs(e.clientY - drag.current.startY) > MOVE_THRESHOLD) moved.current = true;
-    if (moved.current) applyDelta(e.clientY);
+    if (!moved.current) {
+      // Пока порог не пройден — значение НЕ трогаем: палец на тач-экране всегда
+      // дрожит на несколько px, и без этого обычный тап засчитывался как драг.
+      if (Math.abs(e.clientY - drag.current.startY) <= MOVE_THRESHOLD) return;
+      // Переякориваем в точке пересечения порога, иначе значение скачком
+      // проседает сразу на MOVE_THRESHOLD * (max / DRAG_RANGE).
+      moved.current = true;
+      drag.current = { startY: e.clientY, startValue: interactive?.value ?? drag.current.startValue };
+    }
+    applyDelta(e.clientY);
   };
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging) return;
