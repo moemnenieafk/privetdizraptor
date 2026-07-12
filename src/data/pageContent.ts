@@ -88,7 +88,7 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
   'eft-progress-tracker': {
     title: 'Трекер Предметов',
     description: 'Агрегированный вид всех предметов, нужных для активных квестов. Отмечайте найденные предметы и отслеживайте прогресс по каждому заданию.',
-    iconClass: 'icon-eft-items-tracker',
+    iconClass: 'icon-eft-prog-items-tracker',
   },
   'eft-quests-lore-quests': {
     title: 'Сюжетные задания',
