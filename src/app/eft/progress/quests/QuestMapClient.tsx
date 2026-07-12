@@ -9,6 +9,11 @@ import { QuestFilterBar } from '@/components/features/quests/QuestFilterBar';
 import { QuestResetModal } from '@/components/features/quests/QuestResetModal';
 import { QuestDrawer } from '@/components/features/quests/QuestDrawer';
 import { QuestStatusBar } from '@/components/features/quests/QuestStatusBar';
+import { MobileQuestBar } from '@/components/features/quests/MobileQuestBar';
+import { QuestSearchSheet } from '@/components/features/quests/QuestSearchSheet';
+import { QuestTraderSheet } from '@/components/features/quests/QuestTraderSheet';
+import { QuestMapsSheet } from '@/components/features/quests/QuestMapsSheet';
+import { MAP_ICON_CSS as MAP_CSS } from '@/data/map-icons';
 import { useQuestStore, exportProgress, importProgress } from '@/store/useQuestStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { TraderNode } from '@/components/features/quests/TraderNode';
@@ -846,6 +851,29 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     });
   }, []);
 
+  // Мобилка: перелёт к портрету торговца без изменения фильтра (фильтрация по торговцам на телефоне убрана).
+  const handleFocusTrader = useCallback((name: string) => {
+    const pos = connPositionsRef.current.get(`trader-${name}`);
+    if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: 1.2, duration: 500 });
+  }, []);
+
+  // Список торговцев для мобильного шита (в порядке TRADER_ORDER).
+  const mobileTraders = useMemo(() => {
+    const seen = new Map<string, { normalizedName: string; name: string }>();
+    for (const t of initialTasks) {
+      if (!seen.has(t.trader.normalizedName)) {
+        seen.set(t.trader.normalizedName, { normalizedName: t.trader.normalizedName, name: t.trader.name });
+      }
+    }
+    return TRADER_ORDER.filter(n => seen.has(n)).map(n => seen.get(n)!);
+  }, [initialTasks]);
+
+  // Карты для мобильного шита (иконки из общего реестра).
+  const mobileMaps = useMemo(
+    () => maps.map(m => ({ id: m.id, name: m.name, iconClass: MAP_CSS[m.normalizedName] ?? null })),
+    [maps],
+  );
+
   const handleReset = () => {
     setFilterKappa(false);
     setFilterLK(false);
@@ -1047,6 +1075,11 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   return (
     <>
       <div className={containerCls} style={containerStyle}>
+        {/* Мобильная верхняя панель: поиск / торговцы / карты */}
+        <MobileQuestBar mapsFilterActive={selectedMaps.size > 0} />
+
+        {/* Десктопный фильтр-бар — прячем на мобилке */}
+        <div className="hidden lg:block">
         <QuestFilterBar
           tasks={initialTasks}
           completedQuests={completedQuests}
@@ -1064,6 +1097,17 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           selectedMaps={selectedMaps}
           onMap={handleMap}
           onFocus={handleFocusNode}
+        />
+        </div>
+
+        {/* Мобильные шиты */}
+        <QuestSearchSheet tasks={initialTasks} onFocus={handleFocusNode} />
+        <QuestTraderSheet traders={mobileTraders} onFocusTrader={handleFocusTrader} />
+        <QuestMapsSheet
+          maps={mobileMaps}
+          selectedMaps={selectedMaps}
+          onToggleMap={handleMap}
+          onReset={() => setSelectedMaps(new Set())}
         />
 
         <div className="flex flex-1 min-h-0">
