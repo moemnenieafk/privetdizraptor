@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { Download, Upload, Save } from 'lucide-react';
+import { Download, Upload, Save, RotateCcw } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useQuestMapUiStore } from '@/store/useQuestMapUiStore';
 import { BottomSheet } from '@/components/layout/BottomSheet';
@@ -26,6 +26,7 @@ interface Props {
   onToggleFullscreen: () => void;
   onExport:           () => void;
   onImport:           (file: File) => void;
+  onResetProgress:    () => void;
 }
 
 export function QuestStatusBar({
@@ -35,7 +36,7 @@ export function QuestStatusBar({
   filterKappa, filterLK,
   isFullscreen, onToggleFullscreen,
   onKappa, onLK,
-  onExport, onImport,
+  onExport, onImport, onResetProgress,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,7 +60,6 @@ export function QuestStatusBar({
   return (
     <div className="flex items-center gap-3 px-3 h-14 bg-card-menu shrink-0">
 
-      {/* Прогресс — слева. На мобилке компактно (X/Y), на десктопе полная строка. */}
       <div className="flex shrink-0 items-center gap-1.5 font-blender-medium text-sm uppercase tracking-widest">
         <span className="hidden text-success/25 lg:inline">Выполнено:</span>
         <span className="text-success">{completedCount}</span>
@@ -68,7 +68,6 @@ export function QuestStatusBar({
         </span>
       </div>
 
-      {/* Центр: LK + Kappa (на мобилке — только иконки, без процентов) */}
       <div className="flex flex-1 items-center justify-center gap-2">
 
         <button
@@ -103,7 +102,6 @@ export function QuestStatusBar({
           </span>
         </button>
 
-        {/* Профиль — только десктоп (на мобилке занимает лишнее место) */}
         <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
           <div className="relative w-7 h-7 shrink-0">
             {!activeProfile?.prestige || activeProfile.prestige === '0' ? (
@@ -124,19 +122,14 @@ export function QuestStatusBar({
 
       </div>
 
-      {/* Справа: сохранение + фуллскрин */}
       <div className="flex shrink-0 items-center">
 
-        {/* Мобилка — одна кнопка-дискета, раскрывает шит импорт/экспорт */}
-        <button
-          onClick={() => openSheet('save')}
-          title="Сохранение прогресса"
-          className={`${btnCls} lg:hidden`}
-        >
+        {/* Мобилка — дискета: импорт / экспорт / сброс */}
+        <button onClick={() => openSheet('save')} title="Прогресс" className={`${btnCls} lg:hidden`}>
           <Save className="w-3.5 h-3.5" />
         </button>
 
-        {/* Десктоп — раздельные импорт/экспорт как раньше */}
+        {/* Десктоп — раздельно, как было */}
         <button onClick={pickFile} title="Импорт прогресса" className={`${btnCls} hidden lg:flex`}>
           <Upload className="w-3.5 h-3.5" />
         </button>
@@ -170,7 +163,7 @@ export function QuestStatusBar({
 
       </div>
 
-      {/* Шит сохранения (mobile) — импорт / экспорт */}
+      {/* Шит прогресса (mobile) */}
       <BottomSheet open={saveOpen} title="Прогресс" onClose={closeSheet}>
         <ul className="flex flex-col gap-1 pb-2">
           <li>
@@ -198,6 +191,20 @@ export function QuestStatusBar({
               <span className="flex min-w-0 flex-1 flex-col text-left">
                 <span className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">Экспорт</span>
                 <span className="font-blender-book text-xs text-text-muted">Сохранить прогресс в файл</span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => { closeSheet(); onResetProgress(); }}
+              className="flex h-14 w-full items-center gap-3 rounded-xs border border-lines-hover bg-card-menu px-3"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center text-red-400">
+                <RotateCcw className="size-5" strokeWidth={2} />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col text-left">
+                <span className="font-blender-medium text-sm uppercase tracking-widest text-red-400">Сброс прогресса</span>
+                <span className="font-blender-book text-xs text-text-muted">Обнулить все выполненные квесты</span>
               </span>
             </button>
           </li>
