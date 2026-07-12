@@ -868,9 +868,12 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     return TRADER_ORDER.filter(n => seen.has(n)).map(n => seen.get(n)!);
   }, [initialTasks]);
 
-  // Карты для мобильного шита (иконки из общего реестра).
+  // Карты для мобильного шита. Ночные варианты и 21+ отсеиваем — одна иконка на локацию
+  // подхватывает и день, и ночь (как в десктопном QuestFilterBar).
   const mobileMaps = useMemo(
-    () => maps.map(m => ({ id: m.id, name: m.name, iconClass: MAP_CSS[m.normalizedName] ?? null })),
+    () => maps
+      .filter(m => !m.normalizedName.includes('night') && !m.name.includes('21+'))
+      .map(m => ({ id: m.id, name: m.name, iconClass: MAP_CSS[m.normalizedName] ?? null })),
     [maps],
   );
 
@@ -1340,6 +1343,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           onLK={handleLKClick}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsFullscreen(v => !v)}
+          onResetProgress={() => setResetModalOpen(true)}
           onExport={handleExport}
           onImport={handleImport}
         />
