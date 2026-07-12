@@ -173,6 +173,17 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
     // Rubber-band selection state
     const boxDrag = useRef<{ startX: number; startY: number } | null>(null);
 
+    // Активные указатели (touch) + состояние pinch-жеста
+    const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
+    const pinch = useRef<{
+      startDist:  number;
+      startScale: number;
+      startX:     number;
+      startY:     number;
+      startMidX:  number;
+      startMidY:  number;
+    } | null>(null);
+
     const rafId      = useRef(0);
     const cancelAnim = useRef<(() => void) | null>(null);
     const debounce   = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -204,6 +215,30 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
 
       cancelAnim.current?.();
       cancelAnim.current = null;
+
+      // Регистрируем касание. Второй палец → pinch-zoom (мобилка), pan отменяем.
+      if (e.pointerType !== 'mouse') {
+        pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        try { target.setPointerCapture(e.pointerId); } catch {}
+        if (pointers.current.size === 2) {
+          const [a, b] = [...pointers.current.values()];
+          const dist = Math.hypot(b.x - a.x, b.y - a.y);
+          if (dist > 0) {
+            drag.current = null;
+            containerRef.current?.classList.remove('[&]:cursor-grabbing');
+            pinch.current = {
+              startDist:  dist,
+              startScale: transform.current.scale,
+              startX:     transform.current.x,
+              startY:     transform.current.y,
+              startMidX:  (a.x + b.x) / 2,
+              startMidY:  (a.y + b.y) / 2,
+            };
+          }
+          return;
+        }
+        if (pointers.current.size > 2) return;
+      }
 
       if (isDragModeRef.current) {
         // Rubber-band selection instead of pan
@@ -241,6 +276,42 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
 
     // ── Pointer move — rubber-band update OR pan via RAF ─────────────────
     const onPointerMove = useCallback((e: PointerEvent) => {
+      // Pinch-zoom: масштаб по расстоянию между пальцами, панорама по их центру.
+      if (e.pointerType !== 'mouse' && pointers.current.has(e.pointerId)) {
+        pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+      if (pinch.current && pointers.current.size >= 2) {
+        const vp = containerRef.current;
+        if (!vp) return;
+        const [a, b] = [...pointers.current.values()];
+        const dist = Math.hypot(b.x - a.x, b.y - a.y);
+        if (dist <= 0) return;
+
+        const p        = pinch.current;
+        const rect     = vp.getBoundingClientRect();
+        const oldScale = p.startScale;
+        const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, oldScale * (dist / p.startDist)));
+
+        // Точка канваса под стартовым центром пальцев остаётся на месте,
+        // плюс сам центр может двигаться — это даёт одновременный zoom + pan.
+        const midX0 = p.startMidX - rect.left;
+        const midY0 = p.startMidY - rect.top;
+        const midX1 = (a.x + b.x) / 2 - rect.left;
+        const midY1 = (a.y + b.y) / 2 - rect.top;
+        const ratio = newScale / oldScale;
+
+        const nx = midX1 - (midX0 - p.startX) * ratio;
+        const ny = midY1 - (midY0 - p.startY) * ratio;
+
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+        rafId.current = requestAnimationFrame(() => {
+          const el = containerRef.current;
+          if (!el) return;
+          commitAndNotify(clamp(el, { x: nx, y: ny, scale: newScale }));
+        });
+        return;
+      }
+
       if (boxDrag.current) {
         const cont = containerRef.current;
         const el   = selectionBoxRef.current;
@@ -279,6 +350,18 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
 
     // ── Pointer up — finalize rubber-band OR end pan ─────────────────────
     const onPointerUp = useCallback((e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') {
+        pointers.current.delete(e.pointerId);
+        if (pointers.current.size < 2 && pinch.current) {
+          // Палец убран — pinch закончен. Оставшийся палец не превращаем в pan
+          // (иначе карта дёргается), ждём нового касания.
+          pinch.current = null;
+          if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = 0; }
+          try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
+          return;
+        }
+      }
+
       if (boxDrag.current) {
         const el = selectionBoxRef.current;
         if (el) el.style.display = 'none';
