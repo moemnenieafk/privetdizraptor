@@ -57,7 +57,9 @@ const TRADER_ORDER = [
   'jaeger', 'ragman', 'ref', 'fence', 'lightkeeper', 'btrdriver',
 ];
 const OBJ_ROW_H         = 36;
-const CARD_BASE_H       = 160;
+// Базовая высота карточки: шапка + ряд «hero-баннер (81px) + название» + кнопка + прогресс-бар.
+// Ряд с баннером фиксирован по высоте картинки, поэтому база выросла со 160 (было — только заголовок).
+const CARD_BASE_H       = 206;
 const CELL_W            = NODE_W + CELL_GAP;    // 512 — slot step (used in snap grid)
 const ROW_STAGGER       = CELL_W / 2;                        // 256 — half-cell shift for odd rows (chess pattern)
 const MAX_PER_ROW_ODD   = 13;                                // cards per odd (staggered) row
