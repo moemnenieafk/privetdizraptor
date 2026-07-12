@@ -675,11 +675,21 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
   const pinnedSet = useMemo(() => new Set(pinnedQuests), [pinnedQuests]);
 
+  // Зум, при котором объект шириной w влезает в экран целиком (с полями).
+  // Ограничен сверху desired — на десктопе поведение прежнее, на узком экране ужимается.
+  const fitZoom = useCallback((w: number, desired = 1.2) => {
+    if (typeof window === 'undefined') return desired;
+    const avail = window.innerWidth * 0.88; // 12% суммарно на поля
+    return Math.max(0.4, Math.min(desired, avail / w));
+  }, []);
+
   // ── Navigate to a quest ──────────────────────────────────────────────────
   const flyToQuest = useCallback((id: string, zoom = 1.2, duration = 0) => {
     const pos = connPositionsRef.current.get(id);
-    if (pos) vpRef.current?.setCenter(pos.x + NODE_W / 2, pos.y + NODE_H / 2, { zoom, duration });
-  }, []);
+    // Потолок зума — чтобы карточка ноды влезала в экран целиком (на мобилке ужимается).
+    const z = fitZoom(NODE_W, zoom);
+    if (pos) vpRef.current?.setCenter(pos.x + NODE_W / 2, pos.y + NODE_H / 2, { zoom: z, duration });
+  }, [fitZoom]);
 
   // ── Initial view on mount ────────────────────────────────────────────────
   useEffect(() => {
@@ -846,16 +856,16 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     setSelectedTraders(prev => {
       if (prev.has(name)) return new Set();
       const pos = connPositionsRef.current.get(`trader-${name}`);
-      if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: 1.2, duration: 500 });
+      if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: fitZoom(TRADER_W), duration: 500 });
       return new Set([name]);
     });
-  }, []);
+  }, [fitZoom]);
 
   // Мобилка: перелёт к портрету торговца без изменения фильтра (фильтрация по торговцам на телефоне убрана).
   const handleFocusTrader = useCallback((name: string) => {
     const pos = connPositionsRef.current.get(`trader-${name}`);
-    if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: 1.2, duration: 500 });
-  }, []);
+    if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: fitZoom(TRADER_W), duration: 500 });
+  }, [fitZoom]);
 
   // Список торговцев для мобильного шита (в порядке TRADER_ORDER).
   const mobileTraders = useMemo(() => {
