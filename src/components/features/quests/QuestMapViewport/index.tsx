@@ -211,7 +211,16 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
       if (e.button !== 0 && e.pointerType === 'mouse') return;
       // Don't cancel UI clicks on nodes — only start from the container bg
       const target = e.target as HTMLElement;
-      if (target.closest('[data-no-pan]')) return;
+      // Touch: панорамировать можно с любого места, включая карточки квестов —
+      // блокируем только настоящие интерактивные элементы (кнопки/ссылки/поля),
+      // чтобы тап по «Выполнено?» и пунктам задач продолжал работать.
+      // Мышь: прежнее поведение — [data-no-pan] полностью исключён из pan
+      // (иначе сломается drag нод в дев-режиме).
+      if (e.pointerType === 'mouse') {
+        if (target.closest('[data-no-pan]')) return;
+      } else if (target.closest('button, a, input, select, textarea, [role="button"], [contenteditable="true"]')) {
+        return;
+      }
 
       cancelAnim.current?.();
       cancelAnim.current = null;
