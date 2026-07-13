@@ -2,42 +2,43 @@ import { unstable_cache } from 'next/cache';
 import type { VideoCategorySlug, YoutubeVideo } from '@/types/video';
 import {
   CATEGORY_BY_PLAYLIST,
+  CATEGORY_KEYWORDS,
   CATALOG_TTL,
+  FALLBACK_CATEGORY,
   PLAYLIST_MAX_PAGES,
   PLAYLIST_PAGE_SIZE,
+  UPLOADS_PLAYLIST_ID,
   VIDEO_CATEGORIES,
-  YT_CHANNEL_HANDLE,
 } from '@/data/video-catalog';
 import { detectFacets, parseChapters, parseIsoDuration } from '@/lib/video-utils';
 
 /**
- * Серверный загрузчик видео с YouTube. ДВА РЕЖИМА, переключается сам:
+ * Загрузчик видео с YouTube. Каскад из двух осей — источник и транспорт:
  *
- *   1. YOUTUBE_API_KEY задан  → Data API v3. Полный архив плейлиста (до 500 видео),
- *      есть длительность и точные просмотры. Квота: ~20 юнитов из 10 000/сутки.
- *   2. Ключа нет              → публичный RSS плейлиста (feeds/videos.xml).
- *      Без авторизации и без квот, но: только 15 последних видео на плейлист
- *      и НЕТ длительности (duration = 0, в UI покажется «—»).
+ *   ИСТОЧНИК:   плейлисты из каталога → иначе uploads-лента канала (UC… → UU…)
+ *               с авто-раскладкой по CATEGORY_KEYWORDS.
+ *   ТРАНСПОРТ:  YOUTUBE_API_KEY есть → Data API v3 (весь архив, длительность, точные
+ *               просмотры). Ключа нет → публичный RSS (без квот и авторизации,
+ *               но только 15 последних видео и без длительности).
  *
- * Смысл фолбэка: раздел живой сразу, а появление ключа в env разворачивает
- * архив до полного БЕЗ правок кода. Категория = плейлист в обоих режимах.
+ * Итог: раздел работает из коробки, а появление ключа/плейлистов в env и каталоге
+ * расширяет его БЕЗ правок кода.
  */
 
 const API = 'https://www.googleapis.com/youtube/v3';
 const RSS = 'https://www.youtube.com/feeds/videos.xml';
 
-/* ═════════════════ РЕЖИМ 2: RSS (без ключа) ═════════════════ */
+/* ═════════════ Авто-категоризация (режим uploads-ленты) ═════════════ */
 
-/** Достаёт содержимое первого <tag ...>…</tag>. XML-парсера в рантайме нет — режем регуляркой. */
-function tagText(xml: string, tag: string): string {
-  const m = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`).exec(xml);
-  return m ? decodeXml(m[1].trim()) : '';
+function detectCategory(title: string, description: string): VideoCategorySlug {
+  const hay = `${title} ${description.slice(0, 300)}`.toLowerCase();
+  for (const rule of CATEGORY_KEYWORDS) {
+    if (rule.keywords.some((w) => hay.includes(w))) return rule.slug;
+  }
+  return FALLBACK_CATEGORY;
 }
 
-function attr(xml: string, tag: string, name: string): string {
-  const m = new RegExp(`<${tag}[^>]*\\s${name}="([^"]*)"`).exec(xml);
-  return m ? decodeXml(m[1]) : '';
-}
+/* ═════════════ ТРАНСПОРТ 1: RSS (без ключа) ═════════════ */
 
 function decodeXml(s: string): string {
   return s
@@ -48,12 +49,24 @@ function decodeXml(s: string): string {
     .replace(/&amp;/g, '&');
 }
 
-async function loadPlaylistViaRss(
+function tagText(xml: string, tag: string): string {
+  const m = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`).exec(xml);
+  return m ? decodeXml(m[1].trim()) : '';
+}
+
+function attr(xml: string, tag: string, name: string): string {
+  const m = new RegExp(`<${tag}[^>]*\\s${name}="([^"]*)"`).exec(xml);
+  return m ? decodeXml(m[1]) : '';
+}
+
+/** resolveCategory: null → определяем по ключевым словам (uploads-режим). */
+async function loadViaRss(
   playlistId: string,
-  category: VideoCategorySlug,
+  fixedCategory: VideoCategorySlug | null,
 ): Promise<YoutubeVideo[]> {
   const res = await fetch(`${RSS}?playlist_id=${encodeURIComponent(playlistId)}`, {
     cache: 'no-store',
+    headers: { 'User-Agent': 'CTA-Portal/1.0' },
   });
   if (!res.ok) throw new Error(`RSS ${res.status}`);
 
@@ -66,20 +79,19 @@ async function loadPlaylistViaRss(
     if (!id || !title) return acc;
 
     const description = tagText(entry, 'media:description');
-    const views = Number(attr(entry, 'media:statistics', 'views') || 0);
 
     acc.push({
       source: 'youtube',
       id,
       playlistId,
-      category,
+      category: fixedCategory ?? detectCategory(title, description),
       title,
       description,
       publishedAt: tagText(entry, 'published') || new Date(0).toISOString(),
-      duration: 0, // RSS не отдаёт длительность — UI покажет «—»
+      duration: 0, // RSS не отдаёт длительность → в UI «—»
       thumbnail:
         attr(entry, 'media:thumbnail', 'url') || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
-      viewCount: views,
+      viewCount: Number(attr(entry, 'media:statistics', 'views') || 0),
       chapters: parseChapters(description, 0),
       facets: detectFacets(title, description, []),
       externalUrl: `https://www.youtube.com/watch?v=${id}`,
@@ -88,7 +100,7 @@ async function loadPlaylistViaRss(
   }, []);
 }
 
-/* ═════════════════ РЕЖИМ 1: Data API v3 (с ключом) ═════════════════ */
+/* ═════════════ ТРАНСПОРТ 2: Data API v3 (с ключом) ═════════════ */
 
 interface YtThumb {
   url: string;
@@ -118,9 +130,6 @@ interface YtVideoItem {
 interface YtVideosResponse {
   items?: YtVideoItem[];
 }
-interface YtChannelsResponse {
-  items?: { contentDetails?: { relatedPlaylists?: { uploads?: string } } }[];
-}
 
 async function ytFetch<T>(
   path: string,
@@ -146,7 +155,12 @@ function pickThumbnail(t: YtThumbnails | undefined, videoId: string): string {
   );
 }
 
-async function fetchPlaylistVideoIds(playlistId: string, key: string): Promise<string[]> {
+async function loadViaApi(
+  playlistId: string,
+  fixedCategory: VideoCategorySlug | null,
+  key: string,
+): Promise<YoutubeVideo[]> {
+  /* 1. ID видео плейлиста (пагинация) */
   const ids: string[] = [];
   let pageToken: string | undefined;
 
@@ -167,10 +181,8 @@ async function fetchPlaylistVideoIds(playlistId: string, key: string): Promise<s
     if (!data.nextPageToken) break;
     pageToken = data.nextPageToken;
   }
-  return ids;
-}
 
-async function fetchVideoDetails(ids: string[], key: string): Promise<YtVideoItem[]> {
+  /* 2. Детали пачками по 50 (лимит videos.list) */
   const chunks: string[][] = [];
   for (let i = 0; i < ids.length; i += 50) chunks.push(ids.slice(i, i + 50));
 
@@ -188,121 +200,86 @@ async function fetchVideoDetails(ids: string[], key: string): Promise<YtVideoIte
       ),
     ),
   );
-  return pages.flatMap((p) => p.items ?? []);
+
+  /* 3. → домен */
+  return pages.flatMap((p) => p.items ?? []).reduce<YoutubeVideo[]>((acc, raw) => {
+    const id = raw.id;
+    const snippet = raw.snippet;
+    if (!id || !snippet?.title) return acc;
+
+    const description = snippet.description ?? '';
+    const duration = parseIsoDuration(raw.contentDetails?.duration);
+
+    acc.push({
+      source: 'youtube',
+      id,
+      playlistId,
+      category: fixedCategory ?? detectCategory(snippet.title, description),
+      title: snippet.title,
+      description,
+      publishedAt: snippet.publishedAt ?? new Date(0).toISOString(),
+      duration,
+      thumbnail: pickThumbnail(snippet.thumbnails, id),
+      viewCount: Number(raw.statistics?.viewCount ?? 0),
+      chapters: parseChapters(description, duration),
+      facets: detectFacets(snippet.title, description, snippet.tags ?? []),
+      externalUrl: `https://www.youtube.com/watch?v=${id}`,
+    });
+    return acc;
+  }, []);
 }
 
-function toVideo(
-  raw: YtVideoItem,
-  category: VideoCategorySlug,
-  playlistId: string,
-): YoutubeVideo | null {
-  const id = raw.id;
-  const snippet = raw.snippet;
-  if (!id || !snippet?.title) return null;
-
-  const description = snippet.description ?? '';
-  const duration = parseIsoDuration(raw.contentDetails?.duration);
-
-  return {
-    source: 'youtube',
-    id,
-    playlistId,
-    category,
-    title: snippet.title,
-    description,
-    publishedAt: snippet.publishedAt ?? new Date(0).toISOString(),
-    duration,
-    thumbnail: pickThumbnail(snippet.thumbnails, id),
-    viewCount: Number(raw.statistics?.viewCount ?? 0),
-    chapters: parseChapters(description, duration),
-    facets: detectFacets(snippet.title, description, snippet.tags ?? []),
-    externalUrl: `https://www.youtube.com/watch?v=${id}`,
-  };
-}
-
-async function loadPlaylistViaApi(
-  playlistId: string,
-  category: VideoCategorySlug,
-  key: string,
-): Promise<YoutubeVideo[]> {
-  const ids = await fetchPlaylistVideoIds(playlistId, key);
-  const details = await fetchVideoDetails(ids, key);
-  return details
-    .map((raw) => toVideo(raw, category, playlistId))
-    .filter((v): v is YoutubeVideo => v !== null);
-}
-
-/** Uploads-плейлист канала — фолбэк, если ID плейлистов не проставлены (только с ключом). */
-async function fetchUploadsPlaylistId(key: string): Promise<string | null> {
-  const data = await ytFetch<YtChannelsResponse>(
-    'channels',
-    { part: 'contentDetails', forHandle: YT_CHANNEL_HANDLE },
-    key,
-  );
-  return data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads ?? null;
-}
-
-/* ═════════════════ Оркестрация ═════════════════ */
+/* ═════════════ Оркестрация ═════════════ */
 
 async function loadYoutube(): Promise<{ videos: YoutubeVideo[]; errors: string[] }> {
   const key = process.env.YOUTUBE_API_KEY;
   const errors: string[] = [];
 
-  // Плейлисты, у которых ID реально проставлен (не PL_REPLACE_ME_*).
-  const configured = VIDEO_CATEGORIES.filter(
-    (c) => c.playlistId && !c.playlistId.startsWith('PL_REPLACE_ME'),
-  );
+  const load = (playlistId: string, category: VideoCategorySlug | null) =>
+    key ? loadViaApi(playlistId, category, key) : loadViaRss(playlistId, category);
 
-  if (configured.length === 0) {
-    // Без плейлистов и без ключа сделать нечего — отдаём пустой архив с внятной причиной.
-    if (!key) {
-      return {
-        videos: [],
-        errors: ['YouTube: не заданы ID плейлистов в src/data/video-catalog.ts'],
-      };
-    }
-    try {
-      const uploads = await fetchUploadsPlaylistId(key);
-      if (!uploads) return { videos: [], errors: ['YouTube: канал не найден'] };
-      const videos = await loadPlaylistViaApi(uploads, 'guides', key);
-      return { videos, errors };
-    } catch (e) {
-      return { videos: [], errors: [`YouTube: ${(e as Error).message}`] };
-    }
+  if (!key) {
+    errors.push('Без API-ключа YouTube доступны только 15 последних видео');
   }
 
-  if (!key) errors.push('YouTube: без API-ключа доступны только 15 последних видео на раздел');
+  /* Плейлисты заданы в каталоге → категория = плейлист. */
+  const configured = VIDEO_CATEGORIES.filter((c) => Boolean(c.playlistId));
 
-  const results = await Promise.all(
-    configured.map(async (cat) => {
-      const playlistId = cat.playlistId as string;
-      const category = CATEGORY_BY_PLAYLIST[playlistId] ?? cat.slug;
-      try {
-        return key
-          ? await loadPlaylistViaApi(playlistId, category, key)
-          : await loadPlaylistViaRss(playlistId, category);
-      } catch (e) {
-        errors.push(`YouTube «${cat.title}»: ${(e as Error).message}`);
-        return [];
-      }
-    }),
+  const batches = await Promise.all(
+    configured.length > 0
+      ? configured.map(async (cat) => {
+          const playlistId = cat.playlistId as string;
+          try {
+            return await load(playlistId, CATEGORY_BY_PLAYLIST[playlistId] ?? cat.slug);
+          } catch (e) {
+            errors.push(`YouTube «${cat.title}»: ${(e as Error).message}`);
+            return [];
+          }
+        })
+      : /* Плейлистов нет → uploads-лента канала + авто-раскладка (category = null). */
+        [
+          load(UPLOADS_PLAYLIST_ID, null).catch((e: Error) => {
+            errors.push(`YouTube: ${e.message}`);
+            return [] as YoutubeVideo[];
+          }),
+        ],
   );
 
-  // Дедуп: одно видео может лежать в двух плейлистах — берём первое вхождение.
+  /* Дедуп: одно видео может лежать сразу в двух плейлистах. */
   const seen = new Set<string>();
   const videos: YoutubeVideo[] = [];
-  for (const v of results.flat()) {
+  for (const v of batches.flat()) {
     if (seen.has(v.id)) continue;
     seen.add(v.id);
     videos.push(v);
   }
+
   return { videos, errors };
 }
 
 /**
- * Публичная точка входа. Кэш на CATALOG_TTL: все страницы раздела за час
- * обслуживаются одним походом наружу. Никогда не бросает — ошибки уезжают
- * в `errors` и рисуются баннером над сеткой (страница не должна падать в 500).
+ * Публичная точка входа. Кэш на CATALOG_TTL. Никогда не бросает: любая ошибка
+ * превращается в `errors` и рисуется баннером над сеткой — страница не падает в 500.
  */
 export const getYoutubeVideos = unstable_cache(
   async () => {
