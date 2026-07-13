@@ -1,50 +1,52 @@
 # Ручной синк оружейного слоя (weapon_bases/slots/parts/presets).
-# Запуск с телефона: GitHub → Actions → «Синк оружия (EFT)» → Run workflow.
+# Запуск: Actions → «sync-weapons» → Run workflow.
 #
-# Расписания НЕТ намеренно: слоты и модификаторы меняются раз в патч игры,
-# а не раз в час (в отличие от цен). Гоняем руками после патча.
+# Расписания НЕТ намеренно: слоты и модификаторы модулей меняются раз в патч игры,
+# а не ежечасно (в отличие от цен). Гоняем руками после патча.
 #
-# Секрет не светится в URL: заголовок Bearer ставит curl, не браузер.
-name: Синк оружия (EFT)
+# Нужны в настройках репозитория (Settings → Secrets and variables → Actions):
+#   • Secret   CRON_SECRET    — то же значение, что в Vercel env
+#   • Variable PROD_BASE_URL  — прод-домен, напр. https://cta.vercel.app (без /api)
+# Оба уже заведены для sync-prices — новых заводить не нужно.
+name: sync-weapons
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
+
+concurrency:
+  group: sync-weapons
+  cancel-in-progress: false
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Дёрнуть /api/cron/sync-weapons
+      - name: Trigger weapons sync
         env:
-          SITE_URL: ${{ secrets.SITE_URL }}
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          if [ -z "$SITE_URL" ] || [ -z "$CRON_SECRET" ]; then
-            echo "::error::нет SITE_URL или CRON_SECRET в secrets репозитория"
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET в Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/sync-weapons"
+          echo "GET $url"
+          code=$(curl -sS -m 300 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Синк оружия не удался (HTTP $code) — таблицы НЕ тронуты"
             exit 1
           fi
 
-          echo "→ POST $SITE_URL/api/cron/sync-weapons"
-
-          # Синк тяжёлый (полный дамп + перезапись таблиц) — даём 5 минут.
-          http_code=$(curl -sS -o response.json -w '%{http_code}' \
-            --max-time 300 \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            "$SITE_URL/api/cron/sync-weapons")
-
-          echo "HTTP $http_code"
-          cat response.json
-          echo ""
-
-          if [ "$http_code" != "200" ]; then
-            echo "::error::синк упал — таблицы НЕ тронуты (транзакция откатилась)"
-            exit 1
-          fi
-
-      - name: Показать итог
-        if: success()
+      - name: Итог в саммари
+        if: always()
         run: |
           echo "### Синк оружия" >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat response.json >> $GITHUB_STEP_SUMMARY
+          cat /tmp/out.json 2>/dev/null || echo "нет ответа" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
