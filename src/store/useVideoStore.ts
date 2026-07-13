@@ -8,19 +8,15 @@ import { isWatched } from '@/lib/video-utils';
  * Клиентское состояние раздела «Видео». Персонализация без БД:
  * прогресс просмотра, «Продолжить просмотр», избранное и режим выдачи
  * живут в localStorage — profile-free, работает и без авторизации.
- *
- *   • progress  — позиция по каждому видео (пишет VideoPlayer раз в ~5с);
- *   • favorites — «Смотреть позже», ряд на хабе раздела;
- *   • view      — grid (плитка) / table (плотный список) для мобилки.
  */
 
-/** Не пишем прогресс на первых секундах — случайный тап не должен плодить записи. */
 const MIN_TRACK_POSITION = 15;
-/** Верхняя граница истории «Продолжить», чтобы localStorage не пух. */
 const MAX_PROGRESS_ENTRIES = 200;
 
+export type ProgressMap = Record<string, VideoProgress>;
+
 interface VideoStore {
-  progress: Record<string, VideoProgress>;
+  progress: ProgressMap;
   favorites: string[];
   view: ViewMode;
 
@@ -32,19 +28,17 @@ interface VideoStore {
   setView: (view: ViewMode) => void;
 }
 
-/** Обрезает историю до MAX_PROGRESS_ENTRIES самых свежих записей. */
-function trim(entries: Record<string, VideoProgress>): Record<string, VideoProgress> {
+function trim(entries: ProgressMap): ProgressMap {
   const keys = Object.keys(entries);
   if (keys.length <= MAX_PROGRESS_ENTRIES) return entries;
 
-  const kept = keys
+  return keys
     .sort((a, b) => entries[b].updatedAt - entries[a].updatedAt)
-    .slice(0, MAX_PROGRESS_ENTRIES);
-
-  return kept.reduce<Record<string, VideoProgress>>((acc, key) => {
-    acc[key] = entries[key];
-    return acc;
-  }, {});
+    .slice(0, MAX_PROGRESS_ENTRIES)
+    .reduce<ProgressMap>((acc, key) => {
+      acc[key] = entries[key];
+      return acc;
+    }, {});
 }
 
 export const useVideoStore = create<VideoStore>()(
@@ -59,7 +53,6 @@ export const useVideoStore = create<VideoStore>()(
           if (duration <= 0 || position < MIN_TRACK_POSITION) return state;
 
           const prev = state.progress[videoId];
-          // Досмотренное не «откатываем» перемоткой в начало на повторном просмотре.
           if (prev?.completed && !isWatched(position, duration)) return state;
 
           const next: VideoProgress = {
@@ -90,22 +83,21 @@ export const useVideoStore = create<VideoStore>()(
 
       setView: (view) => set({ view }),
     }),
-    {
-      name: 'cta-video-progress',
-      version: 1,
-      // Селективный partialize не нужен — всё поле стора персистится осознанно.
-    },
+    { name: 'cta-video-progress', version: 1 },
   ),
 );
 
-/* ─────────────────── селекторы ─────────────────── */
-
 /**
- * ID видео для ряда «Продолжить просмотр»: начатые, но не досмотренные,
- * свежие сверху. Компонент сам матчит их с каталогом.
+ * ВАЖНО: это НЕ zustand-селектор, а чистая функция над уже полученным объектом.
+ *
+ * Zustand v5 сидит на useSyncExternalStore и сравнивает результат селектора
+ * по ССЫЛКЕ. Селектор, возвращающий свежий массив на каждый вызов, уводит React
+ * в бесконечный ре-рендер («Maximum update depth exceeded») и убивает страницу.
+ * Поэтому из стора всегда достаём стабильную ссылку (s.progress), а производные
+ * массивы считаем через useMemo на стороне компонента.
  */
-export function selectContinueIds(state: VideoStore): string[] {
-  return Object.entries(state.progress)
+export function getContinueIds(progress: ProgressMap): string[] {
+  return Object.entries(progress)
     .filter(([, p]) => !p.completed && p.position >= MIN_TRACK_POSITION)
     .sort((a, b) => b[1].updatedAt - a[1].updatedAt)
     .map(([id]) => id);
