@@ -7,6 +7,7 @@ export const PROGRESS_KEYS = [
   'cta-hideout',
   'player-profile-storage',
   'cta-achievement-progress',
+  'cta-weapon-builds',
 ] as const;
 
 export function clearProgressStorage(): void {
