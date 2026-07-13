@@ -16,9 +16,15 @@
 // ВАЖНО: containsItems у пресетов НЕ содержит слот детали (проверено на живом синке:
 // 3789 из 3789 без slotNameId). Поэтому слот выводится постобработкой —
 // resolvePresetSlots() по allowedItemIds. См. src/lib/preset-slots.ts.
+//
+// Запрос тяжёлый (весь оружейный слой), tarkov.dev под нагрузкой отдаёт 503 →
+// ретраим с бэкоффом. 4xx не ретраим: это наша ошибка в запросе, повтор не поможет.
 import { resolvePresetSlots } from "@/lib/preset-slots";
 
 const ENDPOINT = "https://api.tarkov.dev/graphql";
+
+const RETRIES = 3;
+const BACKOFF_MS = [1000, 3000, 7000];
 
 /* ───────────────── публичная форма (её пишет в БД src/db/weapons.ts) ───────────────── */
 
@@ -255,18 +261,48 @@ function slotNameFromAttributes(attrs: RawAttribute[] | null | undefined): strin
   return typeof hit?.value === "string" && hit.value.length > 0 ? hit.value : "";
 }
 
-async function gql(query: string): Promise<RawItem[]> {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ query }),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`tarkov.dev → ${res.status}`);
+const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
-  const json = (await res.json()) as RawResponse;
-  if (json.errors) throw new Error(`tarkov.dev вернул errors: ${JSON.stringify(json.errors)}`);
-  return json.data?.items ?? [];
+/**
+ * GraphQL-запрос с ретраями. Ретраим 5xx и сетевые обрывы (tarkov.dev под нагрузкой
+ * отдаёт 503), не ретраим 4xx — это ошибка в самом запросе, повтор не поможет.
+ */
+async function gql(query: string, label: string): Promise<RawItem[]> {
+  let lastError = "";
+
+  for (let attempt = 0; attempt <= RETRIES; attempt++) {
+    if (attempt > 0) await sleep(BACKOFF_MS[attempt - 1] ?? 7000);
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ query }),
+        cache: "no-store",
+      });
+
+      if (res.status >= 400 && res.status < 500) {
+        throw new Error(`tarkov.dev [${label}] → ${res.status} (запрос битый, ретрай не поможет)`);
+      }
+      if (!res.ok) {
+        lastError = `tarkov.dev [${label}] → ${res.status}`;
+        continue; // 5xx — ретраим
+      }
+
+      const json = (await res.json()) as RawResponse;
+      if (json.errors) {
+        throw new Error(`tarkov.dev [${label}] вернул errors: ${JSON.stringify(json.errors)}`);
+      }
+      return json.data?.items ?? [];
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // Битый запрос — сразу наружу, ретраить нечего.
+      if (msg.includes("ретрай не поможет") || msg.includes("вернул errors")) throw e;
+      lastError = msg; // сетевой обрыв / таймаут — ретраим
+    }
+  }
+
+  throw new Error(`${lastError} — исчерпаны ${RETRIES} ретрая, синк отменён`);
 }
 
 /* ───────────────── публичный фетч ───────────────── */
@@ -276,7 +312,10 @@ async function gql(query: string): Promise<RawItem[]> {
  * упасть, а не затереть рабочие таблицы пустотой (паттерн syncEftPrices).
  */
 export async function getEftWeaponsDump(): Promise<EftWeaponsDump> {
-  const [main, ammoRaw] = await Promise.all([gql(MAIN_QUERY), gql(AMMO_QUERY)]);
+  // Последовательно, а не Promise.all: два тяжёлых запроса параллельно — верный способ
+  // выбить у tarkov.dev 503. Ammo-запрос лёгкий, лишние 2 секунды не жалко.
+  const main = await gql(MAIN_QUERY, "gun+mods+preset");
+  const ammoRaw = await gql(AMMO_QUERY, "ammo");
 
   if (main.length === 0) throw new Error("tarkov.dev отдал пустой список оружия — синк отменён");
 
