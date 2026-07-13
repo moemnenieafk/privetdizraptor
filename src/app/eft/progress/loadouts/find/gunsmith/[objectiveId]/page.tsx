@@ -1,23 +1,21 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getBuildContext } from '@/db/weapons';
-import { getGunsmithSpec } from '@/db/weapons';
+import { getBuildContext, getGunsmithSpec } from '@/db/weapons';
 import { getGunsmithListItem } from '@/db/gunsmith-list';
 import { getBuildPriceMap, priceOfFrom, type BuildPrice } from '@/db/build-prices';
+import { getGunsmithVideo } from '@/lib/gunsmith-videos';
 import { solveQuest } from '@/lib/gunsmith-solver';
 import { checkBuild } from '@/lib/gunsmith';
 import { GunsmithSolution } from '@/components/features/loadouts/GunsmithSolution';
+import { GunsmithVideoCard } from '@/components/features/loadouts/GunsmithVideoCard';
 import type { BuildItemDef } from '@/lib/weapon-build';
 
-// Страница одного квеста «Оружейник»: пороги + САМАЯ ДЕШЁВАЯ сборка, которая их проходит.
+// Страница одного квеста «Оружейник»: пороги + САМАЯ ДЕШЁВАЯ сборка, которая их
+// проходит + видео-гайд ФУЛЛ КАМЕНЬ (матчится по номеру части).
 //
 // Солвер крутится на сервере, а не в браузере: ему нужен полный индекс модулей ствола
 // (BFS по дереву слотов) и карта цен. На телефоне это заметная работа, на сервере —
 // доли секунды, а результат кэшируется на сутки вместе со страницей.
-//
-// Цены берём из нашей таблицы prices, поэтому «дешёвая» — по ценам последнего синка.
-// Это честно и заметно лучше, чем у конкурентов: тир-листы вообще не знают, что
-// сколько стоит СЕГОДНЯ.
 
 interface Props {
   params: Promise<{ objectiveId: string }>;
@@ -38,7 +36,10 @@ export default async function GunsmithQuestPage({ params }: Props) {
   if (!ctx) notFound();
 
   // Цены нужны только для того, что реально можно поставить на ЭТОТ ствол.
-  const priceMap = await getBuildPriceMap([...ctx.index.keys()]);
+  const [priceMap, video] = await Promise.all([
+    getBuildPriceMap([...ctx.index.keys()]),
+    getGunsmithVideo(spec.part),
+  ]);
 
   const solution = solveQuest({
     baseItemId: spec.baseItemId,
@@ -76,6 +77,12 @@ export default async function GunsmithQuestPage({ params }: Props) {
             <span>{ctx.base.name}</span>
           </div>
         </header>
+
+        {video && (
+          <div className="mb-6">
+            <GunsmithVideoCard video={video} />
+          </div>
+        )}
 
         <GunsmithSolution
           baseItemId={spec.baseItemId}
