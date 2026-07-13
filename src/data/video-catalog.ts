@@ -6,23 +6,33 @@ import type {
 
 /**
  * Каталог раздела «Видео» — единственный источник правды по контенту.
- * Категория = ПЛЕЙЛИСТ канала @fullkamen: раскладку контролирует автор на YouTube,
- * код при добавлении видео не трогаем. Мы лишь зеркалим плейлисты и обогащаем
- * их фасетами (карта/тема), вычисленными из title+description+tags.
+ *
+ * КАСКАД ИСТОЧНИКОВ (см. lib/youtube.ts):
+ *   1. Если у категории задан playlistId → берём этот плейлист (автор рулит раскладкой).
+ *   2. Если ни один не задан → берём uploads-ленту канала целиком и раскладываем
+ *      по категориям автоматически (CATEGORY_KEYWORDS).
+ * И то, и другое работает БЕЗ API-ключа (через публичный RSS), а с ключом
+ * разворачивается в полный архив. Код при этом не меняется.
  */
 
-/** Канал-первоисточник. Handle — для channels.list?forHandle (1 юнит квоты). */
 export const YT_CHANNEL_HANDLE = '@fullkamen';
+
+/** Реальный channel ID @fullkamen. Нужен для RSS и вывода uploads-плейлиста. */
+export const YT_CHANNEL_ID = 'UCdIg3tdVwU4G6DArnFd69yQ';
+
+/**
+ * Плейлист «все загрузки» канала. YouTube гарантирует правило UC… → UU…,
+ * поэтому лишний запрос к channels.list не нужен (экономим и квоту, и ключ).
+ */
+export const UPLOADS_PLAYLIST_ID = `UU${YT_CHANNEL_ID.slice(2)}`;
 
 /** Twitch-канал того же автора (VOD'ы и хайлайты в категорию «Стримы»). */
 export const TWITCH_CHANNEL_LOGIN = 'fullkamen';
 
-/** Сколько последних видео тянем из каждого плейлиста (50 = 1 страница = 1 юнит). */
 export const PLAYLIST_PAGE_SIZE = 50;
-/** Максимум страниц на плейлист (500 видео = 10 юнитов). Защита от бесконечной пагинации. */
 export const PLAYLIST_MAX_PAGES = 10;
 
-/** TTL серверного кэша каталога, сек. Час — компромисс свежесть/квота (10k юнитов/сутки). */
+/** TTL серверного кэша каталога, сек. */
 export const CATALOG_TTL = 3600;
 
 /* ─────────────────────── Категории ─────────────────────── */
@@ -33,7 +43,9 @@ export const VIDEO_CATEGORIES: VideoCategoryMeta[] = [
     title: 'Гайды',
     description: 'Подробные видеоруководства по квестам, механикам и сборкам оружия.',
     iconPath: '/icons/eft/06-videos/video-guides.svg',
-    playlistId: 'PL_REPLACE_ME_GUIDES', // TODO: ID плейлиста «Гайды»
+    // Впиши ID плейлиста, когда Дима его даст (из ссылки ?list=PL…).
+    // Пока null — категория наполняется авто-раскладкой из uploads-ленты.
+    playlistId: null,
     includeTwitch: false,
   },
   {
@@ -41,7 +53,7 @@ export const VIDEO_CATEGORIES: VideoCategoryMeta[] = [
     title: 'Советы',
     description: 'Короткие и полезные видеосоветы для новичков и опытных игроков.',
     iconPath: '/icons/eft/06-videos/video-advices.svg',
-    playlistId: 'PL_REPLACE_ME_ADVICES', // TODO: ID плейлиста «Советы»
+    playlistId: null,
     includeTwitch: false,
   },
   {
@@ -49,7 +61,7 @@ export const VIDEO_CATEGORIES: VideoCategoryMeta[] = [
     title: 'Новости',
     description: 'Официальные новости, анонсы и обзоры обновлений от разработчиков.',
     iconPath: '/icons/eft/06-videos/video-news.svg',
-    playlistId: 'PL_REPLACE_ME_NEWS', // TODO: ID плейлиста «Новости»
+    playlistId: null,
     includeTwitch: false,
   },
   {
@@ -57,7 +69,7 @@ export const VIDEO_CATEGORIES: VideoCategoryMeta[] = [
     title: 'Стримы',
     description: 'Записи трансляций и лучшие моменты с Twitch и YouTube.',
     iconPath: '/icons/eft/06-videos/live-streams.svg',
-    playlistId: 'PL_REPLACE_ME_STREAMS', // TODO: ID плейлиста «Стримы» (null — если только Twitch)
+    playlistId: null,
     includeTwitch: true,
   },
 ];
@@ -68,7 +80,6 @@ export const CATEGORY_BY_SLUG: Record<VideoCategorySlug, VideoCategoryMeta> =
     {} as Record<VideoCategorySlug, VideoCategoryMeta>,
   );
 
-/** Обратный индекс: playlistId → категория (раскладка выдачи YouTube). */
 export const CATEGORY_BY_PLAYLIST: Record<string, VideoCategorySlug> =
   VIDEO_CATEGORIES.reduce<Record<string, VideoCategorySlug>>((acc, c) => {
     if (c.playlistId) acc[c.playlistId] = c.slug;
@@ -79,13 +90,47 @@ export function isVideoCategory(value: string): value is VideoCategorySlug {
   return VIDEO_CATEGORIES.some((c) => c.slug === value);
 }
 
-/* ─────────────────────── Фасеты: карты ─────────────────────── */
+/* ─────────────────────── Авто-раскладка по категориям ─────────────────────── */
 
 /**
- * Словарь распознавания карт в тексте. Ключ = слаг из /eft/maps/[slug],
- * значения = все народные написания (рус/англ/сленг), в нижнем регистре.
- * Матчим по вхождению подстроки — дёшево и достаточно точно для заголовков.
+ * Правила для режима uploads-ленты. Проверяются СТРОГО В ЭТОМ ПОРЯДКЕ —
+ * первое совпадение выигрывает, поэтому узкие темы («новости», «советы»)
+ * стоят выше широких («гайд»). Всё, что не подошло → 'streams'
+ * (канал в основе своей — нарезки и лучшие моменты).
  */
+export const CATEGORY_KEYWORDS: { slug: VideoCategorySlug; keywords: string[] }[] = [
+  {
+    slug: 'news',
+    keywords: [
+      'новост', 'патч', 'обновлен', 'анонс', 'вайп', 'wipe',
+      'что нового', 'изменени', 'дневник разраб', 'нас ждёт', 'нас ждет',
+    ],
+  },
+  {
+    slug: 'advices',
+    keywords: [
+      'совет', 'советы', 'лайфхак', 'фишк', 'ошибк', 'новичк',
+      'топ-', 'топ ', 'что нужно знать', 'как не', 'подборк',
+    ],
+  },
+  {
+    slug: 'guides',
+    keywords: [
+      'гайд', 'прохожден', 'квест', 'задани', 'сборк', 'билд',
+      'разбор', 'обзор', 'как пройти', 'босс', 'убежищ', 'крафт', 'обучен',
+    ],
+  },
+  {
+    slug: 'streams',
+    keywords: ['стрим', 'нарезк', 'лучшие момент', 'запись', 'моменты'],
+  },
+];
+
+/** Категория по умолчанию, если ни одно правило не сработало. */
+export const FALLBACK_CATEGORY: VideoCategorySlug = 'streams';
+
+/* ─────────────────────── Фасеты: карты ─────────────────────── */
+
 export const MAP_KEYWORDS: Record<string, string[]> = {
   customs: ['таможн', 'customs', 'тамож'],
   factory: ['завод', 'factory'],
@@ -94,10 +139,11 @@ export const MAP_KEYWORDS: Record<string, string[]> = {
   shoreline: ['берег', 'shoreline', 'санаторий'],
   interchange: ['развязк', 'interchange', 'ультра'],
   lighthouse: ['маяк', 'lighthouse'],
-  streets: ['улиц', 'streets', 'тарков-стрит'],
+  streets: ['улиц', 'streets'],
   lab: ['лаборатор', 'labs', 'the lab', 'терагруп'],
-  'groundzero-map': ['эпицентр', 'ground zero', 'граундзеро'],
+  'ground-zero': ['эпицентр', 'ground zero', 'граундзеро'],
   terminal: ['терминал', 'terminal'],
+  labyrinth: ['лабиринт', 'labyrinth'],
 };
 
 /* ─────────────────────── Фасеты: темы ─────────────────────── */
@@ -108,12 +154,11 @@ export interface VideoTopicMeta {
   keywords: string[];
 }
 
-/** Темы — второй ряд чипсов-фильтров. Порядок = порядок отрисовки. */
 export const VIDEO_TOPICS: VideoTopicMeta[] = [
   {
     id: 'weapons',
     label: 'Оружие',
-    keywords: ['оруж', 'сборк', 'билд', 'ствол', 'патрон', 'бронеб', 'калаш', 'мета-оруж', 'модул'],
+    keywords: ['оруж', 'сборк', 'билд', 'ствол', 'патрон', 'бронеб', 'калаш', 'модул'],
   },
   {
     id: 'quests',
@@ -123,12 +168,12 @@ export const VIDEO_TOPICS: VideoTopicMeta[] = [
   {
     id: 'hideout',
     label: 'Убежище',
-    keywords: ['убежищ', 'hideout', 'крафт', 'биткоин', 'модул'],
+    keywords: ['убежищ', 'hideout', 'крафт', 'биткоин'],
   },
   {
     id: 'economy',
     label: 'Экономика',
-    keywords: ['барах', 'барт', 'ценн', 'рубл', 'заработ', 'лут', 'фарм', 'профит', 'барыг'],
+    keywords: ['барах', 'барт', 'ценн', 'рубл', 'заработ', 'лут', 'фарм', 'профит'],
   },
   {
     id: 'boss',
@@ -138,12 +183,12 @@ export const VIDEO_TOPICS: VideoTopicMeta[] = [
   {
     id: 'meta',
     label: 'Механики',
-    keywords: ['механик', 'настройк', 'звук', 'фпс', 'оптимизац', 'новичк', 'гайд для нович'],
+    keywords: ['механик', 'настройк', 'звук', 'фпс', 'оптимизац', 'новичк'],
   },
   {
     id: 'wipe',
     label: 'Вайп / Патч',
-    keywords: ['вайп', 'wipe', 'патч', 'обновлен', 'старт', 'ивент'],
+    keywords: ['вайп', 'wipe', 'патч', 'обновлен', 'ивент'],
   },
 ];
 
@@ -163,24 +208,17 @@ export function isVideoSort(value: string): value is VideoSort {
 
 /* ─────────────────────── Ручные оверрайды ─────────────────────── */
 
-/**
- * Точечные правки поверх авто-разбора. Нужны редко: когда заголовок врёт
- * (например, «Стрим по квестам» — а по сути гайд) или надо спрятать видео.
- * Ключ — YouTube videoId / Twitch video id.
- */
 export interface VideoOverride {
   category?: VideoCategorySlug;
   maps?: string[];
   topics?: string[];
-  /** Закрепить в начале выдачи категории (при сортировке «Сначала новые»). */
   pinned?: boolean;
-  /** Убрать из архива полностью. */
   hidden?: boolean;
 }
 
+/** Точечные правки поверх авто-разбора: перекинуть в другую категорию, закрепить, скрыть. */
 export const VIDEO_OVERRIDES: Record<string, VideoOverride> = {
-  // 'dQw4w9WgXcQ': { category: 'guides', topics: ['quests'], pinned: true },
+  // 'dQw4w9WgXcQ': { category: 'guides', pinned: true },
 };
 
-/** Порог «досмотрено» — доля длительности. Ниже — показываем «Продолжить». */
 export const WATCHED_THRESHOLD = 0.92;
