@@ -1,11 +1,11 @@
 // Оружейный слой: синк из tarkov.dev + читалки для конструктора сборок.
 //
-// Источник (tarkov.dev) трогает ТОЛЬКО syncEftWeapons() — его дёргает
-// `npm run db:sync-weapons`. Рантайм читает наши таблицы weapon_* (правило автономии).
+// Источник (tarkov.dev) трогают ТОЛЬКО syncEftWeapons() и syncEftGunsmith() — их
+// дёргает /api/cron/sync-weapons. Рантайм читает наши таблицы weapon_* (правило автономии).
 //
 // Полная замена в транзакции, а не upsert: между патчами BSG режет и переименовывает
 // слоты, и осиротевшая строка weapon_slots отравила бы пикер «фантомным» слотом.
-// Таблицы маленькие (~500 стволов / ~1000 модулей / ~4000 слотов) — замена дешевле прюна.
+// Таблицы маленькие (~170 стволов / ~2400 деталей / ~3200 слотов) — замена дешевле прюна.
 //
 // Импорты относительные (не @/), чтобы модуль грузился и под tsx-скриптом.
 import { and, asc, eq } from "drizzle-orm";
@@ -18,8 +18,10 @@ import {
   weaponPresets,
   weaponSlots,
 } from "./schema";
+import { gunsmithSpecs, type GunsmithSpecRow } from "./schema-gunsmith";
 import { eftGameId } from "./eft";
 import { getEftWeaponsDump, type EftSlot } from "../lib/eft-weapons";
+import { getEftGunsmithSpecs } from "../lib/eft-gunsmith";
 import { memoTTL } from "../lib/server-cache";
 import type {
   BuildItemDef,
@@ -31,7 +33,7 @@ import type {
 } from "../lib/weapon-build";
 import type { PresetRef } from "../lib/build-media";
 
-/* ───────────────────────── синк ───────────────────────── */
+/* ───────────────────────── синк: оружейный слой ───────────────────────── */
 
 export interface SyncWeaponsResult {
   bases: number;
@@ -142,6 +144,44 @@ export async function syncEftWeapons(): Promise<SyncWeaponsResult> {
     parts: partRows.length,
     presets: presetRows.length,
     slots: slotRows.length,
+  };
+}
+
+/* ───────────────────────── синк: спеки «Оружейника» ───────────────────────── */
+
+export interface SyncGunsmithResult {
+  specs: number;
+  /** Спеки без единого порога — источник что-то не отдал, солвер по ним не поедет. */
+  specsWithoutThresholds: number;
+}
+
+/** Тянет пороги квестовых сборок и полностью пересобирает gunsmith_specs. */
+export async function syncEftGunsmith(): Promise<SyncGunsmithResult> {
+  const specs = await getEftGunsmithSpecs(); // бросит сам при пустом ответе
+  const gameId = await eftGameId();
+
+  const rows = specs.map((s) => ({
+    objectiveId: s.objectiveId,
+    gameId,
+    taskId: s.taskId,
+    taskName: s.taskName,
+    traderName: s.traderName,
+    minPlayerLevel: s.minPlayerLevel,
+    part: s.part,
+    baseItemId: s.baseItemId,
+    requiredItemIds: s.requiredItemIds,
+    requiredCategoryIds: s.requiredCategoryIds,
+    thresholds: s.thresholds,
+  })) satisfies (typeof gunsmithSpecs.$inferInsert)[];
+
+  await db.transaction(async (tx) => {
+    await tx.delete(gunsmithSpecs).where(eq(gunsmithSpecs.gameId, gameId));
+    await insertChunked(rows, (b) => tx.insert(gunsmithSpecs).values(b));
+  });
+
+  return {
+    specs: rows.length,
+    specsWithoutThresholds: rows.filter((r) => r.thresholds.length === 0).length,
   };
 }
 
@@ -274,7 +314,7 @@ export interface BuildContext {
 /**
  * Собирает BuildItemIndex обходом дерева слотов от базы вширь: слот базы → допустимые
  * модули → их собственные слоты → и так далее. В индекс попадает только то, что реально
- * можно поставить на ЭТОТ ствол — пикер не тащит все 1000 модулей игры.
+ * можно поставить на ЭТОТ ствол — пикер не тащит все 2400 модулей игры.
  */
 export async function getBuildContext(baseItemId: string): Promise<BuildContext | null> {
   const cat = await loadWeaponCatalog();
@@ -398,4 +438,40 @@ export async function getWeaponPresets(baseItemId: string): Promise<PresetRef[]>
       isDefault: p.isDefault,
       partIds: p.parts.map((x) => x.itemId),
     }));
+}
+
+/* ───────────────── спеки «Оружейника» (рантайм) ───────────────── */
+
+const GUNSMITH_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Все квестовые спеки, отсортированные по номеру части (именные — в конец).
+ * Питают вкладку «Оружейник» и солвер.
+ */
+export async function getGunsmithSpecs(): Promise<GunsmithSpecRow[]> {
+  return memoTTL("eft-gunsmith-specs", GUNSMITH_TTL_MS, async () => {
+    const gameId = await eftGameId();
+    const rows = await db
+      .select()
+      .from(gunsmithSpecs)
+      .where(eq(gunsmithSpecs.gameId, gameId));
+
+    return rows.sort((a, b) => {
+      if (a.part != null && b.part != null) return a.part - b.part;
+      if (a.part != null) return -1; // нумерованные выше именных
+      if (b.part != null) return 1;
+      return a.taskName.localeCompare(b.taskName, "ru");
+    });
+  });
+}
+
+/** Спека по id цели — для страницы одного квеста. */
+export async function getGunsmithSpec(objectiveId: string): Promise<GunsmithSpecRow | null> {
+  const gameId = await eftGameId();
+  const [row] = await db
+    .select()
+    .from(gunsmithSpecs)
+    .where(and(eq(gunsmithSpecs.gameId, gameId), eq(gunsmithSpecs.objectiveId, objectiveId)))
+    .limit(1);
+  return row ?? null;
 }
