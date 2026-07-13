@@ -1,5 +1,5 @@
 // Фетч оружейного слоя EFT из tarkov.dev. ИСТОЧНИК для self-mirror'а: эту функцию
-// вызывает ТОЛЬКО серверный синк (src/db/weapons.ts → `npm run db:sync-weapons`).
+// вызывает ТОЛЬКО серверный синк (src/db/weapons.ts → /api/cron/sync-weapons).
 // Рантайм-UI сюда не ходит — конструктор читает наши таблицы weapon_*.
 //
 // Берём три сущности одним запросом (items(types: [gun, mods, preset])):
@@ -12,6 +12,11 @@
 //
 // Слоты источник отдаёт как allowedItems/excludedItems. Мы схлопываем их в ОДИН
 // плоский allowedItemIds (allowed − excluded), чтобы пикер фильтровал IN-проверкой.
+//
+// ВАЖНО: containsItems у пресетов НЕ содержит слот детали (проверено на живом синке:
+// 3789 из 3789 без slotNameId). Поэтому слот выводится постобработкой —
+// resolvePresetSlots() по allowedItemIds. См. src/lib/preset-slots.ts.
+import { resolvePresetSlots } from "@/lib/preset-slots";
 
 const ENDPOINT = "https://api.tarkov.dev/graphql";
 
@@ -239,7 +244,10 @@ function mapSlots(raw: RawSlot[] | null | undefined): EftSlot[] {
   });
 }
 
-/** Из attributes контейнера пресета достаём имя слота, в котором стоит деталь. */
+/**
+ * Слот детали пресета из attributes — если источник его вдруг начнёт отдавать.
+ * Сейчас всегда пусто → слот выводит resolvePresetSlots() по allowedItemIds.
+ */
 function slotNameFromAttributes(attrs: RawAttribute[] | null | undefined): string {
   const hit = (attrs ?? []).find(
     (a) => a?.name === "slotNameId" || a?.name === "slotId" || a?.type === "slot",
@@ -370,5 +378,10 @@ export async function getEftWeaponsDump(): Promise<EftWeaponsDump> {
 
   if (bases.length === 0) throw new Error("не распознано ни одного оружия — синк отменён");
 
-  return { bases, parts, presets };
+  const dump: EftWeaponsDump = { bases, parts, presets };
+
+  // tarkov.dev не отдаёт слот в containsItems — выводим его сами по allowedItemIds.
+  resolvePresetSlots(dump);
+
+  return dump;
 }
