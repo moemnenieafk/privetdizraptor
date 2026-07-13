@@ -5,8 +5,7 @@
 // лежит в supabase/ для истории и для тех, у кого есть дашборд.
 //
 // Все стейтменты ИДЕМПОТЕНТНЫ (if not exists / drop policy if exists) — повторный
-// прогон безопасен. Разбивать SQL по ';' в рантайме нельзя (сломается на будущих
-// функциях с $$-кавычками), поэтому держим массивом.
+// прогон безопасен.
 export const WEAPONS_DDL: string[] = [
   `create table if not exists public.weapon_bases (
     game_id            uuid not null references public.games(id) on delete cascade,
@@ -103,21 +102,44 @@ export const WEAPONS_DDL: string[] = [
   `create index if not exists weapon_builds_public_idx
      on public.weapon_builds (is_public, base_item_id)`,
 
+  // ─── Оружейник: пороги квестовых сборок ───
+  // objective_id, а не task_id: у «Старого друга» три ствола в одном квесте.
+  `create table if not exists public.gunsmith_specs (
+    objective_id          text primary key,
+    game_id               uuid not null references public.games(id) on delete cascade,
+    task_id               text not null,
+    task_name             text not null,
+    trader_name           text,
+    min_player_level      integer,
+    part                  integer,
+    base_item_id          text not null,
+    required_item_ids     jsonb not null default '[]'::jsonb,
+    required_category_ids jsonb not null default '[]'::jsonb,
+    thresholds            jsonb not null default '[]'::jsonb,
+    synced_at             timestamptz not null default now()
+  )`,
+
+  `create index if not exists gunsmith_specs_task_idx
+     on public.gunsmith_specs (game_id, task_id)`,
+
   // RLS: справочники читает кто угодно, пишет только owner-роль (Drizzle идёт мимо RLS).
-  `alter table public.weapon_bases   enable row level security`,
-  `alter table public.weapon_slots   enable row level security`,
-  `alter table public.weapon_parts   enable row level security`,
-  `alter table public.weapon_presets enable row level security`,
+  `alter table public.weapon_bases    enable row level security`,
+  `alter table public.weapon_slots    enable row level security`,
+  `alter table public.weapon_parts    enable row level security`,
+  `alter table public.weapon_presets  enable row level security`,
+  `alter table public.gunsmith_specs  enable row level security`,
 
-  `drop policy if exists weapon_bases_read   on public.weapon_bases`,
-  `drop policy if exists weapon_slots_read   on public.weapon_slots`,
-  `drop policy if exists weapon_parts_read   on public.weapon_parts`,
-  `drop policy if exists weapon_presets_read on public.weapon_presets`,
+  `drop policy if exists weapon_bases_read    on public.weapon_bases`,
+  `drop policy if exists weapon_slots_read    on public.weapon_slots`,
+  `drop policy if exists weapon_parts_read    on public.weapon_parts`,
+  `drop policy if exists weapon_presets_read  on public.weapon_presets`,
+  `drop policy if exists gunsmith_specs_read  on public.gunsmith_specs`,
 
-  `create policy weapon_bases_read   on public.weapon_bases   for select using (true)`,
-  `create policy weapon_slots_read   on public.weapon_slots   for select using (true)`,
-  `create policy weapon_parts_read   on public.weapon_parts   for select using (true)`,
-  `create policy weapon_presets_read on public.weapon_presets for select using (true)`,
+  `create policy weapon_bases_read    on public.weapon_bases    for select using (true)`,
+  `create policy weapon_slots_read    on public.weapon_slots    for select using (true)`,
+  `create policy weapon_parts_read    on public.weapon_parts    for select using (true)`,
+  `create policy weapon_presets_read  on public.weapon_presets  for select using (true)`,
+  `create policy gunsmith_specs_read  on public.gunsmith_specs  for select using (true)`,
 
   // Сборки: свои — целиком, чужие — только опубликованные.
   `alter table public.weapon_builds enable row level security`,
