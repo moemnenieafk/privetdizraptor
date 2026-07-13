@@ -10,6 +10,7 @@
 import { NextResponse } from "next/server";
 import { syncEftWeapons, syncEftGunsmith, type SyncGunsmithResult } from "@/db/weapons";
 import { getEftWeaponsDump } from "@/lib/eft-weapons";
+import { getEftGunsmithSpecs } from "@/lib/eft-gunsmith";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,8 +38,31 @@ export async function GET(req: Request): Promise<NextResponse> {
     // Спеки — best-effort: их падение не должно валить уже записанный оружейный слой.
     let gunsmith: SyncGunsmithResult = { specs: 0, specsWithoutThresholds: 0 };
     let gunsmithError: string | null = null;
+    // Уникальные имена порогов из источника: солвер маппит их на свои метрики,
+    // и любое новое имя (или переименование в патче) должно быть видно СРАЗУ.
+    let thresholdNames: string[] = [];
+    let thresholdSample: { task: string; name: string; cmp: string; value: number }[] = [];
+
     try {
       gunsmith = await syncEftGunsmith();
+
+      const specs = await getEftGunsmithSpecs();
+      const names = new Set<string>();
+      for (const s of specs) {
+        for (const t of s.thresholds) names.add(`${t.name} ${t.compareMethod}`);
+      }
+      thresholdNames = [...names].sort();
+
+      // Один живой пример — глазами проверить единицы измерения (0.85 или 850?).
+      const first = specs.find((s) => s.thresholds.length > 0);
+      if (first) {
+        thresholdSample = first.thresholds.map((t) => ({
+          task: first.taskName,
+          name: t.name,
+          cmp: t.compareMethod,
+          value: t.value,
+        }));
+      }
     } catch (e) {
       console.error("[cron/sync-weapons] gunsmith:", e);
       gunsmithError = e instanceof Error ? e.message : String(e);
@@ -49,6 +73,8 @@ export async function GET(req: Request): Promise<NextResponse> {
       ...weapons,
       gunsmith,
       gunsmithError,
+      thresholdNames,
+      thresholdSample,
       diagnostics: {
         // >0 → у этих стволов пустой конструктор, дерево слотов не распарсилось
         basesWithoutSlots: basesNoSlots,
