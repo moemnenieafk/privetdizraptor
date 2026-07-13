@@ -62,3 +62,20 @@ export function requiredTier(feature: GatedFeature): TierId {
 export function isTierId(v: unknown): v is TierId {
   return typeof v === 'string' && v in TIERS;
 }
+
+/* ───────────────── лимиты сборок оружия ───────────────── */
+/**
+ * Конструктор и все статы — бесплатны (это витрина ценности). Гейтим не функцию,
+ * а КОЛИЧЕСТВО и синхронизацию: free держит 3 сборки локально, платные — без лимита
+ * и в облаке. Прецедент: TarkovBOT гейтит ровно число пресетов (200 у Patreon).
+ * Серверная проверка дублируется в POST /api/eft/builds — клиентский лимит это UX.
+ */
+export const BUILD_LIMITS: Record<TierId, number> = {
+  free: 3,
+  operative: Number.POSITIVE_INFINITY,
+  veteran: Number.POSITIVE_INFINITY,
+};
+
+export function buildLimit(tier: TierId): number {
+  return BUILD_LIMITS[tier];
+}
