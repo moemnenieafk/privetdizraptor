@@ -6,6 +6,11 @@
 //
 // Сортировка по вкладу модуля: «лучшая отдача» / «лучшая эргономика» / «по имени».
 // Конфликтующие модули не прячем, а помечаем — иначе непонятно, почему их нет.
+//
+// ВАЖНО про скролл: у листа max-h, а список внутри — flex-1 overflow-y-auto. Без
+// min-h-0 флекс-ребёнок отказывается сжиматься ниже своего контента, и список
+// обрезается вместо того, чтобы скроллиться (на мобиле это выглядело как «показывает
+// не все детали»). min-h-0 обязателен.
 import { useEffect, useMemo, useState } from 'react';
 import { Ban, Check, Search, Trash2, X } from 'lucide-react';
 import { itemIconUrl } from '@/lib/item-icon';
@@ -81,10 +86,12 @@ export function ModPicker({ target, index, onClose, onPick }: ModPickerProps) {
         className="absolute inset-0 bg-black/70 backdrop-blur-xs"
       />
 
-      {/* Лист */}
-      <div className="relative flex max-h-[85vh] w-full flex-col rounded-t-md border border-lines-hover bg-(--color-base) sm:max-w-2xl sm:rounded-md animate-[fade-in-up_0.25s_ease-out_both]">
-        {/* Шапка */}
-        <header className="flex items-center gap-3 border-b border-lines-hover p-4">
+      {/* Лист. overflow-hidden + h-[85vh] на мобиле: фиксированная высота даёт
+          предсказуемый скролл, «резиновая» max-h на iOS схлопывалась при появлении
+          клавиатуры под поиском. */}
+      <div className="relative flex h-[85vh] w-full flex-col overflow-hidden rounded-t-md border border-lines-hover bg-(--color-base) sm:h-auto sm:max-h-[85vh] sm:max-w-2xl sm:rounded-md animate-[fade-in-up_0.25s_ease-out_both]">
+        {/* Шапка — не сжимается */}
+        <header className="flex shrink-0 items-center gap-3 border-b border-lines-hover p-4">
           <i
             className={`${slotIconClass(target.slotNameId)} text-2xl text-(--primary)`}
             aria-hidden="true"
@@ -107,8 +114,8 @@ export function ModPicker({ target, index, onClose, onPick }: ModPickerProps) {
           </button>
         </header>
 
-        {/* Поиск + сортировка */}
-        <div className="flex flex-col gap-2 border-b border-lines-hover p-4">
+        {/* Поиск + сортировка — не сжимаются */}
+        <div className="flex shrink-0 flex-col gap-2 border-b border-lines-hover p-4">
           <div className="relative w-full">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
@@ -141,8 +148,8 @@ export function ModPicker({ target, index, onClose, onPick }: ModPickerProps) {
           </div>
         </div>
 
-        {/* Список */}
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Список. min-h-0 — вот из-за его отсутствия список не разворачивался. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
           {/* Снять модуль */}
           {target.currentItemId && (
             <button
@@ -164,7 +171,7 @@ export function ModPicker({ target, index, onClose, onPick }: ModPickerProps) {
                 : 'В этот слот в игре ничего не ставится.'}
             </p>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 pb-4">
               {options.map((d) => (
                 <ModRow
                   key={d.id}
@@ -238,13 +245,12 @@ function ModRow({
               {def.damage} урон · {def.penetrationPower} проб.
             </span>
           )}
-          {isMod &&
-            def.conflictingItemIds.length > 0 && (
-              <span className="flex items-center gap-1 font-blender-medium text-xs text-text-secondary">
-                <Ban className="h-3 w-3" aria-hidden="true" />
-                {def.conflictingItemIds.length}
-              </span>
-            )}
+          {isMod && def.conflictingItemIds.length > 0 && (
+            <span className="flex items-center gap-1 font-blender-medium text-xs text-text-secondary">
+              <Ban className="h-3 w-3" aria-hidden="true" />
+              {def.conflictingItemIds.length}
+            </span>
+          )}
         </span>
       </span>
 
@@ -259,9 +265,7 @@ function ModRow({
 
 function Stat({ value, good, suffix }: { value: number; good: boolean; suffix: string }) {
   return (
-    <span
-      className={`font-blender-medium text-xs ${good ? 'text-success' : 'text-danger'}`}
-    >
+    <span className={`font-blender-medium text-xs ${good ? 'text-success' : 'text-danger'}`}>
       {value > 0 ? '+' : ''}
       {value}
       {suffix}
