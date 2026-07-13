@@ -11,34 +11,32 @@ import {
   queryVideos,
   type VideoQuery,
 } from '@/lib/video-utils';
-import { selectContinueIds, useVideoStore } from '@/store/useVideoStore';
+import { getContinueIds, useVideoStore } from '@/store/useVideoStore';
 import { VideoCard } from './VideoCard';
 import { VideoFilterBar } from './VideoFilterBar';
 
 /**
- * Клиентская витрина архива: получает ПОЛНЫЙ каталог категории с сервера
- * (RSC-проп) и всю фильтрацию делает в памяти — без round-trip на каждый чипс.
- * Каталог одной категории — сотни объектов, это дёшево и мгновенно на телефоне.
+ * Клиентская витрина архива: получает ПОЛНЫЙ каталог категории с сервера (RSC-проп)
+ * и всю фильтрацию делает в памяти — без round-trip на каждый чипс.
  *
  * Источник истины фильтра — URL (?q=&map=&topic=&sort=), см. VideoFilterBar.
- * Ряд «Продолжить просмотр» — персонализация из localStorage (useVideoStore),
- * рендерится только после гидрации, поэтому SSR/CSR-разметка не расходится.
+ *
+ * ВНИМАНИЕ при правках: из useVideoStore достаём ТОЛЬКО стабильные ссылки
+ * (s.progress). Селектор, возвращающий новый массив/объект, роняет страницу
+ * в бесконечный ре-рендер (zustand v5 + useSyncExternalStore).
  */
 
 interface VideoArchiveProps {
   videos: Video[];
-  /** Мягкая деградация платформ: ошибки YouTube/Twitch показываем баннером. */
   errors?: string[];
-  /** Показывать ли ряд «Продолжить просмотр» (на хабе — да, внутри категории — да). */
   showContinue?: boolean;
 }
 
 export function VideoArchive({ videos, errors = [], showContinue = true }: VideoArchiveProps) {
   const params = useSearchParams();
   const view = useVideoStore((s) => s.view);
-  const continueIds = useVideoStore(selectContinueIds);
+  const progress = useVideoStore((s) => s.progress); // стабильная ссылка
 
-  /* Разбор URL → VideoQuery. Мультизначные оси читаем через getAll. */
   const query = useMemo<VideoQuery>(() => {
     const sortRaw = params.get('sort') ?? '';
     return {
@@ -53,15 +51,15 @@ export function VideoArchive({ videos, errors = [], showContinue = true }: Video
   const result = useMemo(() => queryVideos(videos, query), [videos, query]);
 
   /* «Продолжить»: начатые видео этой категории, свежие сверху.
-     Фильтр не влияет — это отдельный контекстный ряд, а не часть выдачи. */
+     Массив выводим здесь, а не в селекторе стора — см. коммент выше. */
   const continueVideos = useMemo(() => {
     if (!showContinue) return [];
     const byId = new Map(videos.map((v) => [v.id, v]));
-    return continueIds
+    return getContinueIds(progress)
       .map((id) => byId.get(id))
       .filter((v): v is Video => v !== undefined)
       .slice(0, 6);
-  }, [showContinue, continueIds, videos]);
+  }, [showContinue, progress, videos]);
 
   const gridClass =
     view === 'table'
@@ -70,7 +68,6 @@ export function VideoArchive({ videos, errors = [], showContinue = true }: Video
 
   return (
     <div className="flex w-full flex-col gap-6">
-      {/* Баннер деградации: часть архива не подгрузилась — но что есть, показываем */}
       {errors.length > 0 && (
         <div className="flex items-start gap-3 rounded-sm border border-moderate/40 bg-[color-mix(in_srgb,var(--color-moderate)_10%,transparent)] p-3">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-moderate" />
@@ -87,7 +84,6 @@ export function VideoArchive({ videos, errors = [], showContinue = true }: Video
         </div>
       )}
 
-      {/* ─── Продолжить просмотр ─── */}
       {continueVideos.length > 0 && (
         <section className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
@@ -98,7 +94,6 @@ export function VideoArchive({ videos, errors = [], showContinue = true }: Video
             <div className="h-px flex-1 bg-lines-hover" />
           </div>
 
-          {/* Горизонтальная карусель: не жрёт вертикаль на телефоне */}
           <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] xl:mx-0 xl:px-0">
             {continueVideos.map((video, i) => (
               <div key={video.id} className="w-64 shrink-0 snap-start sm:w-72">
@@ -109,10 +104,8 @@ export function VideoArchive({ videos, errors = [], showContinue = true }: Video
         </section>
       )}
 
-      {/* ─── Фильтры ─── */}
       <VideoFilterBar query={query} available={available} resultCount={result.length} />
 
-      {/* ─── Выдача ─── */}
       {result.length > 0 ? (
         <div className={gridClass}>
           {result.map((video, i) => (
