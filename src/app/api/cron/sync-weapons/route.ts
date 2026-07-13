@@ -1,11 +1,14 @@
-// Синк оружейного слоя EFT (weapon_bases / weapon_slots / weapon_parts / weapon_presets).
+// Синк оружейного слоя EFT: weapon_bases / weapon_slots / weapon_parts / weapon_presets
+// + спеки квестов «Оружейник» (gunsmith_specs).
+//
 // Дёргается вручную из GitHub Actions (.github/workflows/sync-weapons.yml) после патча игры.
-// Расписания нет: слоты и модификаторы модулей меняются раз в патч, а не ежечасно.
+// Расписания нет: слоты, модификаторы модулей и пороги квестов меняются раз в патч.
 //
 // Защита — CRON_SECRET (fail-closed, как в sync-prices).
-// Синк идёт В ТРАНЗАКЦИИ: при любой ошибке таблицы остаются в старом рабочем состоянии.
+// Каждый синк идёт В СВОЕЙ транзакции: падение спек не откатывает оружейный слой,
+// и наоборот. Спеки — best-effort: без них живёт конструктор, но не вкладка «Оружейник».
 import { NextResponse } from "next/server";
-import { syncEftWeapons } from "@/db/weapons";
+import { syncEftWeapons, syncEftGunsmith, type SyncGunsmithResult } from "@/db/weapons";
 import { getEftWeaponsDump } from "@/lib/eft-weapons";
 
 export const runtime = "nodejs";
@@ -29,18 +32,30 @@ export async function GET(req: Request): Promise<NextResponse> {
       0,
     );
 
-    const result = await syncEftWeapons();
+    const weapons = await syncEftWeapons();
+
+    // Спеки — best-effort: их падение не должно валить уже записанный оружейный слой.
+    let gunsmith: SyncGunsmithResult = { specs: 0, specsWithoutThresholds: 0 };
+    let gunsmithError: string | null = null;
+    try {
+      gunsmith = await syncEftGunsmith();
+    } catch (e) {
+      console.error("[cron/sync-weapons] gunsmith:", e);
+      gunsmithError = e instanceof Error ? e.message : String(e);
+    }
 
     return NextResponse.json({
       ok: true,
-      ...result,
+      ...weapons,
+      gunsmith,
+      gunsmithError,
       diagnostics: {
         // >0 → у этих стволов пустой конструктор, дерево слотов не распарсилось
         basesWithoutSlots: basesNoSlots,
         // >0 → hero-картинка деградирует до голой базы (без обвеса)
         basesWithoutDefaultPreset: basesNoPreset,
-        // если ≈ presetParts → не сработает автозаполнение дерева из пресета
-        // (совпадение сборки с пресетом это НЕ ломает — оно сверяется по id)
+        // слот детали пресета выводится из allowedItemIds (см. lib/preset-slots) —
+        // остаток здесь это детали, не влезающие ни в один слот (патроны в магазинах)
         presetParts,
         presetPartsWithoutSlotName: presetPartsNoSlotName,
       },
@@ -48,8 +63,17 @@ export async function GET(req: Request): Promise<NextResponse> {
     });
   } catch (e) {
     // Эндпоинт за CRON_SECRET — отдаём реальный текст ошибки, чтобы было видно в логах Actions.
+    // postgres-js прячет исходную ошибку БД в cause: без неё видно только «Failed query».
     console.error("[cron/sync-weapons]", e);
-    const message = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    const err = e as { message?: string; cause?: { message?: string; code?: string } };
+    return NextResponse.json(
+      {
+        ok: false,
+        error: err.message ?? String(e),
+        dbError: err.cause?.message ?? null,
+        dbCode: err.cause?.code ?? null,
+      },
+      { status: 500 },
+    );
   }
 }
