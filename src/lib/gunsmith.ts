@@ -1,41 +1,52 @@
 // Квесты «Оружейник»: нормализация порогов из источника + проверка сборки.
 //
-// tarkov.dev отдаёт пороги как AttributeThreshold { name, compareMethod, value } —
-// имена сырые и могут менять регистр/написание между патчами. Поэтому НЕ хардкодим
-// точные строки, а матчим по смыслу (нормализованный ключ). Нераспознанное не
-// проглатываем молча: оно уезжает в `unknown` и показывается в UI — иначе сборка
-// «проходит» квест, который на самом деле требует чего-то ещё.
+// Реальные имена порогов от tarkov.dev (сверено на живом синке, 30 спек):
+//   ergonomics >=      эргономика собранного ствола
+//   recoil <=          СУММА отдачи (верт + гор), в тех же единицах, что у нас
+//   weight <= / >=     вес в кг
+//   magazineCapacity   ёмкость установленного магазина
+//   muzzleVelocity >=  скорость пули (зависит от патрона и ствола)
+//   accuracy >=        точность (MOA)
+//   durability >=      прочность — свойство ЭКЗЕМПЛЯРА из стеша, не сборки
+//   effectiveDistance  прицельная дальность — даёт установленный прицел
+//   width <= / height  размер собранного ствола в сетке («сделай компактным»)
 //
-// Единицы: сумма отдачи в квесте («меньше 850») — это те же единицы, что
-// recoilVertical + recoilHorizontal у tarkov.dev. Никаких коэффициентов.
+// Три из них мы посчитать не можем и честно помечаем «проверь сам»:
+//   • durability — прочность конкретного ствола, её нет ни в какой сборке;
+//   • width/height — размер собранного оружия в сетке; модули меняют его через
+//     ExtraSizeLeft/Right/Up/Down, а tarkov.dev эти поля не отдаёт;
+//   • effectiveDistance — приедет, когда добавим sightingRange прицелов в weapon_parts.
+//
+// Пустышки (`weight >= 0`, `accuracy >= 0`) прячем: BSG сыпет их в каждый квест,
+// и в чеклисте они только мешают.
 import type { GunsmithThreshold } from '@/db/schema-gunsmith';
 import type { BuildResult, BuildStats } from '@/lib/weapon-build';
 
 /* ───────────────── нормализация ───────────────── */
 
-/** Метрика, к которой сводится порог. */
 export type GunsmithMetric =
   | 'ergonomics'
   | 'recoilSum'
   | 'weight'
-  | 'durability'
-  | 'sightingRange'
-  | 'velocity'
+  | 'magazineCapacity'
+  | 'muzzleVelocity'
   | 'accuracy'
-  | 'slots';
+  | 'durability'
+  | 'effectiveDistance'
+  | 'width'
+  | 'height';
 
-/** Оператор сравнения. */
 export type CompareOp = 'gt' | 'gte' | 'lt' | 'lte' | 'eq';
 
 export interface GunsmithRequirement {
   metric: GunsmithMetric;
   op: CompareOp;
   value: number;
-  /** Исходное имя из источника — для отладки и подписи в UI. */
+  /** Исходное имя из источника — для отладки. */
   rawName: string;
 }
 
-/** Порог, который мы не смогли распознать. Показывается в UI как «проверьте вручную». */
+/** Порог, который мы не распознали. Показывается в UI, а не проглатывается молча. */
 export interface UnknownRequirement {
   rawName: string;
   rawCompare: string;
@@ -47,28 +58,27 @@ export interface GunsmithSpecParsed {
   unknown: UnknownRequirement[];
 }
 
-/** Ключ → метрика. Матчим по подстроке нормализованного имени (без регистра/пробелов/_). */
+/**
+ * Имя из источника → метрика. Матч по подстроке нормализованного имени
+ * (без регистра/пробелов/подчёркиваний), чтобы переименование в патче не ломало всё.
+ * ПОРЯДОК ЗНАЧИМ: частные раньше общих (magazineCapacity до capacity,
+ * muzzleVelocity до velocity, effectiveDistance до distance).
+ */
 const METRIC_RULES: readonly [needle: string, metric: GunsmithMetric][] = [
+  ['magazinecapacity', 'magazineCapacity'],
+  ['capacity', 'magazineCapacity'],
+  ['muzzlevelocity', 'muzzleVelocity'],
+  ['velocit', 'muzzleVelocity'],
+  ['effectivedistance', 'effectiveDistance'],
+  ['sighting', 'effectiveDistance'],
   ['ergonomic', 'ergonomics'],
-  ['эргоном', 'ergonomics'],
   ['recoil', 'recoilSum'],
-  ['отдач', 'recoilSum'],
-  ['weight', 'weight'],
-  ['вес', 'weight'],
   ['durabilit', 'durability'],
-  ['прочност', 'durability'],
-  ['sighting', 'sightingRange'],
-  ['sightrange', 'sightingRange'],
-  ['прицельн', 'sightingRange'],
-  ['velocit', 'velocity'],
-  ['скорост', 'velocity'],
   ['accuracy', 'accuracy'],
   ['moa', 'accuracy'],
-  ['centerofimpact', 'accuracy'],
-  ['точност', 'accuracy'],
-  ['slot', 'slots'],
-  ['size', 'slots'],
-  ['ячее', 'slots'],
+  ['weight', 'weight'],
+  ['width', 'width'],
+  ['height', 'height'],
 ] as const;
 
 const COMPARE_RULES: Record<string, CompareOp> = {
@@ -102,7 +112,15 @@ function toOp(rawCompare: string): CompareOp | null {
   return COMPARE_RULES[k] ?? COMPARE_RULES[rawCompare.trim()] ?? null;
 }
 
-/** Сырые пороги из БД → распознанные требования + список нераспознанных. */
+/**
+ * Порог-пустышка: BSG прописывает в каждый квест `weight >= 0`, `accuracy >= 0`,
+ * `muzzleVelocity >= 0` — они выполняются всегда и только засоряют чеклист.
+ */
+function isNoop(op: CompareOp, value: number): boolean {
+  return value === 0 && (op === 'gte' || op === 'gt');
+}
+
+/** Сырые пороги из БД → значимые требования + нераспознанные. */
 export function parseSpec(thresholds: GunsmithThreshold[]): GunsmithSpecParsed {
   const requirements: GunsmithRequirement[] = [];
   const unknown: UnknownRequirement[] = [];
@@ -115,6 +133,8 @@ export function parseSpec(thresholds: GunsmithThreshold[]): GunsmithSpecParsed {
       unknown.push({ rawName: t.name, rawCompare: t.compareMethod, value: t.value });
       continue;
     }
+    if (isNoop(op, t.value)) continue;
+
     requirements.push({ metric, op, value: t.value, rawName: t.name });
   }
 
@@ -124,38 +144,47 @@ export function parseSpec(thresholds: GunsmithThreshold[]): GunsmithSpecParsed {
 /* ───────────────── проверка сборки ───────────────── */
 
 export interface RequirementCheck extends GunsmithRequirement {
-  /** Что даёт сборка по этой метрике. null — метрика неизмерима (напр. прочность). */
+  /** Что даёт сборка. null — метрику мы не считаем (проверь в игре). */
   actual: number | null;
-  /** null → проверить вручную (метрику не считаем). */
+  /** null → ручная проверка. */
   passed: boolean | null;
   label: string;
+  /** Почему не посчитали (для метрик с actual = null). */
+  manualReason?: string;
 }
 
 export interface GunsmithCheck {
   checks: RequirementCheck[];
   unknown: UnknownRequirement[];
-  /** Обязательные детали, которых нет в сборке. */
+  /** Обязательные детали (containsAll), которых нет в сборке. */
   missingItemIds: string[];
-  /** Все измеримые проверки пройдены и обязательные детали на месте. */
+  /** Все ИЗМЕРИМЫЕ проверки пройдены и обязательные детали на месте. */
   passed: boolean;
+  /** Есть ли пункты, которые придётся глазами проверить в игре. */
+  hasManual: boolean;
 }
 
 const LABELS: Record<GunsmithMetric, string> = {
   ergonomics: 'Эргономика',
   recoilSum: 'Сумма отдачи',
   weight: 'Вес',
+  magazineCapacity: 'Ёмкость магазина',
+  muzzleVelocity: 'Скорость пули',
+  accuracy: 'Точность (MOA)',
   durability: 'Прочность',
-  sightingRange: 'Прицельная дальность',
-  velocity: 'Скорость пули',
-  accuracy: 'Точность',
-  slots: 'Ячеек',
+  effectiveDistance: 'Прицельная дальность',
+  width: 'Ширина в сетке',
+  height: 'Высота в сетке',
 };
 
-/**
- * Значение метрики у сборки. Прочность (durability) — свойство КОНКРЕТНОГО ствола
- * в стеше, а не сборки, поэтому её мы не считаем: возвращаем null → «проверь сам».
- * То же с числом ячеек: размер собранного ствола в сетке нам ниоткуда не приходит.
- */
+const MANUAL_REASONS: Partial<Record<GunsmithMetric, string>> = {
+  durability: 'зависит от конкретного ствола в стеше — берите свежий у торговца',
+  effectiveDistance: 'даёт установленный прицел',
+  width: 'размер собранного ствола в сетке — сверьтесь в игре',
+  height: 'размер собранного ствола в сетке — сверьтесь в игре',
+};
+
+/** Значение метрики у сборки. null → посчитать не можем (см. MANUAL_REASONS). */
 function actualOf(metric: GunsmithMetric, stats: BuildStats): number | null {
   switch (metric) {
     case 'ergonomics':
@@ -164,16 +193,17 @@ function actualOf(metric: GunsmithMetric, stats: BuildStats): number | null {
       return stats.recoilSum;
     case 'weight':
       return stats.weight;
-    case 'velocity':
+    case 'magazineCapacity':
+      return stats.capacity;
+    case 'muzzleVelocity':
       return stats.velocity;
     case 'accuracy':
       return stats.moa;
-    case 'sightingRange':
-      return null; // дальность даёт прицел; в статах сборки её пока нет
     case 'durability':
-      return null; // свойство экземпляра, не сборки
-    case 'slots':
-      return null; // размер в сетке не зеркалим
+    case 'effectiveDistance':
+    case 'width':
+    case 'height':
+      return null;
   }
 }
 
@@ -206,19 +236,23 @@ export function checkBuild(
       actual,
       passed: actual === null ? null : compare(actual, r.op, r.value),
       label: LABELS[r.metric],
+      manualReason: MANUAL_REASONS[r.metric],
     };
   });
 
   const installed = new Set(result.parts.map((p) => p.itemId));
   const missingItemIds = spec.requiredItemIds.filter((id) => !installed.has(id));
 
-  const passed =
-    missingItemIds.length === 0 && checks.every((c) => c.passed !== false);
-
-  return { checks, unknown, missingItemIds, passed };
+  return {
+    checks,
+    unknown,
+    missingItemIds,
+    passed: missingItemIds.length === 0 && checks.every((c) => c.passed !== false),
+    hasManual: checks.some((c) => c.passed === null),
+  };
 }
 
-/** Человекочитаемый оператор для UI: «≥ 45». */
+/** Оператор для UI: «≥ 47». */
 export function opSymbol(op: CompareOp): string {
   switch (op) {
     case 'gt':
