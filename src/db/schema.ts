@@ -621,3 +621,193 @@ export type MapAssetRow = typeof mapAssets.$inferSelect;
 export type NewMapAssetRow = typeof mapAssets.$inferInsert;
 export type MapMarkerRow = typeof mapMarkers.$inferSelect;
 export type NewMapMarkerRow = typeof mapMarkers.$inferInsert;
+
+/* ───────────────── weapon builds — оружейный слой (self-mirror tarkov.dev) ───────────────── */
+/**
+ * Слой сборок оружия. В `items`/`item_properties` лежит общая карточка предмета, но
+ * для конструктора нужны три вещи, которых там нет: ДЕРЕВО СЛОТОВ, модификаторы
+ * модулей и пресеты. Держим их отдельными плоскими таблицами — конструктору нужен
+ * быстрый батч-ридер, а не разбор JSONB на каждый мод.
+ *
+ * Наполняет `db:sync-weapons` (items(types: [gun, mods, preset])).
+ * Ключи (item id) стабильны между вайпами → синк это чистый upsert.
+ *
+ * ВАЖНО: recoilModifier/accuracyModifier в источнике приходят ДОЛЕЙ (-0.06 = −6%).
+ * Храним как есть, движок (src/lib/weapon-build.ts) складывает их и умножает базу.
+ */
+
+// Оружие-база: стоковые характеристики до обвеса + указатель на дефолт-пресет.
+export const weaponBases = pgTable(
+  "weapon_bases",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    itemId: text("item_id").notNull(), // inGameId оружия
+    caliber: text("caliber"),
+    ergonomics: real("ergonomics").notNull().default(0),
+    recoilVertical: integer("recoil_vertical").notNull().default(0),
+    recoilHorizontal: integer("recoil_horizontal").notNull().default(0),
+    fireRate: integer("fire_rate"),
+    fireModes: jsonb("fire_modes").$type<string[]>(),
+    sightingRange: integer("sighting_range"),
+    centerOfImpact: real("center_of_impact"), // MOA базы
+    deviationCurve: real("deviation_curve"),
+    deviationMax: real("deviation_max"),
+    defaultPresetId: text("default_preset_id"), // item id пресета «из коробки» (у него своя картинка)
+    defaultAmmoId: text("default_ammo_id"),
+    allowedAmmoIds: jsonb("allowed_ammo_ids").$type<string[]>().notNull().default([]),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.gameId, t.itemId] })],
+);
+
+// Слот-приёмник модулей. Родитель — оружие ИЛИ сам модуль (планка → крышка → прицел).
+// allowedItemIds — плоский массив (excluded уже вычтены на этапе синка): пикер модулей
+// фильтрует на клиенте простой IN-проверкой, без запроса на каждый слот.
+export const weaponSlots = pgTable(
+  "weapon_slots",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    parentItemId: text("parent_item_id").notNull(),
+    slotId: text("slot_id").notNull(), // BSG id слота
+    nameId: text("name_id").notNull(), // mod_muzzle / mod_magazine / mod_scope — ключ дерева сборки
+    name: text("name").notNull(),
+    required: boolean("required").notNull().default(false),
+    ord: integer("ord").notNull().default(0), // порядок показа в конструкторе
+    allowedItemIds: jsonb("allowed_item_ids").$type<string[]>().notNull().default([]),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.gameId, t.parentItemId, t.slotId] }),
+    index("weapon_slots_parent_idx").on(t.gameId, t.parentItemId),
+  ],
+);
+
+// Деталь сборки: модуль ИЛИ патрон. Дискриминатор — kind (совпадает с union'ом движка).
+// Для мода значимы ergonomics/recoilModifier/accuracyModifier/velocity/capacity,
+// для патрона — initialSpeed/recoilModifier/accuracyModifier (остальное null).
+export type WeaponPartKind = "mod" | "ammo";
+
+export const weaponParts = pgTable(
+  "weapon_parts",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    itemId: text("item_id").notNull(),
+    kind: text("kind").$type<WeaponPartKind>().notNull(),
+    ergonomics: real("ergonomics").notNull().default(0), // плоская прибавка, может быть < 0
+    recoilModifier: real("recoil_modifier").notNull().default(0), // доля
+    accuracyModifier: real("accuracy_modifier").notNull().default(0), // доля
+    velocity: real("velocity").notNull().default(0), // % к скорости пули (мод)
+    loudness: integer("loudness").notNull().default(0),
+    capacity: integer("capacity"), // магазины
+    initialSpeed: real("initial_speed"), // патроны
+    conflictingItemIds: jsonb("conflicting_item_ids").$type<string[]>().notNull().default([]),
+    conflictingSlotIds: jsonb("conflicting_slot_ids").$type<string[]>().notNull().default([]),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.gameId, t.itemId] }),
+    index("weapon_parts_kind_idx").on(t.gameId, t.kind),
+  ],
+);
+
+// Пресет = САМОСТОЯТЕЛЬНЫЙ item со своим id → у него есть собственная отрендеренная
+// картинка СОБРАННОГО ствола (items/eft/512/{id}.webp в R2). Отсюда hero-картинки
+// сборок: точное совпадение дерева с parts → показываем рендер пресета.
+export type WeaponPresetPart = { itemId: string; slotNameId: string; count: number };
+
+export const weaponPresets = pgTable(
+  "weapon_presets",
+  {
+    id: text("id").primaryKey(), // item id самого пресета
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    baseItemId: text("base_item_id").notNull(),
+    name: text("name").notNull(),
+    isDefault: boolean("is_default").notNull().default(false),
+    ergonomics: real("ergonomics"),
+    recoilVertical: integer("recoil_vertical"),
+    recoilHorizontal: integer("recoil_horizontal"),
+    moa: real("moa"),
+    parts: jsonb("parts").$type<WeaponPresetPart[]>().notNull().default([]),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("weapon_presets_base_idx").on(t.gameId, t.baseItemId)],
+);
+
+/* ───────────────── weapon_builds — сборки игрока (облако + community) ───────────────── */
+/**
+ * Облачные сборки. ГИБРИД (паттерн playerProfiles): источник — localStorage
+ * (useBuildStore, ключ `cta-weapon-builds`), синк в БД при логине для платных тиров.
+ * `tree` 1:1 повторяет BuildNode из src/lib/weapon-build.ts → синк без конвертации.
+ * `stats` — денормализованный снимок расчёта: нужен для сортировки/фильтров ленты
+ * community и для OG-картинки, чтобы не поднимать весь справочник модулей.
+ *
+ * Лимит free-тира (3 сборки) проверяется НА СЕРВЕРЕ в POST /api/eft/builds —
+ * useBuildQuota это только UX. RLS: owner-only на запись, публичные — на чтение
+ * (supabase/weapon-builds-rls.sql, накатывается через db:sql).
+ */
+export type BuildTreeNode = {
+  itemId: string;
+  quantity: number;
+  mods: Record<string, BuildTreeNode>;
+};
+
+export type BuildStatsSnapshot = {
+  ergonomics: number;
+  recoilVertical: number;
+  recoilHorizontal: number;
+  recoilSum: number;
+  moa: number | null;
+  weight: number;
+  velocity: number | null;
+  capacity: number | null;
+  modCount: number;
+  /** Итог в рублях на момент сохранения (цены живые, значение справочное). */
+  priceRub: number | null;
+};
+
+export const weaponBuilds = pgTable(
+  "weapon_builds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    purpose: text("purpose").notNull().default(""), // «мета» / «бюджет» / «Оружейник ч.7»
+    baseItemId: text("base_item_id").notNull(),
+    tree: jsonb("tree").$type<BuildTreeNode>().notNull(),
+    stats: jsonb("stats").$type<BuildStatsSnapshot>().notNull(),
+    isPublic: boolean("is_public").notNull().default(false),
+    slug: text("slug").unique(), // /eft/progress/loadouts/b/{slug}
+    likes: integer("likes").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("weapon_builds_user_idx").on(t.userId, t.gameId),
+    index("weapon_builds_public_idx").on(t.isPublic, t.baseItemId),
+  ],
+);
+
+/* ───────────────── inferred types (оружейный слой) ───────────────── */
+export type WeaponBaseRow = typeof weaponBases.$inferSelect;
+export type NewWeaponBaseRow = typeof weaponBases.$inferInsert;
+export type WeaponSlotRow = typeof weaponSlots.$inferSelect;
+export type NewWeaponSlotRow = typeof weaponSlots.$inferInsert;
+export type WeaponPartRow = typeof weaponParts.$inferSelect;
+export type NewWeaponPartRow = typeof weaponParts.$inferInsert;
+export type WeaponPresetRow = typeof weaponPresets.$inferSelect;
+export type NewWeaponPresetRow = typeof weaponPresets.$inferInsert;
+export type WeaponBuildRow = typeof weaponBuilds.$inferSelect;
+export type NewWeaponBuildRow = typeof weaponBuilds.$inferInsert;
