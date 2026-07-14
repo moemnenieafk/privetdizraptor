@@ -1,0 +1,50 @@
+# Назначение роли пользователю (без SQL Editor — с телефона).
+# Запуск: Actions → «set-role» → Run workflow → указать логин и роль.
+#
+# Роут выдаёт только 'user' и 'moderator'. Роль 'admin' назначается вручную
+# в Supabase — утечка CRON_SECRET не должна давать доступ к CMS.
+name: set-role
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "Логин пользователя (profiles.username), регистр не важен"
+        required: true
+        type: string
+      role:
+        description: "Роль"
+        required: true
+        default: moderator
+        type: choice
+        options:
+          - moderator
+          - user
+
+jobs:
+  set-role:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Assign role
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          USERNAME: ${{ inputs.username }}
+          ROLE: ${{ inputs.role }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/set-role?username=$(printf %s "$USERNAME" | jq -sRr @uri)&role=${ROLE}"
+          echo "GET ${url}"
+          code=$(curl -sS -m 60 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Роль не назначена (HTTP $code) — проверь логин"
+            exit 1
+          fi
