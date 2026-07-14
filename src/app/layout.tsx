@@ -8,10 +8,39 @@ import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { StreamDockLayer } from "@/components/features/streams/StreamDock";
 import { FeedbackProvider } from "@/components/providers/FeedbackProvider";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "ЦТА Хаб",
-  description: "Технический паспорт дизайн-системы и игровой хаб",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "ЦТА — портал по Escape from Tarkov",
+    template: "%s · ЦТА",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "Escape from Tarkov", "Тарков", "ЦТА", "цены барахолки", "карты Таркова",
+    "трекер заданий", "убежище", "бартеры", "сборки оружия", "гайды",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    title: "ЦТА — портал по Escape from Tarkov",
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ЦТА — портал по Escape from Tarkov",
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
 };
 
 export default function RootLayout({
