@@ -15,7 +15,8 @@ import {
 import { getKarmaMap, grantKarma, type KarmaInfo } from "@/db/comlink";
 import { eftGameId } from "@/db/eft";
 
-export const canModerate = (role: string): boolean => role === "admin" || role === "moderator";
+// Канон прав — src/lib/auth/roles.ts. Здесь реэкспорт: импорты по проекту уже смотрят сюда.
+export { canModerate } from "@/lib/auth/roles";
 
 /* ─────────────────── список тем ─────────────────── */
 

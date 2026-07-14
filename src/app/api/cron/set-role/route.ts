@@ -1,8 +1,8 @@
 // Назначение роли пользователю без доступа к SQL Editor (телефон/отпуск).
 // Паттерн migrate-*: GET за CRON_SECRET, дёргается из GitHub Actions (workflow «set-role»).
 //
-// Умышленное ограничение: роут выдаёт только 'user' и 'moderator'. Роль 'admin'
-// (полный доступ к CMS) через него НЕ назначается — утечка CRON_SECRET не должна
+// Умышленное ограничение: роут выдаёт 'user', 'editor' и 'moderator'. Роль 'admin'
+// (каталог + выдача ролей) через него НЕ назначается — утечка CRON_SECRET не должна
 // давать админку; админа ставим вручную в Supabase.
 import { NextResponse } from "next/server";
 import { and, ne, sql } from "drizzle-orm";
@@ -12,7 +12,7 @@ import { profiles } from "@/db/schema";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ASSIGNABLE = new Set(["user", "moderator"]);
+const ASSIGNABLE = new Set(["user", "editor", "moderator"]);
 
 export async function GET(req: Request): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
