@@ -6,7 +6,7 @@ import { getBartersByQuest } from '@/db/barter-quest';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { QuestsNavBar, type QuestsNavRow } from '@/components/features/quests/QuestsNavBar';
 import { getQuestsSiblings } from '@/lib/quests-nav';
-import { getQuestEvent } from '@/lib/eft-event-quests';
+import { getQuestEvent } from '@/lib/eft-event-content';
 import { formatEventDate } from '@/lib/eft-events-utils';
 import type { TaskRaw } from '@/types/quest';
 
