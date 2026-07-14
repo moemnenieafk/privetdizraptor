@@ -405,13 +405,14 @@ export const profiles = pgTable("profiles", {
   youtube: text("youtube"),
   discord: text("discord"),
   steam: text("steam"),
-  role: text("role").notNull().default("user"), // 'user' | 'admin' (слой 5, CMS)
+  role: text("role").notNull().default("user"), // 'user' | 'moderator' | 'admin'
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Роль пользователя — дискриминатор доступа к CMS.
-export type UserRole = "user" | "admin";
+// Роль пользователя — дискриминатор доступа. 'admin' — CMS целиком; 'moderator' —
+// модерация раздела «Связь» (pin/lock/hide, очередь жалоб; см. canModerate в db/comlink-forum).
+export type UserRole = "user" | "moderator" | "admin";
 
 /* ─────────────────────── quest_progress ─────────────────────── */
 /**
