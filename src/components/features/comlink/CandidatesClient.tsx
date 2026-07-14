@@ -10,10 +10,12 @@ import {
   Copy,
   Check,
   Headphones,
+  Loader2,
   MicOff,
   Pencil,
   Plus,
   ShieldCheck,
+  Swords,
   Users,
 } from 'lucide-react';
 import { ComlinkProfileForm } from '@/components/features/comlink/ComlinkProfileForm';
@@ -280,30 +282,97 @@ function CandidateCard({ c }: { c: CandidateListItem }) {
       )}
 
       {/* Контакт: Discord-хендл, связь на сервере fullkamen (ссылка в футере) */}
-      {c.discord ? (
-        <button
-          type="button"
-          onClick={copyDiscord}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-xs border border-(--primary) px-4 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)]"
-        >
-          {copied ? (
-            <>
-              <Check className="h-4 w-4" aria-hidden="true" />
-              Скопировано
-            </>
-          ) : (
-            <>
-              <Copy className="h-4 w-4" aria-hidden="true" />
-              Discord: {c.discord}
-            </>
-          )}
-        </button>
-      ) : (
-        <p className="font-blender-book text-xs text-text-secondary/70">
-          Discord не привязан — игрок появится на связи, когда добавит хендл в профиле.
-        </p>
-      )}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        {c.discord ? (
+          <button
+            type="button"
+            onClick={copyDiscord}
+            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xs border border-(--primary) px-4 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)]"
+          >
+            {copied ? (
+              <>
+                <Check className="h-4 w-4" aria-hidden="true" />
+                Скопировано
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4" aria-hidden="true" />
+                Discord: {c.discord}
+              </>
+            )}
+          </button>
+        ) : (
+          <p className="flex-1 self-center font-blender-book text-xs text-text-secondary/70">
+            Discord не привязан — игрок появится на связи, когда добавит хендл.
+          </p>
+        )}
+
+        <InviteButton userId={c.userId} />
+      </div>
     </article>
+  );
+}
+
+/* ─────────────────── «мы сыграли» ─────────────────── */
+
+/**
+ * Заявка на подтверждение рейда: жмётся ПОСЛЕ игры (нашлись в Discord → сыграли →
+ * фиксируем здесь). Партнёр подтверждает во «Входящих» — +5 кармы обоим.
+ */
+function InviteButton({ userId }: { userId: string }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'sent' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const invite = async () => {
+    setState('busy');
+    try {
+      const res = await fetch('/api/comlink/raids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerId: userId }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setMessage(data.error ?? 'Не получилось');
+        setState('error');
+        return;
+      }
+      setState('sent');
+    } catch {
+      setMessage('Сеть недоступна');
+      setState('error');
+    }
+  };
+
+  if (state === 'sent') {
+    return (
+      <span className="flex h-11 items-center justify-center gap-2 rounded-xs border border-success/60 px-4 font-blender-medium text-xs uppercase tracking-widest text-success">
+        <Check className="h-4 w-4" aria-hidden="true" />
+        Заявка отправлена
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        disabled={state === 'busy'}
+        onClick={invite}
+        title="Жмите после совместной игры — партнёр подтвердит, оба получите +5 кармы"
+        className="flex h-11 items-center justify-center gap-2 rounded-xs border border-lines-hover px-4 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary) disabled:opacity-40"
+      >
+        {state === 'busy' ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <Swords className="h-4 w-4" aria-hidden="true" />
+        )}
+        Мы сыграли
+      </button>
+      {state === 'error' && (
+        <span className="font-blender-book text-xs text-danger">{message}</span>
+      )}
+    </div>
   );
 }
 
