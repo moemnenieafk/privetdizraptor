@@ -2,7 +2,18 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { draftMode } from 'next/headers';
 import { getArticle } from '@/db/articles';
+import { getMe } from '@/lib/auth/me';
+import { canEditContent } from '@/lib/auth/roles';
+
+/** Черновик открывается только CMS-роли и только в режиме черновика. */
+async function draftAllowed(): Promise<boolean> {
+  const { isEnabled } = await draftMode();
+  if (!isEnabled) return false;
+  const me = await getMe();
+  return canEditContent(me?.role ?? 'user');
+}
 
 // Разбор патча: НАШ русский текст. Оригинал патчноута BSG не воспроизводим —
 // показываем выжимку и отправляем к первоисточнику.
@@ -15,7 +26,7 @@ export const revalidate = 3600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const a = await getArticle(slug);
+  const a = await getArticle(slug, await draftAllowed());
   if (!a) return { title: 'Патч не найден · ЦТА' };
   return {
     title: `${a.title} — разбор · ЦТА`,
@@ -25,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PatchDetailPage({ params }: Props) {
   const { slug } = await params;
-  const a = await getArticle(slug);
+  const a = await getArticle(slug, await draftAllowed());
   if (!a || a.kind !== 'patch') notFound();
 
   return (

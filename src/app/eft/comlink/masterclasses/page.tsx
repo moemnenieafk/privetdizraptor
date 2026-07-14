@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { draftMode } from 'next/headers';
 import { getMe } from '@/lib/auth/me';
 import { getArticles } from '@/db/articles';
+import { canEditContent } from '@/lib/auth/roles';
 import { ArticleFeedClient } from '@/components/features/comlink/ArticleFeedClient';
 
 // Мастер-классы: анонсы (с датой) и записи прошедших. Тот же движок comlink_articles,
@@ -14,7 +16,9 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function MasterclassesPage() {
-  const [me, items] = await Promise.all([getMe(), getArticles('masterclass', 30)]);
+  const [me, { isEnabled }] = await Promise.all([getMe(), draftMode()]);
+  const canEdit = canEditContent(me?.role ?? 'user');
+  const items = await getArticles('masterclass', 30, isEnabled && canEdit);
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
@@ -34,7 +38,7 @@ export default async function MasterclassesPage() {
         <ArticleFeedClient
           kind="masterclass"
           items={items}
-          isAdmin={me?.role === 'admin'}
+          canEdit={canEdit}
           emptyText="Мастер-классов пока нет. Анонсы появятся здесь."
         />
       </div>

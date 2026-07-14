@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ExternalLink, FileText } from 'lucide-react';
+import { draftMode } from 'next/headers';
 import { getArticles } from '@/db/articles';
+import { getMe } from '@/lib/auth/me';
+import { canEditContent } from '@/lib/auth/roles';
 
 // «Обновления игры» — лента патчей. Источник: Steam News API (appid 3932890),
 // официально и без ключа. Discord-канал BSG читать нельзя (нужен бот в их сервере),
@@ -24,7 +27,8 @@ const fmtDate = (iso: string): string =>
   new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
 export default async function GameUpdatesPage() {
-  const patches = await getArticles('patch', 30);
+  const [me, { isEnabled }] = await Promise.all([getMe(), draftMode()]);
+  const patches = await getArticles('patch', 30, isEnabled && canEditContent(me?.role ?? 'user'));
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">

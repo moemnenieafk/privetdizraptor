@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { draftMode } from 'next/headers';
 import { getMe } from '@/lib/auth/me';
 import { getArticles } from '@/db/articles';
+import { canEditContent } from '@/lib/auth/roles';
 import { ArticleFeedClient } from '@/components/features/comlink/ArticleFeedClient';
 
 // Блог ЦТА: новости проекта, статьи, объявления. Публичная страница — воронка в раздел.
@@ -14,7 +16,10 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function BlogPage() {
-  const [me, items] = await Promise.all([getMe(), getArticles('news', 30)]);
+  // Черновики видит только CMS-роль и только при включённом режиме черновика.
+  const [me, { isEnabled }] = await Promise.all([getMe(), draftMode()]);
+  const canEdit = canEditContent(me?.role ?? 'user');
+  const items = await getArticles('news', 30, isEnabled && canEdit);
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
@@ -34,7 +39,7 @@ export default async function BlogPage() {
         <ArticleFeedClient
           kind="news"
           items={items}
-          isAdmin={me?.role === 'admin'}
+          canEdit={canEdit}
           emptyText="Статей пока нет."
         />
       </div>

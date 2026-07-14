@@ -69,6 +69,8 @@ export interface ArticleListItem {
   eventAt: string | null;
   videoUrl: string | null;
   authorName: string | null;
+  /** false = черновик. В обычном режиме такие материалы не отдаются вовсе. */
+  published: boolean;
 }
 
 const toListItem = (r: ArticleRow, authorName: string | null): ArticleListItem => ({
@@ -85,6 +87,7 @@ const toListItem = (r: ArticleRow, authorName: string | null): ArticleListItem =
   eventAt: r.eventAt ? r.eventAt.toISOString() : null,
   videoUrl: r.videoUrl,
   authorName,
+  published: r.published,
 });
 
 /**
@@ -95,16 +98,25 @@ const toListItem = (r: ArticleRow, authorName: string | null): ArticleListItem =
  * Без этого перехвата билд падает, деплой не выезжает, миграцию накатить нечем: дедлок.
  * Нет таблицы → пустая лента, страница живёт.
  */
-export async function getArticles(kind: ArticleKind, limit = 30): Promise<ArticleListItem[]> {
+export async function getArticles(
+  kind: ArticleKind,
+  limit = 30,
+  /** true (режим черновика) — отдаём и неопубликованное. Ставится только для CMS-ролей. */
+  includeDrafts = false,
+): Promise<ArticleListItem[]> {
   try {
-    return await getArticlesUnsafe(kind, limit);
+    return await getArticlesUnsafe(kind, limit, includeDrafts);
   } catch (e) {
     console.warn("[articles] лента недоступна:", e instanceof Error ? e.message : e);
     return [];
   }
 }
 
-async function getArticlesUnsafe(kind: ArticleKind, limit: number): Promise<ArticleListItem[]> {
+async function getArticlesUnsafe(
+  kind: ArticleKind,
+  limit: number,
+  includeDrafts: boolean,
+): Promise<ArticleListItem[]> {
   const gameId = await eftGameId();
 
   const rows = await db
@@ -115,7 +127,7 @@ async function getArticlesUnsafe(kind: ArticleKind, limit: number): Promise<Arti
       and(
         eq(comlinkArticles.gameId, gameId),
         eq(comlinkArticles.kind, kind),
-        eq(comlinkArticles.published, true),
+        ...(includeDrafts ? [] : [eq(comlinkArticles.published, true)]),
       ),
     )
     // Мастер-классы сортируем по дате события (ближайшие сверху), остальное — по публикации.
@@ -134,16 +146,22 @@ export interface ArticleDetail extends ArticleListItem {
 }
 
 /** Один материал. Тоже не бросает — см. коммент к getArticles. */
-export async function getArticle(slug: string): Promise<ArticleDetail | null> {
+export async function getArticle(
+  slug: string,
+  includeDrafts = false,
+): Promise<ArticleDetail | null> {
   try {
-    return await getArticleUnsafe(slug);
+    return await getArticleUnsafe(slug, includeDrafts);
   } catch (e) {
     console.warn("[articles] материал недоступен:", e instanceof Error ? e.message : e);
     return null;
   }
 }
 
-async function getArticleUnsafe(slug: string): Promise<ArticleDetail | null> {
+async function getArticleUnsafe(
+  slug: string,
+  includeDrafts: boolean,
+): Promise<ArticleDetail | null> {
   const gameId = await eftGameId();
 
   const [row] = await db
@@ -153,12 +171,32 @@ async function getArticleUnsafe(slug: string): Promise<ArticleDetail | null> {
     .where(and(eq(comlinkArticles.gameId, gameId), eq(comlinkArticles.slug, slug)))
     .limit(1);
 
-  if (!row || !row.a.published) return null;
+  if (!row) return null;
+  if (!row.a.published && !includeDrafts) return null;
 
   return { ...toListItem(row.a, row.authorName), bodyRu: row.a.bodyRu };
 }
 
-/* ─────────────────── CMS (role=admin) ─────────────────── */
+/* ─────────────────── CMS (admin | editor) ─────────────────── */
+
+/** Полный материал по id — для формы редактора (тело, статус, источник). */
+export async function getArticleForEdit(
+  id: string,
+): Promise<(ArticleDetail & { imported: boolean }) | null> {
+  const [row] = await db
+    .select({ a: comlinkArticles, authorName: profiles.username })
+    .from(comlinkArticles)
+    .leftJoin(profiles, eq(profiles.id, comlinkArticles.authorId))
+    .where(eq(comlinkArticles.id, id))
+    .limit(1);
+
+  if (!row) return null;
+  return {
+    ...toListItem(row.a, row.authorName),
+    bodyRu: row.a.bodyRu,
+    imported: row.a.source === "steam",
+  };
+}
 
 export interface UpsertArticleInput {
   id?: string;
