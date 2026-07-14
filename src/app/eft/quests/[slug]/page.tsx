@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation';
+import { draftMode } from 'next/headers';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
-import { STORY_WALKTHROUGHS } from '@/data/story-walkthroughs';
-import { StoryWalkthroughView } from '@/components/features/quests/StoryWalkthrough';
+import { getStory } from '@/db/stories';
+import { getMe } from '@/lib/auth/me';
+import { canEditContent } from '@/lib/auth/roles';
+import { StoryWalkthroughEditable } from '@/components/features/quests/StoryWalkthroughEditable';
 import { QuestsHubNav } from '@/components/features/quests/QuestsHubNav';
 import { getEftPricesByIds } from '@/db/prices';
 import { QuestTraderList } from '@/components/features/quests/QuestTraderList';
@@ -44,9 +47,14 @@ export default async function QuestSlugPage({ params }: Props) {
 
   const { sections, siblings, parentLabel } = getQuestsSiblings(`/eft/quests/${slug}`);
 
-  // Walkthrough-гайд нового дизайна (Figma story-boreas-step01): все истории — из реестра.
-  const walkthrough = STORY_WALKTHROUGHS[slug];
-  if (walkthrough) {
+  // Walkthrough-гайд: истории живут в БД (E10, фаза 5) с фолбэком на src/data,
+  // пока миграция не накатана. Черновик виден только контентной роли.
+  const [me, { isEnabled }] = await Promise.all([getMe(), draftMode()]);
+  const canEdit = canEditContent(me?.role ?? 'user');
+
+  const record = await getStory(slug, isEnabled && canEdit);
+  const walkthrough = record?.doc;
+  if (record && walkthrough) {
     // Актуальные цены предметов условий — из НАШЕГО зеркала (RSC).
     const itemIds = walkthrough.steps.flatMap((s) =>
       s.blocks.flatMap((b) => [
@@ -76,7 +84,13 @@ export default async function QuestSlugPage({ params }: Props) {
             subLabel={parentLabel}
             activeHref={`/eft/quests/${slug}`}
           />
-          <StoryWalkthroughView story={walkthrough} priceByItemId={priceByItemId} />
+          <StoryWalkthroughEditable
+            story={walkthrough}
+            priceByItemId={priceByItemId}
+            published={record.published}
+            fromStatic={record.fromStatic}
+            canEdit={canEdit}
+          />
         </div>
       </main>
     );
