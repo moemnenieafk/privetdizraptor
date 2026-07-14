@@ -1,10 +1,10 @@
 'use client';
 
-// Лента материалов (Блог / Мастер-классы) + CMS для админа поверх неё.
+// Лента материалов (Блог / Мастер-классы) + CMS поверх неё.
 // Данные приезжают с сервера пропсами (RSC), клиент нужен только ради редактора.
 import { useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, Pencil, Play, Plus } from 'lucide-react';
+import { CalendarClock, Loader2, Pencil, Play, Plus } from 'lucide-react';
 import { ArticleEditor, type EditorInitial } from '@/components/features/comlink/ArticleEditor';
 import type { ArticleListItem } from '@/db/articles';
 import type { ArticleKind } from '@/db/schema-articles';
@@ -12,8 +12,8 @@ import type { ArticleKind } from '@/db/schema-articles';
 interface ArticleFeedClientProps {
   kind: Exclude<ArticleKind, 'patch'>;
   items: ArticleListItem[];
-  /** Сервер решил, что этот человек — админ ЦТА. Клиент роль не проверяет. */
-  isAdmin: boolean;
+  /** Сервер решил, что у человека есть право на контент (admin|editor). Клиент роль не проверяет. */
+  canEdit: boolean;
   emptyText: string;
 }
 
@@ -39,8 +39,36 @@ const emptyDraft = (kind: Exclude<ArticleKind, 'patch'>): EditorInitial => ({
   published: true,
 });
 
-export function ArticleFeedClient({ kind, items, isAdmin, emptyText }: ArticleFeedClientProps) {
+export function ArticleFeedClient({ kind, items, canEdit, emptyText }: ArticleFeedClientProps) {
   const [editing, setEditing] = useState<EditorInitial | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  // Лента не тащит тела материалов (они до 40к символов), поэтому перед правкой
+  // догружаем полный материал. Раньше форма открывалась с пустым bodyRu и
+  // published:true — сохранение затирало разбор и публиковало черновик.
+  const openEditor = async (id: string) => {
+    setLoadingId(id);
+    try {
+      const res = await fetch(`/api/admin/articles?id=${id}`);
+      if (!res.ok) return;
+      const { article } = (await res.json()) as {
+        article: {
+          id: string;
+          title: string;
+          excerpt: string;
+          bodyRu: string;
+          coverUrl: string | null;
+          eventAt: string | null;
+          videoUrl: string | null;
+          published: boolean;
+          imported: boolean;
+        };
+      };
+      setEditing({ ...article, kind });
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   if (editing) {
     return (
@@ -58,7 +86,7 @@ export function ArticleFeedClient({ kind, items, isAdmin, emptyText }: ArticleFe
 
   return (
     <div className="flex w-full flex-col gap-4">
-      {isAdmin && (
+      {canEdit && (
         <button
           type="button"
           onClick={() => setEditing(emptyDraft(kind))}
@@ -88,8 +116,13 @@ export function ArticleFeedClient({ kind, items, isAdmin, emptyText }: ArticleFe
                 )}
 
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="font-blender-medium text-base uppercase tracking-widest text-text-primary">
+                  <h2 className="flex items-center gap-2 font-blender-medium text-base uppercase tracking-widest text-text-primary">
                     {a.title}
+                    {!a.published && (
+                      <span className="rounded-xs border border-tactical-amber/50 bg-tactical-amber/10 px-2 py-0.5 font-blender-medium text-type-micro uppercase tracking-widest text-tactical-amber">
+                        Черновик
+                      </span>
+                    )}
                   </h2>
 
                   {upcoming ? (
@@ -132,25 +165,18 @@ export function ArticleFeedClient({ kind, items, isAdmin, emptyText }: ArticleFe
                     </a>
                   )}
 
-                  {isAdmin && (
+                  {canEdit && (
                     <button
                       type="button"
-                      onClick={() =>
-                        setEditing({
-                          id: a.id,
-                          kind,
-                          title: a.title,
-                          excerpt: a.excerpt,
-                          bodyRu: '',
-                          coverUrl: a.coverUrl,
-                          eventAt: a.eventAt,
-                          videoUrl: a.videoUrl,
-                          published: true,
-                        })
-                      }
-                      className="flex h-11 items-center gap-2 rounded-xs border border-lines-hover px-4 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+                      onClick={() => void openEditor(a.id)}
+                      disabled={loadingId === a.id}
+                      className="flex h-11 items-center gap-2 rounded-xs border border-lines-hover px-4 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary) disabled:opacity-50"
                     >
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                      {loadingId === a.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                      )}
                       Править
                     </button>
                   )}

@@ -1,16 +1,41 @@
 // /api/admin/articles — CMS для Блога, Мастер-классов и разборов патчей.
-// Только role=admin (модератор правит форум, но не публикует от имени ЦТА).
+// Права: admin | editor (модератор правит форум, но не публикует от имени ЦТА).
 //
+//   GET    — материал по id для формы редактора (?id=): полное тело + статус
 //   POST   — создать/обновить материал (id в теле = правка)
 //   DELETE — удалить (?id=)
+//
+// После записи инвалидируем кэш затронутых страниц (revalidatePath) — публикация
+// видна сразу, без ребилда.
 //
 // Импортированный из Steam патч правится ЧАСТИЧНО: можно писать только bodyRu
 // (наш разбор). Заголовок, выжимка и дата принадлежат первоисточнику — их не трогаем.
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getMe } from "@/lib/auth/me";
+import { canEditContent } from "@/lib/auth/roles";
 import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
-import { deleteArticle, upsertArticle, type UpsertArticleInput } from "@/db/articles";
+import {
+  deleteArticle,
+  getArticleForEdit,
+  upsertArticle,
+  type UpsertArticleInput,
+} from "@/db/articles";
 import type { ArticleKind } from "@/db/schema-articles";
+
+/** Куда смотрит материал этого вида — эти пути и сбрасываем после записи. */
+const PATHS: Record<ArticleKind, string> = {
+  news: "/eft/comlink/blog",
+  masterclass: "/eft/comlink/masterclasses",
+  patch: "/eft/comlink/game-updates",
+};
+
+function revalidateArticle(kind: ArticleKind, slug?: string): void {
+  const base = PATHS[kind];
+  revalidatePath(base);
+  if (slug) revalidatePath(`${base}/${slug}`);
+}
+
 
 export const runtime = "nodejs";
 
@@ -41,10 +66,24 @@ function slugify(title: string): string {
   return s.length > 0 ? s : `post-${Date.now()}`;
 }
 
+/** Материал для формы редактора. */
+export async function GET(req: Request): Promise<NextResponse> {
+  const me = await getMe();
+  if (!me) return err(401, "Не авторизован");
+  if (!canEditContent(me.role)) return err(403, "Только для редакторов ЦТА");
+
+  const id = new URL(req.url).searchParams.get("id") ?? "";
+  if (!UUID_RE.test(id)) return err(400, "Некорректный id");
+
+  const article = await getArticleForEdit(id);
+  if (!article) return err(404, "Материал не найден");
+  return NextResponse.json({ article });
+}
+
 export async function POST(req: Request): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return err(401, "Не авторизован");
-  if (me.role !== "admin") return err(403, "Только для админов ЦТА");
+  if (!canEditContent(me.role)) return err(403, "Только для редакторов ЦТА");
 
   if (bodyTooLarge(req, JSON_BODY_CAP)) return err(413, "Слишком большой запрос");
   let body: Record<string, unknown>;
@@ -91,19 +130,24 @@ export async function POST(req: Request): Promise<NextResponse> {
   };
 
   const result = await upsertArticle(me.id, input);
-  return result.ok
-    ? NextResponse.json({ ok: true, id: result.id })
-    : err(409, result.error ?? "Не удалось сохранить");
+  if (!result.ok) return err(409, result.error ?? "Не удалось сохранить");
+
+  // Публикация должна быть видна сразу: сбрасываем кэш ленты и деталки.
+  revalidateArticle(input.kind, input.slug);
+  return NextResponse.json({ ok: true, id: result.id });
 }
 
 export async function DELETE(req: Request): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return err(401, "Не авторизован");
-  if (me.role !== "admin") return err(403, "Только для админов ЦТА");
+  if (!canEditContent(me.role)) return err(403, "Только для редакторов ЦТА");
 
   const id = new URL(req.url).searchParams.get("id") ?? "";
   if (!UUID_RE.test(id)) return err(422, "Некорректный id");
 
+  // Читаем ДО удаления — иначе не узнаем, чей кэш сбрасывать.
+  const existing = await getArticleForEdit(id);
   await deleteArticle(id);
+  if (existing) revalidateArticle(existing.kind, existing.slug);
   return NextResponse.json({ ok: true });
 }
