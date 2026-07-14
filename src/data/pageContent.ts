@@ -102,8 +102,8 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
   },
   'eft-quests-events': {
     title: 'События',
-    description: 'Временные внутриигровые события и сезонные активности Escape from Tarkov.',
-    iconClass: 'icon-eft-quests',
+    description: 'Хронология всех внутриигровых ивентов: сюжетные главы, праздничные события, изменения боссов, экономики и механик.',
+    iconClass: 'icon-eft-quests-events',
   },
   'eft-items-loot-rate': {
     title: 'Рейтинг предметов',
