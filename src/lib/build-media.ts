@@ -11,7 +11,7 @@
 // Требование к ETL: в выгрузку иконок в R2 должен попадать `type: preset`.
 // Никаких обращений к tarkov.dev в рантайме.
 import { itemIconUrl } from '@/lib/item-icon';
-import { matchesPreset, type BuildResult } from '@/lib/weapon-build';
+import { matchesPreset, type BuildItemDef, type BuildResult } from '@/lib/weapon-build';
 
 /** Пресет из таблицы weapon_presets — только то, что нужно медиа-слою. */
 export interface PresetRef {
@@ -21,6 +21,20 @@ export interface PresetRef {
   isDefault: boolean;
   /** id всех деталей пресета (без базы). */
   partIds: string[];
+}
+
+/**
+ * Ответ POST /api/eft/builds/defs — определения ТОЛЬКО тех предметов, что реально
+ * стоят в сохранённых деревьях, плюс пресеты их баз.
+ *
+ * Зачем отдельно от BuildContext: сохранённые сборки живут в localStorage, сервер о них
+ * не знает, а полный BuildItemIndex ствола (все совместимые модули) для списка избыточен —
+ * там сотни позиций на каждую базу, а считать надо уже собранное дерево.
+ */
+export interface BuildDefsBundle {
+  defs: BuildItemDef[];
+  presets: PresetRef[];
+  names: Record<string, string>;
 }
 
 export type BuildHeroKind = 'preset' | 'default_preset' | 'bare';
