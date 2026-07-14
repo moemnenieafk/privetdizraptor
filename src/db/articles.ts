@@ -87,8 +87,24 @@ const toListItem = (r: ArticleRow, authorName: string | null): ArticleListItem =
   authorName,
 });
 
-/** Лента одного вида: патчи / блог / мастер-классы. */
+/**
+ * Лента одного вида: патчи / блог / мастер-классы.
+ *
+ * НЕ БРОСАЕТ. Страницы лент рендерятся статически на билде, а таблица comlink_articles
+ * создаётся миграцией, которая живёт в ТОМ ЖЕ деплое — на первой сборке её ещё нет.
+ * Без этого перехвата билд падает, деплой не выезжает, миграцию накатить нечем: дедлок.
+ * Нет таблицы → пустая лента, страница живёт.
+ */
 export async function getArticles(kind: ArticleKind, limit = 30): Promise<ArticleListItem[]> {
+  try {
+    return await getArticlesUnsafe(kind, limit);
+  } catch (e) {
+    console.warn("[articles] лента недоступна:", e instanceof Error ? e.message : e);
+    return [];
+  }
+}
+
+async function getArticlesUnsafe(kind: ArticleKind, limit: number): Promise<ArticleListItem[]> {
   const gameId = await eftGameId();
 
   const rows = await db
@@ -117,7 +133,17 @@ export interface ArticleDetail extends ArticleListItem {
   bodyRu: string;
 }
 
+/** Один материал. Тоже не бросает — см. коммент к getArticles. */
 export async function getArticle(slug: string): Promise<ArticleDetail | null> {
+  try {
+    return await getArticleUnsafe(slug);
+  } catch (e) {
+    console.warn("[articles] материал недоступен:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+async function getArticleUnsafe(slug: string): Promise<ArticleDetail | null> {
   const gameId = await eftGameId();
 
   const [row] = await db
