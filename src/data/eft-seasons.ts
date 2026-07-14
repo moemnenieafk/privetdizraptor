@@ -335,6 +335,17 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
 ];
 
+/**
+ * Проставляет iconUrl каждому перку по его id: /eft/seasons/{slug}/{id}.png.
+ * Ассеты — заглушки, кадрированные из превью BSG; заменятся на SVG без правки данных.
+ * Уже заданный вручную iconUrl не перетирается.
+ */
+const withIcons = (perks: SeasonPerk[], seasonSlug: string): SeasonPerk[] =>
+  perks.map((p) => ({
+    ...p,
+    iconUrl: p.iconUrl ?? `/eft/seasons/${seasonSlug}/${p.id}.png`,
+  }));
+
 export const EFT_SEASONS: Season[] = [
   {
     id: 'kord-breach',
@@ -353,7 +364,7 @@ export const EFT_SEASONS: Season[] = [
       'Свой трек наград и сезонные задачи; заработанное переносится на основного персонажа.',
       'Минимальная длительность — 74 дня. Заявлено два сезона в год, бесплатно.',
     ],
-    perks: KORD_BREACH_PERKS,
+    perks: withIcons(KORD_BREACH_PERKS, 'kord-breach'),
   },
 ];
 

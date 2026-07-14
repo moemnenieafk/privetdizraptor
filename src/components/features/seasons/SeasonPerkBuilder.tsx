@@ -114,15 +114,29 @@ function PerkCard({
     >
       <div className="flex items-start justify-between gap-2">
         <span className="flex items-center gap-2">
-          {/* Иконки перков появятся отдельным коммитом — пока типизированная плашка. */}
-          <span
-            aria-hidden
-            className={`flex size-9 shrink-0 items-center justify-center rounded-xs border ${s.border} font-blender-medium text-xs ${s.text}`}
-          >
-            {perk.cost === 0 ? '—' : perk.cost > 0 ? `+${perk.cost}` : perk.cost}
-          </span>
+          {/* Иконка-заглушка (кадр из превью BSG). Нет ассета — типизированная плашка с очками. */}
+          {perk.iconUrl ? (
+            <img
+              src={perk.iconUrl}
+              alt=""
+              aria-hidden
+              className={`size-9 shrink-0 rounded-xs border object-contain p-1 ${s.border}`}
+            />
+          ) : (
+            <span
+              aria-hidden
+              className={`flex size-9 shrink-0 items-center justify-center rounded-xs border font-blender-medium text-xs ${s.border} ${s.text}`}
+            >
+              {perk.cost === 0 ? '—' : perk.cost > 0 ? `+${perk.cost}` : perk.cost}
+            </span>
+          )}
           <span className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">
             {perk.name}
+            {perk.cost !== 0 && (
+              <span className={`ml-1.5 ${s.text}`}>
+                ({perk.cost > 0 ? `+${perk.cost}` : perk.cost})
+              </span>
+            )}
           </span>
         </span>
 
