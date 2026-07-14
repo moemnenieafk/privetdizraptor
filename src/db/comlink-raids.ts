@@ -16,6 +16,7 @@ import {
   type RaidStatus,
 } from "@/db/schema-comlink";
 import { grantKarma } from "@/db/comlink";
+import { getActiveSherpaIds } from "@/db/sherpa";
 import { eftGameId } from "@/db/eft";
 
 const PENDING_TTL_MS = 48 * 60 * 60 * 1000; // подтверждение
@@ -125,8 +126,14 @@ export async function resolveRaid(
     .where(eq(comlinkRaids.id, raidId));
 
   if (accept) {
-    await grantKarma(raid.initiatorId, "raid_confirmed", 5, "raid", raidId);
-    await grantKarma(raid.partnerId, "raid_confirmed", 5, "raid", raidId);
+    // Сессия с шерпой: наставник получает +15 (sherpa_session) вместо +5.
+    // «Кто шерпа» — по активной анкете goal='sherpa' на момент подтверждения.
+    const sherpas = await getActiveSherpaIds([raid.initiatorId, raid.partnerId]);
+
+    for (const uid of [raid.initiatorId, raid.partnerId]) {
+      if (sherpas.has(uid)) await grantKarma(uid, "sherpa_session", 15, "raid", raidId);
+      else await grantKarma(uid, "raid_confirmed", 5, "raid", raidId);
+    }
   }
 
   return { ok: true };
