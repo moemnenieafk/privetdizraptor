@@ -11,6 +11,11 @@ interface CmsLink {
 
 const CONTENT_LINKS: CmsLink[] = [
   {
+    href: "/eft/gamesetting",
+    title: "Кодекс",
+    hint: "Лор-статьи: правка прямо на странице статьи, кнопка «✎»",
+  },
+  {
     href: "/eft/comlink/blog",
     title: "Блог",
     hint: "Новости проекта и статьи — правка на самой странице раздела",
