@@ -6,7 +6,8 @@
 // Патч из Steam правится частично: только «Разбор ЦТА». Заголовок и выжимка
 // принадлежат первоисточнику, поэтому в этом режиме поля заблокированы.
 import { useState } from 'react';
-import { Check, Loader2, Trash2, X } from 'lucide-react';
+import { Check, ImageIcon, Loader2, Trash2, X } from 'lucide-react';
+import { MediaPicker } from '@/components/features/media/MediaPicker';
 import type { ArticleKind } from '@/db/schema-articles';
 
 export interface EditorInitial {
@@ -40,6 +41,7 @@ export function ArticleEditor({ initial, onDone, onCancel }: ArticleEditorProps)
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
 
   const locked = initial.imported === true;
 
@@ -156,13 +158,37 @@ export function ArticleEditor({ initial, onDone, onCancel }: ArticleEditorProps)
       )}
 
       {!locked && (
-        <input
-          type="url"
-          value={coverUrl}
-          onChange={(e) => setCoverUrl(e.target.value)}
-          placeholder="Обложка (URL, необязательно)"
-          className="h-11 w-full rounded-sm border border-lines-hover bg-(--color-darkbase) px-3 font-blender-book text-sm text-text-primary placeholder:text-text-secondary focus:border-(--primary) focus:outline-none"
-        />
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={coverUrl}
+              onChange={(e) => setCoverUrl(e.target.value)}
+              placeholder="Обложка (URL, необязательно)"
+              className="h-11 w-full rounded-sm border border-lines-hover bg-(--color-darkbase) px-3 font-blender-book text-sm text-text-primary placeholder:text-text-secondary focus:border-(--primary) focus:outline-none"
+            />
+            {/* Ссылку можно вставить руками, но обычный путь — выбрать из библиотеки. */}
+            <button
+              type="button"
+              onClick={() => setPicking(true)}
+              className="flex h-11 shrink-0 items-center gap-2 rounded-sm border border-lines-hover px-4 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+            >
+              <ImageIcon className="h-4 w-4" aria-hidden="true" />
+              Выбрать
+            </button>
+          </div>
+
+          {coverUrl && (
+            <div className="h-32 w-full overflow-hidden rounded-xs border border-lines-hover bg-(--color-darkbase)">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+            </div>
+          )}
+        </div>
+      )}
+
+      {picking && (
+        <MediaPicker onPick={(url) => setCoverUrl(url)} onClose={() => setPicking(false)} />
       )}
 
       {!locked && (

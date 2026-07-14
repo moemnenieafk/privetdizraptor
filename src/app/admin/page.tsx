@@ -30,6 +30,11 @@ const CONTENT_LINKS: CmsLink[] = [
     title: "Обновления игры",
     hint: "Патчи из Steam приходят синком; вручную пишется наш разбор",
   },
+  {
+    href: "/admin/media",
+    title: "Медиа",
+    hint: "Загрузка изображений: обложки, скриншоты гайдов, иллюстрации",
+  },
 ];
 
 const ADMIN_LINKS: CmsLink[] = [
