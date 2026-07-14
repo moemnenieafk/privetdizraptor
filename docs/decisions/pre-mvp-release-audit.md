@@ -136,5 +136,14 @@ date: 2026-07-04
 - [x] RLS на comlink — **аудит пройден:** RLS уже в `comlink-ddl.ts` (enable + read-policy для авторизованных; `karma_events`/`reports` — без policy). Все 8 API-роутов проверяют сессию (`getMe` → 401), запись — owner-роль. Модерация есть (`moderator`, pin/lock/hide, очередь жалоб).
 - [ ] ⚠ **Ручной шаг:** прогнать workflow `migrate-comlink` в проде (накатить RLS-стейтменты) + назначить модераторов.
 - [ ] `NEXT_PUBLIC_SITE_URL` в Vercel env (пока фолбэк на системный `VERCEL_PROJECT_PRODUCTION_URL` — работает, но кастомный домен лучше задать явно).
-- [ ] `/security-review` · `next build` · мобилка-смок · живость кронов · Leaflet lazy
+- [x] **`/security-review` — пройден 14.07.** Найдено и закрыто 3 дыры:
+  - `/api/feedback` — публичный приём вложений (5×500 КБ base64 в БД) **без rate-limit** → спам/раздувание Postgres. Лимит 5/час на IP до чтения тела (`ad81e8a1`).
+  - `/api/eft/builds/defs` (POST, до 600 id) и `/api/eft/prices` (GET, до 200 id) — публичные БД-джойны без лимита → 120 / 5 мин на IP (`0e428e7c`).
+  - `/api/account/avatar` — запись в Storage без лимита → 10/час на пользователя (`e4fc9ecc`).
+  - Проверено и чисто: в клиент уходят только `NEXT_PUBLIC_*` (anon-key, Turnstile, icon-base); `/admin` и `/api/admin/*` закрыты `getAdmin()`; аватар валидирует тип/размер; auth-роуты имеют капчу + лимиты; rate-limit fail-open (сбой лимитера не запирает вход).
+- [x] **Кроны живы:** `sync-prices` — ежечасно (GH Actions) + ежедневный Vercel-крон; `sync-patches` — по расписанию; `sync-weapons`/`migrate-*` — по `workflow_dispatch` (правильно, гоняются при патче).
+- [x] **Leaflet/ReactFlow lazy:** `next/dynamic` + `ssr:false` (`MapViewerLoader`, `QuestMapLoader`, `QuestMapDynamic`).
+- [ ] `next build` — гоняется Vercel при деплое (локально без БД не воспроизвести).
+- [ ] Мобилка-смок ключевых страниц на устройстве (за V4DYA).
+- [ ] D1: спот-чек категорий предметов с 0 позиций (нужна прод-БД).
 - [ ] RLS на будущую `subscriptions` (таблицы ещё нет — при старте монетизации)
