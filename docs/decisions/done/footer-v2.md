@@ -1,9 +1,14 @@
 ---
-status: ✅ реализовано
+status: ✅ сделано
 affects: layout, footer
 date: 2026-07-04
+done: 2026-07-04
 ---
 # Футер v2 — Twitch API + соцлинки + дубль навигации
+
+> [!success] Закрыто 2026-07-04 (ревизия 2026-07-14)
+> Проверено в коде: `twitch-status` на 2 канала, нав из `headerConfig`, соц-линки. Замещён редизайном E12 → [[cta-footer-redesign]].
+
 
 Эпик E1 из [[additional-workout]] (пункт №1). Размер `S`, лимит-устойчивый.
 

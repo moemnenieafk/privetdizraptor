@@ -1,10 +1,14 @@
 ---
-status: ✅ research готов
+status: ✅ research закрыт
 affects: monetization, research
 date: 2026-07-08
-owner: "[[monetization-subscriptions]]"
+done: 2026-07-08
 ---
 # Deep research: подписки и монетизация (E3)
+
+> [!success] Закрыто 2026-07-08 (ревизия 2026-07-14)
+> Выводы перенесены в [[monetization-subscriptions]] (3 тира, 80/20). Заметка — архивный источник.
+
 
 Разведка под эпик [[monetization-subscriptions]] (пункт №3 из [[additional-workout]]): сколько тиров, что бесплатно / что за paywall, ценообразование, как монетизируются companion-сервисы по EFT и как устроен Boosty.
 

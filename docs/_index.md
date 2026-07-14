@@ -10,7 +10,8 @@ type: index
 > Открой **Graph View** (Ctrl+G), чтобы видеть связи между решениями и фичами.
 
 ## 📍 Текущее состояние
-- [[snapshot-2026-06]] — полный срез проекта (стек, что готово, долги). Обновлять при крупных вехах.
+- ⭐ **[[release-readiness-2026-07]]** — актуальный срез готовности к релизу (14.07.2026, сверка заметок с кодом).
+- [[snapshot-2026-06]] — старый срез (стек, долги). Частично устарел.
 
 ## 🧭 Решения — пройтись по за/против
 Каждая заметка: контекст → варианты → за/против → вывод.
@@ -23,14 +24,17 @@ FROM "decisions"
 SORT status ASC, date ASC
 ```
 
-**Гигиена кода**
-- [[fsd-lite-normalize]] — вынести `PlaceholderPage` + хук из корня `components/`, слить дубликат хука
+**Релиз-блокеры (14.07)**
+- [[pre-mvp-release-audit]] — Проход 2: SEO/robots/sitemap, 500-страница, RLS-аудит Comlink, `/security-review`
+- [[cta-footer-redesign]] — ЧП4: реальные URL вместо `#` + реальный юр-текст
 
-**Блокеры**
-- [[supabase-jwt-fix]] — критичный: ES256 ломает загрузку аватара (RLS режет `auth.uid()`)
+**Монетизация**
+- [[monetization-subscriptions]] — E4 разметка paywall (инфра есть, применена только к сборкам) + E5 рельс оплаты
 
 **Развитие**
-- [[maps-v2-scope]] — карты: больше типов маркеров, зоны квестов, локации без подложки
+- [[maps-marker-render]] — карты: иконки выходов/боссов, рез спавнов, dev-tool маркеров
+- [[maps-v2-scope]] — карты: объём v2
+- [[story-content-assets]] — галереи скриншотов 9 историй
 - [[multigaming-second-game]] — когда и как добавить вторую игру
 
 ## 🎯 Видение
@@ -43,7 +47,14 @@ SORT status ASC, date ASC
 ## ✅ Сделано
 Архив исполненных решений — файлы в `decisions/done/`, статусы дублирует борд выше.
 
-> [!success]- Развернуть архив (10) · свежие сверху
+> [!success]- Развернуть архив · свежие сверху
+> **Закрыто ревизией 14.07.2026 (12):**
+> - [[the-lab-parity]] — Лаба на своём арте (статик) · 2026-07-14
+> - [[fsd-lite-normalize]] · [[mobile-first-audit]] · [[loot-contaier-table-page]] · [[player-position-tracking]] · [[deep-research-subscription-monetization]] · [[deep-research-payment-rails]] — 2026-07-08
+> - [[footer-v2]] · [[feedback-form]] · [[player-tracking-tab]] · [[tracking-favorite-items]] — 2026-07-04
+> - [[supabase-jwt-fix]] — 2026-06-28
+>
+> **Ранее (10):**
 > - [[maps-floor-hotkeys]] — Карты: хоткеи переключения этажей · 2026-06-29
 > - [[css-consolidation]] — Собрать раздробленный CSS · 2026-06-29
 > - [[account-real-data]] — AccountCenter: реальные данные · 2026-06-29

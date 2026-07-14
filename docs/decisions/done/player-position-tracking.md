@@ -1,10 +1,14 @@
 ---
-status: ⚪ отложено (на будущее)
+status: ✅ сделано (Track-1)
 affects: maps
 date: 2026-07-08
+done: 2026-07-08
 ---
-
 # Трекинг позиции игрока на карте (по скриншотам EFT)
+
+> [!success] Закрыто 2026-07-08 (ревизия 2026-07-14)
+> Проверено в коде: `lib/eft-screenshot.ts`, `store/useTrackingStore.ts`, `features/maps/PlayerTracker.tsx` (File System Access API, вариант A). Остаток: live-калибровка оффсета стрелки на ПК.
+
 
 **Статус:** ⚪ отложено — идея на будущее, не блокер MVP
 **Затрагивает:** [[maps-marker-render]] · `MapViewerClient` · `eft-map-config.ts`
