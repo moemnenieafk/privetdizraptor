@@ -33,7 +33,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     ...new Set(body.itemIds.filter((v): v is string => typeof v === "string" && v.length > 0)),
   ].slice(0, MAX_IDS);
 
-  const empty: BuildDefsBundle = { defs: [], presets: [], names: {} };
+  const empty: BuildDefsBundle = { defs: [], presets: [], names: {}, prices: {} };
   if (itemIds.length === 0) return NextResponse.json(empty);
 
   try {
