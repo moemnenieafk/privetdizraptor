@@ -65,6 +65,7 @@
 *   **Основной текст:** `font-blender-book` (Regular, 400).
 *   **Заголовки (H1-H6):** `font-blender-medium` (Medium, 500). Всегда в верхнем регистре (`uppercase`), с трекингом `tracking-widest` (или `tracking-wider`).
 *   **Числа, цены, статы:** `font-blender-medium text-xs` — ⛔ `font-mono` **ЗАПРЕЩЁН** в этом проекте.
+*   **Перенос строк (Baseline-2026):** семантические заголовки (`h1–h4`) и проза (`p`) получают `text-wrap: balance` / `pretty` из базового слоя автоматически. Для не-семантической вёрстки применяй утилиты Tailwind: `text-balance` на заголовки-`div`/`span`, `text-pretty` на длинные описания (лор боссов, кодекс, квесты).
 
 ---
 

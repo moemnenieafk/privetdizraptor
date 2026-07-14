@@ -166,6 +166,13 @@
     font-family: var(--font-blender-medium);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    /* Baseline-2026: равномерный перенос заголовков (без «висячих» слов) */
+    text-wrap: balance;
+  }
+
+  /* Baseline-2026: убираем сироты/рваный хвост в прозе (описания квестов, лор, кодекс) */
+  p {
+    text-wrap: pretty;
   }
 
   html {
