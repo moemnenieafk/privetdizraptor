@@ -14,6 +14,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -27,6 +28,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return err(401, "Не авторизован");
+
+  // Загрузка в Storage — дорогая операция: лимитим по пользователю.
+  if (!(await rateLimit(`avatar:uid:${user.id}`, 10, 3600))) {
+    return err(429, "Слишком много загрузок. Попробуйте позже.");
+  }
 
   // Ранний отсев по Content-Length — не буферизуем гигантское тело ради 500КБ-гейта.
   const declaredLen = Number(req.headers.get("content-length") ?? "0");
