@@ -132,17 +132,19 @@ export default function Footer() {
           <div className="flex shrink-0 flex-col items-center gap-5 xl:w-44 xl:items-start">
             <SupportButton />
 
-            <div className="flex flex-col items-center gap-3.5 xl:items-start">
-              {ADDITIONAL_LINKS.map(({ label, href }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className="font-blender-medium text-type-micro uppercase tracking-[0.1em] whitespace-nowrap text-text-secondary transition-none hover:text-(--primary)"
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
+            {ADDITIONAL_LINKS.length > 0 && (
+              <div className="flex flex-col items-center gap-3.5 xl:items-start">
+                {ADDITIONAL_LINKS.map(({ label, href }) => (
+                  <Link
+                    key={label}
+                    href={href}
+                    className="font-blender-medium text-type-micro uppercase tracking-[0.1em] whitespace-nowrap text-text-secondary transition-none hover:text-(--primary)"
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
 
             <div className="grid grid-cols-3 gap-2">
               {SOCIAL_LINKS.map(({ label, href, icon }) => (

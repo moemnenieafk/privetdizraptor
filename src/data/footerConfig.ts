@@ -2,7 +2,8 @@
 // соц-сетей, доп-ссылок и юр-ссылок. Навигация НЕ здесь — она берётся из
 // общего headerConfig (game-aware) прямо в компоненте.
 //
-// TODO(V4DYA): заполнить реальные URL там, где стоит "#".
+// Правило: ссылка без реального URL в футер НЕ попадает (мёртвые "#" на паблике —
+// признак недоделанного сайта). Появится URL — просто добавь запись в массив.
 
 // ── Стример-карточки ────────────────────────────────────────────────
 export type StreamPlatformKind = "twitch" | "youtube" | "vklive";
@@ -77,10 +78,11 @@ export interface SocialLink {
 export const SOCIAL_LINKS: SocialLink[] = [
   { label: "Telegram", href: "https://t.me/fullkamen", icon: "/images/footer/social/telegram.svg" },
   { label: "Discord",  href: "https://discord.gg/rYc6hpfvez", icon: "/images/footer/social/discord.svg" },
-  { label: "VK",       href: "#", icon: "/images/footer/social/vk.svg"      }, // TODO VK-сообщество
   { label: "Boosty",   href: "https://boosty.to/fullkamen", icon: "/images/footer/social/boosty.svg"  },
-  { label: "X",        href: "#", icon: "/images/footer/social/xcom.svg"    }, // TODO X (Twitter)
-  { label: "Reddit",   href: "#", icon: "/images/footer/social/reddit.svg"  }, // TODO Reddit
+  // Скрыты до появления реальных площадок (ассеты на месте — вернуть строкой с href):
+  //   VK     → /images/footer/social/vk.svg
+  //   X      → /images/footer/social/xcom.svg
+  //   Reddit → /images/footer/social/reddit.svg
 ];
 
 // ── Кнопка «Поддержка» (Boosty) ─────────────────────────────────────
@@ -92,16 +94,13 @@ export interface FooterLink {
   href: string;
 }
 
-export const ADDITIONAL_LINKS: FooterLink[] = [
-  { label: "Партнёрская программа", href: "#" }, // TODO
-  { label: "Интеграции",            href: "#" }, // TODO
-  { label: "Экосистема ЦТА",        href: "#" }, // TODO
-];
+// Пусто до готовности разделов: «Партнёрская программа», «Интеграции», «Экосистема ЦТА»
+// вернутся сюда с реальными путями. Пустой массив — колонка в футере не рендерится.
+export const ADDITIONAL_LINKS: FooterLink[] = [];
 
-// ── Юр-ссылки (нижний бар). Страницы создаются отдельной задачей. ────
+// ── Юр-ссылки (нижний бар). Только действующие документы: оферта и пользовательское
+// соглашение остаются черновиками (noindex) и вернутся сюда при запуске монетизации.
 export const LEGAL_LINKS: FooterLink[] = [
-  { label: "Оферта",                      href: "/legal/offer"    },
-  { label: "Условия использования",       href: "/legal/terms"    },
-  { label: "Политика конфиденциальности", href: "/legal/privacy"  },
-  { label: "Пользовательское соглашение", href: "/legal/eula"     },
+  { label: "Условия использования",       href: "/legal/terms"   },
+  { label: "Политика конфиденциальности", href: "/legal/privacy" },
 ];
