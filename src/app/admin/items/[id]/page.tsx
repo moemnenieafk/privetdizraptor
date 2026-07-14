@@ -4,6 +4,8 @@ import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { items, itemCategories, itemProperties } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
+import { redirect } from "next/navigation";
+import { getAdmin } from "@/lib/auth/admin";
 import { EditItemForm } from "./EditItemForm";
 
 export default async function AdminItemEditPage({
@@ -11,6 +13,9 @@ export default async function AdminItemEditPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // Каталог — только владелец: редактор в /admin видит контент, но не предметы.
+  if (!(await getAdmin())) redirect("/admin");
+
   const { id } = await params;
   const gameId = await eftGameId();
 
