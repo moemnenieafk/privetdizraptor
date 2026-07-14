@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { feedback, type FeedbackAttachment } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,12 @@ async function currentUserId(): Promise<string | null> {
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
+  // Роут ПУБЛИЧНЫЙ (форму видит и аноним) и принимает вложения → без лимита это
+  // вектор спама и раздувания БД. Лимитим по IP ДО чтения тела.
+  if (!(await rateLimit(`feedback:ip:${clientIp(req)}`, 5, 3600))) {
+    return NextResponse.json({ error: "Слишком много обращений. Попробуйте позже." }, { status: 429 });
+  }
+
   // Ранний 413 по Content-Length — до буферизации тела.
   const len = Number(req.headers.get("content-length") ?? "0");
   if (Number.isFinite(len) && len > MAX_TOTAL_BYTES) {
