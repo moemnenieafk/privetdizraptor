@@ -9,6 +9,7 @@ import { items } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
 import { getEftPricesByIds } from "@/db/prices";
 import { itemIconUrl } from "@/lib/item-icon";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import type { EftItemData, EftPriceEntry } from "@/components/features/items/EftItemTile";
 import type { EftCurrency } from "@/lib/formatters";
 
@@ -38,6 +39,11 @@ const entry = (o?: OfferRaw): EftPriceEntry | undefined =>
     : undefined;
 
 export async function GET(req: Request): Promise<NextResponse> {
+  // Публичная ручка без сессии: до 200 предметов с ценами за запрос → лимит по IP.
+  if (!(await rateLimit(`eft-prices:ip:${clientIp(req)}`, 120, 300))) {
+    return NextResponse.json({ error: "too many requests" }, { status: 429 });
+  }
+
   const idsParam = new URL(req.url).searchParams.get("ids") ?? "";
   const ids = [...new Set(idsParam.split(",").filter((s) => BSG_ID_RE.test(s)))].slice(0, MAX_IDS);
   if (ids.length === 0) return NextResponse.json({ items: [] });

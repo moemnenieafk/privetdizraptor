@@ -6,6 +6,7 @@
 // конструктору (там его отдаёт RSC).
 import { NextResponse } from "next/server";
 import { getBuildDefs } from "@/db/build-defs";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import type { BuildDefsBundle } from "@/lib/build-media";
 
 export const runtime = "nodejs";
@@ -18,6 +19,11 @@ interface DefsBody {
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
+  // Публичная ручка без сессии: запрос стоит БД-джойна на сотни id → лимит по IP.
+  if (!(await rateLimit(`builds-defs:ip:${clientIp(req)}`, 120, 300))) {
+    return NextResponse.json({ error: "too many requests" }, { status: 429 });
+  }
+
   let body: DefsBody;
   try {
     body = (await req.json()) as DefsBody;
