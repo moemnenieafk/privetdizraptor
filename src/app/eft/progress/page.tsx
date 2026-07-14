@@ -22,6 +22,14 @@ const PROGRESS_HUB_CARDS = [
     variant: 'rectangle' as const,
   },
   {
+    id: 'seasons',
+    title: 'Сезоны',
+    description: 'Механика сезонного персонажа и интерактивный конструктор модификаторов с бюджетом очков.',
+    href: '/eft/progress/seasons',
+    iconPath: '/icons/eft/progress-icon.svg',
+    variant: 'rectangle' as const,
+  },
+  {
     id: 'loadouts',
     title: 'Сборки оружия',
     description: 'Создавайте, сохраняйте и делитесь своими лучшими сборками оружия с сообществом.',

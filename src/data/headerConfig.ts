@@ -86,6 +86,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       'lightkeeper-quest': 'Смотритель Маяка',
       questmap: 'Карта Заданий',
       progress: 'Прогресс',
+      seasons: 'Сезоны',
+      perks: 'Конструктор перков',
       achievements: 'Достижения',
       styleguide: 'Styleguide',
       // Боссы (слаги /eft/gamesetting/bosses/<slug>; 1:1 nameRu из src/data/bosses.ts)
@@ -531,6 +533,15 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             label: 'Прибыль бартера',
             path: '/eft/progress/barter',
             iconUrl: '/icons/eft/04-progression/barter-profit.svg',
+          },
+          {
+            id: 'p-seasons',
+            label: 'Сезоны',
+            path: '/eft/progress/seasons',
+            iconUrl: '/icons/eft/progress-icon.svg',
+            children: [
+              { id: 'p-seasons-perks', label: 'Конструктор перков', path: '/eft/progress/seasons/perks', iconUrl: '/icons/eft/progress-icon.svg' },
+            ],
           },
           {
             id: 'p-loadouts',
