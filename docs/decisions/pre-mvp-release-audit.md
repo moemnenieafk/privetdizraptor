@@ -134,7 +134,8 @@ date: 2026-07-04
 - [x] Юр-текст privacy + terms — **сделано 14.07** (`b85201de`). Действующая редакция, 152-ФЗ, правила UGC для «Связи», контакт оператора. Оферта/EULA — остались черновиками (noindex), нужны при монетизации.
 - [x] Футер: мёртвые `#` убраны — **сделано 14.07** (`e9623d7f`). Соц: TG/Discord/Boosty; доп-ссылки и оферта/EULA скрыты до готовности.
 - [x] RLS на comlink — **аудит пройден:** RLS уже в `comlink-ddl.ts` (enable + read-policy для авторизованных; `karma_events`/`reports` — без policy). Все 8 API-роутов проверяют сессию (`getMe` → 401), запись — owner-роль. Модерация есть (`moderator`, pin/lock/hide, очередь жалоб).
-- [ ] ⚠ **Ручной шаг:** прогнать workflow `migrate-comlink` в проде (накатить RLS-стейтменты) + назначить модераторов.
+- [x] ✅ **`migrate-comlink` прогнан** (V4DYA, 14.07) — таблицы + RLS в проде.
+- [x] ✅ **Модератор назначен:** `fullkamen` → `role='moderator'` (14.07). Для этого заведён роут `GET /api/cron/set-role` (за `CRON_SECRET`) + workflow **set-role** (Actions → Run workflow → логин + роль) — назначение ролей с телефона, без SQL Editor. Роль `admin` роутом НЕ выдаётся (утечка секрета не должна давать CMS). `UserRole` расширен: `user | moderator | admin`.
 - [ ] `NEXT_PUBLIC_SITE_URL` в Vercel env (пока фолбэк на системный `VERCEL_PROJECT_PRODUCTION_URL` — работает, но кастомный домен лучше задать явно).
 - [x] **`/security-review` — пройден 14.07.** Найдено и закрыто 3 дыры:
   - `/api/feedback` — публичный приём вложений (5×500 КБ base64 в БД) **без rate-limit** → спам/раздувание Postgres. Лимит 5/час на IP до чтения тела (`ad81e8a1`).
