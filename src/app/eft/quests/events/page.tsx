@@ -4,7 +4,8 @@ import { getQuestsNav } from '@/lib/quests-nav';
 import { QuestsHubNav } from '@/components/features/quests/QuestsHubNav';
 import { EventsTimeline } from '@/components/features/events/EventsTimeline';
 import { EFT_EVENTS } from '@/data/eft-events';
-import { getEventQuestLinks } from '@/lib/eft-event-quests';
+import { getEventContentIndex, getEventContentStatus } from '@/lib/eft-event-content';
+import type { EftEventContentStatus } from '@/types/eft-events';
 
 export const metadata: Metadata = {
   title: 'События | Задания ЦТА',
@@ -16,10 +17,15 @@ export const metadata: Metadata = {
  * Индекс внутриигровых событий. Данные статичные → серверный рендер;
  * ссылки на квесты резолвятся здесь, чтобы база квестов не уехала в клиентский бандл.
  */
-export default function EventsPage() {
+export default async function EventsPage() {
   const { sections } = getQuestsNav('/eft/quests/events');
   const pageContent = PAGE_CONTENT_DICTIONARY['eft-quests-events'];
-  const questLinks = getEventQuestLinks();
+
+  // Актуальность бартеров и достижений считаем по живой БД, а не по ручным флажкам.
+  const content = await getEventContentIndex();
+  const statuses: Record<string, EftEventContentStatus> = Object.fromEntries(
+    EFT_EVENTS.map((e) => [e.id, getEventContentStatus(e)]),
+  );
 
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
@@ -33,7 +39,7 @@ export default function EventsPage() {
           count={EFT_EVENTS.length}
         />
 
-        <EventsTimeline events={EFT_EVENTS} questLinks={questLinks} />
+        <EventsTimeline events={EFT_EVENTS} content={content} statuses={statuses} />
       </div>
     </main>
   );
