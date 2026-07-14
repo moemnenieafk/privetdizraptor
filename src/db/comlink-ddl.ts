@@ -126,6 +126,41 @@ export const COMLINK_DDL: string[] = [
   `create index if not exists comlink_posts_topic_idx
      on public.comlink_posts (topic_id, created_at)`,
 
+  // Контентные подразделы: Обновления игры (импорт из Steam), Блог, Мастер-классы.
+  // Один движок, различает kind. Полный текст патчноутов BSG не зеркалим — только
+  // выжимка + ссылка; ценность добавляем своим разбором в body_ru.
+  `create table if not exists public.comlink_articles (
+    id           uuid primary key default gen_random_uuid(),
+    game_id      uuid not null references public.games(id) on delete cascade,
+    kind         text not null,
+    title        text not null,
+    slug         text not null,
+    excerpt      text not null default '',
+    body_ru      text not null default '',
+    cover_url    text,
+    source       text not null default 'cta',
+    external_id  text,
+    external_url text,
+    published_at timestamptz not null,
+    event_at     timestamptz,
+    video_url    text,
+    author_id    uuid references public.profiles(id) on delete set null,
+    published    boolean not null default true,
+    created_at   timestamptz not null default now(),
+    updated_at   timestamptz not null default now()
+  )`,
+
+  `create index if not exists comlink_articles_feed_idx
+     on public.comlink_articles (game_id, kind, published, published_at)`,
+
+  `create unique index if not exists comlink_articles_slug_uq
+     on public.comlink_articles (game_id, slug)`,
+
+  // Дедуп импорта: один gid Steam = одна запись (повторный синк не плодит дубли
+  // и не затирает наш русский разбор).
+  `create unique index if not exists comlink_articles_external_uq
+     on public.comlink_articles (game_id, source, external_id)`,
+
   /* ─────────── RLS ─────────── */
   // Социальный контент читают только авторизованные; пишет owner-роль через API.
   `alter table public.comlink_profiles enable row level security`,
@@ -162,4 +197,11 @@ export const COMLINK_DDL: string[] = [
   `drop policy if exists comlink_posts_read on public.comlink_posts`,
   `create policy comlink_posts_read on public.comlink_posts
      for select to authenticated using (hidden = false or author_id = auth.uid())`,
+
+  // Статьи и патчноуты — ПУБЛИЧНЫЕ (в отличие от анкет): их индексирует поиск,
+  // это входная воронка в раздел.
+  `alter table public.comlink_articles enable row level security`,
+  `drop policy if exists comlink_articles_read on public.comlink_articles`,
+  `create policy comlink_articles_read on public.comlink_articles
+     for select using (published = true)`,
 ];

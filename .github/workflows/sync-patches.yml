@@ -1,0 +1,34 @@
+# Импорт патчноутов EFT из Steam News API.
+# Раз в сутки + кнопка Run workflow. Вставляются только новые — разборы не затираются.
+name: sync-patches
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "0 9 * * *" # 09:00 UTC ежедневно
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger patches sync
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/sync-patches"
+          echo "GET $url"
+          code=$(curl -sS -m 120 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Синк патчей не удался (HTTP $code)"
+            exit 1
+          fi
