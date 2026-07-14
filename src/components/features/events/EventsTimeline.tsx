@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { ArrowDownWideNarrow, ArrowUpWideNarrow, Search, X } from 'lucide-react';
-import type { EftEvent, EftEventCategory, EftEventQuestLink } from '@/types/eft-events';
+import type {
+  EftEvent,
+  EftEventCategory,
+  EftEventContentIndex,
+  EftEventContentStatus,
+} from '@/types/eft-events';
 import { EFT_EVENT_CATEGORIES, getEventYears } from '@/data/eft-events';
 import {
   EMPTY_EVENTS_QUERY,
@@ -14,8 +19,10 @@ import { EventCard } from './EventCard';
 
 interface EventsTimelineProps {
   events: EftEvent[];
-  /** eventId → задания ивента из базы квестов (резолвятся на сервере). */
-  questLinks?: Record<string, EftEventQuestLink[]>;
+  /** eventId → квесты/достижения/бартеры ивента, сверенные с базой (резолв на сервере). */
+  content?: EftEventContentIndex;
+  /** eventId → статус контента после окончания (считается на сервере). */
+  statuses?: Record<string, EftEventContentStatus>;
 }
 
 /**
@@ -23,7 +30,7 @@ interface EventsTimelineProps {
  * данные статичные, страница серверная — URL-состояние здесь избыточно.
  * Вся математика фильтрации — в @/lib/eft-events-utils (UI остаётся чистым).
  */
-export function EventsTimeline({ events, questLinks = {} }: EventsTimelineProps) {
+export function EventsTimeline({ events, content = {}, statuses = {} }: EventsTimelineProps) {
   const [query, setQuery] = useState<EventsQuery>(EMPTY_EVENTS_QUERY);
 
   const years = useMemo(() => getEventYears(events), [events]);
@@ -174,7 +181,8 @@ export function EventsTimeline({ events, questLinks = {} }: EventsTimelineProps)
                   <EventCard
                     key={event.id}
                     event={event}
-                    questLinks={questLinks[event.id]}
+                    content={content[event.id]}
+                    status={statuses[event.id] ?? 'unknown'}
                     defaultOpen={event.active}
                   />
                 ))}
