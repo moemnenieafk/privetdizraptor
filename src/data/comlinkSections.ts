@@ -1,7 +1,12 @@
-// Раздел «Связь» (COMLINK) — сообщество ЦТА. Пока навигируемые смарт-заглушки
-// (MVP-решение V4DYA 2026-07-05): раздел заведён «как остальные», подпункты ведут
-// на страницы-заглушки SectionPlaceholder. Реальная реализация — отдельным эпиком.
+// Раздел «Связь» (COMLINK) — сообщество ЦТА.
 // Единый источник правды для роутов /eft/comlink/* и табов внутри раздела.
+//
+// Живые подразделы (свои статические роуты, перебивают [section]):
+//   find-partner    — мои рейды: заявки, подтверждения, оценки
+//   candidates      — анкеты игроков (фундамент раздела)
+//   sherpa-exchange — биржа наставников
+//   discussions     — форум
+// Заглушки (пока через [section]): masterclasses, blog, game-updates.
 
 export const COMLINK_BASE = "/eft/comlink";
 // TODO: свои иконки подпунктов (пока общий comlink-icon как плейсхолдер).
@@ -14,9 +19,10 @@ export interface ComlinkSection {
 }
 
 export const COMLINK_SECTIONS: ComlinkSection[] = [
-  { slug: "find-partner", label: "Поиск напарника", description: "Найти напарника для рейдов под свой стиль игры и график." },
+  { slug: "find-partner", label: "Поиск напарника", description: "Заявки на совместные рейды, подтверждения и оценки напарников." },
   { slug: "candidates", label: "Кандидаты", description: "Анкеты игроков, ищущих команду или сокомандников." },
   { slug: "sherpa-exchange", label: "Биржа шерпов", description: "Опытные игроки-наставники помогают новичкам освоиться." },
+  { slug: "discussions", label: "Обсуждения", description: "Темы по игре: мета, споты, механики. У каждого автора виден уровень доверия." },
   { slug: "masterclasses", label: "Мастер-классы", description: "Разборы, обучающие сессии и гайды от профи." },
   { slug: "blog", label: "Новостной блог", description: "Новости проекта ЦТА, статьи и объявления." },
   { slug: "game-updates", label: "Обновления игры", description: "Патчи, вайпы и ключевые изменения игры." },

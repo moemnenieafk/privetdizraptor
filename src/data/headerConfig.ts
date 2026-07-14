@@ -608,6 +608,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           { id: 'cl-find-partner', label: 'Поиск напарника', path: '/eft/comlink/find-partner', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
           { id: 'cl-candidates', label: 'Кандидаты', path: '/eft/comlink/candidates', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
           { id: 'cl-sherpa', label: 'Биржа шерпов', path: '/eft/comlink/sherpa-exchange', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
+          { id: 'cl-discussions', label: 'Обсуждения', path: '/eft/comlink/discussions', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
           { id: 'cl-masterclasses', label: 'Мастер-классы', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
           { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
           { id: 'cl-game-updates', label: 'Обновления игры', path: '/eft/comlink/game-updates', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' }
