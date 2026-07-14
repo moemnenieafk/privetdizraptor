@@ -2,7 +2,7 @@
 
 // Оркестратор конструктора: собирает BuildItemIndex из плоского массива определений
 // (Map через RSC-границу не проходит), держит черновик в useBuildStore, склеивает
-// медиа / статы / дерево слотов / пикер.
+// медиа / статы / дерево слотов / пикер / сводку (уклон + цена + шаринг).
 //
 // Пикер — единственное модальное состояние, живёт здесь: канвас только сообщает
 // «открой слот X по пути Y», выбор возвращается в стор.
@@ -14,9 +14,12 @@ import { Paywall } from '@/components/features/subscription/Paywall';
 import { BuildMedia, BuildMediaSkeleton } from '@/components/features/loadouts/BuildMedia';
 import { BuildCanvas } from '@/components/features/loadouts/BuildCanvas';
 import { BuildStatsPanel } from '@/components/features/loadouts/BuildStatsPanel';
+import { BuildSummary } from '@/components/features/loadouts/BuildSummary';
+import { ShoppingList } from '@/components/features/loadouts/ShoppingList';
 import { ModPicker } from '@/components/features/loadouts/ModPicker';
-import { calcBuild, calcDelta, emptyBuild, type BuildItemDef } from '@/lib/weapon-build';
+import { calcBuild, calcDelta, type BuildItemDef } from '@/lib/weapon-build';
 import type { PresetRef } from '@/lib/build-media';
+import type { BuildPrice } from '@/lib/build-price';
 
 /** Какой слот сейчас открыт в пикере. path — цепочка slotNameId от корня до владельца слота. */
 export interface OpenSlotTarget {
@@ -34,6 +37,8 @@ interface WeaponBuilderProps {
   defs: BuildItemDef[];
   presets: PresetRef[];
   names: Record<string, string>;
+  /** Цены всех совместимых деталей — считает сервер, чтобы клиент не дёргал API на каждый мод. */
+  prices: Record<string, BuildPrice>;
 }
 
 export function WeaponBuilder({
@@ -42,6 +47,7 @@ export function WeaponBuilder({
   defs,
   presets,
   names,
+  prices,
 }: WeaponBuilderProps) {
   const draft = useBuildStore((s) => s.draft);
   const startBuild = useBuildStore((s) => s.startBuild);
@@ -124,6 +130,19 @@ export function WeaponBuilder({
         <BuildStatsPanel delta={delta} issues={result.issues} />
       </div>
 
+      {/* Уклон + цена + шаринг */}
+      <BuildSummary
+        baseItemId={baseItemId}
+        baseName={baseName}
+        tree={draft}
+        result={result}
+        delta={delta}
+        index={index}
+        prices={prices}
+        nameOf={nameOf}
+        buildName={name.trim() || undefined}
+      />
+
       {/* Дерево слотов */}
       <BuildCanvas
         node={draft}
@@ -132,6 +151,13 @@ export function WeaponBuilder({
         nameOf={nameOf}
         onOpenSlot={setPicker}
       />
+
+      {/* Список покупок — платный: сама сборка и её цена бесплатны, удобство «где купить» нет */}
+      {result.stats.modCount > 0 && (
+        <Paywall feature="weapon_builds">
+          <ShoppingList result={result} prices={prices} nameOf={nameOf} />
+        </Paywall>
+      )}
 
       {/* Сохранение */}
       <section className="flex flex-col gap-3 rounded-sm border border-lines-hover bg-(--color-base) p-4">

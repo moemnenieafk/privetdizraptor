@@ -12,6 +12,7 @@
 // Никаких обращений к tarkov.dev в рантайме.
 import { itemIconUrl } from '@/lib/item-icon';
 import { matchesPreset, type BuildItemDef, type BuildResult } from '@/lib/weapon-build';
+import type { BuildPrice } from '@/lib/build-price';
 
 /** Пресет из таблицы weapon_presets — только то, что нужно медиа-слою. */
 export interface PresetRef {
@@ -35,6 +36,8 @@ export interface BuildDefsBundle {
   defs: BuildItemDef[];
   presets: PresetRef[];
   names: Record<string, string>;
+  /** Актуальная цена каждой детали (лучшее из торговцев и барахолки) на момент запроса. */
+  prices: Record<string, BuildPrice>;
 }
 
 export type BuildHeroKind = 'preset' | 'default_preset' | 'bare';

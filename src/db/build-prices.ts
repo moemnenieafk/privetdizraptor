@@ -8,17 +8,12 @@
 // приедет, когда добавим requiredPlayerLevel в синк цен.
 //
 // Только для сервера (прямой доступ к БД). Импортировать из RSC.
+// Типы BuildPrice/PriceSource переехали в @/lib/build-price — их тянут и клиентские
+// компоненты; здесь ре-экспорт, чтобы не ломать существующие импорты.
 import { getEftPricesByIds } from "@/db/prices";
+import type { BuildPrice } from "@/lib/build-price";
 
-export type PriceSource = "trader" | "flea";
-
-export interface BuildPrice {
-  /** Рубли. */
-  rub: number;
-  source: PriceSource;
-  /** Имя вендора: «Прапор», «Барахолка»… */
-  vendor: string;
-}
+export type { BuildPrice, PriceSource } from "@/lib/build-price";
 
 const FLEA = new Set(["flea-market", "Барахолка", "Flea Market"]);
 

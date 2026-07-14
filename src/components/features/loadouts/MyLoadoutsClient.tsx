@@ -6,11 +6,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, Copy, Pencil, Plus, Trash2, Wrench, X } from 'lucide-react';
+import { Check, Copy, Pencil, Plus, Share2, Trash2, Wrench, X } from 'lucide-react';
 import { useBuildStore, type SavedBuild } from '@/store/useBuildStore';
 import { useBuildQuota } from '@/hooks/useBuildQuota';
 import { BuildMedia, BuildMediaSkeleton } from '@/components/features/loadouts/BuildMedia';
 import { calcBuild, calcDelta, type BuildItemIndex, type BuildNode } from '@/lib/weapon-build';
+import { buildFocus } from '@/lib/build-focus';
+import { buildTotal, formatRub, type BuildPrice } from '@/lib/build-price';
+import { buildShareUrl } from '@/lib/build-share';
 import type { BuildDefsBundle, PresetRef } from '@/lib/build-media';
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error';
@@ -158,6 +161,7 @@ export function MyLoadoutsClient() {
               build={b}
               index={index}
               presets={bundle?.presets ?? []}
+              prices={bundle?.prices ?? {}}
               nameOf={nameOf}
               onEdit={() => handleEdit(b)}
               onDuplicate={() => duplicateBuild(b.id)}
@@ -177,6 +181,7 @@ interface BuildCardProps {
   build: SavedBuild;
   index: BuildItemIndex;
   presets: PresetRef[];
+  prices: Record<string, BuildPrice>;
   nameOf: (itemId: string) => string;
   onEdit: () => void;
   onDuplicate: () => void;
@@ -188,6 +193,7 @@ function BuildCard({
   build,
   index,
   presets,
+  prices,
   nameOf,
   onEdit,
   onDuplicate,
@@ -197,10 +203,37 @@ function BuildCard({
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState(build.name);
   const [confirming, setConfirming] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const result = calcBuild(build.tree, index);
   const delta = calcDelta(build.tree, index);
   const baseName = nameOf(build.baseItemId);
+
+  // Цена АКТУАЛЬНАЯ (последний синк), а не та, что была при сохранении.
+  const total = buildTotal(build.baseItemId, result, prices);
+  const focus = buildFocus(result, delta, index, total.total > 0 ? total.total : null);
+
+  const share = async () => {
+    const url = buildShareUrl(window.location.origin, build.tree, build.name);
+    const text = `${build.name} · ${focus.label} · ${formatRub(total.total)} — собрано в ЦТА`;
+
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: build.name, text, url });
+        return;
+      } catch {
+        // шит закрыли — молча падаем в копирование
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      window.prompt('Скопируйте ссылку на сборку:', url);
+    }
+  };
 
   const commitRename = () => {
     const next = draftName.trim();
@@ -251,7 +284,7 @@ function BuildCard({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-1">
           <h2 className="truncate font-blender-medium text-sm uppercase tracking-widest text-text-primary">
             {build.name}
           </h2>
@@ -259,6 +292,24 @@ function BuildCard({
             {baseName}
             {build.purpose ? ` · ${build.purpose}` : ''}
           </p>
+
+          {/* Уклон + актуальная цена — то, ради чего человек и открывает список */}
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span className="rounded-xs border border-(--primary)/40 bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] px-2 py-0.5 font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
+              {focus.label}
+            </span>
+            {focus.tags.slice(0, 2).map((t) => (
+              <span
+                key={t.id}
+                className="rounded-xs border border-lines-hover px-2 py-0.5 font-blender-medium text-xs uppercase tracking-widest text-text-secondary"
+              >
+                {t.label}
+              </span>
+            ))}
+            <span className="ml-auto font-blender-medium text-sm text-(--primary)">
+              {formatRub(total.total)}
+            </span>
+          </div>
         </div>
       )}
 
@@ -296,6 +347,19 @@ function BuildCard({
           className="flex h-11 w-11 items-center justify-center rounded-xs border border-lines-hover text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
         >
           <Pencil className="h-4 w-4" aria-hidden="true" />
+        </button>
+
+        <button
+          type="button"
+          onClick={share}
+          aria-label="Поделиться сборкой"
+          className="flex h-11 w-11 items-center justify-center rounded-xs border border-lines-hover text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+        >
+          {copied ? (
+            <Check className="h-4 w-4 text-success" aria-hidden="true" />
+          ) : (
+            <Share2 className="h-4 w-4" aria-hidden="true" />
+          )}
         </button>
 
         <button

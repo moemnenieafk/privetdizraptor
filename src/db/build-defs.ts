@@ -21,6 +21,7 @@ import {
   weaponSlots,
 } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
+import { getBuildPriceMap } from "@/db/build-prices";
 import type {
   BuildItemDef,
   WeaponAmmoDef,
@@ -36,7 +37,7 @@ import type { BuildDefsBundle, PresetRef } from "@/lib/build-media";
  * и сборка со снятым из игры модулем всё равно откроется.
  */
 export async function getBuildDefs(itemIds: string[]): Promise<BuildDefsBundle> {
-  const empty: BuildDefsBundle = { defs: [], presets: [], names: {} };
+  const empty: BuildDefsBundle = { defs: [], presets: [], names: {}, prices: {} };
   if (itemIds.length === 0) return empty;
 
   const gameId = await eftGameId();
@@ -183,12 +184,17 @@ export async function getBuildDefs(itemIds: string[]): Promise<BuildDefsBundle> 
 
   // Пресеты баз — для hero-картинки: если дерево совпало с пресетом, показываем
   // его отрендеренную картинку вместо «база + планка иконок».
-  const presetRows = await db
-    .select()
-    .from(weaponPresets)
-    .where(
-      and(eq(weaponPresets.gameId, gameId), inArray(weaponPresets.baseItemId, [...baseIds])),
-    );
+  // Цены — по тем же id: сборка должна показывать АКТУАЛЬНУЮ стоимость, а не ту,
+  // что была в момент сохранения (цены на барахолке живут своей жизнью).
+  const [presetRows, priceMap] = await Promise.all([
+    db
+      .select()
+      .from(weaponPresets)
+      .where(
+        and(eq(weaponPresets.gameId, gameId), inArray(weaponPresets.baseItemId, [...baseIds])),
+      ),
+    getBuildPriceMap(itemIds),
+  ]);
 
   const presets: PresetRef[] = presetRows.map((p) => ({
     id: p.id,
@@ -197,5 +203,5 @@ export async function getBuildDefs(itemIds: string[]): Promise<BuildDefsBundle> 
     partIds: p.parts.map((x) => x.itemId),
   }));
 
-  return { defs, presets, names };
+  return { defs, presets, names, prices: Object.fromEntries(priceMap) };
 }
