@@ -46,7 +46,64 @@ export interface EftEvent {
    * Временные (снятые после ивента) квесты в базе отсутствуют и здесь не указываются.
    */
   quests?: string[];
+  /** Достижения ивента. Статус курируется вручную: наличие в базе ≠ возможность получить. */
+  achievements?: EftEventAchievementRef[];
+  /** Бартеры, которые ивент добавлял торговцам. Актуальность считается по живой базе. */
+  barters?: EftEventBarterRef[];
+  /** Явный статус контента/наград после окончания. Если не задан — берётся дефолт по категории. */
+  contentStatus?: EftEventContentStatus;
+  /** Уточнение к статусу (показывается в карточке). */
+  contentNote?: string;
 }
+
+/**
+ * Что стало с контентом и наградами ивента после его окончания:
+ *  - permanent — осталось в игре, можно получить и сейчас;
+ *  - seasonal  — возвращается вместе с ивентом (Новый год, Хэллоуин);
+ *  - expired   — выдавалось только во время ивента, больше не получить;
+ *  - unknown   — не подтверждено, статус уточняется.
+ */
+export type EftEventContentStatus = 'permanent' | 'seasonal' | 'expired' | 'unknown';
+
+export interface EftEventAchievementRef {
+  /** Точное имя достижения, как в базе (ru). */
+  name: string;
+  status: EftEventContentStatus;
+}
+
+export interface EftEventBarterRef {
+  /** Описание бартера для карточки. */
+  label: string;
+  /** normalizedName торговца: mechanic, skier, prapor, ragman… */
+  trader: string;
+  level: number;
+  /** Часть имени предмета-награды — по нему ищем бартер в базе. */
+  reward?: string;
+  /** Часть имени требуемого предмета. */
+  required?: string;
+}
+
+export interface EftEventAchievementLink extends EftEventAchievementRef {
+  /** id из базы; null — достижения в базе нет (вырезано вместе с ивентом). */
+  id: string | null;
+  playersCompletedPercent: number | null;
+}
+
+export interface EftEventBarterLink extends EftEventBarterRef {
+  /** id бартера в базе; null — бартер свёрнут после ивента. */
+  id: string | null;
+  /** Бартер сейчас реально есть у торговца. */
+  live: boolean;
+}
+
+/** Разрешённый контент одного ивента (собирается на сервере). */
+export interface EftEventContent {
+  quests: EftEventQuestLink[];
+  achievements: EftEventAchievementLink[];
+  barters: EftEventBarterLink[];
+}
+
+export type EftEventContentIndex = Record<string, EftEventContent>;
 
 /** Квест из базы, привязанный к ивенту (резолвится на сервере). */
 export interface EftEventQuestLink {
