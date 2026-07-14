@@ -6,6 +6,8 @@ import { getBartersByQuest } from '@/db/barter-quest';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { QuestsNavBar, type QuestsNavRow } from '@/components/features/quests/QuestsNavBar';
 import { getQuestsSiblings } from '@/lib/quests-nav';
+import { getQuestEvent } from '@/lib/eft-event-quests';
+import { formatEventDate } from '@/lib/eft-events-utils';
 import type { TaskRaw } from '@/types/quest';
 
 interface Props {
@@ -26,6 +28,9 @@ export default async function QuestTaskPage({ params }: Props) {
 
   const bartersByQuest = await getBartersByQuest();
 
+  // Метка ивента: квест пришёл вместе с внутриигровым событием и остался в игре.
+  const questEvent = getQuestEvent(task.normalizedName);
+
   const traderSlug = task.trader.normalizedName;
   const { sections, siblings, parentLabel } = getQuestsSiblings(`/eft/quests/${traderSlug}`);
   const navRows: QuestsNavRow[] = [
@@ -44,6 +49,21 @@ export default async function QuestTaskPage({ params }: Props) {
           Квесты
         </Link>
         <QuestsNavBar rows={navRows} activeHref={`/eft/quests/${traderSlug}`} />
+
+        {questEvent && (
+          <Link
+            href={`/eft/quests/events#${questEvent.id}`}
+            className="mt-6 flex items-center gap-2 rounded border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] px-3 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]"
+          >
+            <span className="font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
+              Ивент · {questEvent.title}
+            </span>
+            <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">
+              {formatEventDate(questEvent.date)}
+            </span>
+          </Link>
+        )}
+
         <QuestDetail task={normalizeTrader(task)} variant="page" barters={bartersByQuest[task.id]} />
       </div>
     </main>
