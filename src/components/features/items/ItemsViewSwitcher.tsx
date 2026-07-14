@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { DataViewToggle, type ViewMode } from "@/components/ui/DataViewToggle";
 import { ItemsTable } from "@/components/features/items/ItemsTable";
 import { ItemTile, type ItemTileProps } from "@/components/features/items/ItemTile";
+import { useContainerColumns, type ColumnStep } from "@/hooks/useContainerColumns";
 import { TarkovItem } from "@/types/tarkov-items";
 
 export type ViewSwitcherItem = TarkovItem & {
@@ -16,27 +17,25 @@ interface ItemsViewSwitcherProps {
   className?: string;
 }
 
+/**
+ * Пороги колонок по ширине КОНТЕЙНЕРА сетки (не вьюпорта). Единый источник правды:
+ * этим же числом кормится виртуализатор и `grid-template-columns`, поэтому CSS и JS
+ * не могут разъехаться ни в одном слоте (сайдбар, `CompareDrawer`, сплит-вью).
+ */
+const GRID_COLUMN_STEPS: readonly ColumnStep[] = [
+  { minWidth: 0, columns: 2 },
+  { minWidth: 420, columns: 3 },
+  { minWidth: 600, columns: 4 },
+  { minWidth: 820, columns: 5 },
+  { minWidth: 1000, columns: 6 },
+];
+
 export function ItemsViewSwitcher({ items, className = "" }: ItemsViewSwitcherProps) {
   const [view, setView] = useState<ViewMode>("grid");
   const parentRef = useRef<HTMLDivElement>(null);
-  const [columns, setColumns] = useState(6);
 
-  // Синхронизируем количество колонок с брейкпоинтами Tailwind для точного расчета строк
-  useEffect(() => {
-    const updateCols = () => {
-      const w = window.innerWidth;
-      if (w >= 1280) setColumns(6);      // xl
-      else if (w >= 1024) setColumns(5); // lg
-      else if (w >= 768) setColumns(4);  // md
-      else if (w >= 640) setColumns(3);  // sm
-      else setColumns(2);                // default
-    };
-    
-    updateCols();
-    window.addEventListener("resize", updateCols);
-    return () => window.removeEventListener("resize", updateCols);
-  }, []);
-
+  // Колонки считаются по ширине самого скролл-контейнера через ResizeObserver.
+  const columns = useContainerColumns(parentRef, GRID_COLUMN_STEPS);
   const rowCount = Math.ceil(items.length / columns);
 
   const virtualizer = useVirtualizer({
@@ -75,26 +74,28 @@ export function ItemsViewSwitcher({ items, className = "" }: ItemsViewSwitcherPr
       {view === "table" ? (
         <ItemsTable items={items} />
       ) : (
-        <div 
+        <div
           ref={parentRef}
-          className="w-full max-h-[calc(100vh-220px)] overflow-auto rounded-lg border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_10%,transparent)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-lines-hover hover:[&::-webkit-scrollbar-thumb]:bg-text-muted"
+          className="@container/items-grid w-full max-h-[calc(100vh-220px)] overflow-auto rounded-lg border border-lines-hover bg-[color-mix(in_srgb,var(--color-card-menu)_10%,transparent)] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-lines-hover hover:[&::-webkit-scrollbar-thumb]:bg-text-muted"
         >
-          <div 
-            style={{ 
-              height: `${virtualizer.getTotalSize() + 32}px`, 
-              position: 'relative', 
-              width: '100%' 
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize() + 32}px`,
+              position: "relative",
+              width: "100%",
             }}
           >
-            <div 
-              style={{ 
-                position: 'absolute', 
-                top: '16px', 
-                left: '16px', 
-                right: '16px', 
-                transform: `translateY(${translateY}px)` 
+            <div
+              style={{
+                position: "absolute",
+                top: "16px",
+                left: "16px",
+                right: "16px",
+                transform: `translateY(${translateY}px)`,
+                display: "grid",
+                gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
               }}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+              className="gap-4"
             >
               {visibleItems.map((item) => (
                 <div key={item.id} className="flex justify-center">
