@@ -23,3 +23,8 @@ const CODEX_ARTICLES: Record<string, CodexArticle> = {
 export function getCodexArticle(slug: string): CodexArticle | null {
   return CODEX_ARTICLES[slug] ?? null;
 }
+
+// Статика — первичный источник для сида БД (E10, фаза 3) и аварийный фолбэк,
+// пока миграция не накатана. После сида источник правды — таблица codex_articles.
+export const STATIC_CODEX = CODEX_ARTICLES;
+export const CODEX_SLUGS = Object.keys(CODEX_ARTICLES);
