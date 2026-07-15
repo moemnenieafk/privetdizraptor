@@ -93,6 +93,19 @@ export default function RootLayout({
             <StreamDockLayer />
           </ThemeProvider>
         </div>
+
+        {/* BG Layer 4: film grain — субтильная тактическая текстура поверх всего (атмосфера).
+            Статичный, pointer-events-none, не влияет на интерактив/раскладку.
+            Плотность крутится через opacity-[…]; убрать = снести этот блок. */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-[100] opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='cta-grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23cta-grain)'/%3E%3C/svg%3E\")",
+            backgroundSize: "220px 220px",
+          }}
+        />
       </body>
     </html>
   );
