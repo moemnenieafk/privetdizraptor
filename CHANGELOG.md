@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-15
+- `aad985d` fix(account): make getMe tolerant of missing notify_* columns + mobile migration
 - `403bd82` feat(account): persist notification (rassylka) preferences
 - `25b38be` feat(account): honest PRO-status from real subscription tier
 - `8914872` feat(mobile): вход в Аккаунт Центр из бургер-меню
