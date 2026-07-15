@@ -671,3 +671,16 @@ html {
   0%, 100% { fill-opacity: 0.12; stroke-opacity: 0.7; }
   50% { fill-opacity: 0.3; stroke-opacity: 1; }
 }
+
+/* ─── Доступность: уважаем системную настройку «уменьшить движение» ────────────
+   Единый глобальный guard: гасит анимации/транзишены/скролл-моушен для
+   пользователей с prefers-reduced-motion: reduce. Аддитивно — на остальных не
+   влияет, вёрстку не меняет. Канон-2026 (functional motion must respect a11y). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

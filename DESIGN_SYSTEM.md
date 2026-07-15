@@ -124,6 +124,7 @@
 *   **Базовый транзишн:** `transition-all duration-300 ease-in-out`.
 *   **Эффект водопада (Cascade Fade-in):** Списки должны появляться поочередно. Родительский контейнер имеет класс `.animate-on-scroll.is-visible`. Для дочерних элементов используй инлайн стиль `style={{ animationDelay: \`${index * 50}ms\` }}` и класс `animate-[fade-in-up_0.5s_ease-out_both]`.
 *   **Иконки (Hover):** При наведении на карточку, иконки должны реагировать: `group-hover:scale-110 group-hover:text-(--primary) transition-transform duration-300`.
+*   **Доступность (reduced-motion):** глобальный guard в `globals.css` гасит анимации/транзишены при `prefers-reduced-motion: reduce`. Отдельно в компонентах ничего гейтить не нужно — оно уже покрыто; для скролл-моушена/параллакса (когда появится) всё равно проверяй настройку явно.
 
 ---
 
