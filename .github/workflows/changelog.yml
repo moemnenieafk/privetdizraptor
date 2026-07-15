@@ -34,6 +34,8 @@ jobs:
           out, cur = [], None
           for line in log:
               d, h, s = line.split("\t", 2)
+              if "[skip changelog]" in s:
+                  continue
               if d != cur:
                   out.append(f"\n### {d}"); cur = d
               out.append(f"- `{h}` {s}")
