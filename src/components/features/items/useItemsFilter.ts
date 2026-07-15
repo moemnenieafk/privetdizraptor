@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { TarkovItem, ItemCategoryType, ArmorMetrics } from "@/types/tarkov-items";
-import { SortOption, ArmorFilterState } from "@/components/features/items/ItemsFilterPanel";
+import { SortOption, ArmorFilterState } from "@/components/features/items/filter-types";
 import { usePlayerStore } from "@/store/usePlayerStore";
 
 export const useItemsFilter = (initialItems: TarkovItem[]) => {
