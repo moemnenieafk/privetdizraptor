@@ -684,3 +684,20 @@ html {
     scroll-behavior: auto !important;
   }
 }
+
+/* ─── View Transitions: сдержанный тактический кроссфейд роут-переходов ─────────
+   App Router бандлит React canary; включено флагом experimental.viewTransition.
+   root-группа = всё сменяемое содержимое (оболочка/шапка персистентны — вне <ViewTransition>). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* reduced-motion: мгновенный свап без анимации — глобальный *-guard выше не покрывает VT-псевдо */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

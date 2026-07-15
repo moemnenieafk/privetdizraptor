@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ViewTransition } from "react";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ProgressSync } from "@/components/providers/ProgressSync";
@@ -85,7 +86,7 @@ export default function RootLayout({
             <PlayerProfileSync />
             <FeedbackProvider>
               <ConditionalLayout>
-                {children}
+                <ViewTransition>{children}</ViewTransition>
               </ConditionalLayout>
             </FeedbackProvider>
             <ScrollToTop />
