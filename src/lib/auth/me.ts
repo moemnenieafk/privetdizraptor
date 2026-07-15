@@ -38,13 +38,28 @@ export async function getMe(): Promise<Me | null> {
       youtube: profiles.youtube,
       discord: profiles.discord,
       steam: profiles.steam,
-      notifyAccount: profiles.notifyAccount,
-      notifyOffers: profiles.notifyOffers,
-      notifyNews: profiles.notifyNews,
     })
     .from(profiles)
     .where(eq(profiles.id, user.id))
     .limit(1);
+
+  // notify_* — additive-колонки (supabase/account-notifications.sql / cron-миграция).
+  // Читаем отдельным запросом с fallback: getMe в куче гардов, и он НЕ должен падать,
+  // если миграция ещё не накатана. Дефолт — opt-out (всё включено).
+  let notifications = { account: true, offers: true, news: true };
+  try {
+    const rows = await db.execute<{
+      notify_account: boolean;
+      notify_offers: boolean;
+      notify_news: boolean;
+    }>(
+      sql`select notify_account, notify_offers, notify_news from public.profiles where id = ${user.id} limit 1`,
+    );
+    const r = [...rows][0];
+    if (r) notifications = { account: r.notify_account, offers: r.notify_offers, news: r.notify_news };
+  } catch {
+    // колонок ещё нет — оставляем дефолт до миграции
+  }
 
   return {
     id: user.id,
@@ -60,11 +75,7 @@ export async function getMe(): Promise<Me | null> {
       discord: p?.discord ?? null,
       steam: p?.steam ?? null,
     },
-    notifications: {
-      account: p?.notifyAccount ?? true,
-      offers: p?.notifyOffers ?? true,
-      news: p?.notifyNews ?? true,
-    },
+    notifications,
   };
 }
 
