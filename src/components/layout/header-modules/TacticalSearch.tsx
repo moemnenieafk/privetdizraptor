@@ -11,9 +11,7 @@ import { SearchItemRow } from './SearchItemRow';
 import { SearchQuestCard, questResultHref } from './SearchQuestCard';
 import type { SearchItemResult, QuestSearchResult } from '@/types/search';
 import { SearchEmptyState } from './SearchEmptyState';
-import { DataViewToggle } from '@/components/ui/DataViewToggle';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { useSearchViewStore } from '@/store/useSearchViewStore';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
 // Хелпер: должна ли иконка сохранять свои оригинальные цвета (без CSS-маски)
@@ -63,9 +61,8 @@ export function TacticalSearch() {
     return profile?.faction || 'BEAR';
   });
 
-  // Режим выдачи предметов: плитка (дефолт) или список. Persist в Zustand.
-  const itemView = useSearchViewStore((s) => s.itemView);
-  const setItemView = useSearchViewStore((s) => s.setItemView);
+  // Выдача предметов — всегда плитка (тумблер убран). Тип расширен, чтобы list-ветка компилилась как мёртвая.
+  const itemView: 'grid' | 'table' = 'grid';
 
   // Получаем динамический конфиг для текущего раздела
   const config = getHeaderConfig(pathname || '');
@@ -410,8 +407,6 @@ export function TacticalSearch() {
                   <span className="text-type-caption font-blender-medium tracking-widest uppercase text-text-muted">
                     База предметов EFT
                   </span>
-                  {/* Тумблер: плитка (дефолт) ⇄ список */}
-                  <DataViewToggle view={itemView} onChange={setItemView} />
                 </div>
                 <div className="px-2 pb-3 sm:px-4 sm:pb-4">
                   <div
