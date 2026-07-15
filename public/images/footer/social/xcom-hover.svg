@@ -1,6 +1,1 @@
-<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="btn-xcom">
-<rect width="48" height="48" rx="8" fill="var(--fill-0, black)"/>
-<path id="Vector" d="M34.991 35L26.4584 22.3878L34.419 13H31.6481L25.2275 20.5748L20.1054 13H13.123L21.3476 25.1575L13 35H15.7709L22.5796 26.9694L28.0153 35H35H34.991ZM19.1927 14.769L31.6831 33.231H28.9224L16.4297 14.769H19.1927Z" fill="var(--fill-0, white)"/>
-</g>
-</svg>
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="btn-xcom"><rect width="48" height="48" rx="8" fill="var(--fill-0, black)"/><path id="Vector" d="M34.991 35L26.4584 22.3878L34.419 13H31.6481L25.2275 20.5748L20.1054 13H13.123L21.3476 25.1575L13 35H15.7709L22.5796 26.9694L28.0153 35H35H34.991ZM19.1927 14.769L31.6831 33.231H28.9224L16.4297 14.769H19.1927Z" fill="var(--fill-0, white)"/></g></svg>

@@ -1,18 +1,1 @@
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="16" height="16" fill="#1E4C29"/>
-<path d="M5 6.18182C5 6.0814 5.0814 6 5.18182 6H5.55775C5.65817 6 5.73957 6.0814 5.73957 6.18182V9.81818C5.73957 9.9186 5.65817 10 5.55775 10H5.18182C5.0814 10 5 9.9186 5 9.81818V6.18182Z" fill="url(#paint0_linear_1061_1654)"/>
-<path d="M6.48584 6.18182C6.48584 6.0814 6.56724 6 6.66766 6H9.12701C10.1614 6 11 6.89543 11 8C11 9.10457 10.1614 10 9.12701 10H6.66766C6.56724 10 6.48584 9.9186 6.48584 9.81818V6.18182Z" fill="url(#paint1_linear_1061_1654)"/>
-<path d="M5.55762 5.65039C5.85127 5.65039 6.08975 5.88801 6.08984 6.18164V9.81836C6.08975 10.112 5.85127 10.3496 5.55762 10.3496H5.18164C4.88807 10.3495 4.65049 10.1119 4.65039 9.81836V6.18164C4.65049 5.88807 4.88807 5.65049 5.18164 5.65039H5.55762ZM9.12695 5.65039C10.376 5.65039 11.3496 6.72412 11.3496 8C11.3496 9.27588 10.376 10.3496 9.12695 10.3496H6.66797C6.37431 10.3496 6.13584 10.112 6.13574 9.81836V6.18164C6.13584 5.88801 6.37431 5.65039 6.66797 5.65039H9.12695Z" stroke="black" stroke-opacity="0.5" stroke-width="0.7"/>
-<defs>
-<linearGradient id="paint0_linear_1061_1654" x1="8" y1="6" x2="8" y2="10" gradientUnits="userSpaceOnUse">
-<stop stop-color="#F2F2F2"/>
-<stop offset="0.5" stop-color="#9CA3AF"/>
-<stop offset="1" stop-color="#52525B"/>
-</linearGradient>
-<linearGradient id="paint1_linear_1061_1654" x1="8" y1="6" x2="8" y2="10" gradientUnits="userSpaceOnUse">
-<stop stop-color="#F2F2F2"/>
-<stop offset="0.5" stop-color="#9CA3AF"/>
-<stop offset="1" stop-color="#52525B"/>
-</linearGradient>
-</defs>
-</svg>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><metadata>© 2026 CTA — Центр Тактической Адаптации · V4DYA. Проприетарная графика. Копирование без разрешения запрещено.</metadata><rect width="16" height="16" fill="#1E4C29"/><path d="M5 6.18182C5 6.0814 5.0814 6 5.18182 6H5.55775C5.65817 6 5.73957 6.0814 5.73957 6.18182V9.81818C5.73957 9.9186 5.65817 10 5.55775 10H5.18182C5.0814 10 5 9.9186 5 9.81818V6.18182Z" fill="url(#paint0_linear_1061_1654)"/><path d="M6.48584 6.18182C6.48584 6.0814 6.56724 6 6.66766 6H9.12701C10.1614 6 11 6.89543 11 8C11 9.10457 10.1614 10 9.12701 10H6.66766C6.56724 10 6.48584 9.9186 6.48584 9.81818V6.18182Z" fill="url(#paint1_linear_1061_1654)"/><path d="M5.55762 5.65039C5.85127 5.65039 6.08975 5.88801 6.08984 6.18164V9.81836C6.08975 10.112 5.85127 10.3496 5.55762 10.3496H5.18164C4.88807 10.3495 4.65049 10.1119 4.65039 9.81836V6.18164C4.65049 5.88807 4.88807 5.65049 5.18164 5.65039H5.55762ZM9.12695 5.65039C10.376 5.65039 11.3496 6.72412 11.3496 8C11.3496 9.27588 10.376 10.3496 9.12695 10.3496H6.66797C6.37431 10.3496 6.13584 10.112 6.13574 9.81836V6.18164C6.13584 5.88801 6.37431 5.65039 6.66797 5.65039H9.12695Z" stroke="black" stroke-opacity="0.5" stroke-width="0.7"/><defs><linearGradient id="paint0_linear_1061_1654" x1="8" y1="6" x2="8" y2="10" gradientUnits="userSpaceOnUse"><stop stop-color="#F2F2F2"/><stop offset="0.5" stop-color="#9CA3AF"/><stop offset="1" stop-color="#52525B"/></linearGradient><linearGradient id="paint1_linear_1061_1654" x1="8" y1="6" x2="8" y2="10" gradientUnits="userSpaceOnUse"><stop stop-color="#F2F2F2"/><stop offset="0.5" stop-color="#9CA3AF"/><stop offset="1" stop-color="#52525B"/></linearGradient></defs></svg>

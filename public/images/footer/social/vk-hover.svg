@@ -1,6 +1,1 @@
-<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="btn-vk">
-<rect width="48" height="48" rx="8" fill="var(--fill-0, #0077FF)"/>
-<path id="Vector" d="M24.9825 31C17.466 31 13.1786 25.7447 13 17H16.7651C16.8888 23.4184 19.6646 26.1371 21.8632 26.6977V17H25.4085V22.5355C27.5796 22.2973 29.8607 19.7748 30.6302 17H34.1755C33.5846 20.4194 31.1112 22.9419 29.3523 23.979C31.1112 24.8198 33.9282 27.02 35 31H31.0974C30.2592 28.3373 28.1705 26.2773 25.4085 25.997V31H24.9825Z" fill="var(--fill-0, white)"/>
-</g>
-</svg>
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="btn-vk"><rect width="48" height="48" rx="8" fill="var(--fill-0, #0077FF)"/><path id="Vector" d="M24.9825 31C17.466 31 13.1786 25.7447 13 17H16.7651C16.8888 23.4184 19.6646 26.1371 21.8632 26.6977V17H25.4085V22.5355C27.5796 22.2973 29.8607 19.7748 30.6302 17H34.1755C33.5846 20.4194 31.1112 22.9419 29.3523 23.979C31.1112 24.8198 33.9282 27.02 35 31H31.0974C30.2592 28.3373 28.1705 26.2773 25.4085 25.997V31H24.9825Z" fill="var(--fill-0, white)"/></g></svg>

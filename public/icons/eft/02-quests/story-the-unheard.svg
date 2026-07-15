@@ -1,14 +1,1 @@
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M5.00005 9.00007L8.0001 2H6.03006L2 11.0001H7.29009L8.1401 9.00007H5.00005Z" fill="url(#paint0_linear_319_884)"/>
-<path d="M8.70992 4.99991L7.8599 6.99993H11L7.99991 14H9.96994L14 4.99991H8.70992Z" fill="url(#paint1_linear_319_884)"/>
-<defs>
-<linearGradient id="paint0_linear_319_884" x1="8.08222" y1="2" x2="8.08222" y2="14" gradientUnits="userSpaceOnUse">
-<stop stop-color="#E4F9FF"/>
-<stop offset="1" stop-color="#6096A6"/>
-</linearGradient>
-<linearGradient id="paint1_linear_319_884" x1="8.08222" y1="2" x2="8.08222" y2="14" gradientUnits="userSpaceOnUse">
-<stop stop-color="#E4F9FF"/>
-<stop offset="1" stop-color="#6096A6"/>
-</linearGradient>
-</defs>
-</svg>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><metadata>© 2026 CTA — Центр Тактической Адаптации · V4DYA. Проприетарная графика. Копирование без разрешения запрещено.</metadata><path d="M5.00005 9.00007L8.0001 2H6.03006L2 11.0001H7.29009L8.1401 9.00007H5.00005Z" fill="url(#paint0_linear_319_884)"/><path d="M8.70992 4.99991L7.8599 6.99993H11L7.99991 14H9.96994L14 4.99991H8.70992Z" fill="url(#paint1_linear_319_884)"/><defs><linearGradient id="paint0_linear_319_884" x1="8.08222" y1="2" x2="8.08222" y2="14" gradientUnits="userSpaceOnUse"><stop stop-color="#E4F9FF"/><stop offset="1" stop-color="#6096A6"/></linearGradient><linearGradient id="paint1_linear_319_884" x1="8.08222" y1="2" x2="8.08222" y2="14" gradientUnits="userSpaceOnUse"><stop stop-color="#E4F9FF"/><stop offset="1" stop-color="#6096A6"/></linearGradient></defs></svg>
