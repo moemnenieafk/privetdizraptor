@@ -82,6 +82,11 @@ const kindStyle: Record<string, { border: string; text: string; label: string }>
   negative: { border: 'border-danger/50', text: 'text-danger', label: 'Негативный' },
 };
 
+// Стабильные пустышки: возвращать `?? []` прямо в селекторе нельзя — новый массив
+// каждый рендер ломает сравнение Zustand v5 (Object.is) → бесконечный ре-рендер.
+const EMPTY_SELECTION: string[] = [];
+const EMPTY_HISTORY: string[][] = [];
+
 function PerkCard({
   perk,
   selected,
@@ -161,14 +166,17 @@ function PerkCard({
 }
 
 export function SeasonPerkBuilder({ season, initialSelection }: Props) {
-  const { selected, toggle, applyPreset, reset, undo, history } = useSeasonStore((s) => ({
-    selected: s.selected[season.slug] ?? [],
-    toggle: s.toggle,
-    applyPreset: s.applyPreset,
-    reset: s.reset,
-    undo: s.undo,
-    history: s.history[season.slug] ?? [],
-  }));
+  // Индивидуальные селекторы: каждый отдаёт стабильную ссылку (слайс стора или экшен),
+  // без создания объектов/массивов в селекторе — иначе Zustand v5 зациклит ре-рендер.
+  const selectedMap = useSeasonStore((s) => s.selected);
+  const historyMap = useSeasonStore((s) => s.history);
+  const toggle = useSeasonStore((s) => s.toggle);
+  const applyPreset = useSeasonStore((s) => s.applyPreset);
+  const reset = useSeasonStore((s) => s.reset);
+  const undo = useSeasonStore((s) => s.undo);
+
+  const selected = selectedMap[season.slug] ?? EMPTY_SELECTION;
+  const history = historyMap[season.slug] ?? EMPTY_HISTORY;
 
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
