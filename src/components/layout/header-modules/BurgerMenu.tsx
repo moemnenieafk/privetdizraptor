@@ -9,6 +9,7 @@ import { Carousel } from "@/components/ui/Carousel";
 import { PlatformLogo } from "./PlatformLogo";
 import { MobileMenuStats } from "./MobileMenuStats";
 import NewbieButton from "./NewbieButton";
+import { useUser } from "@/hooks/useUser";
 
 interface BurgerMenuProps {
   menuItems?: MenuItem[];
@@ -39,6 +40,7 @@ function BurgerIcon({ open }: { open: boolean }) {
 export function BurgerMenu({ menuItems = [], onOpenNewbie }: BurgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { user } = useUser();
 
   const currentGameId = (pathname || "").split("/").filter(Boolean)[0] || "eft";
   const activeGames = GAMES_DATA.filter((g) => !g.isInactive);
@@ -92,6 +94,28 @@ export function BurgerMenu({ menuItems = [], onOpenNewbie }: BurgerMenuProps) {
         {/* Скроллируемое тело: стата + навигация + новичок */}
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
           <MobileMenuStats />
+
+          {/* Вход в Аккаунт Центр / логин — на мобиле PlayerTelemetry скрыт (hidden xl:block),
+              поэтому дублируем точку входа сюда. */}
+          {user ? (
+            <Link
+              href="/account"
+              onClick={() => setIsOpen(false)}
+              className="tactical-menu-item flex items-center justify-center gap-2.5 rounded border border-(--primary) py-3.5 font-blender-medium text-[15px] uppercase tracking-widest text-(--primary) hover:scale-[1.02]"
+            >
+              <span className="h-4 w-4 icon-mask icon-account_profile_icon bg-(--primary)" />
+              Аккаунт Центр
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setIsOpen(false)}
+              className="tactical-menu-item flex items-center justify-center gap-2.5 rounded border border-(--primary) py-3.5 font-blender-medium text-[15px] uppercase tracking-widest text-(--primary) hover:scale-[1.02]"
+            >
+              <span className="h-4 w-4 icon-mask icon-eft-profile-login bg-(--primary)" />
+              Войти
+            </Link>
+          )}
 
           <nav className="flex flex-col gap-2">
             {menuItems.map((item, idx) => (
