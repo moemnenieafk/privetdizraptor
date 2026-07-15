@@ -10,11 +10,25 @@ const SECURITY_HEADERS = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
 ];
 
+// Анти-хотлинк для собственных ассетов (SVG-иконки и пр.). CORP=same-origin: браузер
+// НЕ отдаёт ресурс чужому сайту для <img>/no-cors. Свои загрузки (same-origin) не задеты.
+// Браузерная защита — программный парсинг (curl) не покрывает. Обход через crossorigin
+// падает на отсутствии ACAO. Применяем только к same-origin public/-ассетам (не к R2).
+const ASSET_HOTLINK_HEADERS = [
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+];
+
 const nextConfig: NextConfig = {
   /* config options here */
 
   async headers() {
-    return [{ source: '/(.*)', headers: SECURITY_HEADERS }];
+    return [
+      { source: '/(.*)', headers: SECURITY_HEADERS },
+      // CORP только на директориях со своими ассетами.
+      { source: '/icons/:path*', headers: ASSET_HOTLINK_HEADERS },
+      { source: '/games/:path*', headers: ASSET_HOTLINK_HEADERS },
+      { source: '/images/:path*', headers: ASSET_HOTLINK_HEADERS },
+    ];
   },
 
   images: {
