@@ -18,7 +18,7 @@ cta-project/
 ├── AGENTS.md               # Контекст проекта для агентов
 ├── CHANGELOG.md            # История версий
 ├── DESIGN_SYSTEM.md        # NIGHTFALL дизайн-система
-├── MVPMANIFEST.md          # Дорожная карта и AI-манифест
+├── MVPMANIFEST.md          # Индекс-указатель на источники истины (docs/, DESIGN_SYSTEM.md)
 ├── PROJECT_STRUCTURE.md    # (этот файл)
 └── README.md               # Технический паспорт проекта
 ```

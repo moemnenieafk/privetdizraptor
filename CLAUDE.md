@@ -10,7 +10,7 @@
 Consult before planning architecture or styling:
 - `PROJECT_STRUCTURE.md` — routing, file paths, FSD-lite layout
 - `DESIGN_SYSTEM.md` / `README.md` — Figma tokens, layout grids, UI patterns
-- `MVPMANIFEST.md` — roadmap and AI directives
+- `MVPMANIFEST.md` — index/pointer to sources of truth (roadmap & status live in `docs/`, design in `DESIGN_SYSTEM.md`)
 - `CHANGELOG.md` — historical context
 
 ## 3. TECH STACK
