@@ -4,13 +4,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export function AccountHeader() {
   const profiles = usePlayerStore((s) => s.profiles);
   const activeProfileId = usePlayerStore((s) => s.activeProfileId);
   const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0];
   const ed = EDITIONS[activeProfile?.edition ?? 'Standard'];
-  const isPro = activeProfile?.edition === 'TUE' || activeProfile?.edition === 'EOD';
+  const { tier } = useSubscription();
+  const isPro = tier !== 'free';
 
   return (
     <header className="sticky top-0 z-50 flex h-[60px] w-full shrink-0 items-center justify-between border-b border-lines-hover bg-base px-4 lg:px-8">

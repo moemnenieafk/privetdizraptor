@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-react';
-import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
 import { changeEmail, saveSocials, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
@@ -14,6 +13,7 @@ import type { HideoutNeed, HideoutStationInfo } from '@/db/hideout';
 import { PROGRESS_KEYS } from '@/lib/progress-storage';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 import { TrackingPanel } from './TrackingPanel';
+import { TIERS, type TierId } from '@/data/subscription-tiers';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // зеркалит серверный EMAIL_RE
@@ -765,11 +765,9 @@ function GameResetCard({ game }: { game: (typeof GAMES)[number] }) {
   );
 }
 
-function ProfilePanel({ onNavigate, me, stats }: { onNavigate: (v: ViewId) => void; me: Me; stats: AccountStats }) {
-  const profiles = usePlayerStore((s) => s.profiles);
-  const activeProfileId = usePlayerStore((s) => s.activeProfileId);
-  const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0];
-  const isPro = activeProfile?.edition === 'TUE' || activeProfile?.edition === 'EOD';
+function ProfilePanel({ onNavigate, me, stats, tier }: { onNavigate: (v: ViewId) => void; me: Me; stats: AccountStats; tier: TierId }) {
+  const isPro = tier !== 'free';
+  const tierName = TIERS[tier].name;
 
   return (
     <div className="flex flex-col gap-4">
@@ -816,7 +814,7 @@ function ProfilePanel({ onNavigate, me, stats }: { onNavigate: (v: ViewId) => vo
 
         <FlatRow
           label="Ваш статус"
-          action={<RowBtn />}
+          action={<RowBtn onClick={() => onNavigate('plan')} />}
         >
           {isPro ? (
             <>
@@ -825,11 +823,11 @@ function ProfilePanel({ onNavigate, me, stats }: { onNavigate: (v: ViewId) => vo
                 <span className="font-blender-medium text-type-caption tracking-wider text-tactical-amber">PRO</span>
               </div>
               <span className="font-blender-book text-sm text-tactical-amber">
-                Полный доступ ко всем функциям
+                {tierName} — полный доступ ко всем функциям
               </span>
             </>
           ) : (
-            <span className="font-blender-book text-sm text-text-muted">Стандартный доступ</span>
+            <span className="font-blender-book text-sm text-text-muted">{tierName} — стандартный доступ</span>
           )}
         </FlatRow>
 
@@ -976,7 +974,44 @@ function BillingPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
   );
 }
 
-function ProStatusPanel() {
+function ProStatusPanel({
+  tier,
+  validUntil,
+  onNavigate,
+}: {
+  tier: TierId;
+  validUntil: string | null;
+  onNavigate: (v: ViewId) => void;
+}) {
+  const isPro = tier !== 'free';
+  const tierName = TIERS[tier].name;
+  const until = validUntil ? new Date(validUntil).toLocaleDateString('ru-RU') : null;
+
+  if (!isPro) {
+    return (
+      <div className="rounded border border-lines-hover bg-card-menu p-6">
+        <div className="flex flex-col items-center gap-4 py-10 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded border border-lines-hover bg-(--color-base)">
+            <div className="h-8 w-8 icon-mask icon-account_prostatus_icon bg-text-muted" />
+          </div>
+          <span className="font-blender-medium text-2xl uppercase tracking-widest text-text-secondary">
+            {tierName}
+          </span>
+          <p className="max-w-xs font-blender-book text-sm leading-relaxed text-text-muted">
+            У вас стандартный доступ. PRO-подписка открывает избранное, облачную синхронизацию
+            сборок, сравнение цен барахолки и расширенную аналитику.
+          </p>
+          <button
+            onClick={() => onNavigate('plan')}
+            className="rounded border border-(--primary) bg-(--primary)/10 px-8 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20"
+          >
+            Оформить подписку
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded border border-lines-hover bg-card-menu p-6">
       <div className="flex flex-col items-center gap-4 py-10 text-center">
@@ -985,7 +1020,7 @@ function ProStatusPanel() {
         </div>
         <div className="flex items-center gap-2">
           <span className="font-blender-medium text-2xl uppercase tracking-widest text-tactical-amber">
-            PRO
+            {tierName}
           </span>
           <div className="flex h-5 items-center rounded border border-tactical-amber/40 bg-tactical-amber/10 px-2">
             <span className="font-blender-medium text-type-caption tracking-widest text-tactical-amber">
@@ -993,9 +1028,18 @@ function ProStatusPanel() {
             </span>
           </div>
         </div>
-        <p className="font-blender-book text-sm leading-relaxed text-text-secondary max-w-xs">
-          PRO-статус даёт полный доступ ко всем функциям платформы ЦТА. Осуществляется с помощью подписки.
+        {until && (
+          <span className="font-blender-medium text-xs text-text-muted">Активен до {until}</span>
+        )}
+        <p className="max-w-xs font-blender-book text-sm leading-relaxed text-text-secondary">
+          PRO-статус «{tierName}» даёт полный доступ ко всем функциям платформы ЦТА.
         </p>
+        <button
+          onClick={() => onNavigate('plan')}
+          className="rounded border border-lines-hover bg-(--color-base) px-8 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-secondary transition-all hover:border-(--primary) hover:text-(--primary)"
+        >
+          Управление подпиской
+        </button>
       </div>
     </div>
   );
@@ -1084,8 +1128,12 @@ export function AccountCenter({
   questsDigest,
   hideoutNeeds,
   hideoutStations,
+  tier,
+  validUntil,
 }: {
   me: Me;
+  tier: TierId;
+  validUntil: string | null;
   stats: AccountStats;
   achievements: AchievementView[];
   hints: Record<string, AchievementHint>;
@@ -1121,12 +1169,12 @@ export function AccountCenter({
     if (activeView === 'social')        return <SocialView onBack={goBack} me={me} />;
 
     switch (activeTab) {
-      case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} stats={stats} />;
+      case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} stats={stats} tier={tier} />;
       case 'tracking':  return <TrackingPanel achievements={achievements} hints={hints} questsDigest={questsDigest} hideoutNeeds={hideoutNeeds} hideoutStations={hideoutStations} />;
       case 'security':  return <SecurityPanel onNavigate={navigate} />;
       case 'linking':   return <LinkingPanel onNavigate={navigate} me={me} />;
       case 'billing':   return <BillingPanel onNavigate={navigate} />;
-      case 'prostatus': return <ProStatusPanel />;
+      case 'prostatus': return <ProStatusPanel tier={tier} validUntil={validUntil} onNavigate={navigate} />;
     }
   };
 

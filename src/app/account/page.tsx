@@ -5,6 +5,7 @@ import { getEftAchievements, getEftMaps, getEftTraders } from '@/db/landing';
 import { getHideoutNeeds, getHideoutStations } from '@/db/hideout';
 import { resolveAchievementHint, type AchievementHint } from '@/lib/achievement-hints';
 import { buildQuestsDigest } from '@/lib/tracking-digest';
+import { getSubscription } from '@/lib/subscription.server';
 import { AccountCenter } from './AccountCenter';
 
 export const metadata: Metadata = {
@@ -16,8 +17,9 @@ export default async function AccountPage() {
   // Server-гард: кабинет только для залогиненных.
   const me = await getMe();
   if (!me) redirect('/login?next=/account');
-  const [stats, achievements, maps, traders, hideoutNeeds, hideoutStations] = await Promise.all([
+  const [stats, sub, achievements, maps, traders, hideoutNeeds, hideoutStations] = await Promise.all([
     getAccountStats(me.id),
+    getSubscription(me.id),
     getEftAchievements(),
     getEftMaps(),
     getEftTraders(),
@@ -42,6 +44,8 @@ export default async function AccountPage() {
   return (
     <AccountCenter
       me={me}
+      tier={sub.tier}
+      validUntil={sub.validUntil}
       stats={stats}
       achievements={achievements}
       hints={hints}
