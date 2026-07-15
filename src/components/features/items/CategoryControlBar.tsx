@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState, useRef, useEffect, type ComponentType } from 'react';
-import { Search, X, LayoutGrid, List, ChevronDown, Check, Save, SlidersHorizontal, TrendingDown, ArrowDownAZ, Activity } from 'lucide-react';
+import { Search, X, ChevronDown, Check, Save, SlidersHorizontal, TrendingDown, ArrowDownAZ, Activity } from 'lucide-react';
 import type { SortConfig } from './useCategoryFilters';
 
 type SortOption = {
@@ -88,7 +88,6 @@ interface CategoryControlBarProps {
   barterOnly: boolean;
   availableOnly: boolean;
   favoritesOnly: boolean;
-  viewMode: 'grid' | 'table';
   isSaved: boolean;
   showAdvanced: boolean;
   activeAdvancedCount: number;
@@ -98,7 +97,6 @@ interface CategoryControlBarProps {
   onBarterOnlyChange: (v: boolean) => void;
   onAvailableOnlyChange: (v: boolean) => void;
   onFavoritesOnlyChange: (v: boolean) => void;
-  onViewModeChange: (mode: 'grid' | 'table') => void;
   onSaveFilters: () => void;
   onToggleAdvanced: () => void;
 }
@@ -113,7 +111,6 @@ export function CategoryControlBar({
   barterOnly,
   availableOnly,
   favoritesOnly,
-  viewMode,
   isSaved,
   showAdvanced,
   activeAdvancedCount,
@@ -123,7 +120,6 @@ export function CategoryControlBar({
   onBarterOnlyChange,
   onAvailableOnlyChange,
   onFavoritesOnlyChange,
-  onViewModeChange,
   onSaveFilters,
   onToggleAdvanced,
 }: CategoryControlBarProps) {
@@ -246,32 +242,6 @@ export function CategoryControlBar({
       </button>
 
       <div className="h-6 w-px shrink-0 bg-lines-hover" />
-
-      {/* Переключатель вида */}
-      <div className="flex shrink-0 items-center gap-1">
-        <button
-          onClick={() => onViewModeChange('grid')}
-          className={`flex h-11 w-11 @xl/controlbar:h-8 @xl/controlbar:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
-            viewMode === 'grid'
-              ? 'text-(--primary)'
-              : 'text-zinc-500 hover:text-zinc-300'
-          }`}
-          title="Сетка"
-        >
-          <LayoutGrid className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => onViewModeChange('table')}
-          className={`flex h-11 w-11 @xl/controlbar:h-8 @xl/controlbar:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
-            viewMode === 'table'
-              ? 'text-(--primary)'
-              : 'text-zinc-500 hover:text-zinc-300'
-          }`}
-          title="Список"
-        >
-          <List className="h-4 w-4" />
-        </button>
-      </div>
 
       {/* Сохранить фильтры — дискета */}
       <button

@@ -991,7 +991,6 @@ export function ItemsCategoryClient({
   questRefMap,
 }: ItemsCategoryClientProps) {
   const {
-    viewMode, setViewMode,
     searchQuery, setSearchQuery,
     sortConfig,
     activeArmorClasses,
@@ -1015,6 +1014,8 @@ export function ItemsCategoryClient({
     resetFilters,
     resetAdvancedFilters,
   } = useCategoryFilters();
+  // Табличный вид убран — всегда карточки. Тип расширен, чтобы мёртвые table-ветки компилились.
+  const viewMode: 'grid' | 'table' = 'grid';
 
   const selectedTraders = useItemsStore((state) => state.selectedTraders);
   const setCatalogReturnPath = useItemsStore((s) => s.setCatalogReturnPath);
@@ -1315,7 +1316,6 @@ export function ItemsCategoryClient({
           barterOnly={barterOnly}
           availableOnly={availableOnly}
           favoritesOnly={favoritesOnly}
-          viewMode={viewMode}
           isSaved={isSaved}
           showAdvanced={showAdvanced}
           activeAdvancedCount={activeAdvancedCount}
@@ -1325,7 +1325,6 @@ export function ItemsCategoryClient({
           onBarterOnlyChange={setBarterOnly}
           onAvailableOnlyChange={setAvailableOnly}
           onFavoritesOnlyChange={setFavoritesOnly}
-          onViewModeChange={setViewMode}
           onSaveFilters={handleSaveFilters}
           onToggleAdvanced={() => setShowAdvanced(v => !v)}
         />
