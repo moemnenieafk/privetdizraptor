@@ -64,10 +64,10 @@ export function VideoArchive({ videos, errors = [], showContinue = true }: Video
   const gridClass =
     view === 'table'
       ? 'flex flex-col gap-2'
-      : 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+      : 'grid grid-cols-1 gap-3 @lg/videoarchive:grid-cols-2 @3xl/videoarchive:grid-cols-3 @5xl/videoarchive:grid-cols-4';
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="@container/videoarchive flex w-full flex-col gap-6">
       {errors.length > 0 && (
         <div className="flex items-start gap-3 rounded-sm border border-moderate/40 bg-[color-mix(in_srgb,var(--color-moderate)_10%,transparent)] p-3">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-moderate" />
@@ -94,9 +94,9 @@ export function VideoArchive({ videos, errors = [], showContinue = true }: Video
             <div className="h-px flex-1 bg-lines-hover" />
           </div>
 
-          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] xl:mx-0 xl:px-0">
+          <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] @5xl/videoarchive:mx-0 @5xl/videoarchive:px-0">
             {continueVideos.map((video, i) => (
-              <div key={video.id} className="w-64 shrink-0 snap-start sm:w-72">
+              <div key={video.id} className="w-64 shrink-0 snap-start @lg/videoarchive:w-72">
                 <VideoCard video={video} view="grid" index={i} />
               </div>
             ))}
