@@ -32,24 +32,19 @@
     "db:upload-icons-r2": "tsx scripts/upload-icons-r2.ts"
   },
   "dependencies": {
-    "@apollo/client": "^4.1.9",
-    "@dagrejs/dagre": "^3.0.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
     "@tanstack/react-virtual": "^3.14.2",
     "@types/leaflet": "^1.9.21",
-    "autoprefixer": "^10.5.0",
     "drizzle-orm": "^0.45.2",
     "embla-carousel": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
-    "graphql": "^16.14.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.16.0",
     "next": "^16.2.7",
     "postgres": "^3.4.9",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "reactflow": "^11.11.4",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
