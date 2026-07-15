@@ -248,6 +248,9 @@
 
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
+### 2026-07-16
+- `d2f285b` feat(rookie): подраздел «Я новичок» в Прогрессе + вход из меню ЧВК
+
 ### 2026-07-15
 - `cd07a3b` feat(adaptive): hoursPlayed в профиле ЧВК + движок роли + useRoleStore
 - `aad985d` fix(account): make getMe tolerant of missing notify_* columns + mobile migration
