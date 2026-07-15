@@ -10,4 +10,7 @@ export interface ProfileOcrResult {
   edition: ProfileEdition | null;
   faction: 'USEC' | 'BEAR' | null;
   mode: 'PVP' | 'PVE' | null;
+  hoursPlayed: number | null;
+  raids: number | null;
+  survivalRate: number | null;
 }

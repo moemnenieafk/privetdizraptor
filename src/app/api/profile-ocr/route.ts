@@ -51,8 +51,11 @@ const RESPONSE_SCHEMA = {
     edition: { type: 'STRING', enum: ['Standard', 'LB', 'PFE', 'EOD', 'TUE'], nullable: true },
     faction: { type: 'STRING', enum: ['USEC', 'BEAR'], nullable: true },
     mode: { type: 'STRING', enum: ['PVP', 'PVE'], nullable: true },
+    hoursPlayed: { type: 'INTEGER', nullable: true },
+    raids: { type: 'INTEGER', nullable: true },
+    survivalRate: { type: 'NUMBER', nullable: true },
   },
-  required: ['nickname', 'level', 'prestige', 'edition', 'faction', 'mode'],
+  required: ['nickname', 'level', 'prestige', 'edition', 'faction', 'mode', 'hoursPlayed', 'raids', 'survivalRate'],
 };
 
 const PROMPT = `Распознай профиль игрока Escape from Tarkov со скриншота экрана персонажа и верни JSON по схеме.
@@ -63,6 +66,9 @@ const PROMPT = `Распознай профиль игрока Escape from Tarko
 - edition: издание игры по бейджу/иконке — Standard, LB (Left Behind), PFE (Prepare for Escape), EOD (Edge of Darkness) или TUE (The Unheard) — или null.
 - faction: фракция по логотипу — USEC или BEAR — или null.
 - mode: режим — PVP или PVE — или null.
+- hoursPlayed: суммарные часы в игре (число) или null.
+- raids: суммарное число рейдов (число) или null.
+- survivalRate: процент выживаемости (число 0–100) или null.
 Если поле не видно или ты не уверен — верни null. Ничего не выдумывай.`;
 
 export async function POST(req: Request) {

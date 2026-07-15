@@ -10,6 +10,7 @@ export interface PlayerProfile {
   faction: 'USEC' | 'BEAR';
   edition: EditionType;
   mode: 'PVP' | 'PVE';
+  hoursPlayed: number | null;
   traderLevels: Record<string, number>;
 }
 
@@ -38,6 +39,7 @@ export const usePlayerStore = create<PlayerStore>()(
           faction: 'BEAR',
           edition: 'Standard',
           mode: 'PVP',
+          hoursPlayed: null,
           traderLevels: defaultTraderLevels,
         }
       ],
@@ -56,6 +58,7 @@ export const usePlayerStore = create<PlayerStore>()(
           faction: 'USEC',
           edition: 'Standard',
           mode: 'PVE',
+          hoursPlayed: null,
           traderLevels: { ...defaultTraderLevels },
         };
         return {

@@ -524,6 +524,7 @@ export type PlayerProfilePersist = {
   faction: string;
   edition: string;
   mode: string;
+  hoursPlayed: number | null;
   traderLevels: Record<string, number>;
 };
 

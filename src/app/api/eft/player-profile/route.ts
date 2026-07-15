@@ -30,6 +30,9 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 const str = (v: unknown, fallback = ""): string =>
   typeof v === "string" ? v.slice(0, STR_CAP) : fallback;
 
+const numOrNull = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) ? v : null;
+
 function parseTraderLevels(v: unknown): Record<string, number> {
   if (!isObject(v)) return {};
   const out: Record<string, number> = {};
@@ -51,6 +54,7 @@ function parseProfile(v: unknown): PlayerProfilePersist | null {
     faction: str(v.faction, "BEAR"),
     edition: str(v.edition, "Standard"),
     mode: str(v.mode, "PVP"),
+    hoursPlayed: numOrNull(v.hoursPlayed),
     traderLevels: parseTraderLevels(v.traderLevels),
   };
 }
