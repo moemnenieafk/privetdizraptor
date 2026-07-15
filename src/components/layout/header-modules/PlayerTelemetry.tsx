@@ -211,6 +211,16 @@ export function PlayerTelemetry() {
                     <span className="text-type-label font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Настройки</span>
                   </button>
                   <Link
+                    href="/eft/progress/rookie"
+                    onClick={() => setIsProfileMenuOpen(false)}
+                    className="flex h-7 w-full items-center justify-start gap-2 px-2 transition-colors hover:bg-card-menu group/btn"
+                  >
+                    <div className="flex h-3 w-3 items-center justify-center shrink-0">
+                      <div className="h-full w-full icon-mask icon-eft-lore-tarkov bg-text-secondary transition-colors group-hover/btn:bg-(--primary)" />
+                    </div>
+                    <span className="text-type-label font-blender-medium uppercase leading-none text-text-secondary transition-colors group-hover/btn:text-(--primary) mt-0.5">Я новичок</span>
+                  </Link>
+                  <Link
                     href="/account"
                     onClick={() => setIsProfileMenuOpen(false)}
                     className="flex h-7 w-full items-center justify-start gap-2 px-2 transition-colors hover:bg-card-menu group/btn"

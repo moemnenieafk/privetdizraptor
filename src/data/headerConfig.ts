@@ -85,6 +85,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       'ref-quest': 'Реф',
       'lightkeeper-quest': 'Смотритель Маяка',
       questmap: 'Карта Заданий',
+      rookie: 'Я новичок',
       progress: 'Прогресс',
       seasons: 'Сезоны',
       perks: 'Конструктор перков',
@@ -517,6 +518,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/progress',
         iconUrl: '/icons/eft/progress-icon.svg',
         children: [
+          { id: 'p-rookie', label: 'Я новичок', path: '/eft/progress/rookie', iconUrl: '/icons/eft/soldier-animation-start-frame.svg' },
           {
             id: 'p-hideout',
             label: 'Убежище ЧВК',

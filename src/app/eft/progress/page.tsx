@@ -6,6 +6,14 @@ import { HubCard } from '@/components/ui/HubCard';
 // Достижения и Престиж переехали в «Кодекс» (/eft/gamesetting) — карточки там.
 const PROGRESS_HUB_CARDS = [
   {
+    id: 'rookie',
+    title: 'Я новичок',
+    description: 'Не понимаешь Tarkov? Выбери свою роль и пройди Путь Новобранца — учим мир игры по шагам.',
+    href: '/eft/progress/rookie',
+    iconPath: '/icons/eft/soldier-animation-start-frame.svg',
+    variant: 'rectangle' as const,
+  },
+  {
     id: 'hideout',
     title: 'Убежище ЧВК',
     description: 'Развивайте свою базу, создавайте предметы и получайте пассивные бонусы для вашего персонажа.',

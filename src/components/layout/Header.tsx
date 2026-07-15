@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { getHeaderConfig } from '@/data/headerConfig';
 
 import { PlatformLogo } from './header-modules/PlatformLogo';
@@ -12,18 +11,17 @@ import { PlayerTelemetry } from './header-modules/PlayerTelemetry';
 import StreamStatus from './header-modules/StreamStatus';
 import { TacticalSearch } from './header-modules/TacticalSearch';
 import NewbieButton from './header-modules/NewbieButton';
-import NewbieModal from './header-modules/NewbieModal';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const segments = (pathname || '').split('/').filter(Boolean);
   const gameId = segments.length > 0 ? segments[0] : 'eft';
   const config = getHeaderConfig(pathname || '');
   const menuItems = config?.menuItems || [];
   const isHomePage = pathname === '/';
   const showFeatures = !isHomePage;
-  const [isNewbieModalOpen, setIsNewbieModalOpen] = useState(false);
 
   return (
     <>
@@ -47,7 +45,7 @@ export function Header() {
               <div className="hidden xl:block">
                 <PlayerTelemetry />
               </div>
-              <BurgerMenu menuItems={menuItems} onOpenNewbie={() => setIsNewbieModalOpen(true)} />
+              <BurgerMenu menuItems={menuItems} onOpenNewbie={() => router.push('/eft/progress/rookie')} />
             </div>
           )}
         </div>
@@ -63,7 +61,7 @@ export function Header() {
                 <TacticalSearch />
               </div>
               <div className="hidden xl:flex shrink-0">
-                <NewbieButton onClick={() => setIsNewbieModalOpen(true)} />
+                <NewbieButton onClick={() => router.push('/eft/progress/rookie')} />
               </div>
             </div>
 
@@ -76,8 +74,6 @@ export function Header() {
 
       {/* Плавающий оверлей стрима — вне потока хедер-бара, сам себя позиционирует (fixed, правый-низ) */}
       {showFeatures && <StreamStatus />}
-
-      <NewbieModal isOpen={isNewbieModalOpen} onClose={() => setIsNewbieModalOpen(false)} />
     </>
   );
 }
