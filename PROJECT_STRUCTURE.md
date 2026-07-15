@@ -1,7 +1,7 @@
 # 🗺️ Архитектура Проекта CTA — Карта файлов
 
 > Актуально на: **2026-06-15** · Версия: **4.2.0**  
-> Next.js 14 App Router · FSD-lite · Tailwind CSS v4 · Zustand
+> Next.js 16 App Router · FSD-lite · Tailwind CSS v4 · Zustand
 
 ---
 
