@@ -7,7 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # CTA Project — Agent Context
 
 **Project:** Centre Tactical Adaptation — Hardcore Extraction Shooter Portal (EFT hub + multi-game).  
-**Version:** 4.1.0  
+**Version:** 4.3.0  
 **Stack:** Next.js 16 (App Router, RSC + react-compiler) · Tailwind CSS v4 · Zustand · TypeScript strict.  
 **Data source:** our Supabase mirror. UI reads ONLY our backend (`getEftCatalog`/`getEftPriceMapFromDb`/`cta-api`); tarkov.dev is synced by a server cron, never at request time (see CLAUDE.md rule 11 — BACKEND AUTONOMY).
 
