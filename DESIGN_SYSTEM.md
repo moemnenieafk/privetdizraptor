@@ -186,11 +186,10 @@
 *   Единицы контейнера при нужде: `cqw` / `cqi` (`w-[50cqi]`).
 
 ### 9.3. Виртуализированные сетки — исключение
-Виртуализатору (`@tanstack/react-virtual`) число колонок обязано быть известно в JS (расчёт строк). Здесь `window.innerWidth` + `resize` **запрещены** — они меряют вьюпорт и разъезжаются с реальным контейнером. Меряем сам скролл-контейнер через `ResizeObserver`.
-*   Канонический примитив: `useContainerColumns(ref, steps)` (`src/hooks/useContainerColumns.ts`).
-*   Единый источник правды: одним числом колонок кормится и виртуализатор, и инлайновый `gridTemplateColumns: repeat(n, minmax(0,1fr))` — CSS и JS не могут разъехаться.
-*   Эталон: `src/components/features/items/ItemsViewSwitcher.tsx`.
+Если появится виртуализированная сетка (`@tanstack/react-virtual`), число колонок обязано быть известно в JS. Тогда `window.innerWidth` + `resize` **запрещены** (меряют вьюпорт) — меряй сам скролл-контейнер через `ResizeObserver` и одним числом корми и виртуализатор, и `gridTemplateColumns: repeat(n, minmax(0,1fr))`. *(Прежняя реализация `useContainerColumns` / `ItemsViewSwitcher` удалена вместе с табличным видом предметов — живых виртуализированных сеток сейчас нет.)*
 
 ### 9.4. Что НЕ делать
 *   ⛔ `useMediaQuery` / `window.innerWidth` для рефлоу компонента.
-*   ⛔ Отдельный «мобильный» компонент-двойник ради одной раскладки — свести к одному через контейнер-варианты. **Сделано для таблицы:** `ItemTableRow` + `ItemCard` → `ItemRow` (`@container/items-table`, эталон унификации). `ItemCard` пока жив только в `ItemsCategoryClient` (сортируемая категорийная таблица на `EftItemTile`) — миграция на очереди.
+*   ⛔ Отдельный «мобильный» компонент-двойник ради одной раскладки — свести к одному через контейнер-варианты.
+
+**Применено (эталоны):** `CategoryControlBar`, `HubNav`, `VideoFilterBar` / `VideoArchive`, `QuestStatusBar` (`@container/…`). Табличный вид предметов удалён целиком — каталог только карточки `EftItemTile`.

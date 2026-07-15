@@ -19,11 +19,11 @@
 
 ## 1. Стек технологий
 
-- **Фреймворк:** Next.js 14+ (App Router) — дефолт Server Components, `"use client"` только для интерактивных узлов
+- **Фреймворк:** Next.js 16 (App Router, RSC + react-compiler) — дефолт Server Components, `"use client"` только для интерактивных узлов
 - **Стилизация:** Tailwind CSS v4 — токены через `@theme` в `globals.css`
 - **Глобальный стейт:** Zustand (`src/store/`)
 - **Типизация:** TypeScript strict — `any` запрещён, Discriminated Unions
-- **GraphQL:** tarkov.dev public API (fetch + ISR кэш 1ч). Защищённые контейнеры: `types:[noFlea]` + `__typename` фильтр — НЕ `types:[container]`.
+- **Данные:** зеркало в нашей Supabase; UI читает ТОЛЬКО наш бэкенд (`getEftCatalog`/`getEftPriceMapFromDb`/`cta-api`). tarkov.dev синкается серверным кроном, не в рантайме (CLAUDE.md, правило 11). Защищённые контейнеры: `types:[noFlea]` + `__typename` фильтр — НЕ `types:[container]`.
 - **Шрифты:**
   - `BlenderPro-Book` (Regular, 400) — `font-blender-book`
   - `BlenderPro-Medium` (Medium, 500) — `font-blender-medium`

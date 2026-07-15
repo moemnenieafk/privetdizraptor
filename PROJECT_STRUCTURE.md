@@ -151,18 +151,13 @@ features/
 │   │       ├── CraftTooltip.tsx  # Тултип крафта в убежище
 │   │       └── QuestTooltip.tsx  # Тултип квестового использования
 │   │
-│   ├── ArmorFilterPanel.tsx      # Слайдеры диапазона класса брони (1–6)
 │   ├── Badge.tsx                 # Семантический бейдж предметов (урон, пробитие...)
 │   ├── CategoryControlBar.tsx    # Единая полоска фильтров категорийной страницы
 │   ├── CategoryTabs.tsx          # Табы навигации по подкатегориям
 │   ├── EyewearSubtypeBar.tsx     # Субтип-бар для Eyewear (очки / ПНВ / визоры)
-│   ├── ItemTableRow.tsx          # Строка таблицы (legacy, для Items hub)
-│   ├── ItemTile.tsx              # Тайл предмета (legacy, используется в barter)
-│   ├── ItemsFilterPanel.tsx      # ⚠️ Orphaned — не используется в страницах
-│   ├── ItemsTable.tsx            # Таблица предметов (legacy)
-│   ├── ItemsViewSwitcher.tsx     # Переключатель Grid / Table (legacy)
+│   ├── filter-types.ts           # Типы фильтрации (SortOption, ArmorFilterState)
 │   ├── useCategoryFilters.ts     # Хук всего стейта фильтров категории
-│   └── useItemsFilter.ts         # Хук фильтров (legacy, для Items hub)
+│   └── useItemsFilter.ts         # ⚠️ Orphaned (0 ссылок; типы вынесены в filter-types.ts)
 │
 ├── telemetry/
 │   ├── TacticalTelemetryCard.tsx # Карточка телеметрии (метрики матча)
