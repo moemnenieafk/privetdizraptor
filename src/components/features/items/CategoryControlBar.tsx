@@ -130,7 +130,7 @@ export function CategoryControlBar({
   const showArmorFilter = ARMOR_CATEGORIES.includes(categorySlug as typeof ARMOR_CATEGORIES[number]);
 
   return (
-    <div className="flex w-full flex-wrap items-center gap-2 py-3">
+    <div className="@container/controlbar flex w-full flex-wrap items-center gap-2 py-3">
 
       {/* Поиск — тянется на всё свободное место */}
       <div className="relative flex h-10 min-w-36 flex-1 items-center rounded border border-lines-hover bg-(--color-base) px-3 transition-colors focus-within:border-(--primary)">
@@ -192,7 +192,7 @@ export function CategoryControlBar({
         }`}
       >
         <span className="icon-eft-prog-barter h-4 w-4 shrink-0 mask-contain mask-no-repeat mask-center bg-current" />
-        <span className="hidden sm:block">Бартер</span>
+        <span className="hidden @md/controlbar:block">Бартер</span>
       </button>
 
       {/* Избранное */}
@@ -207,7 +207,7 @@ export function CategoryControlBar({
         }`}
       >
         <span>{favoritesOnly ? '★' : '☆'}</span>
-        <span className="hidden sm:block">Избранное</span>
+        <span className="hidden @md/controlbar:block">Избранное</span>
       </button>
 
       {/* Доступно мне */}
@@ -221,8 +221,8 @@ export function CategoryControlBar({
             : 'text-zinc-500 hover:text-zinc-300'
         }`}
       >
-        <span className="hidden lg:block">Доступно мне</span>
-        <span className="lg:hidden">Уров.</span>
+        <span className="hidden @xl/controlbar:block">Доступно мне</span>
+        <span className="@xl/controlbar:hidden">Уров.</span>
       </button>
 
       {/* Расширенные фильтры */}
@@ -237,7 +237,7 @@ export function CategoryControlBar({
         }`}
       >
         <SlidersHorizontal className="h-4 w-4 shrink-0" />
-        <span className="hidden md:block">Фильтры</span>
+        <span className="hidden @lg/controlbar:block">Фильтры</span>
         {activeAdvancedCount > 0 && (
           <span className="flex h-4 w-4 items-center justify-center rounded-full bg-(--primary) text-type-caption font-blender-medium text-(--color-base)">
             {activeAdvancedCount}
@@ -251,7 +251,7 @@ export function CategoryControlBar({
       <div className="flex shrink-0 items-center gap-1">
         <button
           onClick={() => onViewModeChange('grid')}
-          className={`flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
+          className={`flex h-11 w-11 @xl/controlbar:h-8 @xl/controlbar:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
             viewMode === 'grid'
               ? 'text-(--primary)'
               : 'text-zinc-500 hover:text-zinc-300'
@@ -262,7 +262,7 @@ export function CategoryControlBar({
         </button>
         <button
           onClick={() => onViewModeChange('table')}
-          className={`flex h-11 w-11 lg:h-8 lg:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
+          className={`flex h-11 w-11 @xl/controlbar:h-8 @xl/controlbar:w-8 items-center justify-center bg-transparent transition-colors duration-200 ${
             viewMode === 'table'
               ? 'text-(--primary)'
               : 'text-zinc-500 hover:text-zinc-300'
@@ -276,7 +276,7 @@ export function CategoryControlBar({
       {/* Сохранить фильтры — дискета */}
       <button
         onClick={onSaveFilters}
-        className={`flex h-11 w-11 lg:h-8 lg:w-8 shrink-0 items-center justify-center bg-transparent outline-none transition-colors duration-200 focus-visible:outline-none ${
+        className={`flex h-11 w-11 @xl/controlbar:h-8 @xl/controlbar:w-8 shrink-0 items-center justify-center bg-transparent outline-none transition-colors duration-200 focus-visible:outline-none ${
           isSaved
             ? 'text-nvg-green'
             : 'text-zinc-500 hover:text-zinc-300'
