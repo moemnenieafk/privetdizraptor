@@ -4,7 +4,6 @@ import React, { useMemo, useRef, useState, useEffect, memo, forwardRef } from 'r
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { PackageX, Coins, ChevronUp, ChevronDown, Check, X, Scale } from 'lucide-react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { Badge as SemanticBadge, getArmorClassColor } from '@/components/features/items/Badge';
 import { EftItemTile } from '@/components/features/items/EftItemTile';
 import type { EftItemData, EftBarterData, EftCraftData, EftQuestData } from '@/components/features/items/EftItemTile';
@@ -22,7 +21,6 @@ import { useQuestStore } from '@/store/useQuestStore';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
 import { FavoritesStrip } from '@/components/features/items/FavoritesStrip';
 import { CompareDrawer } from '@/components/features/items/CompareDrawer';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1031,8 +1029,6 @@ export function ItemsCategoryClient({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeEyewearSubtype, setActiveEyewearSubtype] = useState<EyewearSubtype | 'all'>('all');
   const [visibleCount, setVisibleCount] = useState(100);
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const isMobile = useMediaQuery('(max-width: 639px)');
   const slug = categorySlug || '';
 
   const availableCalibers = useMemo(() => {
@@ -1221,56 +1217,12 @@ export function ItemsCategoryClient({
     return () => clearTimeout(t);
   }, [highlightId]);
 
-  const renderSortableHeader = (label: string, sortKey: string, align: 'left' | 'center' | 'right' = 'left', customClass = '') => {
-    const isActive = sortConfig.key === sortKey;
-    return (
-      <th
-        scope="col"
-        className={`px-3 py-2 text-type-caption font-blender-medium uppercase tracking-widest cursor-pointer hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)] transition-colors group select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'} ${isActive ? 'text-(--primary)' : 'text-text-muted'} ${customClass}`}
-        onClick={() => handleColumnSort(sortKey)}
-      >
-        <div className={`flex items-center gap-1.5 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
-          {label}
-          <span className="w-3 h-3 flex items-center justify-center">
-            {isActive
-              ? (sortConfig.direction === 'desc' ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />)
-              : <ChevronDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />}
-          </span>
-        </div>
-      </th>
-    );
-  };
-
-  const tableVirtualizer = useVirtualizer({
-    count: !isLoading && viewMode === 'table' ? processedItems.length : 0,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => (isMobile ? 150 : 57),
-    overscan: 8,
-  });
-  const virtualTableRows = tableVirtualizer.getVirtualItems();
-  const tablePaddingTop = virtualTableRows.length > 0 ? virtualTableRows[0].start : 0;
-  const tablePaddingBottom = virtualTableRows.length > 0
-    ? tableVirtualizer.getTotalSize() - virtualTableRows[virtualTableRows.length - 1].end
-    : 0;
-
-  // Card-reflow на мобилке: смена высоты строка↔карточка — сброс замеров
-  useEffect(() => {
-    tableVirtualizer.measure();
-  }, [isMobile, tableVirtualizer]);
-
   // Возврат со страницы предмета (?focus=<id>): прокрутить к предмету и подсветить.
   useEffect(() => {
     if (!focusId || isLoading) return;
     if (focusedRef.current === focusId) return;
     const index = processedItems.findIndex((i) => i.id === focusId);
     if (index < 0) return;
-
-    if (viewMode === 'table') {
-      focusedRef.current = focusId;
-      setHighlightId(focusId);
-      requestAnimationFrame(() => tableVirtualizer.scrollToIndex(index, { align: 'center' }));
-      return;
-    }
 
     // Сетка: сначала убедиться, что плитка отрендерена (visibleCount), затем скролл.
     if (index >= visibleCount) {
@@ -1282,26 +1234,7 @@ export function ItemsCategoryClient({
     focusedRef.current = focusId;
     setHighlightId(focusId);
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  }, [focusId, isLoading, viewMode, processedItems, visibleCount, tableVirtualizer]);
-
-  // Dynamic colspan for skeleton/padding rows (+1 for GP column)
-  const dynamicColCount =
-    slug === 'headphones' ? 8 :
-    slug === 'helmets' ? 9 :
-    slug === 'armor' ? 10 :
-    slug === 'components' ? 8 :
-    slug === 'eyewear' ? 7 :
-    (slug === 'facecovers' || slug === 'masks') ? 7 :
-    slug === 'rigs' ? 8 :
-    slug === 'backpacks' ? 8 :
-    CONTAINER_SLUGS.has(slug) ? 8 :
-    GUN_SLUGS.has(slug) ? 10 :
-    slug === 'ammo' ? 9 :
-    slug === 'grenades' ? 9 :
-    slug === 'sights' ? 9 :
-    slug === 'pistolgrips' ? 7 :
-    ERGO_RECOIL_MOD_SLUGS.has(slug) ? 8 :
-    8; // default
+  }, [focusId, isLoading, viewMode, processedItems, visibleCount]);
 
   return (
     <div className="w-full flex flex-col gap-6">
