@@ -231,6 +231,8 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-15
+- `9c2704a` chore: align project version to 4.3.0 across docs + package.json
+- `a6f8c93` docs(changelog): backfill commit log since 2026-06-23 + auto-sync workflow [skip changelog]
 - `d763e60` docs: fix stale Next.js 14 in PROJECT_STRUCTURE header
 - `d579015` docs: reconcile root docs with current reality
 - `2249390` docs: replace stale MVPMANIFEST with thin pointer index
@@ -250,8 +252,6 @@
 - `3956c9c` feat(a11y): global prefers-reduced-motion guard
 - `312d184` refactor(items): container-query HubNav
 - `859edfe` refactor(items): container-query CategoryControlBar
-
-### 2026-07-14
 - `c142e58` feat(typography): text-wrap balance/pretty defaults (Baseline 2026)
 - `a2c8b55` refactor(items): unify ItemTableRow+ItemCard into container-query ItemRow
 - `bd954a5` refactor(items): container-aware grid columns via ResizeObserver
@@ -272,6 +272,8 @@
 - `079220a` feat(cms): API медиа — загрузка со сверкой сигнатур
 - `80d655c` feat(cms): каталог медиа — схема, DDL, миграция (E10, фаза 4)
 - `6f70783` docs(cms): фаза 3 закрыта — Кодекс в БД, миграция прогнана
+
+### 2026-07-14
 - `b5bafd1` feat(cms): инлайн-редактор Кодекса на самой статье
 - `d5d14ee` feat(cms): миграция Кодекса + сид 8 статей
 - `73b5d9d` feat(cms): Кодекс в БД — схема, DDL, слой доступа (E10, фаза 3)
@@ -383,8 +385,6 @@
 - `3de5bd5` Update video-catalog.ts
 - `7c19308` Update youtube.ts
 - `95fca05` Update twitch-vods.ts
-
-### 2026-07-12
 - `191bbde` Update twitch-embed.ts
 - `8fe8d1c` Update VideoCard.tsx
 - `c1e3d33` Create src/app/eft/videos/[category]/[id]/page.tsx
@@ -392,6 +392,8 @@
 - `06add8b` Update page.tsx
 - `63fd7de` Create src/components/features/videos/VideoPlayer.tsx
 - `47cee16` Create src/components/features/videos/VideoArchive.tsx
+
+### 2026-07-12
 - `6295067` Create src/components/features/videos/VideoFilterBar.tsx
 - `c2268a1` Create src/components/features/videos/VideoCard.tsx
 - `2464bbf` Create src/store/useVideoStore.ts
@@ -424,14 +426,14 @@
 - `b1c8545` Create src/store/useQuestMapUiStore.ts
 - `6df8fa6` Update QuestMapClient.tsx
 - `ee31b94` Update index.tsx
-
-### 2026-07-11
 - `167e7fc` Update MobileMapBar.tsx
 - `99cc553` Update MapFrame.tsx
 - `5fd460f` Create src/components/features/maps/MapRaidSheet.tsx
 - `e234abe` Update MapBottomBar.tsx
 - `c580381` Update useMapUiStore.ts
 - `6d9b5f0` Update MapFrame.tsx
+
+### 2026-07-11
 - `238f970` Update MapQuestSheet.tsx
 - `d1b8873` Update MobileMapBar.tsx
 - `9a68a10` Update MobileMapBar.tsx
@@ -571,9 +573,9 @@
 - `718c41a` feat(account): вкладка «Трекинг» — вотчлист достижений + обзор по редкости (v1)
 - `2c619b2` docs(decisions): эпик достижений закрыт (Фазы 1-2 одобрены V4DYA) → done/ + заметка player-tracking-tab
 - `039f078` feat(achievements): трекинг игрока (Фаза 2) — выполнено/отслеживаю + облачный синк
+- `b004a58` feat(achievements): редизайн раздела — офиц. редкость/фракция, SMART-детали, фикс иконок (Фаза 1)
 
 ### 2026-07-01
-- `b004a58` feat(achievements): редизайн раздела — офиц. редкость/фракция, SMART-детали, фикс иконок (Фаза 1)
 - `f88edd3` feat(mobile): единый стиль контента — HubCard/каталог/похожие/карты 1-в-ряд на телефоне
 - `7f86117` feat(header): мобильная адаптация хедера 1:1 по макетам + морф-бургер (2 линии↔крест)
 - `c331b11` docs(decisions): fix-quests закрыт → done/ (приёмка V4DYA; код в 469e0b8+682607f)
@@ -583,8 +585,6 @@
 - `2a8e97d` ci(vercel): ignoreCommand смотрит весь диапазон PREV..HEAD (фикс skip-docs ямы)
 - `bb171a0` docs(decisions): fix-quests дорешено (⏳ к исполнению) — вариант B QuestsHubNav, scope только хаб
 - `4cb80ca` docs+layout: исполнено решение stream-status-btn (вынос кнопки стрима из хедера в плавающий стек) через цепь docs→code
-
-### 2026-06-30
 - `84f63c1` docs(process): инженерный цикл ✅ сделано (живой рулбук, остаётся в корне)
 - `60de754` docs(decisions): закрыто глобальное правило агрегации (✅ сделано → done/)
 - `1416f3c` docs+maps: исполнено решение maps-frame-size (эталон 1100×768 + адаптив по высоте) через цепь docs→code
@@ -598,6 +598,8 @@
 - `81a006c` feat(maps): Ледокол — уточнены реальные позиции Замены масла + помечен лут-облако
 - `d56c482` feat(maps): Ледокол — quest-маркеры (Судовая электрика сняты, цепочка привязана)
 - `467def9` feat(maps): Ледокол — 10 quest-маркеров (3 побочных квеста)
+
+### 2026-06-30
 - `62f242f` feat(maps): quest-маркеры на статик-картах (questId/objectiveId)
 - `8e84b7c` data(quests): рефреш каталога с tarkov.dev (510 + 10 сюжетных = 520)
 - `a4d9a08` feat(maps): Ледокол — 53 маркера на 12 этажах (перенос с tarkov-market)
@@ -618,14 +620,14 @@
 - `44694fc` feat(maps): карта Ледокол (icebreaker) — статик v1, 14 палуб
 - `9c968e2` feat(maps): хоткеи переключения этажей (↑↓ / +− / Alt+колесо) + тултип
 - `5edfae9` docs: консолидация CSS-решения + архив done/ в журнале решений
-
-### 2026-06-28
 - `8cc5a48` docs: account-real-data ✅ — живой сброс прогресса (слайс 3); роадмап
 - `e364692` feat(account): живой «Сброс прогресса ЧВК» (была мёртвая кнопка)
 - `9ff12c4` docs: account-real-data slice 2 (реальные данные/стата) ✅; роадмап
 - `b0582d5` feat(account): реальные данные — «участник с» + стата, честные плейсхолдеры (slice 2)
 - `b07142b` docs: account-real-data slice 1 (соцсети) ✅; роадмап обновлён
 - `61c51db` feat(account): соц-привязки — ручные хендлы (account-real-data slice 1)
+
+### 2026-06-28
 - `b4bd524` docs: style-debt → ✅ (механика + типы); роадмап обновлён
 - `c365f63` style(debt): убрать any — типизация фильтра/youtube/achievements/itemtile
 - `b6c90a8` style(debt): механика — font-mono→font-blender-medium, rounded-[1px]→rounded-xs, бренд-HEX inline
@@ -666,8 +668,6 @@
 - `ded109b` feat(icon-render): +3 icebreaker-кейкарты (чтение подписей с рендера) = 113
 - `e2b234e` feat(icon-render): +IBX Gigachad (cryptocopro1) и DesmondPilak CD (cdcase) = 110
 - `e7a7470` fix(icon-render): isGlass по имени шейдера, не по _HeatColor (ложные срабатывания)
-
-### 2026-06-24
 - `4d02cad` fix(icon-render): камера-автофит (FOV-зум + центрирование) — резко и крупно
 - `f5dadc2` fix(icon-render): авто-кроп вместо bounds-фитинга — носимые красиво заполняют кадр
 - `c60dfd4` feat(maps): интерактивный фрейм локаций EFT (этажи, поиск, связь с квестами) (#1)
@@ -676,6 +676,8 @@
 - `5510e8c` feat(icon-render): авто-детект стекла + авто-тинт из иконки tarkov.dev
 - `dfb2fa0` feat(icon-render): glass-оверрайд (стекло) + bgColor
 - `16452bc` feat(icon-render): studio reflection-environment fallback + диагностика стекла
+
+### 2026-06-24
 - `18ec5e9` feat(icon-render): мастер-рендер 2048 -> webp 512 + 1024
 - `7cfb77d` feat(icon-render): параметризуемый свет (keyEuler/intensity/ambient) per-job
 - `c27ba61` feat(icon-render): свет Unity-рендера ярче + fill — ближе к tarkov.dev
@@ -696,13 +698,13 @@
 - `bfe3aeb` chore(scripts): db:login-link — генерация ссылки входа/сброса без письма
 - `d034fad` fix(auth): /auth/confirm обрабатывает и token_hash, и code (дефолтный PKCE-шаблон)
 - `c36c1d4` feat(account): Фаза 2-идентичность — логин/email/пароль/аватар на реальном auth
-
-### 2026-06-23
 - `87ea6c9` feat(account): реальная личность в UI — Фаза 1
 - `b2dddfc` feat(account): облачные игровые профили player_profiles (Фаза 2)
 - `40fda2c` docs: апгрейд Agent Architecture в живой CTA-плейбук (v2.0)
 - `5afae97` fix(security): Фаза 0 — open-redirect, крон fail-closed, авторизация profile-ocr
 - `c339b72` fix(home): починка двойной кодировки ActiveContextBar (аудит мохибейка)
+
+### 2026-06-23
 - `d20cace` feat(eft/quests): бартеры в квестах + краф↔бартер (Этап 3)
 - `10b726d` feat(eft/barters): кросс-линки + починка кодировки (Этап 2)
 - `e1a6cbc` fix(eft/item): двунаправленные бартеры/крафты на карточке + кросс-линки (Этап 1)
