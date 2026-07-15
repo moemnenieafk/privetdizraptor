@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { changeEmail, saveSocials, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
+import { changeEmail, saveSocials, saveNotifications, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
 import type { AchievementView } from '@/lib/achievement-visuals';
 import type { AchievementHint } from '@/lib/achievement-hints';
@@ -512,53 +512,94 @@ function EmailView({ onBack, me }: { onBack: () => void; me: Me }) {
   );
 }
 
-function SubscriptionView({ onBack }: { onBack: () => void }) {
-  const [checks, setChecks] = useState([true, true, true]);
-  const toggle = (i: number) =>
-    setChecks((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
+function SubscriptionView({ onBack, me }: { onBack: () => void; me: Me }) {
+  const router = useRouter();
+  const KEYS = ['account', 'offers', 'news'] as const;
+  type NotifyKey = (typeof KEYS)[number];
+  const [checks, setChecks] = useState<Record<NotifyKey, boolean>>({
+    account: me.notifications.account,
+    offers: me.notifications.offers,
+    news: me.notifications.news,
+  });
+  const [status, setStatus] = useState<'idle' | 'saving' | 'done'>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const toggle = (k: NotifyKey) => setChecks((prev) => ({ ...prev, [k]: !prev[k] }));
 
-  const labels = [
-    'Отправлять сообщения об изменениях в моей учётной записи. Получать уведомления в случае несанкционированного входа в вашу учётную запись, изменения пароля или настроек безопасности.',
-    'Получать по электронной почте новостные дайджесты и специальные предложения, касающиеся продуктов и услуг ЦТА Limited.',
-    'Получать новости и специальные предложения, связанные с платформой ЦТА.',
-  ];
+  const labels: Record<NotifyKey, string> = {
+    account:
+      'Отправлять сообщения об изменениях в моей учётной записи. Получать уведомления в случае несанкционированного входа в вашу учётную запись, изменения пароля или настроек безопасности.',
+    offers:
+      'Получать по электронной почте новостные дайджесты и специальные предложения, касающиеся продуктов и услуг ЦТА Limited.',
+    news: 'Получать новости и специальные предложения, связанные с платформой ЦТА.',
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setStatus('saving');
+    // Шлём только изменённые флаги — без частичного сохранения на бэке.
+    const changed: Partial<Record<NotifyKey, boolean>> = {};
+    for (const k of KEYS) {
+      if (checks[k] !== me.notifications[k]) changed[k] = checks[k];
+    }
+    if (Object.keys(changed).length === 0) {
+      setStatus('done');
+      setTimeout(onBack, 800);
+      return;
+    }
+    const r = await saveNotifications(changed);
+    if (!r.ok) {
+      setError(r.error ?? 'Не удалось сохранить');
+      setStatus('idle');
+      return;
+    }
+    setStatus('done');
+    router.refresh();
+    setTimeout(onBack, 1000);
+  };
 
   return (
-    <div className="flex flex-col">
+    <form onSubmit={submit} className="flex flex-col">
       <BackBtn onClick={onBack} />
       <div className="flex flex-col items-center gap-5">
         <SubTitle>Параметры подписки</SubTitle>
         <div className="flex w-full max-w-md flex-col gap-4">
-          <button className="flex items-center justify-between rounded border border-lines-hover bg-card-menu px-4 py-3 transition-colors hover:border-(--primary)">
+          <div className="flex items-center justify-between rounded border border-lines-hover bg-card-menu px-4 py-3">
             <span className="font-blender-book text-sm text-text-secondary">Русский / Russian</span>
             <ChevronDown className="h-4 w-4 text-text-muted" />
-          </button>
-          {labels.map((label, i) => (
+          </div>
+          {KEYS.map((k) => (
             <button
-              key={i}
-              onClick={() => toggle(i)}
-              className="flex items-start gap-3 text-left"
+              key={k}
+              type="button"
+              onClick={() => toggle(k)}
+              disabled={status === 'done'}
+              className="flex items-start gap-3 text-left disabled:opacity-60"
             >
               <div
                 className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border transition-colors ${
-                  checks[i]
+                  checks[k]
                     ? 'border-(--primary) bg-(--primary)/20'
                     : 'border-lines-hover bg-(--color-base)'
                 }`}
               >
-                {checks[i] && <Check className="h-2.5 w-2.5 text-(--primary)" />}
+                {checks[k] && <Check className="h-2.5 w-2.5 text-(--primary)" />}
               </div>
               <span className="font-blender-book text-xs leading-relaxed text-text-secondary">
-                {label}
+                {labels[k]}
               </span>
             </button>
           ))}
+          <Feedback error={error} success={status === 'done' ? 'Сохранено' : null} />
         </div>
-        <button className="rounded border border-(--primary) bg-(--primary)/10 px-8 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20">
-          Сохранить
-        </button>
+        <FormActions
+          onCancel={onBack}
+          submitting={status === 'saving'}
+          disabled={status === 'done'}
+          label="Сохранить"
+        />
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -1162,7 +1203,7 @@ export function AccountCenter({
     if (activeView === 'avatar')        return <AvatarView onBack={goBack} me={me} />;
     if (activeView === 'username')      return <UsernameView onBack={goBack} me={me} />;
     if (activeView === 'email')         return <EmailView onBack={goBack} me={me} />;
-    if (activeView === 'subscription')  return <SubscriptionView onBack={goBack} />;
+    if (activeView === 'subscription')  return <SubscriptionView onBack={goBack} me={me} />;
     if (activeView === 'password')      return <PasswordView onBack={goBack} />;
     if (activeView === '2fa')           return <TwoFAView onBack={goBack} />;
     if (activeView === 'plan')          return <PlanView onBack={goBack} />;

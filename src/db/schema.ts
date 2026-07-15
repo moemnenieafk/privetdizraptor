@@ -405,6 +405,11 @@ export const profiles = pgTable("profiles", {
   youtube: text("youtube"),
   discord: text("discord"),
   steam: text("steam"),
+  // Настройки рассылок (account-real-data): opt-out, по умолчанию всё включено.
+  // Колонки additive — заводятся через supabase/account-notifications.sql (db:sql, без db:push).
+  notifyAccount: boolean("notify_account").notNull().default(true),
+  notifyOffers: boolean("notify_offers").notNull().default(true),
+  notifyNews: boolean("notify_news").notNull().default(true),
   role: text("role").notNull().default("user"), // см. Role в @/lib/auth/roles
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

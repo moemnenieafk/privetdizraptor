@@ -14,6 +14,7 @@ export interface Me {
   usernameChangedAt: string | null; // ISO; для кулдауна смены логина в UI
   createdAt: string | null; // ISO; «участник с»
   socials: { twitch: string | null; youtube: string | null; discord: string | null; steam: string | null };
+  notifications: { account: boolean; offers: boolean; news: boolean };
 }
 
 export type SocialPlatform = "twitch" | "youtube" | "discord" | "steam";
@@ -37,6 +38,9 @@ export async function getMe(): Promise<Me | null> {
       youtube: profiles.youtube,
       discord: profiles.discord,
       steam: profiles.steam,
+      notifyAccount: profiles.notifyAccount,
+      notifyOffers: profiles.notifyOffers,
+      notifyNews: profiles.notifyNews,
     })
     .from(profiles)
     .where(eq(profiles.id, user.id))
@@ -55,6 +59,11 @@ export async function getMe(): Promise<Me | null> {
       youtube: p?.youtube ?? null,
       discord: p?.discord ?? null,
       steam: p?.steam ?? null,
+    },
+    notifications: {
+      account: p?.notifyAccount ?? true,
+      offers: p?.notifyOffers ?? true,
+      news: p?.notifyNews ?? true,
     },
   };
 }

@@ -222,6 +222,18 @@ export async function saveSocials(
   return res.ok ? { ok: true } : { ok: false, error: await readError(res) };
 }
 
+// Сохранить настройки рассылок (3 булевых флага). Шлём только изменённые.
+export async function saveNotifications(
+  notifications: Partial<Record<"account" | "offers" | "news", boolean>>,
+): Promise<AccountResult> {
+  const res = await fetch(`${baseUrl()}/api/account/notifications`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notifications }),
+  });
+  return res.ok ? { ok: true } : { ok: false, error: await readError(res) };
+}
+
 // Сменить e-mail (Supabase шлёт подтверждение на новый адрес).
 export async function changeEmail(email: string): Promise<AccountResult> {
   const res = await fetch(`${baseUrl()}/api/account/email`, {
