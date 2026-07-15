@@ -21,11 +21,11 @@ const ROOKIE_PATH: RookieStage[] = [
   { id: 'secure', title: 'Не потеряй всё', blurb: 'Секур-контейнер и страховка.', ready: true },
   { id: 'fir', title: 'Найдено в рейде', blurb: 'Механика FiR — ловушка новичка.', ready: true },
   { id: 'traders', title: 'Торговцы и репутация', blurb: 'Где брать шмот и зачем квесты.', ready: true },
-  { id: 'flea', title: 'Флиа-маркет', blurb: 'Экономика и как не переплатить.', ready: false },
-  { id: 'quests', title: 'Квесты', blurb: 'Двигатель прогресса.', ready: false },
-  { id: 'hideout', title: 'Убежище', blurb: 'Твоя база и крафт.', ready: false },
-  { id: 'ammo', title: 'Патрон решает', blurb: 'Почему дешёвый ствол убивает дорогого.', ready: false },
-  { id: 'first-build', title: 'Твой первый билд', blurb: 'Собери оружие руками.', ready: false },
+  { id: 'flea', title: 'Флиа-маркет', blurb: 'Экономика и как не переплатить.', ready: true },
+  { id: 'quests', title: 'Квесты', blurb: 'Двигатель прогресса.', ready: true },
+  { id: 'hideout', title: 'Убежище', blurb: 'Твоя база и крафт.', ready: true },
+  { id: 'ammo', title: 'Патрон решает', blurb: 'Почему дешёвый ствол убивает дорогого.', ready: true },
+  { id: 'first-build', title: 'Твой первый билд', blurb: 'Собери оружие руками.', ready: true },
 ];
 
 function StageRow({ stage, index, done }: { stage: RookieStage; index: number; done: boolean }) {
@@ -91,6 +91,14 @@ export function RookieHubClient() {
 
   return (
     <div className="flex flex-col gap-8">
+      {doneCount === ROOKIE_PATH.length && (
+        <div className="flex flex-col gap-1 rounded-xs border border-(--primary) bg-(--color-base) p-4">
+          <span className="text-sm font-blender-medium uppercase tracking-widest text-(--primary)">Ты адаптирован</span>
+          <span className="text-type-label font-blender-book text-text-secondary">
+            Путь Новобранца пройден. Добро пожаловать в Тарков — теперь ты знаешь, как он устроен.
+          </span>
+        </div>
+      )}
       {/* Ролевой переключатель — ручной оверрайд «Ульты». */}
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
