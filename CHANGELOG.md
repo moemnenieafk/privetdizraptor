@@ -249,6 +249,8 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-15
+- `f37053c` chore: снос мёртвого острова items-фильтра
+- `39d4d73` chore(changelog): sync commit log [skip changelog]
 - `3eabd71` docs: свод корневых доков + выравнивание версий на 4.4.0
 - `0f1f233` chore(changelog): sync commit log [skip changelog]
 - `9c2704a` chore: align project version to 4.3.0 across docs + package.json
