@@ -80,7 +80,7 @@ export function SecureClient() {
             return (
               <div
                 key={i}
-                className={`h-7 w-7 rounded-xs border ${filled ? 'border-(--primary) bg-(--primary)/20' : 'border-lines-hover'}`}
+                className={`h-7 w-7 rounded-xs border ${filled ? 'border-(--primary) bg-(--primary)' : 'border-lines-hover'}`}
               />
             );
           })}

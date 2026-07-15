@@ -80,7 +80,7 @@ export function HideoutClient() {
       {/* Прогресс станций */}
       <div className="flex items-center gap-1.5">
         {STATIONS.map((s, i) => (
-          <div key={s.id} className={`h-1 flex-1 rounded-xs ${i < stationIdx || (i === 0 && upgradedFirst) ? 'bg-(--primary)' : i === stationIdx ? 'bg-(--primary)/50' : 'bg-lines-hover'}`} />
+          <div key={s.id} className={`h-1 flex-1 rounded-xs ${i < stationIdx || (i === 0 && upgradedFirst) ? 'bg-(--primary)' : i === stationIdx ? 'bg-text-secondary' : 'bg-lines-hover'}`} />
         ))}
       </div>
 
