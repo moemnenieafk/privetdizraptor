@@ -7,7 +7,6 @@ import { getHeaderConfig, type MenuItem } from '@/data/headerConfig';
 import Link from 'next/link';
 import { searchEftItemsAction, searchQuestsAction } from '@/actions/search-actions';
 import { SearchItemCard } from './SearchItemCard';
-import { SearchItemRow } from './SearchItemRow';
 import { SearchQuestCard, questResultHref } from './SearchQuestCard';
 import type { SearchItemResult, QuestSearchResult } from '@/types/search';
 import { SearchEmptyState } from './SearchEmptyState';
@@ -426,11 +425,7 @@ export function TacticalSearch() {
                       id={`search-result-${globalIndex}`}
                       className={`transition-all duration-200 ${itemView === 'grid' ? 'rounded-lg' : 'rounded-md'} ${isSelected ? `ring-2 ring-(--primary) shadow-[0_0_20px_color-mix(in_srgb,var(--primary)_40%,transparent)] ${itemView === 'grid' ? 'scale-[1.03]' : ''}` : ''}`}
                     >
-                      {itemView === 'grid' ? (
-                        <SearchItemCard item={item} onSelect={() => { saveSearch(query); setIsOpen(false); }} />
-                      ) : (
-                        <SearchItemRow item={item} onSelect={() => { saveSearch(query); setIsOpen(false); }} />
-                      )}
+                      <SearchItemCard item={item} onSelect={() => { saveSearch(query); setIsOpen(false); }} />
                     </div>
                   );
                 })}
