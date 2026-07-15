@@ -17,8 +17,8 @@ interface RookieStage {
 
 const ROOKIE_PATH: RookieStage[] = [
   { id: 'raid', title: 'Что такое рейд', blurb: 'Заход, лут, бой и главное — эвакуация.', ready: true },
-  { id: 'pmc-scav', title: 'ЧВК и Дикий', blurb: 'Два персонажа: кем и когда играть.', ready: false },
-  { id: 'secure', title: 'Не потеряй всё', blurb: 'Секур-контейнер и страховка.', ready: false },
+  { id: 'pmc-scav', title: 'ЧВК и Дикий', blurb: 'Два персонажа: кем и когда играть.', ready: true },
+  { id: 'secure', title: 'Не потеряй всё', blurb: 'Секур-контейнер и страховка.', ready: true },
   { id: 'fir', title: 'Найдено в рейде', blurb: 'Механика FiR — ловушка новичка.', ready: false },
   { id: 'traders', title: 'Торговцы и репутация', blurb: 'Где брать шмот и зачем квесты.', ready: false },
   { id: 'flea', title: 'Флиа-маркет', blurb: 'Экономика и как не переплатить.', ready: false },
