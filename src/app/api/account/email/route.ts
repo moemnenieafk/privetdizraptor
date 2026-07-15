@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return err(401, "Не авторизован");
+
+  // Смена e-mail шлёт письмо → анти-абьюз лимит по пользователю.
+  if (!(await rateLimit(`account-email:u:${user.id}`, 5, 900))) {
+    return err(429, "Слишком много запросов, попробуйте позже");
+  }
 
   if (bodyTooLarge(req, JSON_BODY_CAP)) return err(413, "Слишком большой запрос");
   let body: unknown;

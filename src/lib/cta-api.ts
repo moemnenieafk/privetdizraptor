@@ -211,11 +211,13 @@ export async function changeUsername(username: string): Promise<AccountResult> {
 }
 
 // Привязать/отвязать соц-аккаунт (ручной хендл; пустой = отвязать).
-export async function changeSocial(platform: SocialPlatform, handle: string): Promise<AccountResult> {
+export async function saveSocials(
+  socials: Partial<Record<SocialPlatform, string>>,
+): Promise<AccountResult> {
   const res = await fetch(`${baseUrl()}/api/account/social`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ platform, handle }),
+    body: JSON.stringify({ socials }),
   });
   return res.ok ? { ok: true } : { ok: false, error: await readError(res) };
 }

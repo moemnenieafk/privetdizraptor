@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { createClient } from '@/lib/supabase/client';
-import { changeEmail, changeSocial, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
+import { changeEmail, saveSocials, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
 import type { AchievementView } from '@/lib/achievement-visuals';
 import type { AchievementHint } from '@/lib/achievement-hints';
@@ -1018,15 +1018,22 @@ function SocialView({ onBack, me }: { onBack: () => void; me: Me }) {
     e.preventDefault();
     setError(null);
     setStatus('saving');
+    // Собираем только изменённые площадки и шлём одним атомарным запросом — без частичного сохранения.
+    const changed: Partial<Record<SocialPlatform, string>> = {};
     for (const p of PLATS) {
       const next = handles[p].trim();
-      if (next === (me.socials[p] ?? '')) continue; // шлём только изменённые
-      const r = await changeSocial(p, next);
-      if (!r.ok) {
-        setError(r.error ?? 'Не удалось сохранить');
-        setStatus('idle');
-        return;
-      }
+      if (next !== (me.socials[p] ?? '')) changed[p] = next;
+    }
+    if (Object.keys(changed).length === 0) {
+      setStatus('done');
+      setTimeout(onBack, 800);
+      return;
+    }
+    const r = await saveSocials(changed);
+    if (!r.ok) {
+      setError(r.error ?? 'Не удалось сохранить');
+      setStatus('idle');
+      return;
     }
     setStatus('done');
     router.refresh();
