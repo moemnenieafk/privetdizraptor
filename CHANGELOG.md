@@ -249,6 +249,8 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-15
+- `3eabd71` docs: свод корневых доков + выравнивание версий на 4.4.0
+- `0f1f233` chore(changelog): sync commit log [skip changelog]
 - `9c2704a` chore: align project version to 4.3.0 across docs + package.json
 - `a6f8c93` docs(changelog): backfill commit log since 2026-06-23 + auto-sync workflow [skip changelog]
 - `d763e60` docs: fix stale Next.js 14 in PROJECT_STRUCTURE header
