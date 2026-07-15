@@ -65,10 +65,11 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
   const categories = tabs ?? DEFAULT_CATEGORIES;
 
   return (
-    <div className="w-full max-w-275 mx-auto flex flex-col lg:flex-row justify-between lg:items-end gap-6 lg:gap-12 mb-8 lg:mb-12">
+    <div className="@container/hubnav w-full max-w-275 mx-auto mb-8 lg:mb-12">
+      <div className="flex flex-col @4xl/hubnav:flex-row justify-between @4xl/hubnav:items-end gap-6 @4xl/hubnav:gap-12">
 
       {/* Left Block: Icon + Title + Description */}
-      <div className="flex items-end gap-4 lg:gap-7">
+      <div className="flex items-end gap-4 @4xl/hubnav:gap-7">
         <div className="w-21 h-21 shrink-0 bg-(--color-darkbase) rounded-md flex items-center justify-center">
           <div className="text-(--primary) [&>svg]:fill-current [&>path]:fill-current">
             {iconUrl ? (
@@ -106,7 +107,7 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
       </div>
 
       {/* Right Block: Label + Categories + Traders */}
-      <div className="flex flex-col w-full lg:max-w-125 gap-4">
+      <div className="flex flex-col w-full @4xl/hubnav:max-w-125 gap-4">
 
         {/* Section Label + Divider */}
         <div className="flex items-center gap-3">
@@ -117,10 +118,10 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
         </div>
 
         {/* Categories + Traders: на мобиле стекируются, на lg — side by side */}
-        <div className="flex flex-col gap-3.5 lg:flex-row lg:gap-6">
+        <div className="flex flex-col gap-3.5 @4xl/hubnav:flex-row @4xl/hubnav:gap-6">
 
           {/* Category Buttons */}
-          <div className="flex flex-wrap gap-3.5 lg:gap-2 w-full lg:w-64">
+          <div className="flex flex-wrap gap-3.5 @4xl/hubnav:gap-2 w-full @4xl/hubnav:w-64">
             {categories.map((cat) => {
               const isActive =
                 pathname === cat.href ||
@@ -157,7 +158,7 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
           </div>
 
           {/* Trader Toggle Buttons */}
-          <div className="flex flex-wrap gap-3.5 lg:gap-2 w-full lg:flex-1">
+          <div className="flex flex-wrap gap-3.5 @4xl/hubnav:gap-2 w-full @4xl/hubnav:flex-1">
             {TRADERS.map((trader) => {
               const isActive = selectedTraders.length === 0 || selectedTraders.includes(trader.id);
               return (
@@ -183,6 +184,7 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
           </div>
 
         </div>
+      </div>
       </div>
     </div>
   );
