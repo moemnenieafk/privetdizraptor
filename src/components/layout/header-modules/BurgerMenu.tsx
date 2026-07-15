@@ -14,6 +14,7 @@ import { useUser } from "@/hooks/useUser";
 interface BurgerMenuProps {
   menuItems?: MenuItem[];
   onOpenNewbie?: () => void;
+  newbieLabel?: string;
 }
 
 // Достаём src+габариты логотипа из union-конфига игры (mask / multi-state / строка).
@@ -37,7 +38,7 @@ function BurgerIcon({ open }: { open: boolean }) {
   );
 }
 
-export function BurgerMenu({ menuItems = [], onOpenNewbie }: BurgerMenuProps) {
+export function BurgerMenu({ menuItems = [], onOpenNewbie, newbieLabel }: BurgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const { user } = useUser();
@@ -130,7 +131,7 @@ export function BurgerMenu({ menuItems = [], onOpenNewbie }: BurgerMenuProps) {
           </nav>
 
           <div className="flex justify-center pt-1">
-            <NewbieButton onClick={() => { setIsOpen(false); onOpenNewbie?.(); }} />
+            <NewbieButton label={newbieLabel} onClick={() => { setIsOpen(false); onOpenNewbie?.(); }} />
           </div>
         </div>
 

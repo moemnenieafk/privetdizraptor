@@ -2,6 +2,8 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { getHeaderConfig } from '@/data/headerConfig';
+import { useRoleStore, selectEffectiveRole } from '@/store/useRoleStore';
+import { ROLE_LABELS } from '@/lib/role-inference';
 
 import { PlatformLogo } from './header-modules/PlatformLogo';
 import { HeaderNavigation } from './header-modules/HeaderNavigation';
@@ -16,6 +18,8 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const effectiveRole = useRoleStore(selectEffectiveRole);
+  const newbieLabel = ROLE_LABELS[effectiveRole].button;
   const segments = (pathname || '').split('/').filter(Boolean);
   const gameId = segments.length > 0 ? segments[0] : 'eft';
   const config = getHeaderConfig(pathname || '');
@@ -45,7 +49,7 @@ export function Header() {
               <div className="hidden xl:block">
                 <PlayerTelemetry />
               </div>
-              <BurgerMenu menuItems={menuItems} onOpenNewbie={() => router.push('/eft/progress/rookie')} />
+              <BurgerMenu menuItems={menuItems} newbieLabel={newbieLabel} onOpenNewbie={() => router.push('/eft/progress/rookie')} />
             </div>
           )}
         </div>
@@ -61,7 +65,7 @@ export function Header() {
                 <TacticalSearch />
               </div>
               <div className="hidden xl:flex shrink-0">
-                <NewbieButton onClick={() => router.push('/eft/progress/rookie')} />
+                <NewbieButton label={newbieLabel} onClick={() => router.push('/eft/progress/rookie')} />
               </div>
             </div>
 

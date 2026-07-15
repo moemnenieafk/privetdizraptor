@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ProgressSync } from "@/components/providers/ProgressSync";
 import { AchievementSync } from "@/components/providers/AchievementSync";
 import { PlayerProfileSync } from "@/components/providers/PlayerProfileSync";
+import { RoleAutoWire } from "@/components/providers/RoleAutoWire";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { StreamDockLayer } from "@/components/features/streams/StreamDock";
@@ -84,6 +85,7 @@ export default function RootLayout({
             <ProgressSync />
             <AchievementSync />
             <PlayerProfileSync />
+            <RoleAutoWire />
             <FeedbackProvider>
               <ConditionalLayout>
                 <ViewTransition>{children}</ViewTransition>

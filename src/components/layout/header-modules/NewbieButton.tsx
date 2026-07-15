@@ -2,9 +2,10 @@
 
 interface NewbieButtonProps {
   onClick?: () => void;
+  label?: string;
 }
 
-export default function NewbieButton({ onClick }: NewbieButtonProps) {
+export default function NewbieButton({ onClick, label }: NewbieButtonProps) {
   return (
     <button 
       onClick={onClick}
@@ -53,7 +54,7 @@ export default function NewbieButton({ onClick }: NewbieButtonProps) {
 
           {/* 6. Центр: Текст строго по центру (поверх всех абсолютных слоев) */}
           <span className="relative z-10 font-blender-medium text-xs uppercase tracking-wide text-text-secondary transition-colors duration-300 group-hover:text-(--primary)">
-            Я НОВИЧОК
+            {label ?? 'Я НОВИЧОК'}
           </span>
 
         </div>
