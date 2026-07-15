@@ -58,13 +58,13 @@ export function QuestStatusBar({
   const pickFile = () => fileInputRef.current?.click();
 
   return (
-    <div className="flex items-center gap-3 px-3 h-14 bg-card-menu shrink-0">
+    <div className="@container/questbar flex items-center gap-3 px-3 h-14 bg-card-menu shrink-0">
 
       <div className="flex shrink-0 items-center gap-1.5 font-blender-medium text-sm uppercase tracking-widest">
-        <span className="hidden text-success/25 lg:inline">Выполнено:</span>
+        <span className="hidden text-success/25 @4xl/questbar:inline">Выполнено:</span>
         <span className="text-success">{completedCount}</span>
         <span className="text-text-secondary">
-          / {totalQuests}<span className="hidden lg:inline"> - {pct}%</span>
+          / {totalQuests}<span className="hidden @4xl/questbar:inline"> - {pct}%</span>
         </span>
       </div>
 
@@ -81,8 +81,8 @@ export function QuestStatusBar({
         >
           <span className="icon-mask icon-eft-profile-lightkeeper w-5.5 h-5.5" style={filterLK ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
           <span className="font-blender-medium text-type-caption">
-            <span className="lg:hidden">{lkCompleted}/{lkTotal}</span>
-            <span className="hidden lg:inline">{lkCompleted} / {lkTotal} - {lkPct}%</span>
+            <span className="@4xl/questbar:hidden">{lkCompleted}/{lkTotal}</span>
+            <span className="hidden @4xl/questbar:inline">{lkCompleted} / {lkTotal} - {lkPct}%</span>
           </span>
         </button>
 
@@ -97,12 +97,12 @@ export function QuestStatusBar({
         >
           <span className="icon-mask icon-eft-profile-kappa w-5.5 h-5.5" style={filterKappa ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
           <span className="font-blender-medium text-type-caption">
-            <span className="lg:hidden">{kappaCompleted}/{kappaTotal}</span>
-            <span className="hidden lg:inline">{kappaCompleted} / {kappaTotal} - {kappaPct}%</span>
+            <span className="@4xl/questbar:hidden">{kappaCompleted}/{kappaTotal}</span>
+            <span className="hidden @4xl/questbar:inline">{kappaCompleted} / {kappaTotal} - {kappaPct}%</span>
           </span>
         </button>
 
-        <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
+        <div className="hidden shrink-0 items-center gap-1.5 @4xl/questbar:flex">
           <div className="relative w-7 h-7 shrink-0">
             {!activeProfile?.prestige || activeProfile.prestige === '0' ? (
               <img src={`/icons/eft/lvl-icons/player-level-group-${levelGroup}.webp`} alt="Level" className="w-full h-full object-contain" />
@@ -125,15 +125,15 @@ export function QuestStatusBar({
       <div className="flex shrink-0 items-center">
 
         {/* Мобилка — дискета: импорт / экспорт / сброс */}
-        <button onClick={() => openSheet('save')} title="Прогресс" className={`${btnCls} lg:hidden`}>
+        <button onClick={() => openSheet('save')} title="Прогресс" className={`${btnCls} @4xl/questbar:hidden`}>
           <Save className="w-3.5 h-3.5" />
         </button>
 
         {/* Десктоп — раздельно, как было */}
-        <button onClick={pickFile} title="Импорт прогресса" className={`${btnCls} hidden lg:flex`}>
+        <button onClick={pickFile} title="Импорт прогресса" className={`${btnCls} hidden @4xl/questbar:flex`}>
           <Upload className="w-3.5 h-3.5" />
         </button>
-        <button onClick={onExport} title="Экспорт прогресса" className={`${btnCls} ml-2 hidden lg:flex`}>
+        <button onClick={onExport} title="Экспорт прогресса" className={`${btnCls} ml-2 hidden @4xl/questbar:flex`}>
           <Download className="w-3.5 h-3.5" />
         </button>
 
