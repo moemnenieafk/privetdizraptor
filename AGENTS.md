@@ -7,7 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # CTA Project — Agent Context
 
 **Project:** Centre Tactical Adaptation — Hardcore Extraction Shooter Portal (EFT hub + multi-game).  
-**Version:** 4.3.0  
+**Version:** 4.4.0  
 **Stack:** Next.js 16 (App Router, RSC + react-compiler) · Tailwind CSS v4 · Zustand · TypeScript strict.  
 **Data source:** our Supabase mirror. UI reads ONLY our backend (`getEftCatalog`/`getEftPriceMapFromDb`/`cta-api`); tarkov.dev is synced by a server cron, never at request time (see CLAUDE.md rule 11 — BACKEND AUTONOMY).
 
@@ -22,7 +22,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `src/lib/` — formatters, search-engine, tarkov-colors, eft-catalog, cta-api, item-icon
 - `src/app/eft/` — all EFT game routes
 
-## Key Components (v4.1.0)
+## Key Components (v4.4.0)
 - `CategoryControlBar` — items filter bar (search, sort, armor class, barter, advanced filters)
 - `EftItemTile/` — composable tile (Root/Header/Media/Name/Pricing + tooltips)
 - `ItemsCategoryClient` — items catalog client (cards-only via `EftItemTile` + sort; table view removed)
