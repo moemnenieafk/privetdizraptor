@@ -26,6 +26,10 @@ export async function syncEftPrices(): Promise<SyncResult> {
   }
   const gameId = await eftGameId();
 
+  // PvE — отдельная экономика (gameMode: pve). Best-effort: пустая карта → PvE-поля не трогаем.
+  const pveMap = await getEftPriceMap('pve');
+  const hasPve = pveMap.size > 0;
+
   const rows = [...map.entries()].map(([inGameId, p]) => ({
     gameId,
     inGameId,
@@ -40,6 +44,14 @@ export async function syncEftPrices(): Promise<SyncResult> {
     high24hPrice: p.high24hPrice ?? null,
     sellFor: p.sellFor,
     buyFor: p.buyFor,
+    ...(hasPve
+      ? {
+          avg24hPricePve: pveMap.get(inGameId)?.avg24hPrice ?? null,
+          low24hPricePve: pveMap.get(inGameId)?.low24hPrice ?? null,
+          sellForPve: pveMap.get(inGameId)?.sellFor ?? null,
+          buyForPve: pveMap.get(inGameId)?.buyFor ?? null,
+        }
+      : {}),
   }));
 
   const CHUNK = 500;
@@ -61,6 +73,14 @@ export async function syncEftPrices(): Promise<SyncResult> {
           high24hPrice: sql`excluded.high24h_price`,
           sellFor: sql`excluded.sell_for`,
           buyFor: sql`excluded.buy_for`,
+          ...(hasPve
+            ? {
+                avg24hPricePve: sql`excluded.avg24h_price_pve`,
+                low24hPricePve: sql`excluded.low24h_price_pve`,
+                sellForPve: sql`excluded.sell_for_pve`,
+                buyForPve: sql`excluded.buy_for_pve`,
+              }
+            : {}),
           syncedAt: sql`now()`,
         },
       });
@@ -87,6 +107,10 @@ function mapPriceRow(r: typeof prices.$inferSelect): EftPriceInfo {
     high24hPrice: r.high24hPrice ?? undefined,
     sellFor: (r.sellFor ?? []) as CtaVendorOffer[],
     buyFor: (r.buyFor ?? []) as CtaVendorOffer[],
+    avg24hPricePve: r.avg24hPricePve ?? undefined,
+    low24hPricePve: r.low24hPricePve ?? undefined,
+    sellForPve: (r.sellForPve ?? undefined) as CtaVendorOffer[] | undefined,
+    buyForPve: (r.buyForPve ?? undefined) as CtaVendorOffer[] | undefined,
   };
 }
 

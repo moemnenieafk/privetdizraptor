@@ -334,8 +334,19 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     }
   }
 
-  const toVendor = (o: { price: number; priceRUB?: number; vendor: { name: string; normalizedName?: string } }): VendorOffer => ({
-    price: o.price, priceRUB: o.priceRUB, vendor: { name: o.vendor.name, normalizedName: o.vendor.normalizedName ?? '' },
+  const pveRubMap = (offers: { price: number; priceRUB?: number; vendor: { name: string; normalizedName?: string } }[] | undefined) => {
+    const m = new Map<string, number>();
+    for (const o of offers ?? []) {
+      const key = o.vendor.normalizedName ?? o.vendor.name;
+      const v = o.priceRUB ?? o.price;
+      if (v > 0) m.set(key, v);
+    }
+    return m;
+  };
+  const buyPve = pveRubMap(px.buyForPve);
+  const sellPve = pveRubMap(px.sellForPve);
+  const toVendor = (o: { price: number; priceRUB?: number; vendor: { name: string; normalizedName?: string } }, pve: Map<string, number>): VendorOffer => ({
+    price: o.price, priceRUB: o.priceRUB, priceRUBPve: pve.get(o.vendor.normalizedName ?? o.vendor.name), vendor: { name: o.vendor.name, normalizedName: o.vendor.normalizedName ?? '' },
   });
 
   const item: TarkovItem = {
@@ -353,8 +364,8 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     bsgCategoryId: px.bsgCategoryId,
     image512pxLink: itemIconUrl(mainId),
     properties: mapDetailProperties(base.propertiesRaw),
-    sellFor: (px.sellFor ?? []).map(toVendor),
-    buyFor: (px.buyFor ?? []).map(toVendor),
+    sellFor: (px.sellFor ?? []).map((o) => toVendor(o, sellPve)),
+    buyFor: (px.buyFor ?? []).map((o) => toVendor(o, buyPve)),
     barters: itemBarters,
     crafts: itemCrafts,
     usedInBarters,

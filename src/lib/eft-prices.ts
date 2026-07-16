@@ -28,6 +28,10 @@ export interface EftPriceInfo {
   high24hPrice?: number;
   sellFor: CtaVendorOffer[];
   buyFor: CtaVendorOffer[];
+  avg24hPricePve?: number;
+  low24hPricePve?: number;
+  sellForPve?: CtaVendorOffer[];
+  buyForPve?: CtaVendorOffer[];
 }
 
 /* ───────────────── сырой ответ API (без any) ───────────────── */
@@ -56,9 +60,9 @@ interface RawResponse {
   errors?: unknown;
 }
 
-const QUERY = `
+const buildQuery = (gameMode: 'regular' | 'pve') => `
   query {
-    items(lang: ru) {
+    items(lang: ru, gameMode: ${gameMode}) {
       id
       normalizedName
       bsgCategoryId
@@ -86,12 +90,12 @@ const mapOffer = (o: RawOffer): CtaVendorOffer => ({
  * Карта id → экономика/мета из tarkov.dev. Никогда не бросает: при любой ошибке
  * отдаёт пустую Map (синк сам решает, что делать с пустотой).
  */
-export async function getEftPriceMap(): Promise<Map<string, EftPriceInfo>> {
+export async function getEftPriceMap(gameMode: 'regular' | 'pve' = 'regular'): Promise<Map<string, EftPriceInfo>> {
   try {
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ query: QUERY }),
+      body: JSON.stringify({ query: buildQuery(gameMode) }),
       cache: "no-store",
     });
     if (!res.ok) return new Map();
