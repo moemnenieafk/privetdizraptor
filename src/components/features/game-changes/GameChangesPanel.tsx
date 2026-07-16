@@ -148,6 +148,17 @@ function autoSummary(set: Changeset): string {
       if (parts.length > 0) lines.push(`Крафт ${title} (${area}): ${parts.join('; ')}`);
     }
   }
+
+  const quest = set.changes.filter((c) => c.category === 'quest');
+  for (const { trader: tr, changes } of groupByScope(quest)) {
+    for (const g of groupByItem(changes)) {
+      const title = g.name;
+      if (g.status === 'added') { lines.push(`Новый квест (${tr}): ${title}`); continue; }
+      if (g.status === 'removed') { lines.push(`Убран квест: ${title}`); continue; }
+      const parts = g.fields.map((c) => `${fieldLabel(c.field)} ${c.oldValue ?? '—'} → ${c.newValue ?? '—'}`);
+      if (parts.length > 0) lines.push(`Квест «${title}» (${tr}): ${parts.join('; ')}`);
+    }
+  }
   return lines.join('\n');
 }
 
@@ -332,6 +343,7 @@ function Details({ changesets, digests, canEdit }: { changesets: Changeset[]; di
             const stat = set.changes.filter((c) => c.category === 'stat');
             const trader = set.changes.filter((c) => c.category === 'trader');
             const craft = set.changes.filter((c) => c.category === 'craft');
+            const quest = set.changes.filter((c) => c.category === 'quest');
             return (
               <div className="flex flex-col gap-3">
                 {stat.length > 0 && (
@@ -361,6 +373,16 @@ function Details({ changesets, digests, canEdit }: { changesets: Changeset[]; di
                     </span>
                     {groupByItem(changes).map((g, i) => (
                       <ItemCard key={`${set.date}-${area}-${g.name}-${i}`} g={g} />
+                    ))}
+                  </div>
+                ))}
+                {groupByScope(quest).map(({ trader: tr, changes }) => (
+                  <div key={`${set.date}-q-${tr}`} className="flex flex-col gap-1.5">
+                    <span className="font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
+                      Квесты · {tr}
+                    </span>
+                    {groupByItem(changes).map((g, i) => (
+                      <ItemCard key={`${set.date}-q-${tr}-${g.name}-${i}`} g={g} />
                     ))}
                   </div>
                 ))}
