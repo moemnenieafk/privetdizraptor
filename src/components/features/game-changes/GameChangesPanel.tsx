@@ -93,10 +93,30 @@ function groupByItem(changes: GameChange[]): ItemGroup[] {
   return order.map((k) => map.get(k)).filter((g): g is ItemGroup => g !== undefined);
 }
 
+// Группировка изменений торговцев по торговцу (scope).
+function groupByScope(changes: GameChange[]): Array<{ trader: string; changes: GameChange[] }> {
+  const map = new Map<string, GameChange[]>();
+  const order: string[] = [];
+  for (const c of changes) {
+    const key = c.scope ?? '—';
+    let arr = map.get(key);
+    if (!arr) {
+      arr = [];
+      map.set(key, arr);
+      order.push(key);
+    }
+    arr.push(c);
+  }
+  return order.map((trader) => ({ trader, changes: map.get(trader) ?? [] }));
+}
+
 // Авто-перевод среза в текст-черновик для редактора (кнопка «сгенерировать из диффа»).
 function autoSummary(set: Changeset): string {
   const lines: string[] = [];
-  for (const g of groupByItem(set.changes)) {
+  const stat = set.changes.filter((c) => c.category === 'stat');
+  const trader = set.changes.filter((c) => c.category === 'trader');
+
+  for (const g of groupByItem(stat)) {
     const title = g.shortName?.trim() || g.name;
     if (g.status === 'added') { lines.push(`Новый предмет: ${title}`); continue; }
     if (g.status === 'removed') { lines.push(`Убран: ${title}`); continue; }
@@ -106,6 +126,16 @@ function autoSummary(set: Changeset): string {
       return `${fieldLabel(c.field)} ${c.oldValue ?? '—'} → ${c.newValue ?? '—'}${tag}`;
     });
     if (parts.length > 0) lines.push(`${title}: ${parts.join('; ')}`);
+  }
+
+  for (const { trader: tr, changes } of groupByScope(trader)) {
+    for (const g of groupByItem(changes)) {
+      const title = g.shortName?.trim() || g.name;
+      if (g.status === 'added') { lines.push(`${tr} — новый оффер: ${title}`); continue; }
+      if (g.status === 'removed') { lines.push(`${tr} — убран оффер: ${title}`); continue; }
+      const parts = g.fields.map((c) => `${fieldLabel(c.field)} ${c.oldValue ?? '—'} → ${c.newValue ?? '—'}`);
+      if (parts.length > 0) lines.push(`${tr} — ${title}: ${parts.join('; ')}`);
+    }
   }
   return lines.join('\n');
 }
@@ -287,11 +317,34 @@ function Details({ changesets, digests, canEdit }: { changesets: Changeset[]; di
             </span>
           </div>
           <DigestBlock set={set} digest={digests[set.date]} canEdit={canEdit} />
-          <div className="flex flex-col gap-1.5">
-            {groupByItem(set.changes).map((g, i) => (
-              <ItemCard key={`${set.date}-${g.name}-${i}`} g={g} />
-            ))}
-          </div>
+          {(() => {
+            const stat = set.changes.filter((c) => c.category === 'stat');
+            const trader = set.changes.filter((c) => c.category === 'trader');
+            return (
+              <div className="flex flex-col gap-3">
+                {stat.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
+                      Статы предметов
+                    </span>
+                    {groupByItem(stat).map((g, i) => (
+                      <ItemCard key={`${set.date}-stat-${g.name}-${i}`} g={g} />
+                    ))}
+                  </div>
+                )}
+                {groupByScope(trader).map(({ trader: tr, changes }) => (
+                  <div key={`${set.date}-tr-${tr}`} className="flex flex-col gap-1.5">
+                    <span className="font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
+                      Торговец · {tr}
+                    </span>
+                    {groupByItem(changes).map((g, i) => (
+                      <ItemCard key={`${set.date}-${tr}-${g.name}-${i}`} g={g} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       ))}
     </div>
