@@ -32,10 +32,37 @@ export async function GET(req: Request): Promise<NextResponse> {
     );
     const tables = [...check].map((r) => r.table_name);
 
+    // Верификация RLS: доказываем, что row-level security включён на каждой таблице
+    // раздела и что число политик соответствует модели (karma_events/comlink_reports —
+    // намеренно 0 политик = глухой доступ; остальные — по одной read-политике).
+    const rlsRows = await db.execute<{ table_name: string; rls_enabled: boolean }>(
+      sql`select relname as table_name, relrowsecurity as rls_enabled
+          from pg_class
+          where relnamespace = 'public'::regnamespace
+            and (relname like 'comlink%' or relname = 'karma_events')
+          order by relname`,
+    );
+    const polRows = await db.execute<{ table_name: string; policies: number }>(
+      sql`select tablename as table_name, count(*)::int as policies
+          from pg_policies
+          where schemaname = 'public'
+            and (tablename like 'comlink%' or tablename = 'karma_events')
+          group by tablename`,
+    );
+    const polMap = new Map([...polRows].map((r) => [r.table_name, Number(r.policies)]));
+    const security = [...rlsRows].map((r) => ({
+      table: r.table_name,
+      rls: r.rls_enabled === true,
+      policies: polMap.get(r.table_name) ?? 0,
+    }));
+    const rlsAllOn = security.length > 0 && security.every((s) => s.rls);
+
     return NextResponse.json({
       ok: true,
       statements: COMLINK_DDL.length,
       tables,
+      rlsAllOn,
+      security,
       at: new Date().toISOString(),
     });
   } catch (e) {
