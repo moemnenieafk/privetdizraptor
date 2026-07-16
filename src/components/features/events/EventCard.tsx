@@ -7,6 +7,7 @@ import type { EftEvent, EftEventContent, EftEventContentStatus } from '@/types/e
 import { getCategoryMeta } from '@/data/eft-events';
 import { formatEventRange } from '@/lib/eft-events-utils';
 import { EventCategoryGlyph } from './EventCategoryGlyph';
+import { useIsPve } from '@/hooks/useGameMode';
 
 /** Лейблы статусов дублируем на клиенте: серверный резолвер в бандл не тянем. */
 const STATUS_LABEL: Record<EftEventContentStatus, string> = {
@@ -37,6 +38,7 @@ interface EventCardProps {
 /** Узел таймлайна: точка на рельсе, шапка-кнопка, раскрывающийся список изменений. */
 export function EventCard({ event, content, status, defaultOpen = false }: EventCardProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const isPve = useIsPve();
   const meta = getCategoryMeta(event.category);
   const panelId = `event-changes-${event.id}`;
 
@@ -80,8 +82,8 @@ export function EventCard({ event, content, status, defaultOpen = false }: Event
                 <span className={statusChipClass(status)}>{STATUS_LABEL[status]}</span>
               )}
               {event.pvpOnly && (
-                <span className="rounded-xs border border-lines-hover px-1.5 py-0.5 font-blender-medium text-xs uppercase tracking-widest text-text-muted">
-                  Только PvP
+                <span className={`rounded-xs border px-1.5 py-0.5 font-blender-medium text-xs uppercase tracking-widest ${isPve ? 'border-edition-tue text-edition-tue' : 'border-lines-hover text-text-muted'}`}>
+                  {isPve ? 'Не в PvE' : 'Только PvP'}
                 </span>
               )}
               {event.patch && (
