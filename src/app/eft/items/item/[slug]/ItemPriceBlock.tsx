@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from 'react';
 import { PackageX } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useIsPve } from '@/hooks/useGameMode';
@@ -65,8 +66,73 @@ function LevelHex({ required }: { required: number }) {
   );
 }
 
+// Плавный переход числа при смене режима PvP↔PvE: обе цены уже в payload,
+// грузить нечего — поэтому не скелетон, а честный tween значения + короткий поп.
+// Первый рендер без анимации (не крутим счётчик на загрузке страницы);
+// prefers-reduced-motion → мгновенная подстановка.
+const TWEEN_MS = 220;
+
+function useAnimatedNumber(target: number): { shown: number; pop: boolean } {
+  const [shown, setShown] = useState(target);
+  const [pop, setPop] = useState(false);
+  const fromRef = useRef(target);
+  const rafRef = useRef<number | null>(null);
+  const popRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstRef = useRef(true);
+
+  useEffect(() => {
+    if (firstRef.current) {
+      firstRef.current = false;
+      fromRef.current = target;
+      setShown(target);
+      return;
+    }
+    const from = fromRef.current;
+    const to = target;
+    if (from === to) return;
+
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+    if (reduce) {
+      fromRef.current = to;
+      setShown(to);
+      return;
+    }
+
+    setPop(true);
+    if (popRef.current) clearTimeout(popRef.current);
+    popRef.current = setTimeout(() => setPop(false), TWEEN_MS);
+
+    const start = performance.now();
+    const step = (now: number): void => {
+      const t = Math.min((now - start) / TWEEN_MS, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setShown(Math.round(from + (to - from) * eased));
+      if (t < 1) rafRef.current = requestAnimationFrame(step);
+      else fromRef.current = to;
+    };
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(step);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (popRef.current) clearTimeout(popRef.current);
+    };
+  }, [target]);
+
+  return { shown, pop };
+}
+
 function BigPrice({ value, className }: { value: number; className: string }) {
-  return <span className={`font-blender-medium text-3xl leading-none ${className}`}>{fmtRub(value)}</span>;
+  const { shown, pop } = useAnimatedNumber(value);
+  return (
+    <span
+      className={`font-blender-medium text-3xl leading-none transition-transform duration-200 ease-out ${pop ? 'scale-105' : 'scale-100'} ${className}`}
+    >
+      {fmtRub(shown)}
+    </span>
+  );
 }
 
 function EmptyValue() {
