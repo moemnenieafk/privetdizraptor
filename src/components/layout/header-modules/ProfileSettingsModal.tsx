@@ -32,6 +32,8 @@ export interface ProfileSettingsFields {
   setPrestige: (val: string) => void;
   traderLevels: Record<string, number>;
   setTraderLevels: (val: Record<string, number>) => void;
+  hoursPlayed?: number | null;
+  setHoursPlayed?: (val: number | null) => void;
 }
 
 interface ProfileSettingsModalProps extends ProfileSettingsFields {
@@ -70,6 +72,7 @@ export function ProfileSettingsForm({
   edition, setEdition, faction, setFaction, mode, setMode,
   nickname, setNickname, level, setLevel, prestige, setPrestige,
   traderLevels, setTraderLevels,
+  hoursPlayed, setHoursPlayed,
   onNestedModalToggle,
 }: ProfileSettingsFields & { onNestedModalToggle?: (open: boolean) => void }) {
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
@@ -135,6 +138,7 @@ export function ProfileSettingsForm({
       if (d.edition) setEdition(d.edition);
       if (d.faction) setFaction(d.faction);
       if (d.mode) setMode(d.mode);
+      if (d.hoursPlayed != null && setHoursPlayed) setHoursPlayed(d.hoursPlayed);
     } catch {
       setOcrError('Сеть недоступна');
     } finally {
@@ -251,6 +255,27 @@ export function ProfileSettingsForm({
           </div>
         </div>
       </div>
+
+      {setHoursPlayed && (
+        <div className="flex w-full flex-col items-start justify-start gap-2">
+          <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Часов в игре</div>
+          <div className="flex h-10 w-full items-center rounded border border-lines-hover bg-(--color-base) px-3">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={hoursPlayed != null ? String(hoursPlayed) : ''}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 5);
+                setHoursPlayed?.(digits === '' ? null : Number(digits));
+              }}
+              className="flex-1 w-full bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
+              placeholder="НЕ УКАЗАНО"
+              spellCheck={false}
+            />
+            <span className="text-type-label font-blender-medium uppercase text-text-secondary">ч</span>
+          </div>
+        </div>
+      )}
 
       {/* ИЗДАНИЕ */}
       <div className="flex w-full flex-col items-start justify-start gap-2">

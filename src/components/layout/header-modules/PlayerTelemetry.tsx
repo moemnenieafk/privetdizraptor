@@ -395,6 +395,7 @@ export function PlayerTelemetry() {
         level={activeProfile?.level || '1'} setLevel={(val) => activeProfile && updateProfile(activeProfile.id, { level: val })}
         prestige={activeProfile?.prestige || '0'} setPrestige={(val) => activeProfile && updateProfile(activeProfile.id, { prestige: val })}
         traderLevels={activeProfile?.traderLevels || {}} setTraderLevels={(val) => activeProfile && updateProfile(activeProfile.id, { traderLevels: val })}
+        hoursPlayed={activeProfile?.hoursPlayed ?? null} setHoursPlayed={(val) => activeProfile && updateProfile(activeProfile.id, { hoursPlayed: val })}
       />
 
       {/* Модальное окно удаления ЧВК */}
