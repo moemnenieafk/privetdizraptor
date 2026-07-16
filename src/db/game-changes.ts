@@ -13,10 +13,11 @@
 // Импорты относительные (не @/) — модуль может грузиться и под tsx-скриптом.
 import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "./index";
-import { items, itemChangeState, itemChanges, changeDigests, traderOfferState } from "./schema";
+import { items, itemChangeState, itemChanges, changeDigests, traderOfferState, craftState } from "./schema";
 import { eftGameId } from "./eft";
 import { getEftItemStats } from "../lib/eft-item-stats";
 import { getTraderOffers, type CostReq } from "../lib/spt-traders";
+import { getHideoutRecipes, type HideoutRecipe, type CraftInput } from "../lib/spt-hideout";
 
 // Массовый сдвиг = рекалибровка (смена/пересбор источника), не патч. Тогда дельты не
 // пишем, только освежаем снимок. Реальный патч трогает статы десятков–сотен предметов.
@@ -145,7 +146,7 @@ export interface GameChange {
   oldValue: string | null;
   newValue: string | null;
   /** 'stat' — статы предмета, 'trader' — оффер торговца. */
-  category: 'stat' | 'trader';
+  category: 'stat' | 'trader' | 'craft';
   /** Для 'trader' — имя торговца. */
   scope: string | null;
 }
@@ -160,6 +161,10 @@ export interface Changeset {
 
 function asKind(v: string): ChangeKind {
   return v === "added" || v === "removed" ? v : "field";
+}
+
+function asCategory(v: string): 'stat' | 'trader' | 'craft' {
+  return v === "trader" || v === "craft" ? v : "stat";
 }
 
 /**
@@ -193,7 +198,7 @@ export async function getRecentChangesets(maxChangesets = 6, perSet = 80): Promi
         field: r.field,
         oldValue: r.oldValue,
         newValue: r.newValue,
-        category: r.category === 'trader' ? 'trader' : 'stat',
+        category: asCategory(r.category),
         scope: r.scope,
       });
     }
@@ -412,6 +417,165 @@ export async function detectTraderChanges(): Promise<DetectResult> {
       .values(stateRows.slice(i, i + CHUNK))
       .onConflictDoUpdate({
         target: [traderOfferState.gameId, traderOfferState.traderId, traderOfferState.tpl],
+        set: { fingerprint: sql`excluded.fingerprint`, updatedAt: sql`now()` },
+      });
+  }
+
+  return {
+    baseline,
+    recalibrated,
+    scanned: current.size,
+    added: changeRows.filter((c) => c.kind === "added").length,
+    removed: changeRows.filter((c) => c.kind === "removed").length,
+    fieldChanges: changeRows.filter((c) => c.kind === "field").length,
+  };
+}
+
+/* ───────────────── детект изменений крафтов убежища (SPT-дифф) ───────────────── */
+
+// areaType (enum SPT/BSG) → русское имя зоны.
+const AREA_NAMES: Record<number, string> = {
+  0: "Вентиляция", 1: "Пункт охраны", 2: "Санузел", 3: "Тайник", 4: "Генератор",
+  5: "Отопление", 6: "Сборник воды", 7: "Медблок", 8: "Кухня", 9: "Зона отдыха",
+  10: "Верстак", 11: "Разведцентр", 12: "Тир", 13: "Библиотека", 14: "Скав-кейс",
+  15: "Освещение", 16: "Зал славы", 17: "Очистка воздуха", 18: "Солнечная батарея",
+  19: "Самогонный аппарат", 20: "Bitcoin-ферма", 21: "Ёлка", 22: "Аварийная стена",
+  23: "Спортзал", 24: "Стойка оружия",
+};
+const areaName = (t: number): string => AREA_NAMES[t] ?? `Зона #${t}`;
+
+function fmtTime(sec: number): string {
+  const h = Math.floor(sec / 3600);
+  const m = Math.round((sec % 3600) / 60);
+  if (h && m) return `${h}ч ${m}м`;
+  if (h) return `${h}ч`;
+  return `${m}м`;
+}
+
+const inputsNorm = (inp: CraftInput[]): string =>
+  [...inp].sort((a, b) => a.tpl.localeCompare(b.tpl)).map((i) => `${i.tpl}:${i.count}`).join(",");
+
+function humanItems(inp: CraftInput[], names: NameMap): string {
+  if (inp.length === 0) return "—";
+  return inp
+    .map((i) => {
+      const n = names.get(i.tpl);
+      return `${i.count}× ${n?.short?.trim() || n?.name || "?"}`;
+    })
+    .join(", ");
+}
+
+const craftFp = (r: HideoutRecipe): string =>
+  `p${r.endProduct}|c${r.count}|t${r.productionTime}|a${r.areaLevel ?? "-"}|${inputsNorm(r.inputs)}`;
+
+interface ParsedCraftFp {
+  endProduct: string;
+  count: string;
+  time: string;
+  area: string;
+  inputs: CraftInput[];
+}
+function parseCraftFp(fp: string): ParsedCraftFp {
+  const parts = fp.split("|");
+  const get = (pfx: string, i: number): string => (parts[i] ?? "").replace(new RegExp(`^${pfx}`), "");
+  const inpStr = parts[4] ?? "";
+  const inputs: CraftInput[] = inpStr.length
+    ? inpStr.split(",").map((s) => {
+        const [tpl, count] = s.split(":");
+        return { tpl, count: Number(count) || 0 };
+      })
+    : [];
+  return { endProduct: get("p", 0), count: get("c", 1), time: get("t", 2), area: get("a", 3), inputs };
+}
+
+/**
+ * Диффает крафты убежища (SPT) со снимком craft_state, пишет дельты в item_changes
+ * (category='craft'). Первый прогон = базлайн. Пустой срез → бросаем.
+ */
+export async function detectCraftChanges(): Promise<DetectResult> {
+  const gameId = await eftGameId();
+
+  const recipes = await getHideoutRecipes();
+  if (recipes.length === 0) {
+    throw new Error("SPT отдал пустые крафты — детект убежища отменён (снимок сохранён)");
+  }
+
+  const itemRows = await db
+    .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName })
+    .from(items)
+    .where(eq(items.gameId, gameId));
+  const names: NameMap = new Map(itemRows.map((r) => [r.inGameId, { name: r.name, short: r.shortName }]));
+  const nameOf = (tpl: string): string => names.get(tpl)?.name ?? tpl;
+  const shortOf = (tpl: string): string | null => names.get(tpl)?.short ?? null;
+
+  const current = new Map<string, HideoutRecipe & { fp: string }>();
+  for (const r of recipes) current.set(r.recipeId, { ...r, fp: craftFp(r) });
+
+  const priorRows = await db
+    .select({ recipeId: craftState.recipeId, fingerprint: craftState.fingerprint })
+    .from(craftState)
+    .where(eq(craftState.gameId, gameId));
+  const prior = new Map(priorRows.map((p) => [p.recipeId, p.fingerprint]));
+
+  const baseline = prior.size === 0;
+  let changeRows: (typeof itemChanges.$inferInsert)[] = [];
+
+  if (!baseline) {
+    for (const [id, cur] of current) {
+      const prevFp = prior.get(id);
+      const scope = areaName(cur.areaType);
+      const name = nameOf(cur.endProduct);
+      const short = shortOf(cur.endProduct);
+      const base = { gameId, inGameId: cur.endProduct, name, shortName: short, category: "craft" as const, scope };
+
+      if (prevFp === undefined) {
+        changeRows.push({ ...base, kind: "added" });
+        continue;
+      }
+      if (prevFp === cur.fp) continue;
+
+      const prev = parseCraftFp(prevFp);
+      if (prev.count !== String(cur.count)) {
+        changeRows.push({ ...base, kind: "field", field: "Выход", oldValue: prev.count, newValue: String(cur.count) });
+      }
+      if (prev.time !== String(cur.productionTime)) {
+        changeRows.push({ ...base, kind: "field", field: "Время", oldValue: fmtTime(Number(prev.time) || 0), newValue: fmtTime(cur.productionTime) });
+      }
+      const curArea = cur.areaLevel === null ? "-" : String(cur.areaLevel);
+      if (prev.area !== curArea) {
+        changeRows.push({ ...base, kind: "field", field: "Уровень зоны", oldValue: prev.area === "-" ? "—" : `ур. ${prev.area}`, newValue: cur.areaLevel === null ? "—" : `ур. ${cur.areaLevel}` });
+      }
+      if (inputsNorm(prev.inputs) !== inputsNorm(cur.inputs)) {
+        changeRows.push({ ...base, kind: "field", field: "Требования", oldValue: humanItems(prev.inputs, names), newValue: humanItems(cur.inputs, names) });
+      }
+    }
+    for (const id of prior.keys()) {
+      if (!current.has(id)) {
+        const prev = parseCraftFp(prior.get(id) ?? "");
+        changeRows.push({
+          gameId, inGameId: prev.endProduct, name: nameOf(prev.endProduct), shortName: shortOf(prev.endProduct),
+          kind: "removed", category: "craft", scope: "Убежище",
+        });
+      }
+    }
+  }
+
+  const recalibrated =
+    !baseline && (changeRows.length > RECAL_ABS || changeRows.length > current.size * RECAL_RATIO);
+  if (recalibrated) changeRows = [];
+
+  const CHUNK = 500;
+  for (let i = 0; i < changeRows.length; i += CHUNK) {
+    await db.insert(itemChanges).values(changeRows.slice(i, i + CHUNK));
+  }
+
+  const stateRows = [...current.values()].map((c) => ({ gameId, recipeId: c.recipeId, fingerprint: c.fp }));
+  for (let i = 0; i < stateRows.length; i += CHUNK) {
+    await db
+      .insert(craftState)
+      .values(stateRows.slice(i, i + CHUNK))
+      .onConflictDoUpdate({
+        target: [craftState.gameId, craftState.recipeId],
         set: { fingerprint: sql`excluded.fingerprint`, updatedAt: sql`now()` },
       });
   }
