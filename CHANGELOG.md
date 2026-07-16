@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-16
+- `44b3b40` feat(gamemode): гейтинг PvP-only контента в режиме PvE
 - `148ad3f` feat(gamemode): PvP/PvE переключает весь сайт через профиль ЧВК
 - `5b33048` feat(adaptive): роль per-profile ЧВК + гейт инсайтов на подписку
 - `ff07d4f` feat(profile): поля «Рейдов» и «Выживаемость» в профиле ЧВК + инференс
