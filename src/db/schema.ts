@@ -868,3 +868,24 @@ export const itemChanges = pgTable(
 );
 
 export type ItemChangeRow = typeof itemChanges.$inferSelect;
+
+/* ───────────────── change digests (редакторский разбор среза изменений) ─────────────────
+ * Человеческий «разбор ЦТА» на срез изменений (по дню). Автоинтерпретация статов в UI —
+ * это факты; здесь редактор добавляет текстовый разбор/контекст и публикует. Пишет только
+ * серверный admin-роут (Drizzle мимо RLS); публичное чтение — только published. */
+export const changeDigests = pgTable(
+  "change_digests",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    date: text("date").notNull(), // YYYY-MM-DD — совпадает с днём чейнджсета
+    noteRu: text("note_ru").notNull().default(""),
+    published: boolean("published").notNull().default(false),
+    authorId: uuid("author_id"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("change_digests_game_date_idx").on(t.gameId, t.date)],
+);
+
+export type ChangeDigestRow = typeof changeDigests.$inferSelect;
