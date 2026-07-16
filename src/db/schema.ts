@@ -824,3 +824,47 @@ export type WeaponPresetRow = typeof weaponPresets.$inferSelect;
 export type NewWeaponPresetRow = typeof weaponPresets.$inferInsert;
 export type WeaponBuildRow = typeof weaponBuilds.$inferSelect;
 export type NewWeaponBuildRow = typeof weaponBuilds.$inferInsert;
+/* ───────────────── game changes (CDC — «что реально изменилось в игре») ─────────────────
+ * Трекаем ТОЛЬКО игровые поля предмета (вес, базовая цена, статы), которые меняются
+ * патчами/силент-чейнджами. Флиа-цены НЕ трекаем — это рынок, а не изменения игры.
+ * item_change_state — снимок-отпечаток на (игра, предмет). Дифф-джоб сравнивает свежие
+ * items+item_properties со снимком и пишет дельты в item_changes. */
+export const itemChangeState = pgTable(
+  "item_change_state",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    inGameId: text("in_game_id").notNull(),
+    name: text("name").notNull(),
+    shortName: text("short_name"),
+    fingerprint: jsonb("fingerprint").$type<Record<string, string>>().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("item_change_state_game_ingame_idx").on(t.gameId, t.inGameId)],
+);
+
+// Журнал изменений: 'added' | 'removed' | 'field'. Группируется по detected_at в чейнджсеты.
+export const itemChanges = pgTable(
+  "item_changes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    inGameId: text("in_game_id").notNull(),
+    name: text("name").notNull(),
+    shortName: text("short_name"),
+    kind: text("kind").notNull(),
+    field: text("field"),
+    oldValue: text("old_value"),
+    newValue: text("new_value"),
+    detectedAt: timestamp("detected_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("item_changes_detected_idx").on(t.detectedAt),
+    index("item_changes_game_idx").on(t.gameId),
+  ],
+);
+
+export type ItemChangeRow = typeof itemChanges.$inferSelect;
