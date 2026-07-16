@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { ExternalLink, FileText } from 'lucide-react';
 import { draftMode } from 'next/headers';
 import { getArticles } from '@/db/articles';
+import { getRecentChangesets } from '@/db/game-changes';
+import { GameChangesPanel } from '@/components/features/game-changes/GameChangesPanel';
 import { getMe } from '@/lib/auth/me';
 import { canEditContent } from '@/lib/auth/roles';
 
@@ -28,7 +30,10 @@ const fmtDate = (iso: string): string =>
 
 export default async function GameUpdatesPage() {
   const [me, { isEnabled }] = await Promise.all([getMe(), draftMode()]);
-  const patches = await getArticles('patch', 30, isEnabled && canEditContent(me?.role ?? 'user'));
+  const [patches, changesets] = await Promise.all([
+    getArticles('patch', 30, isEnabled && canEditContent(me?.role ?? 'user')),
+    getRecentChangesets(),
+  ]);
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
@@ -45,6 +50,8 @@ export default async function GameUpdatesPage() {
             объясняем по-русски, что изменилось для игрока.
           </p>
         </header>
+
+        <GameChangesPanel changesets={changesets} />
 
         {patches.length === 0 ? (
           <p className="py-10 text-center font-blender-book text-sm text-text-secondary">
