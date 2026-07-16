@@ -249,6 +249,9 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-16
+- `7a6b843` feat(game-changes): панель на game-updates, детали за подпиской
+- `d7b957c` feat(game-changes): дифф-движок + крон детекта
+- `cf436da` feat(game-changes): схема CDC + гейт-фича + миграция
 - `c27d478` feat(header): пульс-появление бейджа режима при входе в PvE
 - `4d27c8a` feat(items): плавный переход цен при смене режима PvP↔PvE
 - `afa85a5` docs(ulta): статус 🔵 обдумываю → 🟢 в проде
