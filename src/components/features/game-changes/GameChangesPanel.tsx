@@ -1,13 +1,20 @@
 'use client';
 
-import { Plus, Minus, ArrowUp, ArrowDown, ArrowRight, Activity } from 'lucide-react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Plus, Minus, ArrowUp, ArrowDown, ArrowRight, Activity, Pencil, Loader2 } from 'lucide-react';
 import { Paywall } from '@/components/features/subscription/Paywall';
 import type { Changeset, GameChange } from '@/db/game-changes';
 
-// «Что реально изменилось» — наш дифф игровых данных, переведённый на понятный язык:
-// группируем по предмету, статам даём человеческие имена и семантику усилено/ослаблено.
-// Саммари видят все (воронка + SEO), детальный список — за подпиской «Оперативник».
-// Гейт клиентский: страница game-updates — статический ISR.
+// «Что реально изменилось» — дифф игровых данных на понятном языке (авто-интерпретатор)
+// + редакторский разбор ЦТА поверх (правится админом в Draft Mode). Саммари видят все
+// (воронка + SEO), детальный список — за подпиской «Оперативник». Гейт клиентский.
+
+export interface DigestView {
+  noteRu: string;
+  published: boolean;
+}
+export type DigestMap = Record<string, DigestView>;
 
 const FIELD_LABEL: Record<string, string> = {
   weight: 'Вес',
@@ -32,25 +39,12 @@ const FIELD_LABEL: Record<string, string> = {
   capacity: 'Вместимость',
 };
 
-// Направление «в плюс игроку»: +1 больше=лучше, −1 меньше=лучше, 0/нет — нейтрально.
+// Направление «в плюс игроку»: +1 больше=лучше, −1 меньше=лучше, нет ключа — нейтрально.
 const STAT_DIRECTION: Record<string, 1 | -1> = {
-  penetrationPower: 1,
-  damage: 1,
-  armorDamage: 1,
-  fragmentationChance: 1,
-  armorClass: 1,
-  durability: 1,
-  ergonomics: 1,
-  capacity: 1,
-  initialSpeed: 1,
-  recoilVertical: -1,
-  recoilHorizontal: -1,
-  bluntThroughput: -1,
-  weight: -1,
-  // штрафы хранятся отрицательными: рост значения (ближе к 0) = меньше штраф = лучше
-  ergoPenalty: 1,
-  speedPenalty: 1,
-  turnPenalty: 1,
+  penetrationPower: 1, damage: 1, armorDamage: 1, fragmentationChance: 1, armorClass: 1,
+  durability: 1, ergonomics: 1, capacity: 1, initialSpeed: 1,
+  recoilVertical: -1, recoilHorizontal: -1, bluntThroughput: -1, weight: -1,
+  ergoPenalty: 1, speedPenalty: 1, turnPenalty: 1,
 };
 
 const fieldLabel = (f: string | null): string => (f ? FIELD_LABEL[f] ?? f : '');
@@ -59,7 +53,6 @@ const fmtDay = (iso: string): string =>
 
 type Verdict = 'buff' | 'nerf' | null;
 
-// Интерпретатор: усилено / ослаблено / нейтрально по знаку изменения и направлению стата.
 function verdict(field: string | null, oldV: string | null, newV: string | null): Verdict {
   if (!field || oldV === null || newV === null) return null;
   const dir = STAT_DIRECTION[field];
@@ -67,8 +60,7 @@ function verdict(field: string | null, oldV: string | null, newV: string | null)
   const a = Number(oldV);
   const b = Number(newV);
   if (!Number.isFinite(a) || !Number.isFinite(b) || a === b) return null;
-  const delta = (b - a) * dir;
-  return delta > 0 ? 'buff' : 'nerf';
+  return (b - a) * dir > 0 ? 'buff' : 'nerf';
 }
 
 function countKinds(cs: Changeset[]): { added: number; removed: number; field: number } {
@@ -77,7 +69,6 @@ function countKinds(cs: Changeset[]): { added: number; removed: number; field: n
   return acc;
 }
 
-// Группировка плоского списка изменений по предмету — чтобы читать «по предмету», а не по полю.
 interface ItemGroup {
   name: string;
   shortName: string | null;
@@ -89,12 +80,11 @@ function groupByItem(changes: GameChange[]): ItemGroup[] {
   const map = new Map<string, ItemGroup>();
   const order: string[] = [];
   for (const c of changes) {
-    const key = c.name;
-    let g = map.get(key);
+    let g = map.get(c.name);
     if (!g) {
       g = { name: c.name, shortName: c.shortName, status: null, fields: [] };
-      map.set(key, g);
-      order.push(key);
+      map.set(c.name, g);
+      order.push(c.name);
     }
     if (c.kind === 'added') g.status = 'added';
     else if (c.kind === 'removed') g.status = 'removed';
@@ -103,10 +93,26 @@ function groupByItem(changes: GameChange[]): ItemGroup[] {
   return order.map((k) => map.get(k)).filter((g): g is ItemGroup => g !== undefined);
 }
 
+// Авто-перевод среза в текст-черновик для редактора (кнопка «сгенерировать из диффа»).
+function autoSummary(set: Changeset): string {
+  const lines: string[] = [];
+  for (const g of groupByItem(set.changes)) {
+    const title = g.shortName?.trim() || g.name;
+    if (g.status === 'added') { lines.push(`Новый предмет: ${title}`); continue; }
+    if (g.status === 'removed') { lines.push(`Убран: ${title}`); continue; }
+    const parts = g.fields.map((c) => {
+      const v = verdict(c.field, c.oldValue, c.newValue);
+      const tag = v === 'buff' ? ' (усилено)' : v === 'nerf' ? ' (ослаблено)' : '';
+      return `${fieldLabel(c.field)} ${c.oldValue ?? '—'} → ${c.newValue ?? '—'}${tag}`;
+    });
+    if (parts.length > 0) lines.push(`${title}: ${parts.join('; ')}`);
+  }
+  return lines.join('\n');
+}
+
 function FieldLine({ c }: { c: GameChange }) {
   const v = verdict(c.field, c.oldValue, c.newValue);
-  const tone =
-    v === 'buff' ? 'text-nvg-green' : v === 'nerf' ? 'text-danger' : 'text-(--primary)';
+  const tone = v === 'buff' ? 'text-nvg-green' : v === 'nerf' ? 'text-danger' : 'text-(--primary)';
   const Icon = v === 'buff' ? ArrowUp : v === 'nerf' ? ArrowDown : ArrowRight;
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -157,7 +163,117 @@ function ItemCard({ g }: { g: ItemGroup }) {
   );
 }
 
-function Details({ changesets }: { changesets: Changeset[] }) {
+// Редакторский разбор: показ опубликованного всем; инлайн-редактор — админу.
+function DigestBlock({ set, digest, canEdit }: { set: Changeset; digest: DigestView | undefined; canEdit: boolean }) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [note, setNote] = useState(digest?.noteRu ?? '');
+  const [published, setPublished] = useState(digest?.published ?? false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/change-digests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: set.date, noteRu: note, published }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? 'Не удалось сохранить');
+        return;
+      }
+      setEditing(false);
+      router.refresh();
+    } catch {
+      setError('Сеть недоступна');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const showNote = digest && (digest.published || canEdit) && digest.noteRu.trim().length > 0;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {showNote && !editing && (
+        <div className="rounded-xs border border-(--primary)/30 bg-[color-mix(in_srgb,var(--primary)_6%,transparent)] px-3 py-2">
+          {!digest?.published && (
+            <span className="mb-1 inline-block font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
+              Черновик
+            </span>
+          )}
+          <p className="whitespace-pre-wrap font-blender-book text-sm text-text-primary">{digest?.noteRu}</p>
+        </div>
+      )}
+
+      {canEdit && !editing && (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="flex h-8 w-fit items-center gap-1.5 rounded-xs border border-(--primary)/40 px-2.5 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]"
+        >
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+          {showNote ? 'Править разбор' : 'Добавить разбор'}
+        </button>
+      )}
+
+      {canEdit && editing && (
+        <div className="flex flex-col gap-2 rounded-xs border border-(--primary)/40 bg-[color-mix(in_srgb,var(--primary)_6%,transparent)] p-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
+              Разбор ЦТА · {fmtDay(set.date)}
+            </span>
+            <button
+              type="button"
+              onClick={() => setNote(autoSummary(set))}
+              className="h-7 rounded-xs border border-lines-hover px-2 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+            >
+              Сгенерировать из диффа
+            </button>
+          </div>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={6}
+            placeholder="Разбор на понятном языке — что и почему изменилось для игрока…"
+            className="w-full rounded-xs border border-lines-hover bg-(--color-base) px-3 py-2 font-blender-book text-sm text-text-primary outline-none focus:border-(--primary)"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="flex items-center gap-2 font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
+              <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
+              Опубликовать
+            </label>
+            <div className="flex items-center gap-2">
+              {error && <span className="font-blender-book text-xs text-danger">{error}</span>}
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="h-8 rounded-xs border border-lines-hover px-3 font-blender-medium text-xs uppercase tracking-widest text-text-secondary"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={save}
+                disabled={busy}
+                className="flex h-8 items-center gap-1.5 rounded-xs border border-(--primary) px-3 font-blender-medium text-xs uppercase tracking-widest text-(--primary) disabled:opacity-50"
+              >
+                {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Details({ changesets, digests, canEdit }: { changesets: Changeset[]; digests: DigestMap; canEdit: boolean }) {
   return (
     <div className="flex flex-col gap-5">
       {changesets.map((set) => (
@@ -170,6 +286,7 @@ function Details({ changesets }: { changesets: Changeset[] }) {
               {set.total} изм.
             </span>
           </div>
+          <DigestBlock set={set} digest={digests[set.date]} canEdit={canEdit} />
           <div className="flex flex-col gap-1.5">
             {groupByItem(set.changes).map((g, i) => (
               <ItemCard key={`${set.date}-${g.name}-${i}`} g={g} />
@@ -181,9 +298,14 @@ function Details({ changesets }: { changesets: Changeset[] }) {
   );
 }
 
-export function GameChangesPanel({ changesets }: { changesets: Changeset[] }) {
+interface PanelProps {
+  changesets: Changeset[];
+  digests?: DigestMap;
+  canEdit?: boolean;
+}
+
+export function GameChangesPanel({ changesets, digests = {}, canEdit = false }: PanelProps) {
   if (changesets.length === 0) {
-    // Idle: журнал пуст (только базлайн снят или патча ещё не было) — фича видна и активна.
     return (
       <section className="mb-8 rounded-sm border border-lines-hover bg-(--color-base) p-5">
         <div className="mb-2 flex items-center gap-2.5">
@@ -217,7 +339,6 @@ export function GameChangesPanel({ changesets }: { changesets: Changeset[] }) {
         убрали. То, что часто остаётся за скобками официального патчноута.
       </p>
 
-      {/* Саммари — видно всем (воронка) */}
       <div className="mb-4 flex flex-wrap gap-2">
         <span className="flex items-center gap-1.5 rounded-xs border border-lines-hover px-2.5 py-1 font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
           Свежий срез: {fmtDay(latest.date)}
@@ -239,9 +360,8 @@ export function GameChangesPanel({ changesets }: { changesets: Changeset[] }) {
         )}
       </div>
 
-      {/* Детали — за подпиской */}
       <Paywall feature="game_changes">
-        <Details changesets={changesets} />
+        <Details changesets={changesets} digests={digests} canEdit={canEdit} />
       </Paywall>
     </section>
   );

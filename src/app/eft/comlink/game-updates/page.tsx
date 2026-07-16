@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ExternalLink, FileText } from 'lucide-react';
 import { draftMode } from 'next/headers';
 import { getArticles } from '@/db/articles';
-import { getRecentChangesets } from '@/db/game-changes';
+import { getRecentChangesets, getChangeDigests } from '@/db/game-changes';
 import { GameChangesPanel } from '@/components/features/game-changes/GameChangesPanel';
 import { getMe } from '@/lib/auth/me';
 import { canEditContent } from '@/lib/auth/roles';
@@ -30,10 +30,15 @@ const fmtDate = (iso: string): string =>
 
 export default async function GameUpdatesPage() {
   const [me, { isEnabled }] = await Promise.all([getMe(), draftMode()]);
-  const [patches, changesets] = await Promise.all([
-    getArticles('patch', 30, isEnabled && canEditContent(me?.role ?? 'user')),
+  const canEdit = isEnabled && canEditContent(me?.role ?? 'user');
+  const [patches, changesets, digestMap] = await Promise.all([
+    getArticles('patch', 30, canEdit),
     getRecentChangesets(),
+    getChangeDigests(canEdit),
   ]);
+  const digests = Object.fromEntries(
+    [...digestMap.entries()].map(([date, d]) => [date, { noteRu: d.noteRu, published: d.published }]),
+  );
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
@@ -51,7 +56,7 @@ export default async function GameUpdatesPage() {
           </p>
         </header>
 
-        <GameChangesPanel changesets={changesets} />
+        <GameChangesPanel changesets={changesets} digests={digests} canEdit={canEdit} />
 
         {patches.length === 0 ? (
           <p className="py-10 text-center font-blender-book text-sm text-text-secondary">

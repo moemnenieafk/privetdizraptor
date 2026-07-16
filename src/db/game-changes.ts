@@ -11,9 +11,9 @@
 // смены источника даёт реальные правки статов, а не стену «field added».
 //
 // Импорты относительные (не @/) — модуль может грузиться и под tsx-скриптом.
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "./index";
-import { itemChangeState, itemChanges } from "./schema";
+import { itemChangeState, itemChanges, changeDigests } from "./schema";
 import { eftGameId } from "./eft";
 import { getEftItemStats } from "../lib/eft-item-stats";
 
@@ -199,4 +199,53 @@ export async function getRecentChangesets(maxChangesets = 6, perSet = 80): Promi
     console.warn("[game-changes] журнал недоступен:", e instanceof Error ? e.message : e);
     return [];
   }
+}
+
+
+/* ───────────────── редакторские разборы срезов (change_digests) ───────────────── */
+
+export interface ChangeDigest {
+  date: string;
+  noteRu: string;
+  published: boolean;
+}
+
+/**
+ * Разборы по дням. includeDrafts=true (админ в Draft Mode) — все, иначе только published.
+ * НЕ бросает: до миграции/при сбое → пустая Map.
+ */
+export async function getChangeDigests(includeDrafts = false): Promise<Map<string, ChangeDigest>> {
+  try {
+    const gameId = await eftGameId();
+    const where = includeDrafts
+      ? eq(changeDigests.gameId, gameId)
+      : and(eq(changeDigests.gameId, gameId), eq(changeDigests.published, true));
+    const rows = await db.select().from(changeDigests).where(where);
+    return new Map(rows.map((r) => [r.date, { date: r.date, noteRu: r.noteRu, published: r.published }]));
+  } catch (e) {
+    console.warn("[game-changes] разборы недоступны:", e instanceof Error ? e.message : e);
+    return new Map();
+  }
+}
+
+/** Создать/обновить разбор на день. Пишет только серверный admin-роут. */
+export async function upsertChangeDigest(
+  userId: string,
+  date: string,
+  noteRu: string,
+  published: boolean,
+): Promise<void> {
+  const gameId = await eftGameId();
+  await db
+    .insert(changeDigests)
+    .values({ gameId, date, noteRu, published, authorId: userId })
+    .onConflictDoUpdate({
+      target: [changeDigests.gameId, changeDigests.date],
+      set: {
+        noteRu: sql`excluded.note_ru`,
+        published: sql`excluded.published`,
+        authorId: sql`excluded.author_id`,
+        updatedAt: sql`now()`,
+      },
+    });
 }
