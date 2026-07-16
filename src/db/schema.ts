@@ -525,6 +525,8 @@ export type PlayerProfilePersist = {
   edition: string;
   mode: string;
   hoursPlayed: number | null;
+  raids: number | null;
+  survivalRate: number | null;
   traderLevels: Record<string, number>;
 };
 

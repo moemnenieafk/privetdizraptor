@@ -34,6 +34,10 @@ export interface ProfileSettingsFields {
   setTraderLevels: (val: Record<string, number>) => void;
   hoursPlayed?: number | null;
   setHoursPlayed?: (val: number | null) => void;
+  raids?: number | null;
+  setRaids?: (val: number | null) => void;
+  survivalRate?: number | null;
+  setSurvivalRate?: (val: number | null) => void;
 }
 
 interface ProfileSettingsModalProps extends ProfileSettingsFields {
@@ -73,6 +77,8 @@ export function ProfileSettingsForm({
   nickname, setNickname, level, setLevel, prestige, setPrestige,
   traderLevels, setTraderLevels,
   hoursPlayed, setHoursPlayed,
+  raids, setRaids,
+  survivalRate, setSurvivalRate,
   onNestedModalToggle,
 }: ProfileSettingsFields & { onNestedModalToggle?: (open: boolean) => void }) {
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
@@ -139,6 +145,8 @@ export function ProfileSettingsForm({
       if (d.faction) setFaction(d.faction);
       if (d.mode) setMode(d.mode);
       if (d.hoursPlayed != null && setHoursPlayed) setHoursPlayed(d.hoursPlayed);
+      if (d.raids != null && setRaids) setRaids(d.raids);
+      if (d.survivalRate != null && setSurvivalRate) setSurvivalRate(d.survivalRate);
     } catch {
       setOcrError('Сеть недоступна');
     } finally {
@@ -273,6 +281,43 @@ export function ProfileSettingsForm({
               spellCheck={false}
             />
             <span className="text-type-label font-blender-medium uppercase text-text-secondary">ч</span>
+          </div>
+        </div>
+      )}
+
+      {setRaids && (
+        <div className="flex w-full gap-2">
+          <div className="flex flex-1 flex-col items-start justify-start gap-2">
+            <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Рейдов</div>
+            <div className="flex h-10 w-full items-center rounded border border-lines-hover bg-(--color-base) px-3">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={raids != null ? String(raids) : ''}
+                onChange={(e) => setRaids?.(e.target.value.replace(/\D/g, '').slice(0, 5) === '' ? null : Number(e.target.value.replace(/\D/g, '').slice(0, 5)))}
+                className="flex-1 w-full bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
+                placeholder="—"
+                spellCheck={false}
+              />
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col items-start justify-start gap-2">
+            <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Выживаемость</div>
+            <div className="flex h-10 w-full items-center rounded border border-lines-hover bg-(--color-base) px-3">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={survivalRate != null ? String(survivalRate) : ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+                  setSurvivalRate?.(digits === '' ? null : Math.min(100, Number(digits)));
+                }}
+                className="flex-1 w-full bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
+                placeholder="—"
+                spellCheck={false}
+              />
+              <span className="text-type-label font-blender-medium uppercase text-text-secondary">%</span>
+            </div>
           </div>
         </div>
       )}

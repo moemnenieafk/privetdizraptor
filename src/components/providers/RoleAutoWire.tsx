@@ -30,6 +30,8 @@ export function RoleAutoWire() {
       const active = ps.profiles.find((p) => p.id === ps.activeProfileId) ?? ps.profiles[0];
       const facts: ProfileFacts = {
         hoursPlayed: active?.hoursPlayed ?? null,
+        survivalRate: active?.survivalRate ?? null,
+        raids: active?.raids ?? null,
         level: numOrNull(active?.level),
         prestige: active ? Number(active.prestige) || null : null,
         mode: active?.mode ?? null,

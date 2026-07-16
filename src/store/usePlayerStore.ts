@@ -11,6 +11,8 @@ export interface PlayerProfile {
   edition: EditionType;
   mode: 'PVP' | 'PVE';
   hoursPlayed: number | null;
+  raids: number | null;
+  survivalRate: number | null;
   traderLevels: Record<string, number>;
 }
 
@@ -40,6 +42,8 @@ export const usePlayerStore = create<PlayerStore>()(
           edition: 'Standard',
           mode: 'PVP',
           hoursPlayed: null,
+          raids: null,
+          survivalRate: null,
           traderLevels: defaultTraderLevels,
         }
       ],
@@ -59,6 +63,8 @@ export const usePlayerStore = create<PlayerStore>()(
           edition: 'Standard',
           mode: 'PVE',
           hoursPlayed: null,
+          raids: null,
+          survivalRate: null,
           traderLevels: { ...defaultTraderLevels },
         };
         return {

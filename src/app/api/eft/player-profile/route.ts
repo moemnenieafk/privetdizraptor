@@ -55,6 +55,8 @@ function parseProfile(v: unknown): PlayerProfilePersist | null {
     edition: str(v.edition, "Standard"),
     mode: str(v.mode, "PVP"),
     hoursPlayed: numOrNull(v.hoursPlayed),
+    raids: numOrNull(v.raids),
+    survivalRate: numOrNull(v.survivalRate),
     traderLevels: parseTraderLevels(v.traderLevels),
   };
 }

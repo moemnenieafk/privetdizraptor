@@ -329,6 +329,8 @@ export function TrackingPanel({
               prestige={activeProfile?.prestige || '0'} setPrestige={(val) => activeProfile && updateProfile(activeProfile.id, { prestige: val })}
               traderLevels={activeProfile?.traderLevels || {}} setTraderLevels={(val) => activeProfile && updateProfile(activeProfile.id, { traderLevels: val })}
               hoursPlayed={activeProfile?.hoursPlayed ?? null} setHoursPlayed={(val) => activeProfile && updateProfile(activeProfile.id, { hoursPlayed: val })}
+              raids={activeProfile?.raids ?? null} setRaids={(val) => activeProfile && updateProfile(activeProfile.id, { raids: val })}
+              survivalRate={activeProfile?.survivalRate ?? null} setSurvivalRate={(val) => activeProfile && updateProfile(activeProfile.id, { survivalRate: val })}
             />
           </div>
         )}

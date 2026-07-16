@@ -91,6 +91,8 @@ export interface ProfileFacts {
   mode: 'PVP' | 'PVE' | null;
   /** Средний уровень торговцев 0–4 (сигнал прогресса), null — неизвестно. */
   traderLevelAvg: number | null;
+  survivalRate: number | null;
+  raids: number | null;
 }
 
 /** Результат инференса. */
@@ -149,6 +151,12 @@ export function inferStage(facts: ProfileFacts): PlayerStage {
     if (hrs > 500) return 'endgame';
     return 'mid';
   }
+  const rd = facts.raids;
+  if (rd !== null) {
+    if (rd < 30) return 'timmy';
+    if (rd > 400) return 'endgame';
+    return 'mid';
+  }
   return 'mid';
 }
 
@@ -167,9 +175,11 @@ function inferAxes(signals: BehaviorSignals, facts: ProfileFacts): RoleAxes {
   const collect = (g('needed') + g('loot') + g('hideout')) / total;
   // Соло↔сокланы: пока только видео как слабый прокси «смотрит комьюнити».
   const clan = (g('videos') + g('comlink') + g('partner')) / total;
+  // Выживаемость: высокая → осторожный, низкая → агрессивный.
+  const survivalBias = facts.survivalRate != null ? (facts.survivalRate - 50) / 100 : 0;
 
   return {
-    cautionAggression: clamp(aggression - caution, -1, 1),
+    cautionAggression: clamp(aggression - caution - survivalBias, -1, 1),
     economyCombat: clamp(combat - economy, -1, 1),
     sprintCollect: clamp(collect - sprint, -1, 1),
     soloClan: clamp(clan * 2 - 0.2, -1, 1),
