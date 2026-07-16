@@ -859,6 +859,9 @@ export const itemChanges = pgTable(
     field: text("field"),
     oldValue: text("old_value"),
     newValue: text("new_value"),
+    // category: 'stat' (статы предметов) | 'trader' (офферы торговцев). scope — имя торговца.
+    category: text("category").notNull().default("stat"),
+    scope: text("scope"),
     detectedAt: timestamp("detected_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
@@ -889,3 +892,21 @@ export const changeDigests = pgTable(
 );
 
 export type ChangeDigestRow = typeof changeDigests.$inferSelect;
+
+/* ───────────────── trader offer state (снимок офферов торговцев для диффа) ─────────────────
+ * Снимок-отпечаток оффера торговца на (игра, торговец, предмет-tpl): лояльность + цена.
+ * Источник — сырые assort.json из sp-tarkov/server. Дифф пишет дельты в item_changes
+ * (category='trader'). Скупщик (динамический ассорт) не трекается. */
+export const traderOfferState = pgTable(
+  "trader_offer_state",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    traderId: text("trader_id").notNull(), // BSG-id торговца
+    tpl: text("tpl").notNull(), // template предмета (= items.in_game_id)
+    fingerprint: text("fingerprint").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("trader_offer_state_key_idx").on(t.gameId, t.traderId, t.tpl)],
+);
