@@ -29,7 +29,8 @@
     "db:sync-maps-geometry": "tsx scripts/sync-maps-geometry.ts",
     "db:sync-quest-zones": "tsx scripts/sync-quest-zones.ts",
     "db:upload-maps": "tsx scripts/upload-map-assets.ts",
-    "db:upload-icons-r2": "tsx scripts/upload-icons-r2.ts"
+    "db:upload-icons-r2": "tsx scripts/upload-icons-r2.ts",
+    "audit:roles": "tsx scripts/role-hub-audit.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
