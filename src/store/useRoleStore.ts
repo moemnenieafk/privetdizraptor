@@ -2,56 +2,73 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PlayerRole, RoleInference } from '@/lib/role-inference';
 
-// Стор роли «Ульты» (см. docs/decisions/adaptive-hub-ulta.md).
-// derived — авто-инференс (пересчитывается провайдером из профиля+телеметрии);
-// manualOverride — явный выбор игрока (всегда главнее). effectiveRole = override ?? derived.
+// Стор роли «Ульты» — ПО ПРОФИЛЮ ЧВК (у каждого профиля свой стиль → своя роль).
+// derived — авто-инференс (провайдер), manualOverride — явный выбор игрока (главнее).
+
+export interface ProfileRole {
+  derived: RoleInference | null;
+  manualOverride: PlayerRole | null;
+  lastComputedAt: number;
+}
+
+const EMPTY_ROLE: ProfileRole = { derived: null, manualOverride: null, lastComputedAt: 0 };
 
 interface RoleStore {
-  /** Последний авто-инференс (null — ещё не считался). */
-  derived: RoleInference | null;
-  /** Явный выбор игрока — перебивает авто. null — доверяем авто. */
-  manualOverride: PlayerRole | null;
-  /** Таймстемп последнего пересчёта derived. */
-  lastComputedAt: number;
-  /** SSR-safe гейт регидратации persist (не персистится). */
+  byProfile: Record<string, ProfileRole>;
   _hasHydrated: boolean;
   setHasHydrated: () => void;
-
-  setDerived: (inference: RoleInference) => void;
-  setManualOverride: (role: PlayerRole | null) => void;
-  clearOverride: () => void;
+  setDerived: (profileId: string, inference: RoleInference) => void;
+  setManualOverride: (profileId: string, role: PlayerRole | null) => void;
+  clearOverride: (profileId: string) => void;
 }
 
 export const useRoleStore = create<RoleStore>()(
   persist(
     (set) => ({
-      derived: null,
-      manualOverride: null,
-      lastComputedAt: 0,
+      byProfile: {},
       _hasHydrated: false,
       setHasHydrated: () => set({ _hasHydrated: true }),
 
-      setDerived: (inference) => set({ derived: inference, lastComputedAt: Date.now() }),
-      setManualOverride: (role) => set({ manualOverride: role }),
-      clearOverride: () => set({ manualOverride: null }),
+      setDerived: (profileId, inference) =>
+        set((s) => ({
+          byProfile: {
+            ...s.byProfile,
+            [profileId]: { ...(s.byProfile[profileId] ?? EMPTY_ROLE), derived: inference, lastComputedAt: Date.now() },
+          },
+        })),
+      setManualOverride: (profileId, role) =>
+        set((s) => ({
+          byProfile: {
+            ...s.byProfile,
+            [profileId]: { ...(s.byProfile[profileId] ?? EMPTY_ROLE), manualOverride: role },
+          },
+        })),
+      clearOverride: (profileId) =>
+        set((s) => ({
+          byProfile: {
+            ...s.byProfile,
+            [profileId]: { ...(s.byProfile[profileId] ?? EMPTY_ROLE), manualOverride: null },
+          },
+        })),
     }),
     {
-      name: 'cta-role',
-      // SSR-safe: не гидрируем на module-eval; rehydrate() зовём в эффекте на клиенте.
+      name: 'cta-role-v2',
       skipHydration: true,
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated();
       },
-      partialize: (state) => ({
-        derived: state.derived,
-        manualOverride: state.manualOverride,
-        lastComputedAt: state.lastComputedAt,
-      }),
+      partialize: (state) => ({ byProfile: state.byProfile }),
     },
   ),
 );
 
-/** Итоговая роль: ручной выбор главнее авто, дефолт — новичок. */
-export function selectEffectiveRole(state: RoleStore): PlayerRole {
-  return state.manualOverride ?? state.derived?.primary ?? 'rookie';
+/** Роль конкретного профиля (или пустая). */
+export function selectProfileRole(state: RoleStore, profileId: string): ProfileRole {
+  return state.byProfile[profileId] ?? EMPTY_ROLE;
+}
+
+/** Итоговая роль профиля: ручной выбор главнее авто, дефолт — новичок. */
+export function effectiveRoleFor(state: RoleStore, profileId: string): PlayerRole {
+  const r = state.byProfile[profileId];
+  return r?.manualOverride ?? r?.derived?.primary ?? 'rookie';
 }

@@ -38,7 +38,7 @@ export function RoleAutoWire() {
         traderLevelAvg: active ? traderLevelAvg(active.traderLevels) : null,
       };
       const signals = useBehaviorStore.getState().signals();
-      useRoleStore.getState().setDerived(computeRole(facts, signals));
+      if (active) useRoleStore.getState().setDerived(active.id, computeRole(facts, signals));
     };
 
     // Клиентская регидратация persist-сторов (skipHydration: true).

@@ -32,7 +32,8 @@ export type GatedFeature =
   | 'ai_options'
   | 'cloud_sync'
   | 'advanced_analytics'
-  | 'early_access';
+  | 'early_access'
+  | 'role_insights';
 
 export const FEATURE_MIN_TIER: Record<GatedFeature, TierId> = {
   favorites: 'operative',
@@ -43,6 +44,7 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, TierId> = {
   cloud_sync: 'operative',
   advanced_analytics: 'veteran',
   early_access: 'veteran',
+  role_insights: 'operative',
 };
 
 export function tierRank(id: TierId): number {

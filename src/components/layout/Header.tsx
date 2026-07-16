@@ -2,7 +2,8 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { getHeaderConfig } from '@/data/headerConfig';
-import { useRoleStore, selectEffectiveRole } from '@/store/useRoleStore';
+import { useRoleStore, effectiveRoleFor } from '@/store/useRoleStore';
+import { usePlayerStore } from '@/store/usePlayerStore';
 import { ROLE_LABELS } from '@/lib/role-inference';
 
 import { PlatformLogo } from './header-modules/PlatformLogo';
@@ -18,7 +19,8 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const effectiveRole = useRoleStore(selectEffectiveRole);
+  const activeProfileId = usePlayerStore((s) => s.activeProfileId);
+  const effectiveRole = useRoleStore((s) => effectiveRoleFor(s, activeProfileId));
   const newbieLabel = ROLE_LABELS[effectiveRole].button;
   const segments = (pathname || '').split('/').filter(Boolean);
   const gameId = segments.length > 0 ? segments[0] : 'eft';

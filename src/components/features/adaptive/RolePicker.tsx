@@ -1,16 +1,18 @@
 'use client';
 
-import { useRoleStore, selectEffectiveRole } from '@/store/useRoleStore';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { useRoleStore, effectiveRoleFor } from '@/store/useRoleStore';
 import { PLAYER_ROLES, ROLE_LABELS, type PlayerRole } from '@/lib/role-inference';
 
-// Ручной оверрайд роли «Ульты». Используется и в хабе, и в Пути Новобранца.
+// Ручной оверрайд роли активного профиля ЧВК. Используется в хабе и в Пути Новобранца.
 
 export function RolePicker() {
-  const manualOverride = useRoleStore((s) => s.manualOverride);
+  const activeId = usePlayerStore((s) => s.activeProfileId);
+  const manualOverride = useRoleStore((s) => s.byProfile[activeId]?.manualOverride ?? null);
   const setManualOverride = useRoleStore((s) => s.setManualOverride);
-  const effectiveRole = useRoleStore(selectEffectiveRole);
+  const effectiveRole = useRoleStore((s) => effectiveRoleFor(s, activeId));
 
-  const pick = (role: PlayerRole) => setManualOverride(manualOverride === role ? null : role);
+  const pick = (role: PlayerRole) => setManualOverride(activeId, manualOverride === role ? null : role);
 
   return (
     <section className="flex flex-col gap-3">
@@ -18,7 +20,7 @@ export function RolePicker() {
         <h2 className="text-sm font-blender-medium uppercase tracking-widest text-text-primary">Кто ты в Таркове</h2>
         {manualOverride && (
           <button
-            onClick={() => setManualOverride(null)}
+            onClick={() => setManualOverride(activeId, null)}
             className="text-type-label font-blender-medium uppercase tracking-wide text-text-secondary transition-colors hover:text-(--primary)"
           >
             Сбросить
@@ -44,7 +46,7 @@ export function RolePicker() {
         })}
       </div>
       <p className="text-type-label font-blender-book text-text-secondary">
-        Портал подстроится под выбранную роль. Дальше подскажет сам — по твоему профилю и тому, что смотришь.
+        Роль своя у каждого профиля ЧВК. Портал подстроится — или подберёт сам по профилю и тому, что смотришь.
       </p>
     </section>
   );
