@@ -63,7 +63,9 @@ export default async function PatchDetailPage({ params }: Props) {
             {a.bodyRu}
           </div>
         ) : (
-          <p className="font-blender-book text-sm text-text-secondary">{a.excerpt}</p>
+          <p className="font-blender-book text-sm text-text-secondary">
+            Разбор этого патча ещё готовится. Полный текст обновления — в оригинале по ссылке ниже.
+          </p>
         )}
 
         {a.externalUrl && (

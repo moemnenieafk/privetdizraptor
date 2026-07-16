@@ -78,12 +78,6 @@ export default async function GameUpdatesPage() {
                   </span>
                 </div>
 
-                {p.excerpt && (
-                  <p className="line-clamp-3 font-blender-book text-sm text-text-secondary">
-                    {p.excerpt}
-                  </p>
-                )}
-
                 <div className="flex flex-wrap gap-2">
                   {p.hasBodyRu && (
                     <Link
