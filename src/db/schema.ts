@@ -910,3 +910,20 @@ export const traderOfferState = pgTable(
   },
   (t) => [uniqueIndex("trader_offer_state_key_idx").on(t.gameId, t.traderId, t.tpl)],
 );
+
+/* ───────────────── craft state (снимок крафтов убежища для диффа) ─────────────────
+ * Снимок-отпечаток рецепта убежища на (игра, recipeId): продукт, выход, время,
+ * уровень зоны, входы. Источник — hideout/production.json из sp-tarkov/server.
+ * Дельты пишутся в item_changes (category='craft', scope=зона). */
+export const craftState = pgTable(
+  "craft_state",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    recipeId: text("recipe_id").notNull(),
+    fingerprint: text("fingerprint").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("craft_state_key_idx").on(t.gameId, t.recipeId)],
+);
