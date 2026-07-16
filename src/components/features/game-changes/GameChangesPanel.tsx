@@ -108,7 +108,24 @@ function Details({ changesets }: { changesets: Changeset[] }) {
 }
 
 export function GameChangesPanel({ changesets }: { changesets: Changeset[] }) {
-  if (changesets.length === 0) return null;
+  if (changesets.length === 0) {
+    // Idle: журнал пуст (только базлайн снят или патча ещё не было) — фича видна и активна.
+    return (
+      <section className="mb-8 rounded-sm border border-lines-hover bg-(--color-base) p-5">
+        <div className="mb-2 flex items-center gap-2.5">
+          <Activity className="h-5 w-5 text-(--primary)" aria-hidden="true" />
+          <h2 className="font-blender-medium text-lg uppercase tracking-widest text-text-primary">
+            Что реально изменилось
+          </h2>
+        </div>
+        <p className="max-w-2xl font-blender-book text-sm text-text-secondary">
+          Следим за игровыми данными — статы, вес, базовая цена, появление и пропажа предметов.
+          С последнего среза правок не зафиксировано; изменения появятся здесь после ближайшего
+          обновления игры.
+        </p>
+      </section>
+    );
+  }
 
   const { added, removed, field } = countKinds(changesets);
   const latest = changesets[0];
