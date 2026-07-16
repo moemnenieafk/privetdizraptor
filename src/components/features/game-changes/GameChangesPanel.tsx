@@ -137,6 +137,17 @@ function autoSummary(set: Changeset): string {
       if (parts.length > 0) lines.push(`${tr} — ${title}: ${parts.join('; ')}`);
     }
   }
+
+  const craft = set.changes.filter((c) => c.category === 'craft');
+  for (const { trader: area, changes } of groupByScope(craft)) {
+    for (const g of groupByItem(changes)) {
+      const title = g.shortName?.trim() || g.name;
+      if (g.status === 'added') { lines.push(`Убежище (${area}) — новый крафт: ${title}`); continue; }
+      if (g.status === 'removed') { lines.push(`Убежище — убран крафт: ${title}`); continue; }
+      const parts = g.fields.map((c) => `${fieldLabel(c.field)} ${c.oldValue ?? '—'} → ${c.newValue ?? '—'}`);
+      if (parts.length > 0) lines.push(`Крафт ${title} (${area}): ${parts.join('; ')}`);
+    }
+  }
   return lines.join('\n');
 }
 
@@ -320,6 +331,7 @@ function Details({ changesets, digests, canEdit }: { changesets: Changeset[]; di
           {(() => {
             const stat = set.changes.filter((c) => c.category === 'stat');
             const trader = set.changes.filter((c) => c.category === 'trader');
+            const craft = set.changes.filter((c) => c.category === 'craft');
             return (
               <div className="flex flex-col gap-3">
                 {stat.length > 0 && (
@@ -339,6 +351,16 @@ function Details({ changesets, digests, canEdit }: { changesets: Changeset[]; di
                     </span>
                     {groupByItem(changes).map((g, i) => (
                       <ItemCard key={`${set.date}-${tr}-${g.name}-${i}`} g={g} />
+                    ))}
+                  </div>
+                ))}
+                {groupByScope(craft).map(({ trader: area, changes }) => (
+                  <div key={`${set.date}-cr-${area}`} className="flex flex-col gap-1.5">
+                    <span className="font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
+                      Убежище · {area}
+                    </span>
+                    {groupByItem(changes).map((g, i) => (
+                      <ItemCard key={`${set.date}-${area}-${g.name}-${i}`} g={g} />
                     ))}
                   </div>
                 ))}
