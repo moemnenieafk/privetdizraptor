@@ -49,7 +49,7 @@ export function Header() {
               <div className="hidden xl:block">
                 <PlayerTelemetry />
               </div>
-              <BurgerMenu menuItems={menuItems} newbieLabel={newbieLabel} onOpenNewbie={() => router.push('/eft/progress/rookie')} />
+              <BurgerMenu menuItems={menuItems} newbieLabel={newbieLabel} onOpenNewbie={() => router.push('/eft/hub')} />
             </div>
           )}
         </div>
@@ -65,7 +65,7 @@ export function Header() {
                 <TacticalSearch />
               </div>
               <div className="hidden xl:flex shrink-0">
-                <NewbieButton label={newbieLabel} onClick={() => router.push('/eft/progress/rookie')} />
+                <NewbieButton label={newbieLabel} onClick={() => router.push('/eft/hub')} />
               </div>
             </div>
 

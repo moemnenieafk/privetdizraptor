@@ -85,6 +85,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       'ref-quest': 'Реф',
       'lightkeeper-quest': 'Смотритель Маяка',
       questmap: 'Карта Заданий',
+      hub: 'Мой хаб',
       rookie: 'Я новичок',
       progress: 'Прогресс',
       seasons: 'Сезоны',
