@@ -6,6 +6,7 @@ import { useRoleStore, selectEffectiveRole } from '@/store/useRoleStore';
 import { ROLE_LABELS } from '@/lib/role-inference';
 import { ROLE_HUBS } from '@/data/role-hubs';
 import { RolePicker } from '@/components/features/adaptive/RolePicker';
+import { usePlayerStore } from '@/store/usePlayerStore';
 
 export function AdaptiveHubClient() {
   useEffect(() => {
@@ -16,6 +17,10 @@ export function AdaptiveHubClient() {
   const derived = useRoleStore((s) => s.derived);
   const manualOverride = useRoleStore((s) => s.manualOverride);
   const effectiveRole = useRoleStore(selectEffectiveRole);
+  const pve = usePlayerStore((s) => {
+    const a = s.profiles.find((p) => p.id === s.activeProfileId) ?? s.profiles[0];
+    return a?.mode === 'PVE';
+  });
 
   if (!hydrated) {
     return (
@@ -48,6 +53,14 @@ export function AdaptiveHubClient() {
             {reason}
           </span>
         </div>
+        {pve && (
+          <div className="flex flex-col gap-1 rounded-xs border border-edition-tue bg-edition-tue/10 p-3">
+            <span className="text-type-label font-blender-medium uppercase tracking-widest text-edition-tue">Режим ПвЕ</span>
+            <span className="text-type-label font-blender-book leading-4 text-text-secondary">
+              {hub.pveHint ?? 'Барахолка ограничена — упор на лут, крафты и сюжет, без гонки live-цен.'}
+            </span>
+          </div>
+        )}
         <p className="text-sm font-blender-book text-text-secondary">{hub.intro}</p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {hub.links.map((link) => (

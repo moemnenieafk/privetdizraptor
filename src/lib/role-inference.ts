@@ -13,7 +13,8 @@ export type PlayerRole =
   | 'viewer' // Зритель контента
   | 'rat' // Крыса (тихий соло-лутер/кемпер)
   | 'sherpa' // Шерп (наставник)
-  | 'lore'; // Лорник (фанат вселенной)
+  | 'lore' // Лорник (фанат вселенной)
+  | 'squad'; // Сокланы (групповой игрок)
 
 export const PLAYER_ROLES: readonly PlayerRole[] = [
   'rookie',
@@ -26,6 +27,7 @@ export const PLAYER_ROLES: readonly PlayerRole[] = [
   'rat',
   'sherpa',
   'lore',
+  'squad',
 ] as const;
 
 /** Русские подписи и текст адаптивной кнопки «Ульты». */
@@ -40,6 +42,7 @@ export const ROLE_LABELS: Record<PlayerRole, { name: string; button: string }> =
   rat: { name: 'Крыса', button: 'Я крыса' },
   sherpa: { name: 'Шерп', button: 'Я шерп' },
   lore: { name: 'Лорник', button: 'Я лорник' },
+  squad: { name: 'Сокланы', button: 'Я в отряде' },
 };
 
 /** Стадия прогресса — грубый детерминированный слой по фактам профиля. */
@@ -62,7 +65,8 @@ export type BehaviorDomain =
   | 'rookie'
   | 'hideout'
   | 'comlink'
-  | 'lore';
+  | 'lore'
+  | 'partner';
 
 /** Счётчики визитов по доменам (уже с затуханием на стороне агрегатора). */
 export type BehaviorSignals = Partial<Record<BehaviorDomain, number>>;
@@ -119,10 +123,11 @@ const DOMAIN_TO_ROLES: Record<BehaviorDomain, PlayerRole[]> = {
   hideout: ['engineer'],
   comlink: ['sherpa'],
   lore: ['lore'],
+  partner: ['squad'],
 };
 
 function emptyScores(): Record<PlayerRole, number> {
-  return { rookie: 0, progressor: 0, trader: 0, gunsmith: 0, engineer: 0, raider: 0, viewer: 0, rat: 0, sherpa: 0, lore: 0 };
+  return { rookie: 0, progressor: 0, trader: 0, gunsmith: 0, engineer: 0, raider: 0, viewer: 0, rat: 0, sherpa: 0, lore: 0, squad: 0 };
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -161,7 +166,7 @@ function inferAxes(signals: BehaviorSignals, facts: ProfileFacts): RoleAxes {
   const sprint = (g('quests') + g('questmap')) / total;
   const collect = (g('needed') + g('loot') + g('hideout')) / total;
   // Соло↔сокланы: пока только видео как слабый прокси «смотрит комьюнити».
-  const clan = (g('videos') + g('comlink')) / total;
+  const clan = (g('videos') + g('comlink') + g('partner')) / total;
 
   return {
     cautionAggression: clamp(aggression - caution, -1, 1),

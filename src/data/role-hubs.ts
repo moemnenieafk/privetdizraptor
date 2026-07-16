@@ -12,6 +12,8 @@ export interface HubLink {
 export interface RoleHub {
   intro: string;
   links: HubLink[];
+  /** Подсказка при активном PvE-режиме (ось поверх роли). */
+  pveHint?: string;
 }
 
 export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
@@ -35,6 +37,7 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
   },
   trader: {
     intro: 'Живёшь барахолкой? Вот где деньги.',
+    pveHint: 'В ПвЕ живой барахолки нет — профит идёт через крафты убежища и лут, а не перепродажу.',
     links: [
       { title: 'Прибыль бартера', description: 'Где бартер выгоднее покупки.', href: '/eft/progress/barter' },
       { title: 'Цена за слот', description: 'Что тащить ради ₽ за клетку.', href: '/eft/items/price-slot' },
@@ -80,6 +83,7 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
   },
   rat: {
     intro: 'Тихий лут без лишнего боя? Держи данные, чтобы не спалиться.',
+    pveHint: 'В ПвЕ давления игроков меньше — фокус смещается на чистый лут и сюжет.',
     links: [
       { title: 'Карты', description: 'Спавны, выходы, простреливаемые линии.', href: '/eft/maps' },
       { title: 'Лут-контейнеры', description: 'Где лежит ценное.', href: '/eft/loot-containers' },
@@ -103,6 +107,15 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
       { title: 'Хронология', description: 'События по датам.', href: '/eft/gamesetting/timeline' },
       { title: 'Персонажи', description: 'Кто есть кто в Таркове.', href: '/eft/gamesetting/characters' },
       { title: 'Теории и загадки', description: 'Тайны и версии комьюнити.', href: '/eft/gamesetting/theories' },
+    ],
+  },
+  squad: {
+    intro: 'Играешь отрядом? Собери пати и держи связь.',
+    links: [
+      { title: 'Поиск напарника', description: 'Найти людей под рейд.', href: '/eft/comlink/find-partner' },
+      { title: 'Кандидаты', description: 'Кто ищет группу.', href: '/eft/comlink/candidates' },
+      { title: 'Обсуждения', description: 'Комьюнити и тактики.', href: '/eft/comlink/discussions' },
+      { title: 'Мастер-классы', description: 'Учиться играть вместе.', href: '/eft/comlink/masterclasses' },
     ],
   },
 };
