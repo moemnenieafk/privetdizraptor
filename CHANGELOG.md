@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-16
+- `49bde62` docs(state): свежий релиз-снапшот 16.07 (релиз-гейт почти закрыт)
 - `85d2040` chore(comlink): канонический RLS-скрипт + верификация RLS в миграции
 - `debb032` fix(prices): устойчивое чтение цен — каталог не падает без PvE-миграции
 - `d07fa68` chore(migrate): роут+workflow migrate-prices-pve (добавляет PvE-колонки в prices)
