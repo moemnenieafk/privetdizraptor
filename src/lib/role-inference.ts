@@ -10,7 +10,10 @@ export type PlayerRole =
   | 'gunsmith' // Оружейник (билдер)
   | 'engineer' // Инженер базы (хидаут)
   | 'raider' // Рейдер-хантер
-  | 'viewer'; // Зритель контента
+  | 'viewer' // Зритель контента
+  | 'rat' // Крыса (тихий соло-лутер/кемпер)
+  | 'sherpa' // Шерп (наставник)
+  | 'lore'; // Лорник (фанат вселенной)
 
 export const PLAYER_ROLES: readonly PlayerRole[] = [
   'rookie',
@@ -20,6 +23,9 @@ export const PLAYER_ROLES: readonly PlayerRole[] = [
   'engineer',
   'raider',
   'viewer',
+  'rat',
+  'sherpa',
+  'lore',
 ] as const;
 
 /** Русские подписи и текст адаптивной кнопки «Ульты». */
@@ -31,6 +37,9 @@ export const ROLE_LABELS: Record<PlayerRole, { name: string; button: string }> =
   engineer: { name: 'Инженер базы', button: 'Я строю базу' },
   raider: { name: 'Рейдер', button: 'Я бывалый' },
   viewer: { name: 'Зритель', button: 'Я за контентом' },
+  rat: { name: 'Крыса', button: 'Я крыса' },
+  sherpa: { name: 'Шерп', button: 'Я шерп' },
+  lore: { name: 'Лорник', button: 'Я лорник' },
 };
 
 /** Стадия прогресса — грубый детерминированный слой по фактам профиля. */
@@ -51,7 +60,9 @@ export type BehaviorDomain =
   | 'videos'
   | 'codex'
   | 'rookie'
-  | 'hideout';
+  | 'hideout'
+  | 'comlink'
+  | 'lore';
 
 /** Счётчики визитов по доменам (уже с затуханием на стороне агрегатора). */
 export type BehaviorSignals = Partial<Record<BehaviorDomain, number>>;
@@ -93,23 +104,25 @@ export interface RoleInference {
 /** Вклад одного домена поведения в роли (может бить в несколько). */
 const DOMAIN_TO_ROLES: Record<BehaviorDomain, PlayerRole[]> = {
   barters: ['trader'],
-  prices: ['trader'],
+  prices: ['trader', 'rat'],
   loadouts: ['gunsmith'],
   gunsmith: ['gunsmith'],
   quests: ['progressor'],
   questmap: ['progressor'],
   needed: ['progressor', 'engineer'],
   bosses: ['raider'],
-  maps: ['raider'],
-  loot: ['raider', 'trader'],
+  maps: ['raider', 'rat'],
+  loot: ['raider', 'trader', 'rat'],
   videos: ['viewer'],
   codex: ['rookie'],
   rookie: ['rookie'],
   hideout: ['engineer'],
+  comlink: ['sherpa'],
+  lore: ['lore'],
 };
 
 function emptyScores(): Record<PlayerRole, number> {
-  return { rookie: 0, progressor: 0, trader: 0, gunsmith: 0, engineer: 0, raider: 0, viewer: 0 };
+  return { rookie: 0, progressor: 0, trader: 0, gunsmith: 0, engineer: 0, raider: 0, viewer: 0, rat: 0, sherpa: 0, lore: 0 };
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -148,7 +161,7 @@ function inferAxes(signals: BehaviorSignals, facts: ProfileFacts): RoleAxes {
   const sprint = (g('quests') + g('questmap')) / total;
   const collect = (g('needed') + g('loot') + g('hideout')) / total;
   // Соло↔сокланы: пока только видео как слабый прокси «смотрит комьюнити».
-  const clan = g('videos') / total;
+  const clan = (g('videos') + g('comlink')) / total;
 
   return {
     cautionAggression: clamp(aggression - caution, -1, 1),

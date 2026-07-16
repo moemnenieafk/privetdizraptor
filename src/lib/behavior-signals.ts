@@ -25,7 +25,9 @@ export function pathToDomain(pathname: string): BehaviorDomain | null {
   if (p.includes('bosses')) return 'bosses';
   if (p.includes('/maps')) return 'maps';
   if (p.includes('hideout')) return 'hideout';
+  if (p.includes('/comlink')) return 'comlink';
   if (p.includes('/videos')) return 'videos';
+  if (p.includes('gamesetting') && /(lore|timeline|theories|audiotapes|docs-notes|characters|factions|corporations)/.test(p)) return 'lore';
   if (p.includes('gamesetting') || p.includes('/codex')) return 'codex';
   if (p.includes('/items')) return 'prices';
   return null;

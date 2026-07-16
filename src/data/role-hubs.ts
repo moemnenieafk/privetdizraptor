@@ -78,4 +78,31 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
       { title: 'Мастер-классы', description: 'Разборы от шерпов комьюнити.', href: '/eft/comlink/masterclasses' },
     ],
   },
+  rat: {
+    intro: 'Тихий лут без лишнего боя? Держи данные, чтобы не спалиться.',
+    links: [
+      { title: 'Карты', description: 'Спавны, выходы, простреливаемые линии.', href: '/eft/maps' },
+      { title: 'Лут-контейнеры', description: 'Где лежит ценное.', href: '/eft/loot-containers' },
+      { title: 'Цена за слот', description: 'Что тащить ради \u20bd за клетку.', href: '/eft/items/price-slot' },
+      { title: 'Рейтинг предметов', description: 'Самое ценное и ходовое.', href: '/eft/items/loot-rate' },
+    ],
+  },
+  sherpa: {
+    intro: 'Водишь и учишь новичков? Инструменты наставника здесь.',
+    links: [
+      { title: 'Биржа шерпов', description: 'Найти учеников и наставников.', href: '/eft/comlink/sherpa-exchange' },
+      { title: 'Мастер-классы', description: 'Разборы и обучение от комьюнити.', href: '/eft/comlink/masterclasses' },
+      { title: 'Поиск напарника', description: 'Собрать группу под рейд.', href: '/eft/comlink/find-partner' },
+      { title: 'Кодекс', description: 'База знаний, чтобы объяснять на пальцах.', href: '/eft/gamesetting/lore' },
+    ],
+  },
+  lore: {
+    intro: 'Фанат вселенной? Погружайся в мир Норвинска.',
+    links: [
+      { title: 'История мира', description: 'Что здесь произошло и почему.', href: '/eft/gamesetting/lore' },
+      { title: 'Хронология', description: 'События по датам.', href: '/eft/gamesetting/timeline' },
+      { title: 'Персонажи', description: 'Кто есть кто в Таркове.', href: '/eft/gamesetting/characters' },
+      { title: 'Теории и загадки', description: 'Тайны и версии комьюнити.', href: '/eft/gamesetting/theories' },
+    ],
+  },
 };
