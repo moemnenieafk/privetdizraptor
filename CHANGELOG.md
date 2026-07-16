@@ -249,6 +249,15 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-16
+- `225dde5` feat(quest-changes): рендер изменений квестов в ченджлоге
+- `49a3b72` feat(quest-changes): SPT-дифф квестов + интерпретация
+- `e567114` feat(quest-changes): снимок квестов + миграция
+- `91dcc04` feat(craft-changes): рендер крафтов убежища в ченджлоге
+- `6adb63a` feat(craft-changes): SPT-дифф крафтов убежища + интерпретация
+- `bf9509f` feat(craft-changes): снимок крафтов убежища + миграция
+- `4c92fda` feat(trader-changes): рендер изменений торговцев в ченджлоге
+- `855a7f0` feat(trader-changes): SPT-дифф офферов + интерпретация
+- `66893bf` feat(trader-changes): схема под трекинг офферов торговцев
 - `4d409fe` feat(change-digests): редакторская правка разбора в ченджлоге
 - `fa35815` feat(change-digests): таблица редакторских разборов + миграция
 - `60be607` feat(game-changes): интерпретатор изменений в понятный RU
