@@ -85,3 +85,21 @@ export async function getTraderOffers(): Promise<Map<string, TraderAssort>> {
 
   return out;
 }
+
+// Полный резолв имени торговца по BSG-id (для scope квестов и наград-репутации).
+// Включает и не трекаемых для офферов (Скупщик), и особых (Смотритель, БТР).
+const TRADER_NAMES_BY_ID: Record<string, string> = {
+  "54cb50c76803fa8b248b4571": "Прапор",
+  "54cb57776803fa99248b456e": "Терапевт",
+  "58330581ace78e27b8b10cee": "Лыжник",
+  "5935c25fb3acc3127c3d8cd9": "Миротворец",
+  "5a7c2eca46aef81a7ca2145d": "Механик",
+  "5ac3b934156ae10c4430e83c": "Барахольщик",
+  "5c0647fdd443bc2504c2d371": "Егерь",
+  "579dc571d53a0658a154fbec": "Скупщик",
+  "6617beeaa9cfa777ca915b7c": "Реф",
+  "638f541a29ffd1183d187f57": "Смотритель",
+  "656f0f98d80a697f855d34b1": "БТР",
+};
+
+export const traderNameById = (id: string): string => TRADER_NAMES_BY_ID[id] ?? "Торговец";

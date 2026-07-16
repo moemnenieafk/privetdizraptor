@@ -13,11 +13,12 @@
 // Импорты относительные (не @/) — модуль может грузиться и под tsx-скриптом.
 import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "./index";
-import { items, itemChangeState, itemChanges, changeDigests, traderOfferState, craftState } from "./schema";
+import { items, itemChangeState, itemChanges, changeDigests, traderOfferState, craftState, questState } from "./schema";
 import { eftGameId } from "./eft";
 import { getEftItemStats } from "../lib/eft-item-stats";
-import { getTraderOffers, type CostReq } from "../lib/spt-traders";
+import { getTraderOffers, traderNameById, type CostReq } from "../lib/spt-traders";
 import { getHideoutRecipes, type HideoutRecipe, type CraftInput } from "../lib/spt-hideout";
+import { getQuestSnapshots, type QuestRewardItem, type QuestStanding } from "../lib/spt-quests";
 
 // Массовый сдвиг = рекалибровка (смена/пересбор источника), не патч. Тогда дельты не
 // пишем, только освежаем снимок. Реальный патч трогает статы десятков–сотен предметов.
@@ -146,7 +147,7 @@ export interface GameChange {
   oldValue: string | null;
   newValue: string | null;
   /** 'stat' — статы предмета, 'trader' — оффер торговца. */
-  category: 'stat' | 'trader' | 'craft';
+  category: 'stat' | 'trader' | 'craft' | 'quest';
   /** Для 'trader' — имя торговца. */
   scope: string | null;
 }
@@ -163,8 +164,8 @@ function asKind(v: string): ChangeKind {
   return v === "added" || v === "removed" ? v : "field";
 }
 
-function asCategory(v: string): 'stat' | 'trader' | 'craft' {
-  return v === "trader" || v === "craft" ? v : "stat";
+function asCategory(v: string): 'stat' | 'trader' | 'craft' | 'quest' {
+  return v === "trader" || v === "craft" || v === "quest" ? v : "stat";
 }
 
 /**
@@ -577,6 +578,142 @@ export async function detectCraftChanges(): Promise<DetectResult> {
       .onConflictDoUpdate({
         target: [craftState.gameId, craftState.recipeId],
         set: { fingerprint: sql`excluded.fingerprint`, updatedAt: sql`now()` },
+      });
+  }
+
+  return {
+    baseline,
+    recalibrated,
+    scanned: current.size,
+    added: changeRows.filter((c) => c.kind === "added").length,
+    removed: changeRows.filter((c) => c.kind === "removed").length,
+    fieldChanges: changeRows.filter((c) => c.kind === "field").length,
+  };
+}
+
+/* ───────────────── детект изменений квестов (SPT + tarkov.dev) ───────────────── */
+
+const questItemsNorm = (it: QuestRewardItem[]): string =>
+  [...it].sort((a, b) => a.tpl.localeCompare(b.tpl)).map((i) => `${i.tpl}:${i.count}`).join(",");
+const standingNorm = (st: QuestStanding[]): string =>
+  [...st].sort((a, b) => a.traderId.localeCompare(b.traderId)).map((s) => `${s.traderId}:${s.value.toFixed(2)}`).join(",");
+
+function humanStanding(st: QuestStanding[]): string {
+  if (st.length === 0) return "—";
+  return st.map((s) => `${traderNameById(s.traderId)} ${s.value >= 0 ? "+" : ""}${s.value.toFixed(2)}`).join(", ");
+}
+
+interface ParsedQuestFp {
+  xp: number;
+  items: QuestRewardItem[];
+  standing: QuestStanding[];
+  obj: number;
+  objHash: string;
+  prereqs: number;
+}
+function parseQuestFp(fp: string): ParsedQuestFp {
+  const parts = fp.split("|");
+  const strip = (pfx: string, i: number): string => (parts[i] ?? "").replace(new RegExp(`^${pfx}`), "");
+  const itStr = strip("it", 1);
+  const stStr = strip("st", 2);
+  const obStr = strip("ob", 3);
+  const [obCount, objHash = ""] = obStr.split("#");
+  return {
+    xp: Number(strip("xp", 0)) || 0,
+    items: itStr.length ? itStr.split(",").map((x) => { const [tpl, c] = x.split(":"); return { tpl, count: Number(c) || 0 }; }) : [],
+    standing: stStr.length ? stStr.split(",").map((x) => { const [tid, v] = x.split(":"); return { traderId: tid, value: Number(v) || 0 }; }) : [],
+    obj: Number(obCount) || 0,
+    objHash,
+    prereqs: Number(strip("pr", 4)) || 0,
+  };
+}
+
+/**
+ * Диффает квесты (SPT + RU-имена tarkov.dev) со снимком quest_state, пишет дельты в
+ * item_changes (category='quest'). Первый прогон = базлайн. Пустой срез → бросаем.
+ */
+export async function detectQuestChanges(): Promise<DetectResult> {
+  const gameId = await eftGameId();
+
+  const quests = await getQuestSnapshots();
+  if (quests.length === 0) {
+    throw new Error("Пустой срез квестов — детект отменён (снимок сохранён)");
+  }
+
+  const itemRows = await db
+    .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName })
+    .from(items)
+    .where(eq(items.gameId, gameId));
+  const names: NameMap = new Map(itemRows.map((r) => [r.inGameId, { name: r.name, short: r.shortName }]));
+
+  const fpOfQuest = (q: (typeof quests)[number]): string =>
+    `xp${q.xp}|it${questItemsNorm(q.items)}|st${standingNorm(q.standing)}|ob${q.objectives}#${q.objHash}|pr${q.prereqs}`;
+
+  const current = new Map<string, (typeof quests)[number] & { fp: string }>();
+  for (const q of quests) current.set(q.questId, { ...q, fp: fpOfQuest(q) });
+
+  const priorRows = await db
+    .select({ questId: questState.questId, name: questState.name, fingerprint: questState.fingerprint })
+    .from(questState)
+    .where(eq(questState.gameId, gameId));
+  const prior = new Map(priorRows.map((p) => [p.questId, { name: p.name, fp: p.fingerprint }]));
+
+  const baseline = prior.size === 0;
+  let changeRows: (typeof itemChanges.$inferInsert)[] = [];
+
+  if (!baseline) {
+    for (const [id, cur] of current) {
+      const prev = prior.get(id);
+      const scope = traderNameById(cur.traderId);
+      const base = { gameId, inGameId: id, name: cur.name, shortName: null, category: "quest" as const, scope };
+      if (!prev) {
+        changeRows.push({ ...base, kind: "added" });
+        continue;
+      }
+      if (prev.fp === cur.fp) continue;
+      const p = parseQuestFp(prev.fp);
+      if (p.xp !== cur.xp) {
+        changeRows.push({ ...base, kind: "field", field: "Опыт", oldValue: p.xp.toLocaleString("ru-RU"), newValue: cur.xp.toLocaleString("ru-RU") });
+      }
+      if (questItemsNorm(p.items) !== questItemsNorm(cur.items)) {
+        changeRows.push({ ...base, kind: "field", field: "Награда-предметы", oldValue: humanItems(p.items, names), newValue: humanItems(cur.items, names) });
+      }
+      if (standingNorm(p.standing) !== standingNorm(cur.standing)) {
+        changeRows.push({ ...base, kind: "field", field: "Репутация", oldValue: humanStanding(p.standing), newValue: humanStanding(cur.standing) });
+      }
+      if (p.obj !== cur.objectives) {
+        changeRows.push({ ...base, kind: "field", field: "Цели", oldValue: `${p.obj} усл.`, newValue: `${cur.objectives} усл.` });
+      } else if (p.objHash !== cur.objHash) {
+        changeRows.push({ ...base, kind: "field", field: "Цели", oldValue: "прежние", newValue: "условия изменены" });
+      }
+      if (p.prereqs !== cur.prereqs) {
+        changeRows.push({ ...base, kind: "field", field: "Требования к старту", oldValue: `${p.prereqs} усл.`, newValue: `${cur.prereqs} усл.` });
+      }
+    }
+    for (const [id, prev] of prior) {
+      if (!current.has(id)) {
+        changeRows.push({ gameId, inGameId: id, name: prev.name, shortName: null, kind: "removed", category: "quest", scope: "Квесты" });
+      }
+    }
+  }
+
+  const recalibrated =
+    !baseline && (changeRows.length > RECAL_ABS || changeRows.length > current.size * RECAL_RATIO);
+  if (recalibrated) changeRows = [];
+
+  const CHUNK = 500;
+  for (let i = 0; i < changeRows.length; i += CHUNK) {
+    await db.insert(itemChanges).values(changeRows.slice(i, i + CHUNK));
+  }
+
+  const stateRows = [...current.values()].map((c) => ({ gameId, questId: c.questId, name: c.name, fingerprint: c.fp }));
+  for (let i = 0; i < stateRows.length; i += CHUNK) {
+    await db
+      .insert(questState)
+      .values(stateRows.slice(i, i + CHUNK))
+      .onConflictDoUpdate({
+        target: [questState.gameId, questState.questId],
+        set: { name: sql`excluded.name`, fingerprint: sql`excluded.fingerprint`, updatedAt: sql`now()` },
       });
   }
 
