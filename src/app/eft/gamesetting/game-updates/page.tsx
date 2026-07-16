@@ -8,7 +8,7 @@ import { GameChangesPanel } from '@/components/features/game-changes/GameChanges
 import { getMe } from '@/lib/auth/me';
 import { canEditContent } from '@/lib/auth/roles';
 
-// «Обновления игры» — лента патчей. Источник: Steam News API (appid 3932890),
+// «Обновления игры» — раздел Кодекса: лента патчей + «что реально изменилось». Источник: Steam News API (appid 3932890),
 // официально и без ключа. Discord-канал BSG читать нельзя (нужен бот в их сервере),
 // парсинг сайта хрупок.
 //
@@ -19,7 +19,7 @@ import { canEditContent } from '@/lib/auth/roles';
 // Публичная страница (в отличие от анкет): это воронка в раздел, её должен видеть поиск.
 
 export const metadata: Metadata = {
-  title: 'Обновления игры · Связь · ЦТА',
+  title: 'Обновления игры · Кодекс · ЦТА',
   description: 'Патчи и обновления Escape from Tarkov с разбором на русском.',
 };
 
@@ -45,7 +45,7 @@ export default async function GameUpdatesPage() {
       <div className="w-full max-w-275 px-4 xl:px-0">
         <header className="mb-8">
           <div className="mb-2 flex items-center gap-3">
-            <img src="/icons/eft/00-nav/comlink-icon.svg" alt="" className="h-8 w-8" />
+            <img src="/icons/eft/05-gamesetting/timeline.svg" alt="" className="h-8 w-8" />
             <h1 className="font-blender-medium text-3xl uppercase tracking-widest text-text-primary">
               Обновления игры
             </h1>
@@ -87,7 +87,7 @@ export default async function GameUpdatesPage() {
                 <div className="flex flex-wrap gap-2">
                   {p.hasBodyRu && (
                     <Link
-                      href={`/eft/comlink/game-updates/${p.slug}`}
+                      href={`/eft/gamesetting/game-updates/${p.slug}`}
                       className="flex h-11 items-center gap-2 rounded-xs border border-(--primary) px-4 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)]"
                     >
                       <FileText className="h-4 w-4" aria-hidden="true" />

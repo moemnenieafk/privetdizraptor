@@ -27,7 +27,7 @@ import type { ArticleKind } from "@/db/schema-articles";
 const PATHS: Record<ArticleKind, string> = {
   news: "/eft/comlink/blog",
   masterclass: "/eft/comlink/masterclasses",
-  patch: "/eft/comlink/game-updates",
+  patch: "/eft/gamesetting/game-updates",
 };
 
 function revalidateArticle(kind: ArticleKind, slug?: string): void {

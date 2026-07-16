@@ -21,6 +21,14 @@ const ASSET_HOTLINK_HEADERS = [
 const nextConfig: NextConfig = {
   /* config options here */
 
+  async redirects() {
+    return [
+      // «Обновления игры» переехали из «Связи» в «Кодекс» (URL отражает раздел).
+      { source: '/eft/comlink/game-updates', destination: '/eft/gamesetting/game-updates', permanent: true },
+      { source: '/eft/comlink/game-updates/:slug*', destination: '/eft/gamesetting/game-updates/:slug*', permanent: true },
+    ];
+  },
+
   async headers() {
     return [
       { source: '/(.*)', headers: SECURITY_HEADERS },

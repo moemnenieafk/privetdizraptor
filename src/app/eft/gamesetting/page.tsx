@@ -68,6 +68,14 @@ const CODEX_HUB_CARDS = [
     iconPath: '/icons/eft/05-gamesetting/theory-riddles.svg',
     variant: 'rectangle' as const,
   },
+  {
+    id: 'game-updates',
+    title: 'Обновления игры',
+    description: 'Патчи и «что реально изменилось» — статы, торговцы, крафты и квесты с разбором на русском.',
+    href: '/eft/gamesetting/game-updates',
+    iconPath: '/icons/eft/05-gamesetting/timeline.svg',
+    variant: 'rectangle' as const,
+  },
   // Переехали из «Прогресса» (навигация headerConfig уже здесь; роуты прежние).
   {
     id: 'achievements',

@@ -571,6 +571,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         children: [
           { id: 'gs-lore', label: 'История мира', path: '/eft/gamesetting/lore', iconUrl: '/icons/eft/05-gamesetting/tarkov-lore.svg' },
           { id: 'gs-timeline', label: 'Хронология', path: '/eft/gamesetting/timeline', iconUrl: '/icons/eft/05-gamesetting/timeline.svg' },
+          { id: 'gs-game-updates', label: 'Обновления игры', path: '/eft/gamesetting/game-updates', iconUrl: '/icons/eft/05-gamesetting/timeline.svg' },
           { 
             id: 'gs-characters', 
             label: 'Персонажи', 
@@ -624,8 +625,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           { id: 'cl-sherpa', label: 'Биржа шерпов', path: '/eft/comlink/sherpa-exchange', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
           { id: 'cl-discussions', label: 'Обсуждения', path: '/eft/comlink/discussions', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
           { id: 'cl-masterclasses', label: 'Мастер-классы', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
-          { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
-          { id: 'cl-game-updates', label: 'Обновления игры', path: '/eft/comlink/game-updates', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' }
+          { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' }
         ]
       },
     ],

@@ -44,6 +44,6 @@ export async function POST(req: Request): Promise<NextResponse> {
     return err(500, "Не удалось сохранить");
   }
 
-  revalidatePath("/eft/comlink/game-updates");
+  revalidatePath("/eft/gamesetting/game-updates");
   return NextResponse.json({ ok: true });
 }

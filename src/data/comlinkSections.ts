@@ -25,7 +25,6 @@ export const COMLINK_SECTIONS: ComlinkSection[] = [
   { slug: "discussions", label: "Обсуждения", description: "Темы по игре: мета, споты, механики. У каждого автора виден уровень доверия." },
   { slug: "masterclasses", label: "Мастер-классы", description: "Разборы, обучающие сессии и гайды от профи." },
   { slug: "blog", label: "Новостной блог", description: "Новости проекта ЦТА, статьи и объявления." },
-  { slug: "game-updates", label: "Обновления игры", description: "Патчи, вайпы и ключевые изменения игры." },
 ];
 
 // Табы «навигация по разделу» для SectionPlaceholder.

@@ -43,7 +43,7 @@ export default async function PatchDetailPage({ params }: Props) {
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
       <article className="w-full max-w-3xl px-4 xl:px-0">
         <Link
-          href="/eft/comlink/game-updates"
+          href="/eft/gamesetting/game-updates"
           className="mb-5 inline-flex h-11 items-center gap-2 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-(--primary)"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />

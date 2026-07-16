@@ -31,7 +31,7 @@ const CONTENT_LINKS: CmsLink[] = [
     hint: "Анонсы и записи — дата события, ссылка на видео",
   },
   {
-    href: "/eft/comlink/game-updates",
+    href: "/eft/gamesetting/game-updates",
     title: "Обновления игры",
     hint: "Патчи из Steam приходят синком; вручную пишется наш разбор",
   },

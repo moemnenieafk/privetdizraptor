@@ -16,7 +16,7 @@ export function ItemChangeBadge({ changes }: { changes: ItemChangeEntry[] }) {
           Недавно изменено
         </span>
         <Link
-          href="/eft/comlink/game-updates"
+          href="/eft/gamesetting/game-updates"
           className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-(--primary)"
         >
           Все обновления →
