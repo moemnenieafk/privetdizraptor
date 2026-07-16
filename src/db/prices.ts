@@ -7,9 +7,9 @@
 // getEftPriceMapFromDb() — чистое чтение нашей таблицы `prices`.
 //
 // Импорты относительные (не @/), чтобы модуль грузился и под tsx-скриптом.
-import { eq, sql, and, inArray } from "drizzle-orm";
+import { eq, sql, and, inArray, type SQL } from "drizzle-orm";
 import { db } from "./index";
-import { prices } from "./schema";
+import { prices, type PriceVendorOffer } from "./schema";
 import { eftGameId } from "./eft";
 import { getEftPriceMap, type EftPriceInfo, type CtaVendorOffer } from "../lib/eft-prices";
 import { memoTTL } from "../lib/server-cache";
@@ -89,12 +89,83 @@ export async function syncEftPrices(): Promise<SyncResult> {
   return { items: rows.length };
 }
 
-/**
- * Карта inGameId → экономика/мета из НАШЕЙ таблицы `prices` (чтение, рантайм).
- * Никогда не бросает: пустая Map → список рендерится из каталога без цен.
- */
+/* ─────────────────── устойчивое чтение цен ───────────────────
+ * PvE-колонки (`*_pve`) добавляются отдельной миграцией (migrate-prices-pve),
+ * а с телефона db:push недоступен → возможен интервал «код задеплоен, колонок ещё
+ * нет». Раньше это роняло ВЕСЬ каталог: `select()` тянул PvE-колонки → SELECT падал →
+ * пустая карта цен → у предметов пустые `types` → фильтр категории отдавал 0 предметов.
+ * Теперь читаем явной проекцией: сначала с PvE, при её отсутствии — один раз (флаг на
+ * модуль) падаем в базовую проекцию. Порядок «деплой → миграция» больше ничего не ломает. */
+
+// Postgres: 42703 = undefined_column. Плюс текстовый фолбэк на случай иной обёртки ошибки.
+function isMissingColumnErr(e: unknown): boolean {
+  const err = e as { code?: string; cause?: { code?: string }; message?: string };
+  if (err.code === "42703" || err.cause?.code === "42703") return true;
+  const msg = (err.message ?? "").toLowerCase();
+  return msg.includes("column") && msg.includes("does not exist");
+}
+
+const BASE_COLS = {
+  inGameId: prices.inGameId,
+  normalizedName: prices.normalizedName,
+  bsgCategoryId: prices.bsgCategoryId,
+  backgroundColor: prices.backgroundColor,
+  types: prices.types,
+  lastLowPrice: prices.lastLowPrice,
+  avg24hPrice: prices.avg24hPrice,
+  changeLast48hPercent: prices.changeLast48hPercent,
+  low24hPrice: prices.low24hPrice,
+  high24hPrice: prices.high24hPrice,
+  sellFor: prices.sellFor,
+  buyFor: prices.buyFor,
+} as const;
+
+const PVE_COLS = {
+  avg24hPricePve: prices.avg24hPricePve,
+  low24hPricePve: prices.low24hPricePve,
+  sellForPve: prices.sellForPve,
+  buyForPve: prices.buyForPve,
+} as const;
+
+// Один раз выяснили, что PvE-колонок нет → больше их не запрашиваем (до рестарта инстанса).
+let pveColsMissing = false;
+
+// Минимальный набор полей, который читает mapPriceRow. PvE — опциональны (могут отсутствовать).
+interface PriceRowLike {
+  inGameId: string;
+  normalizedName: string | null;
+  bsgCategoryId: string | null;
+  backgroundColor: string | null;
+  types: string[] | null;
+  lastLowPrice: number | null;
+  avg24hPrice: number | null;
+  changeLast48hPercent: number | null;
+  low24hPrice: number | null;
+  high24hPrice: number | null;
+  sellFor: PriceVendorOffer[] | null;
+  buyFor: PriceVendorOffer[] | null;
+  avg24hPricePve?: number | null;
+  low24hPricePve?: number | null;
+  sellForPve?: PriceVendorOffer[] | null;
+  buyForPve?: PriceVendorOffer[] | null;
+}
+
+/** SELECT из `prices` с фолбэком: с PvE-колонками → без них, если их ещё нет в БД. */
+async function selectPriceRows(where: SQL | undefined): Promise<PriceRowLike[]> {
+  if (!pveColsMissing) {
+    try {
+      return await db.select({ ...BASE_COLS, ...PVE_COLS }).from(prices).where(where);
+    } catch (e) {
+      if (!isMissingColumnErr(e)) throw e;
+      pveColsMissing = true;
+      console.warn("[prices] PvE-колонки отсутствуют — читаю без них (накати migrate-prices-pve)");
+    }
+  }
+  return db.select(BASE_COLS).from(prices).where(where);
+}
+
 // Строка таблицы prices → EftPriceInfo (единый маппер для всех чтений — DRY).
-function mapPriceRow(r: typeof prices.$inferSelect): EftPriceInfo {
+function mapPriceRow(r: PriceRowLike): EftPriceInfo {
   return {
     normalizedName: r.normalizedName ?? "",
     bsgCategoryId: r.bsgCategoryId ?? undefined,
@@ -117,11 +188,15 @@ function mapPriceRow(r: typeof prices.$inferSelect): EftPriceInfo {
 // 1ч — совпадает с почасовым крон-синком цен; ≤1ч «несвежесть» приемлема.
 const PRICES_TTL_MS = 60 * 60 * 1000;
 
+/**
+ * Карта inGameId → экономика/мета из НАШЕЙ таблицы `prices` (чтение, рантайм).
+ * Никогда не бросает: пустая Map → список рендерится из каталога без цен.
+ */
 export async function getEftPriceMapFromDb(): Promise<Map<string, EftPriceInfo>> {
   try {
     const rows = await memoTTL("eft-price-rows", PRICES_TTL_MS, async () => {
       const gameId = await eftGameId();
-      return db.select().from(prices).where(eq(prices.gameId, gameId));
+      return selectPriceRows(eq(prices.gameId, gameId));
     });
     return new Map(rows.map((r) => [r.inGameId, mapPriceRow(r)]));
   } catch (e) {
@@ -136,10 +211,7 @@ export async function getEftPricesByIds(ids: string[]): Promise<Map<string, EftP
   try {
     const gameId = await eftGameId();
     const uniq = [...new Set(ids)];
-    const rows = await db
-      .select()
-      .from(prices)
-      .where(and(eq(prices.gameId, gameId), inArray(prices.inGameId, uniq)));
+    const rows = await selectPriceRows(and(eq(prices.gameId, gameId), inArray(prices.inGameId, uniq)));
     return new Map(rows.map((r) => [r.inGameId, mapPriceRow(r)]));
   } catch (e) {
     console.error("[getEftPricesByIds]", e);
@@ -151,10 +223,7 @@ export async function getEftPricesByIds(ids: string[]): Promise<Map<string, EftP
 export async function getEftPricesByCategory(bsgCategoryId: string): Promise<Map<string, EftPriceInfo>> {
   try {
     const gameId = await eftGameId();
-    const rows = await db
-      .select()
-      .from(prices)
-      .where(and(eq(prices.gameId, gameId), eq(prices.bsgCategoryId, bsgCategoryId)));
+    const rows = await selectPriceRows(and(eq(prices.gameId, gameId), eq(prices.bsgCategoryId, bsgCategoryId)));
     return new Map(rows.map((r) => [r.inGameId, mapPriceRow(r)]));
   } catch (e) {
     console.error("[getEftPricesByCategory]", e);
@@ -168,11 +237,8 @@ export async function getEftPriceBySlug(
 ): Promise<{ id: string; price: EftPriceInfo } | null> {
   try {
     const gameId = await eftGameId();
-    const [row] = await db
-      .select()
-      .from(prices)
-      .where(and(eq(prices.gameId, gameId), eq(prices.normalizedName, slug)))
-      .limit(1);
+    const rows = await selectPriceRows(and(eq(prices.gameId, gameId), eq(prices.normalizedName, slug)));
+    const row = rows[0];
     return row ? { id: row.inGameId, price: mapPriceRow(row) } : null;
   } catch (e) {
     console.error("[getEftPriceBySlug]", e);
