@@ -726,3 +726,45 @@ export async function detectQuestChanges(): Promise<DetectResult> {
     fieldChanges: changeRows.filter((c) => c.kind === "field").length,
   };
 }
+
+/* ───────────────── чтение изменений по предмету (для плашек в разделах) ───────────────── */
+
+export interface ItemChangeEntry {
+  date: string; // ISO день
+  category: 'stat' | 'trader' | 'craft';
+  scope: string | null;
+  kind: ChangeKind;
+  field: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+}
+
+/**
+ * Недавние изменения конкретного предмета (по inGameId): статы + офферы торговцев +
+ * крафты, где он фигурирует. Квесты не item-keyed → сюда не попадают. НЕ бросает → [].
+ */
+export async function getItemChanges(inGameId: string, limit = 8): Promise<ItemChangeEntry[]> {
+  try {
+    const gameId = await eftGameId();
+    const rows = await db
+      .select()
+      .from(itemChanges)
+      .where(and(eq(itemChanges.gameId, gameId), eq(itemChanges.inGameId, inGameId)))
+      .orderBy(desc(itemChanges.detectedAt))
+      .limit(limit);
+    return rows
+      .filter((r) => r.category !== 'quest')
+      .map((r) => ({
+        date: r.detectedAt.toISOString().slice(0, 10),
+        category: (r.category === 'trader' ? 'trader' : r.category === 'craft' ? 'craft' : 'stat') as 'stat' | 'trader' | 'craft',
+        scope: r.scope,
+        kind: asKind(r.kind),
+        field: r.field,
+        oldValue: r.oldValue,
+        newValue: r.newValue,
+      }));
+  } catch (e) {
+    console.warn('[game-changes] изменения предмета недоступны:', e instanceof Error ? e.message : e);
+    return [];
+  }
+}

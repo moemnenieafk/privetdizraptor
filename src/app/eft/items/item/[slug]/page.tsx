@@ -4,6 +4,8 @@ import { db } from '@/db';
 import { items, itemProperties, prices, barters, crafts } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
 import { getEftPriceBySlug, getEftPricesByIds, getEftPricesByCategory } from '@/db/prices';
+import { getItemChanges } from '@/db/game-changes';
+import { ItemChangeBadge } from '@/components/features/game-changes/ItemChangeBadge';
 import { itemIconUrl } from '@/lib/item-icon';
 import { EFT_QUESTS } from '@/data/quests';
 import { BreadcrumbsSetter } from '@/components/features/items/BreadcrumbsSetter';
@@ -427,6 +429,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
   const { item, similar } = data;
   // Требуемый уровень торговца у нас не зеркалится → гексагон уровня не показываем.
   const buyLevelRequired = null;
+  const recentChanges = await getItemChanges(item.id);
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
@@ -436,6 +439,8 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
         <div className="mb-6">
           <CatalogBackLink focusId={item.id} />
         </div>
+
+        <ItemChangeBadge changes={recentChanges} />
 
         <ItemDetailLayout item={item} similar={similar} buyLevelRequired={buyLevelRequired} />
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Minus, ArrowUp, ArrowDown, ArrowRight, Activity, Pencil, Loader2 } from 'lucide-react';
 import { Paywall } from '@/components/features/subscription/Paywall';
 import type { Changeset, GameChange } from '@/db/game-changes';
+import { FIELD_LABEL, STAT_DIRECTION, fieldLabel, fmtDay, verdict } from '@/lib/game-changes-format';
 
 // «Что реально изменилось» — дифф игровых данных на понятном языке (авто-интерпретатор)
 // + редакторский разбор ЦТА поверх (правится админом в Draft Mode). Саммари видят все
@@ -15,53 +16,6 @@ export interface DigestView {
   published: boolean;
 }
 export type DigestMap = Record<string, DigestView>;
-
-const FIELD_LABEL: Record<string, string> = {
-  weight: 'Вес',
-  basePrice: 'Базовая цена',
-  gridWidth: 'Ширина ячеек',
-  gridHeight: 'Высота ячеек',
-  penetrationPower: 'Пробитие',
-  damage: 'Урон',
-  armorDamage: 'Урон брони',
-  fragmentationChance: 'Шанс фрагментации',
-  initialSpeed: 'Начальная скорость',
-  armorClass: 'Класс брони',
-  durability: 'Прочность',
-  bluntThroughput: 'Пробитие тупым',
-  ergoPenalty: 'Штраф эргономики',
-  speedPenalty: 'Штраф скорости',
-  turnPenalty: 'Штраф поворота',
-  ergonomics: 'Эргономика',
-  recoilVertical: 'Отдача вертик.',
-  recoilHorizontal: 'Отдача гориз.',
-  fireRate: 'Скорострельность',
-  capacity: 'Вместимость',
-};
-
-// Направление «в плюс игроку»: +1 больше=лучше, −1 меньше=лучше, нет ключа — нейтрально.
-const STAT_DIRECTION: Record<string, 1 | -1> = {
-  penetrationPower: 1, damage: 1, armorDamage: 1, fragmentationChance: 1, armorClass: 1,
-  durability: 1, ergonomics: 1, capacity: 1, initialSpeed: 1,
-  recoilVertical: -1, recoilHorizontal: -1, bluntThroughput: -1, weight: -1,
-  ergoPenalty: 1, speedPenalty: 1, turnPenalty: 1,
-};
-
-const fieldLabel = (f: string | null): string => (f ? FIELD_LABEL[f] ?? f : '');
-const fmtDay = (iso: string): string =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-
-type Verdict = 'buff' | 'nerf' | null;
-
-function verdict(field: string | null, oldV: string | null, newV: string | null): Verdict {
-  if (!field || oldV === null || newV === null) return null;
-  const dir = STAT_DIRECTION[field];
-  if (!dir) return null;
-  const a = Number(oldV);
-  const b = Number(newV);
-  if (!Number.isFinite(a) || !Number.isFinite(b) || a === b) return null;
-  return (b - a) * dir > 0 ? 'buff' : 'nerf';
-}
 
 function countKinds(cs: Changeset[]): { added: number; removed: number; field: number } {
   const acc = { added: 0, removed: 0, field: 0 };
