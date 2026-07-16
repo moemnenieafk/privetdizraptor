@@ -927,3 +927,21 @@ export const craftState = pgTable(
   },
   (t) => [uniqueIndex("craft_state_key_idx").on(t.gameId, t.recipeId)],
 );
+
+/* ───────────────── quest state (снимок квестов для диффа) ─────────────────
+ * Отпечаток квеста на (игра, questId): опыт, награды, репутация, цели, требования.
+ * name хранится, чтобы показать удалённый квест. Источник — templates/quests.json
+ * (sp-tarkov) + RU-имена из tarkov.dev. Дельты → item_changes (category='quest'). */
+export const questState = pgTable(
+  "quest_state",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    questId: text("quest_id").notNull(),
+    name: text("name").notNull(),
+    fingerprint: text("fingerprint").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("quest_state_key_idx").on(t.gameId, t.questId)],
+);
