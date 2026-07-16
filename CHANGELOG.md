@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-16
+- `60be607` feat(game-changes): интерпретатор изменений в понятный RU
 - `231ee8c` feat(game-changes): живой источник tarkov.dev — фича реально работает
 - `7a6b843` feat(game-changes): панель на game-updates, детали за подпиской
 - `d7b957c` feat(game-changes): дифф-движок + крон детекта
