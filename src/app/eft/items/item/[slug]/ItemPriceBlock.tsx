@@ -2,6 +2,7 @@
 
 import { PackageX } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { useIsPve } from '@/hooks/useGameMode';
 import { VendorImage } from './ItemImage';
 import type { VendorOffer } from './ItemModules';
 
@@ -17,6 +18,18 @@ const isFlea = (v: { normalizedName?: string; name: string }) =>
   v.normalizedName === 'flea-market' || v.name === 'Flea Market';
 
 const rub = (o: VendorOffer) => o.priceRUB ?? o.price;
+// Резолвер цены по режиму: PvE-поле, иначе фолбэк на обычную (PvP) цену.
+const rubForMode = (o: VendorOffer, pve: boolean) => (pve ? (o.priceRUBPve ?? o.pricePve ?? rub(o)) : rub(o));
+
+// Тег контекста цены барахолки в PvE: пока данных нет — показываем, что цифра из PvP-рынка.
+function FleaModeTag({ isPve, hasPve }: { isPve: boolean; hasPve: boolean }) {
+  if (!isPve) return null;
+  return (
+    <span className="ml-2 rounded-xs border border-edition-tue px-1.5 py-0.5 font-blender-medium text-type-caption uppercase tracking-widest text-edition-tue">
+      {hasPve ? 'PvE' : 'PvP-рынок'}
+    </span>
+  );
+}
 const fmtRub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
 
 // ─── Бокс 48px для иконок — фон в цвет иконки (10%), без обводки ──────────────
@@ -80,6 +93,7 @@ function PriceCard({ label, children }: { label: string; children: React.ReactNo
 }
 
 export function ItemPriceBlock({ buyFor = [], sellFor = [], slots, buyLevelRequired }: ItemPriceBlockProps) {
+  const isPve = useIsPve();
   const traderBuys = buyFor.filter((b) => !isFlea(b.vendor));
   const fleaBuy = buyFor.find((b) => isFlea(b.vendor));
   const traderSells = sellFor.filter((s) => !isFlea(s.vendor));
@@ -94,7 +108,7 @@ export function ItemPriceBlock({ buyFor = [], sellFor = [], slots, buyLevelRequi
 
   const safeSlots = slots > 0 ? slots : 1;
   const traderSellVps = bestTraderSell ? Math.floor(rub(bestTraderSell) / safeSlots) : 0;
-  const fleaSellVps = fleaSell ? Math.floor(rub(fleaSell) / safeSlots) : 0;
+  const fleaSellVps = fleaSell ? Math.floor(rubForMode(fleaSell, isPve) / safeSlots) : 0;
 
   return (
     <div className="flex flex-col gap-2">
@@ -124,7 +138,8 @@ export function ItemPriceBlock({ buyFor = [], sellFor = [], slots, buyLevelRequi
             <IconFrame tint="bg-yellow-500/10">
               <span className="icon-eft-currency-ruble h-5 w-5 bg-yellow-500/80 mask-contain mask-center mask-no-repeat" />
             </IconFrame>
-            <BigPrice value={rub(fleaBuy)} className="text-nvg-green" />
+            <BigPrice value={rubForMode(fleaBuy, isPve)} className="text-nvg-green" />
+            <FleaModeTag isPve={isPve} hasPve={fleaBuy.priceRUBPve != null} />
           </>
         ) : (
           <EmptyValue />
@@ -154,7 +169,8 @@ export function ItemPriceBlock({ buyFor = [], sellFor = [], slots, buyLevelRequi
             <IconFrame tint="bg-yellow-500/10">
               <span className="icon-eft-currency-ruble h-5 w-5 bg-yellow-500/80 mask-contain mask-center mask-no-repeat" />
             </IconFrame>
-            <BigPrice value={rub(fleaSell)} className="text-nvg-green" />
+            <BigPrice value={rubForMode(fleaSell, isPve)} className="text-nvg-green" />
+            <FleaModeTag isPve={isPve} hasPve={fleaSell.priceRUBPve != null} />
           </>
         ) : (
           <EmptyValue />

@@ -140,6 +140,9 @@ function isHelmetProps(p: NonNullable<ItemProperties>): p is HelmetProperties {
 export interface VendorOffer {
   price: number;
   priceRUB?: number;
+  /** Цена в PvE-режиме (появится с PvE-синком; пока undefined → фолбэк на PvP). */
+  pricePve?: number;
+  priceRUBPve?: number;
   vendor: {
     name: string;
     normalizedName: string;
