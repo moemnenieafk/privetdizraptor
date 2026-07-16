@@ -8,6 +8,7 @@ import { ROLE_LABELS, type RoleInference } from '@/lib/role-inference';
 import { ROLE_HUBS } from '@/data/role-hubs';
 import { RolePicker } from '@/components/features/adaptive/RolePicker';
 import { Paywall } from '@/components/features/subscription/Paywall';
+import { useIsPve } from '@/hooks/useGameMode';
 
 const STAGE_LABEL: Record<RoleInference['stage'], string> = {
   timmy: 'Новичок',
@@ -76,10 +77,7 @@ export function AdaptiveHubClient() {
   const derived = useRoleStore((s) => s.byProfile[activeId]?.derived ?? null);
   const manualOverride = useRoleStore((s) => s.byProfile[activeId]?.manualOverride ?? null);
   const effectiveRole = useRoleStore((s) => effectiveRoleFor(s, activeId));
-  const pve = usePlayerStore((s) => {
-    const a = s.profiles.find((p) => p.id === s.activeProfileId) ?? s.profiles[0];
-    return a?.mode === 'PVE';
-  });
+  const pve = useIsPve();
 
   if (!hydrated) {
     return (

@@ -11,6 +11,7 @@ import { HeaderNavigation } from './header-modules/HeaderNavigation';
 import { GameLogo } from './header-modules/GameLogo';
 import { BurgerMenu } from './header-modules/BurgerMenu';
 import { PlayerTelemetry } from './header-modules/PlayerTelemetry';
+import { GameModeBadge } from './header-modules/GameModeBadge';
 import StreamStatus from './header-modules/StreamStatus';
 import { TacticalSearch } from './header-modules/TacticalSearch';
 import NewbieButton from './header-modules/NewbieButton';
@@ -48,6 +49,7 @@ export function Header() {
 
           {showFeatures && (
             <div className="ml-auto flex items-center gap-3">
+              <GameModeBadge />
               <div className="hidden xl:block">
                 <PlayerTelemetry />
               </div>
