@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-16
+- `a5bd7f6` feat(account): поле «Часов в игре» в редакторе профиля Аккаунт-центра
 - `fa156c7` feat(profile): инпут «Часов в игре» в профиле ЧВК + приём из OCR
 - `043e0fd` feat(adaptive): role-hubs + адаптивный хаб /eft/hub
 - `b51d0e6` fix(rookie): убрал opacity-модификатор на CSS-переменной (Tailwind v4)
