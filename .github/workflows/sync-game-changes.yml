@@ -1,0 +1,34 @@
+# Детект «что реально изменилось в игре»: дифф текущих данных предметов со снимком.
+# Раз в сутки (после синка предметов) + кнопка Run workflow. Первый прогон — базлайн.
+name: sync-game-changes
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "30 9 * * *" # 09:30 UTC ежедневно (после sync-patches 09:00)
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger game-changes detection
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/sync-game-changes"
+          echo "GET $url"
+          code=$(curl -sS -m 120 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Детект изменений не удался (HTTP $code)"
+            exit 1
+          fi
