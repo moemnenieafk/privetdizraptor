@@ -1,0 +1,34 @@
+# Детект изменений офферов торговцев: дифф SPT-ассортов со снимком.
+# Раз в сутки + кнопка Run workflow. Первый прогон — базлайн.
+name: sync-trader-changes
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "45 9 * * *" # 09:45 UTC ежедневно (после sync-game-changes 09:30)
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger trader-changes detection
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/sync-trader-changes"
+          echo "GET $url"
+          code=$(curl -sS -m 120 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Детект трейдеров не удался (HTTP $code)"
+            exit 1
+          fi

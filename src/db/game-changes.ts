@@ -13,9 +13,10 @@
 // Импорты относительные (не @/) — модуль может грузиться и под tsx-скриптом.
 import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "./index";
-import { itemChangeState, itemChanges, changeDigests } from "./schema";
+import { items, itemChangeState, itemChanges, changeDigests, traderOfferState } from "./schema";
 import { eftGameId } from "./eft";
 import { getEftItemStats } from "../lib/eft-item-stats";
+import { getTraderOffers, type CostReq } from "../lib/spt-traders";
 
 // Массовый сдвиг = рекалибровка (смена/пересбор источника), не патч. Тогда дельты не
 // пишем, только освежаем снимок. Реальный патч трогает статы десятков–сотен предметов.
@@ -143,6 +144,10 @@ export interface GameChange {
   field: string | null;
   oldValue: string | null;
   newValue: string | null;
+  /** 'stat' — статы предмета, 'trader' — оффер торговца. */
+  category: 'stat' | 'trader';
+  /** Для 'trader' — имя торговца. */
+  scope: string | null;
 }
 
 export interface Changeset {
@@ -188,6 +193,8 @@ export async function getRecentChangesets(maxChangesets = 6, perSet = 80): Promi
         field: r.field,
         oldValue: r.oldValue,
         newValue: r.newValue,
+        category: r.category === 'trader' ? 'trader' : 'stat',
+        scope: r.scope,
       });
     }
 
@@ -248,4 +255,173 @@ export async function upsertChangeDigest(
         updatedAt: sql`now()`,
       },
     });
+}
+
+/* ───────────────── детект изменений офферов торговцев (SPT-дифф) ───────────────── */
+
+// Валюты EFT: tpl → символ. Одиночное денежное требование → «цена», иначе → «бартер».
+const CURRENCY: Record<string, string> = {
+  "5449016a4bdc2d6f028b456f": "₽",
+  "5696686a4bdc2da3298b456a": "$",
+  "569668774bdc2da2298b4568": "€",
+};
+
+const normCost = (cost: CostReq[]): string =>
+  [...cost].sort((a, b) => a.tpl.localeCompare(b.tpl)).map((c) => `${c.tpl}:${c.count}`).join(",");
+
+const fpOf = (loyalty: number | null, cost: CostReq[]): string => `L${loyalty ?? "-"}|${normCost(cost)}`;
+
+function parseFp(fp: string): { loyalty: string; cost: CostReq[] } {
+  const [lPart, cPart = ""] = fp.split("|");
+  const cost = cPart.length
+    ? cPart.split(",").map((s) => {
+        const [tpl, count] = s.split(":");
+        return { tpl, count: Number(count) || 0 };
+      })
+    : [];
+  return { loyalty: lPart.replace(/^L/, ""), cost };
+}
+
+type NameMap = Map<string, { name: string; short: string | null }>;
+
+function humanCost(cost: CostReq[], names: NameMap): string {
+  if (cost.length === 0) return "—";
+  const first = cost[0];
+  if (cost.length === 1 && CURRENCY[first.tpl]) {
+    return `${first.count.toLocaleString("ru-RU")} ${CURRENCY[first.tpl]}`;
+  }
+  const parts = cost.map((c) => {
+    const n = names.get(c.tpl);
+    return `${c.count}× ${n?.short?.trim() || n?.name || "?"}`;
+  });
+  return `бартер: ${parts.join(", ")}`;
+}
+
+/**
+ * Диффает офферы торговцев (SPT) со снимком trader_offer_state, пишет дельты в
+ * item_changes (category='trader'). Первый прогон = базлайн. Пустой срез → бросаем.
+ */
+export async function detectTraderChanges(): Promise<DetectResult> {
+  const gameId = await eftGameId();
+
+  const assorts = await getTraderOffers();
+  const totalOffers = [...assorts.values()].reduce((s, a) => s + a.offers.size, 0);
+  if (totalOffers === 0) {
+    throw new Error("SPT отдал пустые ассорты — детект торговцев отменён (снимок сохранён)");
+  }
+
+  const itemRows = await db
+    .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName })
+    .from(items)
+    .where(eq(items.gameId, gameId));
+  const names: NameMap = new Map(itemRows.map((r) => [r.inGameId, { name: r.name, short: r.shortName }]));
+  const nameOf = (tpl: string): string => names.get(tpl)?.name ?? tpl;
+  const shortOf = (tpl: string): string | null => names.get(tpl)?.short ?? null;
+
+  interface Cur {
+    traderId: string;
+    nameRu: string;
+    tpl: string;
+    loyalty: number | null;
+    cost: CostReq[];
+    fp: string;
+  }
+  const current = new Map<string, Cur>();
+  for (const [traderId, a] of assorts) {
+    for (const [tpl, off] of a.offers) {
+      current.set(`${traderId}::${tpl}`, {
+        traderId,
+        nameRu: a.nameRu,
+        tpl,
+        loyalty: off.loyalty,
+        cost: off.cost,
+        fp: fpOf(off.loyalty, off.cost),
+      });
+    }
+  }
+
+  const priorRows = await db
+    .select({ traderId: traderOfferState.traderId, tpl: traderOfferState.tpl, fingerprint: traderOfferState.fingerprint })
+    .from(traderOfferState)
+    .where(eq(traderOfferState.gameId, gameId));
+  const prior = new Map(priorRows.map((p) => [`${p.traderId}::${p.tpl}`, p.fingerprint]));
+
+  const baseline = prior.size === 0;
+  let changeRows: (typeof itemChanges.$inferInsert)[] = [];
+
+  if (!baseline) {
+    for (const [key, cur] of current) {
+      const prevFp = prior.get(key);
+      if (prevFp === undefined) {
+        changeRows.push({
+          gameId, inGameId: cur.tpl, name: nameOf(cur.tpl), shortName: shortOf(cur.tpl),
+          kind: "added", category: "trader", scope: cur.nameRu,
+        });
+        continue;
+      }
+      if (prevFp === cur.fp) continue;
+
+      const prev = parseFp(prevFp);
+      const newLoy = cur.loyalty === null ? "-" : String(cur.loyalty);
+      if (prev.loyalty !== newLoy) {
+        changeRows.push({
+          gameId, inGameId: cur.tpl, name: nameOf(cur.tpl), shortName: shortOf(cur.tpl),
+          kind: "field", category: "trader", scope: cur.nameRu, field: "Уровень лояльности",
+          oldValue: prev.loyalty === "-" ? "—" : `ур. ${prev.loyalty}`,
+          newValue: cur.loyalty === null ? "—" : `ур. ${cur.loyalty}`,
+        });
+      }
+      if (normCost(prev.cost) !== normCost(cur.cost)) {
+        const bothMoney = Boolean(
+          prev.cost.length === 1 && CURRENCY[prev.cost[0].tpl] &&
+          cur.cost.length === 1 && CURRENCY[cur.cost[0].tpl],
+        );
+        changeRows.push({
+          gameId, inGameId: cur.tpl, name: nameOf(cur.tpl), shortName: shortOf(cur.tpl),
+          kind: "field", category: "trader", scope: cur.nameRu, field: bothMoney ? "Цена" : "Бартер",
+          oldValue: humanCost(prev.cost, names), newValue: humanCost(cur.cost, names),
+        });
+      }
+    }
+    for (const key of prior.keys()) {
+      if (!current.has(key)) {
+        const [traderId, tpl] = key.split("::");
+        changeRows.push({
+          gameId, inGameId: tpl, name: nameOf(tpl), shortName: shortOf(tpl),
+          kind: "removed", category: "trader", scope: assorts.get(traderId)?.nameRu ?? traderId,
+        });
+      }
+    }
+  }
+
+  const recalibrated =
+    !baseline && (changeRows.length > RECAL_ABS || changeRows.length > current.size * RECAL_RATIO);
+  if (recalibrated) changeRows = [];
+
+  const CHUNK = 500;
+  for (let i = 0; i < changeRows.length; i += CHUNK) {
+    await db.insert(itemChanges).values(changeRows.slice(i, i + CHUNK));
+  }
+
+  const stateRows = [...current.values()].map((c) => ({
+    gameId, traderId: c.traderId, tpl: c.tpl, fingerprint: c.fp,
+  }));
+  for (let i = 0; i < stateRows.length; i += CHUNK) {
+    await db
+      .insert(traderOfferState)
+      .values(stateRows.slice(i, i + CHUNK))
+      .onConflictDoUpdate({
+        target: [traderOfferState.gameId, traderOfferState.traderId, traderOfferState.tpl],
+        set: { fingerprint: sql`excluded.fingerprint`, updatedAt: sql`now()` },
+      });
+  }
+
+  return {
+    baseline,
+    recalibrated,
+    scanned: current.size,
+    added: changeRows.filter((c) => c.kind === "added").length,
+    removed: changeRows.filter((c) => c.kind === "removed").length,
+    fieldChanges: changeRows.filter((c) => c.kind === "field").length,
+  };
 }
