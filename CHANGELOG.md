@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-16
+- `d07fa68` chore(migrate): роут+workflow migrate-prices-pve (добавляет PvE-колонки в prices)
 - `3aea48b` feat(prices): PvE-цены — схема + синк (gameMode: pve) + чтение
 - `845d2b6` feat(gamemode): фронт-переключение цен барахолки по режиму
 - `44b3b40` feat(gamemode): гейтинг PvP-only контента в режиме PvE
