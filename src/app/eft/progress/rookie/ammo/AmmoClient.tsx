@@ -1,25 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRookieStore } from '@/store/useRookieStore';
+import { BodyMannequin } from '@/components/ui/BodyMannequin';
+import { MANNEQUIN_ORDER, type BodyPartLabel } from '@/components/features/bosses/body-mannequin.config';
 
-// Этап 09 «Патрон решает»: выбери патрон и класс брони, стреляй — увидь пробитие и выстрелы до
-// нейтрализации. Учим: дешёвый ствол с правильным патроном валит дорогую броню.
+// Этап 09 «Патрон решает» на реальном манекене (7 зон). Патрон × броня → урон по зонам:
+// грудь/живит под бронёй гаснут без пробития, голова летальна всегда.
 
-interface Ammo {
-  id: string;
-  name: string;
-  pen: number; // условная пробиваемость
-  dmg: number;
-}
-interface Armor {
-  id: string;
-  name: string;
-  cls: number;
-  threshold: number; // порог пробития
-  hp: number;
-}
+interface Ammo { id: string; name: string; pen: number; dmg: number; }
+interface Armor { id: string; name: string; threshold: number; }
 
 const AMMO: Ammo[] = [
   { id: 'ps', name: 'PS (дешёвый)', pen: 20, dmg: 55 },
@@ -27,30 +18,32 @@ const AMMO: Ammo[] = [
   { id: 'm995', name: 'M995 (топ)', pen: 55, dmg: 45 },
 ];
 const ARMOR: Armor[] = [
-  { id: 'a2', name: 'Класс 2 (мягкая)', cls: 2, threshold: 20, hp: 40 },
-  { id: 'a4', name: 'Класс 4 (средняя)', cls: 4, threshold: 40, hp: 50 },
-  { id: 'a6', name: 'Класс 6 (тяжёлая)', cls: 6, threshold: 58, hp: 60 },
+  { id: 'a2', name: 'Класс 2', threshold: 20 },
+  { id: 'a4', name: 'Класс 4', threshold: 40 },
+  { id: 'a6', name: 'Класс 6', threshold: 58 },
 ];
 
-interface Shot {
-  penChance: number;
-  shotsToKill: number;
-  penetrates: boolean;
+// Броня закрывает грудь и живот; голова и конечности — открыты.
+function zoneDamage(ammo: Ammo, armor: Armor): Record<BodyPartLabel, number> {
+  const pen = ammo.pen >= armor.threshold;
+  const d = ammo.dmg;
+  return {
+    'Голова': d * 2,
+    'Грудь': pen ? d : d * 0.15,
+    'Живот': pen ? d * 0.9 : d * 0.15,
+    'Левая рука': d * 0.55,
+    'Правая рука': d * 0.55,
+    'Левая нога': d * 0.7,
+    'Правая нога': d * 0.7,
+  };
 }
 
-function simulate(ammo: Ammo, armor: Armor): Shot {
-  // Грубая иллюстративная модель: шанс пробития растёт с разницей pen - threshold.
-  const delta = ammo.pen - armor.threshold;
-  const penChance = Math.round(Math.max(0.05, Math.min(0.95, 0.5 + delta / 60)) * 100);
-  // Урон по телу если пробил (35 HP грудина), с учётом шанса — усреднённо.
-  const effDmg = ammo.dmg * (penChance / 100) * 0.8 + 3;
-  const shotsToKill = Math.max(1, Math.ceil(35 / effDmg));
-  return { penChance, shotsToKill, penetrates: ammo.pen >= armor.threshold };
-}
+const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
 
 export function AmmoClient() {
   const [ammoId, setAmmoId] = useState('ps');
   const [armorId, setArmorId] = useState('a4');
+  const [active, setActive] = useState<BodyPartLabel | null>(null);
   const [fired, setFired] = useState(false);
   const complete = useRookieStore((s) => s.complete);
 
@@ -60,16 +53,26 @@ export function AmmoClient() {
 
   const ammo = AMMO.find((a) => a.id === ammoId) ?? AMMO[0];
   const armor = ARMOR.find((a) => a.id === armorId) ?? ARMOR[0];
-  const shot = simulate(ammo, armor);
+
+  const { values, max, penChance, shotsToKill } = useMemo(() => {
+    const v = zoneDamage(ammo, armor);
+    const m = Math.max(...Object.values(v));
+    const delta = ammo.pen - armor.threshold;
+    const pc = Math.round(clamp(0.5 + delta / 60, 0.05, 0.95) * 100);
+    const stk = Math.max(1, Math.ceil(85 / Math.max(1, v['Грудь'])));
+    return { values: v, max: m, penChance: pc, shotsToKill: stk };
+  }, [ammo, armor]);
 
   const fire = () => {
     if (!fired) complete('ammo');
     setFired(true);
   };
 
+  const activeDmg = active ? Math.round(values[active]) : null;
+
   return (
     <div className="flex flex-col gap-5">
-      {/* Выбор патрона */}
+      {/* Патрон */}
       <div className="flex flex-col gap-2">
         <span className="text-type-label font-blender-medium uppercase tracking-widest text-text-secondary">Патрон</span>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -87,9 +90,9 @@ export function AmmoClient() {
         </div>
       </div>
 
-      {/* Выбор брони */}
+      {/* Броня */}
       <div className="flex flex-col gap-2">
-        <span className="text-type-label font-blender-medium uppercase tracking-widest text-text-secondary">Броня цели</span>
+        <span className="text-type-label font-blender-medium uppercase tracking-widest text-text-secondary">Броня цели (грудь + живот)</span>
         <div className="flex flex-col gap-2 sm:flex-row">
           {ARMOR.map((a) => (
             <button
@@ -105,25 +108,40 @@ export function AmmoClient() {
         </div>
       </div>
 
-      {/* Результат */}
-      <div className="flex flex-col gap-3 rounded-xs border border-lines-hover bg-(--color-base) p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-type-label font-blender-medium uppercase tracking-wide text-text-secondary">
-            Шанс пробития
-          </span>
-          <span className={`font-blender-medium text-sm ${shot.penChance >= 60 ? 'text-(--primary)' : shot.penChance >= 30 ? 'text-text-primary' : 'text-danger'}`}>
-            {shot.penChance}%
-          </span>
+      {/* Манекен + разбор зон */}
+      <div className="flex flex-col items-center gap-6 rounded-xs border border-lines-hover bg-(--color-base) p-5 sm:flex-row sm:items-start sm:gap-8">
+        <div className="w-40 shrink-0">
+          <BodyMannequin values={values} max={max} active={active} onEnter={setActive} onLeave={() => setActive(null)} className="h-auto w-full" />
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-xs bg-lines-hover">
-          <div className={`h-full rounded-xs ${shot.penChance >= 60 ? 'bg-(--primary)' : 'bg-danger'}`} style={{ width: `${shot.penChance}%` }} />
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-type-label font-blender-medium uppercase tracking-wide text-text-secondary">
-            Выстрелов до нейтрализации
-          </span>
-          <span className="font-blender-medium text-sm text-text-primary">≈ {shot.shotsToKill}</span>
-        </div>
+        <ul className="flex w-full flex-col gap-2">
+          {MANNEQUIN_ORDER.map((label) => {
+            const dmg = values[label];
+            const isActive = active === label;
+            return (
+              <li
+                key={label}
+                className="flex items-center gap-3 transition-opacity"
+                style={{ opacity: active !== null && !isActive ? 0.4 : 1 }}
+                onMouseEnter={() => setActive(label)}
+                onMouseLeave={() => setActive(null)}
+              >
+                <span className="w-24 shrink-0 text-type-label font-blender-book text-text-secondary">{label}</span>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-xs bg-lines-hover">
+                  <div className="h-full rounded-xs bg-(--primary) transition-[width] duration-300" style={{ width: `${max > 0 ? (dmg / max) * 100 : 0}%` }} />
+                </div>
+                <span className="w-9 shrink-0 text-right font-blender-medium text-xs text-text-primary">{Math.round(dmg)}</span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* Хедлайн по бронезоне */}
+      <div className="flex items-center justify-between rounded-xs border border-lines-hover bg-(--color-base) px-4 py-3">
+        <span className="text-type-label font-blender-medium uppercase tracking-wide text-text-secondary">Пробитие груди</span>
+        <span className={`font-blender-medium text-sm ${penChance >= 60 ? 'text-(--primary)' : penChance >= 30 ? 'text-text-primary' : 'text-danger'}`}>
+          {penChance}% · ≈ {shotsToKill} выстр.{activeDmg !== null ? ` · зона: ${activeDmg}` : ''}
+        </span>
       </div>
 
       <button
@@ -136,8 +154,9 @@ export function AmmoClient() {
       {fired && (
         <div className="flex flex-col gap-3">
           <p className="border-l-2 border-(--primary) pl-3 text-sm font-blender-book leading-5 text-text-primary">
-            Патрон решает больше, чем цена ствола. Дешёвый автомат с пробивным патроном валит дорогую броню, а топ-ствол с
-            плохим патроном будет её щекотать. Смотри на пробитие против класса — это отдельная наука на портале.
+            Смотри на манекен: без пробития грудь и живот почти гаснут — броня держит, — а голова светится всегда. Отсюда
+            вывод: патрон важнее цены ствола. Слабый патрон против высокого класса брони = целься в открытые зоны, либо
+            бери пробивной боеприпас.
           </p>
           <Link
             href="/eft/progress/rookie"
