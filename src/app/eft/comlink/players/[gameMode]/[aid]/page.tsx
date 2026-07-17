@@ -50,7 +50,7 @@ function ProfileError({ message }: { message: string }) {
       <div className="w-full max-w-md px-4 text-center">
         <p className="mb-4 font-blender-medium text-lg uppercase tracking-widest text-(--color-danger)">{message}</p>
         <Link
-          href="/eft/players"
+          href="/eft/comlink/players"
           className="inline-block border border-lines-hover px-5 py-2 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:text-text-primary"
         >
           Вернуться к поиску

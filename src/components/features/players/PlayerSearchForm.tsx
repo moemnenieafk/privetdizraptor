@@ -135,7 +135,7 @@ export function PlayerSearchForm() {
           {hits.map((hit) => (
             <Link
               key={hit.aid}
-              href={`/eft/players/${mode}/${hit.aid}`}
+              href={`/eft/comlink/players/${mode}/${hit.aid}`}
               className="group flex items-center justify-between border border-lines-hover bg-card-menu px-4 py-3 transition-colors hover:border-(--primary)"
             >
               <span className="font-blender-medium text-sm text-text-primary">{hit.name}</span>

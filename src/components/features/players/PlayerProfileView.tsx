@@ -24,7 +24,7 @@ export function PlayerProfileView({ view }: { view: PlayerView }) {
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-4xl px-4 xl:px-0">
         <Link
-          href={`/eft/players?gameMode=${view.gameMode}`}
+          href={`/eft/comlink/players?gameMode=${view.gameMode}`}
           className="mb-6 inline-flex items-center gap-2 font-blender-book text-xs text-text-secondary transition-colors hover:text-text-primary"
         >
           <ArrowLeft className="h-4 w-4" />К поиску

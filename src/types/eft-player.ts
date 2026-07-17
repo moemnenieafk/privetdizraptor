@@ -86,7 +86,7 @@ export interface PlayerSkillView {
   progress: number;
 }
 
-/** Вью-модель профиля для страницы /eft/players/[mode]/[aid]. */
+/** Вью-модель профиля для страницы /eft/comlink/players/[mode]/[aid]. */
 export interface PlayerView {
   aid: number;
   nickname: string;
