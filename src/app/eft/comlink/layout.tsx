@@ -1,3 +1,4 @@
+import { SectionHubNav } from '@/components/features/navigation/SectionHubNav';
 import { DraftLayer } from '@/components/layout/DraftLayer';
 
 // Layout раздела «Связь» — точка монтирования тумблера черновиков (E10, фаза 2).
@@ -10,6 +11,10 @@ import { DraftLayer } from '@/components/layout/DraftLayer';
 export default function ComlinkLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      {/* Верхняя навигация-переключатель подразделов «Связи»: единый источник —
+          HEADER_DICTIONARY, сам вычисляется из rootPath+pathname. На индексе
+          (/eft/comlink) не рендерится — там карточки-заглушка со своими табами. */}
+      <SectionHubNav rootPath="/eft/comlink" variant="bar" />
       {children}
       <DraftLayer />
     </>
