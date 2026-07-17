@@ -286,3 +286,57 @@ export type KarmaEventRow = typeof karmaEvents.$inferSelect;
 export type ComlinkReportRow = typeof comlinkReports.$inferSelect;
 export type ComlinkTopicRow = typeof comlinkTopics.$inferSelect;
 export type ComlinkPostRow = typeof comlinkPosts.$inferSelect;
+
+/* ─────────────────── player_verifications: подтверждение ЧВК-профиля ───────────────────
+ * Доверительный слой — «галочка», что публичный ЧВК-профиль (ник из player_profiles)
+ * реально принадлежит владельцу аккаунта ЦТА. Публичного API BSG для проверки владения
+ * НЕТ → механизм ручной (решение V4DYA): юзер получает одноразовый код, присылает скрин
+ * игрового профиля с этим кодом в кадре, модератор «Связь» сверяет ник и подтверждает.
+ * Доступно только платным тирам (проверка в POST /api/eft/verification). 1 строка на
+ * юзера+игру. RLS: owner-select own row; пишет owner-роль через API. Скрин-пруф лежит
+ * инлайном в jsonb (base64, паттерн feedback.attachments) — модератору для сверки.
+ *
+ * Статусы: awaiting (код выдан, скрин ещё не отправлен) → pending (в очереди модерации)
+ * → approved | rejected (терминальные). Повторная подача после rejected возвращает в
+ * awaiting с новым кодом. */
+export type VerificationStatus = "awaiting" | "pending" | "approved" | "rejected";
+
+/** Скрин-пруф игрового профиля (инлайн base64, паттерн feedback.attachments). */
+export type VerificationProof = {
+  mime: string; // image/png | image/jpeg | image/webp
+  size: number; // байт (декодированного изображения)
+  dataBase64: string; // содержимое без data:-префикса
+};
+
+export const playerVerifications = pgTable(
+  "player_verifications",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    status: text("status").$type<VerificationStatus>().notNull().default("awaiting"),
+    /** Заявленный ЧВК-ник — снимок активного player_profile на момент выдачи кода. */
+    claimedNickname: text("claimed_nickname").notNull().default(""),
+    /** Одноразовый код-челлендж (должен попасть в кадр скрина) — анти-replay. */
+    code: text("code").notNull(),
+    /** Необязательная ссылка/aid профиля (tarkov.dev) для перекрёстной сверки. */
+    accountRef: text("account_ref"),
+    /** Скрин-пруф. null, пока не отправлен (статус awaiting). */
+    proof: jsonb("proof").$type<VerificationProof | null>(),
+    /** Заметка модератора при отклонении (видна пользователю). */
+    note: text("note").notNull().default(""),
+    reviewedBy: uuid("reviewed_by").references(() => profiles.id, { onDelete: "set null" }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.gameId] }),
+    index("player_verifications_queue_idx").on(t.status, t.updatedAt),
+  ],
+);
+
+export type PlayerVerificationRow = typeof playerVerifications.$inferSelect;

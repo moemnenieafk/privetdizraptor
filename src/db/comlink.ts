@@ -19,6 +19,7 @@ import {
   type PlayTime,
 } from "@/db/schema-comlink";
 import { eftGameId } from "@/db/eft";
+import { getVerifiedMap } from "@/db/verification";
 
 /* ─────────────────── карма ─────────────────── */
 
@@ -90,6 +91,10 @@ export interface CandidateListItem {
   karma: KarmaInfo;
   /** Подтверждённых рейдов через ЦТА. */
   confirmedRaids: number;
+  /** ЧВК-профиль подтверждён модерацией — «галочка» в анкете. */
+  verified: boolean;
+  /** Подтверждённый ЧВК-ник (для tooltip галочки). null — не подтверждён. */
+  verifiedNickname: string | null;
   updatedAt: string;
 }
 
@@ -146,9 +151,10 @@ export async function getCandidates(
   ]);
 
   const userIds = rows.map((r) => r.p.userId);
-  const [karmaMap, raidCounts] = await Promise.all([
+  const [karmaMap, raidCounts, verifiedMap] = await Promise.all([
     getKarmaMap(userIds),
     getConfirmedRaidCounts(userIds),
+    getVerifiedMap(userIds),
   ]);
 
   const items: CandidateListItem[] = rows.map((r) => ({
@@ -166,6 +172,8 @@ export async function getCandidates(
     game: r.p.gameSnapshot,
     karma: karmaMap.get(r.p.userId) ?? { total: 0, tierId: "wild", tierLabel: "Дикий" },
     confirmedRaids: raidCounts.get(r.p.userId) ?? 0,
+    verified: verifiedMap.has(r.p.userId),
+    verifiedNickname: verifiedMap.get(r.p.userId) ?? null,
     updatedAt: r.p.updatedAt.toISOString(),
   }));
 

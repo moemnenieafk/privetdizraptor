@@ -19,6 +19,8 @@ import {
   Users,
 } from 'lucide-react';
 import { ComlinkProfileForm } from '@/components/features/comlink/ComlinkProfileForm';
+import { VerificationCard } from '@/components/features/players/VerificationCard';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import type { CandidateListItem } from '@/db/comlink';
 import type { ComlinkGoal, ComlinkProfileRow } from '@/db/schema-comlink';
 import { EFT_MAP_CONFIG } from '@/data/eft-map-config';
@@ -132,6 +134,9 @@ export function CandidatesClient({ authorized }: CandidatesClientProps) {
 
   return (
     <div className="flex w-full flex-col gap-5">
+      {/* Подтверждение ЧВК-профиля — галочка в анкете (платные тиры) */}
+      <VerificationCard />
+
       {/* Моя анкета */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
@@ -221,8 +226,13 @@ function CandidateCard({ c }: { c: CandidateListItem }) {
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-blender-medium text-sm uppercase tracking-widest text-text-primary">
-            {c.username}
+          <span className="flex items-center gap-1.5">
+            <span className="min-w-0 truncate font-blender-medium text-sm uppercase tracking-widest text-text-primary">
+              {c.username}
+            </span>
+            {c.verified && (
+              <VerifiedBadge title={`ЧВК-профиль «${c.verifiedNickname}» подтверждён`} />
+            )}
           </span>
           <span className="font-blender-book text-xs text-text-secondary">
             {GOAL_LABELS[c.goal]}
