@@ -25,57 +25,6 @@ interface Props {
   initialSelection?: string[];
 }
 
-/** Архетипы: считаются от реальных цен, чтобы не разъехаться при правке данных. */
-const PRESETS: { id: string; label: string; hint: string; perks: string[] }[] = [
-  {
-    id: 'kappa-rush',
-    label: 'Каппа-раш',
-    hint: 'Терпим всю боль ради контейнера с первого рейда',
-    perks: [
-      'kappa-protocol',
-      'no-flea-market',
-      'exhaustion',
-      'incompetent',
-      'osteoporosis',
-      'broken-secure-container',
-      'allergic',
-      'well-that-hurt',
-    ],
-  },
-  {
-    id: 'newbie',
-    label: 'Новичок',
-    hint: 'Комфорт без тяжёлых расплат: выживаемость и навыки',
-    perks: ['average', 'sturdy-bones', 'polyphagia', 'no-flea-market', 'personality-vacuum', 'dr-jekyll', 'third-leg'],
-  },
-  {
-    id: 'stealth',
-    label: 'Тихий ход',
-    hint: 'Кусты, выносливость, ключи — про перемещение и лут',
-    perks: ['bushborne', 'safecracker', 'marathon-runner', 'no-flea-market', 'exhaustion', 'osteoporosis', 'hemophilia'],
-  },
-  {
-    id: 'hardcore',
-    label: 'Хардкор',
-    hint: 'Только боль. Очки не тратим — собираем страдание',
-    perks: [
-      'no-flea-market',
-      'exhaustion',
-      'incompetent',
-      'broken-secure-container',
-      'osteoporosis',
-      'allergic',
-      'hemophilia',
-      'well-that-hurt',
-      'personality-vacuum',
-      'polydipsia',
-      'chronic-fatigue',
-      'dr-jekyll',
-      'third-leg',
-    ],
-  },
-];
-
 const kindStyle: Record<string, { border: string; text: string; label: string }> = {
   season: { border: 'border-lines-hover', text: 'text-text-muted', label: 'Сезонный' },
   positive: { border: 'border-success/50', text: 'text-success', label: 'Позитивный' },
@@ -288,34 +237,6 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
           </button>
         </span>
       </div>
-
-      {/* ── Архетипы ── */}
-      <section className="flex flex-col gap-3">
-        <h2 className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-          Готовые стратегии
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {PRESETS.map((p) => {
-            const b = computeBudget(season, p.perks);
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => applyPreset(season.slug, p.perks)}
-                title={p.hint}
-                className="flex flex-col items-start gap-0.5 rounded-xs border border-lines-hover px-3 py-2 text-left transition-colors hover:border-(--primary)"
-              >
-                <span className="font-blender-medium text-xs uppercase tracking-widest text-text-primary">
-                  {p.label}
-                </span>
-                <span className="font-blender-book text-xs text-text-muted">
-                  {p.hint} · остаток {b.balance}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
 
       {/* ── Позитивные ── */}
       <section className="flex flex-col gap-3">

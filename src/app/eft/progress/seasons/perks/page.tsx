@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { CURRENT_SEASON, getSeason } from '@/data/eft-seasons';
 import { SeasonPerkBuilder } from '@/components/features/seasons/SeasonPerkBuilder';
+import { SeasonBuildGallery } from '@/components/features/seasons/SeasonBuildGallery';
 
 export const metadata: Metadata = {
   title: 'Конструктор перков',
@@ -44,7 +45,11 @@ export default async function SeasonPerksPage({ searchParams }: Props) {
           </p>
         </header>
 
-        <SeasonPerkBuilder season={season} />
+        <SeasonBuildGallery season={season} />
+
+        <div id="season-builder" className="scroll-mt-20">
+          <SeasonPerkBuilder season={season} />
+        </div>
       </div>
     </main>
   );
