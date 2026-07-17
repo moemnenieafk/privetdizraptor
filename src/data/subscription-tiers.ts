@@ -34,8 +34,7 @@ export type GatedFeature =
   | 'advanced_analytics'
   | 'early_access'
   | 'role_insights'
-  | 'game_changes'
-  | 'player_deep_stats';
+  | 'game_changes';
 
 export const FEATURE_MIN_TIER: Record<GatedFeature, TierId> = {
   favorites: 'operative',
@@ -48,7 +47,6 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, TierId> = {
   early_access: 'veteran',
   role_insights: 'operative',
   game_changes: 'operative',
-  player_deep_stats: 'operative',
 };
 
 export function tierRank(id: TierId): number {

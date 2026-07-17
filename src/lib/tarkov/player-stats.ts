@@ -1,24 +1,16 @@
-// Чистые хелперы лукапа игроков — без серверных импортов (безопасны и на клиенте).
+// Чистые хелперы разбора личного профиля (без серверных импортов, безопасны на клиенте).
 import type {
-  GameMode,
+  PlayerMasteringView,
   PlayerSkillView,
+  PlayerView,
   RaidSide,
   RaidStatLine,
   RawCounterItem,
   RawPlayerProfile,
   RawSideStats,
-  PlayerView,
 } from "@/types/eft-player";
 
-/** Валидация ника BSG: латиница/цифры/-/_, 3–15 символов, либо TarkovCitizenNNN. */
-export const PLAYER_NAME_RE = /^[a-zA-Z0-9-_]{3,15}$|^TarkovCitizen\d{1,10}$/i;
-export const PLAYER_NAME_CHARSET_RE = /^[a-zA-Z0-9-_]*$/;
-
-export function isValidPlayerName(name: string): boolean {
-  return PLAYER_NAME_RE.test(name);
-}
-
-/** Битфлаги memberCategory → человекочитаемые бейджи. */
+/** Битфлаги memberCategory → бейджи (издания/статусы). */
 const MEMBER_FLAGS: ReadonlyArray<{ bit: number; label: string }> = [
   { bit: 2, label: "EOD" },
   { bit: 1024, label: "Unheard" },
@@ -39,21 +31,26 @@ export function sideLabel(side: string): string {
   return side ? side.toUpperCase() : "—";
 }
 
-/** Значение счётчика: элемент совпадает, если его Key содержит ВСЕ keyParts. */
+/** Значение счётчика: элемент совпадает, если его Key содержит ВСЕ keyParts
+ *  (сторона 'Pmc'/'Scav' в реальных ключах игнорируется — сторону задаёт объект). */
 export function extractCounter(items: RawCounterItem[], keyParts: string[]): number {
   const found = items.find((s) => keyParts.every((part) => s.Key.includes(part)));
   return found?.Value ?? 0;
 }
 
-const STAT_KEYS: ReadonlyArray<{ name: keyof Omit<RaidStatLine, "side" | "survivalRate" | "kdr">; key: string[] }> = [
+const STAT_KEYS: ReadonlyArray<{
+  name: keyof Omit<RaidStatLine, "side" | "survivalRate" | "kdr">;
+  key: string[];
+}> = [
   { name: "raids", key: ["Sessions"] },
   { name: "survived", key: ["ExitStatus", "Survived"] },
   { name: "runthrough", key: ["ExitStatus", "Runner"] },
-  { name: "mia", key: ["ExitStatus", "Left"] },
-  { name: "kia", key: ["ExitStatus", "Killed"] },
+  { name: "transit", key: ["ExitStatus", "Transit"] },
+  { name: "mia", key: ["ExitStatus", "MissingInAction"] },
+  { name: "kia", key: ["Deaths"] },
   { name: "kills", key: ["Kills"] },
-  { name: "streak", key: ["LongestWinStreak"] },
   { name: "killsPmc", key: ["KilledPmc"] },
+  { name: "streak", key: ["LongestWinStreak"] },
 ];
 
 function emptyLine(side: RaidSide): RaidStatLine {
@@ -62,6 +59,7 @@ function emptyLine(side: RaidSide): RaidStatLine {
     raids: 0,
     survived: 0,
     runthrough: 0,
+    transit: 0,
     mia: 0,
     kia: 0,
     kills: 0,
@@ -73,7 +71,8 @@ function emptyLine(side: RaidSide): RaidStatLine {
 }
 
 function derive(line: RaidStatLine): RaidStatLine {
-  line.survivalRate = line.raids > 0 ? (line.survived / line.raids) * 100 : 0;
+  const alive = line.survived + line.runthrough + line.transit;
+  line.survivalRate = line.raids > 0 ? (alive / line.raids) * 100 : 0;
   line.kdr = line.kia > 0 ? line.kills / line.kia : line.kills;
   return line;
 }
@@ -99,7 +98,6 @@ export function buildRaidStats(profile: RawPlayerProfile): RaidStatLine[] {
     lines.push(derive(line));
   }
 
-  // streak в Total — максимум, а не сумма (стрик — не аддитивная величина).
   total.streak = Math.max(...lines.map((l) => l.streak), 0);
   return [derive(total), ...lines];
 }
@@ -111,25 +109,47 @@ export interface PlaytimeParts {
 
 export function playtime(totalSeconds: number): PlaytimeParts {
   const safe = Number.isFinite(totalSeconds) && totalSeconds > 0 ? totalSeconds : 0;
-  return {
-    hours: Math.trunc(safe / 3600),
-    minutes: Math.trunc(safe / 60) % 60,
-  };
+  return { hours: Math.trunc(safe / 3600), minutes: Math.trunc(safe / 60) % 60 };
+}
+
+/** Уровень навыка из накопленного Progress (100 = уровень, максимум 51/elite). */
+function skillLevel(progress: number): number {
+  return Math.min(51, Math.floor(progress / 100));
 }
 
 function skills(profile: RawPlayerProfile): PlayerSkillView[] {
   const common = profile.skills?.Common;
   if (!common) return [];
   return common
-    .filter((s) => s.Progress > 0 && s.LastAccess > 0)
-    .map((s) => ({ id: s.Id, progress: s.Progress }))
+    .map((s) => ({ id: s.Id, level: skillLevel(s.Progress) }))
+    .filter((s) => s.level > 0)
+    .sort((a, b) => b.level - a.level);
+}
+
+function mastering(profile: RawPlayerProfile): PlayerMasteringView[] {
+  const m = profile.skills?.Mastering;
+  if (!m) return [];
+  return m
+    .filter((x) => x.Progress > 0)
+    .map((x) => ({ id: x.Id, progress: Math.round(x.Progress) }))
     .sort((a, b) => b.progress - a.progress);
 }
 
+/** Проверка/типизация произвольного JSON как профиля. null — если это не профиль. */
+export function parseProfile(data: unknown): RawPlayerProfile | null {
+  if (typeof data !== "object" || data === null) return null;
+  const d = data as Record<string, unknown>;
+  if (typeof d.aid !== "number") return null;
+  if (typeof d.info !== "object" || d.info === null) return null;
+  const info = d.info as Record<string, unknown>;
+  if (typeof info.nickname !== "string") return null;
+  return d as unknown as RawPlayerProfile;
+}
+
 /** RAW-профиль → вью-модель. */
-export function normalizeProfile(profile: RawPlayerProfile, gameMode: GameMode): PlayerView {
+export function normalizeProfile(profile: RawPlayerProfile): PlayerView {
   const totalTimeSeconds =
-    profile.pmcStats?.eft?.totalInGameTime ?? profile.stat?.totalInGameTime ?? 0;
+    profile.pmcStats?.eft?.totalInGameTime ?? profile.scavStats?.eft?.totalInGameTime ?? 0;
 
   return {
     aid: profile.aid,
@@ -139,10 +159,11 @@ export function normalizeProfile(profile: RawPlayerProfile, gameMode: GameMode):
     experience: profile.info?.experience ?? 0,
     prestige: profile.info?.prestigeLevel ?? 0,
     badges: memberBadges(profile.info?.memberCategory ?? 0),
-    registrationDate: profile.info?.registrationDate ?? null,
     totalTimeSeconds,
     raidStats: buildRaidStats(profile),
     skills: skills(profile),
-    gameMode,
+    mastering: mastering(profile),
+    achievementsCount: profile.achievements ? Object.keys(profile.achievements).length : 0,
+    updatedAt: profile.updated ?? null,
   };
 }

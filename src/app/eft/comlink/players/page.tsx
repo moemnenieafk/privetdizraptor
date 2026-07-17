@@ -1,38 +1,47 @@
 import type { Metadata } from "next";
 import { Users, ExternalLink } from "lucide-react";
+import { ProfileUpload } from "@/components/features/players/ProfileUpload";
 
 export const metadata: Metadata = {
-  title: "Поиск игроков | ЦТА",
-  description: "Поиск игроков Escape from Tarkov и их статистика — на tarkov.dev.",
+  title: "Статистика игрока | ЦТА",
+  description:
+    "Загрузи profile.json из Escape from Tarkov и посмотри всю статистику: рейды, K/D, выживаемость, навыки, мастерство, престиж.",
 };
 
-export default function PlayersLauncherPage() {
+export default function PlayersPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
-      <div className="w-full max-w-2xl px-4 xl:px-0">
-        <header className="mb-8">
+      <div className="w-full max-w-3xl px-4 xl:px-0">
+        <header className="mb-6">
           <h1 className="flex items-center gap-3 text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">
             <Users className="h-7 w-7 text-(--primary)" />
-            Поиск игроков
+            Статистика игрока
           </h1>
+          <p className="mt-2 font-blender-book text-sm leading-relaxed text-text-secondary">
+            Загрузи свой <span className="text-text-primary">profile.json</span> — портал разберёт его и покажет всю
+            стату: рейды, K/D, выживаемость, серии, навыки, мастерство оружия и престиж. Всё считается в браузере,
+            файл никуда не уходит.
+          </p>
         </header>
 
-        <div className="flex flex-col items-start gap-5 border border-lines-hover bg-card-menu p-6">
-          <p className="font-blender-book text-sm leading-relaxed text-text-secondary">
-            Поиск игроков и их боевая статистика — рейды, выживаемость, K/D, серии, престиж, навыки —
-            доступны на <span className="text-text-primary">tarkov.dev</span>. Профильный сервис защищён капчей на их
-            стороне, поэтому открывается там напрямую.
+        <div className="mb-6 border-l-2 border-(--primary)/40 bg-card-menu px-4 py-3">
+          <p className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">Где взять файл</p>
+          <p className="mt-1 font-blender-book text-xs leading-relaxed text-text-secondary">
+            Открой свой профиль на{" "}
+            <a
+              href="https://tarkov.dev/players"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-(--primary) hover:underline"
+            >
+              tarkov.dev
+              <ExternalLink className="h-3 w-3" />
+            </a>{" "}
+            и нажми кнопку скачивания JSON — получишь файл профиля, который можно загрузить сюда.
           </p>
-          <a
-            href="https://tarkov.dev/players"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-11 items-center justify-center gap-2 border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] px-6 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
-          >
-            Открыть поиск на tarkov.dev
-            <ExternalLink className="h-4 w-4" />
-          </a>
         </div>
+
+        <ProfileUpload />
       </div>
     </main>
   );
