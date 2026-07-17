@@ -244,13 +244,6 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       streams: 'Стримы',
     },
     menuItems: [
-      // ПОИСК ИГРОКОВ (внешний лукап профилей BSG)
-      {
-        id: 'players',
-        label: 'Игроки',
-        iconUrl: '/icons/eft/search-icon.svg',
-        path: '/eft/players',
-      },
       // ВЕТКА 1: КАРТЫ (Полностью структурированная)
       { 
         id: 'maps', 
@@ -632,7 +625,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           { id: 'cl-sherpa', label: 'Биржа шерпов', path: '/eft/comlink/sherpa-exchange', iconUrl: '/icons/eft/07-comlink/sherpa.svg' },
           { id: 'cl-discussions', label: 'Обсуждения', path: '/eft/comlink/discussions', iconUrl: '/icons/eft/07-comlink/discussions.svg' },
           { id: 'cl-masterclasses', label: 'Мастер-классы', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/07-comlink/masterclasses.svg' },
-          { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/07-comlink/blog.svg' }
+          { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/07-comlink/blog.svg' },
+          { id: 'cl-players', label: 'Поиск игроков', path: '/eft/players', iconUrl: '/icons/eft/search-icon.svg' }
         ]
       },
     ],
