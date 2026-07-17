@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-17
+- `f900b70` feat(players): профиль deep-link на tarkov.dev (их /account/ за Turnstile)
 - `f3327fa` fix(players): браузерные заголовки к апстриму player.tarkov.dev
 - `f3159fb` refactor(players): страница под /eft/comlink/players — наследует навбар секции «Связь»
 - `91a74b6` refactor(nav): перенос «Поиск игроков» в раздел «Связь»
