@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { changeEmail, saveSocials, saveNotifications, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
 import { OAuthLogins } from './OAuthLogins';
+import { DiscordIcon, TwitchIcon, YouTubeIcon, SteamIcon } from '@/components/ui/BrandIcons';
 import type { AchievementView } from '@/lib/achievement-visuals';
 import type { AchievementHint } from '@/lib/achievement-hints';
 import type { QuestsDigestData } from '@/lib/tracking-digest';
@@ -51,6 +52,14 @@ const PLATFORMS = [
   { id: 'discord', name: 'DISCORD', color: '#5865F2' },
   { id: 'steam',   name: 'STEAM',   color: '#A3BCCE' },
 ] as const;
+
+// Бренд-глифы под ручные хендлы (тот же реестр, что у OAuth-входов).
+const PLATFORM_ICON: Record<SocialPlatform, typeof DiscordIcon> = {
+  twitch: TwitchIcon,
+  youtube: YouTubeIcon,
+  discord: DiscordIcon,
+  steam: SteamIcon,
+};
 
 const GAMES = [
   { id: 'eft', logo: '/images/games/eft-logo.webp', title: 'Escape From Tarkov' },
@@ -962,6 +971,7 @@ function LinkingPanel({ me, onNavigate }: { me: Me; onNavigate: (v: ViewId) => v
         {PLATFORMS.map((platform) => {
           const handle = me.socials[platform.id];
           const linked = !!handle;
+          const Icon = PLATFORM_ICON[platform.id];
           return (
             <div
               key={platform.id}
@@ -969,14 +979,9 @@ function LinkingPanel({ me, onNavigate }: { me: Me; onNavigate: (v: ViewId) => v
             >
               <div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-lines-hover"
-                style={{ backgroundColor: `${platform.color}1a` }}
+                style={{ backgroundColor: `${platform.color}1a`, color: platform.color }}
               >
-                <span
-                  className="font-blender-medium text-xs"
-                  style={{ color: platform.color }}
-                >
-                  {platform.name.slice(0, 2)}
-                </span>
+                <Icon size={18} />
               </div>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
