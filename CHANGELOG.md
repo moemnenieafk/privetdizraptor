@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-18
+- `a9d48a2` feat(players): трекер статы из личного profile.json (upload, без апстрима)
 - `3d7fc21` chore(players): probe-роут статик-индекса players.tarkov.dev (разведка варианта B)
 - `76e38b5` feat(players): лаунчер вместо прокси — апстрим закрыл и /name/, и /account/
 
