@@ -2,6 +2,7 @@ import type {
   StashItem,
   StashEconomics,
   BarterTrade,
+  BarterItemBase,
   BarterCalculation,
   BarterVerdict,
 } from '@/types/barter';
@@ -123,6 +124,51 @@ export function calcBarterProfit(trade: BarterTrade, stashItems: StashItem[]): B
     netProfit,
     verdict: calcVerdict(netProfit),
   };
+}
+
+// ─── «Поток сделок» (Deal Flow) ─────────────────────────────
+// Быстрый режим без ручного схрона: компоненты сделки = её требования × count.
+// Экономику считаем ТЕМ ЖЕ calcBarterProfit, что и ручной флоу → вердикт в игре
+// побайтово совпадает с VerdictCard. Синтезируем «схрон-лайт» из требований.
+
+/** Мини-предмет схрона из компонента бартера: только ценовые поля, что читает calcBarterProfit. */
+function toStashLite(item: BarterItemBase): StashItem {
+  const fleaEntry = item.sellFor.find((e) => e.vendor.normalizedName === 'flea-market');
+  const fleaPrice = fleaEntry ? (fleaEntry.priceRUB ?? fleaEntry.price) : null;
+  const traderPrices = item.sellFor
+    .filter((e) => e.vendor.normalizedName !== 'flea-market')
+    .map((e) => e.priceRUB ?? e.price)
+    .filter((p): p is number => p > 0);
+  const bestTraderPriceRub = traderPrices.length ? Math.max(...traderPrices) : null;
+  return {
+    uid: item.id,
+    id: item.id,
+    name: item.name,
+    shortName: item.shortName,
+    image512pxLink: item.image512pxLink,
+    backgroundColor: item.backgroundColor,
+    width: item.width,
+    height: item.height,
+    col: 0,
+    row: 0,
+    fleaPrice,
+    bestTraderPriceRub,
+  };
+}
+
+/** Экономика бартера без ручного схрона: компоненты = требования сделки × count. */
+export function calcBarterProfitStandalone(trade: BarterTrade): BarterCalculation {
+  const lite = trade.requiredItems.flatMap(({ item, count }) =>
+    Array.from({ length: Math.ceil(count) }, () => toStashLite(item)),
+  );
+  return calcBarterProfit(trade, lite);
+}
+
+/** Годен ли бартер для «Потока»: есть цена компонентов И есть цена сбыта награды. */
+export function isPlayableBarter(trade: BarterTrade): boolean {
+  const c = calcBarterProfitStandalone(trade);
+  const rewardValue = c.netProfit + c.totalComponentsCost; // ≈ лучшая цена сбыта награды
+  return c.totalComponentsCost > 0 && rewardValue > 0;
 }
 
 export function formatRub(value: number): string {

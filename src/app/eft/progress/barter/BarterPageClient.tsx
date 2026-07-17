@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Trash2, CheckCircle2, Copy, Volume2, VolumeX } from 'lucide-react';
+import { Trash2, CheckCircle2, Copy, Volume2, VolumeX, Search, ChevronDown } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useBarterStore } from '@/store/useBarterStore';
 import { useGamificationStore } from '@/store/useGamificationStore';
@@ -12,6 +12,7 @@ import { useSfx } from '@/hooks/useSfx';
 import { useGamificationSync, type SyncState } from '@/hooks/useGamificationSync';
 import { BarterSearchBar } from '@/components/features/barter/BarterSearchBar';
 import { BarterTradeSelector } from '@/components/features/barter/BarterTradeSelector';
+import { BarterRush } from '@/components/features/barter/BarterRush';
 import { StashGrid } from '@/components/features/barter/StashGrid';
 import { StashSummary } from '@/components/features/barter/StashSummary';
 import { StatsDashboard } from '@/components/features/barter/StatsDashboard';
@@ -37,6 +38,7 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
   const { isUnlocked: proUnlocked } = computeProStatus(xp, confirmedBarterIds, badges);
 
   const [dealConfirmed, setDealConfirmed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [floatXp, setFloatXp] = useState<number | null>(null);
   const [rankUpTier, setRankUpTier] = useState<TraderTier | null>(null);
@@ -122,33 +124,66 @@ export function BarterPageClient({ initialItems, initialBarters }: Props) {
         <MuteToggle />
       </div>
 
-      <div className="mt-2 mb-5 space-y-2">
-        {/* Row 1: Barter trade selector */}
-        <BarterTradeSelector allBarters={initialBarters} />
-
-        {/* Row 2: Manual item search + clear — скрыто в режиме бартер-симуляции */}
-        {!selectedBarter && (
-          <div className="flex items-center gap-3">
-            <BarterSearchBar allItems={initialItems} />
-            {items.length > 0 && (
-              <button
-                type="button"
-                onClick={clearStash}
-                className="flex shrink-0 items-center gap-1.5 border border-lines-hover bg-card-menu px-3 py-2 font-blender-book text-sm text-text-secondary transition-colors duration-150 hover:border-failure hover:text-failure"
-              >
-                <Trash2 size={13} />
-                Очистить схрон
-              </button>
-            )}
+      {selectedBarter ? (
+        <>
+          <div className="mt-2 mb-5">
+            <BarterTradeSelector allBarters={initialBarters} />
           </div>
-        )}
-      </div>
 
-      <div className="overflow-x-auto pb-4">
-        <StashGrid />
-      </div>
+          <div className="overflow-x-auto pb-4">
+            <StashGrid />
+          </div>
 
-      <StashSummary />
+          <StashSummary />
+        </>
+      ) : (
+        <div className="mt-2 mb-5">
+          {/* Hero: играбельная колода бартеров — без строки поиска */}
+          <BarterRush allBarters={initialBarters} />
+
+          {/* Про-путь: точный поиск + ручной схрон, свёрнуты по умолчанию */}
+          <button
+            type="button"
+            onClick={() => setSearchOpen((v) => !v)}
+            className="flex w-full items-center justify-between gap-2 border border-lines-hover bg-card-menu px-3 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors duration-150 hover:text-(--primary)"
+          >
+            <span className="flex items-center gap-2">
+              <Search size={13} />
+              Точный поиск и ручной схрон
+            </span>
+            <ChevronDown
+              size={14}
+              className="transition-transform duration-200"
+              style={{ transform: searchOpen ? 'rotate(180deg)' : 'none' }}
+            />
+          </button>
+
+          {searchOpen && (
+            <div className="mt-2 space-y-2 animate-[fade-in_0.2s_ease-out_both]">
+              <BarterTradeSelector allBarters={initialBarters} />
+              <div className="flex items-center gap-3">
+                <BarterSearchBar allItems={initialItems} />
+                {items.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearStash}
+                    className="flex shrink-0 items-center gap-1.5 border border-lines-hover bg-card-menu px-3 py-2 font-blender-book text-sm text-text-secondary transition-colors duration-150 hover:border-failure hover:text-failure"
+                  >
+                    <Trash2 size={13} />
+                    Очистить схрон
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto pb-4">
+                <StashGrid />
+              </div>
+
+              <StashSummary />
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedBarter && (
         <div className="relative mt-3 flex flex-wrap items-center gap-2">
