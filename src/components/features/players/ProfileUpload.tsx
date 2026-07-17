@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { Upload, FileWarning } from "lucide-react";
 import { parseProfile, normalizeProfile } from "@/lib/tarkov/player-stats";
 import { ProfileStats } from "@/components/features/players/ProfileStats";
+import { SyncPmcButton } from "@/components/features/players/SyncPmcButton";
 import type { PlayerView } from "@/types/eft-player";
 
 const MAX_BYTES = 5 * 1024 * 1024; // профиль ~30–100 КБ; 5 МБ с большим запасом
@@ -90,7 +91,12 @@ export function ProfileUpload() {
         </p>
       )}
 
-      {view && <ProfileStats view={view} />}
+      {view && (
+        <>
+          <SyncPmcButton view={view} />
+          <ProfileStats view={view} />
+        </>
+      )}
     </div>
   );
 }
