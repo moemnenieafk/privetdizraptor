@@ -3,7 +3,9 @@
 # Контракт Vercel: exit 0 = SKIP (билд пропускается), любой ≠0 = BUILD.
 #
 # Политика: билдим, если с последнего успешного деплоя изменилось что-то
-# КРОМЕ docs/ (заметки-валта ребилд не требуют — экономим билд-минуты и egress).
+# КРОМЕ docs/ и CHANGELOG.md (заметки-валта и автолог коммитов ребилд не требуют —
+# экономим билд-минуты и egress, а заодно автокоммит бота `update-changelog` больше
+# не вытесняет ещё летящий прод-билд фичи, помечая его failure).
 #
 # Почему не inline `git diff HEAD^ HEAD` (эволюция, см. docs/decisions/done/vercel-skip-docs-builds.md):
 #  v1  `HEAD^..HEAD` видел только вершину пуша → docs-коммит на вершине прятал
@@ -36,9 +38,9 @@ if ! git cat-file -e "${PREV}^{commit}" 2>/dev/null; then
   exit 1
 fi
 
-# Изменилось ли что-то вне docs/? diff --quiet: exit 0 = нет (SKIP), 1 = есть (BUILD).
-if git diff --quiet "$PREV" HEAD -- ':(exclude)docs/'; then
-  echo "[vercel-ignore] с $PREV изменился только docs/ → SKIP"
+# Изменилось ли что-то вне docs/ и CHANGELOG.md? diff --quiet: exit 0 = нет (SKIP), 1 = есть (BUILD).
+if git diff --quiet "$PREV" HEAD -- ':(exclude)docs/' ':(exclude)CHANGELOG.md'; then
+  echo "[vercel-ignore] с $PREV изменился только docs/ и/или CHANGELOG.md → SKIP"
   exit 0
 else
   echo "[vercel-ignore] есть изменения вне docs/ → BUILD"
