@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import Link from "next/link";
-import { Search, Loader2, ChevronRight } from "lucide-react";
+import { Search, Loader2, ExternalLink } from "lucide-react";
 import { Turnstile } from "@/components/ui/Turnstile";
 import { PLAYER_NAME_CHARSET_RE, isValidPlayerName } from "@/lib/tarkov/player-stats";
 import { GAME_MODES, type GameMode, type PlayerSearchHit } from "@/types/eft-player";
@@ -132,15 +131,22 @@ export function PlayerSearchForm() {
               Показаны первые совпадения — уточните ник для точного результата.
             </p>
           )}
+          {hits.length > 0 && (
+            <p className="font-blender-book text-xs text-text-muted">
+              Профиль со статистикой открывается на tarkov.dev в новой вкладке.
+            </p>
+          )}
           {hits.map((hit) => (
-            <Link
+            <a
               key={hit.aid}
-              href={`/eft/comlink/players/${mode}/${hit.aid}`}
+              href={`https://tarkov.dev/players/${mode}/${hit.aid}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group flex items-center justify-between border border-lines-hover bg-card-menu px-4 py-3 transition-colors hover:border-(--primary)"
             >
               <span className="font-blender-medium text-sm text-text-primary">{hit.name}</span>
-              <ChevronRight className="h-4 w-4 text-text-muted transition-colors group-hover:text-(--primary)" />
-            </Link>
+              <ExternalLink className="h-4 w-4 text-text-muted transition-colors group-hover:text-(--primary)" />
+            </a>
           ))}
         </div>
       )}
