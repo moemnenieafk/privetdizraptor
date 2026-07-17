@@ -946,3 +946,23 @@ export const questState = pgTable(
   (t) => [uniqueIndex("quest_state_key_idx").on(t.gameId, t.questId)],
 );
 
+
+/* ─────────────────────── subscriptions ───────────────────────
+ * Тир подписки пользователя. Читают getSubscription (server) и fetchTier (client)
+ * через Supabase-клиент (.from('subscriptions')); пишет owner-роль — вебхук платёжки
+ * или ручной роут /api/cron/set-tier. valid_until: null = бессрочно; истёкшая по
+ * времени трактуется читалками как free (честный статус). source — откуда выдан тир
+ * (manual | boosty | yookassa | …), на будущее для вебхуков.
+ * RLS: select own row; апдейты только серверной ролью (Drizzle мимо RLS). */
+export const subscriptions = pgTable("subscriptions", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  tier: text("tier").notNull().default("free"), // 'free' | 'operative' | 'veteran' (см. TierId)
+  validUntil: timestamp("valid_until", { withTimezone: true }),
+  source: text("source").notNull().default("manual"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type SubscriptionRow = typeof subscriptions.$inferSelect;

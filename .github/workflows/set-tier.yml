@@ -1,0 +1,55 @@
+# Ручная выдача тира подписки (без SQL Editor — с телефона). Временный инструмент
+# до подключения биллинга: бета-тестеры, компенсации, себе.
+# Запуск: Actions → «set-tier» → Run workflow → логин + тир + срок в месяцах.
+name: set-tier
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "Логин пользователя (profiles.username), регистр не важен"
+        required: true
+        type: string
+      tier:
+        description: "Тир"
+        required: true
+        default: operative
+        type: choice
+        options:
+          - operative
+          - veteran
+          - free
+      months:
+        description: "Срок в месяцах (0 = бессрочно)"
+        required: true
+        default: "1"
+        type: string
+
+jobs:
+  set-tier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Grant tier
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          USERNAME: ${{ inputs.username }}
+          TIER: ${{ inputs.tier }}
+          MONTHS: ${{ inputs.months }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/set-tier?username=$(printf %s "$USERNAME" | jq -sRr @uri)&tier=${TIER}&months=${MONTHS}"
+          echo "GET ${url}"
+          code=$(curl -sS -m 60 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Тир не выдан (HTTP $code) — проверь логин"
+            exit 1
+          fi
