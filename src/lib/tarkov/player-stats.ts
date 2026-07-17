@@ -3,6 +3,7 @@ import type {
   PlayerMasteringView,
   PlayerSkillView,
   PlayerView,
+  ProfileEdition,
   RaidSide,
   RaidStatLine,
   RawCounterItem,
@@ -29,6 +30,37 @@ export function sideLabel(side: string): string {
   const s = (side || "").toLowerCase();
   if (s === "savage") return "SCAV";
   return side ? side.toUpperCase() : "—";
+}
+
+// Кумулятивный опыт для уровней 1..79 (EFT 1.0, EFT-wiki). Индекс = уровень−1.
+const LEVEL_CUM: readonly number[] = [
+  0, 1000, 4017, 8432, 14256, 21477, 30023, 39936, 51204, 63723, 77563, 93279, 115302, 143253,
+  177337, 217885, 264432, 316851, 374400, 437465, 505161, 577978, 656347, 741150, 836066, 944133,
+  1066259, 1199423, 1343743, 1499338, 1666320, 1846664, 2043349, 2258436, 2492126, 2750217, 3032022,
+  3337766, 3663831, 4010401, 4377662, 4765799, 5182399, 5627732, 6102063, 6630287, 7189442, 7779792,
+  8401607, 9055144, 9740666, 10458431, 11219666, 12024744, 12874041, 13767918, 14706741, 15690872,
+  16720667, 17816442, 19041492, 20360945, 21792266, 23350443, 25098462, 27100775, 29581231, 33028574,
+  37953544, 44260543, 51901513, 60887711, 71228846, 82933459, 96009180, 110462910, 126300949,
+  144924572, 172016256,
+];
+
+/** Уровень PMC из накопленного опыта (в рамках текущего престижа). */
+export function experienceToLevel(exp: number): number {
+  if (!Number.isFinite(exp) || exp <= 0) return 1;
+  let level = 1;
+  for (let i = 0; i < LEVEL_CUM.length; i++) {
+    if (exp >= LEVEL_CUM[i]) level = i + 1;
+    else break;
+  }
+  return level;
+}
+
+/** Издание из memberCategory-битов (для отображаемого — selectedMemberCategory приоритетнее). */
+function editionFrom(memberCategory: number, selected?: number): ProfileEdition {
+  const m = (selected ?? 0) > 0 ? (selected as number) : memberCategory;
+  if ((m & 1024) === 1024) return "TUE"; // Unheard
+  if ((m & 2) === 2) return "EOD"; // Edge of Darkness
+  return "Standard";
 }
 
 /** Значение счётчика: элемент совпадает, если его Key содержит ВСЕ keyParts
@@ -157,6 +189,8 @@ export function normalizeProfile(profile: RawPlayerProfile): PlayerView {
     side: profile.info?.side ?? "",
     sideLabel: sideLabel(profile.info?.side ?? ""),
     experience: profile.info?.experience ?? 0,
+    level: experienceToLevel(profile.info?.experience ?? 0),
+    edition: editionFrom(profile.info?.memberCategory ?? 0, profile.info?.selectedMemberCategory),
     prestige: profile.info?.prestigeLevel ?? 0,
     badges: memberBadges(profile.info?.memberCategory ?? 0),
     totalTimeSeconds,

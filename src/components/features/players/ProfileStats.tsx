@@ -72,6 +72,9 @@ export function ProfileStats({ view }: { view: PlayerView }) {
           >
             {view.sideLabel}
           </span>
+          <span className="border border-lines-hover px-2 py-0.5 font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
+            Ур. {view.level}
+          </span>
           {view.prestige > 0 && (
             <span className="flex items-center gap-1 border border-(--color-kappa) px-2 py-0.5 font-blender-medium text-xs uppercase tracking-widest text-(--color-kappa)">
               <Trophy className="h-3 w-3" />

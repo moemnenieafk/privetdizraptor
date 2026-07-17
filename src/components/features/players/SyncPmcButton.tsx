@@ -28,6 +28,8 @@ export function SyncPmcButton({ view }: { view: PlayerView }) {
     if (!active || !pmc) return;
     updateProfile(active.id, {
       nickname: view.nickname,
+      level: String(view.level),
+      edition: view.edition,
       faction,
       prestige: String(view.prestige),
       hoursPlayed: hours,
@@ -45,7 +47,7 @@ export function SyncPmcButton({ view }: { view: PlayerView }) {
       <p className="font-blender-book text-xs text-text-secondary">
         Синхронизировать в активный ЧВК-профиль{" "}
         <span className="font-blender-medium text-text-primary">«{active.nickname}»</span> ({active.mode}): ник,
-        сторону, престиж, часы, рейды и выживаемость.
+        уровень, издание, сторону, престиж, часы, рейды и выживаемость.
       </p>
       <button
         type="button"
@@ -70,8 +72,9 @@ export function SyncPmcButton({ view }: { view: PlayerView }) {
       </button>
       {done && (
         <p className="font-blender-book text-xs text-text-secondary">
-          Записано: {hours} ч · {pmc.raids} рейдов · {pmc.survivalRate.toFixed(1)}% выживаемость. Синхронизация с
-          облаком — автоматически, если вы вошли в аккаунт.
+          Записано: {view.nickname} · ур. {view.level} · {hours} ч · {pmc.raids} рейдов ·{" "}
+          {pmc.survivalRate.toFixed(1)}% выживаемость. Синхронизация с облаком — автоматически, если вы вошли в
+          аккаунт.
         </p>
       )}
     </div>

@@ -95,6 +95,8 @@ export interface PlayerMasteringView {
   progress: number;
 }
 
+export type ProfileEdition = "Standard" | "LB" | "PFE" | "EOD" | "TUE";
+
 /** Вью-модель для рендера загруженного профиля. */
 export interface PlayerView {
   aid: number;
@@ -102,6 +104,8 @@ export interface PlayerView {
   side: string;
   sideLabel: string;
   experience: number;
+  level: number;
+  edition: ProfileEdition;
   prestige: number;
   badges: string[];
   totalTimeSeconds: number;
