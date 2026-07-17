@@ -9,22 +9,24 @@
 // Заглушки (пока через [section]): masterclasses, blog, game-updates.
 
 export const COMLINK_BASE = "/eft/comlink";
-// TODO: свои иконки подпунктов (пока общий comlink-icon как плейсхолдер).
+// Иконка раздела целиком (шапка индекса/заглушек). У подпунктов — свои иконки (поле icon ниже).
 export const COMLINK_ICON = "/icons/eft/00-nav/comlink-icon.svg";
 
 export interface ComlinkSection {
   slug: string;
   label: string;
   description: string;
+  /** Иконка подраздела (плейсхолдер Lucide, до фирменной графики). */
+  icon: string;
 }
 
 export const COMLINK_SECTIONS: ComlinkSection[] = [
-  { slug: "find-partner", label: "Поиск напарника", description: "Заявки на совместные рейды, подтверждения и оценки напарников." },
-  { slug: "candidates", label: "Кандидаты", description: "Анкеты игроков, ищущих команду или сокомандников." },
-  { slug: "sherpa-exchange", label: "Биржа шерпов", description: "Опытные игроки-наставники помогают новичкам освоиться." },
-  { slug: "discussions", label: "Обсуждения", description: "Темы по игре: мета, споты, механики. У каждого автора виден уровень доверия." },
-  { slug: "masterclasses", label: "Мастер-классы", description: "Разборы, обучающие сессии и гайды от профи." },
-  { slug: "blog", label: "Новостной блог", description: "Новости проекта ЦТА, статьи и объявления." },
+  { slug: "find-partner", label: "Поиск напарника", description: "Заявки на совместные рейды, подтверждения и оценки напарников.", icon: "/icons/eft/07-comlink/find-partner.svg" },
+  { slug: "candidates", label: "Кандидаты", description: "Анкеты игроков, ищущих команду или сокомандников.", icon: "/icons/eft/07-comlink/candidates.svg" },
+  { slug: "sherpa-exchange", label: "Биржа шерпов", description: "Опытные игроки-наставники помогают новичкам освоиться.", icon: "/icons/eft/07-comlink/sherpa.svg" },
+  { slug: "discussions", label: "Обсуждения", description: "Темы по игре: мета, споты, механики. У каждого автора виден уровень доверия.", icon: "/icons/eft/07-comlink/discussions.svg" },
+  { slug: "masterclasses", label: "Мастер-классы", description: "Разборы, обучающие сессии и гайды от профи.", icon: "/icons/eft/07-comlink/masterclasses.svg" },
+  { slug: "blog", label: "Новостной блог", description: "Новости проекта ЦТА, статьи и объявления.", icon: "/icons/eft/07-comlink/blog.svg" },
 ];
 
 // Табы «навигация по разделу» для SectionPlaceholder.
@@ -32,5 +34,5 @@ export const COMLINK_TABS = COMLINK_SECTIONS.map((s) => ({
   id: s.slug,
   label: s.label,
   href: `${COMLINK_BASE}/${s.slug}`,
-  iconUrl: COMLINK_ICON,
+  iconUrl: s.icon,
 }));

@@ -613,19 +613,19 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         ]
       },
       // ВЕТКА: СВЯЗЬ (сообщество) — навигируемые смарт-заглушки (MVP), реал — отдельный эпик.
-      // TODO: свои иконки подпунктов (пока общий comlink-icon).
+      // Иконки подпунктов — временные плейсхолдеры (Lucide, /icons/eft/07-comlink), до фирменной графики.
       {
         id: 'comlink',
         label: 'Связь',
         path: '/eft/comlink',
         iconUrl: '/icons/eft/00-nav/comlink-icon.svg',
         children: [
-          { id: 'cl-find-partner', label: 'Поиск напарника', path: '/eft/comlink/find-partner', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
-          { id: 'cl-candidates', label: 'Кандидаты', path: '/eft/comlink/candidates', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
-          { id: 'cl-sherpa', label: 'Биржа шерпов', path: '/eft/comlink/sherpa-exchange', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
-          { id: 'cl-discussions', label: 'Обсуждения', path: '/eft/comlink/discussions', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
-          { id: 'cl-masterclasses', label: 'Мастер-классы', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' },
-          { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/00-nav/comlink-icon.svg' }
+          { id: 'cl-find-partner', label: 'Поиск напарника', path: '/eft/comlink/find-partner', iconUrl: '/icons/eft/07-comlink/find-partner.svg' },
+          { id: 'cl-candidates', label: 'Кандидаты', path: '/eft/comlink/candidates', iconUrl: '/icons/eft/07-comlink/candidates.svg' },
+          { id: 'cl-sherpa', label: 'Биржа шерпов', path: '/eft/comlink/sherpa-exchange', iconUrl: '/icons/eft/07-comlink/sherpa.svg' },
+          { id: 'cl-discussions', label: 'Обсуждения', path: '/eft/comlink/discussions', iconUrl: '/icons/eft/07-comlink/discussions.svg' },
+          { id: 'cl-masterclasses', label: 'Мастер-классы', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/07-comlink/masterclasses.svg' },
+          { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/07-comlink/blog.svg' }
         ]
       },
     ],
