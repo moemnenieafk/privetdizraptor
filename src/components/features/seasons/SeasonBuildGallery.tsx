@@ -61,7 +61,10 @@ export function SeasonBuildGallery({ season }: Props) {
   const [filter, setFilter] = useState<BuildVibe | 'all'>('all');
   const [featured, setFeatured] = useState<CuratedBuild | null>(null);
   const [spinning, setSpinning] = useState(false);
+  const [spinKind, setSpinKind] = useState<'spin' | 'chaos'>('spin');
+  const [landKey, setLandKey] = useState(0);
   const [applied, setApplied] = useState<string | null>(null);
+  const [justApplied, setJustApplied] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
@@ -108,10 +111,12 @@ export function SeasonBuildGallery({ season }: Props) {
 
   // ── Барабан ──────────────────────────────────────────────────────
   const spinTo = useCallback(
-    (final: CuratedBuild) => {
+    (final: CuratedBuild, kind: 'spin' | 'chaos') => {
       if (spinning) return;
       setSpinning(true);
+      setSpinKind(kind);
       setApplied(null);
+      setJustApplied(false);
       timers.current.forEach(clearTimeout);
       timers.current = [];
       const seq = [70, 70, 90, 110, 140, 180, 240, 320, 440];
@@ -128,7 +133,8 @@ export function SeasonBuildGallery({ season }: Props) {
       timers.current.push(
         setTimeout(() => {
           setSpinning(false);
-          play('coins');
+          setLandKey((k) => k + 1);
+          play(kind === 'chaos' ? 'unlock' : 'coins');
         }, acc + 40),
       );
     },
@@ -139,6 +145,8 @@ export function SeasonBuildGallery({ season }: Props) {
     (b: CuratedBuild) => {
       applyPreset(season.slug, b.perks);
       setApplied(b.id);
+      setJustApplied(true);
+      timers.current.push(setTimeout(() => setJustApplied(false), 950));
       play('confirm');
       document.getElementById('season-builder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
@@ -172,6 +180,9 @@ export function SeasonBuildGallery({ season }: Props) {
           perkMap={perkMap}
           season={season}
           spinning={spinning}
+          spinKind={spinKind}
+          landKey={landKey}
+          justApplied={justApplied}
           applied={applied === featured.id}
           onApply={() => applyBuild(featured)}
         />
@@ -179,25 +190,25 @@ export function SeasonBuildGallery({ season }: Props) {
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => spinTo(rnd(filtered.length ? filtered : builds))}
+            onClick={() => spinTo(rnd(filtered.length ? filtered : builds), 'spin')}
             disabled={spinning}
-            className="flex items-center justify-center gap-2 rounded px-4 py-3.5 font-blender-medium text-sm uppercase tracking-widest transition-all duration-150 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded px-4 py-3.5 font-blender-medium text-sm uppercase tracking-widest transition-all duration-150 active:scale-[0.97] disabled:opacity-50"
             style={{
               color: 'var(--primary)',
               border: '1px solid var(--primary)',
               background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
             }}
           >
-            <Repeat size={15} className={spinning ? 'animate-spin' : ''} />
-            {spinning ? 'Крутим…' : 'Крутить'}
+            <Repeat size={15} className={spinning && spinKind === 'spin' ? 'animate-spin' : ''} />
+            {spinning && spinKind === 'spin' ? 'Крутим…' : 'Крутить'}
           </button>
           <button
             type="button"
-            onClick={() => spinTo(makeChaos())}
+            onClick={() => spinTo(makeChaos(), 'chaos')}
             disabled={spinning}
-            className="flex items-center justify-center gap-2 border border-lines-hover bg-card-menu px-4 py-3.5 font-blender-medium text-sm uppercase tracking-widest text-text-secondary transition-colors duration-150 hover:text-(--primary) disabled:opacity-50"
+            className="flex items-center justify-center gap-2 border border-lines-hover bg-card-menu px-4 py-3.5 font-blender-medium text-sm uppercase tracking-widest text-text-secondary transition-colors duration-150 active:scale-[0.97] hover:text-(--primary) disabled:opacity-50"
           >
-            <Dices size={15} />
+            <Dices size={15} className={spinning && spinKind === 'chaos' ? 'animate-spin' : ''} />
             Хаос
           </button>
         </div>
@@ -267,8 +278,20 @@ function Meter({ icon, value, color }: { icon: 'pain' | 'comfort'; value: number
       ) : (
         <Shield size={12} style={{ color }} className="shrink-0" />
       )}
-      <div className="h-1 flex-1 overflow-hidden bg-lines-hover">
-        <div className="h-full" style={{ width: `${value}%`, background: color }} />
+      <div className="relative h-1 flex-1 overflow-hidden bg-lines-hover">
+        <div
+          className="relative h-full overflow-hidden transition-[width] duration-500 ease-out"
+          style={{ width: `${value}%`, background: color }}
+        >
+          {value > 4 && (
+            <div
+              className="animate-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/2"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)',
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -278,18 +301,22 @@ function PerkIcons({
   build,
   perkMap,
   limit,
+  cascade = false,
 }: {
   build: CuratedBuild;
   perkMap: Map<string, SeasonPerk>;
   limit: number;
+  cascade?: boolean;
 }) {
   const shown = build.perks.slice(0, limit);
   const rest = build.perks.length - shown.length;
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {shown.map((id) => {
+      {shown.map((id, i) => {
         const p = perkMap.get(id);
         const border = p && p.cost < 0 ? 'border-success/50' : 'border-danger/50';
+        const anim = cascade ? 'animate-perk-pop' : '';
+        const style = cascade ? { animationDelay: `${i * 40}ms` } : undefined;
         return p?.iconUrl ? (
           <img
             key={id}
@@ -297,12 +324,14 @@ function PerkIcons({
             alt=""
             aria-hidden
             title={p.name}
-            className={`size-7 shrink-0 rounded-xs border object-contain p-0.5 ${border}`}
+            style={style}
+            className={`size-7 shrink-0 rounded-xs border object-contain p-0.5 ${border} ${anim}`}
           />
         ) : (
           <span
             key={id}
-            className={`flex size-7 shrink-0 items-center justify-center rounded-xs border font-blender-medium text-type-micro text-text-muted ${border}`}
+            style={style}
+            className={`flex size-7 shrink-0 items-center justify-center rounded-xs border font-blender-medium text-type-micro text-text-muted ${border} ${anim}`}
           >
             {p ? (p.cost > 0 ? `+${p.cost}` : p.cost) : '?'}
           </span>
@@ -345,7 +374,7 @@ function ApplyButton({ applied, onApply }: { applied: boolean; onApply: () => vo
     <button
       type="button"
       onClick={onApply}
-      className="flex items-center justify-center gap-1.5 rounded-xs px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest transition-all duration-150"
+      className="flex items-center justify-center gap-1.5 rounded-xs px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest transition-all duration-150 active:scale-[0.96]"
       style={
         applied
           ? { color: 'var(--color-success)', border: '1px solid color-mix(in srgb, var(--color-success) 50%, transparent)' }
@@ -363,6 +392,9 @@ function FeaturedCard({
   perkMap,
   season,
   spinning,
+  spinKind,
+  landKey,
+  justApplied,
   applied,
   onApply,
 }: {
@@ -370,24 +402,50 @@ function FeaturedCard({
   perkMap: Map<string, SeasonPerk>;
   season: Season;
   spinning: boolean;
+  spinKind: 'spin' | 'chaos';
+  landKey: number;
+  justApplied: boolean;
   applied: boolean;
   onApply: () => void;
 }) {
   const meta = useBuildMeta(build, season);
   const accent = VIBE_META[build.vibe].color;
+  const landAnim =
+    !spinning && landKey > 0 ? (spinKind === 'chaos' ? 'animate-chaos-glitch' : 'animate-reveal-punch') : '';
   return (
     <div
-      className="relative overflow-hidden rounded-lg border p-4 transition-all duration-300"
+      key={landKey}
+      className={`relative overflow-hidden rounded-lg border p-4 transition-all duration-300 ${landAnim}`}
       style={{
-        borderColor: spinning ? 'var(--color-lines-hover)' : `color-mix(in srgb, ${accent} 55%, transparent)`,
+        borderColor: justApplied
+          ? 'var(--color-success)'
+          : spinning
+            ? 'var(--color-lines-hover)'
+            : `color-mix(in srgb, ${accent} 55%, transparent)`,
         background: `radial-gradient(circle at 50% -30%, color-mix(in srgb, ${accent} 10%, transparent), var(--color-darkbase))`,
-        boxShadow: spinning ? 'none' : `0 0 24px color-mix(in srgb, ${accent} 16%, transparent)`,
+        boxShadow: justApplied
+          ? '0 0 28px color-mix(in srgb, var(--color-success) 40%, transparent)'
+          : spinning
+            ? 'none'
+            : `0 0 24px color-mix(in srgb, ${accent} 16%, transparent)`,
       }}
     >
+      {/* Сканлайн во время прокрутки */}
+      {spinning && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="animate-scan-sweep absolute inset-x-0 h-8"
+            style={{
+              background: `linear-gradient(to bottom, transparent, color-mix(in srgb, ${accent} 24%, transparent), transparent)`,
+            }}
+          />
+        </div>
+      )}
+
       <div
         key={build.id}
-        className="flex flex-col gap-3 animate-[fade-in_0.2s_ease-out_both]"
-        style={{ opacity: spinning ? 0.55 : 1 }}
+        className="relative flex flex-col gap-3 animate-[fade-in_0.2s_ease-out_both]"
+        style={{ opacity: spinning ? 0.5 : 1 }}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -407,7 +465,7 @@ function FeaturedCard({
 
         <MeterRow pain={meta.painPct} comfort={meta.comfortPct} />
 
-        <PerkIcons build={build} perkMap={perkMap} limit={12} />
+        <PerkIcons build={build} perkMap={perkMap} limit={12} cascade={!spinning} />
 
         <div className="flex items-center justify-between gap-2 border-t border-lines-hover pt-3">
           <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
@@ -439,7 +497,7 @@ function GridCard({
 }) {
   const meta = useBuildMeta(build, season);
   return (
-    <div className="flex flex-col gap-2.5 rounded-sm border border-lines-hover bg-(--color-base) p-3">
+    <div className="flex flex-col gap-2.5 rounded-sm border border-lines-hover bg-(--color-base) p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-(--primary) hover:shadow-[0_6px_20px_rgba(0,0,0,0.35)]">
       <div className="flex items-center justify-between gap-2">
         <VibeChip vibe={build.vibe} />
         <BalanceBadge balance={meta.balance} valid={meta.valid} />
