@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-rea
 import { createClient } from '@/lib/supabase/client';
 import { changeEmail, saveSocials, saveNotifications, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
+import { OAuthLogins } from './OAuthLogins';
 import type { AchievementView } from '@/lib/achievement-visuals';
 import type { AchievementHint } from '@/lib/achievement-hints';
 import type { QuestsDigestData } from '@/lib/tracking-digest';
@@ -945,12 +946,15 @@ function SecurityPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
 function LinkingPanel({ me, onNavigate }: { me: Me; onNavigate: (v: ViewId) => void }) {
   return (
     <div className="flex flex-col gap-4">
+      {/* Реальные OAuth-входы (Discord/Twitch) — привязка/отвязка. */}
+      <OAuthLogins />
+
       <div className="rounded border border-lines-hover bg-card-menu px-6 py-5">
         <h2 className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">
-          Связанные аккаунты
+          Публичные хендлы
         </h2>
         <p className="mt-1 font-blender-book text-xs text-text-secondary">
-          Возможность и статус привязки аккаунтов сторонних ресурсов
+          Ники соцсетей для профиля и Комлинка. Это витрина, не способ входа.
         </p>
       </div>
 

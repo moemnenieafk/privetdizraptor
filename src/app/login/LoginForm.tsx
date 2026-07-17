@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Eye, EyeOff, MailCheck } from "lucide-react";
+import { Eye, EyeOff, MailCheck, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { safeNext } from "@/lib/auth/safe-next";
 import { Turnstile } from "@/components/ui/Turnstile";
+import { DiscordIcon, TwitchIcon } from "@/components/ui/BrandIcons";
 
 type Mode = "login" | "register";
 type MagicStatus = "idle" | "sending" | "sent" | "error";
@@ -68,12 +69,55 @@ function PrimaryButton({ children, disabled }: { children: React.ReactNode; disa
   );
 }
 
+const OAUTH_CFG = {
+  discord: { name: "Discord", color: "#5865F2", Icon: DiscordIcon },
+  twitch: { name: "Twitch", color: "#9146FF", Icon: TwitchIcon },
+} as const;
+
+function OAuthButton({
+  provider,
+  busy,
+  disabled,
+  onClick,
+}: {
+  provider: "discord" | "twitch";
+  busy: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  const { name, color, Icon } = OAUTH_CFG[provider];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center justify-center gap-2 rounded border px-4 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest transition-colors hover:bg-black/20 disabled:cursor-not-allowed disabled:opacity-50"
+      style={{ color, borderColor: `${color}66` }}
+    >
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon size={16} />}
+      {name}
+    </button>
+  );
+}
+
 export function LoginForm() {
   const searchParams = useSearchParams();
   const next = safeNext(searchParams.get("next"));
   const supabase = createClient();
 
   const [mode, setMode] = useState<Mode>("login");
+
+  // ── OAuth (Discord/Twitch) ──
+  const [oauthBusy, setOauthBusy] = useState<"discord" | "twitch" | null>(null);
+  const [oauthErr, setOauthErr] = useState<string | null>(null);
+  // Ошибка, с которой нас вернул /auth/callback (провайдер/ссылка) — иначе молчаливый bounce.
+  const callbackError = searchParams.get("error");
+  const callbackMsg =
+    callbackError === "oauth"
+      ? "Не удалось завершить вход через сервис. Попробуйте ещё раз."
+      : callbackError === "link"
+        ? "Ссылка входа недействительна или устарела."
+        : null;
 
   // ── капча (Turnstile) ──
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -184,10 +228,23 @@ export function LoginForm() {
   }
 
   async function oauth(provider: "discord" | "twitch") {
-    await supabase.auth.signInWithOAuth({
+    setOauthErr(null);
+    setOauthBusy(provider);
+    const name = provider === "discord" ? "Discord" : "Twitch";
+    const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
+    // На успехе браузер уже уходит на провайдера; сюда попадаем только при ошибке
+    // (провайдер не включён в Supabase, redirect-URL не в allowlist и т.п.).
+    if (error) {
+      setOauthBusy(null);
+      setOauthErr(
+        /not enabled|unsupported provider|provider is not enabled/i.test(error.message)
+          ? `Вход через ${name} пока не подключён`
+          : `Не удалось начать вход через ${name}`,
+      );
+    }
   }
 
   return (
@@ -336,18 +393,11 @@ export function LoginForm() {
             или через
             <span className="h-px flex-1 bg-lines-hover" />
           </div>
-          <button
-            onClick={() => oauth("discord")}
-            className="rounded border border-lines-hover px-4 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
-          >
-            Discord
-          </button>
-          <button
-            onClick={() => oauth("twitch")}
-            className="rounded border border-lines-hover px-4 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
-          >
-            Twitch
-          </button>
+          {(oauthErr || callbackMsg) && (
+            <p className="mb-1 font-blender-book text-xs text-danger">{oauthErr ?? callbackMsg}</p>
+          )}
+          <OAuthButton provider="discord" busy={oauthBusy === "discord"} disabled={!!oauthBusy} onClick={() => oauth("discord")} />
+          <OAuthButton provider="twitch" busy={oauthBusy === "twitch"} disabled={!!oauthBusy} onClick={() => oauth("twitch")} />
         </div>
       </div>
     </div>
