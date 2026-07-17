@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-17
+- `f3159fb` refactor(players): страница под /eft/comlink/players — наследует навбар секции «Связь»
 - `91a74b6` refactor(nav): перенос «Поиск игроков» в раздел «Связь»
 - `a5cfbf8` feat(cron): migrate-player-cache — накат таблицы кэша лукапа с телефона
 - `d7858c3` feat(eft): player lookup — поиск игроков + профиль со статой
