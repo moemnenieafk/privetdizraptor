@@ -248,6 +248,9 @@
 
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
+### 2026-07-18
+- `76e38b5` feat(players): лаунчер вместо прокси — апстрим закрыл и /name/, и /account/
+
 ### 2026-07-17
 - `f900b70` feat(players): профиль deep-link на tarkov.dev (их /account/ за Turnstile)
 - `f3327fa` fix(players): браузерные заголовки к апстриму player.tarkov.dev
