@@ -244,6 +244,13 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       streams: 'Стримы',
     },
     menuItems: [
+      // ПОИСК ИГРОКОВ (внешний лукап профилей BSG)
+      {
+        id: 'players',
+        label: 'Игроки',
+        iconUrl: '/icons/eft/search-icon.svg',
+        path: '/eft/players',
+      },
       // ВЕТКА 1: КАРТЫ (Полностью структурированная)
       { 
         id: 'maps', 

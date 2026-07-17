@@ -13,6 +13,7 @@ import {
   primaryKey,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
+import type { RawPlayerProfile } from "@/types/eft-player";
 
 /**
  * Слой 1 — фундамент базы CTA.
@@ -944,4 +945,23 @@ export const questState = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [uniqueIndex("quest_state_key_idx").on(t.gameId, t.questId)],
+);
+
+/* ─────────────── eft_player_lookup_cache (внешний лукап игроков) ───────────────
+ * Кэш публичных профилей BSG (проксируем через player.tarkov.dev). Backend-only,
+ * как rate_limits/feedback: пишет/читает только серверная owner-роль (Drizzle мимо
+ * RLS). RLS включён без policy (supabase/eft-player-cache.sql) — anon/authenticated
+ * прямого доступа нет; клиент ходит только через наши роуты. TTL проверяется в коде
+ * (fetchedAt), протухшие строки перезаписываются опортунистически при следующем хите.
+ * PK = (aid, game_mode): один и тот же aid имеет отдельную статистику в regular/pve. */
+export const eftPlayerLookupCache = pgTable(
+  "eft_player_lookup_cache",
+  {
+    aid: text("aid").notNull(),
+    gameMode: text("game_mode").notNull(),
+    nickname: text("nickname"),
+    profile: jsonb("profile").$type<RawPlayerProfile>().notNull(),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.aid, t.gameMode] })],
 );
