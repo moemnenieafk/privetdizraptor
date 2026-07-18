@@ -20,6 +20,11 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     description: 'Все сюжетные и побочные задания от торговцев. Прохождения, награды и необходимые предметы.',
     iconClass: 'icon-eft-quests',
   },
+  'eft-comlink': {
+    title: 'Связь',
+    description: 'Сообщество ЦТА: поиск напарников, биржа шерпов, мастер-классы, новостной блог и обновления игры.',
+    iconClass: 'icon-eft-comlink-icon',
+  },
   'eft-progress': {
     title: 'Прогресс',
     description: 'Отслеживайте свой прогресс: достижения, бартеры, сборки оружия и предметы для убежища.',
