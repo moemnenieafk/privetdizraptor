@@ -20,11 +20,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
   const p = await getPublicProfile(username);
   if (!p) {
-    return { title: "Профиль не найден · ЦТА", robots: { index: false, follow: false } };
+    return { title: "Профиль не найден", robots: { index: false, follow: false } };
   }
   const verified = p.verifiedAnywhere ? "✓ " : "";
   return {
-    title: `${verified}${p.username} · Профиль · ЦТА`,
+    title: `${verified}${p.username} · Профиль`,
     description: `Публичный профиль ${p.username} на ЦТА: подтверждённые ЧВК-профили, анкеты «Связи» и статистика.`,
     robots: { index: true, follow: true },
   };
@@ -44,8 +44,14 @@ const SOCIAL_ICON: Record<SocialPlatform, typeof TwitchIcon> = {
   steam: SteamIcon,
 };
 
-const fmtDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+const MONTHS_GEN = [
+  "января", "февраля", "марта", "апреля", "мая", "июня",
+  "июля", "августа", "сентября", "октября", "ноября", "декабря",
+];
+const fmtDate = (iso: string): string => {
+  const d = new Date(iso);
+  return `${MONTHS_GEN[d.getMonth()]} ${d.getFullYear()}`;
+};
 
 export default async function PublicProfilePage({ params }: Props) {
   const { username } = await params;
