@@ -1,10 +1,10 @@
-// POST /api/eft/builds/comments/vote — тоггл «Полезно». Тело: { id }.
+// POST /api/eft/comments/vote — тоггл «Полезно». Тело: { id }.
 // Голосовать может ЛЮБОЙ залогиненный, включая free: платные пишут, бесплатные
-// сортируют. Дедуп — составной PK build_comment_votes. За себя голосовать нельзя.
+// сортируют. Дедуп — составной PK entity_comment_votes. За себя голосовать нельзя.
 import { NextResponse } from "next/server";
 import { getMe } from "@/lib/auth/me";
 import { rateLimit } from "@/lib/rate-limit";
-import { toggleCommentVote } from "@/db/build-comments";
+import { toggleCommentVote } from "@/db/entity-comments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

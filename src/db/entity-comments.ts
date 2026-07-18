@@ -1,4 +1,7 @@
-// Комментарии к опубликованным сборкам. Только для сервера.
+// Обсуждения под сущностями портала. Только для сервера.
+//
+// Слой полиморфный: цель адресуется парой (targetType, targetId) — сборка, патч,
+// статья Кодекса, босс, торговец. Реестр целей — src/lib/comment-targets.ts.
 //
 // Правила доступа (гейт живёт в роуте, здесь — данные и целостность):
 //   читать    — все, включая анонимов
@@ -6,11 +9,12 @@
 //   голосовать— любой залогиненный, в том числе free
 //   удалять   — автор (мягко) и модератор (скрытие)
 //
-// Голос дедуплится составным PK build_comment_votes(comment_id, user_id).
-// score денормализован в build_comments.score — лента не считает агрегат джойном.
+// Голос дедуплится составным PK entity_comment_votes(comment_id, user_id).
+// score денормализован в entity_comments.score — лента не считает агрегат джойном.
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { buildComments, buildCommentVotes, profiles, weaponBuilds } from "@/db/schema";
+import { entityComments, entityCommentVotes, profiles, weaponBuilds } from "@/db/schema";
+import type { CommentTargetType } from "@/lib/comment-targets";
 import { karmaEvents } from "@/db/schema-comlink";
 
 /** Порог, после которого автор комментария получает карму (разово). */
@@ -22,7 +26,7 @@ export const COMMENT_MIN_LEN = 2;
 
 export type CommentSort = "best" | "new";
 
-export interface BuildComment {
+export interface EntityComment {
   id: string;
   body: string;
   score: number;
@@ -54,48 +58,54 @@ export async function buildIdBySlug(slug: string): Promise<string | null> {
 }
 
 /**
- * Ветка под сборкой. Скрытые модератором строки видны только их автору и модераторам,
+ * Ветка под сущностью. Скрытые модератором строки видны только их автору и модераторам,
  * удалённые автором не отдаются никому. Устойчива к отсутствию таблицы → [].
  */
-export async function getBuildComments(
-  buildId: string,
+export async function getEntityComments(
+  target: { type: CommentTargetType; id: string },
   opts: { sort: CommentSort; viewerId: string | null; viewerCanModerate: boolean },
-): Promise<BuildComment[]> {
+): Promise<EntityComment[]> {
   try {
     const { sort, viewerId, viewerCanModerate } = opts;
 
     const voteCond = viewerId
-      ? and(eq(buildCommentVotes.commentId, buildComments.id), eq(buildCommentVotes.userId, viewerId))
+      ? and(eq(entityCommentVotes.commentId, entityComments.id), eq(entityCommentVotes.userId, viewerId))
       : sql`false`;
 
     const karmaSub = sql<number>`(
       select coalesce(sum(${karmaEvents.delta}), 0)::int
       from ${karmaEvents}
-      where ${karmaEvents.userId} = ${buildComments.userId}
+      where ${karmaEvents.userId} = ${entityComments.userId}
     )`;
 
     const rows = await db
       .select({
-        id: buildComments.id,
-        body: buildComments.body,
-        score: buildComments.score,
-        createdAt: buildComments.createdAt,
-        hiddenAt: buildComments.hiddenAt,
-        authorId: buildComments.userId,
+        id: entityComments.id,
+        body: entityComments.body,
+        score: entityComments.score,
+        createdAt: entityComments.createdAt,
+        hiddenAt: entityComments.hiddenAt,
+        authorId: entityComments.userId,
         authorName: profiles.username,
         authorAvatar: profiles.avatarUrl,
         authorStreamer: profiles.streamer,
         authorKarma: karmaSub,
-        votedUserId: buildCommentVotes.userId,
+        votedUserId: entityCommentVotes.userId,
       })
-      .from(buildComments)
-      .innerJoin(profiles, eq(profiles.id, buildComments.userId))
-      .leftJoin(buildCommentVotes, voteCond)
-      .where(and(eq(buildComments.buildId, buildId), isNull(buildComments.deletedAt)))
+      .from(entityComments)
+      .innerJoin(profiles, eq(profiles.id, entityComments.userId))
+      .leftJoin(entityCommentVotes, voteCond)
+      .where(
+        and(
+          eq(entityComments.targetType, target.type),
+          eq(entityComments.targetId, target.id),
+          isNull(entityComments.deletedAt),
+        ),
+      )
       .orderBy(
         ...(sort === "best"
-          ? [desc(buildComments.score), desc(buildComments.createdAt)]
-          : [desc(buildComments.createdAt)]),
+          ? [desc(entityComments.score), desc(entityComments.createdAt)]
+          : [desc(entityComments.createdAt)]),
       )
       .limit(200);
 
@@ -120,7 +130,7 @@ export async function getBuildComments(
 }
 
 export async function createComment(
-  buildId: string,
+  target: { type: CommentTargetType; id: string },
   userId: string,
   bodyRaw: string,
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
@@ -131,9 +141,9 @@ export async function createComment(
   }
   try {
     const [row] = await db
-      .insert(buildComments)
-      .values({ buildId, userId, body })
-      .returning({ id: buildComments.id });
+      .insert(entityComments)
+      .values({ targetType: target.type, targetId: target.id, userId, body })
+      .returning({ id: entityComments.id });
     return { ok: true, id: row?.id };
   } catch {
     return { ok: false, error: "Не удалось отправить комментарий" };
@@ -144,10 +154,10 @@ export async function createComment(
 export async function deleteOwnComment(commentId: string, userId: string): Promise<boolean> {
   try {
     const res = await db
-      .update(buildComments)
+      .update(entityComments)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(buildComments.id, commentId), eq(buildComments.userId, userId)))
-      .returning({ id: buildComments.id });
+      .where(and(eq(entityComments.id, commentId), eq(entityComments.userId, userId)))
+      .returning({ id: entityComments.id });
     return res.length > 0;
   } catch {
     return false;
@@ -162,14 +172,14 @@ export async function hideComment(
 ): Promise<boolean> {
   try {
     const res = await db
-      .update(buildComments)
+      .update(entityComments)
       .set({
         hiddenAt: hidden ? new Date() : null,
         hiddenBy: hidden ? moderatorId : null,
         updatedAt: new Date(),
       })
-      .where(eq(buildComments.id, commentId))
-      .returning({ id: buildComments.id });
+      .where(eq(entityComments.id, commentId))
+      .returning({ id: entityComments.id });
     return res.length > 0;
   } catch {
     return false;
@@ -187,9 +197,9 @@ export async function toggleCommentVote(
 ): Promise<{ ok: boolean; voted: boolean; score: number; error?: string }> {
   try {
     const [c] = await db
-      .select({ id: buildComments.id, authorId: buildComments.userId })
-      .from(buildComments)
-      .where(and(eq(buildComments.id, commentId), isNull(buildComments.deletedAt)))
+      .select({ id: entityComments.id, authorId: entityComments.userId })
+      .from(entityComments)
+      .where(and(eq(entityComments.id, commentId), isNull(entityComments.deletedAt)))
       .limit(1);
     if (!c) return { ok: false, voted: false, score: 0, error: "Комментарий не найден" };
     if (c.authorId === userId) {
@@ -197,31 +207,31 @@ export async function toggleCommentVote(
     }
 
     const inserted = await db
-      .insert(buildCommentVotes)
+      .insert(entityCommentVotes)
       .values({ commentId, userId, value: 1 })
       .onConflictDoNothing()
-      .returning({ commentId: buildCommentVotes.commentId });
+      .returning({ commentId: entityCommentVotes.commentId });
 
     let voted: boolean;
     if (inserted.length > 0) {
       voted = true;
     } else {
       await db
-        .delete(buildCommentVotes)
-        .where(and(eq(buildCommentVotes.commentId, commentId), eq(buildCommentVotes.userId, userId)));
+        .delete(entityCommentVotes)
+        .where(and(eq(entityCommentVotes.commentId, commentId), eq(entityCommentVotes.userId, userId)));
       voted = false;
     }
 
     const [agg] = await db
-      .select({ n: sql<number>`coalesce(sum(${buildCommentVotes.value}), 0)::int` })
-      .from(buildCommentVotes)
-      .where(eq(buildCommentVotes.commentId, commentId));
+      .select({ n: sql<number>`coalesce(sum(${entityCommentVotes.value}), 0)::int` })
+      .from(entityCommentVotes)
+      .where(eq(entityCommentVotes.commentId, commentId));
     const score = agg?.n ?? 0;
 
     await db
-      .update(buildComments)
+      .update(entityComments)
       .set({ score, updatedAt: new Date() })
-      .where(eq(buildComments.id, commentId));
+      .where(eq(entityComments.id, commentId));
 
     if (score >= COMMENT_KARMA_THRESHOLD) await grantCommentKarma(c.authorId, commentId);
 
@@ -258,4 +268,58 @@ async function grantCommentKarma(authorId: string, commentId: string): Promise<v
     refId: commentId,
     issuedBy: null,
   });
+}
+
+/* ───────────────── лента модерации ───────────────── */
+
+export interface ModerationComment extends EntityComment {
+  targetType: CommentTargetType;
+  targetId: string;
+}
+
+/**
+ * Свежие комментарии по ВСЕМУ порталу — без этого модератор физически не увидит,
+ * что написали под какой-нибудь дальней страницей. Скрытые тоже отдаются:
+ * модератору нужно видеть, что он уже разобрал.
+ */
+export async function getRecentComments(limit = 100): Promise<ModerationComment[]> {
+  try {
+    const rows = await db
+      .select({
+        id: entityComments.id,
+        body: entityComments.body,
+        score: entityComments.score,
+        createdAt: entityComments.createdAt,
+        hiddenAt: entityComments.hiddenAt,
+        targetType: entityComments.targetType,
+        targetId: entityComments.targetId,
+        authorId: entityComments.userId,
+        authorName: profiles.username,
+        authorAvatar: profiles.avatarUrl,
+        authorStreamer: profiles.streamer,
+      })
+      .from(entityComments)
+      .innerJoin(profiles, eq(profiles.id, entityComments.userId))
+      .where(isNull(entityComments.deletedAt))
+      .orderBy(desc(entityComments.createdAt))
+      .limit(Math.min(Math.max(limit, 1), 200));
+
+    return rows.map((r) => ({
+      id: r.id,
+      body: r.body,
+      score: r.score,
+      createdAt: r.createdAt.toISOString(),
+      authorId: r.authorId,
+      authorName: r.authorName ?? "Боец",
+      authorAvatar: r.authorAvatar,
+      authorStreamer: r.authorStreamer,
+      authorKarma: 0,
+      votedByMe: false,
+      hidden: r.hiddenAt !== null,
+      targetType: r.targetType,
+      targetId: r.targetId,
+    }));
+  } catch {
+    return [];
+  }
 }

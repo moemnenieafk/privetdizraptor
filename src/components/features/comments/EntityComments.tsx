@@ -1,6 +1,7 @@
 'use client';
 
-// Ветка обсуждения под опубликованной сборкой.
+// Ветка обсуждения под любой сущностью портала (сборка, патч, Кодекс, босс, торговец).
+// Цель передаётся парой type+id — реестр разрешённых целей в @/lib/comment-targets.
 //
 // Асимметрия по правам сделана намеренно: ПИСАТЬ может платный тир (сообщение имеет
 // цену — это отсекает мусор), ГОЛОСОВАТЬ — любой залогиненный, включая free. Так
@@ -11,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { EyeOff, ThumbsUp, Trash2 } from 'lucide-react';
 import { TwitchIcon } from '@/components/ui/BrandIcons';
+import type { CommentTargetType } from '@/lib/comment-targets';
 
 // Пороги кармы продублированы локально СПЕЦИАЛЬНО: KARMA_TIERS живёт в
 // src/db/schema-comlink.ts рядом с pgTable, и импорт оттуда затащил бы drizzle
@@ -58,7 +60,7 @@ interface FeedResponse {
 const fmtDate = (iso: string): string =>
   new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 
-export function BuildComments({ slug }: { slug: string }) {
+export function EntityComments({ type, id }: { type: CommentTargetType; id: string }) {
   const [sort, setSort] = useState<Sort>('best');
   const [items, setItems] = useState<CommentDTO[]>([]);
   const [me, setMe] = useState<MeInfo | null>(null);
@@ -71,7 +73,7 @@ export function BuildComments({ slug }: { slug: string }) {
     async (nextSort: Sort, signal?: AbortSignal) => {
       try {
         const res = await fetch(
-          `/api/eft/builds/comments?slug=${encodeURIComponent(slug)}&sort=${nextSort}`,
+          `/api/eft/comments?type=${type}&id=${encodeURIComponent(id)}&sort=${nextSort}`,
           { signal },
         );
         if (!res.ok) throw new Error(String(res.status));
@@ -84,7 +86,7 @@ export function BuildComments({ slug }: { slug: string }) {
         setStatus('error');
       }
     },
-    [slug],
+    [type, id],
   );
 
   useEffect(() => {
@@ -99,10 +101,10 @@ export function BuildComments({ slug }: { slug: string }) {
     setSending(true);
     setNotice(null);
     try {
-      const res = await fetch('/api/eft/builds/comments', {
+      const res = await fetch('/api/eft/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, body }),
+        body: JSON.stringify({ type, id, body }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
@@ -116,59 +118,54 @@ export function BuildComments({ slug }: { slug: string }) {
     } finally {
       setSending(false);
     }
-  }, [draft, sending, slug, sort, load]);
+  }, [draft, sending, type, id, sort, load]);
 
-  const vote = useCallback(async (id: string) => {
-    setItems((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? { ...c, votedByMe: !c.votedByMe, score: c.score + (c.votedByMe ? -1 : 1) }
-          : c,
-      ),
-    );
+  const vote = useCallback(async (commentId: string) => {
+    const flip = (c: CommentDTO): CommentDTO =>
+      c.id === commentId
+        ? { ...c, votedByMe: !c.votedByMe, score: c.score + (c.votedByMe ? -1 : 1) }
+        : c;
+
+    setItems((prev) => prev.map(flip));
     try {
-      const res = await fetch('/api/eft/builds/comments/vote', {
+      const res = await fetch('/api/eft/comments/vote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: commentId }),
       });
       const data = (await res.json()) as { voted?: boolean; score?: number; error?: string };
       if (!res.ok) throw new Error(data.error ?? 'fail');
       setItems((prev) =>
         prev.map((c) =>
-          c.id === id ? { ...c, votedByMe: data.voted ?? c.votedByMe, score: data.score ?? c.score } : c,
-        ),
-      );
-    } catch {
-      setItems((prev) =>
-        prev.map((c) =>
-          c.id === id
-            ? { ...c, votedByMe: !c.votedByMe, score: c.score + (c.votedByMe ? -1 : 1) }
+          c.id === commentId
+            ? { ...c, votedByMe: data.voted ?? c.votedByMe, score: data.score ?? c.score }
             : c,
         ),
       );
+    } catch {
+      setItems((prev) => prev.map(flip)); // откат
     }
   }, []);
 
-  const removeOwn = useCallback(async (id: string) => {
-    setItems((prev) => prev.filter((c) => c.id !== id));
+  const removeOwn = useCallback(async (commentId: string) => {
+    setItems((prev) => prev.filter((c) => c.id !== commentId));
     try {
-      await fetch(`/api/eft/builds/comments?id=${id}`, { method: 'DELETE' });
+      await fetch(`/api/eft/comments?id=${commentId}`, { method: 'DELETE' });
     } catch {
       /* список перечитается при следующей загрузке */
     }
   }, []);
 
-  const toggleHide = useCallback(async (id: string, hidden: boolean) => {
-    setItems((prev) => prev.map((c) => (c.id === id ? { ...c, hidden } : c)));
+  const toggleHide = useCallback(async (commentId: string, hidden: boolean) => {
+    setItems((prev) => prev.map((c) => (c.id === commentId ? { ...c, hidden } : c)));
     try {
-      await fetch('/api/eft/builds/comments', {
+      await fetch('/api/eft/comments', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, hidden }),
+        body: JSON.stringify({ id: commentId, hidden }),
       });
     } catch {
-      setItems((prev) => prev.map((c) => (c.id === id ? { ...c, hidden: !hidden } : c)));
+      setItems((prev) => prev.map((c) => (c.id === commentId ? { ...c, hidden: !hidden } : c)));
     }
   }, []);
 

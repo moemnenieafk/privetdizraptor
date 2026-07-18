@@ -7,7 +7,7 @@ import { buildFocus } from '@/lib/build-focus';
 import { buildTotal, formatRub } from '@/lib/build-price';
 import { calcBuild, calcDelta, type BuildNode } from '@/lib/weapon-build';
 import { SharedBuildView } from '@/components/features/loadouts/SharedBuildView';
-import { BuildComments } from '@/components/features/loadouts/BuildComments';
+import { EntityComments } from '@/components/features/comments/EntityComments';
 
 // Снэпшот сборки по ссылке. Всё дерево лежит в самом URL — БД под сборку не нужна,
 // поделиться можно с бесплатного тира и без регистрации.
@@ -103,7 +103,7 @@ export default async function SharedBuildPage({ params, searchParams }: Props) {
 
         {/* Обсуждение — только у опубликованных сборок: у ссылок-снимков (дерево в URL)
             нет строки в БД, а значит и ветки. */}
-        {resolved.slug && <BuildComments slug={resolved.slug} />}
+        {resolved.slug && <EntityComments type="build" id={resolved.slug} />}
       </div>
     </main>
   );

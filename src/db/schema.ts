@@ -14,6 +14,8 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
+import type { CommentTargetType } from "@/lib/comment-targets";
+
 /**
  * Слой 1 — фундамент базы CTA.
  *
@@ -846,21 +848,23 @@ export const weaponBuildLikes = pgTable(
 export type WeaponBuildLikeRow = typeof weaponBuildLikes.$inferSelect;
 export type NewWeaponBuildLikeRow = typeof weaponBuildLikes.$inferInsert;
 
-/* ───────────────── комментарии к сборкам ───────────────── */
+/* ───────────────── обсуждения (полиморфный слой) ───────────────── */
 /**
- * Плоская ветка обсуждения под опубликованной сборкой. ПИСАТЬ может только платный
- * тир (проверка серверная, в роуте — в схеме тира нет), ГОЛОСОВАТЬ — любой
- * залогиненный: платные производят контент, бесплатные его сортируют.
- * `score` — денормализованная сумма голосов, пересчитывается при каждом тоггле.
- * Удаление автором мягкое (deleted_at), скрытие модератором — hidden_at.
+ * Комментарии к ЛЮБОЙ сущности портала: сборки, патчи, Кодекс, боссы, торговцы.
+ * Цель адресуется парой (targetType, targetId) — реестр разрешённых типов и
+ * проверка существования цели живут в src/lib/comment-targets*.ts. FK тут поставить
+ * нельзя, поэтому целостность обеспечивает сервер до вставки.
+ *
+ * ПИСАТЬ может платный тир (проверка в роуте), ГОЛОСОВАТЬ — любой залогиненный:
+ * платные производят контент, бесплатные его сортируют.
+ * `score` денормализован и пересчитывается при каждом тогле голоса.
  */
-export const buildComments = pgTable(
-  "build_comments",
+export const entityComments = pgTable(
+  "entity_comments",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    buildId: uuid("build_id")
-      .notNull()
-      .references(() => weaponBuilds.id, { onDelete: "cascade" }),
+    targetType: text("target_type").$type<CommentTargetType>().notNull(),
+    targetId: text("target_id").notNull(),
     userId: uuid("user_id")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
@@ -873,18 +877,19 @@ export const buildComments = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
-    index("build_comments_build_idx").on(t.buildId, t.createdAt),
-    index("build_comments_score_idx").on(t.buildId, t.score),
+    index("entity_comments_target_idx").on(t.targetType, t.targetId, t.createdAt),
+    index("entity_comments_score_idx").on(t.targetType, t.targetId, t.score),
+    index("entity_comments_recent_idx").on(t.createdAt),
   ],
 );
 
-/** Голоса за комментарии. Сейчас пишем только +1; integer оставлен на случай минусов. */
-export const buildCommentVotes = pgTable(
-  "build_comment_votes",
+/** Голоса. Сейчас пишем только +1; integer оставлен на случай минусов. */
+export const entityCommentVotes = pgTable(
+  "entity_comment_votes",
   {
     commentId: uuid("comment_id")
       .notNull()
-      .references(() => buildComments.id, { onDelete: "cascade" }),
+      .references(() => entityComments.id, { onDelete: "cascade" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
@@ -893,13 +898,13 @@ export const buildCommentVotes = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.commentId, t.userId] }),
-    index("build_comment_votes_user_idx").on(t.userId),
+    index("entity_comment_votes_user_idx").on(t.userId),
   ],
 );
 
-export type BuildCommentRow = typeof buildComments.$inferSelect;
-export type NewBuildCommentRow = typeof buildComments.$inferInsert;
-export type BuildCommentVoteRow = typeof buildCommentVotes.$inferSelect;
+export type EntityCommentRow = typeof entityComments.$inferSelect;
+export type NewEntityCommentRow = typeof entityComments.$inferInsert;
+export type EntityCommentVoteRow = typeof entityCommentVotes.$inferSelect;
 
 /* ───────────────── inferred types (оружейный слой) ───────────────── */
 export type WeaponBaseRow = typeof weaponBases.$inferSelect;

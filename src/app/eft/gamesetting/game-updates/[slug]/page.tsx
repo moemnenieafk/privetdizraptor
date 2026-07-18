@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { EntityComments } from '@/components/features/comments/EntityComments';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { draftMode } from 'next/headers';
@@ -80,6 +81,8 @@ export default async function PatchDetailPage({ params }: Props) {
           </a>
         )}
       </article>
+
+      <EntityComments type="patch" id={slug} />
     </main>
   );
 }

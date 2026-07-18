@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { EntityComments } from '@/components/features/comments/EntityComments';
 import { draftMode } from 'next/headers';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
@@ -24,12 +25,18 @@ export default async function CodexSlugPage({ params }: Props) {
   const record = await getCodex(slug, isEnabled && canEdit);
   if (record) {
     return (
-      <CodexArticleView
-        article={record.doc}
-        published={record.published}
-        fromStatic={record.fromStatic}
-        canEdit={canEdit}
-      />
+      <>
+        <CodexArticleView
+          article={record.doc}
+          published={record.published}
+          fromStatic={record.fromStatic}
+          canEdit={canEdit}
+        />
+        {/* Обсуждение только у реальной статьи: заглушки разделов ветку не получают. */}
+        <div className="mx-auto w-full max-w-5xl px-4 pb-10">
+          <EntityComments type="codex" id={slug} />
+        </div>
+      </>
     );
   }
 

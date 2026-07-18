@@ -1,7 +1,7 @@
-// Миграция слоя комментариев: build_comments + build_comment_votes + RLS.
-// Требует уже накатанной weapon_builds (migrate-weapon-builds) — FK на неё.
+// Миграция слоя комментариев: entity_comments + entity_comment_votes + RLS.
+// Сносит пустой build_comments (был с жёстким FK) и заводит полиморфный слой.
 //
-// Запуск: Actions → «migrate-build-comments». Защита CRON_SECRET. Идемпотентно.
+// Запуск: Actions → «migrate-entity-comments». Защита CRON_SECRET. Идемпотентно.
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
@@ -25,7 +25,7 @@ export async function GET(req: Request): Promise<NextResponse> {
     }
 
     const check = await db.execute<{ n: number }>(
-      sql`select count(*)::int as n from public.build_comments`,
+      sql`select count(*)::int as n from public.entity_comments`,
     );
 
     return NextResponse.json({
@@ -35,7 +35,7 @@ export async function GET(req: Request): Promise<NextResponse> {
       at: new Date().toISOString(),
     });
   } catch (e) {
-    console.error("[cron/migrate-build-comments]", e);
+    console.error("[cron/migrate-entity-comments]", e);
     const err = e as { message?: string; cause?: { message?: string } };
     return NextResponse.json(
       {

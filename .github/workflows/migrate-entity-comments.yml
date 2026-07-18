@@ -1,7 +1,7 @@
-# Одноразовая миграция слоя комментариев (build_comments + build_comment_votes).
-# Запуск: Actions → «migrate-build-comments» → Run workflow. Идемпотентно.
-# Требует уже накатанной weapon_builds (FK на неё).
-name: migrate-build-comments
+# Одноразовая миграция слоя обсуждений (entity_comments + entity_comment_votes).
+# Запуск: Actions → «migrate-entity-comments» → Run workflow. Идемпотентно.
+# Сносит пустой build_comments и заводит полиморфный слой.
+name: migrate-entity-comments
 
 on:
   workflow_dispatch: {}
@@ -20,7 +20,7 @@ jobs:
             echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
             exit 1
           fi
-          url="${BASE_URL%/}/api/cron/migrate-build-comments"
+          url="${BASE_URL%/}/api/cron/migrate-entity-comments"
           echo "GET $url"
           code=$(curl -sS -m 120 -o /tmp/out.json -w "%{http_code}" \
             -H "Authorization: Bearer $CRON_SECRET" "$url")

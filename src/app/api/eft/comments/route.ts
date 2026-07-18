@@ -1,31 +1,32 @@
-// /api/eft/builds/comments — ветка под опубликованной сборкой.
-//   GET    ?slug=&sort=best|new → { items, me: { canWrite, canVote, canModerate, userId } }
-//   POST   { slug, body }       → создать (ТОЛЬКО платный тир + модераторы)
-//   DELETE ?id=                 → мягко удалить свой
-//   PATCH  { id, hidden }       → скрыть/вернуть (модератор)
+// /api/eft/comments — обсуждение под любой сущностью портала.
+//   GET    ?type=&id=&sort=best|new → { items, me }
+//   POST   { type, id, body }       → создать (ТОЛЬКО платный тир + модераторы)
+//   DELETE ?id=<commentId>          → мягко удалить свой
+//   PATCH  { id, hidden }           → скрыть/вернуть (модератор)
 //
-// Гейт по тиру серверный и намеренно продублирован здесь: <Paywall> в UI — это UX,
-// а не защита (см. разведку по пэйволу — клиентские гейты обходятся прямым запросом).
+// Цель адресуется парой type+id (реестр — src/lib/comment-targets.ts). FK на цель
+// нет, поэтому её существование проверяется до вставки (comment-targets.server.ts).
+// Гейт по тиру серверный намеренно: <Paywall> в UI — это UX, а не защита.
 import { NextResponse } from "next/server";
 import { getMe } from "@/lib/auth/me";
 import { canModerate } from "@/lib/auth/roles";
 import { getSubscription } from "@/lib/subscription.server";
 import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
 import { rateLimit } from "@/lib/rate-limit";
+import { isCommentTargetType, isValidTargetId } from "@/lib/comment-targets";
+import { targetExists } from "@/lib/comment-targets.server";
 import {
-  buildIdBySlug,
   createComment,
   deleteOwnComment,
-  getBuildComments,
+  getEntityComments,
   hideComment,
   type CommentSort,
-} from "@/db/build-comments";
+} from "@/db/entity-comments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const err = (status: number, error: string) => NextResponse.json({ error }, { status });
-const SLUG_RE = /^[a-z0-9]{6,16}$/;
 const UUID_RE = /^[0-9a-f-]{36}$/i;
 
 /** Право писать: платный тир ИЛИ модератор/админ (им нужно отвечать в ветке). */
@@ -37,21 +38,19 @@ async function canWriteComments(userId: string, role: string): Promise<boolean> 
 
 export async function GET(req: Request): Promise<NextResponse> {
   const url = new URL(req.url);
-  const slug = (url.searchParams.get("slug") ?? "").trim();
-  if (!SLUG_RE.test(slug)) return err(422, "Некорректный slug");
-  const sort: CommentSort = url.searchParams.get("sort") === "new" ? "new" : "best";
+  const type = url.searchParams.get("type");
+  const id = url.searchParams.get("id");
+  if (!isCommentTargetType(type) || !isValidTargetId(id)) return err(422, "Некорректная цель");
 
-  const buildId = await buildIdBySlug(slug);
-  if (!buildId) return NextResponse.json({ items: [], me: null });
+  const sort: CommentSort = url.searchParams.get("sort") === "new" ? "new" : "best";
 
   const me = await getMe();
   const moderator = me ? canModerate(me.role) : false;
 
-  const items = await getBuildComments(buildId, {
-    sort,
-    viewerId: me?.id ?? null,
-    viewerCanModerate: moderator,
-  });
+  const items = await getEntityComments(
+    { type, id },
+    { sort, viewerId: me?.id ?? null, viewerCanModerate: moderator },
+  );
 
   const meInfo = me
     ? {
@@ -70,29 +69,28 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (!me) return err(401, "Войдите, чтобы комментировать");
 
   if (bodyTooLarge(req, JSON_BODY_CAP)) return err(413, "Слишком большой запрос");
-  let body: { slug?: unknown; body?: unknown };
+  let body: { type?: unknown; id?: unknown; body?: unknown };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return err(400, "Некорректный запрос");
   }
 
-  const slug = typeof body.slug === "string" ? body.slug.trim() : "";
+  const { type, id } = body;
+  if (!isCommentTargetType(type) || !isValidTargetId(id)) return err(422, "Некорректная цель");
   const text = typeof body.body === "string" ? body.body : "";
-  if (!SLUG_RE.test(slug)) return err(422, "Некорректный slug");
 
   if (!(await canWriteComments(me.id, me.role))) {
     return err(403, "Комментарии доступны с подпиской «Оперативник» и выше");
   }
 
-  if (!(await rateLimit(`build-comment:${me.id}`, 30, 3600))) {
+  if (!(await rateLimit(`comment:${me.id}`, 30, 3600))) {
     return err(429, "Слишком много сообщений. Передохни");
   }
 
-  const buildId = await buildIdBySlug(slug);
-  if (!buildId) return err(404, "Сборка не найдена");
+  if (!(await targetExists(type, id))) return err(404, "Страница не найдена");
 
-  const res = await createComment(buildId, me.id, text);
+  const res = await createComment({ type, id }, me.id, text);
   if (!res.ok) return err(422, res.error ?? "Не удалось отправить");
 
   return NextResponse.json({ ok: true, id: res.id });
