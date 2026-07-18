@@ -18,6 +18,7 @@ import {
   seasonPerks,
 } from '@/lib/season-points';
 import { useSeasonStore } from '@/store/useSeasonStore';
+import { perkIconColor, perkMaskStyle } from './perkVisual';
 
 interface Props {
   season: Season;
@@ -68,14 +69,18 @@ function PerkCard({
     >
       <div className="flex items-start justify-between gap-2">
         <span className="flex items-center gap-2">
-          {/* Иконка-заглушка (кадр из превью BSG). Нет ассета — типизированная плашка с очками. */}
+          {/* Иконка перка: монохромный SVG, крашенный CSS-маской по типу (баф/дебаф/сезон).
+              Нет ассета — типизированная плашка с очками. */}
           {perk.iconUrl ? (
-            <img
-              src={perk.iconUrl}
-              alt=""
+            <span
               aria-hidden
-              className={`size-9 shrink-0 rounded-xs border object-contain p-1 ${s.border}`}
-            />
+              className={`flex size-9 shrink-0 items-center justify-center rounded-xs border ${s.border}`}
+            >
+              <span
+                className={`size-6 ${perkIconColor[perk.kind]}`}
+                style={perkMaskStyle(perk.iconUrl)}
+              />
+            </span>
           ) : (
             <span
               aria-hidden

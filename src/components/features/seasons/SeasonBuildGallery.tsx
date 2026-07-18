@@ -17,6 +17,7 @@ import {
 import { computeBudget, personalPerks } from '@/lib/season-points';
 import { useSeasonStore } from '@/store/useSeasonStore';
 import { useSfx } from '@/hooks/useSfx';
+import { perkIconColor, perkMaskStyle } from './perkVisual';
 
 interface Props {
   season: Season;
@@ -318,15 +319,15 @@ function PerkIcons({
         const anim = cascade ? 'animate-perk-pop' : '';
         const style = cascade ? { animationDelay: `${i * 40}ms` } : undefined;
         return p?.iconUrl ? (
-          <img
+          <span
             key={id}
-            src={p.iconUrl}
-            alt=""
             aria-hidden
             title={p.name}
             style={style}
-            className={`size-7 shrink-0 rounded-xs border object-contain p-0.5 ${border} ${anim}`}
-          />
+            className={`flex size-7 shrink-0 items-center justify-center rounded-xs border ${border} ${anim}`}
+          >
+            <span className={`size-5 ${perkIconColor[p.kind]}`} style={perkMaskStyle(p.iconUrl)} />
+          </span>
         ) : (
           <span
             key={id}

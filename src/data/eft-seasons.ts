@@ -8,8 +8,9 @@
 //     Баланс обязан остаться ≥ 0. Хочешь Каппу (−21) — набери +21 болью.
 //
 // ⚠ Цифры и формулировки — из превью сезона; BSG может подкрутить их к релизу.
-// Иконки: пока не заданы — карточка рендерится типизированной плашкой (цвет по типу).
-// Появятся ассеты — проставить iconUrl, разметка не меняется.
+// Иконки: SVG-ассеты сезона 1 (отрисованы V4DYA) — монохром, красятся в UI CSS-маской
+// по типу перка (баф → зелёный, дебаф → красный, сезонный/глобальный → lightkeeper).
+// Имена файлов не равны id — маппинг ниже (S1_PERK_ICON).
 
 export type PerkKind = 'season' | 'positive' | 'negative';
 
@@ -21,7 +22,7 @@ export interface SeasonPerk {
   kind: PerkKind;
   /** Эффекты списком — так их читает и игрок, и карточка. */
   effects: string[];
-  /** Иконка появится после отрисовки ассетов; пока плашка. */
+  /** Путь к монохромному SVG перка; в UI красится CSS-маской по kind. */
   iconUrl?: string;
   /**
    * Перки с ВЗАИМНО ГАСЯЩИМИ эффектами (наша логика, не запрет BSG): брать оба
@@ -335,15 +336,61 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
 ];
 
+// SVG-иконки перков сезона 1. Имена файлов заданы дизайнером и не совпадают с id,
+// поэтому маппинг явный. Монохром → красятся CSS-маской по kind в UI.
+const S1_ICON_DIR = '/icons/eft/04-progression/seasons/season01/perks';
+const S1_PERK_ICON: Record<string, string> = {
+  /* Позитивные (buffs) */
+  'street-tax': `${S1_ICON_DIR}/buffs/personal-buff-businessman.svg`,
+  diet: `${S1_ICON_DIR}/buffs/personal-buff-diet.svg`,
+  'juice-time': `${S1_ICON_DIR}/buffs/personal-buff-juice-time.svg`,
+  'sailors-nostalgia': `${S1_ICON_DIR}/buffs/personal-buff-sailors-nostalgia.svg`,
+  sprinter: `${S1_ICON_DIR}/buffs/personal-buff-sprinter.svg`,
+  thrombophilia: `${S1_ICON_DIR}/buffs/personal-buff-thrombophilia.svg`,
+  hypodipsia: `${S1_ICON_DIR}/buffs/personal-buff-hypodipsia.svg`,
+  polyphagia: `${S1_ICON_DIR}/buffs/personal-buff-polyphagia.svg`,
+  'marathon-runner': `${S1_ICON_DIR}/buffs/personal-buff-marathoner.svg`,
+  youth: `${S1_ICON_DIR}/buffs/personal-buff-youth.svg`,
+  'tarkov-shooter': `${S1_ICON_DIR}/buffs/personal-buff-tarkov-shooter.svg`,
+  hercules: `${S1_ICON_DIR}/buffs/personal-buff-hercules.svg`,
+  'sturdy-bones': `${S1_ICON_DIR}/buffs/personal-buff-strong-bones.svg`,
+  bushborne: `${S1_ICON_DIR}/buffs/personal-buff-bushborn.svg`,
+  safecracker: `${S1_ICON_DIR}/buffs/personal-buff-safecracker.svg`,
+  average: `${S1_ICON_DIR}/buffs/personal-buff-average-joe.svg`,
+  'kappa-protocol': `${S1_ICON_DIR}/buffs/personal-buff-kappa-protocol.svg`,
+
+  /* Негативные (debuff) */
+  polydipsia: `${S1_ICON_DIR}/debuff/personal-debuff-polydipsia.svg`,
+  'chronic-fatigue': `${S1_ICON_DIR}/debuff/personal-debuff-chronic-fatigue-syndrome.svg`,
+  'dr-jekyll': `${S1_ICON_DIR}/debuff/personal-debuff-dr-jekyll.svg`,
+  'third-leg': `${S1_ICON_DIR}/debuff/personal-debuff-well-endowed.svg`,
+  hemophilia: `${S1_ICON_DIR}/debuff/personal-debuff-hemophilia.svg`,
+  'well-that-hurt': `${S1_ICON_DIR}/debuff/personal-debuff-ouch-it-hurts.svg`,
+  'personality-vacuum': `${S1_ICON_DIR}/debuff/personal-debuff-dwarf-nose.svg`,
+  osteoporosis: `${S1_ICON_DIR}/debuff/personal-debuff-osteoporosis.svg`,
+  allergic: `${S1_ICON_DIR}/debuff/personal-debuff-allergic.svg`,
+  exhaustion: `${S1_ICON_DIR}/debuff/personal-debuff-exhaustion.svg`,
+  incompetent: `${S1_ICON_DIR}/debuff/personal-debuff-slow-learner.svg`,
+  'broken-secure-container': `${S1_ICON_DIR}/debuff/personal-debuff-broken-secure-container.svg`,
+  'no-flea-market': `${S1_ICON_DIR}/debuff/personal-debuff-broken-flea-market.svg`,
+
+  /* Сезонные / глобальные (global) */
+  'no-insurance': `${S1_ICON_DIR}/global/global-perk-broken-ensurance.svg`,
+  'black-division': `${S1_ICON_DIR}/global/global-perk-black-division.svg`,
+  'no-fir-hideout': `${S1_ICON_DIR}/global/global-perk-hideout-without-fir.svg`,
+  'armor-shortage': `${S1_ICON_DIR}/global/global-perk-armor-deficit.svg`,
+  handyman: `${S1_ICON_DIR}/global/global-perk-jack-of-all-trades.svg`,
+  'seasoned-pmcs': `${S1_ICON_DIR}/global/global-perk-experienced-pmcs.svg`,
+};
+
 /**
- * Проставляет iconUrl каждому перку по его id: /eft/seasons/{slug}/{id}.png.
- * Ассеты — заглушки, кадрированные из превью BSG; заменятся на SVG без правки данных.
+ * Проставляет iconUrl каждому перку по его id из карты SVG-ассетов.
  * Уже заданный вручную iconUrl не перетирается.
  */
-const withIcons = (perks: SeasonPerk[], seasonSlug: string): SeasonPerk[] =>
+const withIcons = (perks: SeasonPerk[], icons: Record<string, string>): SeasonPerk[] =>
   perks.map((p) => ({
     ...p,
-    iconUrl: p.iconUrl ?? `/eft/seasons/${seasonSlug}/${p.id}.png`,
+    iconUrl: p.iconUrl ?? icons[p.id],
   }));
 
 export const EFT_SEASONS: Season[] = [
@@ -364,7 +411,7 @@ export const EFT_SEASONS: Season[] = [
       'Свой трек наград и сезонные задачи; заработанное переносится на основного персонажа.',
       'Минимальная длительность — 74 дня. Заявлено два сезона в год, бесплатно.',
     ],
-    perks: withIcons(KORD_BREACH_PERKS, 'kord-breach'),
+    perks: withIcons(KORD_BREACH_PERKS, S1_PERK_ICON),
   },
 ];
 
