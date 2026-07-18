@@ -415,6 +415,10 @@ export const profiles = pgTable("profiles", {
   notifyOffers: boolean("notify_offers").notNull().default(true),
   notifyNews: boolean("notify_news").notNull().default(true),
   role: text("role").notNull().default("user"), // см. Role в @/lib/auth/roles
+  // Публичная страница /u/[username]: opt-in. false = профиль не отдаётся анонимам
+  // (сохраняем приватность соц-раздела). Колонка additive — заводится через
+  // /api/cron/migrate-public-profile (add column if not exists).
+  publicProfile: boolean("public_profile").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

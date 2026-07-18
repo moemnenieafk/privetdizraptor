@@ -20,35 +20,11 @@ import {
 } from 'lucide-react';
 import { ComlinkProfileForm } from '@/components/features/comlink/ComlinkProfileForm';
 import { VerificationCard } from '@/components/features/players/VerificationCard';
+import { PublicProfileCard } from '@/components/features/players/PublicProfileCard';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import type { CandidateListItem } from '@/db/comlink';
 import type { ComlinkGoal, ComlinkProfileRow } from '@/db/schema-comlink';
-import { EFT_MAP_CONFIG } from '@/data/eft-map-config';
-
-const GOAL_LABELS: Record<ComlinkGoal, string> = {
-  partner: 'Ищу напарника',
-  team: 'Ищу команду',
-  student: 'Хочу научиться',
-  sherpa: 'Готов обучать',
-};
-
-const TIME_LABELS: Record<string, string> = {
-  morning: 'Утро',
-  day: 'День',
-  evening: 'Вечер',
-  night: 'Ночь',
-};
-
-const STYLE_LABELS: Record<string, string> = {
-  pvp: 'ПВП',
-  loot: 'Лут',
-  quests: 'Квесты',
-  chill: 'Чилл',
-};
-
-const MAP_NAMES: Record<string, string> = Object.fromEntries(
-  Object.entries(EFT_MAP_CONFIG).map(([slug, c]) => [slug, c.displayName ?? slug]),
-);
+import { GOAL_LABELS, TIME_LABELS, STYLE_LABELS, MAP_NAMES } from '@/data/comlink-labels';
 
 /** Цвет бейджа кармы по уровню доверия. */
 const TIER_CLASS: Record<string, string> = {
@@ -136,6 +112,9 @@ export function CandidatesClient({ authorized }: CandidatesClientProps) {
     <div className="flex w-full flex-col gap-5">
       {/* Подтверждение ЧВК-профиля — галочка в анкете (платные тиры) */}
       <VerificationCard />
+
+      {/* Публичная страница профиля — opt-in + ссылка для шэринга */}
+      <PublicProfileCard />
 
       {/* Моя анкета */}
       <div className="flex flex-wrap items-center justify-between gap-3">
