@@ -1,0 +1,48 @@
+# Выдача/снятие публичного статуса «Стример» (подтверждённый Twitch).
+# Запуск: Actions → «set-streamer» → Run workflow → логин + on/off.
+# Включить можно только если у пользователя задан Twitch в профиле.
+name: set-streamer
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "Логин пользователя (profiles.username), регистр не важен"
+        required: true
+        type: string
+      value:
+        description: "Статус стримера"
+        required: true
+        default: "on"
+        type: choice
+        options:
+          - "on"
+          - "off"
+
+jobs:
+  set-streamer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Set streamer status
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          USERNAME: ${{ inputs.username }}
+          VALUE: ${{ inputs.value }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/set-streamer?username=$(printf %s "$USERNAME" | jq -sRr @uri)&value=${VALUE}"
+          echo "GET ${url}"
+          code=$(curl -sS -m 60 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Статус не выставлен (HTTP $code) — проверь логин и что задан Twitch"
+            exit 1
+          fi

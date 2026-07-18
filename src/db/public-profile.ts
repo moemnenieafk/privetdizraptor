@@ -45,6 +45,8 @@ export interface PublicProfile {
   };
   /** Подтверждён хотя бы в одной игре — общая галочка в шапке. */
   verifiedAnywhere: boolean;
+  /** Публичный статус «Стример» (подтверждённый Twitch) — бейдж + твич-рамка. */
+  streamer: boolean;
   sections: PublicGameSection[];
 }
 
@@ -129,6 +131,7 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
       role: profiles.role,
       createdAt: profiles.createdAt,
       publicProfile: profiles.publicProfile,
+      streamer: profiles.streamer,
       twitch: profiles.twitch,
       youtube: profiles.youtube,
       discord: profiles.discord,
@@ -151,6 +154,7 @@ export async function getPublicProfile(username: string): Promise<PublicProfile 
     memberSince: p.createdAt ? p.createdAt.toISOString() : null,
     socials: { twitch: p.twitch, youtube: p.youtube, discord: p.discord, steam: p.steam },
     verifiedAnywhere: sections.some((s) => s.verified),
+    streamer: p.streamer === true,
     sections,
   };
 }

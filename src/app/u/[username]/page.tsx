@@ -67,8 +67,18 @@ export default async function PublicProfilePage({ params }: Props) {
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
       <div className="flex w-full max-w-3xl flex-col gap-6 px-4 xl:px-0">
         {/* ─── Шапка (игро-независимая) ─── */}
-        <header className="flex flex-col gap-4 rounded-sm border border-lines-hover bg-(--color-base) p-5 sm:flex-row sm:items-center">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-lines-hover bg-(--color-darkbase)">
+        <header
+          className={`flex flex-col gap-4 rounded-sm border bg-(--color-base) p-5 sm:flex-row sm:items-center ${
+            p.streamer
+              ? "border-(--color-twitch) shadow-[0_0_24px_-6px_var(--color-twitch)]"
+              : "border-lines-hover"
+          }`}
+        >
+          <div
+            className={`flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-(--color-darkbase) ${
+              p.streamer ? "border-2 border-(--color-twitch)" : "border border-lines-hover"
+            }`}
+          >
             {p.avatarUrl ? (
               <img src={p.avatarUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -82,6 +92,15 @@ export default async function PublicProfilePage({ params }: Props) {
                 {p.username}
               </h1>
               {p.verifiedAnywhere && <VerifiedBadge variant="chip" />}
+              {p.streamer && (
+                <span
+                  title="Подтверждённый стример ЦТА"
+                  className="flex shrink-0 items-center gap-1.5 rounded-xs border border-(--color-twitch)/60 bg-[color-mix(in_srgb,var(--color-twitch)_12%,transparent)] px-2 py-1 font-blender-medium text-xs uppercase tracking-widest text-(--color-twitch)"
+                >
+                  <TwitchIcon className="h-3.5 w-3.5" size={14} />
+                  Стример
+                </span>
+              )}
               {roleLabel && (
                 <span className="rounded-xs border border-(--primary)/40 px-2 py-0.5 font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
                   {roleLabel}
@@ -101,27 +120,33 @@ export default async function PublicProfilePage({ params }: Props) {
                 {socialEntries.map(([platform, handle]) => {
                   const Icon = SOCIAL_ICON[platform];
                   const url = socialUrl(platform, handle as string);
+                  const isTwitchVerified = platform === "twitch" && p.streamer;
                   const inner = (
                     <>
-                      <Icon className="h-4 w-4 text-text-secondary" size={16} />
+                      <Icon
+                        className={isTwitchVerified ? "h-4 w-4 text-(--color-twitch)" : "h-4 w-4 text-text-secondary"}
+                        size={16}
+                      />
                       <span className="font-blender-book text-xs text-text-primary">{handle}</span>
                     </>
                   );
+                  const cls = `flex items-center gap-1.5 rounded-xs border px-2 py-1 ${
+                    isTwitchVerified
+                      ? "border-(--color-twitch)/60"
+                      : "border-lines-hover"
+                  }`;
                   return url ? (
                     <a
                       key={platform}
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 rounded-xs border border-lines-hover px-2 py-1 transition-colors hover:border-(--primary)"
+                      className={`${cls} transition-colors hover:border-(--primary)`}
                     >
                       {inner}
                     </a>
                   ) : (
-                    <span
-                      key={platform}
-                      className="flex items-center gap-1.5 rounded-xs border border-lines-hover px-2 py-1"
-                    >
+                    <span key={platform} className={cls}>
                       {inner}
                     </span>
                   );

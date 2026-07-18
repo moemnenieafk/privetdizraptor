@@ -35,6 +35,9 @@
   --color-nvg-green: #689963; /* NVG Green: Успех, крафты, убежище */
   --color-online: #6B9963;   /* Online status indicator */
 
+  /* Бренд-цвет Twitch — статус «Стример» (рамка/бейдж публичного профиля) */
+  --color-twitch: #9146FF;
+
   /* Danger / destructive states */
   --color-danger: #C24339;
   --color-danger-dim: #7E2C25;

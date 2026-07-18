@@ -419,6 +419,10 @@ export const profiles = pgTable("profiles", {
   // (сохраняем приватность соц-раздела). Колонка additive — заводится через
   // /api/cron/migrate-public-profile (add column if not exists).
   publicProfile: boolean("public_profile").notNull().default(false),
+  // Публичный статус «Стример» (подтверждённый Twitch). Ортогонален role — выдаёт
+  // модератор через /api/cron/set-streamer, показывает бейдж + твич-рамку на /u/.
+  // Колонка additive — заводится через /api/cron/migrate-streamer.
+  streamer: boolean("streamer").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
