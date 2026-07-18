@@ -43,7 +43,12 @@ export default function SeasonsHubPage() {
                       {s.kickoffEvent ? ` · старт с события «${s.kickoffEvent}»` : ''}
                     </span>
                     <h2 className="font-blender-medium text-2xl uppercase tracking-widest text-text-primary">
-                      {s.name}
+                      {s.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.logoUrl} alt={s.name} className="h-11 w-auto" />
+                      ) : (
+                        s.name
+                      )}
                     </h2>
                   </div>
                   <span className="rounded-xs border border-(--primary)/40 bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] px-3 py-1 font-blender-medium text-type-micro uppercase tracking-widest text-(--primary)">

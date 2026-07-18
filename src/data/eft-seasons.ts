@@ -39,6 +39,8 @@ export interface Season {
   number: number;
   name: string;
   patch: string;
+  /** Цветной SVG-логотип сезона (вордмарк). Рендерится как <img>, не маска. */
+  logoUrl?: string;
   /** Стартовое событие сезона. */
   kickoffEvent?: string;
   /** ISO-дата старта. null — BSG объявила окно, но не день. */
@@ -400,6 +402,7 @@ export const EFT_SEASONS: Season[] = [
     number: 1,
     name: 'Kord Breach',
     patch: '1.1.0',
+    logoUrl: '/icons/eft/04-progression/seasons/season01/KORD_BREACH_Season01_logo.svg',
     kickoffEvent: 'Blackout',
     // Окно объявлено (июль 2026), конкретный день BSG не назвала.
     startAt: null,
