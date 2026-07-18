@@ -1,0 +1,33 @@
+# Одноразовая миграция слоя сборок (weapon_builds + weapon_build_likes).
+# Запуск: Actions → «migrate-weapon-builds» → Run workflow. Идемпотентно.
+# До этой миграции публикация сборок падала и витрина «Сообщество» была пуста.
+name: migrate-weapon-builds
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger weapon-builds migration
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/migrate-weapon-builds"
+          echo "GET $url"
+          code=$(curl -sS -m 120 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Миграция не удалась (HTTP $code)"
+            exit 1
+          fi

@@ -821,6 +821,31 @@ export const weaponBuilds = pgTable(
   ],
 );
 
+/**
+ * Лайки community-сборок. Дедуп: один пользователь = один лайк на сборку (составной PK).
+ * Денормализованный счётчик хранится в weapon_builds.likes и пересчитывается при тоггле
+ * (см. toggleBuildLike в db/public-builds) — чтение ленты не джойнит агрегат.
+ */
+export const weaponBuildLikes = pgTable(
+  "weapon_build_likes",
+  {
+    buildId: uuid("build_id")
+      .notNull()
+      .references(() => weaponBuilds.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.buildId, t.userId] }),
+    index("weapon_build_likes_user_idx").on(t.userId),
+  ],
+);
+
+export type WeaponBuildLikeRow = typeof weaponBuildLikes.$inferSelect;
+export type NewWeaponBuildLikeRow = typeof weaponBuildLikes.$inferInsert;
+
 /* ───────────────── inferred types (оружейный слой) ───────────────── */
 export type WeaponBaseRow = typeof weaponBases.$inferSelect;
 export type NewWeaponBaseRow = typeof weaponBases.$inferInsert;

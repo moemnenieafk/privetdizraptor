@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { itemIconUrl } from '@/lib/item-icon';
+import { CommunityTab } from './CommunityTab';
 import type { GunsmithListItem } from '@/db/gunsmith-list';
 import type { PresetListItem } from '@/db/preset-list';
 
@@ -49,7 +50,7 @@ export function FindLoadoutsClient({ gunsmith, presets }: Props) {
       </div>
 
       {/* Поиск */}
-      {(tab === 'gunsmith' || tab === 'presets') && (
+      {(tab === 'gunsmith' || tab === 'presets' || tab === 'community') && (
         <div className="relative w-full">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
@@ -59,7 +60,13 @@ export function FindLoadoutsClient({ gunsmith, presets }: Props) {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={tab === 'gunsmith' ? 'Квест или ствол…' : 'Ствол или пресет…'}
+            placeholder={
+              tab === 'gunsmith'
+                ? 'Квест или ствол…'
+                : tab === 'presets'
+                  ? 'Ствол или пресет…'
+                  : 'Ствол, название или автор…'
+            }
             className="h-11 w-full rounded-sm border border-lines-hover bg-(--color-darkbase) pl-10 pr-3 font-blender-book text-sm text-text-primary placeholder:text-text-secondary focus:border-(--primary) focus:outline-none"
           />
         </div>
@@ -68,7 +75,7 @@ export function FindLoadoutsClient({ gunsmith, presets }: Props) {
       {tab === 'gunsmith' && <GunsmithTab items={gunsmith} query={query} />}
       {tab === 'presets' && <PresetsTab items={presets} query={query} />}
       {tab === 'meta' && <Soon text="Мета-сборки считаются солвером по текущим ценам и статам — не копируются с чужих тир-листов. Раздел собирается." />}
-      {tab === 'community' && <Soon text="Сборки игроков появятся здесь, как только заработает публикация. Свои сборки уже можно сохранять в конструкторе." />}
+      {tab === 'community' && <CommunityTab query={query} />}
     </div>
   );
 }
