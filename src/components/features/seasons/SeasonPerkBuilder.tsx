@@ -51,71 +51,84 @@ function PerkCard({
   const s = kindStyle[perk.kind];
   const readonly = !onToggle;
   const disabled = !!blockedText && !selected;
+  const costLabel = perk.cost === 0 ? null : perk.cost > 0 ? `+${perk.cost}` : `${perk.cost}`;
+  const effectsText = perk.effects.join(' · ');
 
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      disabled={readonly || disabled}
-      aria-pressed={selected}
-      className={[
-        'flex min-h-27 flex-col gap-2 rounded-sm border p-3 text-left transition-colors',
-        selected
-          ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
-          : `${s.border} bg-(--color-base)`,
-        disabled ? 'opacity-40' : '',
-        readonly ? 'cursor-default' : 'cursor-pointer hover:border-(--primary)',
-      ].join(' ')}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <span className="flex items-center gap-2">
-          {/* Иконка перка: монохромный SVG, крашенный CSS-маской по типу (баф/дебаф/сезон).
-              Нет ассета — типизированная плашка с очками. */}
-          {perk.iconUrl ? (
-            <span
-              aria-hidden
-              className={`flex size-9 shrink-0 items-center justify-center rounded-xs border ${s.border}`}
-            >
-              <span
-                className={`size-6 ${perkIconColor[perk.kind]}`}
-                style={perkMaskStyle(perk.iconUrl)}
-              />
-            </span>
-          ) : (
-            <span
-              aria-hidden
-              className={`flex size-9 shrink-0 items-center justify-center rounded-xs border font-blender-medium text-xs ${s.border} ${s.text}`}
-            >
-              {perk.cost === 0 ? '—' : perk.cost > 0 ? `+${perk.cost}` : perk.cost}
-            </span>
-          )}
-          <span className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">
-            {perk.name}
-            {perk.cost !== 0 && (
-              <span className={`ml-1.5 ${s.text}`}>
-                ({perk.cost > 0 ? `+${perk.cost}` : perk.cost})
-              </span>
-            )}
+    // Компактная плитка (3 в ряд на мобилке). Эффекты — в тултипе: показывается
+    // по hover (десктоп) и по focus-within (тап фокусит кнопку — работает на тач).
+    <div className="group relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={readonly || disabled}
+        aria-pressed={selected}
+        title={effectsText}
+        className={[
+          'relative flex w-full flex-col items-center gap-1.5 rounded-sm border p-2 text-center transition-colors',
+          selected
+            ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
+            : `${s.border} bg-(--color-base)`,
+          disabled ? 'opacity-40' : '',
+          readonly ? 'cursor-default' : 'cursor-pointer hover:border-(--primary)',
+        ].join(' ')}
+      >
+        {/* Очки — бейджем в углу, чтобы не воровать место у иконки/названия. */}
+        {costLabel && (
+          <span
+            className={`absolute right-1 top-1 font-blender-medium text-type-micro ${selected ? 'text-(--primary)' : s.text}`}
+          >
+            {costLabel}
           </span>
+        )}
+        {selected && (
+          <Check className="absolute left-1 top-1 h-3.5 w-3.5 text-(--primary)" aria-hidden="true" />
+        )}
+
+        {/* Иконка перка: монохромный SVG, крашенный CSS-маской по типу (баф/дебаф/сезон). */}
+        {perk.iconUrl ? (
+          <span
+            aria-hidden
+            className={`size-14 shrink-0 sm:size-16 xl:size-20 ${perkIconColor[perk.kind]}`}
+            style={perkMaskStyle(perk.iconUrl)}
+          />
+        ) : (
+          <span
+            aria-hidden
+            className={`flex size-14 shrink-0 items-center justify-center font-blender-medium text-lg sm:size-16 xl:size-20 ${s.text}`}
+          >
+            {costLabel ?? '—'}
+          </span>
+        )}
+
+        <span className="line-clamp-2 font-blender-medium text-type-micro uppercase leading-tight tracking-wide text-text-primary">
+          {perk.name}
         </span>
 
-        {selected && <Check className="h-4 w-4 shrink-0 text-(--primary)" aria-hidden="true" />}
+        {blockedText && !selected && (
+          <span className="line-clamp-1 font-blender-medium text-type-micro uppercase tracking-widest text-tactical-amber">
+            {blockedText}
+          </span>
+        )}
+      </button>
+
+      {/* Тултип с эффектами. bottom-full → над плиткой; на тач появляется при фокусе кнопки. */}
+      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 w-48 -translate-x-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+        <div className="rounded border border-lines-hover bg-card-menu px-2.5 py-2 text-left shadow-lg">
+          <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-primary">
+            {perk.name}
+            {costLabel && <span className={`ml-1 ${s.text}`}>({costLabel})</span>}
+          </span>
+          <ul className="mt-1 flex flex-col gap-0.5">
+            {perk.effects.map((e) => (
+              <li key={e} className="font-blender-book text-type-caption leading-snug text-text-secondary">
+                {e}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
-
-      <ul className="flex flex-col gap-1">
-        {perk.effects.map((e) => (
-          <li key={e} className="font-blender-book text-xs leading-relaxed text-text-secondary">
-            {e}
-          </li>
-        ))}
-      </ul>
-
-      {blockedText && !selected && (
-        <span className="font-blender-medium text-type-micro uppercase tracking-widest text-tactical-amber">
-          {blockedText}
-        </span>
-      )}
-    </button>
+    </div>
   );
 }
 
@@ -167,9 +180,9 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
 
   if (!mounted) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} className="h-27 animate-pulse rounded-sm bg-(--color-darkbase)" />
+      <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-2 xl:grid-cols-6">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="aspect-[4/5] animate-pulse rounded-sm bg-(--color-darkbase)" />
         ))}
       </div>
     );
@@ -248,7 +261,7 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
         <h2 className="font-blender-medium text-sm uppercase tracking-widest text-success">
           Позитивные · тратят очки
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-2 xl:grid-cols-6">
           {positives.map((p) => (
             <PerkCard
               key={p.id}
@@ -266,7 +279,7 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
         <h2 className="font-blender-medium text-sm uppercase tracking-widest text-danger">
           Негативные · дают очки
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-2 xl:grid-cols-6">
           {negatives.map((p) => (
             <PerkCard
               key={p.id}
@@ -284,7 +297,7 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
         <h2 className="font-blender-medium text-sm uppercase tracking-widest text-text-muted">
           Сезонные · действуют на всех
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-2 xl:grid-cols-6">
           {forced.map((p) => (
             <PerkCard key={p.id} perk={p} selected={false} blockedText={null} />
           ))}

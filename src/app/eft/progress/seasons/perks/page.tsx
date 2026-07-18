@@ -33,6 +33,14 @@ export default async function SeasonPerksPage({ searchParams }: Props) {
         </Link>
 
         <header className="mb-7 border-b border-lines-hover pb-5">
+          {season.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={season.logoUrl}
+              alt={season.name}
+              className="mb-4 h-12 w-auto sm:h-14"
+            />
+          )}
           <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
             Сезон {season.number} · {season.name}
           </span>
