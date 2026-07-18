@@ -298,21 +298,31 @@ function Meter({ icon, value, color }: { icon: 'pain' | 'comfort'; value: number
   );
 }
 
+// Размеры мини-иконок перка в карточках сборок: md — крупная карточка генератора,
+// sm — компактные грид-карточки. box — рамка, inner — сам SVG под маской.
+const PERK_ICON_SIZE = {
+  sm: { wrap: 'gap-1', box: 'size-9', inner: 'size-6' },
+  md: { wrap: 'gap-1.5', box: 'size-11', inner: 'size-8' },
+} as const;
+
 function PerkIcons({
   build,
   perkMap,
   limit,
   cascade = false,
+  size = 'sm',
 }: {
   build: CuratedBuild;
   perkMap: Map<string, SeasonPerk>;
   limit: number;
   cascade?: boolean;
+  size?: keyof typeof PERK_ICON_SIZE;
 }) {
+  const sz = PERK_ICON_SIZE[size];
   const shown = build.perks.slice(0, limit);
   const rest = build.perks.length - shown.length;
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <div className={`flex flex-wrap items-center ${sz.wrap}`}>
       {shown.map((id, i) => {
         const p = perkMap.get(id);
         const border = p && p.cost < 0 ? 'border-success/50' : 'border-danger/50';
@@ -324,22 +334,22 @@ function PerkIcons({
             aria-hidden
             title={p.name}
             style={style}
-            className={`flex size-7 shrink-0 items-center justify-center rounded-xs border ${border} ${anim}`}
+            className={`flex ${sz.box} shrink-0 items-center justify-center rounded-xs border ${border} ${anim}`}
           >
-            <span className={`size-5 ${perkIconColor[p.kind]}`} style={perkMaskStyle(p.iconUrl)} />
+            <span className={`${sz.inner} ${perkIconColor[p.kind]}`} style={perkMaskStyle(p.iconUrl)} />
           </span>
         ) : (
           <span
             key={id}
             style={style}
-            className={`flex size-7 shrink-0 items-center justify-center rounded-xs border font-blender-medium text-type-micro text-text-muted ${border} ${anim}`}
+            className={`flex ${sz.box} shrink-0 items-center justify-center rounded-xs border font-blender-medium text-type-micro text-text-muted ${border} ${anim}`}
           >
             {p ? (p.cost > 0 ? `+${p.cost}` : p.cost) : '?'}
           </span>
         );
       })}
       {rest > 0 && (
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-xs border border-lines-hover font-blender-medium text-type-micro text-text-muted">
+        <span className={`flex ${sz.box} shrink-0 items-center justify-center rounded-xs border border-lines-hover font-blender-medium text-type-micro text-text-muted`}>
           +{rest}
         </span>
       )}
@@ -466,7 +476,7 @@ function FeaturedCard({
 
         <MeterRow pain={meta.painPct} comfort={meta.comfortPct} />
 
-        <PerkIcons build={build} perkMap={perkMap} limit={12} cascade={!spinning} />
+        <PerkIcons build={build} perkMap={perkMap} limit={12} cascade={!spinning} size="md" />
 
         <div className="flex items-center justify-between gap-2 border-t border-lines-hover pt-3">
           <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
