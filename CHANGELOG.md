@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-18
+- `b421a5d` feat(profile): публичная страница /u/[username] (мультигейм-каркас)
 - `a988885` feat(billing): таблица subscriptions + ручная выдача тира set-tier
 - `1fba814` chore(players): удалён probe-роут статик-индекса + воркфлоу
 - `ae433f4` chore(db): отдельная миграция player_verifications + workflow
