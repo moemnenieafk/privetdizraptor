@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, Copy, Pencil, Plus, Share2, Trash2, Wrench, X } from 'lucide-react';
+import { Check, Copy, Globe, Pencil, Plus, Share2, Trash2, Wrench, X } from 'lucide-react';
 import { useBuildStore, type SavedBuild } from '@/store/useBuildStore';
 import { useBuildQuota } from '@/hooks/useBuildQuota';
 import { BuildMedia, BuildMediaSkeleton } from '@/components/features/loadouts/BuildMedia';
@@ -32,6 +32,7 @@ export function MyLoadoutsClient() {
   const duplicateBuild = useBuildStore((s) => s.duplicateBuild);
   const renameBuild = useBuildStore((s) => s.renameBuild);
   const removeBuild = useBuildStore((s) => s.removeBuild);
+  const markPublished = useBuildStore((s) => s.markPublished);
 
   const quota = useBuildQuota();
 
@@ -167,6 +168,8 @@ export function MyLoadoutsClient() {
               onDuplicate={() => duplicateBuild(b.id)}
               onRename={(name) => renameBuild(b.id, name)}
               onRemove={() => removeBuild(b.id)}
+              onPublished={(slug) => markPublished(b.id, slug)}
+              onUnpublished={() => markPublished(b.id, '')}
             />
           ))}
         </div>
@@ -187,6 +190,8 @@ interface BuildCardProps {
   onDuplicate: () => void;
   onRename: (name: string) => void;
   onRemove: () => void;
+  onPublished: (slug: string) => void;
+  onUnpublished: () => void;
 }
 
 function BuildCard({
@@ -199,11 +204,16 @@ function BuildCard({
   onDuplicate,
   onRename,
   onRemove,
+  onPublished,
+  onUnpublished,
 }: BuildCardProps) {
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState(build.name);
   const [confirming, setConfirming] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [pubErr, setPubErr] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const result = calcBuild(build.tree, index);
   const delta = calcDelta(build.tree, index);
@@ -240,6 +250,48 @@ function BuildCard({
     if (next) onRename(next);
     else setDraftName(build.name);
     setRenaming(false);
+  };
+
+  const publish = async () => {
+    setPublishing(true);
+    setPubErr(null);
+    try {
+      const res = await fetch('/api/eft/builds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: build.name, purpose: build.purpose, tree: build.tree }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { slug?: string; error?: string };
+      if (!res.ok || !data.slug) {
+        setPubErr(data.error ?? 'Не удалось опубликовать');
+        return;
+      }
+      onPublished(data.slug);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const unpublish = async () => {
+    if (!build.publicSlug) return;
+    setPublishing(true);
+    try {
+      await fetch(`/api/eft/builds?slug=${build.publicSlug}`, { method: 'DELETE' });
+      onUnpublished();
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const copyPublicLink = async () => {
+    const url = `${window.location.origin}/eft/progress/loadouts/b/${build.publicSlug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      window.prompt('Ссылка на сборку:', url);
+    }
   };
 
   return (
@@ -399,6 +451,52 @@ function BuildCard({
             <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
+      </div>
+
+      {/* Публикация в профиль */}
+      <div className="flex flex-wrap items-center gap-2 border-t border-lines-hover pt-3">
+        {build.publicSlug ? (
+          <>
+            <span className="flex items-center gap-1.5 rounded-xs border border-(--primary)/50 bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] px-2 py-1 font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
+              <Globe className="h-3.5 w-3.5" aria-hidden="true" />
+              В профиле
+            </span>
+            <Link
+              href={`/eft/progress/loadouts/b/${build.publicSlug}`}
+              target="_blank"
+              className="flex h-9 items-center rounded-xs border border-lines-hover px-3 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+            >
+              Открыть
+            </Link>
+            <button
+              type="button"
+              onClick={copyPublicLink}
+              className="flex h-9 items-center gap-1.5 rounded-xs border border-lines-hover px-3 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+            >
+              {linkCopied ? <Check className="h-4 w-4 text-success" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
+              Ссылка
+            </button>
+            <button
+              type="button"
+              onClick={() => void unpublish()}
+              disabled={publishing}
+              className="ml-auto flex h-9 items-center rounded-xs border border-lines-hover px-3 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-danger hover:text-danger disabled:opacity-40"
+            >
+              Снять
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void publish()}
+            disabled={publishing}
+            className="flex h-9 items-center gap-2 rounded-xs border border-(--primary) px-3 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] disabled:opacity-40"
+          >
+            <Globe className="h-4 w-4" aria-hidden="true" />
+            Опубликовать в профиль
+          </button>
+        )}
+        {pubErr && <p className="w-full font-blender-book text-xs text-danger">{pubErr}</p>}
       </div>
     </article>
   );

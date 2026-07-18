@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarClock, Gamepad2, Headphones, MicOff, ShieldCheck, Users, Wrench } from "lucide-react";
+import { CalendarClock, Gamepad2, Headphones, MicOff, ShieldCheck, Users } from "lucide-react";
 import { getPublicProfile, type PublicGameSection } from "@/db/public-profile";
 import { ROLE_LABELS, isRole } from "@/lib/auth/roles";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
@@ -254,15 +254,43 @@ function GameSection({ s }: { s: PublicGameSection }) {
         </div>
       )}
 
-      {/* Билды — облачного хранения пока нет, ведём в конструктор */}
-      {s.gameCode === "eft" && (
-        <Link
-          href="/eft/progress/loadouts"
-          className="flex w-fit items-center gap-2 rounded-xs border border-lines-hover px-3 py-2 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
-        >
-          <Wrench className="h-4 w-4" aria-hidden="true" />
-          Публичные сборки — скоро · открыть конструктор
-        </Link>
+      {/* Опубликованные сборки — витрина */}
+      {s.builds.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
+            Сборки оружия
+          </span>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {s.builds.map((b) => (
+              <Link
+                key={b.slug}
+                href={`/eft/progress/loadouts/b/${b.slug}`}
+                className="flex flex-col gap-1.5 rounded-xs border border-lines-hover bg-(--color-darkbase) p-3 transition-colors hover:border-(--primary)"
+              >
+                <span className="truncate font-blender-medium text-sm uppercase tracking-widest text-text-primary">
+                  {b.name}
+                </span>
+                <span className="truncate font-blender-book text-xs text-text-secondary">
+                  {b.baseName}
+                  {b.purpose ? ` · ${b.purpose}` : ""}
+                </span>
+                <div className="mt-1 flex flex-wrap items-center gap-3 font-blender-medium text-xs text-text-secondary">
+                  <span>
+                    Эрго <span className="text-text-primary">{b.ergonomics}</span>
+                  </span>
+                  <span>
+                    Отдача <span className="text-text-primary">{b.recoilSum}</span>
+                  </span>
+                  {b.priceRub != null && (
+                    <span className="ml-auto text-(--primary)">
+                      {b.priceRub.toLocaleString("ru-RU")} ₽
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
     </section>
   );

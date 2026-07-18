@@ -8,6 +8,8 @@ import { games, profiles } from "@/db/schema";
 import { comlinkProfiles, comlinkRaids, type ComlinkGoal } from "@/db/schema-comlink";
 import { getKarmaMap, type KarmaInfo } from "@/db/comlink";
 import { getVerifiedMap } from "@/db/verification";
+import { getUserPublicBuilds } from "@/db/public-builds";
+import { getBuildDefs } from "@/db/build-defs";
 import { eftGameId } from "@/db/eft";
 
 export interface PublicGameSection {
@@ -29,6 +31,16 @@ export interface PublicGameSection {
     playStyle: string[];
     playTime: string[];
   } | null;
+  /** Опубликованные сборки оружия (витрина). */
+  builds: {
+    slug: string;
+    name: string;
+    purpose: string;
+    baseName: string;
+    ergonomics: number;
+    recoilSum: number;
+    priceRub: number | null;
+  }[];
 }
 
 export interface PublicProfile {
@@ -76,17 +88,22 @@ async function buildEftSection(userId: string): Promise<PublicGameSection | null
     .where(and(eq(comlinkProfiles.userId, userId), eq(comlinkProfiles.gameId, gameId)))
     .limit(1);
 
-  const [verifiedMap, karmaMap] = await Promise.all([
+  const [verifiedMap, karmaMap, pubBuilds] = await Promise.all([
     getVerifiedMap([userId]),
     getKarmaMap([userId]),
+    getUserPublicBuilds(userId),
   ]);
   const verifiedNickname = verifiedMap.get(userId) ?? null;
 
   // Показываем анкету только если она активна (как в публичном списке кандидатов).
   const anketaActive = anketaRow?.active === true;
 
-  // Нечего показывать: ни активной анкеты, ни подтверждения.
-  if (!anketaActive && verifiedNickname === null) return null;
+  // Нечего показывать: ни активной анкеты, ни подтверждения, ни публичных сборок.
+  if (!anketaActive && verifiedNickname === null && pubBuilds.length === 0) return null;
+
+  // Имена баз для карточек сборок — точечный резолв по уникальным id.
+  const baseIds = [...new Set(pubBuilds.map((b) => b.baseItemId))];
+  const baseNames = baseIds.length > 0 ? (await getBuildDefs(baseIds)).names : {};
 
   const confirmedRaids = await confirmedRaidCount(userId);
 
@@ -108,6 +125,15 @@ async function buildEftSection(userId: string): Promise<PublicGameSection | null
           playTime: anketaRow.playTime,
         }
       : null,
+    builds: pubBuilds.map((b) => ({
+      slug: b.slug,
+      name: b.name,
+      purpose: b.purpose,
+      baseName: baseNames[b.baseItemId] ?? "Оружие",
+      ergonomics: b.stats.ergonomics,
+      recoilSum: b.stats.recoilSum,
+      priceRub: b.stats.priceRub,
+    })),
   };
 }
 

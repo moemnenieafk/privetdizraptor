@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getBuildDefs } from '@/db/build-defs';
 import { decodeBuild } from '@/lib/build-share';
+import { getPublicBuildBySlug } from '@/db/public-builds';
 import { buildFocus } from '@/lib/build-focus';
 import { buildTotal, formatRub } from '@/lib/build-price';
 import { calcBuild, calcDelta, type BuildNode } from '@/lib/weapon-build';
@@ -28,11 +29,21 @@ function collectIds(node: BuildNode, acc: Set<string>): Set<string> {
   return acc;
 }
 
+/** Сборка по коду: сперва пробуем декодировать из URL (старые ссылки), затем —
+ *  опубликованная сборка по slug (витрина профиля). name — только у slug-сборок. */
+async function resolveBuild(code: string): Promise<{ tree: BuildNode; name: string | null } | null> {
+  const decoded = decodeBuild(code);
+  if (decoded) return { tree: decoded, name: null };
+  const pub = await getPublicBuildBySlug(code);
+  return pub ? { tree: pub.tree, name: pub.name } : null;
+}
+
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const [{ code }, { n }] = await Promise.all([params, searchParams]);
 
-  const tree = decodeBuild(code);
-  if (!tree) return { title: 'Сборка не найдена — ЦТА' };
+  const resolved = await resolveBuild(code);
+  if (!resolved) return { title: 'Сборка не найдена — ЦТА' };
+  const tree = resolved.tree;
 
   const ids = [...collectIds(tree, new Set())];
   const bundle = await getBuildDefs(ids);
@@ -42,7 +53,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const delta = calcDelta(tree, index);
 
   const baseName = bundle.names[tree.itemId] ?? 'Оружие';
-  const title = n?.trim() || `${baseName} — сборка`;
+  const title = n?.trim() || resolved.name || `${baseName} — сборка`;
 
   const total = buildTotal(tree.itemId, result, bundle.prices);
   const focus = buildFocus(result, delta, index, total.total > 0 ? total.total : null);
@@ -60,8 +71,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function SharedBuildPage({ params, searchParams }: Props) {
   const [{ code }, { n }] = await Promise.all([params, searchParams]);
 
-  const tree = decodeBuild(code);
-  if (!tree) notFound();
+  const resolved = await resolveBuild(code);
+  if (!resolved) notFound();
+  const tree = resolved.tree;
 
   const ids = [...collectIds(tree, new Set())];
   const bundle = await getBuildDefs(ids);
@@ -70,7 +82,7 @@ export default async function SharedBuildPage({ params, searchParams }: Props) {
   if (!bundle.defs.some((d) => d.id === tree.itemId && d.kind === 'weapon')) notFound();
 
   const baseName = bundle.names[tree.itemId] ?? 'Оружие';
-  const buildName = n?.trim() || `${baseName} — сборка`;
+  const buildName = n?.trim() || resolved.name || `${baseName} — сборка`;
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
