@@ -9,6 +9,7 @@ import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
 import { rateLimit } from "@/lib/rate-limit";
+import { revalidateProfileByUserId } from "@/lib/revalidate-profile";
 import type { SocialPlatform } from "@/lib/auth/me";
 
 export const runtime = "nodejs";
@@ -92,6 +93,8 @@ export async function PUT(req: Request): Promise<NextResponse> {
     .update(profiles)
     .set({ ...patch, updatedAt: sql`now()` })
     .where(eq(profiles.id, userId));
+
+  await revalidateProfileByUserId(userId);
 
   return NextResponse.json({ ok: true, socials: patch });
 }

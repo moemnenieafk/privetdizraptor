@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
+import { revalidateProfileByUsername } from "@/lib/revalidate-profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,6 +52,8 @@ export async function GET(req: Request): Promise<NextResponse> {
       .update(profiles)
       .set({ streamer: enable, updatedAt: sql`now()` })
       .where(eq(profiles.id, user.id));
+
+    revalidateProfileByUsername(user.username);
 
     return NextResponse.json({
       ok: true,

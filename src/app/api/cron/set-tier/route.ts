@@ -9,6 +9,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { profiles, subscriptions } from "@/db/schema";
 import { isTierId } from "@/data/subscription-tiers";
+import { revalidateProfileByUsername } from "@/lib/revalidate-profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,6 +69,8 @@ export async function GET(req: Request): Promise<NextResponse> {
         validUntil: subscriptions.validUntil,
         source: subscriptions.source,
       });
+
+    revalidateProfileByUsername(user.username);
 
     return NextResponse.json({
       ok: true,

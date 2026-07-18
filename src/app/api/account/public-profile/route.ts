@@ -10,6 +10,7 @@ import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
 import { rateLimit } from "@/lib/rate-limit";
+import { revalidateProfileByUsername } from "@/lib/revalidate-profile";
 
 export const runtime = "nodejs";
 
@@ -70,6 +71,8 @@ export async function PUT(req: Request): Promise<NextResponse> {
     .update(profiles)
     .set({ publicProfile: body.public, updatedAt: sql`now()` })
     .where(eq(profiles.id, userId));
+
+  revalidateProfileByUsername(row?.username);
 
   return NextResponse.json({ ok: true, public: body.public, username: row?.username ?? null });
 }

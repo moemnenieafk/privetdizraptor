@@ -16,6 +16,7 @@ import {
 } from "@/db/comlink";
 import type { ComlinkGoal, PlayStyle, PlayTime } from "@/db/schema-comlink";
 import { EFT_MAP_CONFIG } from "@/data/eft-map-config";
+import { revalidateProfileByUserId } from "@/lib/revalidate-profile";
 
 export const runtime = "nodejs";
 
@@ -91,6 +92,9 @@ export async function PUT(req: Request): Promise<NextResponse> {
   };
 
   await upsertComlinkProfile(me.id, input);
+
+  // Анкета видна на публичном профиле — обновляем /u/ сразу.
+  await revalidateProfileByUserId(me.id);
 
   // Окно лимита открываем ПОСЛЕ успешной записи — невалидная попытка час не съедает.
   await db

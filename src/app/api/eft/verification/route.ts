@@ -13,6 +13,7 @@ import { getSubscription } from "@/lib/subscription.server";
 import { tierMeets, TIERS } from "@/data/subscription-tiers";
 import { rateLimit } from "@/lib/rate-limit";
 import { bodyTooLarge } from "@/lib/http";
+import { revalidateProfileByUserId } from "@/lib/revalidate-profile";
 import {
   getMyVerification,
   startVerification,
@@ -145,5 +146,10 @@ export async function PATCH(req: Request): Promise<NextResponse> {
   }
 
   const res = await reviewVerification(me.id, targetUserId, body.decision, note);
-  return res.ok ? NextResponse.json({ ok: true }) : err(409, res.error ?? "Ошибка");
+  if (res.ok) {
+    // Галочка видна на публичном профиле — обновляем сразу, не ждём ISR.
+    await revalidateProfileByUserId(targetUserId);
+    return NextResponse.json({ ok: true });
+  }
+  return err(409, res.error ?? "Ошибка");
 }
