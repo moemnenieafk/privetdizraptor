@@ -249,6 +249,7 @@
 > Автогенерируется `.github/workflows/changelog.yml` на каждый push в `main`. Руками не редактировать — правки затрутся. Курируемая история (Keep a Changelog) — выше.
 
 ### 2026-07-18
+- `2d90213` feat(loadouts): community-витрина публичных сборок + лайки
 - `a3f3439` feat(builds): публичные сборки на профиле /u/[username]
 - `a0441c9` perf(profile): мгновенная инвалидация /u/[username] после изменений
 - `f9dda7a` feat(profile): публичный статус «Стример» (подтверждённый Twitch) + твич-рамка
