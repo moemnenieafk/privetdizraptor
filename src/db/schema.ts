@@ -846,6 +846,61 @@ export const weaponBuildLikes = pgTable(
 export type WeaponBuildLikeRow = typeof weaponBuildLikes.$inferSelect;
 export type NewWeaponBuildLikeRow = typeof weaponBuildLikes.$inferInsert;
 
+/* ───────────────── комментарии к сборкам ───────────────── */
+/**
+ * Плоская ветка обсуждения под опубликованной сборкой. ПИСАТЬ может только платный
+ * тир (проверка серверная, в роуте — в схеме тира нет), ГОЛОСОВАТЬ — любой
+ * залогиненный: платные производят контент, бесплатные его сортируют.
+ * `score` — денормализованная сумма голосов, пересчитывается при каждом тоггле.
+ * Удаление автором мягкое (deleted_at), скрытие модератором — hidden_at.
+ */
+export const buildComments = pgTable(
+  "build_comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    buildId: uuid("build_id")
+      .notNull()
+      .references(() => weaponBuilds.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    score: integer("score").notNull().default(0),
+    hiddenAt: timestamp("hidden_at", { withTimezone: true }),
+    hiddenBy: uuid("hidden_by").references(() => profiles.id, { onDelete: "set null" }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("build_comments_build_idx").on(t.buildId, t.createdAt),
+    index("build_comments_score_idx").on(t.buildId, t.score),
+  ],
+);
+
+/** Голоса за комментарии. Сейчас пишем только +1; integer оставлен на случай минусов. */
+export const buildCommentVotes = pgTable(
+  "build_comment_votes",
+  {
+    commentId: uuid("comment_id")
+      .notNull()
+      .references(() => buildComments.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    value: integer("value").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.commentId, t.userId] }),
+    index("build_comment_votes_user_idx").on(t.userId),
+  ],
+);
+
+export type BuildCommentRow = typeof buildComments.$inferSelect;
+export type NewBuildCommentRow = typeof buildComments.$inferInsert;
+export type BuildCommentVoteRow = typeof buildCommentVotes.$inferSelect;
+
 /* ───────────────── inferred types (оружейный слой) ───────────────── */
 export type WeaponBaseRow = typeof weaponBases.$inferSelect;
 export type NewWeaponBaseRow = typeof weaponBases.$inferInsert;

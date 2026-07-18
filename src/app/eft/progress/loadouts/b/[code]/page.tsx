@@ -7,6 +7,7 @@ import { buildFocus } from '@/lib/build-focus';
 import { buildTotal, formatRub } from '@/lib/build-price';
 import { calcBuild, calcDelta, type BuildNode } from '@/lib/weapon-build';
 import { SharedBuildView } from '@/components/features/loadouts/SharedBuildView';
+import { BuildComments } from '@/components/features/loadouts/BuildComments';
 
 // Снэпшот сборки по ссылке. Всё дерево лежит в самом URL — БД под сборку не нужна,
 // поделиться можно с бесплатного тира и без регистрации.
@@ -31,11 +32,13 @@ function collectIds(node: BuildNode, acc: Set<string>): Set<string> {
 
 /** Сборка по коду: сперва пробуем декодировать из URL (старые ссылки), затем —
  *  опубликованная сборка по slug (витрина профиля). name — только у slug-сборок. */
-async function resolveBuild(code: string): Promise<{ tree: BuildNode; name: string | null } | null> {
+async function resolveBuild(
+  code: string,
+): Promise<{ tree: BuildNode; name: string | null; slug: string | null } | null> {
   const decoded = decodeBuild(code);
-  if (decoded) return { tree: decoded, name: null };
+  if (decoded) return { tree: decoded, name: null, slug: null };
   const pub = await getPublicBuildBySlug(code);
-  return pub ? { tree: pub.tree, name: pub.name } : null;
+  return pub ? { tree: pub.tree, name: pub.name, slug: pub.slug } : null;
 }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
@@ -97,6 +100,10 @@ export default async function SharedBuildPage({ params, searchParams }: Props) {
           names={bundle.names}
           prices={bundle.prices}
         />
+
+        {/* Обсуждение — только у опубликованных сборок: у ссылок-снимков (дерево в URL)
+            нет строки в БД, а значит и ветки. */}
+        {resolved.slug && <BuildComments slug={resolved.slug} />}
       </div>
     </main>
   );
