@@ -1,5 +1,5 @@
 ---
-status: 🟢 фазы A+B готовы
+status: ✅ сделано (фазы A–J + live-проверено, 08.07) — своя цель «отрисовать синканные маркеры» закрыта; карты v2 → [[maps-v2-scope]] · [[maps-design-system]]
 affects: maps
 parent: "[[fix-maps]]"
 date: 2026-07-02

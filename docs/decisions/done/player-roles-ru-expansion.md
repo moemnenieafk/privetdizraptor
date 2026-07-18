@@ -1,5 +1,5 @@
 ---
-status: 🟢 принято
+status: ✅ сделано (принято + заведено в движок role-inference/behavior-signals; RU-роли в проде)
 affects: role-inference, behavior-signals, role-hubs, RolePicker, AdaptiveHub
 date: 2026-07-16
 ---

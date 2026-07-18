@@ -1,5 +1,5 @@
 ---
-status: 🟡 Проход 1 закрыт · ревизия 14.07: продукт готов, открыты 6 релиз-блокеров (Проход 2)
+status: 🟢 ревизия 16.07: 5/6 блокеров в проде + RLS Comlink закрыт → остался 1 ручной (юр-текст privacy/terms). См. [[release-readiness-2026-07-16]]
 affects: release, quality, security, mobile, seo, legal
 date: 2026-07-04
 ---
