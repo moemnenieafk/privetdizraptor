@@ -1,0 +1,12 @@
+
+> centre-tactical-adaptation@4.4.0 dev
+> next dev
+
+▲ Next.js 16.2.7 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.18.0.1:3000
+- Environments: .env.local
+✓ Ready in 760ms
+- Experiments (use with caution):
+  ✓ viewTransition
+
