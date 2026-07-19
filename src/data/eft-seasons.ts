@@ -56,21 +56,21 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   /* ── Сезонные: действуют на всех, выбора нет ────────────────────── */
   {
     id: 'no-insurance',
-    name: 'Без страховки',
+    name: 'Неработающая страховка',
     cost: 0,
     kind: 'season',
     effects: ['Страховать снаряжение перед рейдом нельзя — потерянное не вернётся.'],
   },
   {
     id: 'black-division',
-    name: 'Чёрная дивизия',
+    name: 'Black Division',
     cost: 0,
     kind: 'season',
     effects: ['Бойцы «Чёрной дивизии» встречаются на большем числе локаций, чем в основной игре.'],
   },
   {
     id: 'no-fir-hideout',
-    name: 'Убежище без FiR',
+    name: 'Убежище без FIR',
     cost: 0,
     kind: 'season',
     effects: ['Модулям убежища не нужен статус «Найдено в рейде».'],
@@ -84,14 +84,14 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'handyman',
-    name: 'Мастеровитый',
+    name: 'На все руки мастер',
     cost: 0,
     kind: 'season',
     effects: ['Время крафта предметов вдвое меньше.', 'Навык «Крафт» стартует с 51 уровня.'],
   },
   {
     id: 'seasoned-pmcs',
-    name: 'Бывалые ЧВК',
+    name: 'Опытные ЧВК',
     cost: 0,
     kind: 'season',
     effects: ['Персонаж получает на 25% больше опыта за рейд.'],
@@ -100,7 +100,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   /* ── Позитивные: тратят очки ────────────────────────────────────── */
   {
     id: 'street-tax',
-    name: 'Уличный налог',
+    name: 'Бизнесмен',
     cost: -1,
     kind: 'positive',
     effects: ['Раз в неделю часть Диких отстёгивает вам за «крышу».'],
@@ -114,7 +114,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'juice-time',
-    name: 'Время сока',
+    name: 'The Juice Time',
     cost: -2,
     kind: 'positive',
     effects: ['Выпитый сок даёт эффект обезболивающего на 60 секунд.'],
@@ -200,7 +200,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'bushborne',
-    name: 'Рождённый в кустах',
+    name: 'Кусторожденный',
     cost: -5,
     kind: 'positive',
     effects: ['Ходьба по растительности вдвое тише и вдвое меньше замедляет.'],
@@ -224,7 +224,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'kappa-protocol',
-    name: 'Протокол «Каппа»',
+    name: 'Kappa Protocol',
     cost: -21,
     kind: 'positive',
     effects: ['Разгрузочный контейнер «Каппа» выдаётся сразу.'],
@@ -249,14 +249,14 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'dr-jekyll',
-    name: 'Доктор Джекилл',
+    name: 'Доктор Джекил',
     cost: 1,
     kind: 'negative',
     effects: ['Статус «Свежая рана» не снимается до конца рейда.'],
   },
   {
     id: 'third-leg',
-    name: 'Третья нога',
+    name: 'Большое достоинство',
     cost: 1,
     kind: 'negative',
     effects: ['Скорость передвижения ниже на 1%.', 'Покупки у Терапевта дешевле на 5%.'],
@@ -271,14 +271,14 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'well-that-hurt',
-    name: 'Больно же!',
+    name: 'Ай, болит!',
     cost: 2,
     kind: 'negative',
     effects: ['Аптечки тратят на 25% больше ресурса за использование.'],
   },
   {
     id: 'personality-vacuum',
-    name: 'Пустая харизма',
+    name: 'Карлик нос',
     cost: 2,
     kind: 'negative',
     effects: ['Навык «Харизма» не растёт.', 'Товары торговцев дороже на 20%.'],
@@ -311,7 +311,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'incompetent',
-    name: 'Бездарь',
+    name: 'Необучаемый',
     cost: 4,
     kind: 'negative',
     effects: [
@@ -322,7 +322,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'broken-secure-container',
-    name: 'Сломанный контейнер',
+    name: 'Сломанный защищённый контейнер',
     cost: 4,
     kind: 'negative',
     effects: [
@@ -331,7 +331,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'no-flea-market',
-    name: 'Без барахолки',
+    name: 'Неработающая барахолка',
     cost: 6,
     kind: 'negative',
     effects: ['Торговля с игроками на барахолке недоступна.'],
