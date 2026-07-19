@@ -24,7 +24,7 @@ export interface ComlinkSection {
 export const COMLINK_SECTIONS: ComlinkSection[] = [
   { slug: "find-partner", label: "Поиск напарника", description: "Заявки на совместные рейды, подтверждения и оценки напарников.", icon: "/icons/eft/07-comlink/find-partner.svg" },
   { slug: "candidates", label: "Кандидаты", description: "Анкеты игроков, ищущих команду или сокомандников.", icon: "/icons/eft/07-comlink/candidates.svg" },
-  { slug: "players", label: "Статистика игрока", description: "Загрузи profile.json и посмотри полную стату: рейды, K/D, выживаемость, навыки, мастерство и престиж.", icon: "/icons/eft/profile-pannel/account-centre.svg" },
+  { slug: "players", label: "Статистика игрока", description: "Загрузи profile.json и посмотри полную стату: рейды, K/D, выживаемость, навыки, мастерство и престиж.", icon: "/icons/eft/07-comlink/player-stats.svg" },
   { slug: "sherpa-exchange", label: "Биржа шерпов", description: "Опытные игроки-наставники помогают новичкам освоиться.", icon: "/icons/eft/07-comlink/sherpa.svg" },
   { slug: "discussions", label: "Обсуждения", description: "Темы по игре: мета, споты, механики. У каждого автора виден уровень доверия.", icon: "/icons/eft/07-comlink/discussions.svg" },
   { slug: "masterclasses", label: "Мастер-классы", description: "Разборы, обучающие сессии и гайды от профи.", icon: "/icons/eft/07-comlink/masterclasses.svg" },
