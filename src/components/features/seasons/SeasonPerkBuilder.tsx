@@ -65,7 +65,7 @@ function PerkCard({
         aria-pressed={selected}
         title={effectsText}
         className={[
-          'relative flex w-full flex-col items-center gap-1.5 rounded-sm border p-2 text-center transition-colors',
+          'relative flex h-full w-full flex-col items-center gap-1.5 rounded-sm border p-2 text-center transition-colors',
           selected
             ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
             : `${s.border} bg-(--color-base)`,
@@ -101,7 +101,7 @@ function PerkCard({
           </span>
         )}
 
-        <span className="line-clamp-2 font-blender-medium text-type-micro uppercase leading-tight tracking-wide text-text-primary">
+        <span className="line-clamp-2 min-h-[2lh] font-blender-medium text-type-micro uppercase leading-tight tracking-wide text-text-primary">
           {perk.name}
         </span>
 
