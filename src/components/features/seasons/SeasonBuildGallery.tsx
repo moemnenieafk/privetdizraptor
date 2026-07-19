@@ -266,7 +266,7 @@ function MeterRow({ pain, comfort }: { pain: number; comfort: number }) {
   return (
     <div className="flex flex-col gap-1.5">
       <Meter icon="pain" value={pain} color="var(--color-danger)" />
-      <Meter icon="comfort" value={comfort} color="var(--color-success)" />
+      <Meter icon="comfort" value={comfort} color="var(--color-nvg-green)" />
     </div>
   );
 }
@@ -325,7 +325,7 @@ function PerkIcons({
     <div className={`flex flex-wrap items-center ${sz.wrap}`}>
       {shown.map((id, i) => {
         const p = perkMap.get(id);
-        const border = p && p.cost < 0 ? 'border-success/50' : 'border-danger/50';
+        const border = p && p.cost < 0 ? 'border-nvg-green/50' : 'border-danger/50';
         const anim = cascade ? 'animate-perk-pop' : '';
         const style = cascade ? { animationDelay: `${i * 40}ms` } : undefined;
         return p?.iconUrl ? (
@@ -373,7 +373,7 @@ function BalanceBadge({ balance, valid }: { balance: number; valid: boolean }) {
   return (
     <span
       className="font-blender-medium text-type-micro uppercase tracking-widest"
-      style={{ color: valid ? 'var(--color-success)' : 'var(--color-danger)' }}
+      style={{ color: valid ? 'var(--color-nvg-green)' : 'var(--color-danger)' }}
     >
       Баланс {balance >= 0 ? `+${balance}` : balance}
     </span>
@@ -388,7 +388,7 @@ function ApplyButton({ applied, onApply }: { applied: boolean; onApply: () => vo
       className="flex items-center justify-center gap-1.5 rounded-xs px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest transition-all duration-150 active:scale-[0.96]"
       style={
         applied
-          ? { color: 'var(--color-success)', border: '1px solid color-mix(in srgb, var(--color-success) 50%, transparent)' }
+          ? { color: 'var(--color-nvg-green)', border: '1px solid color-mix(in srgb, var(--color-nvg-green) 50%, transparent)' }
           : { color: 'var(--primary)', border: '1px solid color-mix(in srgb, var(--primary) 50%, transparent)' }
       }
     >
@@ -429,13 +429,13 @@ function FeaturedCard({
       className={`relative overflow-hidden rounded-lg border p-4 transition-all duration-300 ${landAnim}`}
       style={{
         borderColor: justApplied
-          ? 'var(--color-success)'
+          ? 'var(--color-nvg-green)'
           : spinning
             ? 'var(--color-lines-hover)'
             : `color-mix(in srgb, ${accent} 55%, transparent)`,
         background: `radial-gradient(circle at 50% -30%, color-mix(in srgb, ${accent} 10%, transparent), var(--color-darkbase))`,
         boxShadow: justApplied
-          ? '0 0 28px color-mix(in srgb, var(--color-success) 40%, transparent)'
+          ? '0 0 28px color-mix(in srgb, var(--color-nvg-green) 40%, transparent)'
           : spinning
             ? 'none'
             : `0 0 24px color-mix(in srgb, ${accent} 16%, transparent)`,
@@ -482,7 +482,7 @@ function FeaturedCard({
           <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
             <span style={{ color: 'var(--color-danger)' }}>страдания {meta.pain}</span>
             {' · '}
-            <span style={{ color: 'var(--color-success)' }}>комфорт {meta.comfort}</span>
+            <span style={{ color: 'var(--color-nvg-green)' }}>комфорт {meta.comfort}</span>
             {' · '}
             {build.perks.length} перков
           </span>

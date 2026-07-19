@@ -28,7 +28,7 @@ interface Props {
 
 const kindStyle: Record<string, { border: string; text: string; label: string }> = {
   season: { border: 'border-lines-hover', text: 'text-text-muted', label: 'Сезонный' },
-  positive: { border: 'border-success/50', text: 'text-success', label: 'Позитивный' },
+  positive: { border: 'border-nvg-green/50', text: 'text-nvg-green', label: 'Позитивный' },
   negative: { border: 'border-danger/50', text: 'text-danger', label: 'Негативный' },
 };
 
@@ -203,7 +203,7 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
           <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
             Потрачено
           </span>
-          <span className="font-blender-medium text-lg text-success">−{budget.spent}</span>
+          <span className="font-blender-medium text-lg text-nvg-green">−{budget.spent}</span>
         </span>
 
         <span className="flex flex-col">
@@ -220,7 +220,7 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
         <span
           className={`rounded-xs border px-2 py-1 font-blender-medium text-type-micro uppercase tracking-widest ${
             budget.valid
-              ? 'border-success/50 bg-success/10 text-success'
+              ? 'border-nvg-green/50 bg-nvg-green/10 text-nvg-green'
               : 'border-danger/50 bg-danger/10 text-danger'
           }`}
         >
@@ -258,7 +258,7 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
 
       {/* ── Позитивные ── */}
       <section className="flex flex-col gap-3">
-        <h2 className="font-blender-medium text-sm uppercase tracking-widest text-success">
+        <h2 className="font-blender-medium text-sm uppercase tracking-widest text-nvg-green">
           Позитивные · тратят очки
         </h2>
         <div className="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-2 xl:grid-cols-6">

@@ -2,10 +2,10 @@ import type { CSSProperties } from 'react';
 import type { PerkKind } from '@/data/eft-seasons';
 
 // Единый визуальный словарь перков: цвет иконки-маски по типу.
-// Баф → зелёный (success), дебаф → красный (danger), сезонный/глобальный → lightkeeper.
+// Баф → приглушённый зелёный (nvg-green), дебаф → красный (danger), сезонный/глобальный → lightkeeper.
 // Классы дают background-color для CSS-маски (перекрашивают монохромный SVG в цвет темы).
 export const perkIconColor: Record<PerkKind, string> = {
-  positive: 'bg-(--color-success)',
+  positive: 'bg-(--color-nvg-green)',
   negative: 'bg-(--color-danger)',
   season: 'bg-(--color-lightkeeper)',
 };
