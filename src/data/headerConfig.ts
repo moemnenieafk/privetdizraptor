@@ -613,7 +613,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         ]
       },
       // ВЕТКА: СВЯЗЬ (сообщество) — навигируемые смарт-заглушки (MVP), реал — отдельный эпик.
-      // Иконки подпунктов — временные плейсхолдеры (Lucide, /icons/eft/07-comlink), до фирменной графики.
+      // Иконки подпунктов — фирменная графика из /icons/eft/07-comlink.
       {
         id: 'comlink',
         label: 'Связь',
@@ -626,7 +626,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           { id: 'cl-discussions', label: 'Обсуждения', path: '/eft/comlink/discussions', iconUrl: '/icons/eft/07-comlink/discussions.svg' },
           { id: 'cl-masterclasses', label: 'Мастер-классы', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/07-comlink/masterclasses.svg' },
           { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/07-comlink/blog.svg' },
-          { id: 'cl-players', label: 'Статистика игрока', path: '/eft/comlink/players', iconUrl: '/icons/eft/search-icon.svg' }
+          { id: 'cl-players', label: 'Статистика игрока', path: '/eft/comlink/players', iconUrl: '/icons/eft/07-comlink/player-stats.svg' }
         ]
       },
     ],
