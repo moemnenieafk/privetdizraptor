@@ -480,9 +480,9 @@ function FeaturedCard({
 
         <div className="flex items-center justify-between gap-2 border-t border-lines-hover pt-3">
           <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-            <span style={{ color: 'var(--color-danger)' }}>боль {meta.pain}</span>
+            <span style={{ color: 'var(--color-danger)' }}>страдания {meta.pain}</span>
             {' · '}
-            <span style={{ color: 'var(--color-success)' }}>трат {meta.comfort}</span>
+            <span style={{ color: 'var(--color-success)' }}>комфорт {meta.comfort}</span>
             {' · '}
             {build.perks.length} перков
           </span>
