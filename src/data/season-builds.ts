@@ -208,6 +208,56 @@ const KORD_BREACH: CuratedBuild[] = [
       'dr-jekyll',
     ],
   },
+  {
+    id: 'sniper-tower',
+    name: 'Снайперская вышка',
+    tagline: 'Болтовки качаются вдвое, Сила и Выносливость с запасом. Дыхалка сдаёт, а контейнер урезан — но с вышки этого не видно.',
+    vibe: 'meta',
+    perks: ['tarkov-shooter', 'hercules', 'sprinter', 'exhaustion', 'broken-secure-container'],
+  },
+  {
+    id: 'boar-tank',
+    name: 'Ходячий кабан',
+    tagline: 'Не ломается, прёт как БТР, энергия не тает. Обаяния ноль — но кабану оно и не нужно.',
+    vibe: 'comfort',
+    perks: ['sturdy-bones', 'hercules', 'youth', 'no-flea-market', 'personality-vacuum', 'dr-jekyll'],
+  },
+  {
+    id: 'kappa-intact',
+    name: 'Каппа без жертв',
+    tagline: 'Каппа с порога — и разгрузка цела. Платишь здоровьем, навыками и барахолкой, зато таскаешь всё как белый человек.',
+    vibe: 'loot',
+    perks: [
+      'kappa-protocol',
+      'no-flea-market',
+      'incompetent',
+      'exhaustion',
+      'allergic',
+      'hemophilia',
+      'well-that-hurt',
+    ],
+  },
+  {
+    id: 'ghost-exit',
+    name: 'Тихий выход',
+    tagline: 'Призрак по кустам: не шумит, не устаёт, воду бережёт. Барахолки нет — добычу выносишь ногами.',
+    vibe: 'speed',
+    perks: ['bushborne', 'marathon-runner', 'hypodipsia', 'no-flea-market', 'broken-secure-container'],
+  },
+  {
+    id: 'passive-income',
+    name: 'Пассивный доход',
+    tagline: 'Дикие отстёгивают за крышу, сейфы вскрываются без ключей — рубли капают сами. Ты только чуть медленнее и подтекаешь.',
+    vibe: 'loot',
+    perks: ['street-tax', 'safecracker', 'broken-secure-container', 'dr-jekyll', 'third-leg', 'polydipsia'],
+  },
+  {
+    id: 'field-medic',
+    name: 'Полевой медик',
+    tagline: 'Не течёшь, сок глушит боль, рыбка латает. Ирония: аптечки жрёт как не в себя, а свежая рана не заживает до эвака.',
+    vibe: 'comfort',
+    perks: ['thrombophilia', 'juice-time', 'sailors-nostalgia', 'diet', 'broken-secure-container', 'well-that-hurt', 'dr-jekyll'],
+  },
 ];
 
 export const SEASON_BUILDS: Record<string, CuratedBuild[]> = {
