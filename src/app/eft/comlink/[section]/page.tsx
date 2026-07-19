@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SectionPlaceholder } from "@/components/ui/SectionPlaceholder";
-import { COMLINK_BASE, COMLINK_ICON, COMLINK_SECTIONS, COMLINK_TABS } from "@/data/comlinkSections";
+import { COMLINK_ICON, COMLINK_SECTIONS } from "@/data/comlinkSections";
 
 interface Props {
   params: Promise<{ section: string }>;
@@ -29,8 +29,7 @@ export default async function ComlinkSectionPage({ params }: Props) {
       title={s.label}
       description={s.description}
       iconUrl={COMLINK_ICON}
-      tabs={COMLINK_TABS}
-      activeHref={`${COMLINK_BASE}/${s.slug}`}
+      hideHeader
     />
   );
 }

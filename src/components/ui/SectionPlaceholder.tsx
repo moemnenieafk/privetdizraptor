@@ -15,6 +15,8 @@ interface SectionPlaceholderProps {
   tabs?: SectionPlaceholderTab[];
   /** Текущий путь — для подсветки активного таба (server-side, без usePathname). */
   activeHref?: string;
+  /** Скрыть шапку (иконка+заголовок+табы) — когда её уже рендерит внешний HubNav. */
+  hideHeader?: boolean;
 }
 
 const MASK_BASE = {
@@ -31,12 +33,13 @@ const MASK_BASE = {
  * хлеб-крошки рендерятся глобальным хедером), а не превращается в тупик.
  * Server Component — без client-state.
  */
-export function SectionPlaceholder({ title, description, iconUrl, iconClass, tabs, activeHref }: SectionPlaceholderProps) {
+export function SectionPlaceholder({ title, description, iconUrl, iconClass, tabs, activeHref, hideHeader = false }: SectionPlaceholderProps) {
   return (
-    <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
+    <main className={`flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pb-14 ${hideHeader ? '' : 'pt-7'}`}>
       <div className="w-full max-w-275 px-4 xl:px-0">
 
         {/* Шапка раздела: иконка + заголовок + табы */}
+        {!hideHeader && (
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-8 lg:mb-12">
           <div className="flex items-center gap-4 lg:gap-7">
             <div className="w-21 h-21 shrink-0 bg-(--color-darkbase) rounded-md flex items-center justify-center">
@@ -98,6 +101,7 @@ export function SectionPlaceholder({ title, description, iconUrl, iconClass, tab
             </div>
           )}
         </div>
+        )}
 
         {/* Панель «в разработке» — раздел жив и навигируем, не тупик */}
         <div className="relative flex w-full flex-col items-center justify-center rounded-md border border-lines-hover bg-card-menu py-20 px-4 text-center">

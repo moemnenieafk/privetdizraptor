@@ -30,11 +30,3 @@ export const COMLINK_SECTIONS: ComlinkSection[] = [
   { slug: "masterclasses", label: "Мастер-классы", description: "Разборы, обучающие сессии и гайды от профи.", icon: "/icons/eft/07-comlink/masterclasses.svg" },
   { slug: "blog", label: "Новостной блог", description: "Новости проекта ЦТА, статьи и объявления.", icon: "/icons/eft/07-comlink/blog.svg" },
 ];
-
-// Табы «навигация по разделу» для SectionPlaceholder.
-export const COMLINK_TABS = COMLINK_SECTIONS.map((s) => ({
-  id: s.slug,
-  label: s.label,
-  href: `${COMLINK_BASE}/${s.slug}`,
-  iconUrl: s.icon,
-}));
