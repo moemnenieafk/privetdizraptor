@@ -6,7 +6,7 @@
 // выбор в конструктор ниже (applyPreset) и скроллит к нему.
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Dices, Skull, Shield, Hammer, Check, Repeat } from 'lucide-react';
+import { Dices, Hammer, Check, Repeat } from 'lucide-react';
 import type { Season, SeasonPerk } from '@/data/eft-seasons';
 import {
   getSeasonBuilds,
@@ -274,11 +274,13 @@ function MeterRow({ pain, comfort }: { pain: number; comfort: number }) {
 function Meter({ icon, value, color }: { icon: 'pain' | 'comfort'; value: number; color: string }) {
   return (
     <div className="flex items-center gap-2">
-      {icon === 'pain' ? (
-        <Skull size={12} style={{ color }} className="shrink-0" />
-      ) : (
-        <Shield size={12} style={{ color }} className="shrink-0" />
-      )}
+      <span
+        aria-hidden
+        style={{ color }}
+        className={`icon-mask h-3 w-3 shrink-0 ${
+          icon === 'pain' ? 'icon-eft-negative-debuffs' : 'icon-eft-positive-buffs'
+        }`}
+      />
       <div className="relative h-1 flex-1 overflow-hidden bg-lines-hover">
         <div
           className="relative h-full overflow-hidden transition-[width] duration-500 ease-out"
