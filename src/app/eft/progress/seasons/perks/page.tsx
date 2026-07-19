@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { CURRENT_SEASON, getSeason } from '@/data/eft-seasons';
 import { SeasonPerkBuilder } from '@/components/features/seasons/SeasonPerkBuilder';
 import { SeasonBuildGallery } from '@/components/features/seasons/SeasonBuildGallery';
+import { SeasonLogo } from '@/components/features/seasons/SeasonLogo';
 
 export const metadata: Metadata = {
   title: 'Конструктор перков',
@@ -34,12 +35,7 @@ export default async function SeasonPerksPage({ searchParams }: Props) {
 
         <header className="mb-7 border-b border-lines-hover pb-5">
           {season.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={season.logoUrl}
-              alt={season.name}
-              className="mb-4 h-12 w-auto sm:h-14"
-            />
+            <SeasonLogo src={season.logoUrl} alt={season.name} className="mb-4 h-12 sm:h-14" />
           )}
           <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
             Сезон {season.number} · {season.name}

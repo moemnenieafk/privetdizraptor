@@ -490,11 +490,57 @@ html {
     animation: chaos-glitch 0.32s steps(2, end) 2;
   }
 
+  /* Сезонный логотип: диджитал-эффект (неоновое свечение + CRT-сканлайны + развёртка).
+     Сканлайны/развёртка ограничены силуэтом лого через mask-image (задаётся инлайн). */
+  .season-logo-img {
+    filter:
+      drop-shadow(0 0 5px color-mix(in srgb, var(--color-lightkeeper) 55%, transparent))
+      drop-shadow(0 0 16px color-mix(in srgb, var(--color-lightkeeper) 22%, transparent));
+    animation: season-logo-flicker 5s steps(1, end) infinite;
+  }
+  .season-logo-scan {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0.3) 2px,
+      rgba(0, 0, 0, 0.3) 3px
+    );
+    mix-blend-mode: multiply;
+    opacity: 0.65;
+  }
+  .season-logo-sweep {
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in srgb, var(--color-lightkeeper) 55%, transparent),
+      transparent
+    );
+    background-size: 100% 45%;
+    background-repeat: no-repeat;
+    mix-blend-mode: screen;
+    opacity: 0.5;
+    animation: season-logo-sweep 3.6s linear infinite;
+  }
+  @keyframes season-logo-sweep {
+    0%   { background-position: 0 -80%; }
+    100% { background-position: 0 180%; }
+  }
+  @keyframes season-logo-flicker {
+    0%, 90%, 100% { opacity: 1; }
+    91% { opacity: 0.72; }
+    92% { opacity: 1; }
+    95% { opacity: 0.85; }
+    96% { opacity: 1; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-reveal-punch,
     .animate-scan-sweep,
     .animate-perk-pop,
-    .animate-chaos-glitch {
+    .animate-chaos-glitch,
+    .season-logo-img,
+    .season-logo-sweep {
       animation: none;
     }
   }

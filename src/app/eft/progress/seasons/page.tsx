@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EFT_SEASONS } from '@/data/eft-seasons';
 import { seasonPerks, personalPerks } from '@/lib/season-points';
+import { SeasonLogo } from '@/components/features/seasons/SeasonLogo';
 
 export const metadata: Metadata = {
   title: 'Сезоны',
@@ -44,8 +45,7 @@ export default function SeasonsHubPage() {
                     </span>
                     <h2 className="font-blender-medium text-2xl uppercase tracking-widest text-text-primary">
                       {s.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={s.logoUrl} alt={s.name} className="h-11 w-auto" />
+                        <SeasonLogo src={s.logoUrl} alt={s.name} className="h-11" />
                       ) : (
                         s.name
                       )}
