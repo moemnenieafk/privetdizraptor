@@ -534,13 +534,31 @@ html {
     96% { opacity: 1; }
   }
 
+  /* Карточка «в разработке»: CRT-сканлайны (диджитал/оффлайн-вид), медленный дрейф. */
+  .season-card-scanlines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.04) 0,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+    background-size: 100% 4px;
+    animation: season-card-scanlines 8s linear infinite;
+  }
+  @keyframes season-card-scanlines {
+    0%   { background-position: 0 0; }
+    100% { background-position: 0 4px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-reveal-punch,
     .animate-scan-sweep,
     .animate-perk-pop,
     .animate-chaos-glitch,
     .season-logo-img,
-    .season-logo-sweep {
+    .season-logo-sweep,
+    .season-card-scanlines {
       animation: none;
     }
   }
