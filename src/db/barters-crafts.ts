@@ -25,7 +25,6 @@ interface RawBarter {
   id: string;
   trader?: { name?: string; normalizedName?: string };
   level?: number;
-  buyLimit?: number | null;
   taskUnlock?: { id?: string; name?: string } | null;
   requiredItems?: RawSlot[];
   rewardItems?: RawSlot[];
@@ -49,7 +48,6 @@ const QUERY = `
       id
       trader { name normalizedName }
       level
-      buyLimit
       taskUnlock { id name }
       requiredItems { count item { id } }
       rewardItems  { count item { id } }
@@ -101,7 +99,6 @@ export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
       traderName: b.trader?.name ?? "-",
       traderNormalizedName: b.trader?.normalizedName ?? null,
       level: b.level ?? null,
-      buyLimit: b.buyLimit ?? null,
       taskUnlockId: b.taskUnlock?.id ?? null,
       taskUnlockName: b.taskUnlock?.name ?? null,
       requiredItems: toSlots(b.requiredItems),
@@ -136,7 +133,6 @@ export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
           traderName: sql`excluded.trader_name`,
           traderNormalizedName: sql`excluded.trader_normalized_name`,
           level: sql`excluded.level`,
-          buyLimit: sql`excluded.buy_limit`,
           taskUnlockId: sql`excluded.task_unlock_id`,
           taskUnlockName: sql`excluded.task_unlock_name`,
           requiredItems: sql`excluded.required_items`,

@@ -224,7 +224,6 @@ export const barters = pgTable("barters", {
   level: integer("level"),
   taskUnlockId: text("task_unlock_id"), // квест-гейт бартера (для unlock_trade-индикатора)
   taskUnlockName: text("task_unlock_name"),
-  buyLimit: integer("buy_limit"), // лимит покупок за сброс торговца; null — без лимита
   requiredItems: jsonb("required_items").$type<TradeSlot[]>().notNull(),
   rewardItems: jsonb("reward_items").$type<TradeSlot[]>().notNull(),
   syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),

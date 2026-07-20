@@ -10,7 +10,10 @@ import { memoTTL } from "@/lib/server-cache";
 import type { ArenaRates, ArenaValuationBasis } from "@/types/arena-currency";
 
 export const runtime = "nodejs";
-export const revalidate = 3600;
+// Хендлер читает query и IP → он динамический по определению. `export const revalidate`
+// здесь недопустим: билд попытается отрендерить роут статически и упадёт. Кэш держим
+// на memoTTL (процесс) + Cache-Control (CDN) — как в остальных публичных ручках.
+export const dynamic = "force-dynamic";
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
 

@@ -45,7 +45,6 @@ export async function getArenaOffers(basis: ArenaValuationBasis): Promise<ArenaO
     .select({
       id: barters.id,
       level: barters.level,
-      buyLimit: barters.buyLimit,
       requiredItems: barters.requiredItems,
       rewardItems: barters.rewardItems,
     })
@@ -65,7 +64,8 @@ export async function getArenaOffers(basis: ArenaValuationBasis): Promise<ArenaO
     const lega = required.find((s) => s.itemId === LEGA_MEDAL_ID)?.count ?? 0;
     if (gp === 0 && lega === 0) return [];
 
-    return [{ id: row.id, level: row.level ?? 1, buyLimit: row.buyLimit, gp, lega, reward }];
+    // buyLimit появится после миграции barters.buy_limit — до неё лимит неизвестен.
+    return [{ id: row.id, level: row.level ?? 1, buyLimit: null as number | null, gp, lega, reward }];
   });
 
   if (candidates.length === 0) return [];
