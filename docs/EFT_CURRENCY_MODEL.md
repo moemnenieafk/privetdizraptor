@@ -108,9 +108,15 @@ tarkov.dev ──синк──> barters (зеркало) ──getArenaOffers()
   параметры `basis` и `level`, кэш на час через `memoTTL` + `s-maxage`.
 
 Поле `barters.buy_limit` (лимит покупок за сброс) добавлено в схему и в
-`src/db/barters-crafts.ts`. **Порядок выката: сначала `npm run db:push`, затем
-деплой кода, затем `npm run db:sync-barters-crafts`** — до синка колонка пустая,
-и `calcGpCurve` подставляет `FALLBACK_PURCHASES = 1`, занижая ёмкость ступеней.
+`src/db/barters-crafts.ts`. **Порядок выката:**
+
+1. Actions → `migrate-barter-buy-limit` → Run workflow (идемпотентно, добавляет колонку)
+2. деплой кода
+3. Actions → `sync-prices` → Run workflow (тем же кроном синкаются бартеры)
+
+До шага 3 колонка пустая, и `calcGpCurve` подставляет `FALLBACK_PURCHASES = 1`:
+ёмкость ступеней занижена, курс смещён к предельному — то есть завышен, и предметы
+выглядят менее выгодными, чем есть. После синка выправляется сам.
 
 ## Ограничения
 
