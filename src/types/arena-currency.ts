@@ -1,0 +1,85 @@
+// Типы модели стоимости арена-валют (GP-монета, Лега-медаль).
+// GP и Лега не покупаются за рубли/евро/доллары, поэтому рыночной цены у них нет —
+// есть только курс обмена, который задаёт ассортимент Рефа. Отсюда главное следствие:
+// курс монеты не константа, а функция объёма.
+// Вывод формул: docs/EFT_CURRENCY_MODEL.md
+
+/** Как оценивается награда: «сколько сэкономлю» против «сколько выручу». */
+export type ArenaValuationBasis = "acquire" | "liquidate";
+
+/** Нормализованное предложение Рефа: плата в арена-валюте, награда — предмет. */
+export interface ArenaOffer {
+  id: string;
+  rewardId: string;
+  rewardName: string;
+  rewardCount: number;
+  /** Монет GP за одну покупку. */
+  gp: number;
+  /** Лега-медалей за одну покупку. */
+  lega: number;
+  /** Минимальный уровень лояльности Рефа. */
+  level: number;
+  /** Покупок за один сброс торговца; null — лимит неизвестен. */
+  buyLimit: number | null;
+  /** Рыночная стоимость всей награды в рублях; null — предмет вне барахолки. */
+  rewardValue: number | null;
+}
+
+/** Ступень кривой предложения: пачка монет, доступная по одному курсу. */
+export interface GpTier {
+  offerId: string;
+  rewardName: string;
+  /** Монет за одну покупку. */
+  coins: number;
+  /** Покупок за сброс. */
+  purchases: number;
+  /** Монет, которые можно израсходовать по этому курсу за сброс. */
+  capacity: number;
+  /** Рублей за одну покупку. */
+  value: number;
+  /** Рублей за монету на этой ступени. */
+  rate: number;
+}
+
+export interface GpCurve {
+  /** Ступени, отсортированные по курсу от лучшего к худшему. */
+  tiers: GpTier[];
+  /** Сколько монет всего можно израсходовать за сброс. */
+  capacity: number;
+  /** Рублей за всю ёмкость кривой. */
+  value: number;
+  /** Курс лучшей ступени — предельная стоимость первой монеты. */
+  marginalRate: number;
+  /** Средний курс при расходе всей ёмкости. */
+  blendedRate: number;
+  basis: ArenaValuationBasis;
+  /** Сколько предложений попало в расчёт. */
+  sampleSize: number;
+}
+
+export interface LegaEstimate {
+  value: number;
+  low: number;
+  high: number;
+  sampleSize: number;
+  points: { offerId: string; value: number }[];
+}
+
+export interface ArenaRates {
+  gp: GpCurve;
+  lega: LegaEstimate;
+  computedAt: string;
+}
+
+/** Способ получить предмет, приведённый к рублям. */
+export type AcquisitionRoute =
+  | { kind: "fiat"; currency: "RUB" | "USD" | "EUR"; trader: string; level: number; priceRub: number }
+  | { kind: "flea"; priceRub: number }
+  | { kind: "arena"; gp: number; lega: number; level: number; priceRub: number };
+
+/** Вердикт по арена-предложению. Расширяет BarterVerdict числами для UI. */
+export type ArenaVerdict =
+  | { kind: "profitable"; surplus: number; ratio: number; arena: AcquisitionRoute; best: AcquisitionRoute }
+  | { kind: "neutral"; surplus: number; arena: AcquisitionRoute; best: AcquisitionRoute }
+  | { kind: "unprofitable"; deficit: number; arena: AcquisitionRoute; best: AcquisitionRoute }
+  | { kind: "unknown"; reason: "no-market-price" | "no-curve" | "no-routes" };
