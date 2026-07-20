@@ -33,9 +33,13 @@ export async function GET(req: Request): Promise<NextResponse> {
       bartersPruneSkipped: false,
       craftsPruneSkipped: false,
     };
+    // Best-effort, но НЕ молча: текст ошибки уезжает в ответ, иначе `barters: 0`
+    // неотличим от «синкнулось, просто нечего менять», и сбой живёт незамеченным.
+    let bartersError: string | null = null;
     try {
       staticRes = await syncEftBartersCrafts();
     } catch (e) {
+      bartersError = e instanceof Error ? e.message : String(e);
       console.error("[cron/sync-prices] barters/crafts:", e);
     }
     let landingRes = {
@@ -94,6 +98,7 @@ export async function GET(req: Request): Promise<NextResponse> {
       ok: true,
       ...priceRes,
       ...staticRes,
+      bartersError,
       ...landingRes,
       mapsGeometry: mapsRes,
       questZones: questZonesRes,

@@ -1,0 +1,77 @@
+# Сторож курса арена-валют: раз в сутки проверяет, что расчёт не деградировал.
+#
+# Зачем отдельный воркфлоу, а не проверка внутри sync-prices: синк бартеров там
+# best-effort и намеренно не роняет прайс-синк, а sync-prices крутится ежечасно —
+# падение в нём давало бы 24 красных прогона в сутки. Здесь одно уведомление в день,
+# чего для медленной метрики достаточно.
+#
+# Ручка публичная, CRON_SECRET не нужен — только Variable PROD_BASE_URL.
+name: check-arena-rates
+
+on:
+  schedule:
+    - cron: "30 6 * * *" # ежедневно 06:30 UTC, после ночного sync-prices
+  workflow_dispatch: {}
+
+concurrency:
+  group: check-arena-rates
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check arena rates health
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+        run: |
+          if [ -z "$BASE_URL" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/eft/arena-rates"
+          echo "GET $url"
+          code=$(curl -sS -m 60 -o /tmp/rates.json -w "%{http_code}" "$url")
+          if [ "$code" != "200" ]; then
+            echo "::error::Ручка курса недоступна (HTTP $code)"
+            cat /tmp/rates.json 2>/dev/null || true
+            exit 1
+          fi
+
+          status=$(jq -r '.health.status' /tmp/rates.json)
+          capacity=$(jq -r '.gp.capacity' /tmp/rates.json)
+          tiers=$(jq -r '.gp.sampleSize' /tmp/rates.json)
+          limits=$(jq -r '.health.limitsKnown' /tmp/rates.json)
+          marginal=$(jq -r '.gp.marginalRate | round' /tmp/rates.json)
+          blended=$(jq -r '.gp.blendedRate | round' /tmp/rates.json)
+          lega=$(jq -r '.lega.value | round' /tmp/rates.json)
+          legaN=$(jq -r '.lega.sampleSize' /tmp/rates.json)
+
+          {
+            echo "## Курс арена-валют"
+            echo ""
+            echo "| Метрика | Значение |"
+            echo "|---|---|"
+            echo "| Статус | \`$status\` |"
+            echo "| Ступеней | $tiers |"
+            echo "| Ёмкость | $capacity GP |"
+            echo "| Предложений с лимитом | $limits |"
+            echo "| Предельный курс | $marginal ₽/GP |"
+            echo "| Смешанный курс | $blended ₽/GP |"
+            echo "| Лега | $lega ₽ (точек: $legaN) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          jq -r '.health.reasons[]?' /tmp/rates.json | while read -r reason; do
+            echo "::warning::$reason"
+          done
+
+          if [ "$status" = "empty" ]; then
+            echo "::error::Кривая пуста — курс не считается"
+            exit 1
+          fi
+          if [ "$status" = "degraded" ]; then
+            echo "::error::Расчёт деградировал, см. предупреждения выше"
+            exit 1
+          fi
+          echo "Курс в порядке: $tiers ступеней, ёмкость $capacity GP"

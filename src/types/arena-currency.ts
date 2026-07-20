@@ -62,12 +62,27 @@ export interface LegaEstimate {
   low: number;
   high: number;
   sampleSize: number;
+  /** low — точек меньше трёх, показывать диапазоном, а не числом. */
+  confidence: "low" | "ok";
   points: { offerId: string; value: number }[];
+}
+
+/** Самодиагностика расчёта — чтобы тихая деградация была видна снаружи. */
+export interface ArenaHealth {
+  /** empty — кривая пуста; degraded — считается, но данные неполные. */
+  status: "ok" | "degraded" | "empty";
+  /** Причины деградации, человекочитаемо. */
+  reasons: string[];
+  /** Всего арена-предложений Рефа в зеркале. */
+  offersTotal: number;
+  /** Из них с известным buy_limit — если 0, синк колонку не заполнил. */
+  limitsKnown: number;
 }
 
 export interface ArenaRates {
   gp: GpCurve;
   lega: LegaEstimate;
+  health: ArenaHealth;
   computedAt: string;
 }
 

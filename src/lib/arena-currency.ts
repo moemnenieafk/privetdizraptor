@@ -18,6 +18,9 @@ const FALLBACK_PURCHASES = 1;
 /** Ниже этого порога разница считается шумом оценки, а не выгодой. */
 const NEUTRAL_BAND = 0.05;
 
+/** Меньше этого числа точек — оценка Леги ненадёжна. */
+const MIN_LEGA_POINTS = 3;
+
 /**
  * Кривая предложения GP.
  *
@@ -153,6 +156,9 @@ export function calcLegaValue(offers: ArenaOffer[], curve: GpCurve): LegaEstimat
     low: values.length > 0 ? Math.min(...values) : 0,
     high: values.length > 0 ? Math.max(...values) : 0,
     sampleSize: values.length,
+    // При двух точках медиана — просто среднее двух чисел: любое движение цены
+    // тащит её на сотни тысяч. Такую оценку показывают диапазоном, не числом.
+    confidence: values.length >= MIN_LEGA_POINTS ? "ok" : "low",
     points,
   };
 }
