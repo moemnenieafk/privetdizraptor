@@ -1,7 +1,8 @@
 "use client";
 
 import Link from 'next/link';
-import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { traderImg } from '@/lib/trader-utils';
+import { TRADER_COLORS } from '@/data/traderColors';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { useQuestReserveStore, freeForQuest } from '@/store/useQuestReserveStore';
 
@@ -43,7 +44,9 @@ export function QuestCard({
   interactive = false,
 }: QuestCardProps) {
   const nn = task.trader.normalizedName;
-  const traderColor = `var(${traderCssVar(nn)})`;
+  // Не var(--trader-*): Tailwind v4 вырезает неиспользуемые @theme-переменные,
+  // и в рантайме градиент отваливался в чёрный.
+  const traderColor = TRADER_COLORS[nn] ?? TRADER_COLORS.stories;
 
   // Прогресс берём из счётчика «В схроне» — того же, что стоит в шапке карточки
   // предмета. Примитив в селекторе, а не объект: в Zustand v5 объект из селектора
@@ -75,7 +78,7 @@ export function QuestCard({
         borderWidth: 1,
         borderStyle: 'solid',
         borderColor: traderColor,
-        background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 12%, transparent), #000000)`,
+        background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 56%, transparent), #000000)`,
       }}
     >
       {/* 1 — торговец · уровень · каппа */}
