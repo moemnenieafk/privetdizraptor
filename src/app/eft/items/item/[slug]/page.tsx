@@ -16,7 +16,6 @@ import type {
   BarterOffer,
   CraftRecipe,
   UsedInBarter,
-  UsedInCraft,
 } from './ItemModules';
 import { ItemDetailLayout } from './ItemDetailLayout';
 import { getDynamicTopIndicator } from '@/lib/item-indicators.util';
@@ -74,7 +73,7 @@ export interface TarkovItem {
   barters: BarterOffer[];
   crafts: CraftRecipe[];
   usedInBarters?: UsedInBarter[];
-  usedInCrafts?: UsedInCraft[];
+  usedInCrafts?: CraftRecipe[];
   usedInTasks?: UsedInTask[];
   receivedFromTasks?: RewardTask[];
 }
@@ -315,14 +314,19 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
       usedCount: b.requiredItems.find((sl) => sl.itemId === mainId)?.count ?? 1,
       rewardItems: b.rewardItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
     }));
-  const usedInCrafts: UsedInCraft[] = craftRows
+  // Блок «используется в производстве» рисуется той же карточкой, что и обычный
+  // рецепт, поэтому и форма данных та же: полный список ингредиентов + результат.
+  const usedInCrafts: CraftRecipe[] = craftRows
     .filter((c) => c.requiredItems.some((sl) => sl.itemId === mainId))
     .map((c) => ({
       id: c.id,
       station: { name: c.stationName, normalizedName: c.stationNormalizedName ?? '' },
       level: c.level ?? 1,
       duration: c.duration ?? 0,
-      usedCount: c.requiredItems.find((sl) => sl.itemId === mainId)?.count ?? 1,
+      reward: c.rewardItems[0]
+        ? { item: slotItem(c.rewardItems[0].itemId), count: c.rewardItems[0].count }
+        : undefined,
+      requiredItems: c.requiredItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
       rewardItems: c.rewardItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
     }));
 

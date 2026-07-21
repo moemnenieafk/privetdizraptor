@@ -247,15 +247,6 @@ export interface UsedInBarter {
   rewardItems: ProducedItem[];
 }
 
-export interface UsedInCraft {
-  id: string;
-  station: { name: string; normalizedName: string };
-  level: number;
-  duration: number;
-  usedCount: number;
-  rewardItems: ProducedItem[];
-}
-
 // === МОДУЛЬ ОРУЖИЯ ===
 
 export function WeaponModule({ properties }: { properties: ItemProperties }) {
@@ -696,34 +687,17 @@ export function UsedInBarterModule({ usedIn }: { usedIn: UsedInBarter[] }) {
 
 // === ОБРАТНОЕ: «Используется в крафте» (предмет — ингредиент) ===
 
-export function UsedInCraftModule({ usedIn }: { usedIn: UsedInCraft[] }) {
+export function UsedInCraftModule({ usedIn }: { usedIn: CraftRecipe[] }) {
   if (usedIn.length === 0) return null;
+
   return (
-    <SectionPanel title="Используется в крафте" icon={<Hammer className="w-4 h-4" />} noDivider smallTitle bare>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+    <section className="flex flex-col gap-3.5">
+      <SectionRule title="Используется в производстве" icon={<Hammer className="h-4 w-4" />} />
+      <div className="flex flex-col gap-3.5">
         {usedIn.map((recipe) => (
-          <div key={recipe.id} className="relative overflow-hidden rounded-lg p-4" style={accentCardStyle('var(--primary)')}>
-            <div className="relative z-10 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className={`${stationIconClass(recipe.station.normalizedName)} h-4 w-4 shrink-0 bg-(--primary) mask-contain mask-center mask-no-repeat`} />
-                <span className="truncate font-blender-medium text-xs uppercase tracking-widest text-text-secondary">{recipe.station.name}</span>
-                <span className="shrink-0 font-blender-medium text-xs text-text-secondary">Ур.{recipe.level}</span>
-                <span className="ml-auto shrink-0 font-blender-medium text-xs text-text-primary">нужно ×{recipe.usedCount}</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">Даёт</span>
-                <ChevronRight className="h-4 w-4 text-text-muted" />
-                {recipe.rewardItems.map((rw, idx) => (
-                  <div key={rw.item.id} className="flex items-center gap-3">
-                    <ReqItem item={rw.item} count={rw.count} />
-                    {idx < recipe.rewardItems.length - 1 && <span className="text-text-muted">+</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <CraftOfferCard key={recipe.id} recipe={recipe} />
         ))}
       </div>
-    </SectionPanel>
+    </section>
   );
 }
