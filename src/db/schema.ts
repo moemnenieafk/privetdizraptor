@@ -228,6 +228,9 @@ export const priceHistory = pgTable(
     day: date("day").notNull(), // сутки в UTC
     avgPrice: integer("avg_price"), // avg24hPrice на момент снимка
     lowPrice: integer("low_price"), // lastLowPrice на момент снимка
+    // own — наш суточный снимок; tarkovdev — залито бэкфилом из чужой истории.
+    // Ряд смешанной природы, и через месяц об этом никто не вспомнит без пометки.
+    source: text("source").notNull().default("own"),
     syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

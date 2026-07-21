@@ -1,0 +1,39 @@
+# Разовый бэкфил истории цен по наградам Рефа из tarkov.dev.
+# Запуск вручную. Свои снимки не перезаписывает (ON CONFLICT DO NOTHING).
+# Требует применённой миграции migrate-price-history-source.
+name: backfill-price-history
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Глубина истории в сутках (1..90)"
+        required: false
+        default: "30"
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Backfill price history
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          DAYS: ${{ inputs.days }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/backfill-price-history?days=${DAYS:-30}"
+          echo "GET $url"
+          code=$(curl -sS -m 300 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Бэкфил не удался (HTTP $code)"
+            exit 1
+          fi
