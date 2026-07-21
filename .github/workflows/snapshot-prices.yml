@@ -1,0 +1,35 @@
+# Суточный снимок цен барахолки в price_history.
+# Идемпотентно: повторный прогон за те же сутки перезаписывает строки.
+# Требует применённой миграции migrate-price-history.
+name: snapshot-prices
+
+on:
+  schedule:
+    - cron: "10 6 * * *" # ежедневно 06:10 UTC, до сторожа курса в 06:30
+  workflow_dispatch: {}
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Take daily price snapshot
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/snapshot-prices"
+          echo "GET $url"
+          code=$(curl -sS -m 120 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Снимок цен не удался (HTTP $code)"
+            exit 1
+          fi

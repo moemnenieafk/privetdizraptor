@@ -6,8 +6,9 @@ import { db } from "./index";
 import { barters, items } from "./schema";
 import { eftGameId } from "./eft";
 import { getEftPricesByIds } from "./prices";
+import { getMonthlyPrices, type MonthlyPrice } from "./price-history";
 import { calcFleaFee } from "../lib/barter-calc";
-import type { ArenaOffer, ArenaValuationBasis } from "../types/arena-currency";
+import type { ArenaOffer, ArenaPriceSource, ArenaValuationBasis } from "../types/arena-currency";
 
 /** Монета GP — арена-валюта, BSG UID. */
 export const GP_COIN_ID = "5d235b4d86f7742e017bc88a";
@@ -37,8 +38,21 @@ function rewardValue(
   return net > 0 ? net : null;
 }
 
-/** Собирает предложения Рефа, оплачиваемые только GP и/или Легой. */
-export async function getArenaOffers(basis: ArenaValuationBasis): Promise<ArenaOffer[]> {
+export interface ArenaOffersResult {
+  offers: ArenaOffer[];
+  /** Наград, оценённых по истории, а не по текущей котировке. */
+  pricedFromHistory: number;
+}
+
+/**
+ * Собирает предложения Рефа, оплачиваемые только GP и/или Легой.
+ * При `priceSource: "month"` цена награды берётся как медиана суточных снимков
+ * за 30 дней; если истории по предмету не хватает — откат на текущую котировку.
+ */
+export async function getArenaOffers(
+  basis: ArenaValuationBasis,
+  priceSource: ArenaPriceSource = "spot",
+): Promise<ArenaOffersResult> {
   const gameId = await eftGameId();
 
   const rows = await db
@@ -68,7 +82,7 @@ export async function getArenaOffers(basis: ArenaValuationBasis): Promise<ArenaO
     return [{ id: row.id, level: row.level ?? 1, buyLimit: row.buyLimit, gp, lega, reward }];
   });
 
-  if (candidates.length === 0) return [];
+  if (candidates.length === 0) return { offers: [], pricedFromHistory: 0 };
 
   const rewardIds = [...new Set(candidates.map((c) => c.reward.itemId))];
   const [priceMap, itemRows] = await Promise.all([
@@ -79,11 +93,16 @@ export async function getArenaOffers(basis: ArenaValuationBasis): Promise<ArenaO
       .where(and(eq(items.gameId, gameId), inArray(items.inGameId, rewardIds))),
   ]);
   const itemMap = new Map(itemRows.map((r) => [r.inGameId, r]));
+  const monthly: Map<string, MonthlyPrice> =
+    priceSource === "month" ? await getMonthlyPrices(rewardIds) : new Map();
 
-  return candidates.map((c) => {
+  let pricedFromHistory = 0;
+  const offers = candidates.map((c) => {
     const price = priceMap.get(c.reward.itemId);
     const meta = itemMap.get(c.reward.itemId);
-    const unit = price?.lastLowPrice ?? price?.avg24hPrice;
+    const history = monthly.get(c.reward.itemId);
+    if (history) pricedFromHistory++;
+    const unit = history ? history.median : (price?.lastLowPrice ?? price?.avg24hPrice);
     const isNoFlea = price?.types?.includes("noFlea") ?? false;
 
     return {
@@ -98,4 +117,6 @@ export async function getArenaOffers(basis: ArenaValuationBasis): Promise<ArenaO
       rewardValue: rewardValue(unit, c.reward.count, meta?.basePrice ?? null, isNoFlea, basis),
     };
   });
+
+  return { offers, pricedFromHistory };
 }

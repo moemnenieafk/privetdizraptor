@@ -7,7 +7,7 @@ import { getArenaOffers } from "@/db/arena-offers";
 import { calcGpCurve, calcLegaValue } from "@/lib/arena-currency";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { memoTTL } from "@/lib/server-cache";
-import type { ArenaHealth, ArenaRates, ArenaValuationBasis } from "@/types/arena-currency";
+import type { ArenaHealth, ArenaPriceSource, ArenaRates, ArenaValuationBasis } from "@/types/arena-currency";
 
 export const runtime = "nodejs";
 // Хендлер читает query и IP → он динамический по определению. `export const revalidate`
@@ -24,6 +24,10 @@ function parseBasis(value: string | null): ArenaValuationBasis {
   return value === "liquidate" ? "liquidate" : "acquire";
 }
 
+function parseSource(value: string | null): ArenaPriceSource {
+  return value === "spot" ? "spot" : "month";
+}
+
 function parseLevel(value: string | null): number {
   const n = Number(value);
   return Number.isInteger(n) && n >= 1 && n <= 4 ? n : 4;
@@ -34,22 +38,36 @@ function parseLevel(value: string | null): number {
  * не роняет прайс-синк и потому НЕ ВИДНО снаружи. Без этого блока курс мог бы месяцами
  * считаться по пустым лимитам, и заметили бы только глазами на карточке.
  */
-function buildHealth(offersTotal: number, limitsKnown: number, capacity: number, sampleSize: number): ArenaHealth {
+function buildHealth(
+  offersTotal: number,
+  limitsKnown: number,
+  capacity: number,
+  sampleSize: number,
+  pricedFromHistory: number,
+  priceSource: ArenaPriceSource,
+): ArenaHealth {
   const reasons: string[] = [];
+  if (priceSource === "month" && sampleSize > 0 && pricedFromHistory === 0) {
+    reasons.push("истории цен не хватает — считаем по споту, курс будет шуметь");
+  }
   if (sampleSize === 0) reasons.push("в кривую не попало ни одного предложения: нет цен на награды");
   if (offersTotal > 0 && limitsKnown === 0) reasons.push("buy_limit пуст — прогони sync-prices");
   if (sampleSize > 0 && capacity < MIN_CAPACITY) reasons.push(`ёмкость кривой ${capacity} GP — подозрительно мало`);
 
   const status: ArenaHealth["status"] = sampleSize === 0 ? "empty" : reasons.length > 0 ? "degraded" : "ok";
-  return { status, reasons, offersTotal, limitsKnown };
+  return { status, reasons, offersTotal, limitsKnown, pricedFromHistory };
 }
 
-async function computeRates(basis: ArenaValuationBasis, maxLevel: number): Promise<ArenaRates> {
-  const offers = await getArenaOffers(basis);
-  const gp = calcGpCurve(offers, { basis, maxLevel });
+async function computeRates(
+  basis: ArenaValuationBasis,
+  priceSource: ArenaPriceSource,
+  maxLevel: number,
+): Promise<ArenaRates> {
+  const { offers, pricedFromHistory } = await getArenaOffers(basis, priceSource);
+  const gp = calcGpCurve(offers, { basis, priceSource, maxLevel });
   const lega = calcLegaValue(offers, gp);
   const limitsKnown = offers.filter((o) => o.buyLimit !== null).length;
-  const health = buildHealth(offers.length, limitsKnown, gp.capacity, gp.sampleSize);
+  const health = buildHealth(offers.length, limitsKnown, gp.capacity, gp.sampleSize, pricedFromHistory, priceSource);
   return { gp, lega, health, computedAt: new Date().toISOString() };
 }
 
@@ -61,11 +79,12 @@ export async function GET(req: Request): Promise<NextResponse> {
 
   const url = new URL(req.url);
   const basis = parseBasis(url.searchParams.get("basis"));
+  const priceSource = parseSource(url.searchParams.get("source"));
   const maxLevel = parseLevel(url.searchParams.get("level"));
 
   try {
-    const rates = await memoTTL(`arena-rates:${basis}:${maxLevel}`, CACHE_TTL_MS, () =>
-      computeRates(basis, maxLevel),
+    const rates = await memoTTL(`arena-rates:${basis}:${priceSource}:${maxLevel}`, CACHE_TTL_MS, () =>
+      computeRates(basis, priceSource, maxLevel),
     );
     return NextResponse.json(rates, {
       headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" },

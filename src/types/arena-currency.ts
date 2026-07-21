@@ -7,6 +7,13 @@
 /** Как оценивается награда: «сколько сэкономлю» против «сколько выручу». */
 export type ArenaValuationBasis = "acquire" | "liquidate";
 
+/**
+ * Откуда берётся цена награды.
+ * spot  — текущая котировка барахолки; скачет в разы за сутки.
+ * month — медиана суточных снимков за 30 дней; устойчива, по умолчанию для валют.
+ */
+export type ArenaPriceSource = "spot" | "month";
+
 /** Нормализованное предложение Рефа: плата в арена-валюте, награда — предмет. */
 export interface ArenaOffer {
   id: string;
@@ -53,6 +60,7 @@ export interface GpCurve {
   /** Средний курс при расходе всей ёмкости. */
   blendedRate: number;
   basis: ArenaValuationBasis;
+  priceSource: ArenaPriceSource;
   /** Сколько предложений попало в расчёт. */
   sampleSize: number;
 }
@@ -77,6 +85,8 @@ export interface ArenaHealth {
   offersTotal: number;
   /** Из них с известным buy_limit — если 0, синк колонку не заполнил. */
   limitsKnown: number;
+  /** Наград, оценённых по истории; остальные откатились на спот. */
+  pricedFromHistory: number;
 }
 
 export interface ArenaRates {

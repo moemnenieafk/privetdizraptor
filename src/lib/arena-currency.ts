@@ -4,6 +4,7 @@
 import type {
   AcquisitionRoute,
   ArenaOffer,
+  ArenaPriceSource,
   ArenaRates,
   ArenaValuationBasis,
   ArenaVerdict,
@@ -33,7 +34,7 @@ const MIN_LEGA_POINTS = 3;
  */
 export function calcGpCurve(
   offers: ArenaOffer[],
-  options: { basis: ArenaValuationBasis; maxLevel?: number },
+  options: { basis: ArenaValuationBasis; priceSource: ArenaPriceSource; maxLevel?: number },
 ): GpCurve {
   const maxLevel = options.maxLevel ?? 4;
 
@@ -66,6 +67,7 @@ export function calcGpCurve(
     marginalRate: tiers.length > 0 ? tiers[0].rate : 0,
     blendedRate: capacity > 0 ? value / capacity : 0,
     basis: options.basis,
+    priceSource: options.priceSource,
     sampleSize: tiers.length,
   };
 }
