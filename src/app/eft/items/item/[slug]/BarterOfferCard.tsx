@@ -7,16 +7,16 @@ import type { BarterOffer } from './ItemModules';
 const GAIN_GREEN = 10_000;
 const GAIN_SUPER = 100_000;
 
-function gainClass(value: number): string {
+export function gainClass(value: number): string {
   if (value >= GAIN_SUPER) return 'text-(--color-success)';
   if (value >= GAIN_GREEN) return 'text-nvg-green';
   return value > 0 ? 'text-text-secondary' : 'text-danger';
 }
 
-const fmt = (v: number) => `${Math.round(v).toLocaleString('ru-RU')} ₽`;
+export const fmtRubShort = (v: number) => `${Math.round(v).toLocaleString('ru-RU')} ₽`;
 
 /** Разделитель секции: линия · подпись · линия. */
-function SlotDivider({ label }: { label: string }) {
+export function SlotDivider({ label }: { label: string }) {
   return (
     <div className="flex h-7 items-center gap-2.5">
       <span className="h-px min-w-0 flex-1 bg-linear-to-r from-transparent to-lines-hover" />
@@ -28,14 +28,19 @@ function SlotDivider({ label }: { label: string }) {
   );
 }
 
+/** Минимум, который нужен слоту. Бартер и крафт описывают предметы по-разному,
+ *  поэтому слот принимает только то, что реально рисует. */
+export interface SlotItem {
+  id: string;
+  name: string;
+  shortName: string;
+  image512pxLink: string;
+  normalizedName?: string;
+  marketPrice?: number;
+}
+
 /** Слот 96px: тайл 48 со счётчиком в углу, под ним имя, итог и цена за штуку. */
-function BarterSlot({
-  item,
-  count,
-}: {
-  item: BarterOffer['requiredItems'][number]['item'];
-  count: number;
-}) {
+export function BarterSlot({ item, count }: { item: SlotItem; count: number }) {
   const unit = item.marketPrice ?? 0;
   const total = unit * count;
   const body = (
@@ -54,7 +59,7 @@ function BarterSlot({
       {unit > 0 && (
         <>
           <span className="w-full truncate text-center font-blender-medium text-xs leading-none text-text-secondary">
-            {fmt(total)}
+            {fmtRubShort(total)}
           </span>
           <span className="w-full truncate text-center font-blender-medium text-[10px] leading-none text-text-muted">
             {Math.round(unit).toLocaleString('ru-RU')} × {count}
@@ -134,7 +139,7 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
               Экономия
             </span>
             <span className={`ml-auto font-blender-medium text-xl leading-none ${gainClass(saving)}`}>
-              {fmt(saving)}
+              {fmtRubShort(saving)}
             </span>
           </span>
           <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -143,7 +148,7 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
               Прибыль
             </span>
             <span className={`ml-auto font-blender-medium text-xl leading-none ${gainClass(profit)}`}>
-              {fmt(profit)}
+              {fmtRubShort(profit)}
             </span>
           </span>
         </div>
@@ -168,7 +173,7 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
                   На барахолке
                 </span>
                 <span className="font-blender-medium text-xl leading-none text-text-primary">
-                  {fmt(output)}
+                  {fmtRubShort(output)}
                 </span>
               </span>
             )}

@@ -3,6 +3,7 @@ import { Crosshair, Shield, HeartPulse, ArrowLeftRight, Hammer, Clock, Target, B
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
 import { SectionRule } from '@/components/ui/SectionRule';
 import { BarterOfferCard } from './BarterOfferCard';
+import { CraftOfferCard } from './CraftOfferCard';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
 import { formatCompactNumber } from '@/lib/formatters';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
@@ -203,6 +204,9 @@ interface CraftRequiredItem {
     backgroundColor?: string;
     normalizedName?: string;
     hasBarter?: boolean; // ингредиент доступен по бартеру (сорсинг-подсказка)
+    /** Рыночная цена барахолки — для экономики крафта. */
+    marketPrice?: number;
+    basePrice?: number;
   };
   count: number;
 }
@@ -216,6 +220,8 @@ export interface CraftRecipe {
   level: number;
   duration: number;
   requiredItems: CraftRequiredItem[];
+  /** Что и сколько производится. */
+  reward?: { item: CraftRequiredItem['item'] & { basePrice?: number }; count: number };
 }
 
 // === ОБРАТНОЕ НАПРАВЛЕНИЕ: где предмет используется как ингредиент ===
@@ -630,52 +636,23 @@ const STATION_ICON_OVERRIDE: Record<string, string> = {
   'medstation': 'med_station',
   'med-station': 'med_station',
 };
-function stationIconClass(normalizedName: string): string {
+export function stationIconClass(normalizedName: string): string {
   const key = STATION_ICON_OVERRIDE[normalizedName] ?? normalizedName.replace(/-/g, '_');
   return HIDEOUT_ICONS.has(key) ? `icon-eft-${key}` : 'icon-eft-prog-hideout';
 }
 
 export function CraftModule({ crafts }: { crafts: CraftRecipe[] }) {
-  return (
-    <SectionPanel title="Производство (Убежище)" icon={<Hammer className="w-4 h-4" />} noDivider smallTitle bare>
-      {crafts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 text-text-muted">
-          <Hammer className="mb-2 h-6 w-6 opacity-40" />
-          <p className="text-xs uppercase tracking-widest font-blender-book">Не производится в Убежище</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {crafts.map((recipe) => (
-            <div key={recipe.id} className="relative overflow-hidden rounded-lg p-4" style={accentCardStyle('var(--primary)')}>
-              <div className="relative z-10 flex flex-col gap-3">
-                {/* Шапка: станция · уровень · длительность */}
-                <div className="flex items-center gap-2">
-                  <span className={`${stationIconClass(recipe.station.normalizedName)} h-4 w-4 shrink-0 bg-(--primary) mask-contain mask-center mask-no-repeat`} />
-                  <span className="truncate font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
-                    {recipe.station.name}
-                  </span>
-                  <span className="shrink-0 font-blender-medium text-xs text-text-secondary">Ур.{recipe.level}</span>
-                  <span className="ml-auto flex shrink-0 items-center gap-1 rounded bg-(--color-base) px-2 py-0.5">
-                    <Clock className="h-3 w-3 text-text-secondary" />
-                    <span className="font-blender-medium text-xs text-text-secondary">{formatDuration(recipe.duration)}</span>
-                  </span>
-                </div>
+  if (crafts.length === 0) return null;
 
-                {/* Ингредиенты */}
-                <div className="flex flex-wrap items-center gap-3">
-                  {recipe.requiredItems.map((req, idx) => (
-                    <div key={req.item.id} className="flex items-center gap-3">
-                      <ReqItem item={req.item} count={req.count} />
-                      {idx < recipe.requiredItems.length - 1 && <span className="text-text-muted">+</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </SectionPanel>
+  return (
+    <section className="flex flex-col gap-3.5">
+      <SectionRule title="Производство" icon={<Hammer className="h-4 w-4" />} />
+      <div className="flex flex-col gap-3.5">
+        {crafts.map((recipe) => (
+          <CraftOfferCard key={recipe.id} recipe={recipe} />
+        ))}
+      </div>
+    </section>
   );
 }
 

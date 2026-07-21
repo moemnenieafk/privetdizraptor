@@ -295,6 +295,9 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
       station: { name: c.stationName, normalizedName: c.stationNormalizedName ?? '' },
       level: c.level ?? 1,
       duration: c.duration ?? 0,
+      reward: c.rewardItems[0]
+        ? { item: slotItem(c.rewardItems[0].itemId), count: c.rewardItems[0].count }
+        : undefined,
       requiredItems: c.requiredItems.map((sl) => ({
         item: { ...slotItem(sl.itemId), hasBarter: barterableIds.has(sl.itemId) },
         count: sl.count,
