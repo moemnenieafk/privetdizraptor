@@ -29,6 +29,7 @@ interface TaskObjectiveRaw {
   __typename?: string;
   item?: { id: string; shortName?: string; image512pxLink?: string };
   count?: number;
+  foundInRaid?: boolean;
 }
 
 export interface UsedInTask {
@@ -324,7 +325,7 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
       usedInTasks.push({
         id: t.id, name: t.name, taskImageLink: t.trader.imageLink, kappaRequired: t.kappaRequired, minPlayerLevel: t.minPlayerLevel,
         trader: { name: t.trader.name, normalizedName: t.trader.normalizedName },
-        objectives: objs.map((o) => ({ __typename: o.__typename, item: o.item ? { id: o.item.id, shortName: o.item.shortName, image512pxLink: o.item.image512pxLink } : undefined, count: o.count })),
+        objectives: objs.map((o) => ({ __typename: o.__typename, item: o.item ? { id: o.item.id, shortName: o.item.shortName, image512pxLink: o.item.image512pxLink } : undefined, count: o.count, foundInRaid: o.foundInRaid })),
       });
     }
     if (t.finishRewards?.items?.some((r) => r.item?.id === mainId)) {

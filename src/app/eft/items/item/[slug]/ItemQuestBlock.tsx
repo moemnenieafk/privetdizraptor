@@ -16,12 +16,21 @@ export function ItemQuestBlock({ tasks, itemId, itemImage }: ItemQuestBlockProps
     <SectionPanel title={`Нужен в квестах (${tasks.length})`} icon={<ClipboardList className="w-4 h-4" />} noDivider smallTitle bare>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {tasks.map((task) => {
-          const needed = task.objectives
-            .filter((o) => o.item?.id === itemId)
-            .reduce((sum, o) => sum + (o.count ?? 0), 0);
+          // Показываем только цели по ЭТОМУ предмету: остальные цели задания
+          // к карточке предмета отношения не имеют.
+          const own = task.objectives.filter((o) => o.item?.id === itemId);
+          const needed = own.reduce((sum, o) => sum + (o.count ?? 0), 0);
 
           return (
-            <QuestCard key={task.id} task={task} count={needed} countLabel="Собрать" itemImage={itemImage} />
+            <QuestCard
+              key={task.id}
+              task={task}
+              count={needed}
+              countLabel="Собрать"
+              itemImage={itemImage}
+              itemShortName={own[0]?.item?.shortName}
+              foundInRaid={own.some((o) => o.foundInRaid)}
+            />
           );
         })}
       </div>
