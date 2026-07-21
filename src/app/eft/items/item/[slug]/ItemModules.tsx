@@ -1,6 +1,8 @@
 ﻿import Link from 'next/link';
 import { Crosshair, Shield, HeartPulse, ArrowLeftRight, Hammer, Clock, Target, Bomb, Headphones, Lock, ChevronRight } from 'lucide-react';
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
+import { SectionRule } from '@/components/ui/SectionRule';
+import { BarterOfferCard } from './BarterOfferCard';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
 import { formatCompactNumber } from '@/lib/formatters';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
@@ -163,6 +165,8 @@ interface BarterRequiredItem {
     basePrice: number;
     backgroundColor?: string;
     normalizedName?: string; // для кросс-линка на карточку предмета
+    /** Рыночная цена барахолки. basePrice — игровая условность, для экономики не годится. */
+    marketPrice?: number;
   };
   count: number;
 }
@@ -182,6 +186,10 @@ export interface BarterOffer {
   level: number;
   taskUnlock?: BarterTaskUnlock | null;
   requiredItems: BarterRequiredItem[];
+  /** Покупок за сброс торговца; null — лимита нет. */
+  buyLimit?: number | null;
+  /** Что и сколько выдаётся. */
+  reward?: { item: BarterRequiredItem['item']; count: number };
 }
 
 // === ТИПЫ ДЛЯ КРАФТА ===
@@ -574,54 +582,17 @@ function ReqItem({
 // === МОДУЛЬ БАРТЕРА ===
 
 export function BarterModule({ barters }: { barters: BarterOffer[] }) {
+  if (barters.length === 0) return null;
+
   return (
-    <SectionPanel title="Доступный бартер" icon={<ArrowLeftRight className="w-4 h-4" />} noDivider smallTitle bare>
-      {barters.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 text-text-muted">
-          <ArrowLeftRight className="mb-2 h-6 w-6 opacity-40" />
-          <p className="text-xs uppercase tracking-widest font-blender-book">Бартер недоступен</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {barters.map((offer) => {
-            const accent = `var(--trader-${offer.trader.normalizedName})`;
-            const totalCost = offer.requiredItems.reduce(
-              (sum, req) => sum + req.item.basePrice * req.count,
-              0
-            );
-            return (
-              <div key={offer.id} className="relative overflow-hidden rounded-lg p-4" style={accentCardStyle(accent)}>
-                <div className="relative z-10 flex flex-col gap-3">
-                  {/* Шапка: торговец · LL · сумма */}
-                  <div className="flex items-center gap-2">
-                    <img src={traderImg(offer.trader.normalizedName)} alt={offer.trader.name} width={20} height={20} className="shrink-0 rounded-xs" />
-                    <span className="truncate font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
-                      {offer.trader.name}
-                    </span>
-                    <span className="shrink-0 font-blender-medium text-xs text-text-secondary">LL{offer.level}</span>
-                    <span className="ml-auto shrink-0 font-blender-medium text-xs text-text-primary">
-                      {formatCompactNumber(totalCost)} ₽
-                    </span>
-                  </div>
-
-                  {/* Требуемые предметы */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    {offer.requiredItems.map((req, idx) => (
-                      <div key={req.item.id} className="flex items-center gap-3">
-                        <ReqItem item={req.item} count={req.count} />
-                        {idx < offer.requiredItems.length - 1 && <span className="text-text-muted">+</span>}
-                      </div>
-                    ))}
-                  </div>
-
-                  {offer.taskUnlock && <QuestGateBadge taskUnlock={offer.taskUnlock} />}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </SectionPanel>
+    <section className="flex flex-col gap-3.5">
+      <SectionRule title="Бартер" icon={<ArrowLeftRight className="h-4 w-4" />} />
+      <div className="flex flex-col gap-3.5">
+        {barters.map((offer) => (
+          <BarterOfferCard key={offer.id} offer={offer} />
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -265,6 +265,7 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
       id, name: i?.name ?? id, shortName: i?.shortName ?? '', image512pxLink: itemIconUrl(id),
       basePrice: i?.basePrice ?? 0, backgroundColor: priceMap.get(id)?.backgroundColor,
       normalizedName: priceMap.get(id)?.normalizedName ?? undefined, // для кросс-линка на карточку
+      marketPrice: priceMap.get(id)?.lastLowPrice ?? priceMap.get(id)?.avg24hPrice,
     };
   };
   const barterTaskUnlock = (b: { taskUnlockId: string | null; taskUnlockName: string | null }) =>
@@ -281,6 +282,10 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
       trader: { name: b.traderName, normalizedName: b.traderNormalizedName ?? '' },
       level: b.level ?? 1,
       taskUnlock: barterTaskUnlock(b),
+      buyLimit: b.buyLimit ?? null,
+      reward: b.rewardItems[0]
+        ? { item: slotItem(b.rewardItems[0].itemId), count: b.rewardItems[0].count }
+        : undefined,
       requiredItems: b.requiredItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
     }));
   const itemCrafts: CraftRecipe[] = craftRows
