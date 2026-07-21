@@ -1,24 +1,26 @@
 import Link from 'next/link';
-import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { traderImg } from '@/lib/trader-utils';
+import { TRADER_COLORS } from '@/data/traderColors';
 import { calcFleaFee } from '@/lib/barter-calc';
 import type { BarterOffer } from './ItemModules';
 
 /**
- * Фон и обводка карточки: в макете это два радиальных слоя цветом торговца плюс
- * градиентная рамка. Рамка делается двухслойным фоном с разным background-clip —
- * border-image здесь не подходит, он ломает скругление.
+ * Подложка карточки — тот же приём, что в нодах квестов: радиальный градиент
+ * отдельным слоем под контентом плюс сплошная рамка цветом торговца.
+ *
+ * ВАЖНО: цвет берётся из JS-палитры, а не из var(--trader-*). Tailwind v4
+ * вырезает неиспользуемые @theme-переменные из сборки, в рантайме они не
+ * резолвятся, и color-mix отдаёт пустоту — градиент схлопывается в чёрный.
+ * На эти грабли проект уже наступал в QuestNode.
  */
-export function cardStyle(color: string): React.CSSProperties {
-  const at = (pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+export function cardGradient(color: string): string {
+  return `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${color} 56%, transparent), #000000)`;
+}
+
+export function cardBorder(color: string): React.CSSProperties {
   return {
-    backgroundImage: [
-      `radial-gradient(120% 60% at 50% 0%, ${at(28)}, transparent 70%)`,
-      `radial-gradient(90% 90% at 100% 0%, ${at(14)}, transparent 70%)`,
-      'linear-gradient(#000, #000)',
-      `radial-gradient(120% 140% at 50% 0%, ${at(100)}, ${at(10)} 70%)`,
-    ].join(', '),
-    backgroundOrigin: 'border-box',
-    backgroundClip: 'padding-box, padding-box, padding-box, border-box',
+    borderColor: color,
+    boxShadow: `0 0 12px color-mix(in srgb, ${color} 30%, transparent)`,
   };
 }
 
@@ -164,7 +166,7 @@ function Breakdown({
 }
 
 export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
-  const traderColor = `var(${traderCssVar(offer.trader.normalizedName)})`;
+  const traderColor = TRADER_COLORS[offer.trader.normalizedName] ?? TRADER_COLORS.stories;
 
   // Вход — по рыночным ценам, а не по basePrice: последний игровая условность.
   const input = offer.requiredItems.reduce(
@@ -183,9 +185,13 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
   const profit = output - fee - input;
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-transparent p-3.5" style={cardStyle(traderColor)}>
+    <article
+      className="relative flex flex-col gap-3 overflow-hidden rounded-lg border p-3.5"
+      style={{ borderWidth: 1, borderStyle: 'solid', ...cardBorder(traderColor) }}
+    >
+      <div className="absolute inset-0 z-0" style={{ background: cardGradient(traderColor) }} />
       {/* Шапка: торговец · уровень · лимит */}
-      <div className="flex h-12 items-center gap-2.5">
+      <div className="relative z-10 flex h-12 items-center gap-2.5">
         <img
           src={traderImg(offer.trader.normalizedName)}
           alt={offer.trader.name}
@@ -207,7 +213,7 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
 
       {/* Слева квест-гейт, если бартер закрыт заданием; справа единственная метрика. */}
       {(known || offer.taskUnlock) && (
-        <div className="flex h-12 items-stretch gap-2">
+        <div className="relative z-10 flex h-12 items-stretch gap-2">
           <span className="flex min-w-0 flex-1 items-center gap-2">
             {offer.taskUnlock && (
               <>
@@ -232,9 +238,9 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
         </div>
       )}
 
-      <SlotDivider label="Отдать" />
+      <div className="relative z-10"><SlotDivider label="Отдать" /></div>
 
-      <div className="flex flex-wrap items-start justify-center gap-1">
+      <div className="relative z-10 flex flex-wrap items-start justify-center gap-1">
         {offer.requiredItems.map((req) => (
           <BarterSlot key={req.item.id} item={req.item} count={req.count} />
         ))}
@@ -242,8 +248,8 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
 
       {offer.reward && (
         <>
-          <SlotDivider label="Получить" />
-          <div className="flex items-center gap-3.5">
+          <div className="relative z-10"><SlotDivider label="Получить" /></div>
+          <div className="relative z-10 flex items-center gap-3.5">
             <BarterSlot item={offer.reward.item} count={offer.reward.count} tileOnly />
             <span className="min-w-0 flex-1 truncate font-blender-medium text-xs uppercase text-text-primary">
               {offer.reward.item.name}

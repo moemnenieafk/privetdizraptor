@@ -1,4 +1,4 @@
-import { BarterSlot, SlotDivider, Metric, cardStyle } from './BarterOfferCard';
+import { BarterSlot, SlotDivider, Metric, cardGradient, cardBorder } from './BarterOfferCard';
 import { calcFleaFee } from '@/lib/barter-calc';
 import { stationIconClass, type CraftRecipe } from './ItemModules';
 
@@ -21,7 +21,8 @@ export function CraftOfferCard({
   /** Подсветить этот ингредиент: на странице предмета в чужом рецепте важен именно он. */
   highlightItemId?: string;
 }) {
-  const accent = 'var(--primary)';
+  // Литерал, а не var(--primary): та же история с вырезанием @theme-переменных.
+  const accent = '#E68E25';
 
   const input = recipe.requiredItems.reduce(
     (sum, r) => sum + (r.item.marketPrice ?? 0) * r.count,
@@ -38,9 +39,13 @@ export function CraftOfferCard({
   const perHour = recipe.duration > 0 ? (profit / recipe.duration) * 3600 : 0;
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-transparent p-3.5" style={cardStyle(accent)}>
+    <article
+      className="relative flex flex-col gap-3 overflow-hidden rounded-lg border p-3.5"
+      style={{ borderWidth: 1, borderStyle: 'solid', ...cardBorder(accent) }}
+    >
+      <div className="absolute inset-0 z-0" style={{ background: cardGradient(accent) }} />
       {/* Шапка: модуль убежища · уровень · длительность */}
-      <div className="flex h-12 items-center gap-2.5">
+      <div className="relative z-10 flex h-12 items-center gap-2.5">
         <span
           className={`${stationIconClass(recipe.station.normalizedName)} h-12 w-12 shrink-0 bg-text-primary mask-contain mask-center mask-no-repeat`}
         />
@@ -59,15 +64,15 @@ export function CraftOfferCard({
 
       {/* Метрики: прибыль и прибыль в час */}
       {known && (
-        <div className="flex h-12 items-stretch gap-2">
+        <div className="relative z-10 flex h-12 items-stretch gap-2">
           <Metric icon="icon-eft-profit" label="Прибыль" value={profit} />
           <Metric icon="icon-eft-prog-craft" label="Прибыль в час" value={perHour} />
         </div>
       )}
 
-      <SlotDivider label="Отдать" />
+      <div className="relative z-10"><SlotDivider label="Отдать" /></div>
 
-      <div className="flex flex-wrap items-start justify-center gap-2">
+      <div className="relative z-10 flex flex-wrap items-start justify-center gap-2">
         {recipe.requiredItems.map((req) => (
           <BarterSlot
             key={req.item.id}
@@ -80,8 +85,8 @@ export function CraftOfferCard({
 
       {recipe.reward && (
         <>
-          <SlotDivider label="Получить" />
-          <div className="flex items-center justify-center gap-3.5">
+          <div className="relative z-10"><SlotDivider label="Получить" /></div>
+          <div className="relative z-10 flex items-center justify-center gap-3.5">
             <BarterSlot item={recipe.reward.item} count={recipe.reward.count} tileOnly />
             {output > 0 && (
               <span className="flex min-w-0 flex-col gap-1">
