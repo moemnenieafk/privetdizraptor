@@ -1,5 +1,5 @@
 import { ClipboardList } from 'lucide-react';
-import { SectionPanel } from '@/components/ui/kit';
+import { SectionRule } from '@/components/ui/SectionRule';
 import { QuestCard } from './QuestCard';
 import type { UsedInTask } from './page';
 
@@ -13,8 +13,9 @@ export function ItemQuestBlock({ tasks, itemId, itemImage }: ItemQuestBlockProps
   if (tasks.length === 0) return null;
 
   return (
-    <SectionPanel title={`Нужен в квестах (${tasks.length})`} icon={<ClipboardList className="w-4 h-4" />} noDivider smallTitle bare>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+    <section className="flex flex-col gap-3.5">
+      <SectionRule title="Требуется в заданиях" icon={<ClipboardList className="h-4 w-4" />} />
+      <div className="grid grid-cols-1 gap-3.5">
         {tasks.map((task) => {
           // Показываем только цели по ЭТОМУ предмету: остальные цели задания
           // к карточке предмета отношения не имеют.
@@ -36,6 +37,6 @@ export function ItemQuestBlock({ tasks, itemId, itemImage }: ItemQuestBlockProps
           );
         })}
       </div>
-    </SectionPanel>
+    </section>
   );
 }

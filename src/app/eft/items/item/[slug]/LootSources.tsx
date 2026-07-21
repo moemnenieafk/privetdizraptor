@@ -1,5 +1,5 @@
 import { PackageOpen } from 'lucide-react';
-import { SectionPanel } from '@/components/ui/kit';
+import { SectionRule } from '@/components/ui/SectionRule';
 import { QuestCard } from './QuestCard';
 import type { RewardTask } from './page';
 
@@ -13,8 +13,9 @@ export function LootSources({ tasks, itemId, itemImage }: LootSourcesProps) {
   if (tasks.length === 0) return null;
 
   return (
-    <SectionPanel title={`Откуда получить (${tasks.length})`} icon={<PackageOpen className="w-4 h-4" />} noDivider smallTitle bare>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+    <section className="flex flex-col gap-3.5">
+      <SectionRule title="Вознаграждения в заданиях" icon={<PackageOpen className="h-4 w-4" />} />
+      <div className="grid grid-cols-1 gap-3.5">
         {tasks.map((task) => {
           const reward = (task.finishRewards?.items ?? [])
             .filter((r) => r.item?.id === itemId)
@@ -25,6 +26,6 @@ export function LootSources({ tasks, itemId, itemImage }: LootSourcesProps) {
           );
         })}
       </div>
-    </SectionPanel>
+    </section>
   );
 }

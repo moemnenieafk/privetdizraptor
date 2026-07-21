@@ -153,10 +153,11 @@ export function QuestCard({
               </span>
             )}
           </span>
+          {/* У наград резервировать нечего: там количество выдаваемого, а не цель. */}
           <span
             className={`shrink-0 font-blender-book text-base leading-none ${done ? 'text-nvg-green' : 'text-text-primary'}`}
           >
-            {reservedHere}/{count}
+            {interactive ? `${reservedHere}/${count}` : `×${count}`}
           </span>
         </button>
       )}
