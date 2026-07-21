@@ -58,9 +58,13 @@ interface RawItem {
   sellFor?: RawOffer[];
   buyFor?: RawOffer[];
 }
+interface GraphQLError {
+  message?: string;
+}
+
 interface RawResponse {
   data?: { items?: RawItem[] };
-  errors?: unknown;
+  errors?: GraphQLError[];
 }
 
 const buildQuery = (gameMode: 'regular' | 'pve') => `
@@ -91,21 +95,75 @@ const mapOffer = (o: RawOffer): CtaVendorOffer => ({
 });
 
 /**
+ * Причина последней неудачной выборки. Нужна потому, что пустая Map не различает
+ * «источник лежит» и «мы сломали запрос»: одно неизвестное поле в GraphQL роняет
+ * ВЕСЬ запрос, и снаружи это выглядит так же, как 503.
+ */
+let lastFetchError: string | null = null;
+export function getLastPriceFetchError(): string | null {
+  return lastFetchError;
+}
+
+/** Поля, без которых запрос обязан работать. minLevelForFlea появился в схеме
+ *  недавно — если прод источника его ещё не знает, повторяем запрос без него. */
+const OPTIONAL_FIELDS = ["minLevelForFlea"] as const;
+
+/**
  * Карта id → экономика/мета из tarkov.dev. Никогда не бросает: при любой ошибке
- * отдаёт пустую Map (синк сам решает, что делать с пустотой).
+ * отдаёт пустую Map (синк сам решает, что делать с пустотой), причина ложится
+ * в getLastPriceFetchError().
  */
 export async function getEftPriceMap(gameMode: 'regular' | 'pve' = 'regular'): Promise<Map<string, EftPriceInfo>> {
+  lastFetchError = null;
   try {
-    const res = await fetch(ENDPOINT, {
+    let query = buildQuery(gameMode);
+    let res = await fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ query: buildQuery(gameMode) }),
+      body: JSON.stringify({ query }),
       cache: "no-store",
     });
-    if (!res.ok) return new Map();
+    if (!res.ok) {
+      lastFetchError = `HTTP ${res.status} от tarkov.dev`;
+      console.error("[getEftPriceMap]", lastFetchError);
+      return new Map();
+    }
 
-    const json = (await res.json()) as RawResponse;
-    if (json.errors || !json.data?.items) return new Map();
+    let json = (await res.json()) as RawResponse;
+
+    // Неизвестное поле роняет весь запрос. Выкидываем необязательные и пробуем ещё раз,
+    // чтобы схема источника не могла обрушить синк целиком.
+    if (json.errors?.length) {
+      const message = json.errors.map((e: GraphQLError) => e?.message ?? "").join(" | ");
+      const culprit = OPTIONAL_FIELDS.find((f) => message.includes(f));
+      if (culprit) {
+        console.warn(`[getEftPriceMap] источник не знает поля ${culprit} — повтор без него`);
+        query = query.replace(new RegExp(`^\\s*${culprit}\\s*$`, "m"), "");
+        res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ query }),
+          cache: "no-store",
+        });
+        json = res.ok ? ((await res.json()) as RawResponse) : json;
+        lastFetchError = `поле ${culprit} отсутствует в схеме источника`;
+      } else {
+        lastFetchError = `GraphQL: ${message.slice(0, 300)}`;
+        console.error("[getEftPriceMap]", lastFetchError);
+        return new Map();
+      }
+    }
+
+    if (json.errors?.length && !json.data?.items) {
+      lastFetchError = `GraphQL: ${json.errors.map((e: GraphQLError) => e?.message ?? "").join(" | ").slice(0, 300)}`;
+      console.error("[getEftPriceMap]", lastFetchError);
+      return new Map();
+    }
+    if (!json.data?.items) {
+      lastFetchError = lastFetchError ?? "ответ без data.items";
+      console.error("[getEftPriceMap]", lastFetchError);
+      return new Map();
+    }
 
     return new Map(
       json.data.items.map((it) => [
@@ -126,7 +184,9 @@ export async function getEftPriceMap(gameMode: 'regular' | 'pve' = 'regular'): P
         } satisfies EftPriceInfo,
       ]),
     );
-  } catch {
+  } catch (e) {
+    lastFetchError = e instanceof Error ? e.message : String(e);
+    console.error("[getEftPriceMap]", lastFetchError);
     return new Map();
   }
 }

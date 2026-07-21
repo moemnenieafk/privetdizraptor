@@ -11,7 +11,7 @@ import { eq, sql, and, inArray, type SQL } from "drizzle-orm";
 import { db } from "./index";
 import { prices, type PriceVendorOffer } from "./schema";
 import { eftGameId } from "./eft";
-import { getEftPriceMap, type EftPriceInfo, type CtaVendorOffer } from "../lib/eft-prices";
+import { getEftPriceMap, getLastPriceFetchError, type EftPriceInfo, type CtaVendorOffer } from "../lib/eft-prices";
 import { memoTTL } from "../lib/server-cache";
 
 export interface SyncResult {
@@ -22,7 +22,10 @@ export interface SyncResult {
 export async function syncEftPrices(): Promise<SyncResult> {
   const map = await getEftPriceMap();
   if (map.size === 0) {
-    throw new Error("tarkov.dev отдал пустую карту цен — синк отменён (старые данные сохранены)");
+    const reason = getLastPriceFetchError();
+    throw new Error(
+      `tarkov.dev отдал пустую карту цен — синк отменён (старые данные сохранены)${reason ? `. Причина: ${reason}` : ""}`,
+    );
   }
   const gameId = await eftGameId();
 
