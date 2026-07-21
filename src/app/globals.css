@@ -21,6 +21,36 @@
     font-display: swap;
 }
 
+/* Знак рубля. В Blender Pro его нет (проверено: cmap обоих начертаний не содержит
+   U+20BD, при этом € и $ на месте). Подключаем ОДИН глиф, нарисованный V4DYA,
+   под тем же именем семейства + unicode-range: браузер сам подставит его только
+   для ₽, всё остальное отрисует Blender Pro. Ни одна font-family в проекте
+   не меняется. 532 байта.
+
+   Объявлять СТРОГО после основных @font-face: при пересечении диапазонов
+   в одном семействе побеждает последнее объявление.
+
+   Метрики согласованы с BlenderPro-Medium: UPM 1000, cap height 600,
+   полуапроши 24 — как у цифры 0. Апрош 542 против 514 у цифр: знак идёт
+   последним в строке после пробела, табличность колонки от этого не страдает. */
+@font-face {
+    font-family: 'BlenderPro-Book';
+    src: url('/fonts/CTA-Ruble.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+20BD;
+}
+
+@font-face {
+    font-family: 'BlenderPro-Medium';
+    src: url('/fonts/CTA-Ruble.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+20BD;
+}
+
 @theme {
   --color-card-menu: #242426;
   --color-lines-hover: #313135;
