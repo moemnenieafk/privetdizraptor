@@ -1,5 +1,8 @@
+"use client";
+
 import Link from 'next/link';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { useInventoryStore } from '@/store/useInventoryStore';
 
 export interface QuestCardData {
   id: string;
@@ -22,6 +25,8 @@ interface QuestCardProps {
   itemShortName?: string;
   /** Цель требует предмет, найденный в рейде */
   foundInRaid?: boolean;
+  /** id предмета — по нему берётся счётчик схрона для прогресса */
+  itemId?: string;
 }
 
 export function QuestCard({
@@ -31,9 +36,16 @@ export function QuestCard({
   itemImage,
   itemShortName,
   foundInRaid = false,
+  itemId,
 }: QuestCardProps) {
   const nn = task.trader.normalizedName;
   const traderColor = `var(${traderCssVar(nn)})`;
+
+  // Прогресс берём из счётчика «В схроне» — того же, что стоит в шапке карточки
+  // предмета. Примитив в селекторе, а не объект: в Zustand v5 объект из селектора
+  // даёт бесконечный ре-рендер.
+  const owned = useInventoryStore((s) => (itemId ? (s.ownedItems[itemId] ?? 0) : 0));
+  const done = count > 0 && owned >= count;
 
   return (
     <Link
@@ -106,22 +118,14 @@ export function QuestCard({
               </span>
             )}
           </span>
-          <span className="shrink-0 font-blender-book text-base leading-none text-text-primary">
-            0/{count}
+          <span
+            className={`shrink-0 font-blender-book text-base leading-none ${done ? 'text-nvg-green' : 'text-text-primary'}`}
+          >
+            {Math.min(owned, count)}/{count}
           </span>
         </div>
       )}
 
-      {/* 4 — отметка выполнения */}
-      <div className="flex h-7 items-center gap-2.5">
-        <span
-          className="flex h-7 min-w-0 flex-1 items-center rounded-xs px-2.5 font-blender-medium text-sm text-tactical-amber"
-          style={{ background: 'color-mix(in srgb, var(--color-tactical-amber) 10%, transparent)' }}
-        >
-          Выполнено?
-        </span>
-        <span className="h-7 w-7 shrink-0 rounded-sm border border-lines-hover" />
-      </div>
     </Link>
   );
 }

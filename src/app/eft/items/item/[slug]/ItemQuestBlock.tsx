@@ -28,6 +28,7 @@ export function ItemQuestBlock({ tasks, itemId, itemImage }: ItemQuestBlockProps
               count={needed}
               countLabel="Собрать"
               itemImage={itemImage}
+              itemId={itemId}
               itemShortName={own[0]?.item?.shortName}
               foundInRaid={own.some((o) => o.foundInRaid)}
             />
