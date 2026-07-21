@@ -79,6 +79,7 @@
 
   /* ═══ EFT Квесты и Торговцы (02-quests) ═══ */
   .icon-eft-difficulty-skull { mask-image: url('/icons/eft/02-quests/difficulty-skull.svg'); -webkit-mask-image: url('/icons/eft/02-quests/difficulty-skull.svg'); }
+  .icon-eft-quest-lock { mask-image: url('/icons/eft/02-quests/quest-lock-icon.svg'); -webkit-mask-image: url('/icons/eft/02-quests/quest-lock-icon.svg'); }
   .icon-eft-quest-call-trader { mask-image: url('/icons/eft/02-quests/quest-call-trader.svg'); -webkit-mask-image: url('/icons/eft/02-quests/quest-call-trader.svg'); }
   .icon-eft-quest-clue { mask-image: url('/icons/eft/02-quests/quest-clue.svg'); -webkit-mask-image: url('/icons/eft/02-quests/quest-clue.svg'); }
   .icon-eft-quests-eliminate { mask-image: url('/icons/eft/02-quests/quest-eliminate.svg'); -webkit-mask-image: url('/icons/eft/02-quests/quest-eliminate.svg'); }
@@ -132,7 +133,6 @@
   .icon-eft-damage-incomming { mask-image: url('/icons/eft/03-items/meds/damage-incomming.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/damage-incomming.svg'); }
   .icon-eft-energy { mask-image: url('/icons/eft/03-items/meds/energy.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/energy.svg'); }
   .icon-eft-eq-cases { mask-image: url('/icons/eft/03-items/equipment/containers/cases.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/containers/cases.svg'); }
-  .icon-eft-loot-containers { mask-image: url('/icons/eft/03-items/equipment/containers/loot-containers.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/containers/loot-containers.svg'); }
   .icon-eft-eq-containers { mask-image: url('/icons/eft/03-items/equipment/containers.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/containers.svg'); }
   .icon-eft-eq-drinks { mask-image: url('/icons/eft/03-items/equipment/provisions/drinks.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/provisions/drinks.svg'); }
   .icon-eft-eq-food { mask-image: url('/icons/eft/03-items/equipment/provisions/food.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/provisions/food.svg'); }
@@ -209,7 +209,10 @@
   .icon-eft-items-guns { mask-image: url('/icons/eft/03-items/guns.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns.svg'); }
   .icon-eft-items-loot-tier { mask-image: url('/icons/eft/03-items/loot-tier.svg'); -webkit-mask-image: url('/icons/eft/03-items/loot-tier.svg'); }
   .icon-eft-items-price-slot { mask-image: url('/icons/eft/03-items/price-per-slot.svg'); -webkit-mask-image: url('/icons/eft/03-items/price-per-slot.svg'); }
+  .icon-eft-loot-containers { mask-image: url('/icons/eft/03-items/equipment/containers/loot-containers.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/containers/loot-containers.svg'); }
+  .icon-eft-profit { mask-image: url('/icons/eft/03-items/profit-icon.svg'); -webkit-mask-image: url('/icons/eft/03-items/profit-icon.svg'); }
   .icon-eft-questitems { mask-image: url('/icons/eft/03-items/questitems.svg'); -webkit-mask-image: url('/icons/eft/03-items/questitems.svg'); }
+  .icon-eft-savings { mask-image: url('/icons/eft/03-items/savings-icon.svg'); -webkit-mask-image: url('/icons/eft/03-items/savings-icon.svg'); }
   .icon-eft-skill-effect { mask-image: url('/icons/eft/03-items/meds/skill-effect.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/skill-effect.svg'); }
   .icon-eft-stamin-recovery { mask-image: url('/icons/eft/03-items/meds/stamin-recovery.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/stamin-recovery.svg'); }
   .icon-eft-stamina-max { mask-image: url('/icons/eft/03-items/meds/stamina-max.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/stamina-max.svg'); }
@@ -219,7 +222,7 @@
   .icon-eft-underbarrel-launchers { mask-image: url('/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg'); }
   .icon-eft-weight-carry { mask-image: url('/icons/eft/03-items/meds/weight-carry.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/weight-carry.svg'); }
 
-  /* ═══ EFT Прогрессия (04-progression) ═══ */
+/* ═══ EFT Прогрессия (04-progression) ═══ */
   .icon-eft-air_filtering_unit { mask-image: url('/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg'); }
   .icon-eft-barter-electronics { mask-image: url('/icons/eft/04-progression/barter-profit/electronics.svg'); -webkit-mask-image: url('/icons/eft/04-progression/barter-profit/electronics.svg'); }
   .icon-eft-barter-energy { mask-image: url('/icons/eft/04-progression/barter-profit/energy-elements.svg'); -webkit-mask-image: url('/icons/eft/04-progression/barter-profit/energy-elements.svg'); }
