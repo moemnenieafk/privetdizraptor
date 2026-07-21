@@ -1,0 +1,33 @@
+# Миграция: колонка `min_level_for_flea` в `prices`.
+# Запуск: Actions → «migrate-flea-level» → Run workflow. Идемпотентно.
+# Гнать ДО деплоя кода, который пишет колонку: syncEftPrices критический.
+name: migrate-flea-level
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger flea level migration
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/migrate-flea-level"
+          echo "GET $url"
+          code=$(curl -sS -m 120 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Миграция не удалась (HTTP $code)"
+            exit 1
+          fi
