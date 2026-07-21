@@ -294,3 +294,25 @@ export async function getEftPriceIndex(): Promise<Map<string, EftPriceIndexInfo>
     return new Map();
   }
 }
+
+/**
+ * Возраст зеркала цен в часах. Нужен потому, что при недоступности источника
+ * `syncEftPrices()` просто ничего не обновляет, и портал молча показывает вчерашние
+ * числа: ни ошибки, ни красного прогона. Возраст делает заморозку видимой.
+ *
+ * Берётся максимум `synced_at` — то есть время последнего успешного обновления
+ * хотя бы одной строки. null, если таблица пуста.
+ */
+export async function getPricesAgeHours(gameId: string): Promise<number | null> {
+  try {
+    const rows = await db
+      .select({ ageHours: sql<number>`extract(epoch from (now() - max(${prices.syncedAt}))) / 3600` })
+      .from(prices)
+      .where(eq(prices.gameId, gameId));
+    const value = rows[0]?.ageHours;
+    return value === undefined || value === null ? null : Number(value);
+  } catch (e) {
+    console.error("[getPricesAgeHours]", e);
+    return null;
+  }
+}

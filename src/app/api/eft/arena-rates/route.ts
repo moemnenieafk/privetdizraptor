@@ -4,6 +4,8 @@
 // API (BACKEND AUTONOMY). Формулы и ограничения: docs/EFT_CURRENCY_MODEL.md
 import { NextResponse } from "next/server";
 import { getArenaOffers } from "@/db/arena-offers";
+import { getPricesAgeHours } from "@/db/prices";
+import { eftGameId } from "@/db/eft";
 import { calcGpCurve, calcLegaValue } from "@/lib/arena-currency";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { memoTTL } from "@/lib/server-cache";
@@ -19,6 +21,9 @@ const CACHE_TTL_MS = 60 * 60 * 1000;
 
 /** Ниже этой ёмкости кривая перестаёт быть репрезентативной. */
 const MIN_CAPACITY = 50;
+
+/** Старше этого возраста зеркало цен считается подмороженным. */
+const STALE_PRICES_HOURS = 24;
 
 function parseBasis(value: string | null): ArenaValuationBasis {
   return value === "liquidate" ? "liquidate" : "acquire";
@@ -45,6 +50,7 @@ function buildHealth(
   sampleSize: number,
   pricedFromHistory: number,
   priceSource: ArenaPriceSource,
+  pricesAgeHours: number | null,
 ): ArenaHealth {
   const reasons: string[] = [];
   if (priceSource === "month" && sampleSize > 0 && pricedFromHistory === 0) {
@@ -53,9 +59,12 @@ function buildHealth(
   if (sampleSize === 0) reasons.push("в кривую не попало ни одного предложения: нет цен на награды");
   if (offersTotal > 0 && limitsKnown === 0) reasons.push("buy_limit пуст — прогони sync-prices");
   if (sampleSize > 0 && capacity < MIN_CAPACITY) reasons.push(`ёмкость кривой ${capacity} GP — подозрительно мало`);
+  if (pricesAgeHours !== null && pricesAgeHours > STALE_PRICES_HOURS) {
+    reasons.push(`цены не обновлялись ${Math.round(pricesAgeHours)} ч — источник недоступен?`);
+  }
 
   const status: ArenaHealth["status"] = sampleSize === 0 ? "empty" : reasons.length > 0 ? "degraded" : "ok";
-  return { status, reasons, offersTotal, limitsKnown, pricedFromHistory };
+  return { status, reasons, offersTotal, limitsKnown, pricedFromHistory, pricesAgeHours };
 }
 
 async function computeRates(
@@ -63,11 +72,22 @@ async function computeRates(
   priceSource: ArenaPriceSource,
   maxLevel: number,
 ): Promise<ArenaRates> {
-  const { offers, pricedFromHistory } = await getArenaOffers(basis, priceSource);
+  const [{ offers, pricedFromHistory }, pricesAgeHours] = await Promise.all([
+    getArenaOffers(basis, priceSource),
+    eftGameId().then(getPricesAgeHours),
+  ]);
   const gp = calcGpCurve(offers, { basis, priceSource, maxLevel });
   const lega = calcLegaValue(offers, gp);
   const limitsKnown = offers.filter((o) => o.buyLimit !== null).length;
-  const health = buildHealth(offers.length, limitsKnown, gp.capacity, gp.sampleSize, pricedFromHistory, priceSource);
+  const health = buildHealth(
+    offers.length,
+    limitsKnown,
+    gp.capacity,
+    gp.sampleSize,
+    pricedFromHistory,
+    priceSource,
+    pricesAgeHours,
+  );
   return { gp, lega, health, computedAt: new Date().toISOString() };
 }
 

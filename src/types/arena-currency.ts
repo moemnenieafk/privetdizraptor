@@ -87,6 +87,8 @@ export interface ArenaHealth {
   limitsKnown: number;
   /** Наград, оценённых по истории; остальные откатились на спот. */
   pricedFromHistory: number;
+  /** Возраст зеркала цен в часах. null — определить не удалось. */
+  pricesAgeHours: number | null;
 }
 
 export interface ArenaRates {

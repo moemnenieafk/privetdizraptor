@@ -47,6 +47,9 @@ jobs:
           blended=$(jq -r '.gp.blendedRate | round' /tmp/rates.json)
           lega=$(jq -r '.lega.value | round' /tmp/rates.json)
           legaN=$(jq -r '.lega.sampleSize' /tmp/rates.json)
+          age=$(jq -r 'if .health.pricesAgeHours == null then "?" else (.health.pricesAgeHours | round | tostring) end' /tmp/rates.json)
+          fromHist=$(jq -r '.health.pricedFromHistory' /tmp/rates.json)
+          source=$(jq -r '.gp.priceSource' /tmp/rates.json)
 
           {
             echo "## Курс арена-валют"
@@ -60,6 +63,8 @@ jobs:
             echo "| Предельный курс | $marginal ₽/GP |"
             echo "| Смешанный курс | $blended ₽/GP |"
             echo "| Лега | $lega ₽ (точек: $legaN) |"
+            echo "| Источник цены | \`$source\`, по истории: $fromHist |"
+            echo "| Возраст цен | $age ч |"
           } >> "$GITHUB_STEP_SUMMARY"
 
           jq -r '.health.reasons[]?' /tmp/rates.json | while read -r reason; do
