@@ -140,6 +140,8 @@ function isHelmetProps(p: NonNullable<ItemProperties>): p is HelmetProperties {
 export interface VendorOffer {
   price: number;
   priceRUB?: number;
+  /** Валюта оффера: RUB | USD | EUR. Нужна для вторичной цены под рублёвой. */
+  currency?: string;
   /** Цена в PvE-режиме (появится с PvE-синком; пока undefined → фолбэк на PvP). */
   pricePve?: number;
   priceRUBPve?: number;

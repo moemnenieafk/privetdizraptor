@@ -3,7 +3,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { items, itemProperties, prices, barters, crafts } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
-import { getEftPriceBySlug, getEftPricesByIds, getEftPricesByCategory } from '@/db/prices';
+import { getEftPriceBySlug, getEftPricesByIds, getEftPricesByCategory, getCurrencyRates, getPricesAgeHours } from '@/db/prices';
 import { getItemChanges } from '@/db/game-changes';
 import { ItemChangeBadge } from '@/components/features/game-changes/ItemChangeBadge';
 import { itemIconUrl } from '@/lib/item-icon';
@@ -348,8 +348,8 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
   };
   const buyPve = pveRubMap(px.buyForPve);
   const sellPve = pveRubMap(px.sellForPve);
-  const toVendor = (o: { price: number; priceRUB?: number; vendor: { name: string; normalizedName?: string } }, pve: Map<string, number>): VendorOffer => ({
-    price: o.price, priceRUB: o.priceRUB, priceRUBPve: pve.get(o.vendor.normalizedName ?? o.vendor.name), vendor: { name: o.vendor.name, normalizedName: o.vendor.normalizedName ?? '' },
+  const toVendor = (o: { price: number; priceRUB?: number; currency?: string; vendor: { name: string; normalizedName?: string } }, pve: Map<string, number>): VendorOffer => ({
+    price: o.price, priceRUB: o.priceRUB, currency: o.currency, priceRUBPve: pve.get(o.vendor.normalizedName ?? o.vendor.name), vendor: { name: o.vendor.name, normalizedName: o.vendor.normalizedName ?? '' },
   });
 
   const item: TarkovItem = {
@@ -430,7 +430,12 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
   const { item, similar } = data;
   // Требуемый уровень торговца у нас не зеркалится → гексагон уровня не показываем.
   const buyLevelRequired = null;
-  const recentChanges = await getItemChanges(item.id);
+  const gameId = await eftGameId();
+  const [rates, pricesAgeHours, recentChanges] = await Promise.all([
+    getCurrencyRates(gameId),
+    getPricesAgeHours(gameId),
+    getItemChanges(item.id),
+  ]);
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
@@ -443,7 +448,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
 
         <ItemChangeBadge changes={recentChanges} />
 
-        <ItemDetailLayout item={item} similar={similar} buyLevelRequired={buyLevelRequired} />
+        <ItemDetailLayout item={item} similar={similar} buyLevelRequired={buyLevelRequired} rates={rates} pricesAgeHours={pricesAgeHours} />
 
       </div>
     </main>

@@ -5,6 +5,7 @@ import { PackageX } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useIsPve } from '@/hooks/useGameMode';
 import { VendorImage } from './ItemImage';
+import { traderImg } from '@/lib/trader-utils';
 import type { VendorOffer } from './ItemModules';
 
 interface ItemPriceBlockProps {
@@ -13,6 +14,32 @@ interface ItemPriceBlockProps {
   slots: number;
   /** Требуемый уровень игрока для лучшей покупки у торговца */
   buyLevelRequired?: number | null;
+  /** Курс валют торговцев в рублях: USD у Миротворца, EUR у Лыжника. */
+  rates?: { usd: number | null; eur: number | null };
+  /** Возраст зеркала цен в часах — показывается только у карточек барахолки. */
+  pricesAgeHours?: number | null;
+}
+
+/**
+ * Шкала выгодности. Красного нет намеренно: подсвечиваем только то, где игроку
+ * лучше, невыгодное остаётся нейтральным.
+ */
+const GAIN_GREEN = 10_000;
+const GAIN_SUPER = 100_000;
+
+function gainClass(gain: number): string {
+  if (gain >= GAIN_SUPER) return 'text-(--color-success)';
+  if (gain >= GAIN_GREEN) return 'text-nvg-green';
+  return 'text-text-secondary';
+}
+
+const CURRENCY_SIGN: Record<string, string> = { USD: '$', EUR: '€' };
+
+function fmtAge(hours: number | null | undefined): string | null {
+  if (hours == null || hours < 0) return null;
+  if (hours < 1) return `Обновлено: ${Math.max(1, Math.round(hours * 60))} мин назад`;
+  if (hours < 24) return `Обновлено: ${Math.round(hours)} ч назад`;
+  return `Обновлено: ${Math.round(hours / 24)} д назад`;
 }
 
 const isFlea = (v: { normalizedName?: string; name: string }) =>
@@ -146,19 +173,73 @@ function EmptyValue() {
   );
 }
 
-// ─── Строка-ячейка: лейбл слева, иконка + цена справа ────────────────────────
-function PriceCard({ label, children }: { label: string; children: React.ReactNode }) {
+// ─── Карточка цены: подпись сверху, значение снизу ──────────────────────────
+function PriceCard({
+  label,
+  note,
+  children,
+}: {
+  label: string;
+  note?: string | null;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded border border-lines-hover bg-card-menu px-5 py-3">
-      <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
-        {label}
-      </span>
-      <div className="flex min-h-12 shrink-0 items-center justify-end gap-3">{children}</div>
+    <div className="flex flex-col gap-2 rounded-lg bg-card-menu p-3.5">
+      <div className="flex items-baseline gap-2">
+        <span className="font-blender-medium text-xs uppercase tracking-[8px] text-text-secondary">
+          {label}
+        </span>
+        {note && (
+          <span className="ml-auto shrink-0 font-blender-medium text-[8px] text-text-muted">{note}</span>
+        )}
+      </div>
+      <div className="flex min-h-12 items-center gap-4">{children}</div>
     </div>
   );
 }
 
-export function ItemPriceBlock({ buyFor = [], sellFor = [], slots, buyLevelRequired }: ItemPriceBlockProps) {
+// ─── Курс валют торговцев ───────────────────────────────────────────────────
+function RateRow({ rates }: { rates?: { usd: number | null; eur: number | null } }) {
+  if (!rates || (rates.usd == null && rates.eur == null)) return null;
+
+  const entries: { trader: string; label: string; value: number }[] = [];
+  if (rates.usd != null) entries.push({ trader: 'peacekeeper', label: 'USD', value: rates.usd });
+  if (rates.eur != null) entries.push({ trader: 'skier', label: 'EUR', value: rates.eur });
+
+  return (
+    <div className="flex items-center gap-4">
+      {entries.map((e) => (
+        <span key={e.label} className="flex items-center gap-2">
+          <img src={traderImg(e.trader)} alt="" width={16} height={16} className="h-4 w-4 rounded-xs" />
+          <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+            КУРС {e.label}
+          </span>
+          <span className="font-blender-medium text-xs text-text-secondary">{fmtRub(e.value)}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Вторичная цена в валюте торговца под рублёвой — для наглядности, главная всё равно в ₽.
+function CurrencyNote({ offer }: { offer: VendorOffer }) {
+  const sign = offer.currency ? CURRENCY_SIGN[offer.currency] : undefined;
+  if (!sign || !offer.price) return null;
+  return (
+    <span className="font-blender-medium text-xs text-text-muted">
+      {offer.price.toLocaleString('ru-RU')} {sign}
+    </span>
+  );
+}
+
+export function ItemPriceBlock({
+  buyFor = [],
+  sellFor = [],
+  slots,
+  buyLevelRequired,
+  rates,
+  pricesAgeHours,
+}: ItemPriceBlockProps) {
   const isPve = useIsPve();
   const traderBuys = buyFor.filter((b) => !isFlea(b.vendor));
   const fleaBuy = buyFor.find((b) => isFlea(b.vendor));
@@ -176,100 +257,122 @@ export function ItemPriceBlock({ buyFor = [], sellFor = [], slots, buyLevelRequi
   const traderSellVps = bestTraderSell ? Math.floor(rub(bestTraderSell) / safeSlots) : 0;
   const fleaSellVps = fleaSell ? Math.floor(rubForMode(fleaSell, isPve) / safeSlots) : 0;
 
+  // Зелёным подсвечивается сторона, где игроку выгоднее: дешевле купить,
+  // дороже продать. Проигравшая сторона остаётся нейтральной, красного нет.
+  const buyGap = bestTraderBuy && fleaBuy ? rub(bestTraderBuy) - rubForMode(fleaBuy, isPve) : 0;
+  const sellGap = bestTraderSell && fleaSell ? rubForMode(fleaSell, isPve) - rub(bestTraderSell) : 0;
+
+  const traderBuyClass = buyGap < 0 ? gainClass(-buyGap) : 'text-text-secondary';
+  const fleaBuyClass = buyGap > 0 ? gainClass(buyGap) : 'text-text-secondary';
+  const traderSellClass = sellGap < 0 ? gainClass(-sellGap) : 'text-text-secondary';
+  const fleaSellClass = sellGap > 0 ? gainClass(sellGap) : 'text-text-secondary';
+
+  const age = fmtAge(pricesAgeHours);
+
   return (
     <div className="flex flex-col gap-2">
-      {/* ── Купить у торговца ── */}
-      <PriceCard label="Купить у торговца">
-        {bestTraderBuy ? (
-          <>
-            <div className="flex shrink-0 items-center gap-1.5">
+      <RateRow rates={rates} />
+
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+        {/* Купить у торговца */}
+        <PriceCard label="Купить у торговца">
+          {bestTraderBuy ? (
+            <>
+              <div className="flex shrink-0 items-center gap-2">
+                <VendorImage
+                  normalizedName={bestTraderBuy.vendor.normalizedName}
+                  name={bestTraderBuy.vendor.name}
+                  className="h-12 w-12 shrink-0 rounded object-cover"
+                />
+                {buyLevelRequired != null && buyLevelRequired > 0 && <LevelHex required={buyLevelRequired} />}
+              </div>
+              <span className="flex min-w-0 flex-col gap-1">
+                <BigPrice value={rub(bestTraderBuy)} className={traderBuyClass} />
+                <CurrencyNote offer={bestTraderBuy} />
+              </span>
+            </>
+          ) : (
+            <EmptyValue />
+          )}
+        </PriceCard>
+
+        {/* Купить на барахолке */}
+        <PriceCard label="Купить на барахолке" note={age}>
+          {fleaBuy ? (
+            <>
+              <IconFrame tint="bg-tactical-amber/10">
+                <span className="icon-eft-currency-ruble h-7 w-7 bg-tactical-amber mask-contain mask-center mask-no-repeat" />
+              </IconFrame>
+              <BigPrice value={rubForMode(fleaBuy, isPve)} className={fleaBuyClass} />
+              <FleaModeTag isPve={isPve} hasPve={fleaBuy.priceRUBPve != null} />
+            </>
+          ) : (
+            <EmptyValue />
+          )}
+        </PriceCard>
+
+        {/* Продать торговцу */}
+        <PriceCard label="Продать торговцу">
+          {bestTraderSell ? (
+            <>
               <VendorImage
-                normalizedName={bestTraderBuy.vendor.normalizedName}
-                name={bestTraderBuy.vendor.name}
-                className="h-11 w-11 shrink-0 rounded border border-lines-hover/50 object-cover"
+                normalizedName={bestTraderSell.vendor.normalizedName}
+                name={bestTraderSell.vendor.name}
+                className="h-12 w-12 shrink-0 rounded object-cover"
               />
-              {buyLevelRequired != null && buyLevelRequired > 0 && <LevelHex required={buyLevelRequired} />}
-            </div>
-            <BigPrice value={rub(bestTraderBuy)} className="text-text-primary" />
-          </>
-        ) : (
-          <EmptyValue />
-        )}
-      </PriceCard>
+              <span className="flex min-w-0 flex-col gap-1">
+                <BigPrice value={rub(bestTraderSell)} className={traderSellClass} />
+                <CurrencyNote offer={bestTraderSell} />
+              </span>
+            </>
+          ) : (
+            <EmptyValue />
+          )}
+        </PriceCard>
 
-      {/* ── Купить на барахолке ── */}
-      <PriceCard label="Купить на барахолке">
-        {fleaBuy ? (
-          <>
-            <IconFrame tint="bg-yellow-500/10">
-              <span className="icon-eft-currency-ruble h-5 w-5 bg-yellow-500/80 mask-contain mask-center mask-no-repeat" />
-            </IconFrame>
-            <BigPrice value={rubForMode(fleaBuy, isPve)} className="text-nvg-green" />
-            <FleaModeTag isPve={isPve} hasPve={fleaBuy.priceRUBPve != null} />
-          </>
-        ) : (
-          <EmptyValue />
-        )}
-      </PriceCard>
+        {/* Продать на барахолке */}
+        <PriceCard label="Продать на барахолке" note={age}>
+          {fleaSell ? (
+            <>
+              <IconFrame tint="bg-tactical-amber/10">
+                <span className="icon-eft-currency-ruble h-7 w-7 bg-tactical-amber mask-contain mask-center mask-no-repeat" />
+              </IconFrame>
+              <BigPrice value={rubForMode(fleaSell, isPve)} className={fleaSellClass} />
+              <FleaModeTag isPve={isPve} hasPve={fleaSell.priceRUBPve != null} />
+            </>
+          ) : (
+            <EmptyValue />
+          )}
+        </PriceCard>
 
-      {/* ── Продать торговцу ── */}
-      <PriceCard label="Продать торговцу">
-        {bestTraderSell ? (
-          <>
-            <VendorImage
-              normalizedName={bestTraderSell.vendor.normalizedName}
-              name={bestTraderSell.vendor.name}
-              className="h-11 w-11 shrink-0 rounded border border-lines-hover/50 object-cover"
-            />
-            <BigPrice value={rub(bestTraderSell)} className="text-text-secondary" />
-          </>
-        ) : (
-          <EmptyValue />
-        )}
-      </PriceCard>
+        {/* Цена / слот у торговца */}
+        <PriceCard label="Цена / слот у торговца">
+          {traderSellVps > 0 ? (
+            <>
+              <IconFrame tint="bg-text-secondary/10">
+                <span className="icon-eft-items-price-slot h-6 w-6 bg-text-secondary mask-contain mask-center mask-no-repeat" />
+              </IconFrame>
+              <BigPrice value={traderSellVps} className="text-text-secondary" />
+            </>
+          ) : (
+            <EmptyValue />
+          )}
+        </PriceCard>
 
-      {/* ── Продать на барахолке ── */}
-      <PriceCard label="Продать на барахолке">
-        {fleaSell ? (
-          <>
-            <IconFrame tint="bg-yellow-500/10">
-              <span className="icon-eft-currency-ruble h-5 w-5 bg-yellow-500/80 mask-contain mask-center mask-no-repeat" />
-            </IconFrame>
-            <BigPrice value={rubForMode(fleaSell, isPve)} className="text-nvg-green" />
-            <FleaModeTag isPve={isPve} hasPve={fleaSell.priceRUBPve != null} />
-          </>
-        ) : (
-          <EmptyValue />
-        )}
-      </PriceCard>
-
-      {/* ── Цена / слот: торговец ── */}
-      <PriceCard label="Цена / слот">
-        {traderSellVps > 0 ? (
-          <>
-            <IconFrame tint="bg-text-secondary/10">
-              <span className="icon-eft-items-price-slot h-5 w-5 bg-text-secondary mask-contain mask-center mask-no-repeat" />
-            </IconFrame>
-            <BigPrice value={traderSellVps} className="text-text-secondary" />
-          </>
-        ) : (
-          <EmptyValue />
-        )}
-      </PriceCard>
-
-      {/* ── Цена / слот: барахолка ── */}
-      <PriceCard label="Цена / слот на барахолке">
-        {fleaSellVps > 0 ? (
-          <>
-            <IconFrame tint="bg-nvg-green/10">
-              <span className="icon-eft-items-price-slot h-5 w-5 bg-nvg-green mask-contain mask-center mask-no-repeat" />
-            </IconFrame>
-            <BigPrice value={fleaSellVps} className="text-nvg-green" />
-          </>
-        ) : (
-          <EmptyValue />
-        )}
-      </PriceCard>
+        {/* Цена / слот на барахолке */}
+        <PriceCard label="Цена / слот на барахолке" note={`${safeSlots} ${safeSlots === 1 ? 'ячейка' : 'ячеек'}`}>
+          {fleaSellVps > 0 ? (
+            <>
+              <IconFrame tint="bg-nvg-green/10">
+                <span className="icon-eft-items-price-slot h-6 w-6 bg-nvg-green mask-contain mask-center mask-no-repeat" />
+              </IconFrame>
+              <BigPrice value={fleaSellVps} className="text-nvg-green" />
+            </>
+          ) : (
+            <EmptyValue />
+          )}
+        </PriceCard>
+      </div>
     </div>
   );
 }

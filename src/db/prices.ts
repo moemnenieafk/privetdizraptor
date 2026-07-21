@@ -316,3 +316,43 @@ export async function getPricesAgeHours(gameId: string): Promise<number | null> 
     return null;
   }
 }
+
+/**
+ * Курс валют торговцев в рублях. Игра держит его фиксированным, но нигде не отдаёт
+ * отдельным числом — он выводится из офферов: у Миротворца цены в USD, у Лыжника
+ * в EUR, и рядом с каждой лежит рублёвый эквивалент.
+ *
+ * Берётся медиана отношения priceRUB / price по всем офферам валюты: единичный
+ * оффер мог бы приехать битым, медиана к этому глуха.
+ */
+export async function getCurrencyRates(gameId: string): Promise<{ usd: number | null; eur: number | null }> {
+  try {
+    const rows = await db
+      .select({ buyFor: prices.buyFor, sellFor: prices.sellFor })
+      .from(prices)
+      .where(eq(prices.gameId, gameId));
+
+    const buckets: Record<string, number[]> = { USD: [], EUR: [] };
+    for (const row of rows) {
+      for (const offer of [...(row.buyFor ?? []), ...(row.sellFor ?? [])]) {
+        const cur = offer.currency;
+        if (cur !== 'USD' && cur !== 'EUR') continue;
+        if (!offer.price || !offer.priceRUB || offer.price <= 0) continue;
+        buckets[cur].push(offer.priceRUB / offer.price);
+      }
+    }
+
+    const median = (values: number[]): number | null => {
+      if (values.length === 0) return null;
+      const sorted = [...values].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      const value = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+      return Math.round(value);
+    };
+
+    return { usd: median(buckets.USD), eur: median(buckets.EUR) };
+  } catch (e) {
+    console.error('[getCurrencyRates]', e);
+    return { usd: null, eur: null };
+  }
+}

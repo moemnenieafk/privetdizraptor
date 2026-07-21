@@ -29,6 +29,8 @@ interface ItemDetailLayoutProps {
   item: TarkovItem;
   similar: EftItemData[];
   buyLevelRequired?: number | null;
+  rates?: { usd: number | null; eur: number | null };
+  pricesAgeHours?: number | null;
 }
 
 // ─── Статус-бейдж: иконка (как в EftItemTile/Indicator) + текст ──────────────
@@ -59,7 +61,7 @@ function StatusBadge({ label, variant, iconClass }: StatusBadgeData) {
   );
 }
 
-export function ItemDetailLayout({ item, similar, buyLevelRequired }: ItemDetailLayoutProps) {
+export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, pricesAgeHours }: ItemDetailLayoutProps) {
   const hasBarter = item.barters.length > 0;
   const hasCraft = item.crafts.length > 0;
   const hasQuest = (item.usedInTasks?.length ?? 0) > 0;
@@ -156,6 +158,8 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired }: ItemDetail
           sellFor={item.sellFor}
           slots={item.width * item.height}
           buyLevelRequired={buyLevelRequired}
+          rates={rates}
+          pricesAgeHours={pricesAgeHours}
         />
 
         <WeaponModule properties={item.properties} />
