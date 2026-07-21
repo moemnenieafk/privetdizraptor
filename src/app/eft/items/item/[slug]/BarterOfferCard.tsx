@@ -115,6 +115,30 @@ export function Metric({ icon, label, value }: { icon: string; label: string; va
   );
 }
 
+/** Колонка разложения в ряду «получить»: подпись сверху, число под ней. */
+function Breakdown({
+  label,
+  value,
+  tone,
+  big = false,
+}: {
+  label: string;
+  value: number;
+  tone: string;
+  big?: boolean;
+}) {
+  return (
+    <span className="flex shrink-0 flex-col items-end gap-1 text-right">
+      <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+        {label}
+      </span>
+      <span className={`font-blender-medium leading-none ${big ? 'text-2xl' : 'text-xl'} ${tone}`}>
+        {fmtRubShort(value)}
+      </span>
+    </span>
+  );
+}
+
 export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
   const traderColor = `var(${traderCssVar(offer.trader.normalizedName)})`;
 
@@ -129,9 +153,10 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
 
   const known = input > 0 && output > 0;
   const fee = known ? calcFleaFee(offer.reward?.item.basePrice ?? 0, output, rewardCount) : 0;
-  // Прибыль — если перепродать награду; экономия — если оставить себе.
+  // Единственная метрика карточки. Экономия отсюда убрана намеренно: она равна
+  // выходу минус вход, а оба числа и так показаны в ряду «получить» — строка
+  // дублировала бы то, что уже на экране.
   const profit = output - fee - input;
-  const saving = output - input;
 
   return (
     <article
@@ -164,15 +189,34 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
         )}
       </div>
 
-      {/* Метрики: две равные половины, значение прижато вправо внутри своей */}
-      {known && (
+      {/* Слева квест-гейт, если бартер закрыт заданием; справа единственная метрика. */}
+      {(known || offer.taskUnlock) && (
         <div className="flex h-12 items-stretch gap-2">
-          <Metric icon="icon-eft-savings" label="Экономия" value={saving} />
-          <Metric icon="icon-eft-profit" label="Прибыль" value={profit} />
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            {offer.taskUnlock && (
+              <>
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-tactical-amber/10">
+                  <span className="icon-eft-quest-lock h-6 w-6 bg-tactical-amber mask-contain mask-center mask-no-repeat" />
+                </span>
+                <Link
+                  href="/eft/questmap"
+                  className="flex min-w-0 flex-col gap-1 transition-colors hover:text-(--primary)"
+                >
+                  <span className="w-fit rounded-xs border border-tactical-amber/40 px-2 py-0.5 font-blender-medium text-[10px] uppercase tracking-widest text-tactical-amber">
+                    Задание
+                  </span>
+                  <span className="truncate font-blender-medium text-xs uppercase text-text-primary">
+                    {offer.taskUnlock.name ?? 'Требуется задание'}
+                  </span>
+                </Link>
+              </>
+            )}
+          </span>
+          {known && <Metric icon="icon-eft-profit" label="Прибыль" value={profit} />}
         </div>
       )}
 
-      <SlotDivider label="Отдаю" />
+      <SlotDivider label="Отдать" />
 
       <div className="flex flex-wrap items-start justify-center gap-1">
         {offer.requiredItems.map((req) => (
@@ -182,18 +226,18 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
 
       {offer.reward && (
         <>
-          <SlotDivider label="Получаю" />
-          <div className="flex items-center justify-center gap-3.5">
+          <SlotDivider label="Получить" />
+          <div className="flex items-center gap-3.5">
             <BarterSlot item={offer.reward.item} count={offer.reward.count} />
-            {output > 0 && (
-              <span className="flex min-w-0 flex-col gap-1">
-                <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">
-                  На барахолке
-                </span>
-                <span className="font-blender-medium text-xl leading-none text-text-primary">
-                  {fmtRubShort(output)}
-                </span>
-              </span>
+            <span className="min-w-0 flex-1 truncate font-blender-medium text-xs uppercase text-text-primary">
+              {offer.reward.item.name}
+            </span>
+            {known && (
+              <>
+                <Breakdown label="Покупка" value={-input} tone="text-danger" />
+                <Breakdown label="Комиссия" value={-fee} tone="text-danger" />
+                <Breakdown label="Продажа на барахолке" value={output} tone="text-text-primary" big />
+              </>
             )}
           </div>
         </>

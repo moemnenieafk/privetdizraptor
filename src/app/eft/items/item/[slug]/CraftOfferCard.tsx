@@ -73,7 +73,7 @@ export function CraftOfferCard({
         </div>
       )}
 
-      <SlotDivider label="Отдаю" />
+      <SlotDivider label="Отдать" />
 
       <div className="flex flex-wrap items-start justify-center gap-2">
         {recipe.requiredItems.map((req) => (
@@ -88,7 +88,7 @@ export function CraftOfferCard({
 
       {recipe.reward && (
         <>
-          <SlotDivider label="Получаю" />
+          <SlotDivider label="Получить" />
           <div className="flex items-center justify-center gap-3.5">
             <BarterSlot item={recipe.reward.item} count={recipe.reward.count} />
             {output > 0 && (
