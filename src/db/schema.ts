@@ -8,6 +8,7 @@ import {
   boolean,
   jsonb,
   timestamp,
+  date,
   index,
   uniqueIndex,
   primaryKey,
@@ -204,6 +205,35 @@ export const prices = pgTable(
     syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [primaryKey({ columns: [t.gameId, t.inGameId] })],
+);
+
+/* ───────────────────────── история цен (наша, накопительная) ───────────────────────── */
+/**
+ * Суточные снимки цен барахолки. Нужны потому, что `prices` хранит только текущее
+ * состояние: `lastLowPrice` — это самое дешёвое живое предложение в моменте, оно
+ * скачет в разы за сутки (наблюдали 100k → 28k → 40k по одному магазину). Любой
+ * расчёт, опирающийся на спот, шумит на десятки процентов.
+ *
+ * Пишется раз в сутки кроном; ключ (game, item, day) делает запись идемпотентной —
+ * повторный прогон за те же сутки просто перезапишет строку. Глубина 60 дней,
+ * лишнее подчищает тот же крон.
+ */
+export const priceHistory = pgTable(
+  "price_history",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    inGameId: text("in_game_id").notNull(), // 24-символьный BSG UID
+    day: date("day").notNull(), // сутки в UTC
+    avgPrice: integer("avg_price"), // avg24hPrice на момент снимка
+    lowPrice: integer("low_price"), // lastLowPrice на момент снимка
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.gameId, t.inGameId, t.day] }),
+    index("price_history_day_idx").on(t.day),
+  ],
 );
 
 /* ───────────────────────── barters / crafts (self-mirror tarkov.dev) ───────────────────────── */
