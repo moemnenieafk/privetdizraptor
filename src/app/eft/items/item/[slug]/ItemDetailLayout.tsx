@@ -172,14 +172,16 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
         <MedicalItemModule properties={item.properties} />
 
         <ItemQuestBlock tasks={item.usedInTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} />
+
+        {/* Экономика живёт в той же колонке, что и цены: в макете это одна полоса 724. */}
+        <BarterModule barters={item.barters} />
+        <CraftModule crafts={item.crafts} />
+        <UsedInCraftModule usedIn={item.usedInCrafts ?? []} itemId={item.id} />
       </div>
 
       {/* ── СЕКЦИИ НИЖЕ (full-width) ───────────────────── */}
       <div className="flex w-full flex-col gap-6 lg:w-full lg:basis-full">
-        <BarterModule barters={item.barters} />
-        <CraftModule crafts={item.crafts} />
         <UsedInBarterModule usedIn={item.usedInBarters ?? []} />
-        <UsedInCraftModule usedIn={item.usedInCrafts ?? []} itemId={item.id} />
         <SimilarItems items={similar} />
         <LootSources tasks={item.receivedFromTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} />
 

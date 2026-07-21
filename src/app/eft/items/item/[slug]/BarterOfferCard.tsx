@@ -3,6 +3,25 @@ import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { calcFleaFee } from '@/lib/barter-calc';
 import type { BarterOffer } from './ItemModules';
 
+/**
+ * Фон и обводка карточки: в макете это два радиальных слоя цветом торговца плюс
+ * градиентная рамка. Рамка делается двухслойным фоном с разным background-clip —
+ * border-image здесь не подходит, он ломает скругление.
+ */
+export function cardStyle(color: string): React.CSSProperties {
+  const at = (pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+  return {
+    backgroundImage: [
+      `radial-gradient(120% 60% at 50% 0%, ${at(28)}, transparent 70%)`,
+      `radial-gradient(90% 90% at 100% 0%, ${at(14)}, transparent 70%)`,
+      'linear-gradient(#000, #000)',
+      `radial-gradient(120% 140% at 50% 0%, ${at(100)}, ${at(10)} 70%)`,
+    ].join(', '),
+    backgroundOrigin: 'border-box',
+    backgroundClip: 'padding-box, padding-box, padding-box, border-box',
+  };
+}
+
 /** Пороги выгодности — та же шкала, что в ценовом блоке. */
 const GAIN_GREEN = 10_000;
 const GAIN_SUPER = 100_000;
@@ -44,11 +63,14 @@ export function BarterSlot({
   item,
   count,
   highlight = false,
+  tileOnly = false,
 }: {
   item: SlotItem;
   count: number;
   /** Тот самый предмет, чью карточку смотрим. В чужом рецепте он главный. */
   highlight?: boolean;
+  /** Только тайл со счётчиком: в ряду «получить» название и цены стоят рядом. */
+  tileOnly?: boolean;
 }) {
   const unit = item.marketPrice ?? 0;
   const total = unit * count;
@@ -66,14 +88,16 @@ export function BarterSlot({
           x{count}
         </span>
       </span>
-      <span
-        className={`w-full truncate text-center font-blender-medium text-xs leading-none ${
-          highlight ? 'text-tactical-amber' : 'text-text-primary'
-        }`}
-      >
-        {item.shortName || item.name}
-      </span>
-      {unit > 0 && (
+      {!tileOnly && (
+        <span
+          className={`w-full truncate text-center font-blender-medium text-xs leading-none ${
+            highlight ? 'text-tactical-amber' : 'text-text-primary'
+          }`}
+        >
+          {item.shortName || item.name}
+        </span>
+      )}
+      {!tileOnly && unit > 0 && (
         <>
           <span className="w-full truncate text-center font-blender-medium text-xs leading-none text-text-secondary">
             {fmtRubShort(total)}
@@ -89,12 +113,12 @@ export function BarterSlot({
   return item.normalizedName ? (
     <Link
       href={`/eft/items/item/${item.normalizedName}`}
-      className="flex w-24 shrink-0 flex-col items-center gap-1.5 rounded-xs transition-colors hover:bg-white/4"
+      className={`flex shrink-0 flex-col items-center gap-1.5 rounded-xs transition-colors hover:bg-white/4 ${tileOnly ? '' : 'w-24'}`}
     >
       {body}
     </Link>
   ) : (
-    <span className="flex w-24 shrink-0 flex-col items-center gap-1.5">{body}</span>
+    <span className={`flex shrink-0 flex-col items-center gap-1.5 ${tileOnly ? '' : 'w-24'}`}>{body}</span>
   );
 }
 
@@ -159,15 +183,7 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
   const profit = output - fee - input;
 
   return (
-    <article
-      className="flex flex-col gap-3.5 overflow-hidden rounded-lg p-3.5"
-      style={{
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: traderColor,
-        background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 12%, transparent), #000000)`,
-      }}
-    >
+    <article className="flex flex-col gap-3 rounded-lg border border-transparent p-3.5" style={cardStyle(traderColor)}>
       {/* Шапка: торговец · уровень · лимит */}
       <div className="flex h-12 items-center gap-2.5">
         <img
@@ -228,7 +244,7 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
         <>
           <SlotDivider label="Получить" />
           <div className="flex items-center gap-3.5">
-            <BarterSlot item={offer.reward.item} count={offer.reward.count} />
+            <BarterSlot item={offer.reward.item} count={offer.reward.count} tileOnly />
             <span className="min-w-0 flex-1 truncate font-blender-medium text-xs uppercase text-text-primary">
               {offer.reward.item.name}
             </span>

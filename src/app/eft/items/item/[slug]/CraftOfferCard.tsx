@@ -1,4 +1,4 @@
-import { BarterSlot, SlotDivider, Metric } from './BarterOfferCard';
+import { BarterSlot, SlotDivider, Metric, cardStyle } from './BarterOfferCard';
 import { calcFleaFee } from '@/lib/barter-calc';
 import { stationIconClass, type CraftRecipe } from './ItemModules';
 
@@ -38,15 +38,7 @@ export function CraftOfferCard({
   const perHour = recipe.duration > 0 ? (profit / recipe.duration) * 3600 : 0;
 
   return (
-    <article
-      className="flex flex-col gap-3.5 overflow-hidden rounded-lg p-3.5"
-      style={{
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: accent,
-        background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${accent} 12%, transparent), #000000)`,
-      }}
-    >
+    <article className="flex flex-col gap-3 rounded-lg border border-transparent p-3.5" style={cardStyle(accent)}>
       {/* Шапка: модуль убежища · уровень · длительность */}
       <div className="flex h-12 items-center gap-2.5">
         <span
@@ -90,7 +82,7 @@ export function CraftOfferCard({
         <>
           <SlotDivider label="Получить" />
           <div className="flex items-center justify-center gap-3.5">
-            <BarterSlot item={recipe.reward.item} count={recipe.reward.count} />
+            <BarterSlot item={recipe.reward.item} count={recipe.reward.count} tileOnly />
             {output > 0 && (
               <span className="flex min-w-0 flex-col gap-1">
                 <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">
