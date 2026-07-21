@@ -13,7 +13,14 @@ function fmtDuration(seconds: number): string {
   return `${m} мин`;
 }
 
-export function CraftOfferCard({ recipe }: { recipe: CraftRecipe }) {
+export function CraftOfferCard({
+  recipe,
+  highlightItemId,
+}: {
+  recipe: CraftRecipe;
+  /** Подсветить этот ингредиент: на странице предмета в чужом рецепте важен именно он. */
+  highlightItemId?: string;
+}) {
   const accent = 'var(--primary)';
 
   const input = recipe.requiredItems.reduce(
@@ -86,7 +93,12 @@ export function CraftOfferCard({ recipe }: { recipe: CraftRecipe }) {
 
       <div className="flex flex-wrap items-start gap-2">
         {recipe.requiredItems.map((req) => (
-          <BarterSlot key={req.item.id} item={req.item} count={req.count} />
+          <BarterSlot
+            key={req.item.id}
+            item={req.item}
+            count={req.count}
+            highlight={req.item.id === highlightItemId}
+          />
         ))}
       </div>
 

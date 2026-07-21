@@ -179,7 +179,7 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
         <BarterModule barters={item.barters} />
         <CraftModule crafts={item.crafts} />
         <UsedInBarterModule usedIn={item.usedInBarters ?? []} />
-        <UsedInCraftModule usedIn={item.usedInCrafts ?? []} />
+        <UsedInCraftModule usedIn={item.usedInCrafts ?? []} itemId={item.id} />
         <SimilarItems items={similar} />
         <LootSources tasks={item.receivedFromTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} />
 

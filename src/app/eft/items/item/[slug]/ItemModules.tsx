@@ -687,7 +687,7 @@ export function UsedInBarterModule({ usedIn }: { usedIn: UsedInBarter[] }) {
 
 // === ОБРАТНОЕ: «Используется в крафте» (предмет — ингредиент) ===
 
-export function UsedInCraftModule({ usedIn }: { usedIn: CraftRecipe[] }) {
+export function UsedInCraftModule({ usedIn, itemId }: { usedIn: CraftRecipe[]; itemId?: string }) {
   if (usedIn.length === 0) return null;
 
   return (
@@ -695,7 +695,7 @@ export function UsedInCraftModule({ usedIn }: { usedIn: CraftRecipe[] }) {
       <SectionRule title="Используется в производстве" icon={<Hammer className="h-4 w-4" />} />
       <div className="flex flex-col gap-3.5">
         {usedIn.map((recipe) => (
-          <CraftOfferCard key={recipe.id} recipe={recipe} />
+          <CraftOfferCard key={recipe.id} recipe={recipe} highlightItemId={itemId} />
         ))}
       </div>
     </section>

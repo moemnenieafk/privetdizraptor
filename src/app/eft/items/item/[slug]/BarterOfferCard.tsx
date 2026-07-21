@@ -40,12 +40,25 @@ export interface SlotItem {
 }
 
 /** Слот 96px: тайл 48 со счётчиком в углу, под ним имя, итог и цена за штуку. */
-export function BarterSlot({ item, count }: { item: SlotItem; count: number }) {
+export function BarterSlot({
+  item,
+  count,
+  highlight = false,
+}: {
+  item: SlotItem;
+  count: number;
+  /** Тот самый предмет, чью карточку смотрим. В чужом рецепте он главный. */
+  highlight?: boolean;
+}) {
   const unit = item.marketPrice ?? 0;
   const total = unit * count;
   const body = (
     <>
-      <span className="relative flex h-12 w-12 items-center justify-end rounded border border-lines-hover bg-(--color-base) p-[3px]">
+      <span
+        className={`relative flex h-12 w-12 items-center justify-end rounded border bg-(--color-base) p-[3px] ${
+          highlight ? 'border-tactical-amber shadow-[0_0_10px_color-mix(in_srgb,var(--color-tactical-amber)_35%,transparent)]' : 'border-lines-hover'
+        }`}
+      >
         {item.image512pxLink && (
           <img src={item.image512pxLink} alt="" className="absolute inset-0 h-full w-full object-contain" />
         )}
@@ -53,7 +66,11 @@ export function BarterSlot({ item, count }: { item: SlotItem; count: number }) {
           x{count}
         </span>
       </span>
-      <span className="w-full truncate text-center font-blender-medium text-xs leading-none text-text-primary">
+      <span
+        className={`w-full truncate text-center font-blender-medium text-xs leading-none ${
+          highlight ? 'text-tactical-amber' : 'text-text-primary'
+        }`}
+      >
         {item.shortName || item.name}
       </span>
       {unit > 0 && (
