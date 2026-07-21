@@ -69,6 +69,8 @@ export interface TarkovItem {
   properties: ItemProperties;
   sellFor: VendorOffer[];
   buyFor?: VendorOffer[];
+  /** Уровень ЧВК для доступа к предмету на барахолке (Tarkov 1.0). */
+  minLevelForFlea?: number | null;
   barters: BarterOffer[];
   crafts: CraftRecipe[];
   usedInBarters?: UsedInBarter[];
@@ -367,6 +369,7 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     bsgCategoryId: px.bsgCategoryId,
     image512pxLink: itemIconUrl(mainId),
     properties: mapDetailProperties(base.propertiesRaw),
+    minLevelForFlea: px.minLevelForFlea ?? null,
     sellFor: (px.sellFor ?? []).map((o) => toVendor(o, sellPve)),
     buyFor: (px.buyFor ?? []).map((o) => toVendor(o, buyPve)),
     barters: itemBarters,
@@ -428,8 +431,10 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
   if (!data) notFound();
 
   const { item, similar } = data;
-  // Требуемый уровень торговца у нас не зеркалится → гексагон уровня не показываем.
-  const buyLevelRequired = null;
+  // Уровень доступа предмета на барахолке: в Tarkov 1.0 поверх общего порога 15
+  // навешены блокировки по категориям. Гексагон рисуется только если ЧВК не дорос —
+  // сравнение живёт в LevelHex на клиенте, сюда приходит только сам порог.
+  const buyLevelRequired = item.minLevelForFlea ?? null;
   const gameId = await eftGameId();
   const [rates, pricesAgeHours, recentChanges] = await Promise.all([
     getCurrencyRates(gameId),

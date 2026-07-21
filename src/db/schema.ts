@@ -196,6 +196,10 @@ export const prices = pgTable(
     changeLast48hPercent: real("change_last_48h_percent"),
     low24hPrice: integer("low24h_price"),
     high24hPrice: integer("high24h_price"),
+    // Уровень ЧВК, с которого предмет доступен на барахолке. В Tarkov 1.0 поверх
+    // общего порога 15 навешены блокировки по категориям; tarkov.dev отдаёт уже
+    // разрешённое число полем Item.minLevelForFlea.
+    minLevelForFlea: integer("min_level_for_flea"),
     sellFor: jsonb("sell_for").$type<PriceVendorOffer[]>(),
     buyFor: jsonb("buy_for").$type<PriceVendorOffer[]>(),
     avg24hPricePve: integer("avg24h_price_pve"),

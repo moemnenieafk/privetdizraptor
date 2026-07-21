@@ -75,8 +75,10 @@ function LevelHex({ required }: { required: number }) {
   const activeId = usePlayerStore((s) => s.activeProfileId);
   const profile = profiles.find((p) => p.id === activeId);
   const playerLvl = profile ? parseInt(profile.level, 10) : 0;
-  const met = playerLvl >= required;
-  const color = met ? 'var(--color-nvg-green)' : 'var(--color-danger)';
+  // Показываем только пока игрок не дорос: достигнутый порог — не информация,
+  // а шум. Уровень неизвестен (профиль не загружен) → считаем, что не дорос.
+  if (playerLvl >= required) return null;
+  const color = 'var(--color-danger)';
 
   return (
     <span
@@ -284,7 +286,6 @@ export function ItemPriceBlock({
                   name={bestTraderBuy.vendor.name}
                   className="h-12 w-12 shrink-0 rounded object-cover"
                 />
-                {buyLevelRequired != null && buyLevelRequired > 0 && <LevelHex required={buyLevelRequired} />}
               </div>
               <span className="flex min-w-0 flex-col gap-1">
                 <BigPrice value={rub(bestTraderBuy)} className={traderBuyClass} />
@@ -303,6 +304,7 @@ export function ItemPriceBlock({
               <IconFrame tint="bg-tactical-amber/10">
                 <span className="icon-eft-currency-ruble h-7 w-7 bg-tactical-amber mask-contain mask-center mask-no-repeat" />
               </IconFrame>
+              {buyLevelRequired != null && buyLevelRequired > 0 && <LevelHex required={buyLevelRequired} />}
               <BigPrice value={rubForMode(fleaBuy, isPve)} className={fleaBuyClass} />
               <FleaModeTag isPve={isPve} hasPve={fleaBuy.priceRUBPve != null} />
             </>
@@ -337,6 +339,7 @@ export function ItemPriceBlock({
               <IconFrame tint="bg-tactical-amber/10">
                 <span className="icon-eft-currency-ruble h-7 w-7 bg-tactical-amber mask-contain mask-center mask-no-repeat" />
               </IconFrame>
+              {buyLevelRequired != null && buyLevelRequired > 0 && <LevelHex required={buyLevelRequired} />}
               <BigPrice value={rubForMode(fleaSell, isPve)} className={fleaSellClass} />
               <FleaModeTag isPve={isPve} hasPve={fleaSell.priceRUBPve != null} />
             </>

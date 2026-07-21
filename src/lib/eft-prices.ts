@@ -19,6 +19,8 @@ export interface CtaVendorOffer {
 export interface EftPriceInfo {
   normalizedName: string;
   bsgCategoryId?: string;
+  /** Уровень ЧВК для доступа к предмету на барахолке. */
+  minLevelForFlea?: number;
   backgroundColor?: string;
   types?: string[];
   lastLowPrice?: number;
@@ -45,6 +47,7 @@ interface RawItem {
   id: string;
   normalizedName?: string;
   bsgCategoryId?: string;
+  minLevelForFlea?: number;
   backgroundColor?: string;
   types?: string[];
   lastLowPrice?: number;
@@ -66,6 +69,7 @@ const buildQuery = (gameMode: 'regular' | 'pve') => `
       id
       normalizedName
       bsgCategoryId
+      minLevelForFlea
       backgroundColor
       types
       lastLowPrice
@@ -109,6 +113,7 @@ export async function getEftPriceMap(gameMode: 'regular' | 'pve' = 'regular'): P
         {
           normalizedName: it.normalizedName ?? "",
           bsgCategoryId: it.bsgCategoryId ?? undefined,
+          minLevelForFlea: it.minLevelForFlea ?? undefined,
           backgroundColor: it.backgroundColor,
           types: it.types,
           lastLowPrice: it.lastLowPrice ?? undefined,

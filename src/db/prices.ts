@@ -35,6 +35,7 @@ export async function syncEftPrices(): Promise<SyncResult> {
     inGameId,
     normalizedName: p.normalizedName || null,
     bsgCategoryId: p.bsgCategoryId ?? null,
+    minLevelForFlea: p.minLevelForFlea ?? null,
     backgroundColor: p.backgroundColor ?? null,
     types: p.types ?? null,
     lastLowPrice: p.lastLowPrice ?? null,
@@ -64,6 +65,7 @@ export async function syncEftPrices(): Promise<SyncResult> {
         set: {
           normalizedName: sql`excluded.normalized_name`,
           bsgCategoryId: sql`excluded.bsg_category_id`,
+          minLevelForFlea: sql`excluded.min_level_for_flea`,
           backgroundColor: sql`excluded.background_color`,
           types: sql`excluded.types`,
           lastLowPrice: sql`excluded.last_low_price`,
@@ -109,6 +111,7 @@ const BASE_COLS = {
   inGameId: prices.inGameId,
   normalizedName: prices.normalizedName,
   bsgCategoryId: prices.bsgCategoryId,
+  minLevelForFlea: prices.minLevelForFlea,
   backgroundColor: prices.backgroundColor,
   types: prices.types,
   lastLowPrice: prices.lastLowPrice,
@@ -135,6 +138,7 @@ interface PriceRowLike {
   inGameId: string;
   normalizedName: string | null;
   bsgCategoryId: string | null;
+  minLevelForFlea: number | null;
   backgroundColor: string | null;
   types: string[] | null;
   lastLowPrice: number | null;
@@ -169,6 +173,7 @@ function mapPriceRow(r: PriceRowLike): EftPriceInfo {
   return {
     normalizedName: r.normalizedName ?? "",
     bsgCategoryId: r.bsgCategoryId ?? undefined,
+    minLevelForFlea: r.minLevelForFlea ?? undefined,
     backgroundColor: r.backgroundColor ?? undefined,
     types: r.types ?? undefined,
     lastLowPrice: r.lastLowPrice ?? undefined,
@@ -271,6 +276,7 @@ export async function getEftPriceIndex(): Promise<Map<string, EftPriceIndexInfo>
           changeLast48hPercent: prices.changeLast48hPercent,
           backgroundColor: prices.backgroundColor,
           bsgCategoryId: prices.bsgCategoryId,
+  minLevelForFlea: prices.minLevelForFlea,
         })
         .from(prices)
         .where(eq(prices.gameId, gameId));
@@ -286,6 +292,7 @@ export async function getEftPriceIndex(): Promise<Map<string, EftPriceIndexInfo>
           changeLast48hPercent: r.changeLast48hPercent ?? undefined,
           backgroundColor: r.backgroundColor ?? undefined,
           bsgCategoryId: r.bsgCategoryId ?? undefined,
+    minLevelForFlea: r.minLevelForFlea ?? undefined,
         },
       ]),
     );
