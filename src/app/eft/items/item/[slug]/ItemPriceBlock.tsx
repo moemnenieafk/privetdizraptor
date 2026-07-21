@@ -170,7 +170,7 @@ function EmptyValue() {
       <IconFrame tint="bg-red-500/10">
         <PackageX className="h-5 w-5 text-red-500/70" />
       </IconFrame>
-      <span className="font-blender-medium text-2xl leading-none uppercase tracking-widest text-red-500">НЕТ</span>
+      <span className="ml-auto text-right font-blender-medium text-2xl leading-none uppercase tracking-widest text-danger">НЕТ</span>
     </>
   );
 }
@@ -188,7 +188,7 @@ function PriceCard({
   return (
     <div className="flex flex-col gap-2 rounded-lg bg-card-menu p-3.5">
       <div className="flex items-baseline gap-2">
-        <span className="font-blender-medium text-xs uppercase tracking-[8px] text-text-secondary">
+        <span className="font-blender-medium text-xs uppercase tracking-[0.08em] text-text-secondary">
           {label}
         </span>
         {note && (
@@ -287,7 +287,7 @@ export function ItemPriceBlock({
                   className="h-12 w-12 shrink-0 rounded object-cover"
                 />
               </div>
-              <span className="flex min-w-0 flex-col gap-1">
+              <span className="ml-auto flex min-w-0 flex-col items-end gap-1 text-right">
                 <BigPrice value={rub(bestTraderBuy)} className={traderBuyClass} />
                 <CurrencyNote offer={bestTraderBuy} />
               </span>
@@ -305,7 +305,7 @@ export function ItemPriceBlock({
                 <span className="icon-eft-currency-ruble h-7 w-7 bg-tactical-amber mask-contain mask-center mask-no-repeat" />
               </IconFrame>
               {buyLevelRequired != null && buyLevelRequired > 0 && <LevelHex required={buyLevelRequired} />}
-              <BigPrice value={rubForMode(fleaBuy, isPve)} className={fleaBuyClass} />
+              <BigPrice value={rubForMode(fleaBuy, isPve)} className={`ml-auto text-right ${fleaBuyClass}`} />
               <FleaModeTag isPve={isPve} hasPve={fleaBuy.priceRUBPve != null} />
             </>
           ) : (
@@ -322,7 +322,7 @@ export function ItemPriceBlock({
                 name={bestTraderSell.vendor.name}
                 className="h-12 w-12 shrink-0 rounded object-cover"
               />
-              <span className="flex min-w-0 flex-col gap-1">
+              <span className="ml-auto flex min-w-0 flex-col items-end gap-1 text-right">
                 <BigPrice value={rub(bestTraderSell)} className={traderSellClass} />
                 <CurrencyNote offer={bestTraderSell} />
               </span>
@@ -340,7 +340,7 @@ export function ItemPriceBlock({
                 <span className="icon-eft-currency-ruble h-7 w-7 bg-tactical-amber mask-contain mask-center mask-no-repeat" />
               </IconFrame>
               {buyLevelRequired != null && buyLevelRequired > 0 && <LevelHex required={buyLevelRequired} />}
-              <BigPrice value={rubForMode(fleaSell, isPve)} className={fleaSellClass} />
+              <BigPrice value={rubForMode(fleaSell, isPve)} className={`ml-auto text-right ${fleaSellClass}`} />
               <FleaModeTag isPve={isPve} hasPve={fleaSell.priceRUBPve != null} />
             </>
           ) : (
@@ -355,7 +355,7 @@ export function ItemPriceBlock({
               <IconFrame tint="bg-text-secondary/10">
                 <span className="icon-eft-items-price-slot h-6 w-6 bg-text-secondary mask-contain mask-center mask-no-repeat" />
               </IconFrame>
-              <BigPrice value={traderSellVps} className="text-text-secondary" />
+              <BigPrice value={traderSellVps} className="ml-auto text-right text-text-secondary" />
             </>
           ) : (
             <EmptyValue />
@@ -369,7 +369,7 @@ export function ItemPriceBlock({
               <IconFrame tint="bg-nvg-green/10">
                 <span className="icon-eft-items-price-slot h-6 w-6 bg-nvg-green mask-contain mask-center mask-no-repeat" />
               </IconFrame>
-              <BigPrice value={fleaSellVps} className="text-nvg-green" />
+              <BigPrice value={fleaSellVps} className="ml-auto text-right text-nvg-green" />
             </>
           ) : (
             <EmptyValue />

@@ -148,7 +148,7 @@ export function QuestCard({
               {itemShortName ?? countLabel}
             </span>
             {foundInRaid && (
-              <span className="font-blender-medium text-[10px] leading-none tracking-[4px] text-tactical-amber">
+              <span className="font-blender-medium text-[10px] leading-none tracking-[0.04em] text-tactical-amber">
                 найдено в рейде
               </span>
             )}
