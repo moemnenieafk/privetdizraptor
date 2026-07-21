@@ -1,4 +1,4 @@
-import { BarterSlot, SlotDivider, gainClass, fmtRubShort } from './BarterOfferCard';
+import { BarterSlot, SlotDivider, Metric } from './BarterOfferCard';
 import { calcFleaFee } from '@/lib/barter-calc';
 import { stationIconClass, type CraftRecipe } from './ItemModules';
 
@@ -67,31 +67,15 @@ export function CraftOfferCard({
 
       {/* Метрики: прибыль и прибыль в час */}
       {known && (
-        <div className="flex items-center gap-2">
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="icon-eft-profit h-4 w-4 shrink-0 bg-text-muted mask-contain mask-center mask-no-repeat" />
-            <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
-              Прибыль
-            </span>
-            <span className={`ml-auto font-blender-medium text-xl leading-none ${gainClass(profit)}`}>
-              {fmtRubShort(profit)}
-            </span>
-          </span>
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="icon-eft-profit h-4 w-4 shrink-0 bg-text-muted mask-contain mask-center mask-no-repeat" />
-            <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
-              Прибыль в час
-            </span>
-            <span className={`ml-auto font-blender-medium text-xl leading-none ${gainClass(perHour)}`}>
-              {fmtRubShort(perHour)}
-            </span>
-          </span>
+        <div className="flex h-12 items-stretch gap-2">
+          <Metric icon="icon-eft-profit" label="Прибыль" value={profit} />
+          <Metric icon="icon-eft-prog-craft" label="Прибыль в час" value={perHour} />
         </div>
       )}
 
       <SlotDivider label="Отдаю" />
 
-      <div className="flex flex-wrap items-start gap-2">
+      <div className="flex flex-wrap items-start justify-center gap-2">
         {recipe.requiredItems.map((req) => (
           <BarterSlot
             key={req.item.id}
@@ -105,7 +89,7 @@ export function CraftOfferCard({
       {recipe.reward && (
         <>
           <SlotDivider label="Получаю" />
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center justify-center gap-3.5">
             <BarterSlot item={recipe.reward.item} count={recipe.reward.count} />
             {output > 0 && (
               <span className="flex min-w-0 flex-col gap-1">
@@ -113,7 +97,7 @@ export function CraftOfferCard({
                   На барахолке
                 </span>
                 <span className="font-blender-medium text-xl leading-none text-text-primary">
-                  {fmtRubShort(output)}
+                  {Math.round(output).toLocaleString('ru-RU')} ₽
                 </span>
               </span>
             )}

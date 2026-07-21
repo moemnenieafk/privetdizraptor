@@ -98,6 +98,23 @@ export function BarterSlot({
   );
 }
 
+/** Половина ряда метрик: плитка 48 · подпись · значение справа. */
+export function Metric({ icon, label, value }: { icon: string; label: string; value: number }) {
+  return (
+    <span className="flex min-w-0 flex-1 items-center gap-2">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-text-muted/10">
+        <span className={`${icon} h-6 w-6 bg-text-muted mask-contain mask-center mask-no-repeat`} />
+      </span>
+      <span className="shrink-0 font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+        {label}
+      </span>
+      <span className={`ml-auto truncate font-blender-medium text-xl leading-none ${gainClass(value)}`}>
+        {fmtRubShort(value)}
+      </span>
+    </span>
+  );
+}
+
 export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
   const traderColor = `var(${traderCssVar(offer.trader.normalizedName)})`;
 
@@ -147,33 +164,17 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
         )}
       </div>
 
-      {/* Метрики */}
+      {/* Метрики: две равные половины, значение прижато вправо внутри своей */}
       {known && (
-        <div className="flex items-center gap-2">
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="icon-eft-savings h-4 w-4 shrink-0 bg-text-muted mask-contain mask-center mask-no-repeat" />
-            <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
-              Экономия
-            </span>
-            <span className={`ml-auto font-blender-medium text-xl leading-none ${gainClass(saving)}`}>
-              {fmtRubShort(saving)}
-            </span>
-          </span>
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="icon-eft-profit h-4 w-4 shrink-0 bg-text-muted mask-contain mask-center mask-no-repeat" />
-            <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
-              Прибыль
-            </span>
-            <span className={`ml-auto font-blender-medium text-xl leading-none ${gainClass(profit)}`}>
-              {fmtRubShort(profit)}
-            </span>
-          </span>
+        <div className="flex h-12 items-stretch gap-2">
+          <Metric icon="icon-eft-savings" label="Экономия" value={saving} />
+          <Metric icon="icon-eft-profit" label="Прибыль" value={profit} />
         </div>
       )}
 
       <SlotDivider label="Отдаю" />
 
-      <div className="flex flex-wrap items-start gap-1">
+      <div className="flex flex-wrap items-start justify-center gap-1">
         {offer.requiredItems.map((req) => (
           <BarterSlot key={req.item.id} item={req.item} count={req.count} />
         ))}
@@ -182,7 +183,7 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
       {offer.reward && (
         <>
           <SlotDivider label="Получаю" />
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center justify-center gap-3.5">
             <BarterSlot item={offer.reward.item} count={offer.reward.count} />
             {output > 0 && (
               <span className="flex min-w-0 flex-col gap-1">
