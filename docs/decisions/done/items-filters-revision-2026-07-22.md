@@ -1,6 +1,6 @@
 ---
-status: 🟢 большая сессия закоммичена — современный фильтр на ВСЕХ категориях; хвосты в «Осталось»
-affects: items-catalog, useCategoryFilters, CategoryControlBar, AdvancedFiltersPanel, HubNav, useItemsStore, items-filter-config, EftItemTile, eft-category
+status: ✅ ЗАКРЫТО (2026-07-22) — ревизия проведена полностью и в main; остаток = backend-backlog (§4.11, отдельный спринт) + опц. мелочи (бартеры/FiR в needMe)
+affects: items-catalog, useCategoryFilters, CategoryControlBar, AdvancedFiltersPanel, FacetDropdown, SubcategoryBar, HubNav, useItemsStore, items-filter-config, EftItemTile, eft-category, db/hideout, db/weapons, globals.css
 date: 2026-07-22
 ---
 
