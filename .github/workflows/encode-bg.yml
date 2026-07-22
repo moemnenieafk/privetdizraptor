@@ -1,0 +1,63 @@
+name: Encode BG Patterns
+
+on:
+  workflow_dispatch:
+    inputs:
+      drive_folder:
+        description: 'Google Drive folder URL (public)'
+        required: true
+        default: 'https://drive.google.com/drive/folders/1WTelbUKd8qhAqDfRmW0ovjxAME06pavU'
+      vp9_crf:
+        description: 'VP9 CRF (30 = default, 28 = меньше бандинга, больше вес)'
+        required: false
+        default: '30'
+      max_height:
+        description: 'Потолок разрешения'
+        required: false
+        default: '1440'
+
+permissions:
+  contents: write
+
+jobs:
+  encode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gdown
+        run: pip install gdown
+
+      - name: Download from Google Drive
+        run: |
+          mkdir -p source
+          gdown --folder "${{ inputs.drive_folder }}" -O source --remaining-ok
+          # выравниваем возможную вложенность
+          find source -mindepth 2 -type f -exec mv -n {} source/ \;
+          find source -mindepth 1 -type d -empty -delete || true
+          echo "── Скачано ──"
+          ls -la source
+          du -sh source
+
+      - name: FFmpeg version
+        run: ffmpeg -version | head -1
+
+      - name: Encode all patterns
+        env:
+          VP9_CRF: ${{ inputs.vp9_crf }}
+          MAX_HEIGHT: ${{ inputs.max_height }}
+        run: |
+          chmod +x scripts/encode-bg-patterns.sh
+          ./scripts/encode-bg-patterns.sh source out
+
+      - name: Publish release with encoded files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="bg-patterns-$(date +%Y%m%d-%H%M)"
+          gh release create "$TAG" \
+            --title "BG patterns — encoded ($TAG)" \
+            --notes "VP9 Profile 2 10-bit CRF ${{ inputs.vp9_crf }} (2-pass, cues front) + H.264 CRF 18 (faststart). Аудио вырезано." \
+            out/webm/*.webm out/mp4/*.mp4
+          echo "RELEASE=$TAG" >> "$GITHUB_STEP_SUMMARY"
