@@ -8,14 +8,17 @@ export interface BudgetState {
   granted: number;
   /** Сколько очков потрачено на позитивные (всегда ≥ 0). */
   spent: number;
-  /** Остаток. Билд валиден, пока баланс ≥ 0. */
+  /** Остаток. Может уйти в минус — билд собирается свободно. */
   balance: number;
+  /** Выбран ли хотя бы один негатив. Валидный персонаж без боли не существует. */
+  hasNegative: boolean;
+  /** Персонаж собран: баланс ≥ 0 И взят хотя бы 1 негативный модификатор. */
   valid: boolean;
 }
 
-export type BlockReason =
-  | { kind: 'points'; missing: number }
-  | { kind: 'conflict'; withId: string; withName: string };
+// Единственная причина блокировки — взаимоисключающие перки. Нехватку очков больше
+// не блокируем: позитивы выбираются свободно, минус баланса показываем в панели.
+export type BlockReason = { kind: 'conflict'; withId: string; withName: string };
 
 export interface PerkState {
   selected: boolean;
@@ -37,26 +40,29 @@ export function computeBudget(season: Season, selectedIds: string[]): BudgetStat
   const map = byId(season);
   let granted = 0;
   let spent = 0;
+  let hasNegative = false;
 
   for (const id of selectedIds) {
     const perk = map.get(id);
     if (!perk || perk.kind === 'season') continue;
-    if (perk.cost > 0) granted += perk.cost;
-    else spent += -perk.cost;
+    if (perk.cost > 0) {
+      granted += perk.cost;
+      hasNegative = true;
+    } else {
+      spent += -perk.cost;
+    }
   }
 
   const balance = granted - spent;
-  return { granted, spent, balance, valid: balance >= 0 };
+  return { granted, spent, balance, hasNegative, valid: balance >= 0 && hasNegative };
 }
 
 /**
  * Состояние каждого личного перка при текущем выборе.
  *
- * Позитивный перк блокируется, если на него не хватает очков — это и есть весь смысл
- * системы: чтобы взять «Каппу» (−21), надо сначала набрать боль. Негативные не
- * блокируются никогда (они только добавляют очки).
- *
- * Отдельно — конфликты: пары с взаимно гасящими эффектами (см. excludes в данных).
+ * Свободный выбор: позитивы берутся когда угодно (баланс может уйти в минус — это
+ * видно в панели, «добери N»). Единственная блокировка — конфликт: взаимно гасящие
+ * пары (см. excludes) брать бессмысленно, конструктор их не даёт совмещать.
  */
 export function perkStates(
   season: Season,
@@ -64,81 +70,29 @@ export function perkStates(
 ): Record<string, PerkState> {
   const map = byId(season);
   const selected = new Set(selectedIds);
-  const { balance } = computeBudget(season, selectedIds);
 
   const states: Record<string, PerkState> = {};
 
   for (const perk of personalPerks(season)) {
-    const isSelected = selected.has(perk.id);
-
-    if (isSelected) {
+    if (selected.has(perk.id)) {
       states[perk.id] = { selected: true, blocked: null };
       continue;
     }
 
-    // Конфликт важнее нехватки очков: сначала объясняем, что перк бессмыслен.
     const conflictId = (perk.excludes ?? []).find((id) => selected.has(id));
-    if (conflictId) {
-      states[perk.id] = {
-        selected: false,
-        blocked: {
-          kind: 'conflict',
-          withId: conflictId,
-          withName: map.get(conflictId)?.name ?? conflictId,
-        },
-      };
-      continue;
-    }
-
-    if (perk.cost < 0) {
-      const price = -perk.cost;
-      if (price > balance) {
-        states[perk.id] = {
+    states[perk.id] = conflictId
+      ? {
           selected: false,
-          blocked: { kind: 'points', missing: price - balance },
-        };
-        continue;
-      }
-    }
-
-    states[perk.id] = { selected: false, blocked: null };
+          blocked: {
+            kind: 'conflict',
+            withId: conflictId,
+            withName: map.get(conflictId)?.name ?? conflictId,
+          },
+        }
+      : { selected: false, blocked: null };
   }
 
   return states;
-}
-
-/**
- * Снятие негативного перка может увести баланс в минус — тогда «оплаченные» им
- * позитивные перки повисают в воздухе. Возвращаем, что придётся снять следом,
- * чтобы интерфейс мог предупредить, а не молча сломать билд.
- */
-export function dropCascade(
-  season: Season,
-  selectedIds: string[],
-  removingId: string,
-): string[] {
-  const next = selectedIds.filter((id) => id !== removingId);
-  const { balance } = computeBudget(season, next);
-  if (balance >= 0) return [];
-
-  const map = byId(season);
-  // Снимаем самые дорогие позитивные, пока баланс не выправится: дешёвые перки
-  // игрок обычно ценит меньше, а дорогой всё равно «не по карману» без донора очков.
-  const positives = next
-    .map((id) => map.get(id))
-    .filter((p): p is SeasonPerk => !!p && p.cost < 0)
-    .sort((a, b) => a.cost - b.cost);
-
-  const toDrop: string[] = [];
-  let debt = -balance;
-
-  for (const p of positives) {
-    if (debt <= 0) break;
-    toDrop.push(p.id);
-    debt -= -p.cost;
-  }
-
-  return toDrop;
 }
 
 /** Компактный код билда для ссылки: перки по алфавиту через точку. */

@@ -581,6 +581,16 @@ html {
     100% { background-position: 0 4px; }
   }
 
+  /* Советы ЦТА: прогресс-бар автоплея карусели (длительность = AUTOPLAY_MS в JS) */
+  @keyframes season-tip-progress {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+  .season-tip-progress {
+    transform-origin: left center;
+    animation: season-tip-progress 7000ms linear both;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-reveal-punch,
     .animate-scan-sweep,
@@ -588,7 +598,8 @@ html {
     .animate-chaos-glitch,
     .season-logo-img,
     .season-logo-sweep,
-    .season-card-scanlines {
+    .season-card-scanlines,
+    .season-tip-progress {
       animation: none;
     }
   }

@@ -1,7 +1,7 @@
 // Звуковой движок на Web Audio API — синтез на лету (без файлов/лицензий).
 // Чистые «тактические» тоны: blip-подтверждение, монеты, ранг-ап-арпеджио, чайм-анлок, клик.
 
-export type SfxName = 'confirm' | 'coins' | 'rank-up' | 'unlock' | 'tick';
+export type SfxName = 'confirm' | 'coins' | 'rank-up' | 'unlock' | 'tick' | 'reel';
 
 interface AudioWindow {
   AudioContext?: typeof AudioContext;
@@ -65,6 +65,11 @@ export function playSfx(name: SfxName): void {
       break;
     case 'tick':
       tone(c, { freq: 880, dur: 0.04, type: 'square', gain: 0.12 });
+      break;
+    case 'reel':
+      // Мягкий деревянный «ток» для прокрутки рулетки — тихий, с быстрым спадом
+      // питча, не утомляет при повторах (в отличие от резкого square-тика).
+      tone(c, { freq: 340, freqTo: 190, dur: 0.03, type: 'triangle', gain: 0.06 });
       break;
     case 'coins':
       [880, 1100, 1320].forEach((f, i) =>

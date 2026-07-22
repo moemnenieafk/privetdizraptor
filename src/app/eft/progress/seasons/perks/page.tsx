@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { CURRENT_SEASON, getSeason } from '@/data/eft-seasons';
 import { SeasonPerkBuilder } from '@/components/features/seasons/SeasonPerkBuilder';
-import { SeasonBuildGallery } from '@/components/features/seasons/SeasonBuildGallery';
-import { SeasonLogo } from '@/components/features/seasons/SeasonLogo';
+import { SeasonBuildGallery, SeasonBuildList } from '@/components/features/seasons/SeasonBuildGallery';
+import { SeasonIntro } from '@/components/features/seasons/SeasonIntro';
 
 export const metadata: Metadata = {
   title: 'Конструктор перков',
@@ -33,19 +33,17 @@ export default async function SeasonPerksPage({ searchParams }: Props) {
           Сезоны
         </Link>
 
-        <header className="mb-7 border-b border-lines-hover pb-5">
-          {season.logoUrl && (
-            <SeasonLogo src={season.logoUrl} alt={season.name} className="mb-4 h-12 sm:h-14" />
-          )}
-          <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-            Сезон {season.number} · {season.name}
-          </span>
-          <h1 className="mt-1 font-blender-medium text-2xl uppercase tracking-widest text-text-primary">
+        <SeasonIntro season={season} />
+
+        <header className="mt-7 mb-7 border-b border-lines-hover pb-5">
+          <h1 className="font-blender-medium text-2xl uppercase tracking-widest text-text-primary">
             Конструктор перков
           </h1>
           <p className="mt-2 max-w-2xl font-blender-book text-sm leading-relaxed text-text-secondary">
-            Старт — 0 очков. Негативные модификаторы дают очки, позитивные их тратят. Баланс
-            должен остаться неотрицательным. Взаимоисключающие перки конструктор блокирует сам.
+            Добро пожаловать в конструктор перков! Соберите своего сезонного персонажа под свой
+            стиль игры: негативные модификаторы дают очки, позитивные — их тратят, а баланс
+            должен остаться неотрицательным (конфликтующие перки конструктор отсечёт сам).
+            Понравился билд — поделитесь ссылкой с друзьями.
           </p>
         </header>
 
@@ -54,6 +52,8 @@ export default async function SeasonPerksPage({ searchParams }: Props) {
         <div id="season-builder" className="scroll-mt-20">
           <SeasonPerkBuilder season={season} />
         </div>
+
+        <SeasonBuildList season={season} />
       </div>
     </main>
   );

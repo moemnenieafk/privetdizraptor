@@ -18,6 +18,10 @@ export interface CuratedBuild {
   vibe: BuildVibe;
   /** id личных перков (позитивные + негативные). Сезонные сюда не входят. */
   perks: string[];
+  /** Hero-баннер 9:16 для рулетки (webp). Проставляется withBanners по id. */
+  banner?: string;
+  /** Короткий тайтл-оверлей для карточки ленты. */
+  short?: string;
 }
 
 export const VIBE_META: Record<
@@ -258,10 +262,92 @@ const KORD_BREACH: CuratedBuild[] = [
     vibe: 'comfort',
     perks: ['thrombophilia', 'juice-time', 'sailors-nostalgia', 'diet', 'broken-secure-container', 'well-that-hurt', 'dr-jekyll'],
   },
+  // ── Новые билды под сезонные вводные (убежище без FIR, дефицит брони,
+  //    Чёрная дивизия, +25% опыта). Считаны от бюджета: баланс 0, есть негативы. ──
+  {
+    id: 'foreman',
+    name: 'Прораб без бумажек',
+    tagline: 'Убежище строится без «в рейде», крафты вдвое быстрее — пока сосед сидит в бункере, ты уже кладёшь плитку в бассейне. Сейфы без ключей, дань с Диких и скидка у Терапевта гонят рубли на стройку.',
+    vibe: 'loot',
+    perks: [
+      'safecracker',
+      'diet',
+      'street-tax',
+      'third-leg',
+      'polydipsia',
+      'chronic-fatigue',
+      'dr-jekyll',
+      'hemophilia',
+      'well-that-hurt',
+    ],
+  },
+  {
+    id: 'barefoot-infantry',
+    name: 'Босая пехота',
+    tagline: 'Брони у торговцев не достать — значит броня это ноги. Не ломаешься, прёшь как лось, таскаешь железо Геркулесом. Барахолки и разгрузки нет: что нашёл — выносишь на себе.',
+    vibe: 'speed',
+    perks: [
+      'sturdy-bones',
+      'marathon-runner',
+      'sprinter',
+      'hercules',
+      'no-flea-market',
+      'broken-secure-container',
+      'third-leg',
+    ],
+  },
+  {
+    id: 'black-division-assault',
+    name: 'Штурм Чёрной дивизии',
+    tagline: 'Чёрная дивизия расплодилась, а за фраги капает +25% опыта — грех не пушить. Сок глушит боль в бою, кровь не хлещет, дыхалки хватает на все рывки. Барахолки нет — трофеи снимаешь с тел.',
+    vibe: 'meta',
+    perks: [
+      'sprinter',
+      'marathon-runner',
+      'juice-time',
+      'thrombophilia',
+      'no-flea-market',
+      'personality-vacuum',
+      'dr-jekyll',
+    ],
+  },
 ];
 
+// Hero-баннеры сезона 1 (webp в /public/images/seasons/season01/builds) + короткие
+// тайтлы. Имена файлов заданы при генерации (NN-vibe-id) и не равны id — маппинг явный.
+const S1_BUILD_DIR = '/images/seasons/season01/builds';
+const S1_BUILD_BANNER: Record<string, { file: string; short: string }> = {
+  'kappa-doorstep': { file: '01-meta-kappa-doorstep', short: 'Каппа с порога' },
+  'all-in': { file: '02-meta-all-in', short: 'Всё и сразу' },
+  'safecracker-shift': { file: '03-speed-safecracker-shift', short: 'Медвежатник' },
+  'average-joe': { file: '04-comfort-average-joe', short: 'Середнячок' },
+  'pain-department': { file: '05-pain-pain-department', short: 'Отдел страданий' },
+  'zero-sum': { file: '06-meme-zero-sum', short: 'Ровно по нулям' },
+  'therapist-affair': { file: '07-meme-therapist-affair', short: 'Роман с Терапевтом' },
+  'bush-looter': { file: '08-loot-bush-looter', short: 'Из кустов' },
+  'never-tired': { file: '09-comfort-never-tired', short: 'Вечный движ' },
+  'soft-landing': { file: '10-comfort-soft-landing', short: 'Мягкая посадка' },
+  'mosin-boyar': { file: '11-meme-mosin-boyar', short: 'Мосинбоярин' },
+  'champion-liver': { file: '12-meme-champion-liver', short: 'Печень чемпиона' },
+  'sniper-tower': { file: '13-meta-sniper-tower', short: 'Снайперская вышка' },
+  'boar-tank': { file: '14-comfort-boar-tank', short: 'Ходячий кабан' },
+  'kappa-intact': { file: '15-loot-kappa-intact', short: 'Каппа без жертв' },
+  'ghost-exit': { file: '16-speed-ghost-exit', short: 'Тихий выход' },
+  'passive-income': { file: '17-loot-passive-income', short: 'Пассивный доход' },
+  'field-medic': { file: '18-comfort-field-medic', short: 'Полевой медик' },
+  foreman: { file: '19-loot-foreman', short: 'Прораб' },
+  'barefoot-infantry': { file: '20-speed-barefoot-infantry', short: 'Босая пехота' },
+  'black-division-assault': { file: '21-meta-black-division-assault', short: 'Штурм' },
+};
+
+const withBanners = (builds: CuratedBuild[]): CuratedBuild[] =>
+  builds.map((b) => {
+    const meta = S1_BUILD_BANNER[b.id];
+    return meta ? { ...b, banner: `${S1_BUILD_DIR}/${meta.file}.webp`, short: meta.short } : b;
+  });
+
 export const SEASON_BUILDS: Record<string, CuratedBuild[]> = {
-  'kord-breach': KORD_BREACH,
+  'kord-breach': withBanners(KORD_BREACH),
 };
 
 export const getSeasonBuilds = (slug: string): CuratedBuild[] => SEASON_BUILDS[slug] ?? [];

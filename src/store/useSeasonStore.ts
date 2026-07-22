@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CURRENT_SEASON, getSeason } from '@/data/eft-seasons';
-import { computeBudget, dropCascade } from '@/lib/season-points';
 
 /**
  * Конструктор сезонных перков. Хранит выбор ПО СЕЗОНАМ (ключ = slug): сезоны сменяют
@@ -43,21 +42,18 @@ export const useSeasonStore = create<SeasonState>()(
 
         let next: string[];
         if (isOn) {
-          // Снятие негативного перка может обнулить бюджет под уже взятые позитивные —
-          // тогда снимаем и их, иначе билд остался бы в невозможном состоянии.
-          const cascade = dropCascade(season, current, perkId);
-          next = current.filter((id) => id !== perkId && !cascade.includes(id));
+          // Свободный выбор: просто снимаем перк. Баланс может уйти в минус —
+          // это легальное промежуточное состояние, показываем в панели («добери N»).
+          next = current.filter((id) => id !== perkId);
         } else {
           const perk = season.perks.find((p) => p.id === perkId);
           if (!perk || perk.kind === 'season') return;
 
-          // Конфликтующие перки гасят друг друга — не даём собрать бессмыслицу.
+          // Единственный запрет — конфликтующие (взаимно гасящие) перки.
           const conflicts = perk.excludes ?? [];
           if (conflicts.some((id) => current.includes(id))) return;
 
-          const candidate = [...current, perkId];
-          if (!computeBudget(season, candidate).valid) return;
-          next = candidate;
+          next = [...current, perkId];
         }
 
         set((s) => ({
@@ -70,10 +66,8 @@ export const useSeasonStore = create<SeasonState>()(
       },
 
       applyPreset: (slug, perkIds) => {
-        const season = getSeason(slug) ?? CURRENT_SEASON;
-        // Пресет всё равно проверяем математикой: данные могут разъехаться с ценами.
-        if (!computeBudget(season, perkIds).valid) return;
-
+        // Заряжаем выбор как есть (рулетка/каталог дают валидные билды, шаринг —
+        // любое собранное состояние). Свободный выбор допускает и невалидное.
         const current = get().selected[slug] ?? [];
         set((s) => ({
           selected: { ...s.selected, [slug]: perkIds },
