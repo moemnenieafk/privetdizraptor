@@ -1,0 +1,357 @@
+{
+  "_readme": "Заполни grids у нужных предметов: width x height (число ячеек по гориз x верт). Несколько секций (рюкзак с карманами) = несколько объектов в массиве grids. Пустые (0x0) игнорируются при импорте. allowedCats — опц.: русские категории через запятую (что вмещает). Поля name/en/footprint/confidence — справочные, не трогай.",
+  "_count": 27,
+  "items": {
+    "693bfb50d5c25889e701d444": {
+      "name": "Банка под болты",
+      "en": "Nut can",
+      "footprint": "1x1",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 3,
+          "height": 3
+        }
+      ],
+      "allowedCats": ""
+    },
+    "67458730df3c1da90b0b052b": {
+      "name": "Боевой ранец 5.11 Tactical \"RUSH 100\" (Черный)",
+      "en": "5.11 Tactical RUSH 100 backpack (Black)",
+      "footprint": "6x7",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68947ad3e4bf255d1b0ca75c": {
+      "name": "Грузовая рама Mystery Ranch \"NICE Frame Load Sling\" с защитным кейсом",
+      "en": "Mystery Ranch NICE Frame Load Sling",
+      "footprint": "5x6",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 5,
+          "height": 7
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68f8e04eae031982b00e7aaf": {
+      "name": "Защищенный контейнер \"Гамма\"",
+      "en": "Secure container Gamma",
+      "footprint": "3x3",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 3,
+          "height": 3
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68f117b8121d878a2303eee0": {
+      "name": "Защищенный контейнер \"Гамма\" (Loui Peeton)",
+      "en": "Secure container Gamma (Loui Peeton)",
+      "footprint": "3x3",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 3,
+          "height": 3
+        }
+      ],
+      "allowedCats": ""
+    },
+    "676008db84e242067d0dc4c9": {
+      "name": "Защищенный контейнер \"Каппа\" (Осквернённый)",
+      "en": "Secure container Kappa (Desecrated)",
+      "footprint": "3x3",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 3,
+          "height": 4
+        }
+      ],
+      "allowedCats": ""
+    },
+    "67600929bd0a0549d70993f6": {
+      "name": "Кейс для бронеплит",
+      "en": "Ballistic plate case",
+      "footprint": "4x2",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 8,
+          "height": 12
+        }
+      ],
+      "allowedCats": ""
+    },
+    "67d3ed3271c17ff82e0a5b0b": {
+      "name": "Кейс для ключей",
+      "en": "Key case",
+      "footprint": "3x2",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 11,
+          "height": 7
+        }
+      ],
+      "allowedCats": ""
+    },
+    "6937ecc3dbdccab44605fcf0": {
+      "name": "Кейс для редких жетонов \"Twitch\"",
+      "en": "Twitch rare dogtag case",
+      "footprint": "1x1",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 5,
+          "height": 5
+        }
+      ],
+      "allowedCats": ""
+    },
+    "69f9d319c906cd16da03b374": {
+      "name": "Копилка SheefGG",
+      "en": "SheefGG piggy bank",
+      "footprint": "2x2",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 4,
+          "height": 4
+        }
+      ],
+      "allowedCats": ""
+    },
+    "6937eccbfd921faceb0dfecd": {
+      "name": "Непростой бумажник Loui Peeton",
+      "en": "Loui Peeton deluxe wallet",
+      "footprint": "1x1",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 3,
+          "height": 2
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68d55968ca9935b3f10607a9": {
+      "name": "Поясная сумка (Loui Peeton)",
+      "en": "Fanny pack (Loui Peeton)",
+      "footprint": "2x2",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 3,
+          "height": 2
+        }
+      ],
+      "allowedCats": ""
+    },
+    "67458794e21e5d724e066976": {
+      "name": "Рюкзак LBT-1476A 3Day Pack (MultiCam Alpine)",
+      "en": "LBT-1476A 3Day Pack (MultiCam Alpine)",
+      "footprint": "4x5",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 5,
+          "height": 5
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68947ab5a733b1602007e2fe": {
+      "name": "Рюкзак Mystery Ranch \"2 Day Assault Pack\" (Черный)",
+      "en": "Mystery Ranch 2 Day Assault Pack (Black)",
+      "footprint": "5x6",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 5,
+          "height": 6
+        }
+      ],
+      "allowedCats": ""
+    },
+    "674da9cf0cb4bcde7103c07b": {
+      "name": "Рюкзак Mystery Ranch \"Terraframe\" (Новогодний)",
+      "en": "Mystery Ranch Terraframe backpack (Christmas Edition)",
+      "footprint": "5x6",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "674da107c512807d1a0e7436": {
+      "name": "Рюкзак Mystery Ranch \"Terraframe\" (Олива)",
+      "en": "Mystery Ranch Terraframe backpack (Olive Drab)",
+      "footprint": "5x6",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68947a8ce4bf255d1b0ca759": {
+      "name": "Рюкзак Tasmanian Tiger \"Modular Pack 45 Plus\" (MultiCam Black)",
+      "en": "Tasmanian Tiger Modular Pack 45 Plus (MultiCam Black)",
+      "footprint": "5x8",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 5,
+          "height": 8
+        }
+      ],
+      "allowedCats": ""
+    },
+    "6937ecd37713b904480013ac": {
+      "name": "Термосумка для напитков \"Hot Rod\"",
+      "en": "Hot Rod beverage cooler bag",
+      "footprint": "2x2",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 7,
+          "height": 7
+        }
+      ],
+      "allowedCats": ""
+    },
+    "697883474afb9f7de10380ba": {
+      "name": "Тубус для плакатов",
+      "en": "Poster tube",
+      "footprint": "1x3",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 8,
+          "height": 10
+        }
+      ],
+      "allowedCats": ""
+    },
+    "688b2dba67bf6fa26c07e918": {
+      "name": "Ящик с инструментами \"Discord ver.\"",
+      "en": "Toolbox (Discord Version)",
+      "footprint": "2x2",
+      "confidence": "container-type",
+      "grids": [
+        {
+          "width": 6,
+          "height": 6
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68dfc07da7cfeed3e60204e7": {
+      "name": "Бронированный кейс",
+      "en": "Armored case",
+      "footprint": "4x4",
+      "confidence": "likely-new",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68fa8e253666e2fd5b00a626": {
+      "name": "Бронированный кейс",
+      "en": "Armored case",
+      "footprint": "4x4",
+      "confidence": "likely-new",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "67449b6c89d5e1ddc603f504": {
+      "name": "Ключ от кейса",
+      "en": "Case key",
+      "footprint": "1x1",
+      "confidence": "likely-new",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "674078c4a9c9adf0450d59f9": {
+      "name": "Открытый кейс",
+      "en": "Opened case",
+      "footprint": "2x2",
+      "confidence": "likely-new",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "68d2fc914aae290cf704e373": {
+      "name": "Письмо из почтового ящика",
+      "en": "Letter from the mailbox",
+      "footprint": "1x1",
+      "confidence": "likely-new",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "67f924b1b07831a6ef0ce317": {
+      "name": "Плакат с необычной разгрузкой",
+      "en": "Unusual leather rig poster",
+      "footprint": "2x2",
+      "confidence": "likely-new",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    },
+    "69d39aacf1954acdb3083285": {
+      "name": "Ящик \"Echo Belli\"",
+      "en": "Echo Belli crate",
+      "footprint": "3x2",
+      "confidence": "likely-new",
+      "grids": [
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "allowedCats": ""
+    }
+  }
+}

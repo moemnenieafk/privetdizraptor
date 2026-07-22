@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { traderImg } from '@/lib/trader-utils';
 import { TRADER_COLORS } from '@/data/traderColors';
 import { calcFleaFee } from '@/lib/barter-calc';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import type { BarterOffer } from './ItemModules';
 
 /**
@@ -14,7 +15,15 @@ import type { BarterOffer } from './ItemModules';
  * На эти грабли проект уже наступал в QuestNode.
  */
 export function cardGradient(color: string): string {
-  return `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${color} 56%, transparent), #000000)`;
+  // Три слоя как в макете (Figma), сверху вниз: блик 14% в правом-нижнем углу,
+  // блик 28% в левом-верхнем, чёрная база. Прозрачности слоёв вшиты в color-mix.
+  // color берётся из JS-палитры (литерал), а НЕ var(--trader-*): @theme-переменные
+  // Tailwind вырезает, и color-mix в рантайме отдал бы пустоту (грабли QuestNode).
+  return [
+    `radial-gradient(ellipse 50% 100% at 100% 100%, color-mix(in srgb, ${color} 14%, transparent), transparent 72%)`,
+    `radial-gradient(ellipse 50% 100% at 0% 0%, color-mix(in srgb, ${color} 28%, transparent), transparent 72%)`,
+    '#000000',
+  ].join(', ');
 }
 
 export function cardBorder(color: string): React.CSSProperties {
@@ -32,6 +41,17 @@ export function gainClass(value: number): string {
   if (value >= GAIN_SUPER) return 'text-(--color-success)';
   if (value >= GAIN_GREEN) return 'text-nvg-green';
   return value > 0 ? 'text-text-secondary' : 'text-danger';
+}
+
+/** Цвет иконки метрики, её подложки (10%) и подписи (50%) — та же шкала, что
+ *  gainClass, чтобы иконка и метка красились в цвет значения. Классы литеральные —
+ *  их видит сканер Tailwind. */
+export function gainMark(value: number): { icon: string; frame: string; label: string } {
+  if (value >= GAIN_SUPER) return { icon: 'bg-success', frame: 'bg-success/10', label: 'text-success/50' };
+  if (value >= GAIN_GREEN) return { icon: 'bg-nvg-green', frame: 'bg-nvg-green/10', label: 'text-nvg-green/50' };
+  return value > 0
+    ? { icon: 'bg-text-secondary', frame: 'bg-text-secondary/10', label: 'text-text-secondary/50' }
+    : { icon: 'bg-danger', frame: 'bg-danger/10', label: 'text-danger/50' };
 }
 
 export const fmtRubShort = (v: number) => `${Math.round(v).toLocaleString('ru-RU')} ₽`;
@@ -58,6 +78,8 @@ export interface SlotItem {
   image512pxLink: string;
   normalizedName?: string;
   marketPrice?: number;
+  /** Цвет фона по редкости (тинт плитки, как в нодах карты заданий). */
+  backgroundColor?: string;
 }
 
 /** Слот 96px: тайл 48 со счётчиком в углу, под ним имя, итог и цена за штуку. */
@@ -75,20 +97,28 @@ export function BarterSlot({
   tileOnly?: boolean;
 }) {
   const unit = item.marketPrice ?? 0;
-  const total = unit * count;
+  // Целочисленное представление счётчика: GP/арена-валюта в бартерах Рефа приходит
+  // дробной (напр. 9.08), хотя количество по смыслу целое.
+  const qty = Number.isInteger(count) ? count : Math.round(count);
+  const total = unit * qty;
   const body = (
     <>
       <span
-        className={`relative flex h-12 w-12 items-center justify-end rounded border bg-(--color-base) p-[3px] ${
+        className={`relative flex h-12 w-12 items-center justify-end overflow-hidden rounded border p-[3px] ${
           highlight ? 'border-tactical-amber shadow-[0_0_10px_color-mix(in_srgb,var(--color-tactical-amber)_35%,transparent)]' : 'border-lines-hover'
         }`}
+        style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }}
       >
         {item.image512pxLink && (
           <img src={item.image512pxLink} alt="" className="absolute inset-0 h-full w-full object-contain" />
         )}
-        <span className="relative z-10 self-end font-blender-medium text-[10px] leading-none text-tactical-amber">
-          x{count}
-        </span>
+        {/* Внутренняя тень как в предметах нод карты заданий (QuestNode). */}
+        <span className="pointer-events-none absolute inset-0 rounded shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
+        {qty > 1 && (
+          <span className="relative z-10 self-end font-blender-medium text-[10px] leading-none text-tactical-amber [paint-order:stroke] [-webkit-text-stroke:2px_#000]">
+            x{qty}
+          </span>
+        )}
       </span>
       {!tileOnly && (
         <span
@@ -104,34 +134,44 @@ export function BarterSlot({
           <span className="w-full truncate text-center font-blender-medium text-xs leading-none text-text-secondary">
             {fmtRubShort(total)}
           </span>
-          <span className="w-full truncate text-center font-blender-medium text-[10px] leading-none text-text-muted">
-            {Math.round(unit).toLocaleString('ru-RU')} × {count}
-          </span>
+          {/* Разбивка «цена × количество» — только когда предметов больше одного:
+              при одном она дублирует итог. */}
+          {qty > 1 && (
+            <span className="w-full truncate text-center font-blender-medium text-[10px] leading-none text-text-muted">
+              {Math.round(unit).toLocaleString('ru-RU')} × {qty}
+            </span>
+          )}
         </>
       )}
     </>
   );
 
+  // На десктопе ряд «Отдать» не переносится (lg:flex-nowrap у контейнера): слот
+  // сжимаем (lg:shrink + lg:min-w-0), плитка 48 остаётся, ужимаются подписи —
+  // так до 7 предметов влезают в 724-й макет одной строкой. На мобиле — прежний
+  // перенос (адаптация мобилки — отдельный пункт).
+  const sizing = tileOnly ? '' : 'w-24 lg:min-w-0 lg:shrink';
   return item.normalizedName ? (
     <Link
       href={`/eft/items/item/${item.normalizedName}`}
-      className={`flex shrink-0 flex-col items-center gap-1.5 rounded-xs transition-colors hover:bg-white/4 ${tileOnly ? '' : 'w-24'}`}
+      className={`flex shrink-0 flex-col items-center gap-1.5 rounded-xs transition-colors hover:bg-white/4 ${sizing}`}
     >
       {body}
     </Link>
   ) : (
-    <span className={`flex shrink-0 flex-col items-center gap-1.5 ${tileOnly ? '' : 'w-24'}`}>{body}</span>
+    <span className={`flex shrink-0 flex-col items-center gap-1.5 ${sizing}`}>{body}</span>
   );
 }
 
 /** Половина ряда метрик: плитка 48 · подпись · значение справа. */
 export function Metric({ icon, label, value }: { icon: string; label: string; value: number }) {
+  const mark = gainMark(value);
   return (
     <span className="flex min-w-0 flex-1 items-center gap-2">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-text-muted/10">
-        <span className={`${icon} h-6 w-6 bg-text-muted mask-contain mask-center mask-no-repeat`} />
+      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded ${mark.frame}`}>
+        <span className={`${icon} h-6 w-6 ${mark.icon} mask-contain mask-center mask-no-repeat`} />
       </span>
-      <span className="shrink-0 font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+      <span className={`shrink-0 font-blender-medium text-[10px] uppercase tracking-widest ${mark.label}`}>
         {label}
       </span>
       <span className={`ml-auto truncate font-blender-medium text-xl leading-none ${gainClass(value)}`}>
@@ -146,16 +186,23 @@ function Breakdown({
   label,
   value,
   tone,
+  labelTone = 'text-text-muted',
+  width = '',
   big = false,
 }: {
   label: string;
   value: number;
   tone: string;
+  labelTone?: string;
+  /** Класс ширины (напр. lg:w-32 — фикс 128px на десктопе по макету). */
+  width?: string;
   big?: boolean;
 }) {
+  // Фикс-высота 36px + justify-between: метки всех колонок садятся на одну верхнюю
+  // линию, значения — на одну нижнюю, даже когда «Продажа» набрана крупнее (big).
   return (
-    <span className="flex shrink-0 flex-col items-end gap-1 text-right">
-      <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+    <span className={`flex h-9 shrink-0 flex-col items-end justify-between text-right ${width}`}>
+      <span className={`font-blender-medium text-[10px] uppercase tracking-widest ${labelTone}`}>
         {label}
       </span>
       <span className={`font-blender-medium leading-none ${big ? 'text-2xl' : 'text-xl'} ${tone}`}>
@@ -165,7 +212,55 @@ function Breakdown({
   );
 }
 
-export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
+/** Единый подвал «Получаю» для бартера и крафта: тайл награды · название ·
+ *  разбивка Покупка / Комиссия / Продажа на барахолке. */
+export function RewardRow({
+  item,
+  count,
+  input,
+  fee,
+  output,
+  known,
+}: {
+  item: SlotItem;
+  count: number;
+  input: number;
+  fee: number;
+  output: number;
+  known: boolean;
+}) {
+  return (
+    <div className="relative z-10 flex items-center gap-3.5">
+      <BarterSlot item={item} count={count} tileOnly />
+      <span className="min-w-0 flex-1 truncate font-blender-medium text-xs uppercase text-text-primary">
+        {item.name}
+      </span>
+      {known && (
+        <>
+          <Breakdown label="Покупка" value={-input} tone="text-danger" width="lg:w-32" />
+          <Breakdown label="Комиссия" value={-fee} tone="text-danger" width="lg:w-32" />
+          <Breakdown
+            label="Продажа на барахолке"
+            value={output}
+            tone="text-text-primary"
+            labelTone="text-tactical-amber"
+            width="lg:w-[170px]"
+            big
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+export function BarterOfferCard({
+  offer,
+  highlightItemId,
+}: {
+  offer: BarterOffer;
+  /** Подсветить этот ингредиент: в блоке «используется в бартере» важен именно он. */
+  highlightItemId?: string;
+}) {
   const traderColor = TRADER_COLORS[offer.trader.normalizedName] ?? TRADER_COLORS.stories;
 
   // Вход — по рыночным ценам, а не по basePrice: последний игровая условность.
@@ -192,15 +287,23 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
       <div className="absolute inset-0 z-0" style={{ background: cardGradient(traderColor) }} />
       {/* Шапка: торговец · уровень · лимит */}
       <div className="relative z-10 flex h-12 items-center gap-2.5">
-        <img
-          src={traderImg(offer.trader.normalizedName)}
-          alt={offer.trader.name}
-          width={48}
-          height={48}
-          className="h-12 w-12 shrink-0 rounded-xs"
-        />
+        <span className="relative h-12 w-12 shrink-0">
+          <img
+            src={traderImg(offer.trader.normalizedName)}
+            alt={offer.trader.name}
+            width={48}
+            height={48}
+            className="h-12 w-12 rounded-xs"
+          />
+          {/* Бейдж уровня лояльности поверх аватара (иконки I/II/III/IV из icons.css). */}
+          {offer.level > 0 && (
+            <span
+              className={`icon-eft-profile-rep-${Math.min(4, offer.level)} absolute left-0 top-0 h-3 w-3 bg-white mask-contain mask-center mask-no-repeat [filter:drop-shadow(0_0_1px_#000)_drop-shadow(0_0_1px_#000)]`}
+            />
+          )}
+        </span>
         <span className="min-w-0 flex-1 truncate font-blender-medium text-xs uppercase tracking-widest text-text-primary">
-          {offer.trader.name} LL{offer.level}
+          {offer.trader.name}
         </span>
         {offer.buyLimit != null && offer.buyLimit > 0 && (
           // Сколько игрок уже выкупил, портал знать не может — этих данных нет
@@ -238,30 +341,30 @@ export function BarterOfferCard({ offer }: { offer: BarterOffer }) {
         </div>
       )}
 
-      <div className="relative z-10"><SlotDivider label="Отдать" /></div>
+      <div className="relative z-10"><SlotDivider label="Отдаю" /></div>
 
-      <div className="relative z-10 flex flex-wrap items-start justify-center gap-1">
+      <div className="relative z-10 flex flex-wrap items-start justify-center gap-1 lg:flex-nowrap">
         {offer.requiredItems.map((req) => (
-          <BarterSlot key={req.item.id} item={req.item} count={req.count} />
+          <BarterSlot
+            key={req.item.id}
+            item={req.item}
+            count={req.count}
+            highlight={req.item.id === highlightItemId}
+          />
         ))}
       </div>
 
       {offer.reward && (
         <>
-          <div className="relative z-10"><SlotDivider label="Получить" /></div>
-          <div className="relative z-10 flex items-center gap-3.5">
-            <BarterSlot item={offer.reward.item} count={offer.reward.count} tileOnly />
-            <span className="min-w-0 flex-1 truncate font-blender-medium text-xs uppercase text-text-primary">
-              {offer.reward.item.name}
-            </span>
-            {known && (
-              <>
-                <Breakdown label="Покупка" value={-input} tone="text-danger" />
-                <Breakdown label="Комиссия" value={-fee} tone="text-danger" />
-                <Breakdown label="Продажа на барахолке" value={output} tone="text-text-primary" big />
-              </>
-            )}
-          </div>
+          <div className="relative z-10"><SlotDivider label="Получаю" /></div>
+          <RewardRow
+            item={offer.reward.item}
+            count={offer.reward.count}
+            input={input}
+            fee={fee}
+            output={output}
+            known={known}
+          />
         </>
       )}
     </article>

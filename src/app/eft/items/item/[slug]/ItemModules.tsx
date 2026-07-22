@@ -1,13 +1,10 @@
-﻿import Link from 'next/link';
-import { Crosshair, Shield, HeartPulse, ArrowLeftRight, Hammer, Clock, Target, Bomb, Headphones, Lock, ChevronRight } from 'lucide-react';
+﻿import { Crosshair, Shield, HeartPulse, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
 import { SectionRule } from '@/components/ui/SectionRule';
 import { BarterOfferCard } from './BarterOfferCard';
 import { CraftOfferCard } from './CraftOfferCard';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
 import { formatCompactNumber } from '@/lib/formatters';
-import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
-import { traderImg } from '@/lib/trader-utils';
 
 // === ТИПЫ СВОЙСТВ ПРЕДМЕТОВ ===
 
@@ -41,9 +38,20 @@ export interface MedicalItemProperties {
   cures: string[] | null;
 }
 
+export interface GridAllowedItem {
+  id: string;
+  name?: string;
+  shortName?: string;
+}
+export interface GridFilters {
+  allowedCategories?: { id: string; name: string }[];
+  allowedItems?: GridAllowedItem[];
+}
 export interface GridInfo {
   width: number;
   height: number;
+  /** Что вмещает ячейка: допустимые категории/предметы (tarkov.dev grids[].filters). */
+  filters?: GridFilters;
 }
 
 export interface ContainerProperties {
@@ -222,29 +230,6 @@ export interface CraftRecipe {
   requiredItems: CraftRequiredItem[];
   /** Что и сколько производится. */
   reward?: { item: CraftRequiredItem['item'] & { basePrice?: number }; count: number };
-}
-
-// === ОБРАТНОЕ НАПРАВЛЕНИЕ: где предмет используется как ингредиент ===
-// Слот результата (что производит бартер/крафт, потребляя текущий предмет).
-interface ProducedItem {
-  item: {
-    id: string;
-    name: string;
-    shortName: string;
-    image512pxLink: string;
-    backgroundColor?: string;
-    normalizedName?: string;
-  };
-  count: number;
-}
-
-export interface UsedInBarter {
-  id: string;
-  trader: { name: string; normalizedName: string };
-  level: number;
-  taskUnlock?: BarterTaskUnlock | null;
-  usedCount: number; // сколько единиц текущего предмета нужно
-  rewardItems: ProducedItem[];
 }
 
 // === МОДУЛЬ ОРУЖИЯ ===
@@ -516,66 +501,6 @@ export function HelmetModule({ properties }: { properties: ItemProperties }) {
   );
 }
 
-// === ОБЩИЕ ХЕЛПЕРЫ КАРТОЧЕК (бартер/крафт) ===
-
-// Градиент-карточка по accent-цвету (как QuestNode)
-function accentCardStyle(accent: string): React.CSSProperties {
-  return {
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: accent,
-    boxShadow: `0 0 12px color-mix(in srgb, ${accent} 22%, transparent)`,
-    background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${accent} 12%, transparent), #000000)`,
-  };
-}
-
-// Предмет-ингредиент: чистый image512 в единой рамке 53×53 (стиль QuestNode), тинт по рарности
-function ReqItem({
-  item,
-  count,
-}: {
-  item: { id: string; name: string; shortName: string; image512pxLink: string; backgroundColor?: string; normalizedName?: string; hasBarter?: boolean };
-  count: number;
-}) {
-  const body = (
-    <>
-      <div
-        className="relative h-13.25 w-13.25 shrink-0 overflow-hidden rounded-xs border border-lines-hover transition-colors group-hover:border-(--primary)"
-        style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }}
-      >
-        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
-        <img
-          src={item.image512pxLink}
-          alt={item.shortName}
-          className="absolute inset-0 z-10 h-full w-full object-contain p-1"
-        />
-        {item.hasBarter && (
-          <span
-            title="Доступен по бартеру"
-            className="absolute top-0 left-0 z-20 flex h-4 w-4 items-center justify-center rounded-br-xs bg-(--primary)"
-          >
-            <ArrowLeftRight className="h-2.5 w-2.5 text-(--color-base)" />
-          </span>
-        )}
-      </div>
-      <div className="flex flex-col">
-        <span className="text-sm font-blender-book text-text-primary transition-colors group-hover:text-(--primary)" title={item.name}>
-          {item.shortName}
-        </span>
-        <span className="font-blender-medium text-xs text-text-secondary">x{count}</span>
-      </div>
-    </>
-  );
-  // Кликабельно, только если знаем slug предмета (normalizedName из prices).
-  return item.normalizedName ? (
-    <Link href={`/eft/items/item/${item.normalizedName}`} className="group flex items-center gap-2">
-      {body}
-    </Link>
-  ) : (
-    <div className="flex items-center gap-2">{body}</div>
-  );
-}
-
 // === МОДУЛЬ БАРТЕРА ===
 
 export function BarterModule({ barters }: { barters: BarterOffer[] }) {
@@ -590,20 +515,6 @@ export function BarterModule({ barters }: { barters: BarterOffer[] }) {
         ))}
       </div>
     </section>
-  );
-}
-
-// Бейдж «открывается квестом» → клик ведёт на карту квестов с фокусом на задание.
-function QuestGateBadge({ taskUnlock }: { taskUnlock: BarterTaskUnlock }) {
-  return (
-    <Link
-      href={`/eft/questmap?quest=${taskUnlock.id}`}
-      className="group inline-flex w-fit items-center gap-1.5 rounded-xs border border-lines-hover bg-(--color-base) px-2 py-1 font-blender-medium text-xs uppercase tracking-wider text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
-    >
-      <Lock className="h-3 w-3" />
-      <span className="truncate">{taskUnlock.name ? `Квест: ${taskUnlock.name}` : 'Открывается квестом'}</span>
-      <ChevronRight className="h-3 w-3 opacity-60 transition-transform group-hover:translate-x-0.5" />
-    </Link>
   );
 }
 
@@ -649,39 +560,18 @@ export function CraftModule({ crafts }: { crafts: CraftRecipe[] }) {
 
 // === ОБРАТНОЕ: «Используется в бартере» (предмет — ингредиент) ===
 
-export function UsedInBarterModule({ usedIn }: { usedIn: UsedInBarter[] }) {
+export function UsedInBarterModule({ usedIn, itemId }: { usedIn: BarterOffer[]; itemId?: string }) {
   if (usedIn.length === 0) return null;
+
   return (
-    <SectionPanel title="Используется в бартере" icon={<ArrowLeftRight className="w-4 h-4" />} noDivider smallTitle bare>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {usedIn.map((offer) => {
-          const accent = `var(--trader-${offer.trader.normalizedName})`;
-          return (
-            <div key={offer.id} className="relative overflow-hidden rounded-lg p-4" style={accentCardStyle(accent)}>
-              <div className="relative z-10 flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <img src={traderImg(offer.trader.normalizedName)} alt={offer.trader.name} width={20} height={20} className="shrink-0 rounded-xs" />
-                  <span className="truncate font-blender-medium text-xs uppercase tracking-widest text-text-secondary">{offer.trader.name}</span>
-                  <span className="shrink-0 font-blender-medium text-xs text-text-secondary">LL{offer.level}</span>
-                  <span className="ml-auto shrink-0 font-blender-medium text-xs text-text-primary">нужно ×{offer.usedCount}</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">Даёт</span>
-                  <ChevronRight className="h-4 w-4 text-text-muted" />
-                  {offer.rewardItems.map((rw, idx) => (
-                    <div key={rw.item.id} className="flex items-center gap-3">
-                      <ReqItem item={rw.item} count={rw.count} />
-                      {idx < offer.rewardItems.length - 1 && <span className="text-text-muted">+</span>}
-                    </div>
-                  ))}
-                </div>
-                {offer.taskUnlock && <QuestGateBadge taskUnlock={offer.taskUnlock} />}
-              </div>
-            </div>
-          );
-        })}
+    <section className="flex w-full max-w-[724px] flex-col gap-3.5">
+      <SectionRule title="Используется в бартере" icon={<span className="icon-eft-prog-barter h-4 w-4 bg-text-muted mask-contain mask-center mask-no-repeat" />} />
+      <div className="flex flex-col gap-3.5">
+        {usedIn.map((offer) => (
+          <BarterOfferCard key={offer.id} offer={offer} highlightItemId={itemId} />
+        ))}
       </div>
-    </SectionPanel>
+    </section>
   );
 }
 

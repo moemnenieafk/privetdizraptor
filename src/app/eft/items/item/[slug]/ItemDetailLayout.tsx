@@ -19,9 +19,12 @@ import { SlotGrid } from './SlotGrid';
 import { ItemActions } from './ItemActions';
 import { ItemPriceBlock } from './ItemPriceBlock';
 import { ItemQuestBlock } from './ItemQuestBlock';
+import { ItemStoryTours } from './ItemStoryTours';
+import { ContainerContents } from './ContainerContents';
 import { SimilarItems } from './SimilarItems';
-import type { EftItemData } from '@/components/features/items/EftItemTile';
 import { LootSources } from './LootSources';
+import { getItemStoryTours } from '@/lib/item-story-tours';
+import type { EftItemData } from '@/components/features/items/EftItemTile';
 import { getItemCategory, getItemHeadline } from './item-identity.util';
 import type { TarkovItem } from './page';
 
@@ -34,7 +37,9 @@ interface ItemDetailLayoutProps {
 }
 
 // ─── Статус-бейдж: иконка (как в EftItemTile/Indicator) + текст ──────────────
-type BadgeVariant = 'primary' | 'warning' | 'info' | 'danger';
+// Чипы БАРТЕР / КРАФТ / ЗАДАНИЕ — точные цвета макета через @theme-токены
+// (не raw HEX, не var() в инлайне): kappa #BDA550, mode-pve #0095E2, tactical-amber #E68E25.
+type BadgeVariant = 'primary' | 'danger' | 'barter' | 'craft' | 'quest';
 
 interface StatusBadgeData {
   label: string;
@@ -44,15 +49,16 @@ interface StatusBadgeData {
 
 const BADGE_STYLES: Record<BadgeVariant, { box: string; icon: string }> = {
   primary: { box: 'border-(--primary) bg-primary/10 text-(--primary)', icon: 'bg-(--primary)' },
-  warning: { box: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400', icon: 'bg-yellow-400' },
-  info:    { box: 'border-blue-500/30 bg-blue-500/10 text-blue-400', icon: 'bg-blue-400' },
   danger:  { box: 'border-red-500/30 bg-red-500/10 text-red-400', icon: 'bg-red-400' },
+  barter:  { box: 'border-kappa/40 bg-kappa/10 text-kappa', icon: 'bg-kappa' },
+  craft:   { box: 'border-mode-pve/40 bg-mode-pve/10 text-mode-pve', icon: 'bg-mode-pve' },
+  quest:   { box: 'border-tactical-amber/40 bg-tactical-amber/10 text-tactical-amber', icon: 'bg-tactical-amber' },
 };
 
 function StatusBadge({ label, variant, iconClass }: StatusBadgeData) {
   const s = BADGE_STYLES[variant];
   return (
-    <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-blender-medium text-[10px] uppercase tracking-widest ${s.box}`}>
+    <span className={`inline-flex h-5 items-center gap-1 rounded-sm border px-1.5 font-blender-medium text-[10px] uppercase tracking-widest ${s.box}`}>
       {iconClass && (
         <span className={`${iconClass} h-3 w-3 shrink-0 ${s.icon} mask-contain mask-center mask-no-repeat`} />
       )}
@@ -77,13 +83,17 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
   const category = getItemCategory(item.types);
   const headline = getItemHeadline(item);
 
+  // Сюжетные истории, где нужен предмет (блок ТУР) — считаем на сервере, тяжёлые
+  // данные историй в клиент не уезжают.
+  const storyTours = getItemStoryTours(item.id);
+
   // Статус-бейджи (перенесены из левой колонки) — иконки из EftItemTile/Indicator
   const statusBadges: StatusBadgeData[] = [
     ...(armorClass != null ? [{ label: `Класс ${armorClass}`, variant: 'primary' as const, iconClass: `icon-eft-armor-class-${armorClass}` }] : []),
     ...(item.types.includes('noFlea') ? [{ label: 'Без барахолки', variant: 'danger' as const }] : []),
-    ...(hasBarter ? [{ label: 'Бартер', variant: 'warning' as const, iconClass: 'icon-eft-prog-barter' }] : []),
-    ...(hasCraft ? [{ label: 'Крафт', variant: 'info' as const, iconClass: 'icon-eft-prog-craft' }] : []),
-    ...(hasQuest ? [{ label: 'Задание', variant: 'primary' as const, iconClass: 'icon-eft-quests-side' }] : []),
+    ...(hasBarter ? [{ label: 'Бартер', variant: 'barter' as const, iconClass: 'icon-eft-prog-barter' }] : []),
+    ...(hasCraft ? [{ label: 'Крафт', variant: 'craft' as const, iconClass: 'icon-eft-prog-craft' }] : []),
+    ...(hasQuest ? [{ label: 'Задание', variant: 'quest' as const, iconClass: 'icon-eft-quests-side' }] : []),
   ];
 
   return (
@@ -106,15 +116,20 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
           />
         </div>
 
-        <SlotGrid width={item.width} height={item.height} sections={capacityGrids} />
+        <SlotGrid width={item.width} height={item.height} sections={capacityGrids} itemId={item.id} />
 
         <ItemActions itemId={item.id} />
+
+        {/* Задания переехали в левую колонку по макету 1905:850 */}
+        <ItemStoryTours tours={storyTours} itemName={item.name} itemImage={item.image512pxLink} itemBackground={item.backgroundColor} />
+        <ItemQuestBlock tasks={item.usedInTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} itemBackground={item.backgroundColor} />
+        <LootSources tasks={item.receivedFromTasks ?? []} itemId={item.id} itemName={item.shortName} itemImage={item.image512pxLink} itemBackground={item.backgroundColor} />
       </aside>
 
       {/* ── ПРАВАЯ КОЛОНКА ────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col gap-6">
-        <div className="border-b border-lines-hover pb-5">
-          <h1 className="mb-2 text-3xl uppercase leading-none tracking-widest font-blender-medium text-text-primary lg:text-4xl">
+        <div>
+          <h1 className="mb-2 line-clamp-2 text-3xl leading-tight font-blender-medium text-text-primary lg:text-[42px]">
             {item.name}
           </h1>
 
@@ -171,19 +186,19 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
         <MedKitModule properties={item.properties} />
         <MedicalItemModule properties={item.properties} />
 
-        <ItemQuestBlock tasks={item.usedInTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} />
+        {/* Что вмещает контейнер/рюкзак — категории и предметы из фильтров ячеек. */}
+        <ContainerContents grids={capacityGrids} />
 
         {/* Экономика живёт в той же колонке, что и цены: в макете это одна полоса 724. */}
         <BarterModule barters={item.barters} />
+        <UsedInBarterModule usedIn={item.usedInBarters ?? []} itemId={item.id} />
         <CraftModule crafts={item.crafts} />
         <UsedInCraftModule usedIn={item.usedInCrafts ?? []} itemId={item.id} />
       </div>
 
       {/* ── СЕКЦИИ НИЖЕ (full-width) ───────────────────── */}
       <div className="flex w-full flex-col gap-6 lg:w-full lg:basis-full">
-        <UsedInBarterModule usedIn={item.usedInBarters ?? []} />
         <SimilarItems items={similar} />
-        <LootSources tasks={item.receivedFromTasks ?? []} itemId={item.id} itemImage={item.image512pxLink} />
 
         {item.description && (
           <div className="rounded border border-lines-hover bg-card-menu p-5">

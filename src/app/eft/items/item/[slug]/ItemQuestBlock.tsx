@@ -7,9 +7,10 @@ interface ItemQuestBlockProps {
   tasks: UsedInTask[];
   itemId: string;
   itemImage?: string;
+  itemBackground?: string;
 }
 
-export function ItemQuestBlock({ tasks, itemId, itemImage }: ItemQuestBlockProps) {
+export function ItemQuestBlock({ tasks, itemId, itemImage, itemBackground }: ItemQuestBlockProps) {
   if (tasks.length === 0) return null;
 
   return (
@@ -29,6 +30,7 @@ export function ItemQuestBlock({ tasks, itemId, itemImage }: ItemQuestBlockProps
               count={needed}
               countLabel="Собрать"
               itemImage={itemImage}
+              itemBackground={itemBackground}
               itemId={itemId}
               interactive
               itemShortName={own[0]?.item?.shortName}

@@ -7,9 +7,12 @@ interface LootSourcesProps {
   tasks: RewardTask[];
   itemId: string;
   itemImage?: string;
+  /** Имя награды = сам просматриваемый предмет (в строке цели пишем его, а не «Награда»). */
+  itemName?: string;
+  itemBackground?: string;
 }
 
-export function LootSources({ tasks, itemId, itemImage }: LootSourcesProps) {
+export function LootSources({ tasks, itemId, itemImage, itemName, itemBackground }: LootSourcesProps) {
   if (tasks.length === 0) return null;
 
   return (
@@ -22,7 +25,7 @@ export function LootSources({ tasks, itemId, itemImage }: LootSourcesProps) {
             .reduce((sum, r) => sum + (r.count ?? 0), 0);
 
           return (
-            <QuestCard key={task.id} task={task} count={reward} countLabel="Награда" itemImage={itemImage} />
+            <QuestCard key={task.id} task={task} count={reward} countLabel="Награда" itemShortName={itemName} itemImage={itemImage} itemBackground={itemBackground} />
           );
         })}
       </div>

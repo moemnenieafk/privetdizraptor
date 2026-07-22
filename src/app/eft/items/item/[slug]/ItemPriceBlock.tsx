@@ -201,12 +201,21 @@ function PriceCard({
 }
 
 // ─── Курс валют торговцев ───────────────────────────────────────────────────
-function RateRow({ rates }: { rates?: { usd: number | null; eur: number | null } }) {
-  if (!rates || (rates.usd == null && rates.eur == null)) return null;
+// Показываем курс только той валюты, в которой реально торгуется предмет:
+// продаётся/покупается за $ → USD, за € → EUR, только за ₽ → ничего.
+function RateRow({
+  rates,
+  currencies,
+}: {
+  rates?: { usd: number | null; eur: number | null };
+  currencies: Set<string>;
+}) {
+  if (!rates) return null;
 
   const entries: { trader: string; label: string; value: number }[] = [];
-  if (rates.usd != null) entries.push({ trader: 'peacekeeper', label: 'USD', value: rates.usd });
-  if (rates.eur != null) entries.push({ trader: 'skier', label: 'EUR', value: rates.eur });
+  if (rates.usd != null && currencies.has('USD')) entries.push({ trader: 'peacekeeper', label: 'USD', value: rates.usd });
+  if (rates.eur != null && currencies.has('EUR')) entries.push({ trader: 'skier', label: 'EUR', value: rates.eur });
+  if (entries.length === 0) return null;
 
   return (
     <div className="flex items-center gap-4">
@@ -271,9 +280,15 @@ export function ItemPriceBlock({
 
   const age = fmtAge(pricesAgeHours);
 
+  // Валюты, в которых реально торгуется предмет (для показа только нужного курса).
+  const usedCurrencies = new Set<string>();
+  for (const o of [...buyFor, ...sellFor]) {
+    if (o.currency === 'USD' || o.currency === 'EUR') usedCurrencies.add(o.currency);
+  }
+
   return (
     <div className="flex flex-col gap-2">
-      <RateRow rates={rates} />
+      <RateRow rates={rates} currencies={usedCurrencies} />
 
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {/* Купить у торговца */}

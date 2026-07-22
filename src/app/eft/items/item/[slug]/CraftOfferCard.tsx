@@ -1,4 +1,5 @@
-import { BarterSlot, SlotDivider, Metric, cardGradient, cardBorder } from './BarterOfferCard';
+import { Clock } from 'lucide-react';
+import { BarterSlot, SlotDivider, Metric, RewardRow, cardGradient, cardBorder } from './BarterOfferCard';
 import { calcFleaFee } from '@/lib/barter-calc';
 import { stationIconClass, type CraftRecipe } from './ItemModules';
 
@@ -21,8 +22,10 @@ export function CraftOfferCard({
   /** Подсветить этот ингредиент: на странице предмета в чужом рецепте важен именно он. */
   highlightItemId?: string;
 }) {
-  // Литерал, а не var(--primary): та же история с вырезанием @theme-переменных.
-  const accent = '#E68E25';
+  // Фирменный цвет карточки производства по макету — #9A8866 (ДС «Tactical PvP»):
+  // иконка модуля, название, уровень, рамка и градиент фона. Литерал, а не
+  // var(--…): @theme-переменные Tailwind вырезает, color-mix отдал бы пустоту.
+  const accent = '#9A8866';
 
   const input = recipe.requiredItems.reduce(
     (sum, r) => sum + (r.item.marketPrice ?? 0) * r.count,
@@ -47,32 +50,34 @@ export function CraftOfferCard({
       {/* Шапка: модуль убежища · уровень · длительность */}
       <div className="relative z-10 flex h-12 items-center gap-2.5">
         <span
-          className={`${stationIconClass(recipe.station.normalizedName)} h-12 w-12 shrink-0 bg-text-primary mask-contain mask-center mask-no-repeat`}
+          className={`${stationIconClass(recipe.station.normalizedName)} h-12 w-12 shrink-0 mask-contain mask-center mask-no-repeat`}
+          style={{ backgroundColor: accent }}
         />
         <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="truncate font-blender-medium text-xs uppercase tracking-widest text-text-primary">
+          <span className="truncate font-blender-medium text-xs uppercase tracking-widest" style={{ color: accent }}>
             {recipe.station.name}
           </span>
-          <span className="font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+          <span className="font-blender-medium text-[10px] uppercase tracking-widest" style={{ color: accent }}>
             Ур. {String(recipe.level).padStart(2, '0')}
           </span>
         </span>
-        <span className="shrink-0 rounded-sm bg-(--color-base) px-2 py-1 font-blender-medium text-xs text-tactical-amber">
+        <span className="flex shrink-0 items-center gap-1 rounded-sm bg-(--color-base) px-2 py-1 font-blender-medium text-xs text-tactical-amber">
+          <Clock className="h-3.5 w-3.5 shrink-0" />
           {fmtDuration(recipe.duration)}
         </span>
       </div>
 
       {/* Метрики: прибыль и прибыль в час */}
       {known && (
-        <div className="relative z-10 flex h-12 items-stretch gap-2">
+        <div className="relative z-10 flex h-12 items-stretch gap-2 lg:gap-25">
           <Metric icon="icon-eft-profit" label="Прибыль" value={profit} />
           <Metric icon="icon-eft-prog-craft" label="Прибыль в час" value={perHour} />
         </div>
       )}
 
-      <div className="relative z-10"><SlotDivider label="Отдать" /></div>
+      <div className="relative z-10"><SlotDivider label="Отдаю" /></div>
 
-      <div className="relative z-10 flex flex-wrap items-start justify-center gap-2">
+      <div className="relative z-10 flex flex-wrap items-start justify-center gap-2 lg:flex-nowrap">
         {recipe.requiredItems.map((req) => (
           <BarterSlot
             key={req.item.id}
@@ -85,20 +90,15 @@ export function CraftOfferCard({
 
       {recipe.reward && (
         <>
-          <div className="relative z-10"><SlotDivider label="Получить" /></div>
-          <div className="relative z-10 flex items-center justify-center gap-3.5">
-            <BarterSlot item={recipe.reward.item} count={recipe.reward.count} tileOnly />
-            {output > 0 && (
-              <span className="flex min-w-0 flex-col gap-1">
-                <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">
-                  На барахолке
-                </span>
-                <span className="font-blender-medium text-xl leading-none text-text-primary">
-                  {Math.round(output).toLocaleString('ru-RU')} ₽
-                </span>
-              </span>
-            )}
-          </div>
+          <div className="relative z-10"><SlotDivider label="Получаю" /></div>
+          <RewardRow
+            item={recipe.reward.item}
+            count={recipe.reward.count}
+            input={input}
+            fee={fee}
+            output={output}
+            known={known}
+          />
         </>
       )}
     </article>

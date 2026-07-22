@@ -5,6 +5,8 @@ import { traderImg } from '@/lib/trader-utils';
 import { TRADER_COLORS } from '@/data/traderColors';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { useQuestReserveStore, freeForQuest } from '@/store/useQuestReserveStore';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { cardGradient, cardBorder } from './BarterOfferCard';
 
 export interface QuestCardData {
   id: string;
@@ -23,6 +25,8 @@ interface QuestCardProps {
   countLabel: string;
   /** Миниатюра предмета для строки count */
   itemImage?: string;
+  /** Цвет фона предмета по редкости (тинт плитки). */
+  itemBackground?: string;
   /** Короткое имя предмета — по макету в строке цели стоит оно, а не длинный текст цели */
   itemShortName?: string;
   /** Цель требует предмет, найденный в рейде */
@@ -38,6 +42,7 @@ export function QuestCard({
   count,
   countLabel,
   itemImage,
+  itemBackground,
   itemShortName,
   foundInRaid = false,
   itemId,
@@ -77,8 +82,8 @@ export function QuestCard({
       style={{
         borderWidth: 1,
         borderStyle: 'solid',
-        borderColor: traderColor,
-        background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${traderColor} 56%, transparent), #000000)`,
+        ...cardBorder(traderColor),
+        background: cardGradient(traderColor),
       }}
     >
       {/* 1 — торговец · уровень · каппа */}
@@ -141,17 +146,21 @@ export function QuestCard({
           }
           className="flex w-full items-center gap-3.5 rounded-xs text-left transition-colors enabled:hover:bg-white/4 disabled:cursor-default"
         >
-          <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xs border-[0.5px] border-lines-hover bg-(--color-base)">
+          <span
+            className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xs border-[0.5px] border-lines-hover"
+            style={{ backgroundColor: getTarkovBackgroundColor(itemBackground) }}
+          >
             {itemImage && (
               <img src={itemImage} alt="" className="absolute inset-0 h-full w-full object-contain" />
             )}
+            <span className="pointer-events-none absolute inset-0 rounded-xs shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="truncate font-blender-book text-base leading-none text-text-primary">
               {itemShortName ?? countLabel}
             </span>
             {foundInRaid && (
-              <span className="font-blender-medium text-[10px] leading-none tracking-[0.04em] text-tactical-amber">
+              <span className="inline-flex h-5 w-fit items-center gap-1 rounded-sm border border-tactical-amber/40 bg-tactical-amber/10 px-1.5 font-blender-medium text-[10px] uppercase tracking-widest text-tactical-amber">
                 найдено в рейде
               </span>
             )}

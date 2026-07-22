@@ -15,12 +15,31 @@ import type {
   VendorOffer,
   BarterOffer,
   CraftRecipe,
-  UsedInBarter,
 } from './ItemModules';
 import { ItemDetailLayout } from './ItemDetailLayout';
 import { getDynamicTopIndicator } from '@/lib/item-indicators.util';
+import { readdirSync } from 'fs';
+import { join } from 'path';
 import type { EftItemData, EftPriceEntry } from '@/components/features/items/EftItemTile';
 import type { EftCurrency } from '@/lib/formatters';
+
+// Баннеры квестов лежат локально в public/images/quests/eft/<taskId>.webp (наши ассеты,
+// не CDN tarkov.dev). Читаем список один раз на сервере — чтобы для квестов без файла
+// не подставлять битую картинку.
+const QUEST_IMAGE_IDS: Set<string> = (() => {
+  try {
+    return new Set(
+      readdirSync(join(process.cwd(), 'public', 'images', 'quests', 'eft'))
+        .filter((f) => f.endsWith('.webp'))
+        .map((f) => f.slice(0, -'.webp'.length)),
+    );
+  } catch {
+    return new Set<string>();
+  }
+})();
+
+const questImage = (taskId: string): string | undefined =>
+  QUEST_IMAGE_IDS.has(taskId) ? `/images/quests/eft/${taskId}.webp` : undefined;
 
 // === ТИПИЗАЦИЯ ===
 
@@ -72,7 +91,7 @@ export interface TarkovItem {
   minLevelForFlea?: number | null;
   barters: BarterOffer[];
   crafts: CraftRecipe[];
-  usedInBarters?: UsedInBarter[];
+  usedInBarters?: BarterOffer[];
   usedInCrafts?: CraftRecipe[];
   usedInTasks?: UsedInTask[];
   receivedFromTasks?: RewardTask[];
@@ -91,18 +110,45 @@ function mapDetailProperties(raw: Record<string, unknown> | null | undefined): I
     v && typeof v === 'object' && typeof (v as { name?: unknown }).name === 'string'
       ? { name: (v as { name: string }).name }
       : null;
-  const grids = (v: unknown): { width: number; height: number }[] =>
+  // Фильтры ячейки: допустимые категории/предметы (tarkov.dev grids[].filters).
+  const gridFilters = (v: unknown) => {
+    if (!v || typeof v !== 'object') return undefined;
+    const f = v as { allowedCategories?: unknown; allowedItems?: unknown };
+    const cats = Array.isArray(f.allowedCategories)
+      ? f.allowedCategories
+          .map((c) => ({ id: String((c as { id?: unknown })?.id ?? ''), name: String((c as { name?: unknown })?.name ?? '') }))
+          .filter((c) => c.id && c.name)
+      : undefined;
+    const its = Array.isArray(f.allowedItems)
+      ? f.allowedItems
+          .map((i) => ({
+            id: String((i as { id?: unknown })?.id ?? ''),
+            name: typeof (i as { name?: unknown })?.name === 'string' ? (i as { name: string }).name : undefined,
+            shortName: typeof (i as { shortName?: unknown })?.shortName === 'string' ? (i as { shortName: string }).shortName : undefined,
+          }))
+          .filter((i) => i.id)
+      : undefined;
+    if (!cats?.length && !its?.length) return undefined;
+    return { allowedCategories: cats, allowedItems: its };
+  };
+  const grids = (v: unknown) =>
     Array.isArray(v)
-      ? v.map((g) => ({ width: Number((g as { width?: unknown })?.width) || 0, height: Number((g as { height?: unknown })?.height) || 0 }))
+      ? v.map((g) => ({
+          width: Number((g as { width?: unknown })?.width) || 0,
+          height: Number((g as { height?: unknown })?.height) || 0,
+          filters: gridFilters((g as { filters?: unknown })?.filters),
+        }))
       : [];
 
   switch (raw.__typename) {
     case 'ItemPropertiesWeapon':
       return { caliber: s(raw.caliber), fireRate: n(raw.fireRate), ergonomics: n(raw.ergonomics), recoilVertical: n(raw.recoilVertical), recoilHorizontal: n(raw.recoilHorizontal) };
     case 'ItemPropertiesArmor':
-    case 'ItemPropertiesChestRig':
     case 'ItemPropertiesArmorAttachment':
       return { class: n(raw.class) ?? 0, durability: n(raw.durability) ?? 0, speedPenalty: n(raw.speedPenalty), turnPenalty: n(raw.turnPenalty), ergoPenalty: n(raw.ergoPenalty), material: mat(raw.material) };
+    case 'ItemPropertiesChestRig':
+      // Разгрузка: и брони-стата, и секции вместимости (grids) — иначе капасити терялось.
+      return { class: n(raw.class) ?? 0, durability: n(raw.durability) ?? 0, speedPenalty: n(raw.speedPenalty), turnPenalty: n(raw.turnPenalty), ergoPenalty: n(raw.ergoPenalty), material: mat(raw.material), grids: grids(raw.grids) };
     case 'ItemPropertiesHelmet':
       return { class: n(raw.class) ?? 0, durability: n(raw.durability) ?? 0, deafening: s(raw.deafening), headZones: sa(raw.headZones), material: mat(raw.material), blocksHeadset: b(raw.blocksHeadset), speedPenalty: n(raw.speedPenalty), turnPenalty: n(raw.turnPenalty), ergoPenalty: n(raw.ergoPenalty) };
     case 'ItemPropertiesMedKit':
@@ -304,15 +350,21 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     }));
 
   // ОБРАТНОЕ направление: бартеры/крафты, где предмет — ИНГРЕДИЕНТ (предмет в required).
-  const usedInBarters: UsedInBarter[] = barterRows
+  // «Используется в бартере» рисуется той же карточкой, что и обычный бартер:
+  // полный список ингредиентов + результат (reward). Текущий предмет — один из
+  // требуемых, подсвечивается в карточке через highlightItemId.
+  const usedInBarters: BarterOffer[] = barterRows
     .filter((b) => b.requiredItems.some((sl) => sl.itemId === mainId))
     .map((b) => ({
       id: b.id,
       trader: { name: b.traderName, normalizedName: b.traderNormalizedName ?? '' },
       level: b.level ?? 1,
       taskUnlock: barterTaskUnlock(b),
-      usedCount: b.requiredItems.find((sl) => sl.itemId === mainId)?.count ?? 1,
-      rewardItems: b.rewardItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
+      buyLimit: b.buyLimit ?? null,
+      reward: b.rewardItems[0]
+        ? { item: slotItem(b.rewardItems[0].itemId), count: b.rewardItems[0].count }
+        : undefined,
+      requiredItems: b.requiredItems.map((sl) => ({ item: slotItem(sl.itemId), count: sl.count })),
     }));
   // Блок «используется в производстве» рисуется той же карточкой, что и обычный
   // рецепт, поэтому и форма данных та же: полный список ингредиентов + результат.
@@ -337,14 +389,14 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     const objs = t.objectives.filter((o) => o.__typename === 'TaskObjectiveItem' && o.item?.id === mainId);
     if (objs.length) {
       usedInTasks.push({
-        id: t.id, name: t.name, taskImageLink: t.trader.imageLink, kappaRequired: t.kappaRequired, minPlayerLevel: t.minPlayerLevel,
+        id: t.id, name: t.name, taskImageLink: questImage(t.id), kappaRequired: t.kappaRequired, minPlayerLevel: t.minPlayerLevel,
         trader: { name: t.trader.name, normalizedName: t.trader.normalizedName },
         objectives: objs.map((o) => ({ __typename: o.__typename, item: o.item ? { id: o.item.id, shortName: o.item.shortName, image512pxLink: o.item.image512pxLink } : undefined, count: o.count, foundInRaid: o.foundInRaid })),
       });
     }
     if (t.finishRewards?.items?.some((r) => r.item?.id === mainId)) {
       receivedFromTasks.push({
-        id: t.id, name: t.name, taskImageLink: t.trader.imageLink, kappaRequired: t.kappaRequired, minPlayerLevel: t.minPlayerLevel,
+        id: t.id, name: t.name, taskImageLink: questImage(t.id), kappaRequired: t.kappaRequired, minPlayerLevel: t.minPlayerLevel,
         trader: { name: t.trader.name, normalizedName: t.trader.normalizedName },
         finishRewards: { items: t.finishRewards.items.map((r) => ({ item: { id: r.item.id }, count: r.count })) },
       });

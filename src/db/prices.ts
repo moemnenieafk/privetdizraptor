@@ -327,40 +327,28 @@ export async function getPricesAgeHours(gameId: string): Promise<number | null> 
   }
 }
 
+/** BSG-id валютных предметов: курс = их рыночная цена на барахолке (как у игроков),
+ *  а не внутренний курс торговца. */
+const CURRENCY_ITEM_ID = {
+  USD: '5696686a4bdc2da3298b456a', // Доллары
+  EUR: '569668774bdc2da2298b4568', // Евро
+} as const;
+
 /**
- * Курс валют торговцев в рублях. Игра держит его фиксированным, но нигде не отдаёт
- * отдельным числом — он выводится из офферов: у Миротворца цены в USD, у Лыжника
- * в EUR, и рядом с каждой лежит рублёвый эквивалент.
- *
- * Берётся медиана отношения priceRUB / price по всем офферам валюты: единичный
- * оффер мог бы приехать битым, медиана к этому глуха.
+ * Курс валют в рублях = рыночная цена самих предметов «Доллары»/«Евро» на барахолке
+ * (lastLowPrice, фолбэк avg24h). Это тот курс, которым оперируют игроки. Раньше
+ * считался внутренний курс торговца (priceRUB/price по офферам) — он занижен и
+ * расходится с рынком.
  */
-export async function getCurrencyRates(gameId: string): Promise<{ usd: number | null; eur: number | null }> {
+export async function getCurrencyRates(_gameId: string): Promise<{ usd: number | null; eur: number | null }> {
   try {
-    const rows = await db
-      .select({ buyFor: prices.buyFor, sellFor: prices.sellFor })
-      .from(prices)
-      .where(eq(prices.gameId, gameId));
-
-    const buckets: Record<string, number[]> = { USD: [], EUR: [] };
-    for (const row of rows) {
-      for (const offer of [...(row.buyFor ?? []), ...(row.sellFor ?? [])]) {
-        const cur = offer.currency;
-        if (cur !== 'USD' && cur !== 'EUR') continue;
-        if (!offer.price || !offer.priceRUB || offer.price <= 0) continue;
-        buckets[cur].push(offer.priceRUB / offer.price);
-      }
-    }
-
-    const median = (values: number[]): number | null => {
-      if (values.length === 0) return null;
-      const sorted = [...values].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      const value = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-      return Math.round(value);
+    const map = await getEftPricesByIds([CURRENCY_ITEM_ID.USD, CURRENCY_ITEM_ID.EUR]);
+    const rate = (id: string): number | null => {
+      const p = map.get(id);
+      const v = p?.lastLowPrice ?? p?.avg24hPrice ?? null;
+      return v != null && v > 0 ? Math.round(v) : null;
     };
-
-    return { usd: median(buckets.USD), eur: median(buckets.EUR) };
+    return { usd: rate(CURRENCY_ITEM_ID.USD), eur: rate(CURRENCY_ITEM_ID.EUR) };
   } catch (e) {
     console.error('[getCurrencyRates]', e);
     return { usd: null, eur: null };
