@@ -76,4 +76,7 @@ graphify-out/
 
 # Локальные экспорты карт (генерятся scripts/export-maps-svg.ts) и внешние ресёрч-тулзы
 map-exports/
-!for-deep-research/
+\!for-deep-research/
+
+# Логи локального dev-сервера (next dev) — артефакт, не исходник.
+.devlog.*
