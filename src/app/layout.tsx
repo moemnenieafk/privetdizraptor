@@ -32,14 +32,20 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "ЦТА — портал по Escape from Tarkov",
     description: SITE_DESCRIPTION,
-    // og:image даёт файловый генератор src/app/opengraph-image.tsx (логотип без
-    // дескриптора). Статический /og.png убран, чтобы не было дубля тега.
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "ЦТА — Центр тактической адаптации, портал по Escape from Tarkov",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "ЦТА — портал по Escape from Tarkov",
     description: SITE_DESCRIPTION,
-    // twitter:image наследует og:image (генератор выше).
+    images: ["/og.png"],
   },
   robots: {
     index: true,
