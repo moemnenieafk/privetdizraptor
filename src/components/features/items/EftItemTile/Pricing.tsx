@@ -89,6 +89,39 @@ function QuestUnlockIcon() {
   );
 }
 
+// Гексагон требуемого уровня в цвете moderate (#FF7724) — для флиа-лока.
+function ModerateHex({ n }: { n: number }) {
+  return (
+    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+        <polygon points="8,1.5 14,4.75 14,11.25 8,14.5 2,11.25 2,4.75" fill="none" stroke="var(--color-moderate)" strokeWidth="1.5" />
+        <text x="8" y="10.5" textAnchor="middle" fontSize="6" fill="var(--color-moderate)" fontFamily="var(--font-blender-medium)">{n}</text>
+      </svg>
+    </span>
+  );
+}
+
+// Плашка «Барахолка закрыта» (шапка) — верхняя часть флиа-лока.
+function FleaLockedHead() {
+  return (
+    <div className="flex items-center justify-end gap-1 rounded-xs bg-[color-mix(in_srgb,var(--color-moderate)_15%,transparent)] px-1.5 py-0.5" title="Барахолка недоступна на вашем уровне">
+      <span className="icon-eft-currency-ruble h-3 w-3 shrink-0 bg-(--color-moderate) mask-contain mask-center mask-no-repeat opacity-70" />
+      <span className="font-blender-medium text-type-caption uppercase leading-none tracking-widest text-(--color-moderate) whitespace-nowrap">Закрыта</span>
+    </div>
+  );
+}
+
+// Плашка «Доступно с NN уровня» (NN в гексагоне) — нижняя часть флиа-лока.
+function FleaLockedLevel({ required }: { required: number }) {
+  return (
+    <div className="flex items-center justify-end gap-1 rounded-xs bg-[color-mix(in_srgb,var(--color-moderate)_15%,transparent)] px-1.5 py-0.5" title={`Барахолка доступна с ${required} уровня игрока`}>
+      <span className="font-blender-medium text-type-caption uppercase leading-none tracking-wide text-(--color-moderate) whitespace-nowrap">Доступно с</span>
+      <ModerateHex n={required} />
+      <span className="font-blender-medium text-type-caption uppercase leading-none tracking-wide text-(--color-moderate) whitespace-nowrap">ур.</span>
+    </div>
+  );
+}
+
 function PriceCell({
   entry,
   isFlea = false,
@@ -174,6 +207,13 @@ export function EftPricing() {
   const slots = item.width * item.height;
   const hasQuestUnlock = indicators?.quest?.type === 'unlock_trade';
 
+  // Флиа-лок: барахолка недоступна на уровне игрока (пер-предметный minLevelForFlea).
+  const profiles = usePlayerStore((s) => s.profiles);
+  const activeId = usePlayerStore((s) => s.activeProfileId);
+  const profile  = profiles.find((p) => p.id === activeId);
+  const playerLvl = profile ? parseInt(profile.level, 10) : 0;
+  const fleaLocked = item.minLevelForFlea != null && playerLvl < item.minLevelForFlea;
+
   const fleaSellRUB  = pricing.fleaSell?.priceRUB   ?? pricing.fleaSell?.price   ?? 0;
   const traderSellRUB = pricing.traderSell?.priceRUB ?? pricing.traderSell?.price ?? 0;
   const fleaBuyRUB   = pricing.fleaBuy?.priceRUB    ?? pricing.fleaBuy?.price    ?? 0;
@@ -198,7 +238,9 @@ export function EftPricing() {
       <div className="mb-2.5 grid grid-cols-2 gap-2">
         <PriceCell entry={pricing.traderBuy} showQuestUnlock={hasQuestUnlock} />
         <div className="flex justify-end">
-          <PriceCell entry={pricing.fleaBuy} isFlea accent profitable={fleaBuyProfitable} />
+          {fleaLocked
+            ? <FleaLockedHead />
+            : <PriceCell entry={pricing.fleaBuy} isFlea accent profitable={fleaBuyProfitable} />}
         </div>
       </div>
 
@@ -211,7 +253,9 @@ export function EftPricing() {
       <div className="mb-2 grid grid-cols-2 gap-2">
         <PriceCell entry={pricing.traderSell} levelRequired={minPlayerLevel} />
         <div className="flex justify-end">
-          <PriceCell entry={pricing.fleaSell} isFlea accent profitable={fleaSellProfitable} />
+          {fleaLocked && item.minLevelForFlea != null
+            ? <FleaLockedLevel required={item.minLevelForFlea} />
+            : <PriceCell entry={pricing.fleaSell} isFlea accent profitable={fleaSellProfitable} />}
         </div>
       </div>
 
@@ -219,7 +263,9 @@ export function EftPricing() {
       <div className="grid grid-cols-2 gap-2 pt-1">
         <VpsCell price={pricing.traderSell?.price} priceRUB={pricing.traderSell?.priceRUB} slots={slots} />
         <div className="flex items-center justify-end">
-          <VpsCell price={pricing.fleaSell?.price} priceRUB={pricing.fleaSell?.priceRUB} slots={slots} profitable={fleaVpsProfitable} />
+          {fleaLocked
+            ? <span className="font-blender-medium text-type-caption text-text-muted/40">—</span>
+            : <VpsCell price={pricing.fleaSell?.price} priceRUB={pricing.fleaSell?.priceRUB} slots={slots} profitable={fleaVpsProfitable} />}
         </div>
       </div>
     </div>

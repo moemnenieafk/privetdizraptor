@@ -8,7 +8,8 @@
 // Облачный синк избранного — отложен (см. заметку tracking-favorite-items).
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Star, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { FavoriteIcon } from '@/components/features/items/FavoriteIcon';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
 import { EftItemTile, type EftItemData } from '@/components/features/items/EftItemTile';
 import { ResetControl } from '@/components/features/tracking/ResetControl';
@@ -123,7 +124,7 @@ export function TrackingFavoritesDigest() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 rounded-lg border border-lines-hover bg-(--color-base) p-8 text-center">
-          <Star className="h-6 w-6 text-text-muted" />
+          <FavoriteIcon active className="h-6 w-6 text-text-muted" />
           <p className="max-w-90 text-sm text-text-secondary">
             Избранное пусто. Отмечайте предметы звёздочкой в каталоге — они соберутся здесь с
             актуальными ценами.

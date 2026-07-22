@@ -1,8 +1,9 @@
 ﻿'use client';
 
 import { useState, useRef, useEffect, type ComponentType } from 'react';
-import { Search, X, ChevronDown, Check, Save, SlidersHorizontal, TrendingDown, ArrowDownAZ, Activity } from 'lucide-react';
+import { Search, X, ChevronDown, Check, Save, SlidersHorizontal, TrendingDown, ArrowDownAZ, Activity, ShoppingCart } from 'lucide-react';
 import type { SortConfig } from './useCategoryFilters';
+import { USED_IN_OPTIONS, type CategoryFilterConfig } from '@/lib/items-filter-config';
 
 type SortOption = {
   key: string;
@@ -15,12 +16,14 @@ const SORT_OPTIONS: SortOption[] = [
   { key: 'vps',        label: 'По цене / слот',      iconClass: 'icon-eft-items-price-slot' },
   { key: 'sellTrader', label: 'Продажа торговцу',    iconClass: 'icon-eft-lore-traders' },
   { key: 'sellFlea',   label: 'Продажа на Барахолке', iconClass: 'icon-eft-currency-ruble' },
+  { key: 'buyTrader',  label: 'Купить у торговца',    Icon: ShoppingCart },
   { key: 'buyMin',     label: 'Покупка (Мин. цена)', Icon: TrendingDown },
+  { key: 'weight',     label: 'По весу',              iconClass: 'icon-eft-weight-carry' },
   { key: 'name',       label: 'По алфавиту',          Icon: ArrowDownAZ },
   { key: 'indicator',  label: 'По показателю',         Icon: Activity },
 ];
 
-function SortDropdown({ value, onChange }: { value: string; onChange: (key: string) => void }) {
+function SortDropdown({ value, onChange, options }: { value: string; onChange: (key: string) => void; options: SortOption[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -33,14 +36,14 @@ function SortDropdown({ value, onChange }: { value: string; onChange: (key: stri
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const current = SORT_OPTIONS.find(o => o.key === value) ?? SORT_OPTIONS[0];
+  const current = options.find(o => o.key === value) ?? options[0];
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div ref={ref} className="relative w-full sm:w-auto sm:shrink-0">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="flex h-10 items-center gap-2 bg-transparent px-3 font-blender-medium text-type-caption uppercase tracking-wider text-zinc-400 transition-colors duration-200 hover:text-zinc-200"
+        className="flex h-9 w-full items-center gap-2 rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-type-caption uppercase tracking-wider text-zinc-400 transition-colors duration-200 hover:border-(--primary) hover:text-zinc-200"
       >
         {current.iconClass ? (
           <span className={`h-4 w-4 shrink-0 bg-current mask-contain mask-no-repeat mask-center ${current.iconClass}`} />
@@ -48,12 +51,12 @@ function SortDropdown({ value, onChange }: { value: string; onChange: (key: stri
           <current.Icon className="h-4 w-4 shrink-0" />
         ) : null}
         <span>{current.label}</span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`ml-auto h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1 min-w-full overflow-hidden rounded border border-lines-hover bg-card-menu py-1 shadow-lg">
-          {SORT_OPTIONS.map(opt => {
+          {options.map(opt => {
             const isSelected = opt.key === value;
             return (
               <button
@@ -82,12 +85,15 @@ function SortDropdown({ value, onChange }: { value: string; onChange: (key: stri
 
 interface CategoryControlBarProps {
   categorySlug?: string;
+  config: CategoryFilterConfig;
   searchQuery: string;
   sortConfig: SortConfig;
   activeArmorClasses: number[];
   barterOnly: boolean;
   availableOnly: boolean;
   favoritesOnly: boolean;
+  usedIn: string[];
+  needMe: boolean;
   isSaved: boolean;
   showAdvanced: boolean;
   activeAdvancedCount: number;
@@ -97,6 +103,8 @@ interface CategoryControlBarProps {
   onBarterOnlyChange: (v: boolean) => void;
   onAvailableOnlyChange: (v: boolean) => void;
   onFavoritesOnlyChange: (v: boolean) => void;
+  onUsedInToggle: (key: string) => void;
+  onNeedMeChange: (v: boolean) => void;
   onSaveFilters: () => void;
   onToggleAdvanced: () => void;
 }
@@ -105,12 +113,15 @@ const ARMOR_CATEGORIES = ['armor', 'helmets', 'rigs', 'components', 'eyewear', '
 
 export function CategoryControlBar({
   categorySlug,
+  config,
   searchQuery,
   sortConfig,
   activeArmorClasses,
   barterOnly,
   availableOnly,
   favoritesOnly,
+  usedIn,
+  needMe,
   isSaved,
   showAdvanced,
   activeAdvancedCount,
@@ -120,16 +131,22 @@ export function CategoryControlBar({
   onBarterOnlyChange,
   onAvailableOnlyChange,
   onFavoritesOnlyChange,
+  onUsedInToggle,
+  onNeedMeChange,
   onSaveFilters,
   onToggleAdvanced,
 }: CategoryControlBarProps) {
-  const showArmorFilter = ARMOR_CATEGORIES.includes(categorySlug as typeof ARMOR_CATEGORIES[number]);
+  // Гейт поверх рантайм-проверки: armor-фильтр только для armor-категорий И если конфиг разрешает.
+  const showArmorFilter = config.controlBar.includes('armorClass')
+    && ARMOR_CATEGORIES.includes(categorySlug as typeof ARMOR_CATEGORIES[number]);
+  const has = (c: Parameters<typeof config.controlBar.includes>[0]) => config.controlBar.includes(c);
+  const sortOptions = SORT_OPTIONS.filter(o => config.sort.includes(o.key));
 
   return (
-    <div className="@container/controlbar flex w-full flex-wrap items-center gap-2 py-3">
+    <div className="@container/controlbar flex w-full flex-wrap items-end gap-3.5 py-3">
 
-      {/* Поиск — тянется на всё свободное место */}
-      <div className="relative flex h-10 min-w-36 flex-1 items-center rounded border border-lines-hover bg-(--color-base) px-3 transition-colors focus-within:border-(--primary)">
+      {/* Поиск — на мобиле full-width (1-я строка), с sm тянется на всё свободное место */}
+      <div className="relative flex h-9 w-full items-center rounded border border-lines-hover bg-(--color-base) px-3 transition-colors focus-within:border-(--primary) sm:w-auto sm:min-w-36 sm:flex-1">
         <Search className="mr-2 h-4 w-4 shrink-0 text-text-muted" />
         <input
           type="text"
@@ -146,9 +163,9 @@ export function CategoryControlBar({
       </div>
 
       {/* Сортировка */}
-      <SortDropdown value={sortConfig.key} onChange={onDropdownSort} />
+      <SortDropdown value={sortConfig.key} onChange={onDropdownSort} options={sortOptions} />
 
-      <div className="h-6 w-px shrink-0 bg-lines-hover" />
+      <div className="hidden h-9 w-px shrink-0 bg-lines-hover sm:block" />
 
       {/* Класс брони (только armor / helmets / rigs) */}
       {showArmorFilter && (
@@ -172,88 +189,145 @@ export function CategoryControlBar({
               );
             })}
           </div>
-          <div className="h-6 w-px shrink-0 bg-lines-hover" />
+          <div className="hidden h-9 w-px shrink-0 bg-lines-hover sm:block" />
+        </>
+      )}
+
+      {/* «Отображать только» — квадратные иконочные кнопки (usedIn + Нужно мне + Избранное) */}
+      {(has('usedIn') || has('needMe') || has('favorites')) && (
+        <>
+          <div className="flex shrink-0 flex-col gap-1">
+            <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+              Отображать только
+            </span>
+            <div className="flex items-center gap-1.5">
+              {has('usedIn') && USED_IN_OPTIONS.map((opt) => {
+                const isActive = usedIn.includes(opt.key);
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => onUsedInToggle(opt.key)}
+                    title={opt.tip}
+                    aria-pressed={isActive}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-[background-color,border-color] duration-200 ${
+                      isActive
+                        ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]'
+                        : 'border-lines-hover bg-card-menu hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
+                    }`}
+                  >
+                    <span className={`${opt.iconClass} h-5 w-5 mask-contain mask-no-repeat mask-center transition-[background-color] duration-200 ${isActive ? 'bg-(--primary)' : 'bg-text-primary opacity-60'}`} />
+                  </button>
+                );
+              })}
+
+              {has('needMe') && (
+                <button
+                  type="button"
+                  onClick={() => onNeedMeChange(!needMe)}
+                  title="Только то, что мне ещё нужно (незавершённые квесты)"
+                  aria-pressed={needMe}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-[background-color,border-color] duration-200 ${
+                    needMe
+                      ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]'
+                      : 'border-lines-hover bg-card-menu hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
+                  }`}
+                >
+                  <span className={`icon-eft-prog-items-needed h-5 w-5 mask-contain mask-no-repeat mask-center transition-[background-color] duration-200 ${needMe ? 'bg-(--primary)' : 'bg-text-primary opacity-60'}`} />
+                </button>
+              )}
+
+              {has('favorites') && (
+                <button
+                  type="button"
+                  onClick={() => onFavoritesOnlyChange(!favoritesOnly)}
+                  title="Только избранные предметы"
+                  aria-pressed={favoritesOnly}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-[background-color,border-color] duration-200 ${
+                    favoritesOnly
+                      ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]'
+                      : 'border-lines-hover bg-card-menu hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
+                  }`}
+                >
+                  <span className={`${favoritesOnly ? 'icon-eft-favourite-active bg-(--primary)' : 'icon-eft-favourite-default bg-text-primary opacity-60'} h-5 w-5 mask-contain mask-no-repeat mask-center transition-[background-color] duration-200`} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="hidden h-9 w-px shrink-0 bg-lines-hover sm:block" />
         </>
       )}
 
       {/* Бартер */}
-      <button
-        type="button"
-        onClick={() => onBarterOnlyChange(!barterOnly)}
-        title="Только бартерные предметы"
-        className={`flex h-10 shrink-0 items-center gap-1.5 bg-transparent px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
-          barterOnly
-            ? 'text-(--primary)'
-            : 'text-zinc-500 hover:text-zinc-300'
-        }`}
-      >
-        <span className="icon-eft-prog-barter h-4 w-4 shrink-0 mask-contain mask-no-repeat mask-center bg-current" />
-        <span className="hidden @md/controlbar:block">Бартер</span>
-      </button>
-
-      {/* Избранное */}
-      <button
-        type="button"
-        onClick={() => onFavoritesOnlyChange(!favoritesOnly)}
-        title="Только избранные предметы"
-        className={`flex h-10 shrink-0 items-center gap-1.5 bg-transparent px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
-          favoritesOnly
-            ? 'text-amber-400'
-            : 'text-zinc-500 hover:text-zinc-300'
-        }`}
-      >
-        <span>{favoritesOnly ? '★' : '☆'}</span>
-        <span className="hidden @md/controlbar:block">Избранное</span>
-      </button>
+      {has('barterOnly') && (
+        <button
+          type="button"
+          onClick={() => onBarterOnlyChange(!barterOnly)}
+          title="Только бартерные предметы"
+          className={`flex h-10 shrink-0 items-center gap-1.5 bg-transparent px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
+            barterOnly
+              ? 'text-(--primary)'
+              : 'text-zinc-500 hover:text-zinc-300'
+          }`}
+        >
+          <span className="icon-eft-prog-barter h-4 w-4 shrink-0 mask-contain mask-no-repeat mask-center bg-current" />
+          <span className="hidden @md/controlbar:block">Бартер</span>
+        </button>
+      )}
 
       {/* Доступно мне */}
-      <button
-        type="button"
-        onClick={() => onAvailableOnlyChange(!availableOnly)}
-        title="Доступно на моём уровне (Барахолка с 15 ур.)"
-        className={`flex h-10 shrink-0 items-center gap-1.5 bg-transparent px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
-          availableOnly
-            ? 'text-(--primary)'
-            : 'text-zinc-500 hover:text-zinc-300'
-        }`}
-      >
-        <span className="hidden @xl/controlbar:block">Доступно мне</span>
-        <span className="@xl/controlbar:hidden">Уров.</span>
-      </button>
+      {has('availableOnly') && (
+        <button
+          type="button"
+          onClick={() => onAvailableOnlyChange(!availableOnly)}
+          title="Доступно на моём уровне (Барахолка с 15 ур.)"
+          className={`flex h-10 shrink-0 items-center gap-1.5 bg-transparent px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
+            availableOnly
+              ? 'text-(--primary)'
+              : 'text-zinc-500 hover:text-zinc-300'
+          }`}
+        >
+          <span className="hidden @xl/controlbar:block">Доступно мне</span>
+          <span className="@xl/controlbar:hidden">Уров.</span>
+        </button>
+      )}
 
       {/* Расширенные фильтры */}
       <button
         type="button"
         onClick={onToggleAdvanced}
         title="Расширенные фильтры"
-        className={`relative flex h-10 shrink-0 items-center gap-1.5 bg-transparent px-3 font-blender-medium text-xs uppercase tracking-wider transition-colors duration-200 ${
+        aria-pressed={showAdvanced}
+        className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-[background-color,border-color] duration-200 ${
           showAdvanced || activeAdvancedCount > 0
-            ? 'text-(--primary)'
-            : 'text-zinc-500 hover:text-zinc-300'
+            ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]'
+            : 'border-lines-hover bg-card-menu hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
         }`}
       >
-        <SlidersHorizontal className="h-4 w-4 shrink-0" />
-        <span className="hidden @lg/controlbar:block">Фильтры</span>
+        <SlidersHorizontal className={`h-5 w-5 transition-[color] duration-200 ${showAdvanced || activeAdvancedCount > 0 ? 'text-(--primary)' : 'text-text-primary opacity-60'}`} />
         {activeAdvancedCount > 0 && (
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-(--primary) text-type-caption font-blender-medium text-(--color-base)">
+          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-(--primary) text-type-caption font-blender-medium text-(--color-base)">
             {activeAdvancedCount}
           </span>
         )}
       </button>
 
-      <div className="h-6 w-px shrink-0 bg-lines-hover" />
+      <div className="hidden h-9 w-px shrink-0 bg-lines-hover sm:block" />
 
       {/* Сохранить фильтры — дискета */}
       <button
+        type="button"
         onClick={onSaveFilters}
-        className={`flex h-11 w-11 @xl/controlbar:h-8 @xl/controlbar:w-8 shrink-0 items-center justify-center bg-transparent outline-none transition-colors duration-200 focus-visible:outline-none ${
-          isSaved
-            ? 'text-nvg-green'
-            : 'text-zinc-500 hover:text-zinc-300'
-        }`}
         title="Сохранить текущие фильтры"
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border outline-none transition-[background-color,border-color] duration-200 focus-visible:outline-none ${
+          isSaved
+            ? 'border-nvg-green bg-[color-mix(in_srgb,var(--color-nvg-green)_15%,transparent)]'
+            : 'border-lines-hover bg-card-menu hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
+        }`}
       >
-        {isSaved ? <Check className="h-4 w-4 stroke-3" /> : <Save className="h-4 w-4" />}
+        {isSaved
+          ? <Check className="h-5 w-5 stroke-3 text-nvg-green" />
+          : <Save className="h-5 w-5 text-text-primary opacity-60" />}
       </button>
     </div>
   );

@@ -150,6 +150,8 @@
   .icon-eft-eq-questkeys { mask-image: url('/icons/eft/03-items/equipment/keys/mechanical-keys/quest-keys.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/keys/mechanical-keys/quest-keys.svg'); }
   .icon-eft-eq-secure { mask-image: url('/icons/eft/03-items/equipment/containers/secure-containers.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/containers/secure-containers.svg'); }
   .icon-eft-eq-special { mask-image: url('/icons/eft/03-items/equipment/special-equipment.svg'); -webkit-mask-image: url('/icons/eft/03-items/equipment/special-equipment.svg'); }
+  .icon-eft-favourite-active { mask-image: url('/icons/eft/03-items/favourite-active-icon.svg'); -webkit-mask-image: url('/icons/eft/03-items/favourite-active-icon.svg'); }
+  .icon-eft-favourite-default { mask-image: url('/icons/eft/03-items/favourite-default-icon.svg'); -webkit-mask-image: url('/icons/eft/03-items/favourite-default-icon.svg'); }
   .icon-eft-gear-armor { mask-image: url('/icons/eft/03-items/gear/cat-armor.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/cat-armor.svg'); }
   .icon-eft-gear-backpacks { mask-image: url('/icons/eft/03-items/gear/cat-backpacks.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/cat-backpacks.svg'); }
   .icon-eft-gear-comps { mask-image: url('/icons/eft/03-items/gear/cat-gearcomps.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/cat-gearcomps.svg'); }
@@ -158,6 +160,7 @@
   .icon-eft-gear-masks { mask-image: url('/icons/eft/03-items/gear/cat-masks.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/cat-masks.svg'); }
   .icon-eft-gear-rigs { mask-image: url('/icons/eft/03-items/gear/cat-tactical-rigs.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/cat-tactical-rigs.svg'); }
   .icon-eft-gear-visors { mask-image: url('/icons/eft/03-items/gear/cat-visors.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/cat-visors.svg'); }
+  .icon-eft-gpcoin { mask-image: url('/icons/eft/03-items/gpcoin-icon.svg'); -webkit-mask-image: url('/icons/eft/03-items/gpcoin-icon.svg'); }
   .icon-eft-guns-ammo { mask-image: url('/icons/eft/03-items/guns/cat-ammo.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns/cat-ammo.svg'); }
   .icon-eft-guns-ar-bear { mask-image: url('/icons/eft/03-items/guns/gun-types/ar-bear.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns/gun-types/ar-bear.svg'); }
   .icon-eft-guns-ar-usec { mask-image: url('/icons/eft/03-items/guns/gun-types/ar-usec.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns/gun-types/ar-usec.svg'); }

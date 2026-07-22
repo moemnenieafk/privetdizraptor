@@ -1,21 +1,21 @@
-﻿"use client";
+"use client";
 
-import React, { useMemo, useRef, useState, useEffect, memo, forwardRef } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { PackageX, Coins, ChevronUp, ChevronDown, Check, X, Scale } from 'lucide-react';
-import { Badge as SemanticBadge, getArmorClassColor } from '@/components/features/items/Badge';
+import { PackageX, Check, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { EftItemTile } from '@/components/features/items/EftItemTile';
 import type { EftItemData, EftBarterData, EftCraftData, EftQuestData } from '@/components/features/items/EftItemTile';
 import { applyQuestProgress, type QuestProgressRef } from '@/lib/eft-indicators.economics';
-import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
-import { itemIconUrl } from '@/lib/item-icon';
 import { useCategoryFilters } from '@/components/features/items/useCategoryFilters';
 import { CategoryControlBar } from '@/components/features/items/CategoryControlBar';
-import { formatCompactNumber } from '@/lib/formatters';
 import { getDynamicTopIndicator } from '@/lib/item-indicators.util';
+import { formatCompactNumber } from '@/lib/formatters';
 import { getEyewearSubtype, type EyewearSubtype } from '@/lib/eyewear-filter-config';
 import { EyewearSubtypeBar } from '@/components/features/items/EyewearSubtypeBar';
+import { SubcategoryBar } from '@/components/features/items/SubcategoryBar';
+import { PriceRangeSlider } from '@/components/features/items/PriceRangeSlider';
+import { getFilterConfig, type SubcategorySpec } from '@/lib/items-filter-config';
 import { useItemsStore } from '@/store/useItemsStore';
 import { useQuestStore } from '@/store/useQuestStore';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
@@ -84,6 +84,8 @@ export interface CategoryItem {
   basePrice: number;
   image512pxLink: string;
   types?: string[];
+  bsgCategoryId?: string;
+  minLevelForFlea?: number;
   properties?: CategoryItemProperties | null;
   sellFor: { price: number; priceRUB?: number; currency?: string; vendor: { name: string; normalizedName?: string } }[];
   buyFor: { price: number; priceRUB?: number; currency?: string; vendor: { name: string; normalizedName?: string } }[];
@@ -99,6 +101,8 @@ interface ItemsCategoryClientProps {
   /** Определения квест-индикаторов (с сервера) + рефы для оверлея прогресса на клиенте. */
   questDataMap?: Record<string, EftQuestData>;
   questRefMap?: Record<string, QuestProgressRef>;
+  /** Курс валют (₽ за $/€) — для переключателя валют в range-фильтре цены. */
+  rates?: { usd: number | null; eur: number | null };
 }
 
 // ─── Slug groups ──────────────────────────────────────────────────────────────
@@ -129,6 +133,10 @@ function getEconomics(item: CategoryItem) {
   const bestBuy = validBuy.length
     ? validBuy.reduce((min, curr) => rubVal(curr) < rubVal(min) ? curr : min, validBuy[0])
     : undefined;
+  const traderBuys = validBuy.filter(b => !isFlea(b));
+  const bestTraderBuy = traderBuys.length
+    ? traderBuys.reduce((min, curr) => rubVal(curr) < rubVal(min) ? curr : min, traderBuys[0])
+    : undefined;
 
   return {
     slots,
@@ -139,6 +147,7 @@ function getEconomics(item: CategoryItem) {
     fleaSell,
     bestTraderSell,
     minPrice: bestBuy ? rubVal(bestBuy) : 0,
+    traderBuyPrice: bestTraderBuy ? rubVal(bestTraderBuy) : 0,
   };
 }
 
@@ -156,18 +165,6 @@ function formatZoomLevels(zoomLevels?: number[][]): string {
 function fmt(val?: number | null): string {
   if (val === null || val === undefined || val === 0) return '—';
   return String(val);
-}
-
-// ─── Shared sub-components ────────────────────────────────────────────────────
-
-function VendorIcon({ vendor }: { vendor: { name: string; normalizedName?: string } }) {
-  if (!vendor || vendor.name === '-') return null;
-  if (vendor.name === 'Flea Market' || vendor.normalizedName === 'flea-market') {
-    return <Coins className="w-4 h-4 text-yellow-500 shrink-0" />;
-  }
-  if (!vendor.normalizedName) return <span className="w-4 h-4 shrink-0" />;
-   
-  return <img src={`/images/traders/eft/${vendor.normalizedName}.webp`} alt={vendor.name} className="w-4 h-4 object-cover rounded-sm shrink-0" title={vendor.name} />;
 }
 
 type ProcessedItem = CategoryItem & { eco: ReturnType<typeof getEconomics> };
@@ -213,6 +210,7 @@ function toEftItem(
     height: item.height,
     backgroundColor: item.backgroundColor,
     image512pxLink: item.image512pxLink,
+    minLevelForFlea: item.minLevelForFlea,
     armorClass: p.class ?? undefined,
     ammoOverlay: ((p.damage ?? 0) > 0 || (p.penetrationPower ?? 0) > 0)
       ? { damage: p.damage ?? 0, penetration: p.penetrationPower ?? 0 }
@@ -247,204 +245,219 @@ function toEftItem(
   };
 }
 
-
-function renderPrice(
-  price?: number,
-  vendor?: { name: string; normalizedName?: string },
-  highlightGreen = false,
-  isBestSell = false,
-  currency?: string,
-) {
-  if (!price || price <= 0) {
-    return (
-      <div className="flex items-center justify-end gap-1 text-text-muted opacity-50" title="Недоступно / Нет в продаже">
-        <PackageX className="w-3 h-3" />
-        <span className="font-blender-medium text-type-caption uppercase tracking-widest">Нет</span>
-      </div>
-    );
-  }
-  const isUSD = currency === 'USD';
-  const isEUR = currency === 'EUR';
-  const displayText = isUSD
-    ? `$${formatCompactNumber(price)}`
-    : isEUR
-    ? `€${formatCompactNumber(price)}`
-    : `${formatCompactNumber(price)} ₽`;
-  const colorClass = isBestSell
-    ? 'text-(--primary)'
-    : highlightGreen
-    ? 'text-nvg-green'
-    : 'text-text-primary';
-  const sizeClass = isBestSell ? 'text-type-label' : 'text-xs';
-  return (
-    <div className="flex items-center justify-end gap-1.5">
-      <span
-        title={`${price.toLocaleString('ru-RU')} ${isUSD ? '$' : isEUR ? '€' : '₽'}`}
-        className={`cursor-help font-blender-medium ${sizeClass} ${colorClass}`}
-      >
-        {displayText}
-      </span>
-      {vendor && <VendorIcon vendor={vendor} />}
-    </div>
-  );
-}
-
-/** Buy price с поддержкой USD (Миротворец) */
-function renderBuyPrice(eco: ReturnType<typeof getEconomics>) {
-  const { minPrice, bestBuy } = eco;
-  if (!minPrice || !bestBuy) {
-    return (
-      <div className="flex items-center justify-end gap-1 text-text-muted opacity-50" title="Недоступно / Нет в продаже">
-        <PackageX className="w-3 h-3" />
-        <span className="font-blender-medium text-type-caption uppercase tracking-widest">Нет</span>
-      </div>
-    );
-  }
-  const isUSD = bestBuy.currency === 'USD';
-  const displayText = isUSD
-    ? `$${formatCompactNumber(bestBuy.price)}`
-    : `${formatCompactNumber(minPrice)} ₽`;
-  const tooltip = `${minPrice.toLocaleString('ru-RU')} ₽`;
-  return (
-    <div className="flex items-center justify-end gap-1.5">
-      <span title={tooltip} className={`cursor-help font-blender-medium text-xs text-nvg-green${isUSD ? ' opacity-90' : ''}`}>
-        {displayText}
-      </span>
-      <VendorIcon vendor={bestBuy.vendor} />
-    </div>
-  );
-}
-
-/** Compact penalty cell — shows penalties only if non-zero */
-function PenaltyCell({ ergo, speed, turn }: { ergo?: number | null; speed?: number | null; turn?: number | null }) {
-  const rows: { label: string; val: number }[] = [];
-  if (ergo) rows.push({ label: 'Эрго', val: ergo });
-  if (speed) rows.push({ label: 'Скор', val: speed });
-  if (turn) rows.push({ label: 'Повор', val: turn });
-  if (!rows.length) return <span className="text-text-muted text-xs">—</span>;
-  return (
-    <div className="flex flex-col gap-px">
-      {rows.map(({ label, val }) => (
-        <span key={label} className="font-blender-medium text-type-caption text-red-400">
-          {label}: {val < 0 ? val : `-${val}`}%
-        </span>
-      ))}
-    </div>
-  );
-}
-
 // ─── Advanced filters panel ───────────────────────────────────────────────────
+
+type Currency = 'RUB' | 'USD' | 'EUR';
+
+const CURRENCIES: { key: Currency; iconClass: string; tip: string }[] = [
+  { key: 'RUB', iconClass: 'icon-eft-currency-ruble',  tip: 'Рубли' },
+  { key: 'USD', iconClass: 'icon-eft-currency-dollar', tip: 'Доллары (Миротворец)' },
+  { key: 'EUR', iconClass: 'icon-eft-currency-euro',   tip: 'Евро' },
+];
+
+// Универсальная ЛОГ-шкала цены: пол 100₽ → потолок 3M (open-ended сверху «3M+»).
+// Нелинейность чинит скос (junk внизу / LEDX-выбросы вверху) и делает шкалу
+// консистентной во всех категориях; деления читаются как 1k/10k/100k/1M.
+const PRICE_CAP = 3_000_000;
+const PRICE_FLOOR = 100;
+const LN_RANGE = Math.log(PRICE_CAP / PRICE_FLOOR);
+// 7 якорей, ~равномерно распределённых по лог-оси (гармоничные интервалы).
+const TICK_ANCHORS = [0, 500, 3000, 20000, 100000, 500000, 3000000];
+
+const niceRound = (n: number): number => {
+  if (n <= 0) return 0;
+  const mag = Math.pow(10, Math.floor(Math.log10(n)) - 1);
+  return Math.round(n / mag) * mag;
+};
+const priceToPos = (v: number): number =>
+  v <= 0 ? 0 : Math.max(0, Math.min(1, Math.log(v / PRICE_FLOOR) / LN_RANGE));
+const priceToValue = (pos: number): number =>
+  pos <= 0 ? 0 : niceRound(PRICE_FLOOR * Math.exp(pos * LN_RANGE));
 
 interface AdvancedFiltersPanelProps {
   categorySlug: string;
   priceMin: string;
   priceMax: string;
+  currency: Currency;
+  rates: { usd: number | null; eur: number | null };
+  priceBases: Set<'buy' | 'sell'>;
   caliberFilter: string;
   availableCalibers: string[];
-  cantBuyTrader: boolean;
-  cantBuyFlea: boolean;
-  cantSellTrader: boolean;
-  cantSellFlea: boolean;
   onPriceMinChange: (v: string) => void;
   onPriceMaxChange: (v: string) => void;
+  onCurrencyChange: (c: Currency) => void;
+  onPriceBasisToggle: (b: 'buy' | 'sell') => void;
   onCaliberChange: (v: string) => void;
-  onCantBuyTraderChange: (v: boolean) => void;
-  onCantBuyFleaChange: (v: boolean) => void;
-  onCantSellTraderChange: (v: boolean) => void;
-  onCantSellFleaChange: (v: boolean) => void;
+  subtypeBar: SubcategorySpec | null;
+  activeSubcats: Set<string>;
+  onSubcatToggle: (id: string) => void;
+  onSubcatClear: () => void;
   onReset: () => void;
 }
 
 
 function AdvancedFiltersPanel({
   categorySlug,
-  priceMin, priceMax, caliberFilter,
+  priceMin, priceMax, currency, rates, priceBases, caliberFilter,
   availableCalibers,
-  cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea,
-  onPriceMinChange, onPriceMaxChange, onCaliberChange,
-  onCantBuyTraderChange, onCantBuyFleaChange, onCantSellTraderChange, onCantSellFleaChange,
+  subtypeBar, activeSubcats,
+  onPriceMinChange, onPriceMaxChange, onCurrencyChange, onPriceBasisToggle, onCaliberChange,
+  onSubcatToggle, onSubcatClear,
   onReset,
 }: AdvancedFiltersPanelProps) {
   const showCaliber = categorySlug === 'ammo' || GUN_SLUGS.has(categorySlug);
-  const hasActiveFilters = !!(priceMin || priceMax || caliberFilter
-    || cantBuyTrader || cantBuyFlea || cantSellTrader || cantSellFlea);
-  const inputClass = 'h-10 w-full rounded border border-lines-hover bg-(--color-base) px-3 font-blender-medium text-type-label uppercase tracking-wider text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none';
+  const hasActiveFilters = !!(priceMin || priceMax || caliberFilter || activeSubcats.size > 0);
 
-  const AVAILABILITY_FILTERS = [
-    { flag: cantBuyTrader,  set: onCantBuyTraderChange,  label: 'Купить у торговца' },
-    { flag: cantBuyFlea,    set: onCantBuyFleaChange,    label: 'Купить на барахолке' },
-    { flag: cantSellTrader, set: onCantSellTraderChange, label: 'Продать торговцу' },
-    { flag: cantSellFlea,   set: onCantSellFleaChange,   label: 'Продать на барахолке' },
-  ];
+  const lo = priceMin ? Number(priceMin) : 0;
+  const hi = priceMax ? Number(priceMax) : PRICE_CAP;
+
+  const rateFor = (c: Currency) => (c === 'USD' ? rates.usd : c === 'EUR' ? rates.eur : null);
+  const rate = rateFor(currency);
+  const formatPrice = (rub: number) => {
+    if (currency === 'RUB' || !rate) return `${Math.round(rub).toLocaleString('ru-RU')} ₽`;
+    const sym = currency === 'USD' ? '$' : '€';
+    return `${sym}${Math.round(rub / rate).toLocaleString('ru-RU')}`;
+  };
+  const formatTick = (rub: number) => {
+    const v = currency === 'RUB' || !rate ? rub : rub / rate;
+    const num = formatCompactNumber(Math.round(v));
+    return currency === 'RUB' || !rate ? `${num} ₽` : `${currency === 'USD' ? '$' : '€'}${num}`;
+  };
+  const ticks = TICK_ANCHORS.map((v) => ({ value: v, pos: priceToPos(v), label: formatTick(v) }));
+
+  const handleRange = ([nextLo, nextHi]: [number, number]) => {
+    onPriceMinChange(nextLo <= 0 ? '' : String(nextLo));
+    onPriceMaxChange(nextHi >= PRICE_CAP ? '' : String(nextHi));
+  };
 
   return (
-    <div className="animate-[fade-in-up_0.2s_ease-out_both] border-t border-lines-hover/50 pt-3">
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+    <div className="animate-[fade-in-up_0.2s_ease-out_both] flex flex-col gap-3 pt-3">
 
-        {/* Цена от */}
-        <input
-          type="number"
-          min={0}
-          value={priceMin}
-          onChange={(e) => onPriceMinChange(e.target.value)}
-          placeholder="Цена от, ₽"
-          className={inputClass}
-        />
+      {/* Одна строка: категории / валюта / диапазон цены */}
+      <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
 
-        {/* Цена до */}
-        <input
-          type="number"
-          min={0}
-          value={priceMax}
-          onChange={(e) => onPriceMaxChange(e.target.value)}
-          placeholder="Цена до, ₽"
-          className={inputClass}
-        />
+        {/* Категории (подкатегории barter) */}
+        {subtypeBar && (
+          <SubcategoryBar
+            label={subtypeBar.label}
+            options={subtypeBar.options}
+            active={activeSubcats}
+            onToggle={onSubcatToggle}
+            onClear={onSubcatClear}
+          />
+        )}
 
-        {/* Калибр */}
-        {showCaliber && availableCalibers.length > 0 && (
-          <div className="relative">
-            <select
-              value={caliberFilter}
-              onChange={(e) => onCaliberChange(e.target.value)}
-              className="h-10 w-full cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
-            >
-              <option value="">Все калибры</option>
-              {availableCalibers.map(c => (
-                <option key={c} value={c}>{c.replace('Caliber', '').trim()}</option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">▾</span>
+        {/* Валюта */}
+        <div className="flex shrink-0 flex-col gap-2.5">
+          <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+            Валюта
+          </span>
+          <div className="flex items-center gap-1.5">
+            {CURRENCIES.map(({ key, iconClass, tip }) => {
+              const disabled = key !== 'RUB' && !rateFor(key);
+              const isActive = currency === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => onCurrencyChange(key)}
+                  title={disabled ? `${tip} — курс недоступен` : tip}
+                  aria-pressed={isActive}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-[background-color,border-color] duration-200 disabled:cursor-not-allowed disabled:opacity-30 ${
+                    isActive
+                      ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]'
+                      : 'border-lines-hover bg-card-menu hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
+                  }`}
+                >
+                  <span className={`${iconClass} h-4 w-4 mask-contain mask-no-repeat mask-center ${isActive ? 'bg-(--primary)' : 'bg-text-primary opacity-60'}`} />
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
 
-        {AVAILABILITY_FILTERS.map(({ flag, set, label }) => (
-          <button
-            key={label}
-            type="button"
-            onClick={() => set(!flag)}
-            className={`h-10 w-full rounded border px-3 text-left font-blender-medium text-type-label uppercase tracking-wider transition-colors duration-200 ${
-              flag
-                ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-(--primary)'
-                : 'border-lines-hover bg-(--color-base) text-text-muted hover:border-text-secondary hover:text-text-primary'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        {/* Диапазон цен — независимые тогглы Купить↑ / Продать↓ (обе включены по умолчанию) */}
+        <div className="flex shrink-0 flex-col gap-2.5">
+          <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+            Диапазон цен
+          </span>
+          <div className="flex items-center gap-1.5">
+            {([
+              { key: 'buy',  Icon: ArrowUp,   tip: 'Учитывать цену покупки (сколько платить)' },
+              { key: 'sell', Icon: ArrowDown, tip: 'Учитывать цену продажи (сколько выручить)' },
+            ] as const).map(({ key, Icon, tip }) => {
+              const isActive = priceBases.has(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => onPriceBasisToggle(key)}
+                  title={tip}
+                  aria-pressed={isActive}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-colors duration-200 ${
+                    isActive
+                      ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary)'
+                      : 'border-lines-hover bg-card-menu text-text-muted hover:border-(--primary) hover:text-text-primary'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        {/* Сбросить расширенные */}
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={onReset}
-            className="flex h-10 items-center gap-1.5 rounded border border-lines-hover/50 bg-card-menu px-3 font-blender-medium text-xs uppercase tracking-wider text-text-muted transition-colors hover:border-red-500/50 hover:text-red-400"
-          >
-            <X className="h-4 w-4 shrink-0" />
-            Сбросить
-          </button>
-        )}
+        {/* Диапазон цены — тянется на всё свободное место; вместо заголовка — живые границы */}
+        <div className="flex min-w-64 flex-1 flex-col gap-2.5">
+          <div className="flex items-center justify-between font-blender-medium text-type-label leading-none text-(--primary)">
+            <span>{formatPrice(lo)}</span>
+            <span>{hi >= PRICE_CAP ? `${formatPrice(PRICE_CAP)}+` : formatPrice(hi)}</span>
+          </div>
+          <div className="px-1">
+            <PriceRangeSlider
+              value={[lo, hi]}
+              onChange={handleRange}
+              toPos={priceToPos}
+              toValue={priceToValue}
+              ticks={ticks}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Калибр + сброс — в одну линию */}
+      {(showCaliber && availableCalibers.length > 0) || hasActiveFilters ? (
+        <div className="flex flex-wrap items-center gap-3">
+          {showCaliber && availableCalibers.length > 0 && (
+            <div className="relative w-40">
+              <select
+                value={caliberFilter}
+                onChange={(e) => onCaliberChange(e.target.value)}
+                className="h-9 w-full cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
+              >
+                <option value="">Все калибры</option>
+                {availableCalibers.map(c => (
+                  <option key={c} value={c}>{c.replace('Caliber', '').trim()}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">▾</span>
+            </div>
+          )}
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={onReset}
+              title="Сбросить расширенные фильтры"
+              className="flex h-7 items-center gap-1 rounded border border-red-500/50 bg-red-500/10 px-2 font-blender-medium text-type-micro uppercase tracking-widest text-red-400 transition-colors hover:border-red-500 hover:bg-red-500/20 hover:text-red-300"
+            >
+              <X className="h-3.5 w-3.5 shrink-0" />
+              Сбросить
+            </button>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -576,406 +589,6 @@ function getCardSpecs(item: ProcessedItem, slug: string): { label: string; value
   return [{ label: 'Размер', value: `${item.width}×${item.height}` }];
 }
 
-// ─── Table row ────────────────────────────────────────────────────────────────
-
-const CategoryTableRow = memo(forwardRef<
-  HTMLTableRowElement,
-  { item: ProcessedItem; categorySlug?: string; gpCount?: number; highlighted?: boolean } & React.HTMLAttributes<HTMLTableRowElement>
->(function CategoryTableRow({ item, categorySlug, gpCount, highlighted, ...props }, ref) {
-  const slug = categorySlug || '';
-  const p = item.properties || {};
-  const isComparing = useItemsStore((s) => s.compareIds.includes(item.id));
-  const toggleCompare = useItemsStore((s) => s.toggleCompare);
-
-  // Подсветка лучшей цены продажи (amber)
-  const tSell = item.eco.bestTraderSell?.price || 0;
-  const fSell = item.eco.fleaSell?.price || 0;
-  const bestSellIsTrader = tSell > 0 && tSell >= fSell;
-  const bestSellIsFlea   = fSell > tSell && fSell > 0;
-
-  return (
-    <tr
-      ref={ref}
-      id={`eft-item-${item.id}`}
-      {...props}
-      className={`border-b border-lines-hover/40 last:border-0 transition-colors group ${
-        highlighted
-          ? 'bg-[color-mix(in_srgb,var(--primary)_18%,transparent)]'
-          : 'hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)]'
-      }`}
-    >
-      {/* ─── Визуал (fixed) ─── */}
-      <td className="px-3 py-2 border-r border-lines-hover/50">
-        <div className="relative w-12 h-12 mx-auto bg-linear-to-b from-lines-hover to-(--color-base) border border-lines-hover shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] rounded-sm overflow-hidden flex items-center justify-center">
-          <div className="absolute inset-0 pointer-events-none z-0" style={{ backgroundColor: getTarkovBackgroundColor(item.backgroundColor) }} />
-          <button
-            type="button"
-            onClick={() => toggleCompare(item.id, slug)}
-            aria-label={isComparing ? 'Убрать из сравнения' : 'В сравнение'}
-            title={isComparing ? 'Убрать из сравнения' : 'В сравнение'}
-            className={`absolute left-0.5 top-0.5 z-20 flex h-5 w-5 items-center justify-center rounded-xs border transition-colors ${
-              isComparing
-                ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_25%,transparent)] text-(--primary)'
-                : 'border-lines-hover bg-(--color-base)/70 text-text-muted opacity-0 group-hover:opacity-100 hover:border-(--primary) hover:text-(--primary)'
-            }`}
-          >
-            <Scale className="h-3 w-3" />
-          </button>
-          { }
-          <img
-            src={itemIconUrl(item.id)}
-            alt={item.name}
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 z-10 w-full h-full object-contain p-1 group-hover:scale-110 transition-transform"
-            onError={(e) => {
-              if (!e.currentTarget.dataset.triedApi) {
-                e.currentTarget.dataset.triedApi = 'true';
-                e.currentTarget.src = item.image512pxLink || '/images/placeholder.webp';
-              } else if (!e.currentTarget.dataset.triedPlaceholder) {
-                e.currentTarget.dataset.triedPlaceholder = 'true';
-                e.currentTarget.src = '/images/placeholder.webp';
-              }
-            }}
-          />
-        </div>
-      </td>
-
-      {/* ─── Название (fixed) ─── */}
-      <td className="px-3 py-2 w-40 max-w-40 sm:w-55 sm:max-w-55 md:w-65 md:max-w-65 lg:w-75 lg:max-w-75 xl:w-64 xl:max-w-64">
-        <Link href={`/eft/items/item/${item.normalizedName}`} className="flex min-w-0 w-full flex-col overflow-hidden transition-colors group-hover:text-(--primary)">
-          <span className="block w-full truncate font-blender-medium text-type-label uppercase leading-none" title={item.name}>{item.name}</span>
-          <span className="mt-1 block w-full truncate font-blender-book text-xs text-text-secondary" title={item.shortName}>{item.shortName}</span>
-        </Link>
-      </td>
-
-      {/* ─── Dynamic columns ─── */}
-      {slug === 'headphones' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            {p.distanceModifier != null
-              ? <SemanticBadge color="emerald" label={`+${Math.round((p.distanceModifier - 1) * 100)}%`} title="Множитель дистанции слуха" className="w-fit mx-auto" />
-              : <SemanticBadge color="gray" label={p.ambientVolume ? `${p.ambientVolume} dB` : 'Н/Д'} className="w-fit mx-auto" />}
-          </td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaBuy?.price, item.eco.fleaBuy?.vendor)}</td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader, item.eco.bestTraderSell?.currency)}</td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'helmets' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            <SemanticBadge
-              color={getArmorClassColor(p.class || 0)}
-              label={`Класс ${p.class || '?'}`}
-              iconClass={p.class ? `icon-eft-armor-class-${p.class}` : undefined}
-              iconSizeClass="w-[22px] h-[22px]"
-              className="w-fit mx-auto"
-            />
-          </td>
-          <td className="px-3 py-2 text-center text-text-secondary text-type-caption font-blender-medium uppercase">{p.deafening || 'Н/Д'}</td>
-          <td className="px-3 py-2 text-center">
-            {p.blocksHeadset
-              ? <SemanticBadge color="red" label="Блок." title="Блокирует наушники" className="w-fit mx-auto" />
-              : <span className="text-nvg-green font-blender-medium text-xs uppercase opacity-80">Нет</span>}
-          </td>
-          <td className="px-3 py-2 text-center"><span className="font-blender-medium text-xs text-text-primary">{p.durability || 'Н/Д'}</span></td>
-          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} /></td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'armor' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            <SemanticBadge
-              color={getArmorClassColor(p.class || 0)}
-              label={`Класс ${p.class || '?'}`}
-              iconClass={p.class ? `icon-eft-armor-class-${p.class}` : undefined}
-              iconSizeClass="w-[22px] h-[22px]"
-              className="w-fit mx-auto"
-            />
-          </td>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
-              {p.armorType ? (ARMOR_TYPE_RU[p.armorType] ?? p.armorType) : '—'}
-            </span>
-          </td>
-          <td className="px-3 py-2 text-center"><span className="font-blender-medium text-xs text-text-primary">{fmt(p.durability)}</span></td>
-          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} /></td>
-          <td className="px-3 py-2 text-center">
-            {item.weight != null
-              ? <span className="font-blender-medium text-xs text-text-secondary">{item.weight} кг</span>
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader, item.eco.bestTraderSell?.currency)}</td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'components' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            <SemanticBadge
-              color={getArmorClassColor(p.class || 0)}
-              label={`Класс ${p.class || '?'}`}
-              iconClass={p.class ? `icon-eft-armor-class-${p.class}` : undefined}
-              iconSizeClass="w-[22px] h-[22px]"
-              className="w-fit mx-auto"
-            />
-          </td>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
-              {p.armorType ? (ARMOR_TYPE_RU[p.armorType] ?? p.armorType) : '—'}
-            </span>
-          </td>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-text-primary">{fmt(p.durability)}</span>
-          </td>
-          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} /></td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'eyewear' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            {p.class
-              ? <SemanticBadge color={getArmorClassColor(p.class)} label={`Класс ${p.class}`} iconClass={`icon-eft-armor-class-${p.class}`} iconSizeClass="w-[22px] h-[22px]" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs font-blender-medium">Нет</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.blindnessProtection != null
-              ? <SemanticBadge color="emerald" label={`${Math.round((p.blindnessProtection || 0) * 100)}%`} title="Защита от слепящих эффектов" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2">
-            <PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} />
-          </td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : (slug === 'facecovers' || slug === 'masks') ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            {p.class
-              ? <SemanticBadge color={getArmorClassColor(p.class)} label={`Класс ${p.class}`} iconClass={`icon-eft-armor-class-${p.class}`} iconSizeClass="w-[22px] h-[22px]" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs font-blender-medium">Нет</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.blindnessProtection != null
-              ? <SemanticBadge color="emerald" label={`${Math.round((p.blindnessProtection || 0) * 100)}%`} title="Защита от слепящих эффектов" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} /></td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'rigs' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            {p.class
-              ? <SemanticBadge color={getArmorClassColor(p.class)} label={`Класс ${p.class}`} iconClass={`icon-eft-armor-class-${p.class}`} iconSizeClass="w-[22px] h-[22px]" className="w-fit mx-auto" />
-              : <SemanticBadge color="gray" label="Без брони" className="w-fit mx-auto" />}
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.capacity != null
-              ? <SemanticBadge color="emerald" label={`${p.capacity} слот.`} title="Внутренняя вместимость" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-text-primary">{p.class ? fmt(p.durability) : '—'}</span>
-          </td>
-          <td className="px-3 py-2"><PenaltyCell ergo={p.ergoPenalty} speed={p.speedPenalty} turn={p.turnPenalty} /></td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'backpacks' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            {p.capacity != null
-              ? <SemanticBadge color="emerald" label={`${p.capacity} слот.`} title="Внутренняя вместимость" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            {item.weight != null
-              ? <span className="font-blender-medium text-xs text-text-secondary">{item.weight} кг</span>
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            {(p.capacity && item.weight)
-              ? <SemanticBadge color="amber" label={`${(p.capacity / item.weight).toFixed(1)} сл/кг`} title="Слотов на кг веса" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-          <td className="px-3 py-2 text-right">
-            {(p.capacity && item.eco.minPrice)
-              ? <span title={`${Math.round(item.eco.minPrice / p.capacity).toLocaleString('ru-RU')} ₽ за внутренний слот`} className="cursor-help font-blender-medium text-xs text-text-muted">
-                  {formatCompactNumber(Math.round(item.eco.minPrice / p.capacity))} ₽
-                </span>
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-        </>
-      ) : CONTAINER_SLUGS.has(slug) ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            {p.capacity != null
-              ? <SemanticBadge color="emerald" label={`${p.capacity} слот.`} title="Внутренняя вместимость" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-text-muted">{item.width}×{item.height}</span>
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.capacity
-              ? <SemanticBadge color="amber" label={`${(p.capacity / (item.width * item.height)).toFixed(1)}x`} title="Соотношение внутр. слотов к занятым" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-          <td className="px-3 py-2 text-right">
-            {(p.capacity && item.eco.minPrice)
-              ? <span title={`${Math.round(item.eco.minPrice / p.capacity).toLocaleString('ru-RU')} ₽ за внутренний слот`} className="cursor-help font-blender-medium text-xs text-text-muted">
-                  {formatCompactNumber(Math.round(item.eco.minPrice / p.capacity))} ₽
-                </span>
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-        </>
-      ) : GUN_SLUGS.has(slug) ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">
-              {p.caliber?.replace('Caliber', '') || '—'}
-            </span>
-          </td>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-nvg-green">{p.ergonomics != null ? p.ergonomics : '—'}</span>
-          </td>
-          <td className="px-3 py-2 text-center">
-            {(p.recoilVertical || p.recoilHorizontal)
-              ? <span className="font-blender-medium text-xs text-text-secondary">{p.recoilVertical}/{p.recoilHorizontal}</span>
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.fireRate ? <SemanticBadge color="amber" label={`${p.fireRate} rpm`} className="w-fit mx-auto" /> : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-text-muted">{item.width}×{item.height}</span>
-          </td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader, item.eco.bestTraderSell?.currency)}</td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'ammo' ? (
-        <>
-          <td className="px-3 py-2 text-center text-text-secondary font-blender-medium text-type-caption">{p.caliber?.replace('Caliber', '') || '—'}</td>
-          <td className="px-3 py-2"><SemanticBadge color="red" label={p.damage?.toString() || '—'} className="w-fit mx-auto" /></td>
-          <td className="px-3 py-2"><SemanticBadge color="emerald" label={p.penetrationPower?.toString() || '—'} className="w-fit mx-auto" /></td>
-          <td className="px-3 py-2"><SemanticBadge color="gray" label={p.armorDamage ? `${p.armorDamage}%` : '—'} className="w-fit mx-auto" /></td>
-          <td className="px-3 py-2">
-            {(() => {
-              const frag = p.fragmentationChance != null ? Number(p.fragmentationChance) : null;
-              const pen = Number(p.penetrationPower) || 0;
-              const isBlocked = pen < 20;
-              const fragLabel = isBlocked ? 'Блок.' : frag !== null ? `${Math.round(frag * 100)}%` : '—';
-              return <SemanticBadge color={isBlocked ? "gray" : "amber"} label={fragLabel} isStrike={isBlocked} title={isBlocked ? "Фрагментация невозможна из-за пробития < 20" : "Шанс фрагментации"} className="w-fit mx-auto" />;
-            })()}
-          </td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'grenades' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-type-caption uppercase tracking-wider text-text-muted">{p.type || '—'}</span>
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.fragments != null
-              ? <SemanticBadge color="red" label={`${p.fragments} осколк.`} title="Количество осколков" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.fuse != null
-              ? <SemanticBadge color="amber" label={`${p.fuse} с`} title="Время задержки взрыва" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.maxExplosionDistance != null
-              ? <SemanticBadge color="gray" label={`${p.maxExplosionDistance} м`} title="Максимальный радиус взрыва" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader, item.eco.bestTraderSell?.currency)}</td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'sights' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-nvg-green">{p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : p.ergonomics) : '—'}</span>
-          </td>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-text-primary">{formatZoomLevels(p.zoomLevels ?? undefined)}</span>
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.sightingRange
-              ? <SemanticBadge color="gray" label={`${p.sightingRange} м`} title="Прицельная дальность" className="w-fit mx-auto" />
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader, item.eco.bestTraderSell?.currency)}</td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : slug === 'pistolgrips' ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-nvg-green">{p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : p.ergonomics) : '—'}</span>
-          </td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader, item.eco.bestTraderSell?.currency)}</td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : ERGO_RECOIL_MOD_SLUGS.has(slug) ? (
-        <>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-nvg-green">{p.ergonomics != null ? (p.ergonomics > 0 ? `+${p.ergonomics}` : p.ergonomics) : '—'}</span>
-          </td>
-          <td className="px-3 py-2 text-center">
-            {p.recoilModifier != null
-              ? <span className={`font-blender-medium text-xs ${p.recoilModifier < 0 ? 'text-nvg-green' : 'text-red-400'}`}>
-                  {p.recoilModifier > 0 ? `+${(p.recoilModifier * 100).toFixed(1)}` : `${(p.recoilModifier * 100).toFixed(1)}`}%
-                </span>
-              : <span className="text-text-muted text-xs">—</span>}
-          </td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader, item.eco.bestTraderSell?.currency)}</td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-        </>
-      ) : (
-        /* default — all other categories */
-        <>
-          <td className="px-3 py-2 text-center">
-            <span className="font-blender-medium text-xs text-text-muted">{item.width}×{item.height}</span>
-          </td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.bestTraderSell?.price, item.eco.bestTraderSell?.vendor, false, bestSellIsTrader, item.eco.bestTraderSell?.currency)}</td>
-          <td className="px-3 py-2 text-right">{renderPrice(item.eco.fleaSell?.price, item.eco.fleaSell?.vendor, false, bestSellIsFlea)}</td>
-          <td className="px-3 py-2 text-right">{renderBuyPrice(item.eco)}</td>
-          <td className="px-3 py-2 text-right">
-            {item.eco.vps > 0 ? (
-              <span
-                title={`${item.eco.vps.toLocaleString('ru-RU')} ₽`}
-                className={`cursor-help font-blender-medium text-xs ${item.eco.vps > 10000 ? 'text-nvg-green' : item.eco.vps > 5000 ? 'text-yellow-500' : 'text-text-primary'}`}
-              >
-                {formatCompactNumber(item.eco.vps)} ₽
-              </span>
-            ) : (
-              <div className="flex items-center justify-end gap-1 text-text-muted opacity-50">
-                <PackageX className="w-3 h-3" /><span className="font-blender-medium text-type-caption uppercase tracking-widest">Нет</span>
-              </div>
-            )}
-          </td>
-        </>
-      )}
-
-      {/* ─── GP Монеты — универсальная последняя колонка ─── */}
-      <td className="px-3 py-2 text-center w-14">
-        {gpCount ? (
-          <div className="flex flex-col items-center gap-px" title={`Купить у Рефа за ${gpCount} ГП монет`}>
-            <span className="font-blender-medium text-xs text-(--primary)">{gpCount}</span>
-            <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">ГП</span>
-          </div>
-        ) : <span className="text-text-muted/40 text-type-caption">—</span>}
-      </td>
-    </tr>
-  );
-}));
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ItemsCategoryClient({
@@ -986,6 +599,7 @@ export function ItemsCategoryClient({
   craftDataMap,
   questDataMap,
   questRefMap,
+  rates = { usd: null, eur: null },
 }: ItemsCategoryClientProps) {
   const {
     searchQuery, setSearchQuery,
@@ -999,20 +613,23 @@ export function ItemsCategoryClient({
     priceMin, setPriceMin,
     priceMax, setPriceMax,
     caliberFilter, setCaliberFilter,
-    cantBuyTrader, setCantBuyTrader,
-    cantBuyFlea, setCantBuyFlea,
-    cantSellTrader, setCantSellTrader,
-    cantSellFlea, setCantSellFlea,
     favoritesOnly, setFavoritesOnly,
-    handleColumnSort,
     handleDropdownSort,
     toggleArmorClass,
     handleSaveFilters,
     resetFilters,
     resetAdvancedFilters,
   } = useCategoryFilters();
-  // Табличный вид убран — всегда карточки. Тип расширен, чтобы мёртвые table-ветки компилились.
-  const viewMode: 'grid' | 'table' = 'grid';
+
+  const [currency, setCurrency] = useState<'RUB' | 'USD' | 'EUR'>('RUB');
+  // Базы диапазона цены — независимые тогглы, обе включены по умолчанию.
+  const [priceBases, setPriceBases] = useState<Set<'buy' | 'sell'>>(() => new Set(['buy', 'sell']));
+  const togglePriceBasis = (b: 'buy' | 'sell') =>
+    setPriceBases(prev => {
+      const next = new Set(prev);
+      if (next.has(b)) next.delete(b); else next.add(b);
+      return next;
+    });
 
   const selectedTraders = useItemsStore((state) => state.selectedTraders);
   const setCatalogReturnPath = useItemsStore((s) => s.setCatalogReturnPath);
@@ -1030,6 +647,31 @@ export function ItemsCategoryClient({
   const [activeEyewearSubtype, setActiveEyewearSubtype] = useState<EyewearSubtype | 'all'>('all');
   const [visibleCount, setVisibleCount] = useState(100);
   const slug = categorySlug || '';
+  const config = useMemo(() => getFilterConfig(slug), [slug]);
+
+  // Пер-категорийные фильтры (barter): подкатегория (мульти) + «используется в».
+  const [activeBarterSubcats, setActiveBarterSubcats] = useState<Set<string>>(new Set());
+  const [usedIn, setUsedIn] = useState<string[]>([]);
+  const [needMe, setNeedMe] = useState(false);
+
+  const toggleUsedIn = (key: string) =>
+    setUsedIn(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  const toggleBarterSubcat = (id: string) =>
+    setActiveBarterSubcats(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  const clearBarterSubcats = () => setActiveBarterSubcats(new Set());
+
+  // Полный сброс: фильтры хука + локальные пер-категорийные (иначе «Сбросить» не спасает).
+  const handleResetAll = () => {
+    resetFilters();
+    setActiveEyewearSubtype('all');
+    setActiveBarterSubcats(new Set());
+    setUsedIn([]);
+    setNeedMe(false);
+  };
 
   const availableCalibers = useMemo(() => {
     if (slug !== 'ammo' && !GUN_SLUGS.has(slug)) return [];
@@ -1038,11 +680,13 @@ export function ItemsCategoryClient({
     return Array.from(cals).sort();
   }, [initialData, slug]);
 
-  const activeAdvancedCount = [
-    priceMin, priceMax, caliberFilter,
-    cantBuyTrader ? '1' : '', cantBuyFlea ? '1' : '',
-    cantSellTrader ? '1' : '', cantSellFlea ? '1' : '',
-  ].filter(Boolean).length;
+  const activeAdvancedCount = [priceMin, priceMax, caliberFilter]
+    .filter(Boolean).length + activeBarterSubcats.size;
+
+  const handleResetAdvanced = () => {
+    resetAdvancedFilters();
+    clearBarterSubcats();
+  };
 
   const eyewearCounts = useMemo(() => {
     if (slug !== 'eyewear') return undefined;
@@ -1098,19 +742,46 @@ export function ItemsCategoryClient({
         if (itemClass > 0 && !activeArmorClasses.includes(itemClass)) return false;
       }
       if (barterOnly && (!item.types || !item.types.includes('barter'))) return false;
+      // Подкатегория (мульти, напр. barter BSG). Пустой набор = все.
+      if (config.subtypeBar && activeBarterSubcats.size > 0) {
+        if (!item.bsgCategoryId || !activeBarterSubcats.has(item.bsgCategoryId)) return false;
+      }
+      // «Используется в» — предмет должен попасть хотя бы в один выбранный тип связи.
+      if (usedIn.length > 0) {
+        const inBarter = !!barterDataMap?.[item.id];
+        const inCraft  = !!craftDataMap?.[item.id];
+        // Квест: тот же источник, что и индикатор на плитке (серверные квест-данные +
+        // прогресс). НЕ questCountMap — он строится из useQuestStore.tasks, который вне
+        // карты квестов пуст, из-за чего фильтр не находил помеченные квестом предметы.
+        const inQuest  = questIndicatorMap.has(item.id);
+        const inGp     = !!gpCoinBarters?.[item.id];
+        const match = usedIn.some(k =>
+          (k === 'barter' && inBarter) ||
+          (k === 'craft'  && inCraft)  ||
+          (k === 'quest'  && inQuest)  ||
+          (k === 'gp'     && inGp));
+        if (!match) return false;
+      }
+      // «Нужно мне» — предмет нужен для НЕзавершённого квеста (по индикатору плитки).
+      if (needMe) {
+        const q = questIndicatorMap.get(item.id);
+        if (!q || q.status === 'completed') return false;
+      }
       // Advanced filters
       const pMin = priceMin !== '' ? Number(priceMin) : null;
       const pMax = priceMax !== '' ? Number(priceMax) : null;
-      if (pMin !== null && item.eco.minPrice < pMin) return false;
-      if (pMax !== null && pMax > 0 && item.eco.minPrice > pMax) return false;
+      // Диапазон применяется, только если сдвинут хотя бы один край. Предмет проходит,
+      // если цена ЛЮБОЙ включённой базы (покупка/продажа) попадает в [pMin, pMax].
+      if (pMin !== null || pMax !== null) {
+        const bases: number[] = [];
+        if (priceBases.has('buy') && item.eco.minPrice > 0) bases.push(item.eco.minPrice);
+        if (priceBases.has('sell') && rubVal(item.eco.bestSell) > 0) bases.push(rubVal(item.eco.bestSell));
+        const ok = bases.some(pr => (pMin === null || pr >= pMin) && (pMax === null || pr <= pMax));
+        if (!ok) return false;
+      }
       if (caliberFilter && item.properties?.caliber !== caliberFilter) return false;
-      // Фильтры доступности
       const isFlVendor = (v: { name: string; normalizedName?: string }) =>
         v.name === 'Flea Market' || v.normalizedName === 'flea-market';
-      if (cantBuyTrader && item.buyFor?.some(b => !isFlVendor(b.vendor) && (b.priceRUB ?? b.price) > 0)) return false;
-      if (cantBuyFlea && (item.eco.fleaBuy?.price || 0) > 0) return false;
-      if (cantSellTrader && (item.eco.bestTraderSell?.price || 0) > 0) return false;
-      if (cantSellFlea && (item.eco.fleaSell?.price || 0) > 0) return false;
       // Фильтр по торговцам (мульти-выбор из HubNav)
       if (selectedTraders.length > 0) {
         const passesTrader =
@@ -1142,6 +813,7 @@ export function ItemsCategoryClient({
         case 'sellFlea':          aValue = a.eco.fleaSell?.price || 0; bValue = b.eco.fleaSell?.price || 0; break;
         case 'buyFlea':           aValue = a.eco.fleaBuy?.price || 0; bValue = b.eco.fleaBuy?.price || 0; break;
         case 'buyMin':            aValue = a.eco.minPrice; bValue = b.eco.minPrice; break;
+        case 'buyTrader':         aValue = a.eco.traderBuyPrice; bValue = b.eco.traderBuyPrice; break;
         case 'vps':               aValue = a.eco.vps; bValue = b.eco.vps; break;
         case 'size':              aValue = a.eco.slots; bValue = b.eco.slots; break;
         case 'class':             aValue = Number(p(a).class) || 0; bValue = Number(p(b).class) || 0; break;
@@ -1195,7 +867,8 @@ export function ItemsCategoryClient({
 
     return data;
   }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, caliberFilter, gpCoinBarters, activeEyewearSubtype, selectedTraders,
-      cantBuyTrader, cantBuyFlea, cantSellTrader, cantSellFlea, availableOnly, playerLevel, favoritesOnly, favoriteIds]);
+      availableOnly, playerLevel, favoritesOnly, favoriteIds,
+      config, activeBarterSubcats, usedIn, needMe, priceBases, barterDataMap, craftDataMap, questIndicatorMap]);
 
   useEffect(() => { setVisibleCount(100); }, [processedItems]);
   const handleShowMore = () => setVisibleCount(prev => prev + 100);
@@ -1234,20 +907,25 @@ export function ItemsCategoryClient({
     focusedRef.current = focusId;
     setHighlightId(focusId);
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  }, [focusId, isLoading, viewMode, processedItems, visibleCount]);
+  }, [focusId, isLoading, processedItems, visibleCount]);
 
   return (
     <div className="w-full flex flex-col gap-6">
 
-      <div className={`sticky top-0 z-40 border-b border-lines-hover/20 bg-[color-mix(in_srgb,var(--color-base)_88%,transparent)] backdrop-blur-md transition-all duration-300${showAdvanced ? ' pb-3' : ''}`}>
+      {/* Sticky-панель фильтров: контент в контейнере, но фоновая подложка (сплошной фон
+          сайта + нижняя линия) тянется на всю ширину вьюпорта через full-bleed псевдоэлемент. */}
+      <div className={`sticky top-0 z-40 transition-all duration-300 before:pointer-events-none before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-linear-to-b before:from-transparent before:to-[color-mix(in_srgb,var(--color-base)_84%,transparent)] before:backdrop-blur-md before:content-['']${showAdvanced ? ' pb-3' : ''}`}>
         <CategoryControlBar
           categorySlug={categorySlug}
+          config={config}
           searchQuery={searchQuery}
           sortConfig={sortConfig}
           activeArmorClasses={activeArmorClasses}
           barterOnly={barterOnly}
           availableOnly={availableOnly}
           favoritesOnly={favoritesOnly}
+          usedIn={usedIn}
+          needMe={needMe}
           isSaved={isSaved}
           showAdvanced={showAdvanced}
           activeAdvancedCount={activeAdvancedCount}
@@ -1257,6 +935,8 @@ export function ItemsCategoryClient({
           onBarterOnlyChange={setBarterOnly}
           onAvailableOnlyChange={setAvailableOnly}
           onFavoritesOnlyChange={setFavoritesOnly}
+          onUsedInToggle={toggleUsedIn}
+          onNeedMeChange={setNeedMe}
           onSaveFilters={handleSaveFilters}
           onToggleAdvanced={() => setShowAdvanced(v => !v)}
         />
@@ -1266,20 +946,21 @@ export function ItemsCategoryClient({
             categorySlug={slug}
             priceMin={priceMin}
             priceMax={priceMax}
+            currency={currency}
+            rates={rates}
+            priceBases={priceBases}
             caliberFilter={caliberFilter}
             availableCalibers={availableCalibers}
-            cantBuyTrader={cantBuyTrader}
-            cantBuyFlea={cantBuyFlea}
-            cantSellTrader={cantSellTrader}
-            cantSellFlea={cantSellFlea}
             onPriceMinChange={setPriceMin}
             onPriceMaxChange={setPriceMax}
+            onCurrencyChange={setCurrency}
+            onPriceBasisToggle={togglePriceBasis}
             onCaliberChange={setCaliberFilter}
-            onCantBuyTraderChange={setCantBuyTrader}
-            onCantBuyFleaChange={setCantBuyFlea}
-            onCantSellTraderChange={setCantSellTrader}
-            onCantSellFleaChange={setCantSellFlea}
-            onReset={resetAdvancedFilters}
+            subtypeBar={config.subtypeBar}
+            activeSubcats={activeBarterSubcats}
+            onSubcatToggle={toggleBarterSubcat}
+            onSubcatClear={clearBarterSubcats}
+            onReset={handleResetAdvanced}
           />
         )}
       </div>
@@ -1311,7 +992,7 @@ export function ItemsCategoryClient({
               База данных пуста или запрос не дал результатов. Попробуйте изменить параметры фильтрации или строку поиска.
             </p>
             <button
-              onClick={resetFilters}
+              onClick={handleResetAll}
               className="group relative inline-flex items-center justify-center overflow-hidden rounded border border-lines-hover bg-(--color-base) px-8 py-2 transition-all duration-300 hover:border-(--primary) hover:shadow-[0_0_15px_color-mix(in_srgb,var(--primary)_20%,transparent)]"
             >
               <div className="absolute inset-0 w-0 bg-(--primary) opacity-10 transition-all duration-300 ease-out group-hover:w-full" />
@@ -1324,7 +1005,7 @@ export function ItemsCategoryClient({
       )}
 
       {/* Skeleton — сетка */}
-      {isLoading && viewMode === 'grid' && (
+      {isLoading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 max-sm:justify-items-center [&>*]:max-sm:max-w-64 animate-[fade-in-up_0.3s_ease-out]">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="tactical-card-base p-4 flex flex-col h-62.5 animate-pulse border-lines-hover">
@@ -1343,7 +1024,7 @@ export function ItemsCategoryClient({
       )}
 
       {/* Вид: сетка */}
-      {!isLoading && viewMode === 'grid' && processedItems.length > 0 && (
+      {!isLoading && processedItems.length > 0 && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 max-sm:justify-items-center [&>*]:max-sm:max-w-64">
             {displayedItems.map((item) => {

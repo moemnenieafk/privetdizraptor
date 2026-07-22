@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import type { CategoryItem } from '@/app/eft/items/[...category]/ItemsCategoryClient';
 import { itemIconUrl } from '@/lib/item-icon';
+import { FavoriteIcon } from './FavoriteIcon';
 
 interface FavoritesStripProps {
   favoriteIds: string[];
@@ -16,8 +17,9 @@ export function FavoritesStrip({ favoriteIds, items }: FavoritesStripProps) {
 
   return (
     <div className="w-full">
-      <p className="mb-2 font-blender-medium text-type-caption uppercase tracking-widest text-(--text-muted)">
-        ★ Избранное
+      <p className="mb-2 flex items-center gap-1.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--text-muted)">
+        <FavoriteIcon active className="h-3 w-3" />
+        Избранное
       </p>
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
         {favItems.map((item) => (

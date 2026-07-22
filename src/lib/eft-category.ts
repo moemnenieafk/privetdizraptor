@@ -13,6 +13,25 @@ import type { CtaVendorOffer } from "@/lib/eft-prices";
 import type { CategoryItem } from "@/app/eft/items/[...category]/ItemsCategoryClient";
 import { EFT_QUESTS } from "@/data/quests";
 import { memoTTL } from "@/lib/server-cache";
+import fleaLevelsRaw from "@/data/eft-flea-levels.json";
+
+/* ─── Ручной оверрайд minLevelForFlea (пока tarkov.dev не отдаёт поле) ─────────
+ * Мержится на чтении поверх БД. Приоритет: БД → byItem(normalizedName) → byBsgCategory. */
+interface FleaOverride {
+  byBsgCategory?: Record<string, { label?: string; level: number }>;
+  byItem?: Record<string, number | { label?: string; level: number }>;
+}
+const FLEA_OVERRIDE = fleaLevelsRaw as unknown as FleaOverride;
+const FLEA_BY_BSG: Record<string, number> = Object.fromEntries(
+  Object.entries(FLEA_OVERRIDE.byBsgCategory ?? {}).map(([id, v]) => [id, v.level]),
+);
+const FLEA_BY_ITEM: Record<string, number> = Object.fromEntries(
+  Object.entries(FLEA_OVERRIDE.byItem ?? {}).map(([nn, v]) => [nn, typeof v === "number" ? v : v.level]),
+);
+function fleaLevelFor(e: EnrichedItem): number | undefined {
+  if (e.minLevelForFlea != null) return e.minLevelForFlea;
+  return FLEA_BY_ITEM[e.normalizedName] ?? (e.bsgCategoryId ? FLEA_BY_BSG[e.bsgCategoryId] : undefined);
+}
 
 interface EnrichedItem {
   id: string;
@@ -26,6 +45,7 @@ interface EnrichedItem {
   backgroundColor?: string;
   types: string[];
   bsgCategoryId?: string;
+  minLevelForFlea?: number;
   propertiesRaw: Record<string, unknown> | null;
   sellFor: CtaVendorOffer[];
   buyFor: CtaVendorOffer[];
@@ -71,6 +91,7 @@ async function loadEnriched(): Promise<EnrichedItem[]> {
       backgroundColor: px?.backgroundColor,
       types: px?.types ?? [],
       bsgCategoryId: px?.bsgCategoryId,
+      minLevelForFlea: px?.minLevelForFlea,
       propertiesRaw: r.propertiesRaw,
       sellFor: px?.sellFor ?? [],
       buyFor: px?.buyFor ?? [],
@@ -91,6 +112,8 @@ const toCategoryItem = (e: EnrichedItem): CategoryItem => ({
   basePrice: e.basePrice,
   image512pxLink: itemIconUrl(e.id),
   types: e.types,
+  bsgCategoryId: e.bsgCategoryId,
+  minLevelForFlea: fleaLevelFor(e),
   properties: mapProps(e.propertiesRaw),
   sellFor: e.sellFor,
   buyFor: e.buyFor,
