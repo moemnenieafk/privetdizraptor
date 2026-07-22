@@ -39,10 +39,11 @@ jobs:
 
           {
             # Попытка 1: gdown --folder
-            if ! gdown --folder "https://drive.google.com/drive/folders/$FOLDER_ID" -O source --remaining-ok; then
+            if ! gdown --folder "https://drive.google.com/drive/folders/$FOLDER_ID" -O source; then
               echo "=== gdown --folder failed, fallback: embeddedfolderview ==="
               curl -sL "https://drive.google.com/embeddedfolderview?id=$FOLDER_ID#list" -o /tmp/folder.html
-              grep -oE 'data-id="[A-Za-z0-9_-]+"' /tmp/folder.html | cut -d'"' -f2 | sort -u > /tmp/ids.txt
+              echo "--- folder.html head ---"; head -c 3000 /tmp/folder.html; echo; echo "--- end ---"
+              grep -oE 'entry-[A-Za-z0-9_-]{25,}' /tmp/folder.html | sed 's/^entry-//' | sort -u > /tmp/ids.txt
               echo "Found $(wc -l < /tmp/ids.txt) file IDs"
               cat /tmp/ids.txt
               cd source
