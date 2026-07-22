@@ -440,6 +440,38 @@ export async function getWeaponPresets(baseItemId: string): Promise<PresetRef[]>
     }));
 }
 
+/* ───────────────── совместимость мод↔оружие (фильтр каталога) ───────────────── */
+
+export interface ModCompatibility {
+  /** Список стволов для пикера (отсортирован по имени). */
+  weapons: { id: string; name: string; shortName: string }[];
+  /** modId → id стволов, на которые он транзитивно ставится. */
+  modToWeapons: Record<string, string[]>;
+}
+
+/**
+ * Обратный индекс совместимости: для каждого мода — на какие стволы он подходит.
+ * Строится инверсией `getBuildContext` (BFS дерева слотов) по всем базам — та же
+ * логика, что питает конструктор, поэтому «подходит» = 1:1 с пикером сборки.
+ * Данные из наших weapon_* таблиц (правило автономии), кэш на процесс.
+ */
+export async function getModCompatibilityMap(): Promise<ModCompatibility> {
+  return memoTTL("eft-mod-compat", WEAPONS_TTL_MS, async () => {
+    const bases = await getWeaponBaseList();
+    const modToWeapons: Record<string, string[]> = {};
+    for (const b of bases) {
+      const ctx = await getBuildContext(b.id);
+      if (!ctx) continue;
+      for (const [id, def] of ctx.index) {
+        if (def.kind !== "mod") continue;
+        (modToWeapons[id] ??= []).push(b.id);
+      }
+    }
+    const weapons = bases.map((b) => ({ id: b.id, name: b.name, shortName: b.shortName }));
+    return { weapons, modToWeapons };
+  });
+}
+
 /* ───────────────── спеки «Оружейника» (рантайм) ───────────────── */
 
 const GUNSMITH_TTL_MS = 24 * 60 * 60 * 1000;

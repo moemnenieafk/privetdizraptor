@@ -13,7 +13,7 @@ const MASK_BASE = {
 
 interface SubcategoryBarProps {
   label: string;
-  options: { id: string; label: string; iconUrl: string }[];
+  options: { id: string; label: string; iconUrl: string; preserveIconColor?: boolean }[];
   /** выбранные id; пустой набор = показаны все */
   active: Set<string>;
   onToggle: (id: string) => void;
@@ -45,7 +45,7 @@ export function SubcategoryBar({ label, options, active, onToggle, onClear, coun
 
       {/* Иконочные плитки */}
       <div className="flex flex-wrap gap-2">
-        {options.map(({ id, label: name, iconUrl }) => {
+        {options.map(({ id, label: name, iconUrl, preserveIconColor }) => {
           const isActive = active.has(id);
           const count = counts?.[id];
           return (
@@ -61,11 +61,19 @@ export function SubcategoryBar({ label, options, active, onToggle, onClear, coun
                   : 'border-lines-hover bg-card-menu hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
               }`}
             >
-              <div
-                aria-hidden="true"
-                className={`h-5.5 w-5.5 transition-[background-color,opacity] duration-200 ${isActive ? 'bg-(--primary) opacity-100' : 'bg-text-primary opacity-60'}`}
-                style={{ WebkitMaskImage: `url(${iconUrl})`, maskImage: `url(${iconUrl})`, ...MASK_BASE }}
-              />
+              {preserveIconColor ? (
+                <img
+                  src={iconUrl}
+                  alt=""
+                  className={`h-5.5 w-5.5 object-contain transition-opacity duration-200 ${isActive ? 'opacity-100' : 'opacity-60'}`}
+                />
+              ) : (
+                <div
+                  aria-hidden="true"
+                  className={`h-5.5 w-5.5 transition-[background-color,opacity] duration-200 ${isActive ? 'bg-(--primary) opacity-100' : 'bg-text-primary opacity-60'}`}
+                  style={{ WebkitMaskImage: `url(${iconUrl})`, maskImage: `url(${iconUrl})`, ...MASK_BASE }}
+                />
+              )}
             </button>
           );
         })}
