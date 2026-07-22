@@ -80,3 +80,6 @@ map-exports/
 
 # Логи локального dev-сервера (next dev) — артефакт, не исходник.
 .devlog.*
+
+# Encode BG pipeline (GitHub Actions) — рабочая директория скачивания исходников на раннере.
+/source/

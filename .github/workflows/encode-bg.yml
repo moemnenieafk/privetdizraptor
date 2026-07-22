@@ -19,80 +19,79 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: encode-bg
+  cancel-in-progress: true
+
+env:
+  SHARDS: 8
+
 jobs:
-  encode:
+  prepare:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    outputs:
+      tag: ${{ steps.rel.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install gdown
-        run: pip install "gdown>=5.2"
-
-      - name: Download from Google Drive
-        run: |
-          set -x
-          mkdir -p source
-          FOLDER_URL="${{ inputs.drive_folder }}"
-          FOLDER_ID="$(echo "$FOLDER_URL" | grep -oE 'folders/[A-Za-z0-9_-]+' | cut -d/ -f2)"
-          echo "Folder ID: $FOLDER_ID"
-
-          {
-            # Попытка 1: gdown --folder
-            if ! gdown --folder "https://drive.google.com/drive/folders/$FOLDER_ID" -O source; then
-              echo "=== gdown --folder failed, fallback: embeddedfolderview ==="
-              curl -sL "https://drive.google.com/embeddedfolderview?id=$FOLDER_ID#list" -o /tmp/folder.html
-              echo "--- folder.html head ---"; head -c 3000 /tmp/folder.html; echo; echo "--- end ---"
-              grep -oE 'entry-[A-Za-z0-9_-]{25,}' /tmp/folder.html | sed 's/^entry-//' | sort -u > /tmp/ids.txt
-              echo "Found $(wc -l < /tmp/ids.txt) file IDs"
-              cat /tmp/ids.txt
-              cd source
-              while read -r ID; do
-                gdown "$ID" || echo "FAILED: $ID"
-              done < /tmp/ids.txt
-              cd ..
-            fi
-          } 2>&1 | tee /tmp/download.log
-
-          find source -mindepth 2 -type f -exec mv -n {} source/ \;
-          find source -mindepth 1 -type d -empty -delete || true
-          echo "── Скачано ──" | tee -a /tmp/download.log
-          ls -la source | tee -a /tmp/download.log
-          du -sh source | tee -a /tmp/download.log
-          # если пусто — валимся
-          [ -n "$(find source -maxdepth 1 -type f | head -1)" ]
-
-      - name: FFmpeg version
-        run: ffmpeg -version | head -1
-
-      - name: Encode all patterns
-        env:
-          VP9_CRF: ${{ inputs.vp9_crf }}
-          MAX_HEIGHT: ${{ inputs.max_height }}
-        run: |
-          chmod +x scripts/encode-bg-patterns.sh
-          ./scripts/encode-bg-patterns.sh source out 2>&1 | tee /tmp/encode.log
-
-      - name: Publish release with encoded files
+      - id: rel
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="bg-patterns-$(date +%Y%m%d-%H%M)"
           gh release create "$TAG" \
             --title "BG patterns — encoded ($TAG)" \
-            --notes "VP9 Profile 2 10-bit CRF ${{ inputs.vp9_crf }} (2-pass, cues front) + H.264 CRF 18 (faststart). Аудио вырезано." \
-            out/webm/*.webm out/mp4/*.mp4 /tmp/encode.log
+            --notes "VP9 Profile 2 10-bit CRF ${{ inputs.vp9_crf }} (2-pass, cues front) + H.264 CRF 18 (faststart). Аудио вырезано. Заливается шардами — дождись завершения workflow."
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Publish debug log (always)
+  encode:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gdown
+        run: pip install "gdown>=5"
+
+      - name: Download from Google Drive
+        shell: bash
+        run: |
+          mkdir -p source
+          FOLDER_ID="$(echo "${{ inputs.drive_folder }}" | grep -oE 'folders/[A-Za-z0-9_-]+' | cut -d/ -f2)"
+          gdown --folder "https://drive.google.com/drive/folders/$FOLDER_ID" -O source 2>&1 | tail -3
+          find source -mindepth 2 -type f -exec mv -n {} source/ \;
+          find source -mindepth 1 -type d -empty -delete || true
+          [ -n "$(find source -maxdepth 1 -type f | head -1)" ]
+
+      - name: Keep only this shard's files
+        shell: bash
+        run: |
+          i=0
+          for f in $(find source -maxdepth 1 -type f | sort); do
+            if (( i % SHARDS != ${{ matrix.shard }} )); then rm -f "$f"; fi
+            i=$((i+1))
+          done
+          echo "Шард ${{ matrix.shard }}:"; ls -la source
+
+      - name: Encode shard
+        shell: bash
+        env:
+          VP9_CRF: ${{ inputs.vp9_crf }}
+          MAX_HEIGHT: ${{ inputs.max_height }}
+        run: |
+          chmod +x scripts/encode-bg-patterns.sh
+          ./scripts/encode-bg-patterns.sh source out 2>&1 | tee "shard-${{ matrix.shard }}.log"
+
+      - name: Upload shard results to release
         if: always()
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          touch /tmp/download.log
-          cp /tmp/download.log "debug-run-${{ github.run_id }}.log"
-          gh release delete debug-log --yes 2>/dev/null || true
-          git push --delete origin debug-log 2>/dev/null || true
-          gh release create debug-log \
-            --title "debug: последний лог скачивания" \
-            --notes "run ${{ github.run_id }}" \
-            "debug-run-${{ github.run_id }}.log"
+          shopt -s nullglob
+          FILES=(out/webm/*.webm out/mp4/*.mp4 shard-${{ matrix.shard }}.log)
+          gh release upload "${{ needs.prepare.outputs.tag }}" "${FILES[@]}" --clobber
