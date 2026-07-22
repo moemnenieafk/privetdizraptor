@@ -1,6 +1,13 @@
 @import "tailwindcss" source("../");
 @import "../styles/icons.css";
 
+/* Safelist: авторские mask-иконки V4DYA живут в динамических iconClass-строках —
+   сканер Tailwind не всегда ловит их и вырезает правило из icons.css (пропадала
+   иконка). Форсируем включение. См. gotcha-tailwind-content-scan. */
+@source inline("icon-eft-gpcoin");
+@source inline("icon-eft-favourite-default");
+@source inline("icon-eft-favourite-active");
+
 @font-face {
     font-family: 'BlenderPro-Book';
     src: local('Blender Pro Book'), local('BlenderPro-Book'),
