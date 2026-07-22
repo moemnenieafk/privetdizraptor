@@ -1,8 +1,9 @@
 ﻿"use client";
 
-import { Minus, Plus, Star } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
+import { FavoriteIcon } from '@/components/features/items/FavoriteIcon';
 
 interface ItemActionsProps {
   itemId: string;
@@ -27,7 +28,7 @@ export function ItemActions({ itemId }: ItemActionsProps) {
             : 'border-lines-hover bg-(--color-card-menu) text-(--text-muted) hover:border-(--primary)/40 hover:text-(--primary)'
         }`}
       >
-        <Star className={`h-3.5 w-3.5 shrink-0 ${isFavorite ? 'fill-current' : ''}`} />
+        <FavoriteIcon active={isFavorite} className="h-3.5 w-3.5" />
         <span>{isFavorite ? 'Избранное' : 'В избранное'}</span>
       </button>
 

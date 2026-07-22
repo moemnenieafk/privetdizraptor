@@ -2,6 +2,7 @@
 
 import { ItemGridSize } from '@/components/ui/ItemGridSize';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
+import { FavoriteIcon } from '../FavoriteIcon';
 import { useEftItemTile } from './context';
 import type { EftTopStat } from './types';
 
@@ -29,12 +30,12 @@ export function EftHeader() {
       {/* Fav button */}
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(item.id); }}
-        className={`shrink-0 text-sm leading-none transition-colors ${
+        className={`flex shrink-0 items-center leading-none transition-colors ${
           isFavorite ? 'text-amber-400' : 'text-(--text-muted) hover:text-(--primary)'
         }`}
         aria-label={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
       >
-        {isFavorite ? '★' : '☆'}
+        <FavoriteIcon active={isFavorite} className="h-3.5 w-3.5" />
       </button>
 
       {/* Short name */}

@@ -43,13 +43,12 @@ const TRACKING_GAMES = [
 type TrackingGameId = (typeof TRACKING_GAMES)[number]['id'];
 
 // Домены трекинга внутри игры (суб-табы). Порядок утверждён V4DYA (2026-07-03).
-// iconClass: '' → рендерится lucide Star (маски-звезды в icons.css нет).
 const TRACKING_DOMAINS = [
   { id: 'pmc', label: 'Профиль ЧВК', iconClass: 'icon-eft-profile-settings' },
   { id: 'quests', label: 'Задания', iconClass: 'icon-eft-quests' },
   { id: 'story', label: 'Истории', iconClass: 'icon-eft-quests-lore' },
   { id: 'items', label: 'Предметы', iconClass: 'icon-eft-prog-items-needed' },
-  { id: 'favorites', label: 'Избранное', iconClass: '' },
+  { id: 'favorites', label: 'Избранное', iconClass: 'icon-eft-favourite-active' },
   { id: 'hideout', label: 'Убежище', iconClass: 'icon-eft-prog-hideout' },
   { id: 'achievements', label: 'Достижения', iconClass: 'icon-eft-prog-achievements' },
   { id: 'prestige', label: 'Престиж', iconClass: 'icon-eft-prog-prestige' },
@@ -296,19 +295,11 @@ export function TrackingPanel({
                     : 'border-lines-hover bg-(--color-base) text-text-muted hover:border-text-secondary hover:text-text-primary'
                 }`}
               >
-                {d.iconClass ? (
-                  <span
-                    className={`h-4 w-4 shrink-0 icon-mask ${d.iconClass} ${
-                      isActive ? 'bg-(--primary)' : 'bg-text-muted group-hover:bg-text-primary'
-                    }`}
-                  />
-                ) : (
-                  <Star
-                    className={`h-4 w-4 shrink-0 ${
-                      isActive ? 'text-(--primary)' : 'text-text-muted group-hover:text-text-primary'
-                    }`}
-                  />
-                )}
+                <span
+                  className={`h-4 w-4 shrink-0 icon-mask ${d.iconClass} ${
+                    isActive ? 'bg-(--primary)' : 'bg-text-muted group-hover:bg-text-primary'
+                  }`}
+                />
                 <span className="font-blender-medium text-type-micro uppercase tracking-widest">
                   {d.label}
                 </span>

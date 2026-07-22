@@ -8,6 +8,7 @@ import { buildQuestIndicators } from '@/lib/eft-indicators.economics';
 import { EFT_QUESTS } from '@/data/quests';
 import { getEftCategoryItems } from '@/lib/eft-category';
 import { getEftIndicatorsFromDb } from '@/db/indicators';
+import { getCurrencyRates } from '@/db/prices';
 
 interface Props {
   params: Promise<{ category: string[] }>;
@@ -88,9 +89,10 @@ export default async function ItemsDynamicPage({ params }: Props) {
 
   // Предметы категории + индикаторы (бартер/крафт/GP) — всё из НАШЕЙ Supabase.
   // В рантайме страница в api.tarkov.dev не ходит (цены/бартеры/крафты зеркалит крон).
-  const [itemsData, indicators] = await Promise.all([
+  const [itemsData, indicators, rates] = await Promise.all([
     getEftCategoryItems(slug),
     getEftIndicatorsFromDb(),
+    getCurrencyRates(''),
   ]);
 
   // Квест-индикаторы: определения из статического EFT_QUESTS (на сервере, не в
@@ -128,6 +130,7 @@ export default async function ItemsDynamicPage({ params }: Props) {
             craftDataMap={craftDataMapForCategory}
             questDataMap={questDataMapForCategory}
             questRefMap={questRefMapForCategory}
+            rates={rates}
           />
         </Suspense>
       </div>

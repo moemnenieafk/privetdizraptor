@@ -130,6 +130,7 @@ export interface EftItemData {
   armorClass?:     number;
   ammoOverlay?:    EftAmmoOverlay;
   minPlayerLevel?: number;
+  minLevelForFlea?: number;
   questCount?:     number;
   inventoryCount?: number;
 }
