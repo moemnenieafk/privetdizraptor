@@ -7,6 +7,7 @@ SRC_DIR="${1:-./source}"
 OUT_DIR="${2:-./out}"
 OUT_WEBM="$OUT_DIR/webm"
 OUT_MP4="$OUT_DIR/mp4"
+OUT_POSTERS="$OUT_DIR/posters"
 
 MAX_HEIGHT="${MAX_HEIGHT:-1440}"
 VP9_CRF="${VP9_CRF:-30}"
@@ -14,7 +15,7 @@ X264_CRF="${X264_CRF:-18}"
 GOP="${GOP:-240}"
 DEBAND_MP4="${DEBAND_MP4:-0}"
 
-mkdir -p "$OUT_WEBM" "$OUT_MP4"
+mkdir -p "$OUT_WEBM" "$OUT_MP4" "$OUT_POSTERS"
 shopt -s nullglob nocaseglob
 
 for f in "$SRC_DIR"/*.{mp4,mov,mkv,webm,avi,m4v}; do
@@ -62,6 +63,11 @@ for f in "$SRC_DIR"/*.{mp4,mov,mkv,webm,avi,m4v}; do
     -movflags +faststart \
     "$OUT_MP4/${safe}.mp4"
 
+  # Постер: первый кадр → WebP (для poster-атрибута <video> / LQIP)
+  ffmpeg -hide_banner -loglevel warning -y -i "$f" -vf "$VF_BASE" \
+    -frames:v 1 -c:v libwebp -quality 82 -compression_level 6 \
+    "$OUT_POSTERS/${safe}.webp"
+
   rm -f "/tmp/${safe}_vp9-0.log"
 
   s_src=$(du -h "$f" | cut -f1)
@@ -71,4 +77,4 @@ for f in "$SRC_DIR"/*.{mp4,mov,mkv,webm,avi,m4v}; do
 done
 
 echo "── Итог ──"
-du -sh "$OUT_WEBM" "$OUT_MP4"
+du -sh "$OUT_WEBM" "$OUT_MP4" "$OUT_POSTERS"

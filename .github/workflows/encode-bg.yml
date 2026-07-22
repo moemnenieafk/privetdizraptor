@@ -96,5 +96,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           shopt -s nullglob
-          FILES=(out/webm/*.webm out/mp4/*.mp4 shard-${{ matrix.shard }}.log)
+          FILES=(out/webm/*.webm out/mp4/*.mp4 out/posters/*.webp shard-${{ matrix.shard }}.log)
           gh release upload "${{ needs.prepare.outputs.tag }}" "${FILES[@]}" --clobber

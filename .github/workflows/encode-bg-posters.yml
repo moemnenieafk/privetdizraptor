@@ -1,0 +1,63 @@
+name: BG Posters (first frame → WebP)
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Тег релиза, куда доливать постеры'
+        required: true
+      drive_folder:
+        description: 'Google Drive folder URL (public)'
+        required: true
+        default: 'https://drive.google.com/drive/folders/1WTelbUKd8qhAqDfRmW0ovjxAME06pavU'
+      max_height:
+        required: false
+        default: '1440'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: encode-bg-posters
+
+jobs:
+  posters:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Install gdown + ffmpeg
+        run: |
+          pip install "gdown>=5"
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+
+      - name: Download from Google Drive
+        shell: bash
+        run: |
+          mkdir -p source
+          FOLDER_ID="$(echo "${{ inputs.drive_folder }}" | grep -oE 'folders/[A-Za-z0-9_-]+' | cut -d/ -f2)"
+          gdown --folder "https://drive.google.com/drive/folders/$FOLDER_ID" -O source 2>&1 | tail -3
+          find source -mindepth 2 -type f -exec mv -n {} source/ \;
+          [ -n "$(find source -maxdepth 1 -type f | head -1)" ]
+
+      - name: Extract first frames → WebP
+        shell: bash
+        env:
+          MAX_HEIGHT: ${{ inputs.max_height }}
+        run: |
+          shopt -s nullglob nocaseglob
+          mkdir -p posters
+          for f in source/*.{mp4,mov,mkv,webm,avi,m4v}; do
+            name="$(basename "${f%.*}")"
+            safe="$(echo "$name" | tr ' ' '-' | tr -cd '[:alnum:]._-')"
+            h="$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$f")"
+            if (( h > MAX_HEIGHT )); then VF="scale=-2:${MAX_HEIGHT}:flags=lanczos"; else VF="null"; fi
+            ffmpeg -hide_banner -loglevel warning -y -i "$f" -vf "$VF" \
+              -frames:v 1 -c:v libwebp -quality 82 -compression_level 6 \
+              "posters/${safe}.webp"
+            echo "$safe.webp → $(du -h "posters/${safe}.webp" | cut -f1)"
+          done
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.release_tag }}" posters/*.webp --clobber
