@@ -16,6 +16,7 @@ const SORT_OPTIONS: SortOption[] = [
   { key: 'vps',        label: 'По цене / слот',      iconClass: 'icon-eft-items-price-slot' },
   { key: 'sellTrader', label: 'Продажа торговцу',    iconClass: 'icon-eft-lore-traders' },
   { key: 'sellFlea',   label: 'Продажа на Барахолке', iconClass: 'icon-eft-currency-ruble' },
+  { key: 'margin',     label: 'По марже (крафт/бартер)', iconClass: 'icon-eft-profit' },
   { key: 'buyTrader',  label: 'Купить у торговца',    Icon: ShoppingCart },
   { key: 'buyMin',     label: 'Покупка (Мин. цена)', Icon: TrendingDown },
   { key: 'weight',     label: 'По весу',              iconClass: 'icon-eft-weight-carry' },
@@ -94,6 +95,7 @@ interface CategoryControlBarProps {
   favoritesOnly: boolean;
   usedIn: string[];
   needMe: boolean;
+  profitableOnly: boolean;
   isSaved: boolean;
   showAdvanced: boolean;
   activeAdvancedCount: number;
@@ -105,6 +107,7 @@ interface CategoryControlBarProps {
   onFavoritesOnlyChange: (v: boolean) => void;
   onUsedInToggle: (key: string) => void;
   onNeedMeChange: (v: boolean) => void;
+  onProfitableOnlyChange: (v: boolean) => void;
   onSaveFilters: () => void;
   onToggleAdvanced: () => void;
 }
@@ -122,6 +125,7 @@ export function CategoryControlBar({
   favoritesOnly,
   usedIn,
   needMe,
+  profitableOnly,
   isSaved,
   showAdvanced,
   activeAdvancedCount,
@@ -133,6 +137,7 @@ export function CategoryControlBar({
   onFavoritesOnlyChange,
   onUsedInToggle,
   onNeedMeChange,
+  onProfitableOnlyChange,
   onSaveFilters,
   onToggleAdvanced,
 }: CategoryControlBarProps) {
@@ -193,8 +198,8 @@ export function CategoryControlBar({
         </>
       )}
 
-      {/* «Отображать только» — квадратные иконочные кнопки (usedIn + Нужно мне + Избранное) */}
-      {(has('usedIn') || has('needMe') || has('favorites')) && (
+      {/* «Отображать только» — квадратные иконочные кнопки (usedIn + Нужно мне + Прибыльные + Избранное) */}
+      {(has('usedIn') || has('needMe') || has('profitable') || has('favorites')) && (
         <>
           <div className="flex shrink-0 flex-col gap-1">
             <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
@@ -225,7 +230,7 @@ export function CategoryControlBar({
                 <button
                   type="button"
                   onClick={() => onNeedMeChange(!needMe)}
-                  title="Только то, что мне ещё нужно (незавершённые квесты)"
+                  title="Только то, что мне ещё нужно (незавершённые квесты + непостроенные модули убежища)"
                   aria-pressed={needMe}
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-[background-color,border-color] duration-200 ${
                     needMe
@@ -234,6 +239,22 @@ export function CategoryControlBar({
                   }`}
                 >
                   <span className={`icon-eft-prog-items-needed h-5 w-5 mask-contain mask-no-repeat mask-center transition-[background-color] duration-200 ${needMe ? 'bg-(--primary)' : 'bg-text-primary opacity-60'}`} />
+                </button>
+              )}
+
+              {has('profitable') && (
+                <button
+                  type="button"
+                  onClick={() => onProfitableOnlyChange(!profitableOnly)}
+                  title="Только прибыльные (маржа крафта или бартера > 0)"
+                  aria-pressed={profitableOnly}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-[background-color,border-color] duration-200 ${
+                    profitableOnly
+                      ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]'
+                      : 'border-lines-hover bg-card-menu hover:border-(--primary) hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]'
+                  }`}
+                >
+                  <span className={`icon-eft-profit h-5 w-5 mask-contain mask-no-repeat mask-center transition-[background-color] duration-200 ${profitableOnly ? 'bg-(--primary)' : 'bg-text-primary opacity-60'}`} />
                 </button>
               )}
 

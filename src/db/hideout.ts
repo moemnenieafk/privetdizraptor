@@ -249,6 +249,47 @@ export async function getHideoutNeeds(): Promise<HideoutNeed[]> {
   return [...map.values()].sort((x, y) => y.total - x.total || x.itemName.localeCompare(y.itemName));
 }
 
+/* ───────────────── чтение для UI: фильтр «нужно мне» в каталоге ───────────────── */
+
+export interface HideoutItemLevel {
+  /** stationNormalizedName — совпадает с ключом useHideoutStore.levels */
+  station: string;
+  level: number;
+  /** требуется «найдено в рейде» */
+  fir?: boolean;
+}
+
+/**
+ * Лёгкая карта `itemId → [{station, level}]`: где предмет требуется по уровням
+ * станций. Без join'ов с именами/ценами (в отличие от getHideoutNeeds) — только
+ * для фильтра «Нужно мне» в каталоге, где клиент сверяет level с построенным
+ * уровнем из useHideoutStore. Валюта исключена. RSC-only.
+ */
+export async function getHideoutRequirementMap(): Promise<Record<string, HideoutItemLevel[]>> {
+  const gameId = await eftGameId();
+  const rows = await db
+    .select({
+      station: hideoutUpgrades.stationNormalizedName,
+      level: hideoutUpgrades.level,
+      itemRequirements: hideoutUpgrades.itemRequirements,
+    })
+    .from(hideoutUpgrades)
+    .where(eq(hideoutUpgrades.gameId, gameId));
+
+  const out: Record<string, HideoutItemLevel[]> = {};
+  for (const r of rows) {
+    for (const req of r.itemRequirements) {
+      if (CURRENCY_IDS.has(req.itemId)) continue;
+      (out[req.itemId] ??= []).push({
+        station: r.station,
+        level: r.level,
+        ...(req.fir ? { fir: true } : {}),
+      });
+    }
+  }
+  return out;
+}
+
 /* ───────────────── чтение для UI: гейты разблокировки станций ───────────────── */
 
 // normalizedName торговца → русское имя (для гейтов craft-profit). Стабильный набор.

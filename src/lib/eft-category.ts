@@ -288,3 +288,23 @@ export async function getEftCategoryItems(slug: string): Promise<CategoryItem[]>
   const all = await loadEnriched();
   return selectForSlug(slug, all).map(toCategoryItem);
 }
+
+/**
+ * Принадлежность предметов дочерним подкатегориям раздела (для фильтра «Выбор
+ * категорий» на неконечных разделах). Переиспользует `selectForSlug` — тот же
+ * источник правды, что и дочерние страницы, поэтому членство 1:1 с ними.
+ * Возвращает `itemId → [childSlug, …]` (предмет может попасть в несколько).
+ */
+export async function getSubcategoryMembership(
+  childSlugs: string[],
+): Promise<Record<string, string[]>> {
+  if (childSlugs.length === 0) return {};
+  const all = await loadEnriched();
+  const map: Record<string, string[]> = {};
+  for (const cs of childSlugs) {
+    for (const e of selectForSlug(cs, all)) {
+      (map[e.id] ??= []).push(cs);
+    }
+  }
+  return map;
+}

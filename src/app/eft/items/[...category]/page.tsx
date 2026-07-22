@@ -6,9 +6,12 @@ import { HubNav } from '@/components/features/items/HubNav';
 import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
 import { buildQuestIndicators } from '@/lib/eft-indicators.economics';
 import { EFT_QUESTS } from '@/data/quests';
-import { getEftCategoryItems } from '@/lib/eft-category';
+import { getEftCategoryItems, getSubcategoryMembership } from '@/lib/eft-category';
 import { getEftIndicatorsFromDb } from '@/db/indicators';
+import { getHideoutRequirementMap } from '@/db/hideout';
+import { getModCompatibilityMap } from '@/db/weapons';
 import { getCurrencyRates } from '@/db/prices';
+import { MOD_SLUGS } from '@/lib/items-filter-config';
 
 interface Props {
   params: Promise<{ category: string[] }>;
@@ -84,15 +87,30 @@ export default async function ItemsDynamicPage({ params }: Props) {
     preserveIconColor: child.path?.startsWith('/eft/items/mods/') ?? false,
   }));
 
+  // «Выбор категорий»: только для НЕконечных разделов (текущий узел с детьми).
+  // Опции = прямые дети-категории каталога (совпадают с под-навигацией HubNav);
+  // принадлежность считается серверно тем же selectForSlug, что и дочерние страницы.
+  const subcatChildren = (hasChildren ? currentNode.children! : [])
+    .filter((c) => c.path?.startsWith('/eft/items/'));
+  const subcatOptions = subcatChildren.map((c) => ({
+    id: c.path!.split('/').pop()!,
+    label: c.menuTitle ?? c.label,
+    iconUrl: c.iconUrl || c.iconUrlBear || '',
+    // моды: иконки со своей заливкой — рендерим как <img>, а не маску (как в HubNav)
+    preserveIconColor: c.path?.startsWith('/eft/items/mods/') ?? false,
+  }));
+
   const pageId = `eft-items-${resolvedParams.category.join('-')}`;
   const pageContent = PAGE_CONTENT_DICTIONARY[pageId];
 
   // Предметы категории + индикаторы (бартер/крафт/GP) — всё из НАШЕЙ Supabase.
   // В рантайме страница в api.tarkov.dev не ходит (цены/бартеры/крафты зеркалит крон).
-  const [itemsData, indicators, rates] = await Promise.all([
+  const [itemsData, indicators, rates, subcatMembershipAll, hideoutReqAll] = await Promise.all([
     getEftCategoryItems(slug),
     getEftIndicatorsFromDb(),
     getCurrencyRates(''),
+    getSubcategoryMembership(subcatOptions.map((o) => o.id)),
+    getHideoutRequirementMap(),
   ]);
 
   // Квест-индикаторы: определения из статического EFT_QUESTS (на сервере, не в
@@ -108,6 +126,13 @@ export default async function ItemsDynamicPage({ params }: Props) {
   const craftDataMapForCategory = pickByIds(indicators.craftDataMap, itemIds);
   const questDataMapForCategory = pickByIds(questDataMap, itemIds);
   const questRefMapForCategory = pickByIds(questRefMap, itemIds);
+  const subcatMembership = pickByIds(subcatMembershipAll, itemIds);
+  const hideoutReqMap = pickByIds(hideoutReqAll, itemIds);
+
+  // «Совместимо с оружием» — только на слагах модов. Map кэширован; сужаем до категории.
+  const compat = MOD_SLUGS.includes(slug) ? await getModCompatibilityMap() : null;
+  const modToWeapons = compat ? pickByIds(compat.modToWeapons, itemIds) : {};
+  const compatWeapons = compat ? compat.weapons : [];
 
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14">
@@ -131,6 +156,11 @@ export default async function ItemsDynamicPage({ params }: Props) {
             questDataMap={questDataMapForCategory}
             questRefMap={questRefMapForCategory}
             rates={rates}
+            subcatOptions={subcatOptions}
+            subcatMembership={subcatMembership}
+            hideoutReqMap={hideoutReqMap}
+            compatWeapons={compatWeapons}
+            modToWeapons={modToWeapons}
           />
         </Suspense>
       </div>

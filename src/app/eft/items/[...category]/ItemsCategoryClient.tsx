@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { PackageX, Check, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { PackageX, Check, X, ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
 import { EftItemTile } from '@/components/features/items/EftItemTile';
 import type { EftItemData, EftBarterData, EftCraftData, EftQuestData } from '@/components/features/items/EftItemTile';
 import { applyQuestProgress, type QuestProgressRef } from '@/lib/eft-indicators.economics';
@@ -15,10 +15,11 @@ import { getEyewearSubtype, type EyewearSubtype } from '@/lib/eyewear-filter-con
 import { EyewearSubtypeBar } from '@/components/features/items/EyewearSubtypeBar';
 import { SubcategoryBar } from '@/components/features/items/SubcategoryBar';
 import { PriceRangeSlider } from '@/components/features/items/PriceRangeSlider';
-import { getFilterConfig, type SubcategorySpec } from '@/lib/items-filter-config';
+import { getFilterConfig, type SubcatOption, type EnumFacet, type EnumFacetOption } from '@/lib/items-filter-config';
 import { useItemsStore } from '@/store/useItemsStore';
 import { useQuestStore } from '@/store/useQuestStore';
 import { useFavoritesStore } from '@/store/useFavoritesStore';
+import { useHideoutStore } from '@/store/useHideoutStore';
 import { FavoritesStrip } from '@/components/features/items/FavoritesStrip';
 import { CompareDrawer } from '@/components/features/items/CompareDrawer';
 
@@ -103,6 +104,14 @@ interface ItemsCategoryClientProps {
   questRefMap?: Record<string, QuestProgressRef>;
   /** Курс валют (₽ за $/€) — для переключателя валют в range-фильтре цены. */
   rates?: { usd: number | null; eur: number | null };
+  /** «Выбор категорий» (неконечные разделы): опции из меню + принадлежность из selectForSlug. */
+  subcatOptions?: SubcatOption[];
+  subcatMembership?: Record<string, string[]>;
+  /** Требования убежища `itemId → [{station, level}]` — для фильтра «Нужно мне». */
+  hideoutReqMap?: Record<string, { station: string; level: number; fir?: boolean }[]>;
+  /** Совместимость мод↔оружие (только слаги модов): список стволов + `modId → weaponId[]`. */
+  compatWeapons?: { id: string; name: string; shortName: string }[];
+  modToWeapons?: Record<string, string[]>;
 }
 
 // ─── Slug groups ──────────────────────────────────────────────────────────────
@@ -274,21 +283,106 @@ const priceToPos = (v: number): number =>
 const priceToValue = (pos: number): number =>
   pos <= 0 ? 0 : niceRound(PRICE_FLOOR * Math.exp(pos * LN_RANGE));
 
+// Кастомный одиночный дропдаун: ограниченная высота + прокрутка (+ опц. поиск).
+// Нативный <select> с ~26 калибрами / ~170 стволами открывался слишком длинным.
+function FacetDropdown({ options, value, onChange, searchable = false, widthClass = 'w-40', placeholder = 'Все' }: {
+  options: EnumFacetOption[];
+  value: string;
+  onChange: (v: string) => void;
+  searchable?: boolean;
+  widthClass?: string;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const current = options.find((o) => o.value === value);
+  const filtered = searchable && q
+    ? options.filter((o) => o.label.toLowerCase().includes(q.toLowerCase()))
+    : options;
+  const select = (v: string) => { onChange(v); setOpen(false); setQ(''); };
+
+  return (
+    <div ref={ref} className={`relative ${widthClass}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-9 w-full items-center gap-2 rounded border border-lines-hover bg-card-menu px-3 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary transition-colors hover:border-(--primary) focus:border-(--primary) focus:outline-none"
+      >
+        <span className="truncate">{current ? current.label : placeholder}</span>
+        <ChevronDown className={`ml-auto h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-full rounded border border-lines-hover bg-card-menu shadow-lg">
+          {searchable && (
+            <div className="border-b border-lines-hover p-1">
+              <input
+                autoFocus
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Поиск…"
+                className="h-7 w-full rounded bg-(--color-base) px-2 font-blender-book text-type-label text-text-primary placeholder:text-text-muted focus:outline-none"
+              />
+            </div>
+          )}
+          <div className="max-h-56 overflow-y-auto py-1">
+            {[{ value: '', label: placeholder }, ...filtered].map((opt) => {
+              const isSelected = opt.value === value;
+              return (
+                <button
+                  key={opt.value || '__all'}
+                  type="button"
+                  onClick={() => select(opt.value)}
+                  className={`flex w-full items-center gap-2 px-3 py-1.5 font-blender-medium text-type-label uppercase tracking-wider transition-colors duration-150 ${
+                    isSelected ? 'text-(--primary)' : 'text-text-muted hover:text-text-primary'
+                  }`}
+                >
+                  <span className="truncate">{opt.label}</span>
+                  {isSelected && <Check className="ml-auto h-3 w-3 shrink-0" />}
+                </button>
+              );
+            })}
+            {searchable && filtered.length === 0 && (
+              <div className="px-3 py-2 font-blender-book text-type-label text-text-muted">Ничего не найдено</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface AdvancedFiltersPanelProps {
-  categorySlug: string;
   priceMin: string;
   priceMax: string;
   currency: Currency;
   rates: { usd: number | null; eur: number | null };
   priceBases: Set<'buy' | 'sell'>;
-  caliberFilter: string;
-  availableCalibers: string[];
+  facets: EnumFacet[];
+  facetOptions: Record<string, EnumFacetOption[]>;
+  facetSelections: Record<string, Set<string>>;
+  onFacetToggle: (key: string, value: string, multi: boolean) => void;
+  onFacetSelect: (key: string, value: string) => void;
+  compatWeapons: { id: string; name: string; shortName: string }[];
+  compatWeapon: string;
+  onCompatChange: (v: string) => void;
   onPriceMinChange: (v: string) => void;
   onPriceMaxChange: (v: string) => void;
   onCurrencyChange: (c: Currency) => void;
   onPriceBasisToggle: (b: 'buy' | 'sell') => void;
-  onCaliberChange: (v: string) => void;
-  subtypeBar: SubcategorySpec | null;
+  subcatOptions: SubcatOption[];
+  subcatCounts?: Record<string, number>;
   activeSubcats: Set<string>;
   onSubcatToggle: (id: string) => void;
   onSubcatClear: () => void;
@@ -297,16 +391,16 @@ interface AdvancedFiltersPanelProps {
 
 
 function AdvancedFiltersPanel({
-  categorySlug,
-  priceMin, priceMax, currency, rates, priceBases, caliberFilter,
-  availableCalibers,
-  subtypeBar, activeSubcats,
-  onPriceMinChange, onPriceMaxChange, onCurrencyChange, onPriceBasisToggle, onCaliberChange,
+  priceMin, priceMax, currency, rates, priceBases,
+  facets, facetOptions, facetSelections, onFacetToggle, onFacetSelect,
+  compatWeapons, compatWeapon, onCompatChange,
+  subcatOptions, subcatCounts, activeSubcats,
+  onPriceMinChange, onPriceMaxChange, onCurrencyChange, onPriceBasisToggle,
   onSubcatToggle, onSubcatClear,
   onReset,
 }: AdvancedFiltersPanelProps) {
-  const showCaliber = categorySlug === 'ammo' || GUN_SLUGS.has(categorySlug);
-  const hasActiveFilters = !!(priceMin || priceMax || caliberFilter || activeSubcats.size > 0);
+  const facetCount = Object.values(facetSelections).reduce((n, s) => n + s.size, 0);
+  const hasActiveFilters = !!(priceMin || priceMax || compatWeapon || activeSubcats.size > 0 || facetCount > 0);
 
   const lo = priceMin ? Number(priceMin) : 0;
   const hi = priceMax ? Number(priceMax) : PRICE_CAP;
@@ -336,16 +430,81 @@ function AdvancedFiltersPanel({
       {/* Одна строка: категории / валюта / диапазон цены */}
       <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
 
-        {/* Категории (подкатегории barter) */}
-        {subtypeBar && (
+        {/* «Выбор категорий» — подкатегории неконечного раздела (серверные опции) */}
+        {subcatOptions.length > 0 && (
           <SubcategoryBar
-            label={subtypeBar.label}
-            options={subtypeBar.options}
+            label="Выбор категорий"
+            options={subcatOptions}
             active={activeSubcats}
             onToggle={onSubcatToggle}
             onClear={onSubcatClear}
+            counts={subcatCounts}
           />
         )}
+
+        {/* Совместимость мод↔оружие — пикер ствола с поиском (только слаги модов) */}
+        {compatWeapons.length > 0 && (
+          <div className="flex shrink-0 flex-col gap-2.5">
+            <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+              Совместимо с оружием
+            </span>
+            <FacetDropdown
+              options={compatWeapons.map((w) => ({ value: w.id, label: w.name }))}
+              value={compatWeapon}
+              onChange={onCompatChange}
+              searchable
+              widthClass="w-64"
+              placeholder="Любое оружие"
+            />
+          </div>
+        )}
+
+        {/* Категорийные enum-фасеты (калибр = дропдаун; гранаты-тип/броня/кратность = чипы) */}
+        {facets.map((f) => {
+          const opts = facetOptions[f.key] ?? [];
+          if (opts.length === 0) return null;
+          const sel = facetSelections[f.key];
+
+          if (f.ui === 'dropdown') {
+            const value = sel && sel.size > 0 ? [...sel][0] : '';
+            return (
+              <div key={f.key} className="flex shrink-0 flex-col gap-2.5">
+                <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                  {f.label}
+                </span>
+                <FacetDropdown options={opts} value={value} onChange={(v) => onFacetSelect(f.key, v)} />
+              </div>
+            );
+          }
+
+          return (
+            <div key={f.key} className="flex shrink-0 flex-col gap-2.5">
+              <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                {f.label}
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {opts.map((o) => {
+                  const isActive = !!sel?.has(o.value);
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => onFacetToggle(f.key, o.value, f.multi)}
+                      aria-pressed={isActive}
+                      className={`flex h-9 shrink-0 items-center rounded border px-3 font-blender-medium text-type-label uppercase tracking-wider transition-colors duration-200 ${
+                        isActive
+                          ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] text-(--primary)'
+                          : 'border-lines-hover bg-card-menu text-text-muted hover:border-(--primary) hover:text-text-primary'
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
 
         {/* Валюта */}
         <div className="flex shrink-0 flex-col gap-2.5">
@@ -426,38 +585,20 @@ function AdvancedFiltersPanel({
         </div>
       </div>
 
-      {/* Калибр + сброс — в одну линию */}
-      {(showCaliber && availableCalibers.length > 0) || hasActiveFilters ? (
+      {/* Сброс расширенных фильтров */}
+      {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-3">
-          {showCaliber && availableCalibers.length > 0 && (
-            <div className="relative w-40">
-              <select
-                value={caliberFilter}
-                onChange={(e) => onCaliberChange(e.target.value)}
-                className="h-9 w-full cursor-pointer appearance-none rounded border border-lines-hover bg-card-menu pl-3 pr-8 font-blender-medium text-type-label uppercase tracking-wider text-text-secondary transition-colors focus:border-(--primary) focus:outline-none"
-              >
-                <option value="">Все калибры</option>
-                {availableCalibers.map(c => (
-                  <option key={c} value={c}>{c.replace('Caliber', '').trim()}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">▾</span>
-            </div>
-          )}
-
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={onReset}
-              title="Сбросить расширенные фильтры"
-              className="flex h-7 items-center gap-1 rounded border border-red-500/50 bg-red-500/10 px-2 font-blender-medium text-type-micro uppercase tracking-widest text-red-400 transition-colors hover:border-red-500 hover:bg-red-500/20 hover:text-red-300"
-            >
-              <X className="h-3.5 w-3.5 shrink-0" />
-              Сбросить
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onReset}
+            title="Сбросить расширенные фильтры"
+            className="flex h-7 items-center gap-1 rounded border border-red-500/50 bg-red-500/10 px-2 font-blender-medium text-type-micro uppercase tracking-widest text-red-400 transition-colors hover:border-red-500 hover:bg-red-500/20 hover:text-red-300"
+          >
+            <X className="h-3.5 w-3.5 shrink-0" />
+            Сбросить
+          </button>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -600,6 +741,11 @@ export function ItemsCategoryClient({
   questDataMap,
   questRefMap,
   rates = { usd: null, eur: null },
+  subcatOptions = [],
+  subcatMembership = {},
+  hideoutReqMap = {},
+  compatWeapons = [],
+  modToWeapons = {},
 }: ItemsCategoryClientProps) {
   const {
     searchQuery, setSearchQuery,
@@ -612,8 +758,13 @@ export function ItemsCategoryClient({
     playerLevel,
     priceMin, setPriceMin,
     priceMax, setPriceMax,
-    caliberFilter, setCaliberFilter,
     favoritesOnly, setFavoritesOnly,
+    usedIn, toggleUsedIn,
+    needMe, setNeedMe,
+    profitableOnly, setProfitableOnly,
+    activeSubcats, toggleSubcat, clearSubcats,
+    facetState, toggleFacet, setFacetSingle,
+    compatWeapon, setCompatWeapon,
     handleDropdownSort,
     toggleArmorClass,
     handleSaveFilters,
@@ -632,6 +783,7 @@ export function ItemsCategoryClient({
     });
 
   const selectedTraders = useItemsStore((state) => state.selectedTraders);
+  const clearTraders = useItemsStore((state) => state.clearTraders);
   const setCatalogReturnPath = useItemsStore((s) => s.setCatalogReturnPath);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -642,6 +794,7 @@ export function ItemsCategoryClient({
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const itemProgress = useQuestStore((s) => s.itemProgress);
   const favoriteIds = useFavoritesStore((s) => s.favoriteIds);
+  const hideoutLevels = useHideoutStore((s) => s.levels);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeEyewearSubtype, setActiveEyewearSubtype] = useState<EyewearSubtype | 'all'>('all');
@@ -649,44 +802,63 @@ export function ItemsCategoryClient({
   const slug = categorySlug || '';
   const config = useMemo(() => getFilterConfig(slug), [slug]);
 
-  // Пер-категорийные фильтры (barter): подкатегория (мульти) + «используется в».
-  const [activeBarterSubcats, setActiveBarterSubcats] = useState<Set<string>>(new Set());
-  const [usedIn, setUsedIn] = useState<string[]>([]);
-  const [needMe, setNeedMe] = useState(false);
+  // usedIn/needMe/подкатегории/фасеты теперь живут в useCategoryFilters (URL + персист).
 
-  const toggleUsedIn = (key: string) =>
-    setUsedIn(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
-  const toggleBarterSubcat = (id: string) =>
-    setActiveBarterSubcats(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  const clearBarterSubcats = () => setActiveBarterSubcats(new Set());
-
-  // Полный сброс: фильтры хука + локальные пер-категорийные (иначе «Сбросить» не спасает).
+  // Полный сброс: все фильтры хука (usedIn/needMe/подкатегории/фасеты в т.ч.) + стор/локальные.
   const handleResetAll = () => {
     resetFilters();
     setActiveEyewearSubtype('all');
-    setActiveBarterSubcats(new Set());
-    setUsedIn([]);
-    setNeedMe(false);
+    clearTraders(); // #4: фильтр по трейдерам живёт в сторе (HubNav) — «Сбросить» тоже его снимает
   };
 
-  const availableCalibers = useMemo(() => {
-    if (slug !== 'ammo' && !GUN_SLUGS.has(slug)) return [];
-    const cals = new Set<string>();
-    initialData.forEach(item => { if (item.properties?.caliber) cals.add(item.properties.caliber); });
-    return Array.from(cals).sort();
-  }, [initialData, slug]);
+  // Опции фасетов, реально присутствующие в данных категории (фикс-набор сохраняет порядок).
+  const facetOptions = useMemo(() => {
+    const result: Record<string, EnumFacetOption[]> = {};
+    for (const f of config.facets) {
+      const present = new Set<string>();
+      for (const item of initialData) {
+        const v = f.extract(item.properties ?? {});
+        if (v == null) continue;
+        if (Array.isArray(v)) v.forEach(x => present.add(x));
+        else present.add(v);
+      }
+      result[f.key] = f.options
+        ? f.options.filter(o => present.has(o.value))
+        : Array.from(present)
+            .sort((a, b) => {
+              if (f.order) {
+                const ia = f.order.indexOf(a), ib = f.order.indexOf(b);
+                const ra = ia < 0 ? Number.MAX_SAFE_INTEGER : ia;
+                const rb = ib < 0 ? Number.MAX_SAFE_INTEGER : ib;
+                if (ra !== rb) return ra - rb;
+              }
+              return a.localeCompare(b);
+            })
+            .map(v => ({ value: v, label: f.labelFn ? f.labelFn(v) : (f.labelMap?.[v] ?? v) }));
+    }
+    return result;
+  }, [config, initialData]);
 
-  const activeAdvancedCount = [priceMin, priceMax, caliberFilter]
-    .filter(Boolean).length + activeBarterSubcats.size;
+  const facetCount = useMemo(
+    () => Object.values(facetState).reduce((n, s) => n + s.size, 0),
+    [facetState],
+  );
 
-  const handleResetAdvanced = () => {
-    resetAdvancedFilters();
-    clearBarterSubcats();
-  };
+  // Счётчики предметов в каждой подкатегории (в тултип плитки «Выбор категорий»).
+  const subcatCounts = useMemo(() => {
+    if (subcatOptions.length === 0) return undefined;
+    const counts: Record<string, number> = {};
+    for (const item of initialData) {
+      for (const s of subcatMembership[item.id] ?? []) counts[s] = (counts[s] ?? 0) + 1;
+    }
+    return counts;
+  }, [initialData, subcatOptions, subcatMembership]);
+
+  const activeAdvancedCount = [priceMin, priceMax, compatWeapon]
+    .filter(Boolean).length + activeSubcats.size + facetCount;
+
+  // resetAdvancedFilters (хук) уже чистит цену/калибр/подкатегории/фасеты.
+  const handleResetAdvanced = resetAdvancedFilters;
 
   const eyewearCounts = useMemo(() => {
     if (slug !== 'eyewear') return undefined;
@@ -742,9 +914,11 @@ export function ItemsCategoryClient({
         if (itemClass > 0 && !activeArmorClasses.includes(itemClass)) return false;
       }
       if (barterOnly && (!item.types || !item.types.includes('barter'))) return false;
-      // Подкатегория (мульти, напр. barter BSG). Пустой набор = все.
-      if (config.subtypeBar && activeBarterSubcats.size > 0) {
-        if (!item.bsgCategoryId || !activeBarterSubcats.has(item.bsgCategoryId)) return false;
+      // «Выбор категорий»: предмет должен принадлежать хотя бы одной выбранной
+      // подкатегории (принадлежность считается серверно тем же selectForSlug).
+      if (activeSubcats.size > 0) {
+        const mem = subcatMembership[item.id];
+        if (!mem || !mem.some(s => activeSubcats.has(s))) return false;
       }
       // «Используется в» — предмет должен попасть хотя бы в один выбранный тип связи.
       if (usedIn.length > 0) {
@@ -762,10 +936,27 @@ export function ItemsCategoryClient({
           (k === 'gp'     && inGp));
         if (!match) return false;
       }
-      // «Нужно мне» — предмет нужен для НЕзавершённого квеста (по индикатору плитки).
+      // «Нужно мне» — предмет нужен для НЕзавершённого квеста ИЛИ для непостроенного
+      // уровня убежища (level > текущего построенного из useHideoutStore). Бартеры
+      // пока не входят (нет per-player «закрыт»).
       if (needMe) {
         const q = questIndicatorMap.get(item.id);
-        if (!q || q.status === 'completed') return false;
+        const questNeeded = !!q && q.status !== 'completed';
+        const hideoutNeeded = (hideoutReqMap[item.id] ?? []).some(
+          s => (hideoutLevels[s.station] ?? 0) < s.level,
+        );
+        if (!questNeeded && !hideoutNeeded) return false;
+      }
+      // «Совместимо с оружием» — мод ставится на выбранный ствол (обратный индекс).
+      if (compatWeapon) {
+        const w = modToWeapons[item.id];
+        if (!w || !w.includes(compatWeapon)) return false;
+      }
+      // «Только прибыльные» — лучшая маржа (крафт или бартер) строго > 0.
+      if (profitableOnly) {
+        const bp = barterDataMap?.[item.id]?.profit ?? -Infinity;
+        const cp = craftDataMap?.[item.id]?.profit ?? -Infinity;
+        if (Math.max(bp, cp) <= 0) return false;
       }
       // Advanced filters
       const pMin = priceMin !== '' ? Number(priceMin) : null;
@@ -779,9 +970,14 @@ export function ItemsCategoryClient({
         const ok = bases.some(pr => (pMin === null || pr >= pMin) && (pMax === null || pr <= pMax));
         if (!ok) return false;
       }
-      if (caliberFilter && item.properties?.caliber !== caliberFilter) return false;
-      const isFlVendor = (v: { name: string; normalizedName?: string }) =>
-        v.name === 'Flea Market' || v.normalizedName === 'flea-market';
+      // Обобщённые enum-фасеты: предмет проходит фасет, если хотя бы одно его значение выбрано.
+      for (const f of config.facets) {
+        const sel = facetState[f.key];
+        if (!sel || sel.size === 0) continue;
+        const v = f.extract(item.properties ?? {});
+        const vals = v == null ? [] : Array.isArray(v) ? v : [v];
+        if (!vals.some(x => sel.has(x))) return false;
+      }
       // Фильтр по торговцам (мульти-выбор из HubNav)
       if (selectedTraders.length > 0) {
         const passesTrader =
@@ -791,7 +987,7 @@ export function ItemsCategoryClient({
       }
       // Доступно мне: есть покупка у торговца ИЛИ барахолка (барахолка ≥ 15 ур.)
       if (availableOnly) {
-        const hasTraderBuy = item.buyFor?.some(b => !isFlVendor(b.vendor) && (b.priceRUB ?? b.price) > 0);
+        const hasTraderBuy = item.buyFor?.some(b => !isFleaVendor(b.vendor) && (b.priceRUB ?? b.price) > 0);
         const fleaAccessible = (item.eco.fleaBuy?.price || 0) > 0 && playerLevel >= 15;
         if (!hasTraderBuy && !fleaAccessible) return false;
       }
@@ -814,6 +1010,16 @@ export function ItemsCategoryClient({
         case 'buyFlea':           aValue = a.eco.fleaBuy?.price || 0; bValue = b.eco.fleaBuy?.price || 0; break;
         case 'buyMin':            aValue = a.eco.minPrice; bValue = b.eco.minPrice; break;
         case 'buyTrader':         aValue = a.eco.traderBuyPrice; bValue = b.eco.traderBuyPrice; break;
+        case 'margin': {
+          // Лучшая маржа предмета = max(прибыль бартера, прибыль крафта); нет маршрута → в самый низ.
+          const best = (x: typeof a) => {
+            const bp = barterDataMap?.[x.id]?.profit;
+            const cp = craftDataMap?.[x.id]?.profit;
+            return Math.max(bp ?? -Infinity, cp ?? -Infinity);
+          };
+          aValue = best(a); bValue = best(b);
+          break;
+        }
         case 'vps':               aValue = a.eco.vps; bValue = b.eco.vps; break;
         case 'size':              aValue = a.eco.slots; bValue = b.eco.slots; break;
         case 'class':             aValue = Number(p(a).class) || 0; bValue = Number(p(b).class) || 0; break;
@@ -866,9 +1072,10 @@ export function ItemsCategoryClient({
     });
 
     return data;
-  }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, caliberFilter, gpCoinBarters, activeEyewearSubtype, selectedTraders,
+  }, [initialData, searchQuery, sortConfig, slug, activeArmorClasses, barterOnly, priceMin, priceMax, gpCoinBarters, activeEyewearSubtype, selectedTraders,
       availableOnly, playerLevel, favoritesOnly, favoriteIds,
-      config, activeBarterSubcats, usedIn, needMe, priceBases, barterDataMap, craftDataMap, questIndicatorMap]);
+      config, activeSubcats, subcatMembership, usedIn, needMe, profitableOnly, priceBases, barterDataMap, craftDataMap, questIndicatorMap, facetState,
+      hideoutReqMap, hideoutLevels, compatWeapon, modToWeapons]);
 
   useEffect(() => { setVisibleCount(100); }, [processedItems]);
   const handleShowMore = () => setVisibleCount(prev => prev + 100);
@@ -926,6 +1133,7 @@ export function ItemsCategoryClient({
           favoritesOnly={favoritesOnly}
           usedIn={usedIn}
           needMe={needMe}
+          profitableOnly={profitableOnly}
           isSaved={isSaved}
           showAdvanced={showAdvanced}
           activeAdvancedCount={activeAdvancedCount}
@@ -937,29 +1145,35 @@ export function ItemsCategoryClient({
           onFavoritesOnlyChange={setFavoritesOnly}
           onUsedInToggle={toggleUsedIn}
           onNeedMeChange={setNeedMe}
+          onProfitableOnlyChange={setProfitableOnly}
           onSaveFilters={handleSaveFilters}
           onToggleAdvanced={() => setShowAdvanced(v => !v)}
         />
 
         {showAdvanced && (
           <AdvancedFiltersPanel
-            categorySlug={slug}
             priceMin={priceMin}
             priceMax={priceMax}
             currency={currency}
             rates={rates}
             priceBases={priceBases}
-            caliberFilter={caliberFilter}
-            availableCalibers={availableCalibers}
+            facets={config.facets}
+            facetOptions={facetOptions}
+            facetSelections={facetState}
+            onFacetToggle={toggleFacet}
+            onFacetSelect={setFacetSingle}
+            compatWeapons={compatWeapons}
+            compatWeapon={compatWeapon}
+            onCompatChange={setCompatWeapon}
             onPriceMinChange={setPriceMin}
             onPriceMaxChange={setPriceMax}
             onCurrencyChange={setCurrency}
             onPriceBasisToggle={togglePriceBasis}
-            onCaliberChange={setCaliberFilter}
-            subtypeBar={config.subtypeBar}
-            activeSubcats={activeBarterSubcats}
-            onSubcatToggle={toggleBarterSubcat}
-            onSubcatClear={clearBarterSubcats}
+            subcatOptions={subcatOptions}
+            subcatCounts={subcatCounts}
+            activeSubcats={activeSubcats}
+            onSubcatToggle={toggleSubcat}
+            onSubcatClear={clearSubcats}
             onReset={handleResetAdvanced}
           />
         )}

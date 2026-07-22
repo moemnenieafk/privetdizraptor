@@ -5,7 +5,12 @@ import { ItemsCategoryClient, CategoryItem } from './[...category]/ItemsCategory
 import { HubNav } from '@/components/features/items/HubNav';
 import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
 import { getEftCatalog } from '@/lib/eft-catalog';
-import { getEftPriceMapFromDb } from '@/db/prices';
+import { getSubcategoryMembership } from '@/lib/eft-category';
+import { getHideoutRequirementMap } from '@/db/hideout';
+import { getEftIndicatorsFromDb } from '@/db/indicators';
+import { getEftPriceMapFromDb, getCurrencyRates } from '@/db/prices';
+import { buildQuestIndicators } from '@/lib/eft-indicators.economics';
+import { EFT_QUESTS } from '@/data/quests';
 import { itemIconUrl } from '@/lib/item-icon';
 
 function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null {
@@ -53,7 +58,31 @@ export default async function ItemsHubPage() {
   if (!itemsNode) notFound();
 
   const pageContent = PAGE_CONTENT_DICTIONARY['eft-items'];
-  const itemsData = await getItemsData();
+
+  // «Выбор категорий» для общей выборки = топ-уровневые разделы каталога.
+  const subcatChildren = (itemsNode.children || []).filter((c) => c.path?.startsWith('/eft/items/'));
+  const subcatOptions = subcatChildren.map((c) => ({
+    id: c.path!.split('/').pop()!,
+    label: c.menuTitle ?? c.label,
+    iconUrl: c.iconUrl || c.iconUrlBear || '',
+    preserveIconColor: c.path?.startsWith('/eft/items/mods/') ?? false,
+  }));
+
+  const [itemsData, subcatMembership, hideoutReqMap, indicators, rates] = await Promise.all([
+    getItemsData(),
+    getSubcategoryMembership(subcatOptions.map((o) => o.id)),
+    getHideoutRequirementMap(),
+    getEftIndicatorsFromDb(),
+    getCurrencyRates(''),
+  ]);
+
+  // Квест-индикаторы: определения из статического EFT_QUESTS (на сервере, не в
+  // клиент-бандле); живой прогресс накладывается на клиенте из quest-стора.
+  // Корень = все предметы, поэтому карты индикаторов передаём целиком (без сужения).
+  const { dataMap: questDataMap, refMap: questRefMap } = buildQuestIndicators(
+    EFT_QUESTS,
+    indicators.barterUnlockMap,
+  );
 
   const tabs = (itemsNode.children || []).map((child) => ({
     id: child.id,
@@ -75,7 +104,19 @@ export default async function ItemsHubPage() {
         />
 
         <Suspense>
-          <ItemsCategoryClient initialData={itemsData} categorySlug="" gpCoinBarters={{}} />
+          <ItemsCategoryClient
+            initialData={itemsData}
+            categorySlug=""
+            gpCoinBarters={indicators.gpCoinBarters}
+            barterDataMap={indicators.barterDataMap}
+            craftDataMap={indicators.craftDataMap}
+            questDataMap={questDataMap}
+            questRefMap={questRefMap}
+            rates={rates}
+            subcatOptions={subcatOptions}
+            subcatMembership={subcatMembership}
+            hideoutReqMap={hideoutReqMap}
+          />
         </Suspense>
       </div>
     </main>
