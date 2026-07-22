@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/og.png",
+        url: "/og.png?v=d18459a2",
         width: 1200,
         height: 630,
         alt: "ЦТА — Центр тактической адаптации, портал по Escape from Tarkov",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ЦТА — портал по Escape from Tarkov",
     description: SITE_DESCRIPTION,
-    images: ["/og.png"],
+    images: ["/og.png?v=d18459a2"],
   },
   robots: {
     index: true,
