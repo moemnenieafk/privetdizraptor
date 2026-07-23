@@ -1,7 +1,1 @@
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-<!-- Favourite (default) icon — © 2026 V4DYA (Вадим), Центр Тактической Адаптации (ЦТА / CTA). Оригинальная авторская работа. Все права защищены. -->
-<title>Favourite (default) (ЦТА)</title>
-<desc>© 2026 V4DYA — Центр Тактической Адаптации (ЦТА / CTA). Original artwork, all rights reserved.</desc>
-<metadata><rdf:RDF><rdf:Description rdf:about=""><dc:title>Favourite (default)</dc:title><dc:creator>V4DYA (Вадим)</dc:creator><dc:rights>© 2026 V4DYA — Центр Тактической Адаптации (ЦТА / CTA). Все права защищены.</dc:rights><dc:date>2026</dc:date></rdf:Description></rdf:RDF></metadata>
-<path d="M10.2246 5.69038L15.5 6.31637L11.5996 9.92287L12.6357 15.1329L8 12.5381L3.36426 15.1329L4.40039 9.92287L0.5 6.31637L5.77539 5.69038L8 0.867065L10.2246 5.69038ZM6.78516 7.08103L5.95215 7.18064L3.90527 7.42283L6.03516 9.39161L5.46875 12.2354L8 10.8194L10.5303 12.2354L9.96484 9.39161L12.0938 7.42283L10.0479 7.18064L9.21484 7.08103L8 4.4472L6.78516 7.08103Z" fill="#9696A1"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 16"><title>Favourite (default) (ЦТА)</title><desc>© 2026 V4DYA — Центр Тактической Адаптации (ЦТА / CTA). Original artwork, all rights reserved.</desc><metadata/><path fill="#9696a1" d="m10.225 5.69 5.275.626-3.9 3.607 1.036 5.21L8 12.538l-4.636 2.595L4.4 9.923.5 6.316l5.275-.626L8 .867zm-3.44 1.391-.833.1-2.047.242 2.13 1.969-.566 2.843L8 10.82l2.53 1.416-.565-2.843 2.129-1.97-2.046-.241-.833-.1L8 4.447z"/></svg>
