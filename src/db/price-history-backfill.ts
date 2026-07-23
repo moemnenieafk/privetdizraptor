@@ -6,12 +6,16 @@
 //
 // Строки помечаются source='tarkovdev'. Наши собственные снимки не перезаписываются:
 // ON CONFLICT DO NOTHING — свои данные надёжнее чужих.
+//
+// GraphQL-only «особый случай» (§4.11 + eft-data-autonomy-research): historicalPrices —
+// временной ряд, которого в JSON-плоскости json.tarkov.dev НЕТ, поэтому JSON-primary
+// невозможен. Идём через общий fetchTarkovGraphQL (единый HTTP/ошибки), а устойчивость
+// даёт no-wipe: пока GraphQL 503 — просто ничего не доливаем, свои снимки не трогаем.
 import { sql } from "drizzle-orm";
 import { db } from "./index";
 import { eftGameId } from "./eft";
 import { getArenaOffers } from "./arena-offers";
-
-const ENDPOINT = "https://api.tarkov.dev/graphql";
+import { fetchTarkovGraphQL } from "@/lib/tarkov-fallback";
 
 /** Предметов в одном GraphQL-запросе. Больше — рискуем положить чужой сервис. */
 const BATCH_SIZE = 10;
@@ -61,22 +65,12 @@ async function fetchBatch(ids: string[], days: number): Promise<Map<string, Hist
     .map((id, i) => `i${i}: item(id: "${id}") { id historicalPrices(days: ${days}) { price timestamp } }`)
     .join("\n");
 
-  const response = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query: `{ ${fields} }` }),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`tarkov.dev responded ${response.status}`);
-
-  const payload = (await response.json()) as {
-    data?: Record<string, { id: string; historicalPrices?: HistoricalPoint[] } | null>;
-    errors?: { message?: string }[];
-  };
-  if (payload.errors?.length) throw new Error(payload.errors[0]?.message ?? "graphql error");
+  const data = await fetchTarkovGraphQL<Record<string, { id: string; historicalPrices?: HistoricalPoint[] } | null>>(
+    `{ ${fields} }`,
+  );
 
   const result = new Map<string, HistoricalPoint[]>();
-  for (const entry of Object.values(payload.data ?? {})) {
+  for (const entry of Object.values(data ?? {})) {
     if (entry?.id) result.set(entry.id, entry.historicalPrices ?? []);
   }
   return result;
