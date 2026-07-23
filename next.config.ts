@@ -26,6 +26,10 @@ const nextConfig: NextConfig = {
       // «Обновления игры» переехали из «Связи» в «Кодекс» (URL отражает раздел).
       { source: '/eft/comlink/game-updates', destination: '/eft/gamesetting/game-updates', permanent: true },
       { source: '/eft/comlink/game-updates/:slug*', destination: '/eft/gamesetting/game-updates/:slug*', permanent: true },
+      // «Рейтинг предметов» и «Цена за слот» переехали из «Предметов» в «Прогресс»
+      // (обе страницы — инструменты прогресса, а не каталог; URL приведён к разделу).
+      { source: '/eft/items/loot-rate', destination: '/eft/progress/loot-rate', permanent: true },
+      { source: '/eft/items/price-slot', destination: '/eft/progress/price-slot', permanent: true },
     ];
   },
 

@@ -5,11 +5,11 @@ import { itemIconUrl } from '@/lib/item-icon';
 import { calcFleaFee } from '@/lib/barter-calc';
 import { PriceSlotClient, type PriceSlotItem } from './PriceSlotClient';
 
-export const metadata: Metadata = { title: 'Цена за слот | ЦТА' };
+export const metadata: Metadata = { title: 'Цена за слот | Прогресс ЦТА' };
 
 const TOP_N = 500;
 
-// Статический маршрут — перекрывает items/[...category]. Данные ТОЛЬКО из зеркала.
+// Данные ТОЛЬКО из зеркала (в tarkov.dev не ходим).
 async function fetchPriceSlot(): Promise<PriceSlotItem[]> {
   let catalog: Awaited<ReturnType<typeof getEftCatalog>>;
   let priceMap: Awaited<ReturnType<typeof getEftPriceMapFromDb>>;
@@ -67,13 +67,6 @@ export default async function PriceSlotPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <header className="mb-8">
-          <h1 className="text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">Цена за слот</h1>
-          <p className="mt-2 text-sm text-text-secondary font-blender-book">
-            Рейтинг предметов по чистой выручке за ячейку инвентаря (₽/слот) — для стиля «loot vacuum». Учитывает
-            налог барахолки и модификаторы убежища, сравнивает маршруты сбыта (торговец vs барахолка).
-          </p>
-        </header>
         <PriceSlotClient items={items} />
       </div>
     </main>

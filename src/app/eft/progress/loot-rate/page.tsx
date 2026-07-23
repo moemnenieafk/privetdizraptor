@@ -1,11 +1,13 @@
 import { eq } from 'drizzle-orm';
-import { PageHeader } from '@/components/ui/PageHeader';
+import type { Metadata } from 'next';
 import { LootRateClient, type LootItem } from './LootRateClient';
 import { db } from '@/db';
 import { items } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
 import { getEftPriceMapFromDb } from '@/db/prices';
 import { itemIconUrl } from '@/lib/item-icon';
+
+export const metadata: Metadata = { title: 'Рейтинг предметов | Прогресс ЦТА' };
 
 // Типы предметов, попадающих в рейтинг (как в старом types-запросе к tarkov.dev).
 const LOOT_TYPES = new Set([
@@ -80,11 +82,6 @@ export default async function LootRatePage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <PageHeader
-          title="Рейтинг предметов"
-          description="Все предметы игры, отсортированные по цене за клеточку инвентаря. Используйте иконки категорий для фильтрации."
-          iconClass="icon-eft-items-loot-tier"
-        />
         <LootRateClient items={items} />
       </div>
     </main>

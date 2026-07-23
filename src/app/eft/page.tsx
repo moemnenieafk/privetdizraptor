@@ -32,7 +32,7 @@ const EFT_HUB_CARDS = [
     id: 'price-slot',
     title: 'Цена за слот',
     description: 'Расчёт цены за слот в схроне или инвентаре',
-    href: '/eft/items/price-slot',
+    href: '/eft/progress/price-slot',
     iconPath: '/icons/eft/03-items/price-per-slot.svg',
     variant: 'rectangle' as const,
   },

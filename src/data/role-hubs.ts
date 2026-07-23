@@ -40,8 +40,8 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
     pveHint: 'В ПвЕ живой барахолки нет — профит идёт через крафты убежища и лут, а не перепродажу.',
     links: [
       { title: 'Прибыль бартера', description: 'Где бартер выгоднее покупки.', href: '/eft/progress/barter' },
-      { title: 'Цена за слот', description: 'Что тащить ради ₽ за клетку.', href: '/eft/items/price-slot' },
-      { title: 'Рейтинг предметов', description: 'Что ценно и ходово.', href: '/eft/items/loot-rate' },
+      { title: 'Цена за слот', description: 'Что тащить ради ₽ за клетку.', href: '/eft/progress/price-slot' },
+      { title: 'Рейтинг предметов', description: 'Что ценно и ходово.', href: '/eft/progress/loot-rate' },
       { title: 'Прибыль убежища', description: 'Крафты, что приносят профит.', href: '/eft/progress/hideout/craft-profit' },
     ],
   },
@@ -87,8 +87,8 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
     links: [
       { title: 'Карты', description: 'Спавны, выходы, простреливаемые линии.', href: '/eft/maps' },
       { title: 'Лут-контейнеры', description: 'Где лежит ценное.', href: '/eft/loot-containers' },
-      { title: 'Цена за слот', description: 'Что тащить ради \u20bd за клетку.', href: '/eft/items/price-slot' },
-      { title: 'Рейтинг предметов', description: 'Самое ценное и ходовое.', href: '/eft/items/loot-rate' },
+      { title: 'Цена за слот', description: 'Что тащить ради \u20bd за клетку.', href: '/eft/progress/price-slot' },
+      { title: 'Рейтинг предметов', description: 'Самое ценное и ходовое.', href: '/eft/progress/loot-rate' },
     ],
   },
   sherpa: {
