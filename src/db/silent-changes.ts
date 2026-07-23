@@ -215,14 +215,19 @@ export async function syncSilentChanges(
         };
       });
 
-      const ins = await db
-        .insert(silentChanges)
-        .values(rows)
-        .onConflictDoNothing({
-          target: [silentChanges.gameId, silentChanges.pullId, silentChanges.filePath, silentChanges.keyPath],
-        })
-        .returning({ id: silentChanges.id });
-      inserted += ins.length;
+      // Чанками: вайп-пулы дают тысячи строк, а один INSERT ограничен 65535 бинд-
+      // параметрами Postgres (13 колонок × ~5000 строк > лимита). 500 строк = ~6.5k параметров.
+      const CHUNK = 500;
+      for (let j = 0; j < rows.length; j += CHUNK) {
+        const ins = await db
+          .insert(silentChanges)
+          .values(rows.slice(j, j + CHUNK))
+          .onConflictDoNothing({
+            target: [silentChanges.gameId, silentChanges.pullId, silentChanges.filePath, silentChanges.keyPath],
+          })
+          .returning({ id: silentChanges.id });
+        inserted += ins.length;
+      }
     } catch (e) {
       console.error(`[silent-changes] пул ${pull.pullId} пропущен: ${e instanceof Error ? e.message : String(e)}`);
     }
