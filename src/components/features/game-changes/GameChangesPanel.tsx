@@ -183,7 +183,7 @@ function CatTag({ cat, scope }: { cat: CatKey; scope: string | null }) {
 function ChangeCard({ cat, scope, group: g }: CatGroup) {
   const title = g.shortName?.trim() || g.name;
   return (
-    <div className="flex flex-col gap-1 rounded-xs border border-lines-hover bg-card-menu px-3 py-2">
+    <div className="flex flex-col gap-1 rounded-xs border border-lines-hover bg-(--color-darkbase) px-3 py-2">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           {g.status === 'added' && <Plus className="h-3.5 w-3.5 shrink-0 text-nvg-green" aria-hidden="true" />}

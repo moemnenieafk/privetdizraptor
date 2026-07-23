@@ -74,7 +74,7 @@ function EntryRow({ e }: { e: SilentEntry }) {
   const Icon = added ? Plus : removed ? Minus : ArrowRight;
 
   return (
-    <div className="flex flex-col gap-1 rounded-xs border border-lines-hover bg-card-menu px-3 py-2">
+    <div className="flex flex-col gap-1 rounded-xs border border-lines-hover bg-(--color-darkbase) px-3 py-2">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2">
           <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${accent}`} aria-hidden="true" />
