@@ -13,8 +13,8 @@
 // у tarkov.dev всё ещё unknown-item, пропускаются и дождутся следующего прогона.
 import { createClient } from "@supabase/supabase-js";
 import backfillIds from "@/data/icon-backfill-eft.json";
+import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "@/lib/tarkov-fallback";
 
-const TARKOV_API = "https://api.tarkov.dev/graphql";
 const BUCKET = "cta-media";
 const PREFIX = "items/eft";
 const MAX_PER_RUN = 200; // верхняя граница работы за прогон (бюджет Vercel 60s)
@@ -26,22 +26,21 @@ type TdIcon = { id: string; image512pxLink: string | null };
 const isReal = (link: string | null): link is string =>
   !!link && !link.includes("unknown");
 
-async function fetchTdIcons(ids: string[]): Promise<TdIcon[]> {
-  const res = await fetch(TARKOV_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `query ($ids: [ID]) { items(ids: $ids) { id image512pxLink } }`,
-      variables: { ids },
-    }),
-  });
-  if (!res.ok) throw new Error(`tarkov.dev HTTP ${res.status}`);
-  const json = (await res.json()) as {
-    data?: { items?: TdIcon[] };
-    errors?: unknown;
-  };
-  if (json.errors) throw new Error(`tarkov.dev: ${JSON.stringify(json.errors)}`);
-  return json.data?.items ?? [];
+// JSON-плоскость (primary): полный /items → выбираем image512pxLink по бэкфилл-id.
+interface JsonIconItem { image512pxLink?: string | null }
+async function iconsFromJson(ids: string[]): Promise<TdIcon[]> {
+  // У /items коллекция вложена: data.items (dict по id).
+  const data = await fetchTarkovJson<{ items?: Record<string, JsonIconItem> }>("regular/items");
+  const items = data.items ?? {};
+  return ids.map((id) => ({ id, image512pxLink: items[id]?.image512pxLink ?? null }));
+}
+
+// GraphQL (fallback): точечный запрос по ids (ids вшиваем в запрос — это BSG-id, безопасно).
+async function iconsFromGraphQL(ids: string[]): Promise<TdIcon[]> {
+  const data = await fetchTarkovGraphQL<{ items?: TdIcon[] }>(
+    `query { items(ids: ${JSON.stringify(ids)}) { id image512pxLink } }`,
+  );
+  return data.items ?? [];
 }
 
 export type SyncIconsResult = {
@@ -60,7 +59,11 @@ export async function syncEftIcons(): Promise<SyncIconsResult> {
   }
 
   const ids = (backfillIds as string[]).slice(0, MAX_PER_RUN);
-  const items = await fetchTdIcons(ids);
+  const items = await fetchWithFallback<TdIcon>(
+    () => iconsFromJson(ids),
+    () => iconsFromGraphQL(ids),
+    "icons",
+  );
   const ready = items.filter((it) => isReal(it.image512pxLink));
 
   const admin = createClient(url, key, {

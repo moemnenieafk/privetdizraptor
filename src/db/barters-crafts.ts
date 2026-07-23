@@ -1,99 +1,159 @@
 // Self-mirror ТОПОЛОГИИ бартеров и крафтов из tarkov.dev в нашу Supabase.
 // Цены НЕ храним здесь — слоты это {itemId, count}; имя/иконка/цена подтянутся
-// из `items` + `prices` при построении индикаторов (Часть 2, миграция категорий).
+// из `items` + `prices` при построении индикаторов.
 //
-// Источник трогает только syncEftBartersCrafts() — крон /api/cron/sync-prices
-// и CLI `npm run db:sync-barters-crafts`. Импорты относительные (tsx-safe).
+// ИСТОЧНИК: JSON-плоскость (`json.tarkov.dev/{gameMode}/barters|crafts`, primary) с
+// фолбэком на GraphQL — см. src/lib/tarkov-fallback.ts (повод: 2026-07-21 лёг только
+// GraphQL). Имена торговцев/станций плоскость отдаёт плейсхолдерами → берём из
+// tarkov-labels (TRADER_RU/STATION_RU), normalizedName из фида реальный.
+// Трогает только syncEftBartersCrafts() — крон /api/cron/sync-prices и CLI
+// `npm run db:sync-barters-crafts`. Импорты относительные (tsx-safe) кроме @/lib
+// (tsx резолвит @/ через tsconfig paths).
 import { and, eq, notInArray, sql } from "drizzle-orm";
 import { db } from "./index";
 import { barters, crafts, type TradeSlot } from "./schema";
 import { eftGameId } from "./eft";
-
-const ENDPOINT = "https://api.tarkov.dev/graphql";
+import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "../lib/tarkov-fallback";
+import { traderLabelMap, stationLabelMap } from "../lib/tarkov-labels";
 
 // Порог защиты прюна: НЕ удаляем стейл-строки, если свежий набор из источника меньше этой
-// доли уже лежащего в БД — страховка от частичного/обрезанного ответа tarkov.dev (HTTP 200,
-// но усечённый список). Легитимный вайп меняет id, но число бартеров/крафтов резко не режет.
+// доли уже лежащего в БД — страховка от частичного/обрезанного ответа (HTTP 200, но усечённый
+// список). Легитимный вайп меняет id, но число бартеров/крафтов резко не режет.
 const PRUNE_MIN_RATIO = 0.5;
 
-/* ───────────────── сырой ответ API (без any) ───────────────── */
-interface RawSlot {
+/* ─────────────── строка БД (общая для обоих источников) ─────────────── */
+interface BarterRow {
+  id: string;
+  gameId: string;
+  traderName: string;
+  traderNormalizedName: string | null;
+  level: number | null;
+  buyLimit: number | null;
+  taskUnlockId: string | null;
+  taskUnlockName: string | null;
+  requiredItems: TradeSlot[];
+  rewardItems: TradeSlot[];
+}
+interface CraftRow {
+  id: string;
+  gameId: string;
+  stationName: string;
+  stationNormalizedName: string | null;
+  level: number | null;
+  duration: number | null;
+  requiredItems: TradeSlot[];
+  rewardItems: TradeSlot[];
+}
+
+/* ─────────────── JSON-плоскость (primary) ─────────────── */
+interface JsonSlot {
+  item?: string; // id предмета (в GraphQL было item{id})
+  count?: number;
+}
+interface JsonBarter {
+  id: string;
+  trader?: string; // id (имя резолвим через /traders + TRADER_RU)
+  minTraderLevel?: number | null; // в GraphQL называлось level
+  buyLimit?: number | null;
+  taskUnlock?: string | null; // id квеста-анлока (имя даёт только GraphQL-фолбэк)
+  requiredItems?: JsonSlot[];
+  offeredItem?: JsonSlot | null; // в GraphQL было rewardItems[] — тут единичный
+}
+interface JsonCraft {
+  id: string;
+  station?: string; // id (имя резолвим через /hideout + STATION_RU)
+  level?: number | null;
+  duration?: number | null;
+  requiredItems?: JsonSlot[];
+  productItem?: JsonSlot | null; // в GraphQL было rewardItems[]
+}
+
+const toSlotsJson = (arr?: JsonSlot[]): TradeSlot[] =>
+  (arr ?? [])
+    .filter((s): s is JsonSlot & { item: string } => !!s.item)
+    .map((s) => ({ itemId: s.item, count: s.count ?? 1 }));
+
+async function bartersFromJson(gameId: string): Promise<BarterRow[]> {
+  const [data, traders] = await Promise.all([
+    fetchTarkovJson<Record<string, JsonBarter>>("regular/barters"),
+    traderLabelMap(),
+  ]);
+  return Object.values(data)
+    .filter((b) => b.id)
+    .map((b) => {
+      const t = b.trader ? traders.get(b.trader) : undefined;
+      return {
+        id: b.id,
+        gameId,
+        traderName: t?.name ?? b.trader ?? "-",
+        traderNormalizedName: t?.normalizedName ?? b.trader ?? null,
+        level: b.minTraderLevel ?? null,
+        buyLimit: b.buyLimit ?? null,
+        taskUnlockId: typeof b.taskUnlock === "string" ? b.taskUnlock : null,
+        taskUnlockName: null,
+        requiredItems: toSlotsJson(b.requiredItems),
+        rewardItems: toSlotsJson(b.offeredItem ? [b.offeredItem] : []),
+      };
+    });
+}
+
+async function craftsFromJson(gameId: string): Promise<CraftRow[]> {
+  const [data, stations] = await Promise.all([
+    fetchTarkovJson<Record<string, JsonCraft>>("regular/crafts"),
+    stationLabelMap(),
+  ]);
+  return Object.values(data)
+    .filter((c) => c.id)
+    .map((c) => {
+      const s = c.station ? stations.get(c.station) : undefined;
+      return {
+        id: c.id,
+        gameId,
+        stationName: s?.name ?? c.station ?? "-",
+        stationNormalizedName: s?.normalizedName ?? c.station ?? null,
+        level: c.level ?? null,
+        duration: c.duration ?? null,
+        requiredItems: toSlotsJson(c.requiredItems),
+        rewardItems: toSlotsJson(c.productItem ? [c.productItem] : []),
+      };
+    });
+}
+
+/* ─────────────── GraphQL (fallback) ─────────────── */
+interface GqlSlot {
   count?: number;
   item?: { id?: string } | null;
 }
-interface RawBarter {
+interface GqlBarter {
   id: string;
   trader?: { name?: string; normalizedName?: string };
   level?: number;
   buyLimit?: number | null;
   taskUnlock?: { id?: string; name?: string } | null;
-  requiredItems?: RawSlot[];
-  rewardItems?: RawSlot[];
+  requiredItems?: GqlSlot[];
+  rewardItems?: GqlSlot[];
 }
-interface RawCraft {
+interface GqlCraft {
   id: string;
   station?: { name?: string; normalizedName?: string };
   level?: number;
   duration?: number;
-  requiredItems?: RawSlot[];
-  rewardItems?: RawSlot[];
-}
-interface RawResponse {
-  data?: { barters?: RawBarter[]; crafts?: RawCraft[] };
-  errors?: unknown;
+  requiredItems?: GqlSlot[];
+  rewardItems?: GqlSlot[];
 }
 
-const QUERY = `
-  query {
-    barters(lang: ru) {
-      id
-      trader { name normalizedName }
-      level
-      buyLimit
-      taskUnlock { id name }
-      requiredItems { count item { id } }
-      rewardItems  { count item { id } }
-    }
-    crafts(lang: ru) {
-      id
-      station { name normalizedName }
-      level
-      duration
-      requiredItems { count item { id } }
-      rewardItems  { count item { id } }
-    }
-  }
-`;
-
-const toSlots = (arr?: RawSlot[]): TradeSlot[] =>
+const toSlotsGql = (arr?: GqlSlot[]): TradeSlot[] =>
   (arr ?? [])
-    .filter((s): s is RawSlot & { item: { id: string } } => !!s.item?.id)
+    .filter((s): s is GqlSlot & { item: { id: string } } => !!s.item?.id)
     .map((s) => ({ itemId: s.item.id, count: s.count ?? 1 }));
 
-export interface SyncStaticResult {
-  barters: number;
-  crafts: number;
-  bartersDeleted: number;
-  craftsDeleted: number;
-  bartersPruneSkipped: boolean;
-  craftsPruneSkipped: boolean;
-}
-
-/** Тянет бартеры+крафты из tarkov.dev и bulk-upsert'ит в таблицы `barters`/`crafts`. */
-export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ query: QUERY }),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`tarkov.dev barters/crafts → HTTP ${res.status}`);
-  const json = (await res.json()) as RawResponse;
-  if (json.errors || !json.data) throw new Error("tarkov.dev barters/crafts: ошибочный/пустой ответ");
-
-  const gameId = await eftGameId();
-
-  const barterRows = (json.data.barters ?? [])
+async function bartersFromGraphQL(gameId: string): Promise<BarterRow[]> {
+  const data = await fetchTarkovGraphQL<{ barters?: GqlBarter[] }>(`
+    query { barters(lang: ru) {
+      id trader { name normalizedName } level buyLimit taskUnlock { id name }
+      requiredItems { count item { id } } rewardItems { count item { id } }
+    } }`);
+  return (data.barters ?? [])
     .filter((b) => b.id)
     .map((b) => ({
       id: b.id,
@@ -104,11 +164,18 @@ export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
       buyLimit: b.buyLimit ?? null,
       taskUnlockId: b.taskUnlock?.id ?? null,
       taskUnlockName: b.taskUnlock?.name ?? null,
-      requiredItems: toSlots(b.requiredItems),
-      rewardItems: toSlots(b.rewardItems),
+      requiredItems: toSlotsGql(b.requiredItems),
+      rewardItems: toSlotsGql(b.rewardItems),
     }));
+}
 
-  const craftRows = (json.data.crafts ?? [])
+async function craftsFromGraphQL(gameId: string): Promise<CraftRow[]> {
+  const data = await fetchTarkovGraphQL<{ crafts?: GqlCraft[] }>(`
+    query { crafts(lang: ru) {
+      id station { name normalizedName } level duration
+      requiredItems { count item { id } } rewardItems { count item { id } }
+    } }`);
+  return (data.crafts ?? [])
     .filter((c) => c.id)
     .map((c) => ({
       id: c.id,
@@ -117,9 +184,34 @@ export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
       stationNormalizedName: c.station?.normalizedName ?? null,
       level: c.level ?? null,
       duration: c.duration ?? null,
-      requiredItems: toSlots(c.requiredItems),
-      rewardItems: toSlots(c.rewardItems),
+      requiredItems: toSlotsGql(c.requiredItems),
+      rewardItems: toSlotsGql(c.rewardItems),
     }));
+}
+
+export interface SyncStaticResult {
+  barters: number;
+  crafts: number;
+  bartersDeleted: number;
+  craftsDeleted: number;
+  bartersPruneSkipped: boolean;
+  craftsPruneSkipped: boolean;
+}
+
+/** Тянет бартеры+крафты (JSON-primary → GraphQL-fallback) и bulk-upsert'ит в `barters`/`crafts`. */
+export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
+  const gameId = await eftGameId();
+
+  const barterRows = await fetchWithFallback<BarterRow>(
+    () => bartersFromJson(gameId),
+    () => bartersFromGraphQL(gameId),
+    "barters",
+  );
+  const craftRows = await fetchWithFallback<CraftRow>(
+    () => craftsFromJson(gameId),
+    () => craftsFromGraphQL(gameId),
+    "crafts",
+  );
 
   if (barterRows.length === 0 && craftRows.length === 0) {
     throw new Error("barters/crafts пусто — синк отменён (старые данные сохранены)");
@@ -138,7 +230,8 @@ export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
           level: sql`excluded.level`,
           buyLimit: sql`excluded.buy_limit`,
           taskUnlockId: sql`excluded.task_unlock_id`,
-          taskUnlockName: sql`excluded.task_unlock_name`,
+          // taskUnlockName: JSON-плоскость имён не даёт → не затираем хорошее ru-имя пустым.
+          taskUnlockName: sql`coalesce(excluded.task_unlock_name, ${barters.taskUnlockName})`,
           requiredItems: sql`excluded.required_items`,
           rewardItems: sql`excluded.reward_items`,
           syncedAt: sql`now()`,
@@ -167,13 +260,10 @@ export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
   // ⚠️ Два разрушительных края, оба отсекаем ПЕРЕД delete:
   //   1) пустой свежий набор — notInArray(col, []) компилируется в SQL `true` → снесло бы
   //      ВСЮ таблицу. Гард: `rows.length > 0`.
-  //   2) частичный/обрезанный ответ источника (HTTP 200, но, скажем, 12 из 778 — обрезка
-  //      CDN/edge или полу-сломанный резолвер без top-level `errors`): прошёл бы res.ok,
-  //      json.errors, both-empty-throw и `length > 0`, а delete снёс бы сотни ВАЛИДНЫХ
-  //      строк. Гард: PRUNE_MIN_RATIO — если свежих сильно меньше, чем уже в БД, прюн
-  //      пропускаем (данные целы) и пишем варн.
-  // Скоуп по gameId — мультиигровая БД, чужие игры не задеваем. Счётчик удалённых — из
-  // command tag (res.count), без .returning(): не тащим тело удалённых строк по пулеру.
+  //   2) частичный/обрезанный ответ источника (HTTP 200, но, скажем, 12 из 778): прошёл бы
+  //      both-empty-throw и `length > 0`, а delete снёс бы сотни ВАЛИДНЫХ строк. Гард:
+  //      PRUNE_MIN_RATIO — если свежих сильно меньше, чем в БД, прюн пропускаем (данные целы).
+  // Скоуп по gameId — мультиигровая БД. Счётчик удалённых — из command tag (res.count).
   let bartersDeleted = 0;
   let craftsDeleted = 0;
   let bartersPruneSkipped = false;

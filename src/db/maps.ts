@@ -19,8 +19,7 @@ import {
 import { eftGameId } from "./eft";
 import { pruneStale } from "./landing";
 import { EFT_MAP_CONFIG } from "../data/eft-map-config";
-
-const ENDPOINT = "https://api.tarkov.dev/graphql";
+import { fetchTarkovGraphQL } from "../lib/tarkov-fallback";
 
 // НЕ удаляем стейл-маркеры, если свежий набор для карты меньше этой доли уже лежащего —
 // страховка от частичного/обрезанного ответа источника (HTTP 200, но усечённый список).
@@ -154,11 +153,6 @@ interface RawMap {
   lootLoose?: RawLootLoose[] | null;
   stationaryWeapons?: RawStationary[] | null;
 }
-interface RawResponse {
-  data?: { maps?: RawMap[] };
-  errors?: unknown;
-}
-
 // Запрос сверён против живой схемы (интроспекция + прогон, 0 ошибок полей, 2026-06-23).
 // transit.map (карта-назначение) НЕ запрашиваем — резолвер падает на битых ссылках в данных
 // источника; destination добавим в v2 при необходимости.
@@ -356,17 +350,12 @@ export interface SyncMapsResult {
 
 /** Тянет геометрию всех карт из tarkov.dev и зеркалит в maps/map_assets/map_markers. */
 export async function syncEftMapsGeometry(): Promise<SyncMapsResult> {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ query: QUERY }),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`tarkov.dev maps-geometry → HTTP ${res.status}`);
-  const json = (await res.json()) as RawResponse;
-  if (json.errors || !json.data) throw new Error("tarkov.dev maps-geometry: ошибочный/пустой ответ");
-
-  const all = (json.data.maps ?? []).filter((m) => m.id && m.normalizedName);
+  // GraphQL-primary. JSON-плоскость (/maps) сюда НЕ адаптируем: её структура геометрии
+  // (mobs/goonReports/lootContainers) сильно расходится с Map.{spawns,extracts,…}, а
+  // адаптер всей геометрии — непропорциональный риск на координатных данных. Геометрия
+  // меняется раз в вайп и защищена «не затираем при пустоте» — даун GraphQL просто не обновляет.
+  const data = await fetchTarkovGraphQL<{ maps?: RawMap[] }>(QUERY);
+  const all = (data.maps ?? []).filter((m) => m.id && m.normalizedName);
   if (all.length === 0) throw new Error("maps пусто — синк отменён (старые данные сохранены)");
 
   const gameId = await eftGameId();
@@ -557,11 +546,6 @@ interface RawTaskZones {
   name: string;
   objectives?: RawObjectiveZones[] | null;
 }
-interface RawTasksResponse {
-  data?: { tasks?: RawTaskZones[] };
-  errors?: unknown;
-}
-
 /** Базовый slug карты: срезаем суффиксы вариантов рейда (день/ночь/21+). */
 const baseSlug = (s: string): string => s.replace(/-(21|day|night)$/i, "");
 
@@ -577,16 +561,7 @@ export interface SyncQuestZonesResult {
  * «Посмотреть на карте» (перелёт+подсветка зоны). type — свободный text, db:push НЕ нужен.
  */
 export async function syncEftQuestZones(): Promise<SyncQuestZonesResult> {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ query: QUEST_ZONES_QUERY }),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`tarkov.dev quest-zones → HTTP ${res.status}`);
-  const json = (await res.json()) as RawTasksResponse;
-  if (json.errors || !json.data) throw new Error("tarkov.dev quest-zones: ошибочный/пустой ответ");
-
+  const data = await fetchTarkovGraphQL<{ tasks?: RawTaskZones[] }>(QUEST_ZONES_QUERY);
   const gameId = await eftGameId();
 
   // base-slug → mapId, только интерактивные карты (imageKey задан); зоны вне их игнорируем.
@@ -598,7 +573,7 @@ export async function syncEftQuestZones(): Promise<SyncQuestZonesResult> {
   for (const r of assetRows) if (r.imageKey) slugToId.set(r.slug, r.mapId);
 
   const dedup = new Map<string, NewMapMarkerRow>();
-  for (const t of json.data.tasks ?? []) {
+  for (const t of data.tasks ?? []) {
     for (const o of t.objectives ?? []) {
       for (const z of o.zones ?? []) {
         if (!z.position || !z.map?.normalizedName) continue;

@@ -10,6 +10,8 @@
 // Имена — сырые от источника (ergonomics / recoil / weight / …), нормализацию
 // делает src/lib/gunsmith.ts. Здесь зеркалим 1:1, без интерпретации.
 import type { GunsmithThreshold } from "@/db/schema-gunsmith";
+import { fetchTarkovJson } from "@/lib/tarkov-fallback";
+import { traderLabelMap, isPlaceholderName } from "@/lib/tarkov-labels";
 
 const ENDPOINT = "https://api.tarkov.dev/graphql";
 
@@ -156,6 +158,70 @@ async function gql(query: string): Promise<RawTask[]> {
   throw new Error(`${lastError} — исчерпаны ${RETRIES} ретрая`);
 }
 
+/* ───────────────── JSON-плоскость (fallback) ─────────────────
+ * gunsmith — GraphQL-primary (проверенный парсер + ретрай + живые ru-имена/«Часть N»),
+ * JSON-плоскость — запасной слой. Рефы там id-строки, buildAttributes — объект (не
+ * массив), trader — id (имя резолвим), имя квеста — плейсхолдер (part берём из
+ * normalizedName: «gunsmith-part-7» → 7). Адаптер приводит к внутренней RawTask. */
+interface JsonBuildAttr { value?: number | null; compareMethod?: string | null }
+interface JsonObjective {
+  id?: string;
+  type?: string;
+  item?: string | null;
+  containsAll?: string[] | null;
+  containsCategory?: string[] | null;
+  buildAttributes?: Record<string, JsonBuildAttr> | null;
+}
+interface JsonTask {
+  id: string;
+  name?: string | null;
+  normalizedName?: string | null;
+  minPlayerLevel?: number | null;
+  trader?: string | null;
+  objectives?: JsonObjective[] | null;
+}
+
+function jsonTaskToRaw(t: JsonTask, traders: Map<string, { name: string; normalizedName: string }>): RawTask {
+  return {
+    id: t.id,
+    name: isPlaceholderName(t.name, t.id) ? t.normalizedName ?? t.id : (t.name as string),
+    minPlayerLevel: t.minPlayerLevel ?? null,
+    trader: { name: t.trader ? traders.get(t.trader)?.name ?? null : null },
+    objectives: (t.objectives ?? []).map((o) => ({
+      id: o.id ?? null,
+      type: o.type ?? null,
+      item: o.item ? { id: o.item } : null,
+      containsAll: (o.containsAll ?? []).map((id) => ({ id })),
+      containsCategory: (o.containsCategory ?? []).map((id) => ({ id })),
+      attributes: Object.entries(o.buildAttributes ?? {}).map(([name, r]) => ({
+        name,
+        requirement: { compareMethod: r.compareMethod ?? null, value: r.value ?? null },
+      })),
+    })),
+  };
+}
+
+async function gunsmithFromJson(): Promise<RawTask[]> {
+  // У /tasks коллекция вложена: data.tasks (dict по id).
+  const [tasksData, traders] = await Promise.all([
+    fetchTarkovJson<{ tasks?: Record<string, JsonTask> }>("regular/tasks"),
+    traderLabelMap(),
+  ]);
+  return Object.values(tasksData.tasks ?? {}).map((t) => jsonTaskToRaw(t, traders));
+}
+
+/** GraphQL-primary → JSON-fallback. */
+async function getRawGunsmithTasks(): Promise<RawTask[]> {
+  try {
+    const tasks = await gql(QUERY);
+    if (tasks.length > 0) return tasks;
+    console.warn("[gunsmith] GraphQL отдал пустой список — фолбэк на JSON-плоскость");
+  } catch (e) {
+    console.warn(`[gunsmith] GraphQL недоступен (${e instanceof Error ? e.message : String(e)}) — фолбэк на JSON-плоскость`);
+  }
+  return gunsmithFromJson();
+}
+
 /* ───────────────── публичный фетч ───────────────── */
 
 /**
@@ -166,7 +232,7 @@ async function gql(query: string): Promise<RawTask[]> {
  * в одном квесте — это три отдельные спеки.
  */
 export async function getEftGunsmithSpecs(): Promise<EftGunsmithSpec[]> {
-  const tasks = await gql(QUERY);
+  const tasks = await getRawGunsmithTasks();
   if (tasks.length === 0) throw new Error("tarkov.dev отдал пустой список квестов");
 
   const specs: EftGunsmithSpec[] = [];

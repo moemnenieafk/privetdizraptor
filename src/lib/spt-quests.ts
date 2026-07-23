@@ -2,9 +2,10 @@
 // требования. RU-имена квестов тянем из tarkov.dev (tasks lang: ru) по BSG-id.
 // Импорт относительный (tsx-safe).
 
+import { fetchTarkovGraphQL } from "./tarkov-fallback";
+
 const SPT_URL =
   "https://raw.githubusercontent.com/sp-tarkov/server/master/project/assets/database/templates/quests.json";
-const TARKOV_DEV = "https://api.tarkov.dev/graphql";
 
 export interface QuestRewardItem {
   tpl: string;
@@ -59,17 +60,15 @@ function hash(s: string): string {
   return h.toString(36);
 }
 
+// Только ru-ИМЕНА квестов (структура — из SPT GitHub выше). ВАЖНО: JSON-плоскость сюда
+// НЕ фолбэчим — она отдаёт плейсхолдеры имён, а не ru; это было бы ХУЖЕ, чем EN QuestName
+// из SPT (см. фолбэк в getQuestSnapshots). Поэтому GraphQL-only: лёг → пустая карта → EN.
 async function fetchQuestNamesRu(): Promise<Map<string, string>> {
   try {
-    const res = await fetch(TARKOV_DEV, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ query: `query { tasks(lang: ru) { id name } }` }),
-      cache: "no-store",
-    });
-    if (!res.ok) return new Map();
-    const json = (await res.json()) as { data?: { tasks?: Array<{ id: string; name: string }> } };
-    return new Map((json.data?.tasks ?? []).map((t) => [t.id, t.name]));
+    const data = await fetchTarkovGraphQL<{ tasks?: Array<{ id: string; name: string }> }>(
+      `query { tasks(lang: ru) { id name } }`,
+    );
+    return new Map((data.tasks ?? []).map((t) => [t.id, t.name]));
   } catch {
     return new Map();
   }

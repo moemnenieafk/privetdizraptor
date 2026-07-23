@@ -1,13 +1,16 @@
 // Живой срез ИГРОВЫХ статов предметов из tarkov.dev — источник для дифф-движка
 // «что реально изменилось». Наши items/item_properties наполняются вручную (db:etl),
-// поэтому для детекта берём живые значения отсюда: tarkov.dev обновляется постоянно и
-// отражает патчи. Ключи отпечатка совпадают с тем, что писал db/game-changes из нашей
-// схемы, — чтобы срезы разных источников сравнивались корректно.
+// поэтому для детекта берём живые значения отсюда. Ключи отпечатка совпадают с тем,
+// что писал db/game-changes из нашей схемы.
 //
-// Тянем ТОЛЬКО поля, которые меняются патчами (статы, вес, базовая цена, сетка).
-// Рынок (флиа-цены) не трогаем — он живёт в prices и это не «изменения игры».
-
-const ENDPOINT = "https://api.tarkov.dev/graphql";
+// ИСТОЧНИК: текст-тяжёлый (в дайджест уходят ИМЕНА предметов) → GraphQL-primary
+// (живые ru-имена) + JSON-fallback (json.tarkov.dev/regular/items — те же числовые
+// поля properties, имена там плейсхолдеры → подставляем normalizedName). Отпечаток
+// (числа) идентичен у обоих слоёв, поэтому детект изменений не «дрейфит». См.
+// src/lib/tarkov-fallback.ts + decisions/eft-data-autonomy-research.md.
+// Рынок (флиа-цены) не трогаем — он живёт в prices.
+import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "@/lib/tarkov-fallback";
+import { isPlaceholderName } from "@/lib/tarkov-labels";
 
 const QUERY = `
   query {
@@ -31,8 +34,10 @@ const QUERY = `
   }
 `;
 
+// Плоские properties: у GraphQL — типизированные фрагменты, у JSON-плоскости — один
+// объект со ВСЕМИ полями + `propertiesType`. buildFingerprint читает поля по имени и
+// игнорирует дискриминатор, поэтому работает на обоих одинаково.
 interface RawProps {
-  __typename?: string;
   ergonomics?: number | null;
   recoilVertical?: number | null;
   recoilHorizontal?: number | null;
@@ -55,16 +60,12 @@ interface RawItem {
   id: string;
   name?: string | null;
   shortName?: string | null;
+  normalizedName?: string | null; // есть в JSON-плоскости; в GraphQL не запрашиваем
   weight?: number | null;
   basePrice?: number | null;
   width?: number | null;
   height?: number | null;
   properties?: RawProps | null;
-}
-
-interface RawResponse {
-  data?: { items?: RawItem[] };
-  errors?: unknown;
 }
 
 export interface ItemStatSnapshot {
@@ -85,55 +86,59 @@ function buildFingerprint(it: RawItem): Record<string, string> {
 
   const p = it.properties;
   if (p) {
-    // Оружие
     put("ergonomics", p.ergonomics);
     put("recoilVertical", p.recoilVertical);
     put("recoilHorizontal", p.recoilHorizontal);
     put("fireRate", p.fireRate);
-    // Патроны
     put("penetrationPower", p.penetrationPower);
     put("damage", p.damage);
     put("armorDamage", p.armorDamage);
     put("fragmentationChance", p.fragmentationChance);
     put("initialSpeed", p.initialSpeed);
-    // Броня/шлемы (tarkov.dev: class → наш ключ armorClass)
-    put("armorClass", p.class);
+    put("armorClass", p.class); // tarkov.dev: class → наш ключ armorClass
     put("durability", p.durability);
     put("bluntThroughput", p.bluntThroughput);
     put("ergoPenalty", p.ergoPenalty);
     put("speedPenalty", p.speedPenalty);
     put("turnPenalty", p.turnPenalty);
-    // Контейнеры
     put("capacity", p.capacity);
   }
   return fp;
 }
 
+/** GraphQL (primary): живые ru-имена. */
+async function statsFromGraphQL(): Promise<[string, ItemStatSnapshot][]> {
+  const data = await fetchTarkovGraphQL<{ items?: RawItem[] }>(QUERY);
+  const out: [string, ItemStatSnapshot][] = [];
+  for (const it of data.items ?? []) {
+    if (!it.id || !it.name) continue;
+    out.push([it.id, { name: it.name, shortName: it.shortName ?? null, fingerprint: buildFingerprint(it) }]);
+  }
+  return out;
+}
+
+/** JSON-плоскость (fallback): те же числа; имена — плейсхолдеры, берём normalizedName. */
+async function statsFromJson(): Promise<[string, ItemStatSnapshot][]> {
+  const data = await fetchTarkovJson<{ items?: Record<string, RawItem> }>("regular/items");
+  const out: [string, ItemStatSnapshot][] = [];
+  for (const it of Object.values(data.items ?? {})) {
+    if (!it.id) continue;
+    const name = isPlaceholderName(it.name, it.id) ? it.normalizedName ?? it.id : (it.name as string);
+    const shortName = isPlaceholderName(it.shortName, it.id) ? null : it.shortName ?? null;
+    out.push([it.id, { name, shortName, fingerprint: buildFingerprint(it) }]);
+  }
+  return out;
+}
+
 /**
- * Карта inGameId → снимок статов из tarkov.dev. Никогда не бросает: при ошибке/пустоте
- * отдаёт пустую Map (движок сам решит не диффать по пустому срезу, чтобы не занулить всё).
+ * Карта inGameId → снимок статов. Никогда не бросает (fetchWithFallback глотает ошибки):
+ * оба источника легли → пустая Map (движок сам решит не диффать по пустому срезу).
  */
 export async function getEftItemStats(): Promise<Map<string, ItemStatSnapshot>> {
-  try {
-    const res = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ query: QUERY }),
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(`tarkov.dev → ${res.status}`);
-    const json = (await res.json()) as RawResponse;
-    if (json.errors) throw new Error(`tarkov.dev GraphQL errors: ${JSON.stringify(json.errors).slice(0, 200)}`);
-
-    const items = json.data?.items ?? [];
-    const out = new Map<string, ItemStatSnapshot>();
-    for (const it of items) {
-      if (!it.id || !it.name) continue;
-      out.set(it.id, { name: it.name, shortName: it.shortName ?? null, fingerprint: buildFingerprint(it) });
-    }
-    return out;
-  } catch (e) {
-    console.warn("[eft-item-stats] срез недоступен:", e instanceof Error ? e.message : e);
-    return new Map();
-  }
+  const rows = await fetchWithFallback<[string, ItemStatSnapshot]>(
+    () => statsFromGraphQL(),
+    () => statsFromJson(),
+    "item-stats",
+  );
+  return new Map(rows);
 }

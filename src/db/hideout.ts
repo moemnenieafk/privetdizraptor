@@ -17,10 +17,10 @@ import {
   type HideoutSkillReq,
 } from "./schema";
 import { eftGameId } from "./eft";
+import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "../lib/tarkov-fallback";
+import { STATION_RU, traderLabelMap } from "../lib/tarkov-labels";
 
-const ENDPOINT = "https://api.tarkov.dev/graphql";
-
-/* ───────────────── сырой ответ API (без any) ───────────────── */
+/* ═══════════ ИСТОЧНИК 2 (fallback): GraphQL — сырой ответ (без any) ═══════════ */
 interface RawItemReq {
   count?: number;
   item?: { id?: string } | null;
@@ -50,10 +50,6 @@ interface RawStation {
   name?: string;
   normalizedName?: string;
   levels?: RawLevel[];
-}
-interface RawResponse {
-  data?: { hideoutStations?: RawStation[] };
-  errors?: unknown;
 }
 
 const QUERY = `
@@ -98,27 +94,70 @@ const toSkills = (arr?: RawSkillReq[]): HideoutSkillReq[] =>
     .filter((s): s is RawSkillReq & { name: string } => !!s.name)
     .map((s) => ({ skill: s.name, level: s.level ?? 1 }));
 
-export interface SyncHideoutResult {
-  stations: number;
-  upgrades: number;
+/* ───────────── строка БД + JSON-плоскость (primary) ───────────── */
+interface HideoutRow {
+  gameId: string;
+  stationNormalizedName: string;
+  stationName: string;
+  level: number;
+  constructionTime: number | null;
+  itemRequirements: HideoutItemReq[];
+  stationRequirements: HideoutModuleReq[];
+  traderRequirements: HideoutTraderReq[];
+  skillRequirements: HideoutSkillReq[];
 }
 
-/** Тянет апгрейды убежища из tarkov.dev и bulk-upsert'ит в `hideout_upgrades`. */
-export async function syncEftHideout(): Promise<SyncHideoutResult> {
-  const res = await fetch(ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ query: QUERY }),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`tarkov.dev hideout → HTTP ${res.status}`);
-  const json = (await res.json()) as RawResponse;
-  if (json.errors || !json.data) throw new Error("tarkov.dev hideout: ошибочный/пустой ответ");
+interface JsonItemReq { item?: string; count?: number; attributes?: { foundInRaid?: boolean } | null }
+interface JsonStationReq { station?: string; level?: number }
+interface JsonTraderReq { trader?: string; value?: number } // level лежит в `value`
+interface JsonSkillReq { skill?: string; level?: number }
+interface JsonLevel {
+  level?: number;
+  constructionTime?: number;
+  itemRequirements?: JsonItemReq[];
+  stationLevelRequirements?: JsonStationReq[];
+  traderRequirements?: JsonTraderReq[];
+  skillRequirements?: JsonSkillReq[];
+}
+interface JsonStation { id?: string; name?: string; normalizedName?: string; levels?: JsonLevel[] }
 
-  const gameId = await eftGameId();
-  const stations = json.data.hideoutStations ?? [];
+async function hideoutFromJson(gameId: string): Promise<HideoutRow[]> {
+  const [data, traders] = await Promise.all([
+    fetchTarkovJson<Record<string, JsonStation>>("regular/hideout"),
+    traderLabelMap(),
+  ]);
+  const stations = Object.values(data);
+  // id станции → normalizedName (для резолва stationLevelRequirements, где станция дана id)
+  const stationNn = new Map(stations.map((s) => [s.id ?? "", s.normalizedName ?? ""]));
+  return stations.flatMap((st) =>
+    (st.levels ?? [])
+      .filter((lv) => lv.level != null)
+      .map((lv) => ({
+        gameId,
+        stationNormalizedName: st.normalizedName ?? "-",
+        // name из фида — locale-ключ ("hideout_area_7_name"); ru берём из STATION_RU.
+        stationName: STATION_RU[st.normalizedName ?? ""] ?? st.normalizedName ?? "-",
+        level: lv.level as number,
+        constructionTime: lv.constructionTime ?? null,
+        itemRequirements: (lv.itemRequirements ?? [])
+          .filter((r): r is JsonItemReq & { item: string } => !!r.item)
+          .map((r) => ({ itemId: r.item, count: r.count ?? 1, ...(r.attributes?.foundInRaid ? { fir: true } : {}) })),
+        stationRequirements: (lv.stationLevelRequirements ?? [])
+          .filter((r): r is JsonStationReq & { station: string } => !!r.station)
+          .map((r) => ({ station: stationNn.get(r.station) ?? r.station, level: r.level ?? 1 })),
+        traderRequirements: (lv.traderRequirements ?? [])
+          .filter((r): r is JsonTraderReq & { trader: string } => !!r.trader)
+          .map((r) => ({ trader: traders.get(r.trader)?.normalizedName ?? r.trader, level: r.value ?? 1 })),
+        skillRequirements: (lv.skillRequirements ?? [])
+          .filter((r): r is JsonSkillReq & { skill: string } => !!r.skill)
+          .map((r) => ({ skill: r.skill, level: r.level ?? 1 })),
+      })),
+  );
+}
 
-  const rows = stations.flatMap((st) =>
+async function hideoutFromGraphQL(gameId: string): Promise<HideoutRow[]> {
+  const data = await fetchTarkovGraphQL<{ hideoutStations?: RawStation[] }>(QUERY);
+  return (data.hideoutStations ?? []).flatMap((st) =>
     (st.levels ?? [])
       .filter((lv) => lv.level != null)
       .map((lv) => ({
@@ -132,6 +171,21 @@ export async function syncEftHideout(): Promise<SyncHideoutResult> {
         traderRequirements: toTraders(lv.traderRequirements),
         skillRequirements: toSkills(lv.skillRequirements),
       })),
+  );
+}
+
+export interface SyncHideoutResult {
+  stations: number;
+  upgrades: number;
+}
+
+/** Тянет апгрейды убежища (JSON-primary → GraphQL-fallback) и bulk-upsert'ит в `hideout_upgrades`. */
+export async function syncEftHideout(): Promise<SyncHideoutResult> {
+  const gameId = await eftGameId();
+  const rows = await fetchWithFallback<HideoutRow>(
+    () => hideoutFromJson(gameId),
+    () => hideoutFromGraphQL(gameId),
+    "hideout",
   );
 
   if (rows.length === 0) {
@@ -157,7 +211,7 @@ export async function syncEftHideout(): Promise<SyncHideoutResult> {
       });
   }
 
-  return { stations: stations.length, upgrades: rows.length };
+  return { stations: new Set(rows.map((r) => r.stationNormalizedName)).size, upgrades: rows.length };
 }
 
 /* ───────────────── чтение для UI: агрегатор «нужно для убежища» ───────────────── */

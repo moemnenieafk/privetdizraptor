@@ -20,6 +20,8 @@
 // Запрос тяжёлый (весь оружейный слой), tarkov.dev под нагрузкой отдаёт 503 →
 // ретраим с бэкоффом. 4xx не ретраим: это наша ошибка в запросе, повтор не поможет.
 import { resolvePresetSlots } from "@/lib/preset-slots";
+import { fetchTarkovJson } from "@/lib/tarkov-fallback";
+import { isPlaceholderName } from "@/lib/tarkov-labels";
 
 const ENDPOINT = "https://api.tarkov.dev/graphql";
 
@@ -305,6 +307,113 @@ async function gql(query: string, label: string): Promise<RawItem[]> {
   throw new Error(`${lastError} — исчерпаны ${RETRIES} ретрая, синк отменён`);
 }
 
+/* ───────────────── JSON-плоскость (fallback) ─────────────────
+ * weapons — GraphQL-primary (проверенный парсер + 503-ретрай), а JSON-плоскость —
+ * запасной слой на случай дауна GraphQL. Формы данных те же, но рефы там — id-строки
+ * (не {id}); адаптер приводит JSON-предмет к внутренней RawItem, дальше работает тот
+ * же билдер дампа. Имена пресетов в плоскости — плейсхолдеры → берём normalizedName. */
+interface JsonWpnSlotFilters { allowedItems?: string[]; excludedItems?: string[] }
+interface JsonWpnSlot { id?: string; nameId?: string; name?: string; required?: boolean; filters?: JsonWpnSlotFilters }
+interface JsonWpnProps {
+  propertiesType?: string;
+  caliber?: string | null;
+  ergonomics?: number | null; recoilVertical?: number | null; recoilHorizontal?: number | null;
+  recoilModifier?: number | null; accuracyModifier?: number | null;
+  fireRate?: number | null; fireModes?: string[] | null; sightingRange?: number | null;
+  centerOfImpact?: number | null; deviationCurve?: number | null; deviationMax?: number | null;
+  capacity?: number | null; initialSpeed?: number | null; moa?: number | null; default?: boolean | null;
+  defaultPreset?: string | null; defaultAmmo?: string | null; allowedAmmo?: string[] | null; baseItem?: string | null;
+  slots?: JsonWpnSlot[] | null;
+}
+interface JsonWpnContained { item?: string | null; count?: number | null }
+interface JsonWpnItem {
+  id: string; name?: string | null; normalizedName?: string | null; types?: string[] | null;
+  ergonomicsModifier?: number | null; recoilModifier?: number | null; accuracyModifier?: number | null;
+  velocity?: number | null; loudness?: number | null;
+  conflictingItems?: string[] | null; conflictingSlotIds?: string[] | null;
+  containsItems?: JsonWpnContained[] | null;
+  properties?: JsonWpnProps | null;
+}
+
+const toRefs = (v?: string[] | null): RawRef[] => (v ?? []).map((id) => ({ id }));
+
+function jsonItemToRaw(it: JsonWpnItem): RawItem {
+  const p = it.properties;
+  return {
+    id: it.id,
+    name: isPlaceholderName(it.name, it.id) ? it.normalizedName ?? it.id : (it.name as string),
+    types: it.types ?? null,
+    ergonomicsModifier: it.ergonomicsModifier ?? null,
+    recoilModifier: it.recoilModifier ?? null,
+    accuracyModifier: it.accuracyModifier ?? null,
+    velocity: it.velocity ?? null,
+    loudness: it.loudness ?? null,
+    conflictingItems: toRefs(it.conflictingItems),
+    conflictingSlotIds: it.conflictingSlotIds ?? null,
+    containsItems: (it.containsItems ?? []).map((c) => ({ item: c.item ? { id: c.item } : null, count: c.count ?? null, attributes: [] })),
+    properties: p
+      ? {
+          __typename: p.propertiesType,
+          caliber: p.caliber ?? null,
+          ergonomics: p.ergonomics ?? null,
+          recoilVertical: p.recoilVertical ?? null,
+          recoilHorizontal: p.recoilHorizontal ?? null,
+          recoilModifier: p.recoilModifier ?? null,
+          accuracyModifier: p.accuracyModifier ?? null,
+          fireRate: p.fireRate ?? null,
+          fireModes: p.fireModes ?? null,
+          sightingRange: p.sightingRange ?? null,
+          centerOfImpact: p.centerOfImpact ?? null,
+          deviationCurve: p.deviationCurve ?? null,
+          deviationMax: p.deviationMax ?? null,
+          capacity: p.capacity ?? null,
+          initialSpeed: p.initialSpeed ?? null,
+          moa: p.moa ?? null,
+          default: p.default ?? null,
+          defaultPreset: p.defaultPreset ? { id: p.defaultPreset } : null,
+          defaultAmmo: p.defaultAmmo ? { id: p.defaultAmmo } : null,
+          allowedAmmo: toRefs(p.allowedAmmo),
+          baseItem: p.baseItem ? { id: p.baseItem } : null,
+          slots: (p.slots ?? []).map((s) => ({
+            id: s.id,
+            nameId: s.nameId,
+            name: s.name ?? s.nameId,
+            required: s.required ?? null,
+            filters: { allowedItems: toRefs(s.filters?.allowedItems), excludedItems: toRefs(s.filters?.excludedItems) },
+          })),
+        }
+      : null,
+  };
+}
+
+async function weaponsRawFromJson(): Promise<{ main: RawItem[]; ammo: RawItem[] }> {
+  const data = await fetchTarkovJson<{ items?: Record<string, JsonWpnItem> }>("regular/items");
+  const items = data.items ?? {};
+  const main: RawItem[] = [];
+  const ammo: RawItem[] = [];
+  for (const it of Object.values(items)) {
+    const types = it.types ?? [];
+    if (types.includes("gun") || types.includes("mods") || types.includes("preset")) main.push(jsonItemToRaw(it));
+    else if (types.includes("ammo")) ammo.push(jsonItemToRaw(it));
+  }
+  return { main, ammo };
+}
+
+/** GraphQL-primary → JSON-fallback. GraphQL пуст/лёг → берём плоскость. */
+async function getRawWeapons(): Promise<{ main: RawItem[]; ammo: RawItem[] }> {
+  try {
+    // Последовательно, а не Promise.all: два тяжёлых запроса параллельно — верный способ
+    // выбить у tarkov.dev 503. Ammo-запрос лёгкий, лишние 2 секунды не жалко.
+    const main = await gql(MAIN_QUERY, "gun+mods+preset");
+    const ammo = await gql(AMMO_QUERY, "ammo");
+    if (main.length > 0) return { main, ammo };
+    console.warn("[weapons] GraphQL отдал пустой список — фолбэк на JSON-плоскость");
+  } catch (e) {
+    console.warn(`[weapons] GraphQL недоступен (${e instanceof Error ? e.message : String(e)}) — фолбэк на JSON-плоскость`);
+  }
+  return weaponsRawFromJson();
+}
+
 /* ───────────────── публичный фетч ───────────────── */
 
 /**
@@ -312,10 +421,7 @@ async function gql(query: string, label: string): Promise<RawItem[]> {
  * упасть, а не затереть рабочие таблицы пустотой (паттерн syncEftPrices).
  */
 export async function getEftWeaponsDump(): Promise<EftWeaponsDump> {
-  // Последовательно, а не Promise.all: два тяжёлых запроса параллельно — верный способ
-  // выбить у tarkov.dev 503. Ammo-запрос лёгкий, лишние 2 секунды не жалко.
-  const main = await gql(MAIN_QUERY, "gun+mods+preset");
-  const ammoRaw = await gql(AMMO_QUERY, "ammo");
+  const { main, ammo: ammoRaw } = await getRawWeapons();
 
   if (main.length === 0) throw new Error("tarkov.dev отдал пустой список оружия — синк отменён");
 

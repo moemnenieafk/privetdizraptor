@@ -20,6 +20,7 @@
 //   GraphQL: sellFor/buyFor уже включают вендора «Барахолка» и локализованные имена;
 //         bsgCategoryId и low24hPrice — прямые поля.
 import type { EftCurrency } from "@/lib/formatters";
+import { TRADER_RU, FLEA_NORMALIZED_NAME, FLEA_VENDOR_RU } from "@/lib/tarkov-labels";
 
 const JSON_BASE = "https://json.tarkov.dev";
 const GRAPHQL_ENDPOINT = "https://api.tarkov.dev/graphql";
@@ -51,26 +52,8 @@ export interface EftPriceInfo {
   buyForPve?: CtaVendorOffer[];
 }
 
-/** Барахолку UI ищет в sellFor/buyFor по normalizedName==='flea-market'
- *  (ItemPriceBlock.isFlea); по этому же ключу джойнятся PvE-цены. */
-const FLEA_NORMALIZED_NAME = "flea-market";
-const FLEA_VENDOR_RU = "Барахолка";
-
-/** JSON-плоскость отдаёт имена-плейсхолдеры ("{id} Nickname"), ?lang=ru там не
- *  локализует — поэтому ru-имена торговцев держим сами (их немного, вайпами не
- *  меняются). normalizedName из фида реальный и идёт в иконку (VendorImage). */
-const TRADER_RU: Record<string, string> = {
-  prapor: "Прапор",
-  therapist: "Терапевт",
-  fence: "Скупщик",
-  skier: "Лыжник",
-  peacekeeper: "Миротворец",
-  mechanic: "Механик",
-  ragman: "Барахольщик",
-  jaeger: "Егерь",
-  lightkeeper: "Смотритель",
-  ref: "Реф",
-};
+// TRADER_RU + FLEA_NORMALIZED_NAME/FLEA_VENDOR_RU переехали в @/lib/tarkov-labels
+// (общие для всех JSON-plane синков — barters/crafts/… — DRY).
 
 /**
  * Причина последней неудачной выборки. Пустая Map не различает «источник лежит» и
