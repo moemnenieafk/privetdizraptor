@@ -11,6 +11,7 @@ import { eq, sql, and, inArray, type SQL } from "drizzle-orm";
 import { db } from "./index";
 import { prices, type PriceVendorOffer } from "./schema";
 import { eftGameId } from "./eft";
+import { getEftCompanionMap } from "./companion-prices";
 import { getEftPriceMap, getLastPriceFetchError, type EftPriceInfo, type CtaVendorOffer } from "../lib/eft-prices";
 import { memoTTL } from "../lib/server-cache";
 
@@ -247,7 +248,12 @@ export async function getEftPriceBySlug(
     const gameId = await eftGameId();
     const rows = await selectPriceRows(and(eq(prices.gameId, gameId), eq(prices.normalizedName, slug)));
     const row = rows[0];
-    return row ? { id: row.inGameId, price: mapPriceRow(row) } : null;
+    if (!row) return null;
+    const info = mapPriceRow(row);
+    // Наложение живой цены компаньона (краудсорс) поверх зеркала tarkov.dev, если свежая.
+    const cp = (await getEftCompanionMap("regular")).get(row.inGameId);
+    if (cp) info.companion = { price: cp.price, trusted: cp.trusted, at: cp.freshestAt.toISOString(), offers: cp.offers };
+    return { id: row.inGameId, price: info };
   } catch (e) {
     console.error("[getEftPriceBySlug]", e);
     return null;

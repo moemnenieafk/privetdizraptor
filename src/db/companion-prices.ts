@@ -4,6 +4,8 @@
 import { sql } from "drizzle-orm";
 import { db } from "./index";
 import { companionFleaOffers } from "./schema";
+import { eftGameId } from "./eft";
+import { memoTTL } from "../lib/server-cache";
 
 export type CompanionGameMode = "regular" | "pve";
 
@@ -36,6 +38,16 @@ function median(nums: number[]): number {
 export interface CompanionOfferInput {
   inGameId: string;
   price: number;
+}
+
+/** Мемо-обёртка агрегата под EFT (резолвит gameId, кэш 60с — окно свежести 30 мин). */
+export function getEftCompanionMap(
+  gameMode: CompanionGameMode = "regular",
+): Promise<Map<string, CompanionPrice>> {
+  return memoTTL(`companion-map-${gameMode}`, 60_000, async () => {
+    const gameId = await eftGameId();
+    return getCompanionPriceMap(gameId, gameMode);
+  });
 }
 
 /**

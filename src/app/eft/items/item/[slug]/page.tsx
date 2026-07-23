@@ -87,6 +87,8 @@ export interface TarkovItem {
   properties: ItemProperties;
   sellFor: VendorOffer[];
   buyFor?: VendorOffer[];
+  /** Живая цена от компаньона (краудсорс) — если свежая. */
+  companion?: { price: number; trusted: boolean; at: string; offers: number };
   /** Уровень ЧВК для доступа к предмету на барахолке (Tarkov 1.0). */
   minLevelForFlea?: number | null;
   barters: BarterOffer[];
@@ -436,6 +438,7 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     minLevelForFlea: px.minLevelForFlea ?? null,
     sellFor: (px.sellFor ?? []).map((o) => toVendor(o, sellPve)),
     buyFor: (px.buyFor ?? []).map((o) => toVendor(o, buyPve)),
+    companion: px.companion,
     barters: itemBarters,
     crafts: itemCrafts,
     usedInBarters,

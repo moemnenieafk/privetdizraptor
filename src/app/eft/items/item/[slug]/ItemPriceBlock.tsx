@@ -18,6 +18,17 @@ interface ItemPriceBlockProps {
   rates?: { usd: number | null; eur: number | null };
   /** Возраст зеркала цен в часах — показывается только у карточек барахолки. */
   pricesAgeHours?: number | null;
+  /** Живая цена от компаньона (краудсорс, [[eft-live-price-companion]]) — если свежая. */
+  companion?: { price: number; trusted: boolean; at: string; offers: number };
+}
+
+/** Свежесть companion-цены по ISO-времени последнего оффера. */
+function fmtCompanionAge(at: string): string {
+  const min = Math.max(0, Math.round((Date.now() - new Date(at).getTime()) / 60000));
+  if (min < 1) return 'только что';
+  if (min < 60) return `${min} мин назад`;
+  const h = Math.round(min / 60);
+  return h < 24 ? `${h} ч назад` : `${Math.round(h / 24)} д назад`;
 }
 
 /**
@@ -250,6 +261,7 @@ export function ItemPriceBlock({
   buyLevelRequired,
   rates,
   pricesAgeHours,
+  companion,
 }: ItemPriceBlockProps) {
   const isPve = useIsPve();
   const traderBuys = buyFor.filter((b) => !isFlea(b.vendor));
@@ -289,6 +301,23 @@ export function ItemPriceBlock({
   return (
     <div className="flex flex-col gap-2">
       <RateRow rates={rates} currencies={usedCurrencies} />
+
+      {/* Живая цена от компаньона (краудсорс) — поверх зеркала tarkov.dev. */}
+      {companion && (
+        <div className="flex items-center justify-between rounded-xs border border-(--primary)/40 bg-(--primary)/5 px-3 py-2">
+          <div className="flex flex-col gap-0.5">
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-(--primary)">
+              {companion.trusted ? 'Цена · проверено модератором' : 'Цена сообщества'}
+            </span>
+            <span className="font-blender-book text-type-micro text-text-muted">
+              {fmtCompanionAge(companion.at)} · {companion.offers} офф.
+            </span>
+          </div>
+          <span className="font-blender-medium text-sm text-(--primary)">
+            {companion.price.toLocaleString('ru-RU')} ₽
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {/* Купить у торговца */}
