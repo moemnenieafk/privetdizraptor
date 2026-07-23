@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FirstBuildClient } from './FirstBuildClient';
 
-export const metadata: Metadata = { title: 'Твой первый билд | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Твой первый билд | Кто ты в Игре | ЦТА' };
 
 export default function FirstBuildStagePage() {
   return (

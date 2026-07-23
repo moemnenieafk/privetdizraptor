@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SecureClient } from './SecureClient';
 
-export const metadata: Metadata = { title: 'Не потеряй всё | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Не потеряй всё | Кто ты в Игре | ЦТА' };
 
 export default function SecureStagePage() {
   return (

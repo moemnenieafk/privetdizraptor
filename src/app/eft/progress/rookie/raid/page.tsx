@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { RaidSimClient } from './RaidSimClient';
 
-export const metadata: Metadata = { title: 'Что такое рейд | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Что такое рейд | Кто ты в Игре | ЦТА' };
 
 export default function RaidStagePage() {
   return (

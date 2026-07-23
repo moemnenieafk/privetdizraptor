@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AmmoClient } from './AmmoClient';
 
-export const metadata: Metadata = { title: 'Патрон решает | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Патрон решает | Кто ты в Игре | ЦТА' };
 
 export default function AmmoStagePage() {
   return (

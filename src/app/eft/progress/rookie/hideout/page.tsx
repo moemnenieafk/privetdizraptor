@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { HideoutClient } from './HideoutClient';
 
-export const metadata: Metadata = { title: 'Убежище | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Убежище | Кто ты в Игре | ЦТА' };
 
 export default function HideoutStagePage() {
   return (

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { QuestsClient } from './QuestsClient';
 
-export const metadata: Metadata = { title: 'Квесты | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Квесты | Кто ты в Игре | ЦТА' };
 
 export default function QuestsStagePage() {
   return (

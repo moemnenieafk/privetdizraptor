@@ -7,10 +7,10 @@ import { HubCard } from '@/components/ui/HubCard';
 const PROGRESS_HUB_CARDS = [
   {
     id: 'rookie',
-    title: 'Я новичок',
+    title: 'Кто ты в Игре',
     description: 'Не понимаешь Tarkov? Выбери свою роль и пройди Путь Новобранца — учим мир игры по шагам.',
     href: '/eft/progress/rookie',
-    iconPath: '/icons/eft/soldier-animation-start-frame.svg',
+    iconPath: '/icons/eft/04-progression/utarkov.svg',
     variant: 'rectangle' as const,
   },
   {

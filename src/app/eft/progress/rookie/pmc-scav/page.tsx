@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PmcScavClient } from './PmcScavClient';
 
-export const metadata: Metadata = { title: 'ЧВК и Дикий | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'ЧВК и Дикий | Кто ты в Игре | ЦТА' };
 
 export default function PmcScavStagePage() {
   return (

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FleaClient } from './FleaClient';
 
-export const metadata: Metadata = { title: 'Флиа-маркет | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Флиа-маркет | Кто ты в Игре | ЦТА' };
 
 export default function FleaStagePage() {
   return (

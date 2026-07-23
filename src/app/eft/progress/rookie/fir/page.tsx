@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FirClient } from './FirClient';
 
-export const metadata: Metadata = { title: 'Найдено в рейде | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Найдено в рейде | Кто ты в Игре | ЦТА' };
 
 export default function FirStagePage() {
   return (

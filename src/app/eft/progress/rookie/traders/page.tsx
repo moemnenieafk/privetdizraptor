@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { TradersClient } from './TradersClient';
 
-export const metadata: Metadata = { title: 'Торговцы и репутация | Я новичок | ЦТА' };
+export const metadata: Metadata = { title: 'Торговцы и репутация | Кто ты в Игре | ЦТА' };
 
 export default function TradersStagePage() {
   return (

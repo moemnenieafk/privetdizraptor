@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { RookieHubClient } from './RookieHubClient';
 
-export const metadata: Metadata = { title: 'Я новичок | Прогресс ЦТА' };
+export const metadata: Metadata = { title: 'Кто ты в Игре | Прогресс ЦТА' };
 
 export default function RookieHubPage() {
   return (
@@ -9,7 +9,7 @@ export default function RookieHubPage() {
       <div className="w-full max-w-275 px-4 xl:px-0">
         <header className="mb-8">
           <h1 className="text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">
-            Я новичок
+            Кто ты в Игре
           </h1>
           <p className="mt-2 text-sm font-blender-book text-text-secondary">
             Центр Тактической Адаптации: адаптируем тебя к Таркову. Выбери, кто ты — портал подстроится, — и пройди Путь Новобранца.
