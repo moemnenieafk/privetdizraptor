@@ -78,13 +78,19 @@ export function buildMatcher(catalog: CatalogEntry[]): (text: string) => MatchRe
 
     // Близкие по Dice → выбираем ближайшего по edit-distance к OCR-строке.
     const close = scored.filter((s) => top.score - s.score <= TIE);
-    const winner =
-      close.length > 1
-        ? close.reduce((best, s) =>
-            levenshtein(qn, s.x.norm) < levenshtein(qn, best.x.norm) ? s : best,
-          )
-        : top;
+    if (close.length > 1) {
+      const winner = close.reduce((best, s) =>
+        levenshtein(qn, s.x.norm) < levenshtein(qn, best.x.norm) ? s : best,
+      );
+      // Семья твинов (С-1/С-3, РБ-ВО/РБ-ВП): цифра-дискриминатор высоко различительна,
+      // а OCR её путает (3↔5). Если цифры запроса НЕ совпали с выбранным — это мисрид
+      // цифры ИЛИ не тот предмет → НЕ гадаем (иначе С-3-мисрид «С-5» отравил бы С-1).
+      const qd = (qn.match(/\d+/g) ?? []).join('');
+      const wd = (winner.x.norm.match(/\d+/g) ?? []).join('');
+      if (qd && qd !== wd) return null;
+      return { inGameId: winner.x.entry.inGameId, name: winner.x.entry.name, score: top.score };
+    }
 
-    return { inGameId: winner.x.entry.inGameId, name: winner.x.entry.name, score: top.score };
+    return { inGameId: top.x.entry.inGameId, name: top.x.entry.name, score: top.score };
   };
 }
