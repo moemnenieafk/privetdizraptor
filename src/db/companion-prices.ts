@@ -94,16 +94,34 @@ export function withinAnchor(companionPrice: number, ref: number | undefined): b
 }
 
 export interface CompanionPrice {
-  price: number; // медиана по окну (робастна к выбросам OCR)
+  price: number; // медиана по окну; для износных — цена ПОЛНОГО (Y/Y)
   offers: number; // сколько офферов легло в расчёт
   submitters: number; // сколько независимых авторов (порог доверия)
   trusted: boolean; // цена от доверенной роли (moderator/admin) — авторитетна, не толпа
   freshestAt: Date; // самый свежий оффер в окне
+  priceSingle?: number; // износные: цена за 1/Y (почти пустой ключ) — критичная разница
+  maxUses?: number; // износные: Y (макс. использований)
 }
 
 function median(nums: number[]): number {
   const s = [...nums].sort((a, b) => a - b);
   return s[Math.floor(s.length / 2)];
+}
+
+/** Самое частое значение (для maxUses — доминирующий Y среди офферов). */
+function mode(nums: number[]): number {
+  const count = new Map<number, number>();
+  let best = nums[0];
+  let bestCount = 0;
+  for (const n of nums) {
+    const k = (count.get(n) ?? 0) + 1;
+    count.set(n, k);
+    if (k > bestCount) {
+      bestCount = k;
+      best = n;
+    }
+  }
+  return best;
 }
 
 /** Взвешенная медиана: первое значение, где накопленный вес достигает половины суммы. */
@@ -128,6 +146,8 @@ export const KARMA_VOTE_TILT = 1;
 export interface CompanionOfferInput {
   inGameId: string;
   price: number;
+  uses?: number;
+  maxUses?: number;
 }
 
 /**
@@ -255,6 +275,7 @@ export async function getCompanionPriceMap(
     // есть доверенный ЛИБО ≥N независимых авторов.
     const raw = (await db.execute(sql`
       select o.in_game_id as "inGameId", o.price::int as "price", o.trusted as "trusted",
+        o.uses as "uses", o.max_uses as "maxUses",
         o.submitted_by as "submittedBy", o.submitted_at as "submittedAt",
         coalesce(pr.companion_karma, 0)::float8 as "karma"
       from public.companion_flea_offers o
@@ -266,6 +287,8 @@ export async function getCompanionPriceMap(
       inGameId: string;
       price: number;
       trusted: boolean;
+      uses: number | null;
+      maxUses: number | null;
       submittedBy: string;
       submittedAt: string | Date;
       karma: number;
@@ -286,8 +309,33 @@ export async function getCompanionPriceMap(
       const hasTrusted = trustedOffers.length > 0;
       if (!hasTrusted && submitters < TRUST.MIN_SUBMITTERS) continue; // не квалифицируется
 
-      // Разброс-гейт: смешаны состояния (ключи/износ) или манипуляция → цена ненадёжна.
-      const usedPrices = (hasTrusted ? trustedOffers : offers).map((o) => o.price);
+      const usingSet = hasTrusted ? trustedOffers : offers;
+      const freshestAt = new Date(Math.max(...offers.map((o) => new Date(o.submittedAt).getTime())));
+
+      // ── Износные предметы (ключи/оружие): большинство офферов с X/Y → ДВЕ цены ──
+      // Спред-гейт НЕ применяем (1/Y и Y/Y легитимно расходятся). price = полное (Y/Y).
+      const wear = usingSet.filter((o) => o.uses != null && o.maxUses != null && o.maxUses > 1);
+      if (wear.length > 0 && wear.length >= usingSet.length * 0.5) {
+        const maxUses = mode(wear.map((o) => o.maxUses as number));
+        const band = wear.filter((o) => o.maxUses === maxUses);
+        const fullP = band.filter((o) => o.uses === maxUses).map((o) => o.price);
+        const singleP = band.filter((o) => o.uses === 1).map((o) => o.price);
+        const priceFull = fullP.length ? median(fullP) : null;
+        const priceSingle = singleP.length ? median(singleP) : null;
+        map.set(inGameId, {
+          price: priceFull ?? priceSingle ?? median(band.map((o) => o.price)),
+          priceSingle: priceSingle ?? undefined,
+          maxUses,
+          offers: offers.length,
+          submitters,
+          trusted: hasTrusted,
+          freshestAt,
+        });
+        continue;
+      }
+
+      // ── Обычные предметы: разброс-гейт (микс/манипуляция → пропуск) + медиана ──
+      const usedPrices = usingSet.map((o) => o.price);
       const lo = Math.min(...usedPrices);
       const hi = Math.max(...usedPrices);
       if (lo > 0 && hi / lo > TRUST.SPREAD_MAX) continue;
@@ -296,7 +344,6 @@ export async function getCompanionPriceMap(
         ? median(trustedOffers.map((o) => o.price))
         : weightedMedian(offers.map((o) => ({ value: o.price, weight: 1 + o.karma * KARMA_VOTE_TILT })));
 
-      const freshestAt = new Date(Math.max(...offers.map((o) => new Date(o.submittedAt).getTime())));
       map.set(inGameId, { price, offers: offers.length, submitters, trusted: hasTrusted, freshestAt });
     }
     return map;
@@ -325,7 +372,16 @@ export async function insertCompanionOffers(
         o.price >= TRUST.PRICE_MIN &&
         o.price <= TRUST.PRICE_MAX,
     )
-    .map((o) => ({ gameId, inGameId: o.inGameId, gameMode, price: o.price, submittedBy, trusted }));
+    .map((o) => ({
+      gameId,
+      inGameId: o.inGameId,
+      gameMode,
+      price: o.price,
+      uses: o.uses ?? null,
+      maxUses: o.maxUses ?? null,
+      submittedBy,
+      trusted,
+    }));
 
   if (rows.length === 0) return 0;
   await db.insert(companionFleaOffers).values(rows);

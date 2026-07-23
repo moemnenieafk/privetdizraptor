@@ -33,11 +33,32 @@ function parseOffers(raw: unknown): CompanionOfferInput[] | null {
   const out: CompanionOfferInput[] = [];
   for (const o of raw) {
     if (typeof o !== "object" || o === null) return null;
-    const { inGameId, price } = o as { inGameId?: unknown; price?: unknown };
+    const { inGameId, price, uses, maxUses } = o as {
+      inGameId?: unknown;
+      price?: unknown;
+      uses?: unknown;
+      maxUses?: unknown;
+    };
     if (typeof inGameId !== "string" || !IN_GAME_ID_RE.test(inGameId)) return null;
     if (typeof price !== "number" || !Number.isInteger(price)) return null;
     if (price < TRUST.PRICE_MIN || price > TRUST.PRICE_MAX) return null;
-    out.push({ inGameId, price });
+    // Использования опциональны; принимаем только валидную пару X≤Y (иначе игнор).
+    let u: number | undefined;
+    let mx: number | undefined;
+    if (
+      typeof uses === "number" &&
+      typeof maxUses === "number" &&
+      Number.isInteger(uses) &&
+      Number.isInteger(maxUses) &&
+      maxUses > 0 &&
+      maxUses <= 1000 &&
+      uses >= 0 &&
+      uses <= maxUses
+    ) {
+      u = uses;
+      mx = maxUses;
+    }
+    out.push({ inGameId, price, uses: u, maxUses: mx });
   }
   return out;
 }

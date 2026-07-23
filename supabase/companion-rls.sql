@@ -22,6 +22,9 @@ create table if not exists public.companion_flea_offers (
 
 -- Для уже созданной таблицы (аддитивно, идемпотентно).
 alter table public.companion_flea_offers add column if not exists trusted boolean not null default false;
+-- Использования X/Y (ключи/износ) — две цены 1/Y и Y/Y. Additive, NULL = без износа.
+alter table public.companion_flea_offers add column if not exists uses integer;
+alter table public.companion_flea_offers add column if not exists max_uses integer;
 
 -- Репутация компаньона на profiles (микро-начисление за выгрузку, ~0.01). Additive.
 alter table public.profiles add column if not exists companion_karma real not null default 0;

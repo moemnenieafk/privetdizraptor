@@ -264,6 +264,9 @@ export const companionFleaOffers = pgTable(
     inGameId: text("in_game_id").notNull(), // 24-символьный BSG UID
     gameMode: text("game_mode").notNull().default("regular"), // 'regular' | 'pve' — офферы разнятся по режиму
     price: integer("price").notNull(), // ₽ за штуку (нормализовано ридером)
+    // Использования X/Y (ключи/износ): разница 1/10 vs 10/10 в цене критична. NULL = без износа.
+    uses: integer("uses"),
+    maxUses: integer("max_uses"),
     submittedBy: uuid("submitted_by").notNull(), // auth.users.id приславшего (для порога «N независимых»)
     // Прислано доверенной ролью (moderator/admin) — авторитетный оффер: становится
     // истиной сразу, в обход порога ≥3 и медианы толпы. Денормализуем роль на момент

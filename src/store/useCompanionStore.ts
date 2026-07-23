@@ -5,6 +5,8 @@ export interface ScannedOffer {
   inGameId: string;
   name: string; // ru-имя из каталога (для превью)
   price: number; // ₽ за предмет
+  uses?: number; // текущие использования X (ключи/износ), из «X/Y»
+  maxUses?: number; // максимум Y — разница 1/10 vs 10/10 критична для цены
 }
 
 export type CompanionStatus =

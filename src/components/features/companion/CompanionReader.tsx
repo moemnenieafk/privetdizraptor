@@ -115,7 +115,10 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
       const res = await fetch('/api/companion/flea', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameMode, offers: offers.map((o) => ({ inGameId: o.inGameId, price: o.price })) }),
+        body: JSON.stringify({
+          gameMode,
+          offers: offers.map((o) => ({ inGameId: o.inGameId, price: o.price, uses: o.uses, maxUses: o.maxUses })),
+        }),
       });
       if (res.status === 401) {
         setStatus({ kind: 'error', message: 'Войдите, чтобы отправлять цены' });

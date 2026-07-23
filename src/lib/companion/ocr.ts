@@ -19,6 +19,8 @@ const REF_H = 1080;
 export const GEO = {
   name: { left: 905, top: 150, width: 400, height: 900 }, // колонка названий (список)
   price: { left: 1300, width: 168, cropH: 58 }, // колонка цены: до ₽ (маскируем справа), центр по Y имени
+  // Строка «Всего N 🔧 X/Y» под именем — использования ключей/износ (1/10 vs 10/10).
+  uses: { dy: 23, left: 905, width: 220, cropH: 26 },
 } as const;
 
 const NAME_UP = 2; // апскейл колонки имён под OCR
@@ -26,6 +28,7 @@ const PRICE_UP = 4; // апскейл кропа цены (x4 нужен для 
 
 let nameWorker: Worker | null = null;
 let priceWorker: Worker | null = null;
+let usesWorker: Worker | null = null;
 
 async function getNameWorker(): Promise<Worker> {
   if (nameWorker) return nameWorker;
@@ -43,10 +46,19 @@ async function getPriceWorker(): Promise<Worker> {
   return w;
 }
 
+async function getUsesWorker(): Promise<Worker> {
+  if (usesWorker) return usesWorker;
+  const w = await createWorker('eng');
+  await w.setParameters({ tessedit_char_whitelist: '0123456789/', tessedit_pageseg_mode: PSM.SINGLE_LINE });
+  usesWorker = w;
+  return w;
+}
+
 export async function disposeOcr(): Promise<void> {
-  await Promise.all([nameWorker?.terminate(), priceWorker?.terminate()]);
+  await Promise.all([nameWorker?.terminate(), priceWorker?.terminate(), usesWorker?.terminate()]);
   nameWorker = null;
   priceWorker = null;
+  usesWorker = null;
 }
 
 interface Region {
@@ -114,7 +126,7 @@ export async function parseFleaScreenshot(
   const bitmap = await createImageBitmap(file);
   const sx = bitmap.width / REF_W;
   const sy = bitmap.height / REF_H;
-  const [nW, pW] = await Promise.all([getNameWorker(), getPriceWorker()]);
+  const [nW, pW, uW] = await Promise.all([getNameWorker(), getPriceWorker(), getUsesWorker()]);
 
   const offers: ScannedOffer[] = [];
   try {
@@ -149,7 +161,27 @@ export async function parseFleaScreenshot(
       const price = parseInt(data.text.replace(/\D/g, ''), 10);
       if (!Number.isFinite(price) || price <= 0) continue;
 
-      offers.push({ inGameId: m.inGameId, name: m.name, price });
+      // Использования X/Y (ключи/износ) — строка «Всего N 🔧 X/Y» под именем. Нет «/» → нет износа.
+      let uses: number | undefined;
+      let maxUses: number | undefined;
+      const usesRegion: Region = {
+        left: GEO.uses.left * sx,
+        top: origY + GEO.uses.dy * sy - (GEO.uses.cropH / 2) * sy,
+        width: GEO.uses.width * sx,
+        height: GEO.uses.cropH * sy,
+      };
+      const usesText = (await uW.recognize(regionCanvas(bitmap, usesRegion, PRICE_UP, true))).data.text;
+      const um = usesText.match(/(\d+)\s*\/\s*(\d+)/);
+      if (um) {
+        const u = parseInt(um[1], 10);
+        const mx = parseInt(um[2], 10);
+        if (Number.isFinite(u) && Number.isFinite(mx) && mx > 0 && mx <= 1000 && u >= 0 && u <= mx) {
+          uses = u;
+          maxUses = mx;
+        }
+      }
+
+      offers.push({ inGameId: m.inGameId, name: m.name, price, uses, maxUses });
     }
   } finally {
     bitmap.close();
