@@ -1,5 +1,5 @@
 ---
-status: 🟡 принято (V4DYA, 2026-07-23) — фаза 0 (контракт инжеста), UI/OCR дальше
+status: 🟢 Фаза 0 сделана (2026-07-23, коммит feat(companion)) — дальше Фаза 1 (браузерный ридер+OCR)
 affects: prices, backend-autonomy, companion, ocr, cms, multi-game
 date: 2026-07-23
 owner: "[[eft-data-autonomy-research]] · [[deep-research-live-price-sync]]"
@@ -39,7 +39,7 @@ owner: "[[eft-data-autonomy-research]] · [[deep-research-live-price-sync]]"
 - **PvP/PvE:** офферы разнятся по режиму → `gameMode` в контракте с первого дня.
 
 ## Фазовый план
-- **Фаза 0 (в стеке, сейчас):** контракт инжеста + схема-агрегация. `/api/companion/flea` (payload: `[{inGameId, price, gameMode, ts}]`), запись в `price_history source='companion'` + апдейт «живой» цены в `prices` с приоритетом источника; анти-абьюз (rate-limit, только залогиненные, санити-границы цены). Это фундамент, к которому цепляется любой ридер (браузер ИЛИ будущий .exe).
+- **✅ Фаза 0 (сделано 2026-07-23):** контракт инжеста + агрегация. `POST /api/companion/flea` (payload `{gameMode?, offers:[{inGameId, price}]}`), staging-таблица `companion_flea_offers` (сырьё, не `price_history` — для порога доверия нужна raw-раздача), агрегатор `getCompanionPriceMap()` (median по окну, `TRUST`: ≥3 независимых автора / 30 мин), `insertCompanionOffers()`; анти-абьюз (только залогиненные, rate-limit 120/час, санити-границы). RLS без публичного чтения. Файлы: `src/db/companion-prices.ts`, `src/app/api/companion/flea/route.ts`, `supabase/companion-rls.sql`, `schema.ts`. **Scope-правка:** перезапись боевой цены в `prices` отложена в Фазу 2 (перебивать живые цены без quality-гейтов = футган) — Фаза 0 только копит.
 - **Фаза 1:** браузерный ридер + OCR MVP (File System Access → Tesseract.js → распознавание предмета по каталогу → предпросмотр «нашли N офферов» → отправка). Реюз `eft-screenshot.ts`.
 - **Фаза 2:** агрегация/качество — медиана, отброс выбросов, «свежесть N мин», бейдж на плитке «цена от сообщества», приоритет companion→tarkovdev.
 - **Фаза 3 (опц., отдельный проект):** нативный desktop-компаньон, если браузерного охвата мало.
