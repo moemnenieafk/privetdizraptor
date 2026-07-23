@@ -22,7 +22,7 @@ export const GEO = {
 } as const;
 
 const NAME_UP = 2; // апскейл колонки имён под OCR
-const PRICE_UP = 3; // апскейл кропа цены
+const PRICE_UP = 4; // апскейл кропа цены (x4 нужен для 7–8-значных: миллионы читались как «17»)
 
 let nameWorker: Worker | null = null;
 let priceWorker: Worker | null = null;
@@ -56,8 +56,8 @@ interface Region {
   height: number;
 }
 
-/** Вырезать регион исходника в canvas с апскейлом (grayscale — чище OCR). */
-function regionCanvas(bitmap: ImageBitmap, r: Region, up: number): HTMLCanvasElement {
+/** Вырезать регион исходника в canvas с апскейлом (grayscale; опц. бинаризация — чище OCR). */
+function regionCanvas(bitmap: ImageBitmap, r: Region, up: number, binarize = false): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = Math.max(1, Math.round(r.width * up));
   c.height = Math.max(1, Math.round(r.height * up));
@@ -66,6 +66,18 @@ function regionCanvas(bitmap: ImageBitmap, r: Region, up: number): HTMLCanvasEle
   ctx.filter = 'grayscale(1)';
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(bitmap, r.left, r.top, r.width, r.height, 0, 0, c.width, c.height);
+  if (binarize) {
+    // Порог 150: светлый текст → белый, тёмный фон → чёрный. Нужен для чтения
+    // 7–8-значных цен (миллионы), иначе tesseract теряет средний разряд.
+    ctx.filter = 'none';
+    const img = ctx.getImageData(0, 0, c.width, c.height);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v = d[i] >= 150 ? 255 : 0;
+      d[i] = d[i + 1] = d[i + 2] = v;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
   return c;
 }
 
@@ -112,7 +124,9 @@ export async function parseFleaScreenshot(
       width: GEO.name.width * sx,
       height: GEO.name.height * sy,
     };
-    const nameCanvas = regionCanvas(bitmap, nameRegion, NAME_UP);
+    // Бинаризация и здесь: на поиске с 1 результатом фоновый рендер за пустым списком
+    // сбивал SINGLE_BLOCK (имя читалось как «Л |»); порог убирает слабый фон.
+    const nameCanvas = regionCanvas(bitmap, nameRegion, NAME_UP, true);
     const nameRes = await nW.recognize(nameCanvas, {}, { blocks: true });
     const lines = collectLines((nameRes.data as { blocks?: BlockLike[] }).blocks);
 
@@ -122,13 +136,15 @@ export async function parseFleaScreenshot(
 
       // Y центра строки в координатах ИСХОДНИКА (обратный апскейл имени).
       const origY = nameRegion.top + line.yc / NAME_UP;
+      // Клэмп верх кропа, чтобы у ВЕРХНЕЙ строки не залезть в заголовок «Цена».
+      const minTop = (GEO.name.top - 4) * sy;
       const priceRegion: Region = {
         left: GEO.price.left * sx,
-        top: origY - (GEO.price.cropH / 2) * sy,
+        top: Math.max(origY - (GEO.price.cropH / 2) * sy, minTop),
         width: GEO.price.width * sx,
         height: GEO.price.cropH * sy,
       };
-      const priceCanvas = regionCanvas(bitmap, priceRegion, PRICE_UP);
+      const priceCanvas = regionCanvas(bitmap, priceRegion, PRICE_UP, true);
       const { data } = await pW.recognize(priceCanvas);
       const price = parseInt(data.text.replace(/\D/g, ''), 10);
       if (!Number.isFinite(price) || price <= 0) continue;
