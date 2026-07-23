@@ -1,8 +1,13 @@
-// Клиентский OCR скриншота барахолки: crop колонок через <canvas> + tesseract.js.
+// Клиентский OCR скриншота барахолки — NAME-ANCHORED подход.
 // ⚠️ БРАУЗЕР-ОНЛИ (createImageBitmap/canvas) — вызывать только из client-компонента.
-// Геометрия колонок вынесена в GEO и масштабируется от эталона 1920x1080 → тюнится
-// живьём одним местом (у разных игроков разное разрешение; v0 = пропорциональный скейл
-// для 16:9). Построчная нарезка + PSM single-line (доказано спайком надёжнее блочного).
+//
+// Почему так (а не построчно по фиксированному шагу): фикс-геометрия строк хрупкая —
+// на коротких/повторяющихся числах кроп цены уезжает (давал мусор 22/3/112 ₽). Зато
+// колонка ИМЁН сегментируется tesseract'ом надёжно (SINGLE_BLOCK + bbox): каждая
+// строка-предмет даёт свой Y. Используем Y имени как ЯКОРЬ строки и режем цену по нему.
+// Плюсы: самокалибрующийся (нет listTop/pitch), чинит и общий список, и поиск. Прочие
+// строки («Всего N», хлебные крошки) отсеиваются сами — не матчатся с каталогом.
+// Валидация: docs/decisions/eft-live-price-companion.md (спайк 2026-07-23, n2 общий список).
 import { createWorker, PSM, type Worker } from 'tesseract.js';
 import type { MatchResult } from './match';
 import type { ScannedOffer } from '@/store/useCompanionStore';
@@ -10,17 +15,25 @@ import type { ScannedOffer } from '@/store/useCompanionStore';
 const REF_W = 1920;
 const REF_H = 1080;
 
-/** Геометрия при 1920x1080 (снято со спайка на живых скринах). Калибруется живьём. */
+/** Геометрия при 1920x1080 (снято/выверено на живых скринах). Масштабируется от разрешения. */
 export const GEO = {
-  listTop: 150, // y первой строки
-  rowPitch: 72, // шаг строки (измерено по реальному скрину: ~72px при 1080p)
-  maxRows: 12, // сколько строк влезает в кадр (13-я — частичная, с бейджем уровня «50» → не берём)
-  price: { left: 1330, width: 150, height: 52 }, // большой номер цены (без ₽ — маскируется шириной)
-  name: { left: 905, width: 400, height: 40 }, // колонка названия
+  name: { left: 905, top: 150, width: 400, height: 900 }, // колонка названий (список)
+  price: { left: 1300, width: 168, cropH: 58 }, // колонка цены: до ₽ (маскируем справа), центр по Y имени
 } as const;
 
-let priceWorker: Worker | null = null;
+const NAME_UP = 2; // апскейл колонки имён под OCR
+const PRICE_UP = 3; // апскейл кропа цены
+
 let nameWorker: Worker | null = null;
+let priceWorker: Worker | null = null;
+
+async function getNameWorker(): Promise<Worker> {
+  if (nameWorker) return nameWorker;
+  const w = await createWorker('rus');
+  await w.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK });
+  nameWorker = w;
+  return w;
+}
 
 async function getPriceWorker(): Promise<Worker> {
   if (priceWorker) return priceWorker;
@@ -30,19 +43,10 @@ async function getPriceWorker(): Promise<Worker> {
   return w;
 }
 
-async function getNameWorker(): Promise<Worker> {
-  if (nameWorker) return nameWorker;
-  const w = await createWorker('rus');
-  await w.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE });
-  nameWorker = w;
-  return w;
-}
-
-/** Освободить воркеры (при остановке ридера). */
 export async function disposeOcr(): Promise<void> {
-  await Promise.all([priceWorker?.terminate(), nameWorker?.terminate()]);
-  priceWorker = null;
+  await Promise.all([nameWorker?.terminate(), priceWorker?.terminate()]);
   nameWorker = null;
+  priceWorker = null;
 }
 
 interface Region {
@@ -52,22 +56,44 @@ interface Region {
   height: number;
 }
 
-/** Вырезать регион из битмапа в canvas с апскейлом x3 (мелкий текст → чище OCR). */
-function cropCanvas(bitmap: ImageBitmap, r: Region): HTMLCanvasElement {
+/** Вырезать регион исходника в canvas с апскейлом (grayscale — чище OCR). */
+function regionCanvas(bitmap: ImageBitmap, r: Region, up: number): HTMLCanvasElement {
   const c = document.createElement('canvas');
-  c.width = Math.max(1, Math.round(r.width * 3));
-  c.height = Math.max(1, Math.round(r.height * 3));
+  c.width = Math.max(1, Math.round(r.width * up));
+  c.height = Math.max(1, Math.round(r.height * up));
   const ctx = c.getContext('2d');
   if (!ctx) throw new Error('canvas 2d context недоступен');
+  ctx.filter = 'grayscale(1)';
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(bitmap, r.left, r.top, r.width, r.height, 0, 0, c.width, c.height);
   return c;
 }
 
+/** Строки текста (с Y-центром в координатах canvas) из результата SINGLE_BLOCK. */
+interface OcrLine {
+  text: string;
+  yc: number;
+}
+interface BlockLike {
+  paragraphs?: { lines?: { text: string; bbox: { y0: number; y1: number } }[] }[];
+}
+function collectLines(blocks: BlockLike[] | null | undefined): OcrLine[] {
+  const out: OcrLine[] = [];
+  for (const b of blocks ?? []) {
+    for (const p of b.paragraphs ?? []) {
+      for (const l of p.lines ?? []) {
+        const text = l.text.trim();
+        if (text) out.push({ text, yc: (l.bbox.y0 + l.bbox.y1) / 2 });
+      }
+    }
+  }
+  return out;
+}
+
 /**
- * Распознать офферы с одного скриншота барахолки. Построчно: OCR цены (цифры) + имени
- * (ru) → фаззи-матч предмета. Возвращает валидные {inGameId, name, price}. Пустой массив —
- * норм (не барахолка / не распозналось). Не бросает на кривых строках — просто пропускает.
+ * Распознать офферы с одного скриншота барахолки. Якорим по именам, режем цену по Y имени.
+ * Возвращает валидные {inGameId, name, price}. Пустой массив — норм. Не бросает на кривых
+ * строках. Остаточные огрехи цены добивают медиана толпы + якорь tarkov.dev (Фаза 2).
  */
 export async function parseFleaScreenshot(
   file: File,
@@ -76,32 +102,36 @@ export async function parseFleaScreenshot(
   const bitmap = await createImageBitmap(file);
   const sx = bitmap.width / REF_W;
   const sy = bitmap.height / REF_H;
-  const [pW, nW] = await Promise.all([getPriceWorker(), getNameWorker()]);
+  const [nW, pW] = await Promise.all([getNameWorker(), getPriceWorker()]);
 
   const offers: ScannedOffer[] = [];
   try {
-    for (let i = 0; i < GEO.maxRows; i++) {
-      const rowTop = (GEO.listTop + i * GEO.rowPitch) * sy;
+    const nameRegion: Region = {
+      left: GEO.name.left * sx,
+      top: GEO.name.top * sy,
+      width: GEO.name.width * sx,
+      height: GEO.name.height * sy,
+    };
+    const nameCanvas = regionCanvas(bitmap, nameRegion, NAME_UP);
+    const nameRes = await nW.recognize(nameCanvas, {}, { blocks: true });
+    const lines = collectLines((nameRes.data as { blocks?: BlockLike[] }).blocks);
 
-      const priceCanvas = cropCanvas(bitmap, {
-        left: GEO.price.left * sx,
-        top: rowTop,
-        width: GEO.price.width * sx,
-        height: GEO.price.height * sy,
-      });
-      const { data: pd } = await pW.recognize(priceCanvas);
-      const price = parseInt(pd.text.replace(/\D/g, ''), 10);
-      if (!Number.isFinite(price) || price <= 0) continue;
-
-      const nameCanvas = cropCanvas(bitmap, {
-        left: GEO.name.left * sx,
-        top: rowTop,
-        width: GEO.name.width * sx,
-        height: GEO.name.height * sy,
-      });
-      const { data: nd } = await nW.recognize(nameCanvas);
-      const m = match(nd.text);
+    for (const line of lines) {
+      const m = match(line.text); // матч отсеивает «Всего N», крошки, мусор
       if (!m) continue;
+
+      // Y центра строки в координатах ИСХОДНИКА (обратный апскейл имени).
+      const origY = nameRegion.top + line.yc / NAME_UP;
+      const priceRegion: Region = {
+        left: GEO.price.left * sx,
+        top: origY - (GEO.price.cropH / 2) * sy,
+        width: GEO.price.width * sx,
+        height: GEO.price.cropH * sy,
+      };
+      const priceCanvas = regionCanvas(bitmap, priceRegion, PRICE_UP);
+      const { data } = await pW.recognize(priceCanvas);
+      const price = parseInt(data.text.replace(/\D/g, ''), 10);
+      if (!Number.isFinite(price) || price <= 0) continue;
 
       offers.push({ inGameId: m.inGameId, name: m.name, price });
     }
@@ -113,9 +143,8 @@ export async function parseFleaScreenshot(
 
 /**
  * Клиентская страховка: если в кадре ≥4 оффера ОДНОГО предмета (глубинный вид) —
- * отбрасываем цены вне [0.4×, 2.5×] медианы. Убивает грубые мисриды/дрейф (напр.
- * «48 000» среди LEDX по 700k). В общем списке (все предметы разные) не срабатывает —
- * там за качество отвечает серверная медиана по многим авторам.
+ * отбрасываем цены вне [0.4×, 2.5×] медианы. Убивает грубые мисриды/дрейф. В общем
+ * списке (предметы разные) не срабатывает — там за качество медиана по многим авторам.
  */
 function rejectOutliers(offers: ScannedOffer[]): ScannedOffer[] {
   const byId = new Map<string, ScannedOffer[]>();
@@ -131,10 +160,8 @@ function rejectOutliers(offers: ScannedOffer[]): ScannedOffer[] {
       continue;
     }
     const sorted = group.map((g) => g.price).sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
-    for (const o of group) {
-      if (o.price >= median * 0.4 && o.price <= median * 2.5) out.push(o);
-    }
+    const med = sorted[Math.floor(sorted.length / 2)];
+    for (const o of group) if (o.price >= med * 0.4 && o.price <= med * 2.5) out.push(o);
   }
   return out;
 }
