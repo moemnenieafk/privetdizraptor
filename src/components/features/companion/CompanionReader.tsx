@@ -194,7 +194,7 @@ export function CompanionReader() {
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-              {offers.length} офферов · {new Set(offers.map((o) => o.inGameId)).size} предметов
+              {offers.length} предложений · {new Set(offers.map((o) => o.inGameId)).size} предметов
             </span>
             <button
               type="button"
@@ -222,7 +222,7 @@ export function CompanionReader() {
             className="flex items-center justify-center gap-1.5 rounded-sm border border-(--primary) bg-(--primary) px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <Send className="h-3.5 w-3.5" />
-            Отправить {offers.length} офферов
+            Отправить {offers.length} предложений
           </button>
         </div>
       )}

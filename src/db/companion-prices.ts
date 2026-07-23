@@ -20,7 +20,22 @@ export const TRUST = {
   PRICE_MAX: 1_000_000_000,
   /** Максимум офферов в одном сабмите (анти-флуд на приёме). */
   MAX_OFFERS_PER_REQUEST: 500,
+  /** Якорь на tarkov.dev: companion-цена публикуется только в этом коридоре от ref
+   *  (avg24h/lastLow). Широкий (1/3…3×) — пропускает реальные колебания рынка, но
+   *  ловит грубые OCR-мисриды (пропуск разряда = 10×) и накрутку. Применяется ко ВСЕМ,
+   *  включая trusted (OCR-ошибка бывает и у модератора — его тест-цена 139002 попадётся). */
+  ANCHOR_LOW: 1 / 3,
+  ANCHOR_HIGH: 3,
 } as const;
+
+/**
+ * Publication-гейт: companion-цена в разумном коридоре от tarkov.dev-референса.
+ * `ref` falsy → якоря нет (публикуем как есть — других данных по предмету нет).
+ */
+export function withinAnchor(companionPrice: number, ref: number | undefined): boolean {
+  if (!ref || ref <= 0) return true;
+  return companionPrice >= ref * TRUST.ANCHOR_LOW && companionPrice <= ref * TRUST.ANCHOR_HIGH;
+}
 
 export interface CompanionPrice {
   price: number; // медиана по окну (робастна к выбросам OCR)

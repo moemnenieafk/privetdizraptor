@@ -310,7 +310,7 @@ export function ItemPriceBlock({
               {companion.trusted ? 'Цена · проверено модератором' : 'Цена сообщества'}
             </span>
             <span className="font-blender-book text-type-micro text-text-muted">
-              {fmtCompanionAge(companion.at)} · {companion.offers} офф.
+              {fmtCompanionAge(companion.at)} · {companion.offers} предл.
             </span>
           </div>
           <span className="font-blender-medium text-sm text-(--primary)">
