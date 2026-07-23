@@ -7,6 +7,7 @@
 // доверия «N независимых» иначе не работает). См. [[eft-live-price-companion]].
 import { NextResponse } from "next/server";
 import { getMe } from "@/lib/auth/me";
+import { canModerate } from "@/lib/auth/roles";
 import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
 import { rateLimit } from "@/lib/rate-limit";
 import { eftGameId } from "@/db/eft";
@@ -62,8 +63,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     return err(429, "Слишком часто. Передохни");
   }
 
+  // Доверенная роль (moderator/admin) → авторитетный оффер: становится истиной сразу,
+  // в обход порога ≥3 и медианы толпы (см. companion-prices.getCompanionPriceMap).
+  const trusted = canModerate(me.role);
   const gameId = await eftGameId();
-  const accepted = await insertCompanionOffers(gameId, gameMode, me.id, offers);
+  const accepted = await insertCompanionOffers(gameId, gameMode, me.id, offers, trusted);
 
-  return NextResponse.json({ ok: true, accepted, received: offers.length });
+  return NextResponse.json({ ok: true, accepted, trusted, received: offers.length });
 }

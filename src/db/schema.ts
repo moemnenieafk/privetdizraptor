@@ -265,6 +265,10 @@ export const companionFleaOffers = pgTable(
     gameMode: text("game_mode").notNull().default("regular"), // 'regular' | 'pve' — офферы разнятся по режиму
     price: integer("price").notNull(), // ₽ за штуку (нормализовано ридером)
     submittedBy: uuid("submitted_by").notNull(), // auth.users.id приславшего (для порога «N независимых»)
+    // Прислано доверенной ролью (moderator/admin) — авторитетный оффер: становится
+    // истиной сразу, в обход порога ≥3 и медианы толпы. Денормализуем роль на момент
+    // инжеста (цена эфемерна, окно 30 мин — смена роли позже несущественна).
+    trusted: boolean("trusted").notNull().default(false),
     submittedAt: timestamp("submitted_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

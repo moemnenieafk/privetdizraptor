@@ -16,8 +16,12 @@ create table if not exists public.companion_flea_offers (
   game_mode     text not null default 'regular',
   price         integer not null,
   submitted_by  uuid not null,
+  trusted       boolean not null default false,
   submitted_at  timestamptz not null default now()
 );
+
+-- Для уже созданной таблицы (аддитивно, идемпотентно).
+alter table public.companion_flea_offers add column if not exists trusted boolean not null default false;
 
 create index if not exists companion_offers_item_idx
   on public.companion_flea_offers (game_id, in_game_id, game_mode);
