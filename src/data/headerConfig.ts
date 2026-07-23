@@ -2,6 +2,8 @@ export interface MenuItem {
   id: string;
   label: string;
   menuTitle?: string;
+  /** Описание для карточки HubCard на индексе раздела и подзаголовка HubNav. */
+  description?: string;
   path?: string;
   iconUrl?: string;
   iconUrlBear?: string;
@@ -519,10 +521,11 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/progress',
         iconUrl: '/icons/eft/progress-icon.svg',
         children: [
-          { id: 'p-rookie', label: 'Кто ты в Игре', path: '/eft/progress/rookie', iconUrl: '/icons/eft/04-progression/utarkov.svg' },
+          { id: 'p-rookie', label: 'Кто ты в Игре', description: 'Не понимаешь Tarkov? Выбери свою роль и пройди Путь Новобранца — учим мир игры по шагам.', path: '/eft/progress/rookie', iconUrl: '/icons/eft/04-progression/utarkov.svg' },
           {
             id: 'p-hideout',
             label: 'Убежище ЧВК',
+            description: 'Развивайте свою базу, создавайте предметы и получайте пассивные бонусы для вашего персонажа.',
             path: '/eft/progress/hideout',
             iconUrl: '/icons/eft/04-progression/hideout-modules.svg',
             children: [
@@ -534,12 +537,14 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           {
             id: 'p-barter',
             label: 'Прибыль бартера',
+            description: 'Анализируйте выгодные обмены у торговцев, чтобы максимизировать свою прибыль.',
             path: '/eft/progress/barter',
             iconUrl: '/icons/eft/04-progression/barter-profit.svg',
           },
           {
             id: 'p-seasons',
             label: 'Сезоны',
+            description: 'Механика сезонного персонажа и интерактивный конструктор модификаторов с бюджетом очков.',
             path: '/eft/progress/seasons',
             iconUrl: '/icons/eft/progress-icon.svg',
             children: [
@@ -549,6 +554,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           {
             id: 'p-loadouts',
             label: 'Сборки оружия',
+            description: 'Создавайте, сохраняйте и делитесь своими лучшими сборками оружия с сообществом.',
             path: '/eft/progress/loadouts',
             iconUrl: '/icons/eft/04-progression/gun-loadouts.svg',
             children: [
@@ -557,8 +563,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
               { id: 'p-loadouts-add', label: 'Создать сборку', path: '/eft/progress/loadouts/add', iconUrl: '/icons/eft/04-progression/gun-loadouts/add-gun-loadout.svg' }
             ]
           },
-          { id: 'p-tracker', label: 'Трекер предметов', path: '/eft/progress/tracker', iconUrl: '/icons/eft/04-progression/items-tracker.svg' },
-          { id: 'p-needed', label: 'Важные предметы', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
+          { id: 'p-tracker', label: 'Трекер предметов', description: 'Отмечайте найденные предметы для квестов, убежища и бартеров в удобном чек-листе.', path: '/eft/progress/tracker', iconUrl: '/icons/eft/04-progression/items-tracker.svg' },
+          { id: 'p-needed', label: 'Важные предметы', description: 'Полный список всех предметов, необходимых для выполнения заданий и постройки убежища.', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
           { id: 'p-loot-rate', label: 'Рейтинг предметов', path: '/eft/items/loot-rate', iconUrl: '/icons/eft/03-items/loot-tier.svg' },
           { id: 'p-price-slot', label: 'Цена за слот', path: '/eft/items/price-slot', iconUrl: '/icons/eft/03-items/price-per-slot.svg' }
         ]

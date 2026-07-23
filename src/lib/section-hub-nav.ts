@@ -61,3 +61,53 @@ export function getSectionHubNav(rootPath: string, currentPath: string): Section
   }
   return { sections, sub };
 }
+
+export interface SectionHubCard {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  iconPath?: string;
+}
+
+/**
+ * Узел меню, наиболее точно совпадающий с текущим путём (самое глубокое совпадение
+ * по префиксу). Нужен шапке HubNav: заголовок/описание/иконка активного подраздела.
+ */
+export function findSectionNode(rootPath: string, currentPath: string): MenuItem | null {
+  const eftMenu = HEADER_DICTIONARY['eft'].menuItems;
+  const root = findNodeByPath(eftMenu, rootPath);
+  if (!root) return null;
+
+  const matches: MenuItem[] = [];
+  const walk = (items: MenuItem[]): void => {
+    for (const item of items) {
+      if (item.path && (currentPath === item.path || currentPath.startsWith(`${item.path}/`))) {
+        matches.push(item);
+      }
+      if (item.children) walk(item.children);
+    }
+  };
+  walk(root.children ?? []);
+  if (matches.length === 0) return null;
+  return matches.reduce((a, b) => ((b.path?.length ?? 0) > (a.path?.length ?? 0) ? b : a));
+}
+
+/**
+ * Карточки индекса раздела — прямые дети rootPath из HEADER_DICTIONARY.
+ * Держит хаб и верхнюю навигацию на одном источнике: добавил роут в словарь —
+ * появилась и карточка, и пункт в HubNav.
+ */
+export function getSectionHubCards(rootPath: string): SectionHubCard[] {
+  const eftMenu = HEADER_DICTIONARY['eft'].menuItems;
+  const root = findNodeByPath(eftMenu, rootPath);
+  return (root?.children ?? [])
+    .filter((c): c is MenuItem & { path: string } => Boolean(c.path))
+    .map((c) => ({
+      id: c.id,
+      title: c.label,
+      description: c.description ?? '',
+      href: c.path,
+      iconPath: c.iconUrl,
+    }));
+}

@@ -1,78 +1,27 @@
-﻿import { PageHeader } from '@/components/ui/PageHeader';
+import type { Metadata } from 'next';
 import React from 'react';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { HubCard } from '@/components/ui/HubCard';
+import { getSectionHubCards } from '@/lib/section-hub-nav';
 
-// Данные для карточек навигации раздела "Прогресс".
+export const metadata: Metadata = { title: 'Прогресс | ЦТА' };
+
+// Карточки навигации раздела строятся из HEADER_DICTIONARY (дети /eft/progress),
+// а не из локального массива: словарь остаётся единственным источником правды
+// и для верхней навигации (HubNav), и для этой сетки.
 // Достижения и Престиж переехали в «Кодекс» (/eft/gamesetting) — карточки там.
-const PROGRESS_HUB_CARDS = [
-  {
-    id: 'rookie',
-    title: 'Кто ты в Игре',
-    description: 'Не понимаешь Tarkov? Выбери свою роль и пройди Путь Новобранца — учим мир игры по шагам.',
-    href: '/eft/progress/rookie',
-    iconPath: '/icons/eft/04-progression/utarkov.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'hideout',
-    title: 'Убежище ЧВК',
-    description: 'Развивайте свою базу, создавайте предметы и получайте пассивные бонусы для вашего персонажа.',
-    href: '/eft/progress/hideout',
-    iconPath: '/icons/eft/04-progression/hideout-modules.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'barter',
-    title: 'Прибыль бартера',
-    description: 'Анализируйте выгодные обмены у торговцев, чтобы максимизировать свою прибыль.',
-    href: '/eft/progress/barter',
-    iconPath: '/icons/eft/04-progression/barter-profit.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'seasons',
-    title: 'Сезоны',
-    description: 'Механика сезонного персонажа и интерактивный конструктор модификаторов с бюджетом очков.',
-    href: '/eft/progress/seasons',
-    iconPath: '/icons/eft/progress-icon.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'loadouts',
-    title: 'Сборки оружия',
-    description: 'Создавайте, сохраняйте и делитесь своими лучшими сборками оружия с сообществом.',
-    href: '/eft/progress/loadouts',
-    iconPath: '/icons/eft/04-progression/gun-loadouts.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'tracker',
-    title: 'Трекер предметов',
-    description: 'Отмечайте найденные предметы для квестов, убежища и бартеров в удобном чек-листе.',
-    href: '/eft/progress/tracker',
-    iconPath: '/icons/eft/04-progression/items-tracker.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'needed',
-    title: 'Важные предметы',
-    description: 'Полный список всех предметов, необходимых для выполнения заданий и постройки убежища.',
-    href: '/eft/progress/needed',
-    iconPath: '/icons/eft/04-progression/items-needed.svg',
-    variant: 'rectangle' as const,
-  },
-];
+const PROGRESS_HUB_CARDS = getSectionHubCards('/eft/progress');
 
 export default function ProgressHubPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
         <PageHeader pageId="eft-progress" />
-        
-        {/* Сетка HubCard */}
+
+        {/* Сетка HubCard — навигация по разделу */}
         <div className="tactical-grid">
           {PROGRESS_HUB_CARDS.map((card, index) => (
-            <HubCard key={card.id} gameId="eft" {...card} index={index} />
+            <HubCard key={card.id} gameId="eft" variant="rectangle" {...card} index={index} />
           ))}
         </div>
       </div>
