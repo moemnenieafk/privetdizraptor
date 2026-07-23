@@ -13,9 +13,9 @@ const REF_H = 1080;
 /** Геометрия при 1920x1080 (снято со спайка на живых скринах). Калибруется живьём. */
 export const GEO = {
   listTop: 150, // y первой строки
-  rowPitch: 74, // шаг строки
-  maxRows: 12, // сколько строк влезает в кадр
-  price: { left: 1330, width: 150, height: 46 }, // большой номер цены (без ₽ — маскируется шириной)
+  rowPitch: 72, // шаг строки (измерено по реальному скрину: ~72px при 1080p)
+  maxRows: 12, // сколько строк влезает в кадр (13-я — частичная, с бейджем уровня «50» → не берём)
+  price: { left: 1330, width: 150, height: 52 }, // большой номер цены (без ₽ — маскируется шириной)
   name: { left: 905, width: 400, height: 40 }, // колонка названия
 } as const;
 
@@ -108,5 +108,33 @@ export async function parseFleaScreenshot(
   } finally {
     bitmap.close();
   }
-  return offers;
+  return rejectOutliers(offers);
+}
+
+/**
+ * Клиентская страховка: если в кадре ≥4 оффера ОДНОГО предмета (глубинный вид) —
+ * отбрасываем цены вне [0.4×, 2.5×] медианы. Убивает грубые мисриды/дрейф (напр.
+ * «48 000» среди LEDX по 700k). В общем списке (все предметы разные) не срабатывает —
+ * там за качество отвечает серверная медиана по многим авторам.
+ */
+function rejectOutliers(offers: ScannedOffer[]): ScannedOffer[] {
+  const byId = new Map<string, ScannedOffer[]>();
+  for (const o of offers) {
+    const g = byId.get(o.inGameId);
+    if (g) g.push(o);
+    else byId.set(o.inGameId, [o]);
+  }
+  const out: ScannedOffer[] = [];
+  for (const group of byId.values()) {
+    if (group.length < 4) {
+      out.push(...group);
+      continue;
+    }
+    const sorted = group.map((g) => g.price).sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    for (const o of group) {
+      if (o.price >= median * 0.4 && o.price <= median * 2.5) out.push(o);
+    }
+  }
+  return out;
 }
