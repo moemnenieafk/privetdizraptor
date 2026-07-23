@@ -27,6 +27,9 @@ alter table public.companion_flea_offers add column if not exists trusted boolea
 alter table public.profiles add column if not exists companion_karma real not null default 0;
 -- Бан автора (zero-tolerance к ботам/скрапингу/скаму) — блокирует сабмит компаньона. Additive.
 alter table public.profiles add column if not exists banned boolean not null default false;
+-- Дневной лимит начисления кармы (анти-фарм). Additive.
+alter table public.profiles add column if not exists companion_karma_day date;
+alter table public.profiles add column if not exists companion_karma_today real not null default 0;
 
 -- Очередь аномалий (модерация companion-цен). Внутренняя: публичного доступа нет,
 -- читают/пишут owner-ролью серверные роуты (детект + админ-действия) после проверки роли.

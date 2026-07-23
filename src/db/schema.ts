@@ -529,6 +529,10 @@ export const profiles = pgTable("profiles", {
   // ~0.01). Медленный грайнд → вес голоса не накрутить мультиаккаунтами. Колонка
   // additive — заводится через supabase/companion-rls.sql (db:sql, без db:push).
   companionKarma: real("companion_karma").notNull().default(0),
+  // Дневной лимит начисления кармы (анти-фарм: нельзя набить репу, сидя весь день на
+  // PrintScreen). Additive — заводится через supabase/companion-rls.sql.
+  companionKarmaDay: date("companion_karma_day"),
+  companionKarmaToday: real("companion_karma_today").notNull().default(0),
   // Бан (zero-tolerance к ботам/скрапингу/скаму): банит модератор из очереди аномалий,
   // блокирует сабмит компаньона. Additive — заводится через supabase/companion-rls.sql.
   banned: boolean("banned").notNull().default(false),

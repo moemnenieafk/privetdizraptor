@@ -135,26 +135,52 @@ export interface CompanionOfferInput {
  * как лояльность Скупщика в EFT (0.01). Медленный грайнд: вес голоса не накрутить
  * мультиаккаунтами. Тюнится (до 0.001). Начисляем только за принятое (прошло валидацию).
  */
-export const KARMA_PER_UPLOAD = 0.01;
-/** Микро-бонус: обновил устаревшую цену (>60мин) — чуточку больше. */
-const KARMA_STALE_BONUS = 0.01;
-/** Обновил ОЧЕНЬ старую (>6ч) или предмет без данных — направляем усилие туда, где нужнее. */
-const KARMA_VERY_STALE_BONUS = 0.02;
+// Карма — ТОЛЬКО за реальную пользу (обновление устаревшего/без данных). Свежее = 0:
+// пере-скан того же не фармится. Микро-суммы + потолок за выгрузку + ДНЕВНОЙ потолок —
+// набить репу «сидя весь день на PrintScreen» нельзя. Все — тюнятся под экономику наград.
+const KARMA_STALE = 0.001; // обновил устаревший (>60мин)
+const KARMA_MISSING = 0.002; // обновил без данных / очень старый (>6ч) — там нужнее
+const KARMA_UPLOAD_CAP = 0.01; // потолок за одну выгрузку (одним большим скрином не набить)
+const KARMA_DAILY_CAP = 0.05; // потолок за сутки (UTC) — главный анти-фарм
 const VERY_STALE_MIN = 360;
 
-/** Атомарно +amount к репутации автора. Возвращает новое значение. */
-export async function addCompanionKarma(userId: string, amount: number = KARMA_PER_UPLOAD): Promise<number> {
-  const rows = (await db.execute(sql`
-    update public.profiles set companion_karma = companion_karma + ${amount}
-    where id = ${userId} returning companion_karma as "karma"
-  `)) as unknown as Array<{ karma: number }>;
-  return rows[0]?.karma ?? 0;
+export interface KarmaResult {
+  karma: number; // новая суммарная репутация
+  gained: number; // сколько реально начислено (после потолков)
+}
+
+/** Начислить amount с учётом ДНЕВНОГО потолка. Возвращает {итог, реально начислено}. */
+export async function addCompanionKarma(userId: string, amount: number): Promise<KarmaResult> {
+  try {
+    const sel = (await db.execute(sql`
+      select companion_karma as "karma", companion_karma_today as "today", companion_karma_day as "day"
+      from public.profiles where id = ${userId}
+    `)) as unknown as Array<{ karma: number; today: number; day: string | Date | null }>;
+    const row = sel[0];
+    if (!row) return { karma: 0, gained: 0 };
+    const today = new Date().toISOString().slice(0, 10);
+    const dayStr = row.day ? new Date(row.day).toISOString().slice(0, 10) : null;
+    const earnedToday = dayStr === today ? row.today : 0;
+    const gained = Math.max(0, Math.min(amount, KARMA_DAILY_CAP - earnedToday));
+    if (gained <= 0) return { karma: row.karma, gained: 0 };
+    const upd = (await db.execute(sql`
+      update public.profiles set
+        companion_karma = companion_karma + ${gained},
+        companion_karma_today = ${earnedToday + gained},
+        companion_karma_day = ${today}::date
+      where id = ${userId} returning companion_karma as "karma"
+    `)) as unknown as Array<{ karma: number }>;
+    return { karma: upd[0]?.karma ?? row.karma + gained, gained: Math.round(gained * 1000) / 1000 };
+  } catch (e) {
+    console.error("[addCompanionKarma]", e);
+    return { karma: 0, gained: 0 };
+  }
 }
 
 /**
- * Сколько кармы дать за выгрузку: база + бонус по СТЕПЕНИ устаревания обновлённого
- * (берём самый протухший предмет пачки). Вызывать ДО вставки — считает прежнее состояние.
- * Свежие обновления — только база; чем старее была цена, тем щедрее (доска заказов).
+ * Сколько кармы стоит выгрузка: сумма по РАЗНЫМ предметам, но только тем, что были
+ * устаревшими/без данных (свежие → 0, анти-фарм). Потолок за выгрузку. Вызывать ДО
+ * вставки — считает ПРЕЖНЮЮ свежесть. Итог ещё режется дневным потолком в addCompanionKarma.
  */
 export async function uploadKarmaFor(
   gameId: string,
@@ -162,7 +188,7 @@ export async function uploadKarmaFor(
   inGameIds: string[],
 ): Promise<number> {
   const ids = [...new Set(inGameIds)];
-  if (ids.length === 0) return KARMA_PER_UPLOAD;
+  if (ids.length === 0) return 0;
   try {
     const rows = await db
       .select({ inGameId: companionFleaOffers.inGameId, lastAt: sql<string>`max(${companionFleaOffers.submittedAt})` })
@@ -177,16 +203,17 @@ export async function uploadKarmaFor(
       .groupBy(companionFleaOffers.inGameId);
     const lastMap = new Map(rows.map((r) => [r.inGameId, new Date(r.lastAt).getTime()]));
     const now = Date.now();
-    let bonus = 0;
+    let sum = 0;
     for (const id of ids) {
       const last = lastMap.get(id);
       const ageMin = last == null ? Infinity : (now - last) / 60000; // нет данных = максимально «старо»
-      if (ageMin >= VERY_STALE_MIN) bonus = Math.max(bonus, KARMA_VERY_STALE_BONUS);
-      else if (ageMin >= WORKLIST_STALE_MIN) bonus = Math.max(bonus, KARMA_STALE_BONUS);
+      if (ageMin >= VERY_STALE_MIN) sum += KARMA_MISSING;
+      else if (ageMin >= WORKLIST_STALE_MIN) sum += KARMA_STALE;
+      // свежее (< порога) → 0: пере-скан того же не приносит кармы
     }
-    return Math.round((KARMA_PER_UPLOAD + bonus) * 1000) / 1000;
+    return Math.min(Math.round(sum * 1000) / 1000, KARMA_UPLOAD_CAP);
   } catch {
-    return KARMA_PER_UPLOAD;
+    return 0;
   }
 }
 

@@ -73,15 +73,23 @@ export async function POST(req: Request): Promise<NextResponse> {
   const trusted = canModerate(me.role);
   const gameId = await eftGameId();
 
-  // Карму считаем ДО вставки (по ПРЕЖНЕЙ свежести предметов): база + бонус за протухшие.
+  // Карму считаем ДО вставки (по ПРЕЖНЕЙ свежести): только за устаревшее/без данных.
   const karmaAmount = await uploadKarmaFor(gameId, gameMode, offers.map((o) => o.inGameId));
   const accepted = await insertCompanionOffers(gameId, gameMode, me.id, offers, trusted);
 
-  // Начисляем только за принятую выгрузку (Скупщик-стайл микро-начисление).
-  const karma = accepted > 0 ? await addCompanionKarma(me.id, karmaAmount) : await getCompanionKarma(me.id);
+  // Начисляем только за принятую выгрузку с ненулевой пользой; дневной потолок — внутри.
+  let karma: number;
+  let gained = 0;
+  if (accepted > 0 && karmaAmount > 0) {
+    const r = await addCompanionKarma(me.id, karmaAmount);
+    karma = r.karma;
+    gained = r.gained;
+  } else {
+    karma = await getCompanionKarma(me.id);
+  }
 
   // Инлайн-детект аномалий по обновлённым предметам (плюс периодический крон-свип).
   if (accepted > 0) await detectCompanionAnomalies(gameMode, offers.map((o) => o.inGameId));
 
-  return NextResponse.json({ ok: true, accepted, trusted, karma, gained: accepted > 0 ? karmaAmount : 0, received: offers.length });
+  return NextResponse.json({ ok: true, accepted, trusted, karma, gained, received: offers.length });
 }
