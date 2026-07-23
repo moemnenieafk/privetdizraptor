@@ -1,0 +1,17 @@
+// /api/companion/catalog — лёгкий список { inGameId, name } для клиентского фаззи-матча
+// в ридере компаньона. Только имена (не цены/свойства) — минимум трафика. Кэшируем на CDN.
+// Шаг 2 (icon-match) добавит сюда icon-hash по предмету.
+import { NextResponse } from "next/server";
+import { getEftCatalog } from "@/lib/eft-catalog";
+
+export const runtime = "nodejs";
+export const revalidate = 3600; // каталог статичен в пределах патча
+
+export async function GET(): Promise<NextResponse> {
+  const catalog = await getEftCatalog();
+  const items = catalog.map((i) => ({ inGameId: i.id, name: i.name }));
+  return NextResponse.json(
+    { items },
+    { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } },
+  );
+}
