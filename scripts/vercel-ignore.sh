@@ -39,13 +39,10 @@ if ! git cat-file -e "${PREV}^{commit}" 2>/dev/null; then
 fi
 
 # Изменилось ли что-то вне docs/ и CHANGELOG.md? diff --quiet: exit 0 = нет (SKIP), 1 = есть (BUILD).
-if git diff --quiet "$PREV" HEAD -- \
-    ':(exclude)docs/' ':(exclude)CHANGELOG.md' \
-    ':(exclude).github/' ':(exclude).gitignore' \
-    ':(exclude)scripts/encode-bg-patterns.sh' ':(exclude)scripts/vercel-ignore.sh'; then
-  echo "[vercel-ignore] с $PREV изменились только docs/CHANGELOG/CI-файлы → SKIP"
+if git diff --quiet "$PREV" HEAD -- ':(exclude)docs/' ':(exclude)CHANGELOG.md'; then
+  echo "[vercel-ignore] с $PREV изменился только docs/ и/или CHANGELOG.md → SKIP"
   exit 0
 else
-  echo "[vercel-ignore] есть изменения, влияющие на сборку → BUILD"
+  echo "[vercel-ignore] есть изменения вне docs/ → BUILD"
   exit 1
 fi
