@@ -1024,6 +1024,41 @@ export const changeDigests = pgTable(
 
 export type ChangeDigestRow = typeof changeDigests.$inferSelect;
 
+/* ───────────────── silent changes (зеркало Tarkov Silent Changes) ─────────────────
+ * Тихие изменения серверного/клиентского конфига BSG между версиями — источник
+ * changes.tarkov-changes.com (HTML, публичный). Каждый ряд = один изменённый leaf-ключ
+ * в файле конфига за конкретный «пул». По паттерну §4.11: зеркалим кроном, UI читает
+ * только нашу БД. Дедуп по (game, pull, file, key). Интерпретация (класс/подпись) —
+ * src/lib/silent-changes-format.ts. */
+export const silentChanges = pgTable(
+  "silent_changes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    pullId: integer("pull_id").notNull(), // id страницы /view/{pull_id} у источника
+    eftVersion: text("eft_version").notNull(),
+    pulledAt: timestamp("pulled_at", { withTimezone: true }).notNull(),
+    filePath: text("file_path").notNull(), // напр. client/globals/response.json
+    keyPath: text("key_path").notNull(), // точечный путь: data.config.ExtensionsSettings.Enabled
+    kind: text("kind").notNull(), // 'added' | 'removed' | 'field'
+    oldValue: text("old_value"),
+    newValue: text("new_value"),
+    // класс интерпретатора: 'economy' | 'config' | 'locale' | 'other'
+    klass: text("klass").notNull().default("other"),
+    inGameId: text("in_game_id"), // BSG-id предмета, если ключ ссылается на предмет
+    itemName: text("item_name"), // резолвнутое имя предмета (для кросс-линка), может быть null
+  },
+  (t) => [
+    uniqueIndex("silent_changes_uq").on(t.gameId, t.pullId, t.filePath, t.keyPath),
+    index("silent_changes_pulled_idx").on(t.pulledAt),
+    index("silent_changes_game_idx").on(t.gameId),
+  ],
+);
+
+export type SilentChangeRow = typeof silentChanges.$inferSelect;
+
 /* ───────────────── trader offer state (снимок офферов торговцев для диффа) ─────────────────
  * Снимок-отпечаток оффера торговца на (игра, торговец, предмет-tpl): лояльность + цена.
  * Источник — сырые assort.json из sp-tarkov/server. Дифф пишет дельты в item_changes

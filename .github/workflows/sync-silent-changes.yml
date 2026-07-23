@@ -1,0 +1,44 @@
+# Синк «тихих изменений» BSG: changes.tarkov-changes.com (серверные/клиентские конфиги —
+# курсы, цены, флаги) → наша mirror-таблица `silent_changes`. Дёргает self-mirror эндпоинт,
+# который парсит новые пулы источника в Supabase. Тихие правки нечастые → раз в 3 часа.
+#
+# Нужны в настройках репозитория (Settings → Secrets and variables → Actions):
+#   • Secret   CRON_SECRET    — то же значение, что в Vercel env
+#   • Variable PROD_BASE_URL  — прод-домен (https://privetdizraptor.vercel.app), без /api
+# Оба уже заведены для sync-prices — новых заводить не нужно.
+name: sync-silent-changes
+
+on:
+  schedule:
+    - cron: "20 */3 * * *" # каждые 3 часа (UTC), смещение :20 чтобы не толкаться с прайсами
+  workflow_dispatch: {}
+
+concurrency:
+  group: sync-silent-changes
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger silent-changes sync
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/sync-silent-changes"
+          echo "GET $url"
+          code=$(curl -sS -m 120 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Синк тихих изменений не удался (HTTP $code)"
+            exit 1
+          fi

@@ -24,6 +24,7 @@
     "icons:render-missing": "node scripts/icon-render/render_missing.mjs",
     "icons:render-unity": "node scripts/icon-render/render_unity.mjs",
     "db:sync-barters-crafts": "tsx scripts/sync-barters-crafts.ts",
+    "db:sync-silent-changes": "tsx scripts/sync-silent-changes.ts",
     "db:sync-hideout": "tsx scripts/sync-hideout.ts",
     "db:sync-landing": "tsx scripts/sync-landing.ts",
     "db:sync-maps-geometry": "tsx scripts/sync-maps-geometry.ts",

@@ -4,7 +4,9 @@ import { ExternalLink, FileText } from 'lucide-react';
 import { draftMode } from 'next/headers';
 import { getArticles } from '@/db/articles';
 import { getRecentChangesets, getChangeDigests } from '@/db/game-changes';
+import { getSilentChangesets } from '@/db/silent-changes';
 import { GameChangesPanel } from '@/components/features/game-changes/GameChangesPanel';
+import { SilentChangesPanel } from '@/components/features/game-changes/SilentChangesPanel';
 import { getMe } from '@/lib/auth/me';
 import { canEditContent } from '@/lib/auth/roles';
 
@@ -31,10 +33,11 @@ const fmtDate = (iso: string): string =>
 export default async function GameUpdatesPage() {
   const [me, { isEnabled }] = await Promise.all([getMe(), draftMode()]);
   const canEdit = isEnabled && canEditContent(me?.role ?? 'user');
-  const [patches, changesets, digestMap] = await Promise.all([
+  const [patches, changesets, digestMap, silentPulls] = await Promise.all([
     getArticles('patch', 30, canEdit),
     getRecentChangesets(),
     getChangeDigests(canEdit),
+    getSilentChangesets(),
   ]);
   const digests = Object.fromEntries(
     [...digestMap.entries()].map(([date, d]) => [date, { noteRu: d.noteRu, published: d.published }]),
@@ -57,6 +60,8 @@ export default async function GameUpdatesPage() {
         </header>
 
         <GameChangesPanel changesets={changesets} digests={digests} canEdit={canEdit} />
+
+        <SilentChangesPanel pulls={silentPulls} />
 
         {patches.length === 0 ? (
           <p className="py-10 text-center font-blender-book text-sm text-text-secondary">
