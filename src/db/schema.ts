@@ -243,6 +243,36 @@ export const priceHistory = pgTable(
   ],
 );
 
+/* ───────────────────────── companion: сырые офферы барахолки (краудсорс) ───────────────────────── */
+/**
+ * Staging сырых наблюдений цены от ПАССИВНОГО компаньона (см. [[eft-live-price-companion]]).
+ * Игрок сам открывает барахолку и делает скриншот → браузерный ридер (Фаза 1) OCR-ит
+ * офферы → шлёт сюда. НЕ рантайм-фетч наружу: это запись в наше зеркало (§4.11 ok).
+ *
+ * Почему отдельная staging-таблица, а не прямо в `prices`: порог доверия и анти-абьюз
+ * требуют СЫРОЙ раздачи — медиана по ≥N независимым сабмитам за окно, отброс выбросов.
+ * Агрегатор (`src/db/companion-prices.ts`) читает свежее окно отсюда. Публичного чтения
+ * у таблицы нет (RLS без select-политики) — анти-скрейп; портал видит только агрегат.
+ */
+export const companionFleaOffers = pgTable(
+  "companion_flea_offers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    inGameId: text("in_game_id").notNull(), // 24-символьный BSG UID
+    gameMode: text("game_mode").notNull().default("regular"), // 'regular' | 'pve' — офферы разнятся по режиму
+    price: integer("price").notNull(), // ₽ за штуку (нормализовано ридером)
+    submittedBy: uuid("submitted_by").notNull(), // auth.users.id приславшего (для порога «N независимых»)
+    submittedAt: timestamp("submitted_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("companion_offers_item_idx").on(t.gameId, t.inGameId, t.gameMode),
+    index("companion_offers_time_idx").on(t.submittedAt),
+  ],
+);
+
 /* ───────────────────────── barters / crafts (self-mirror tarkov.dev) ───────────────────────── */
 /**
  * Зеркало ТОПОЛОГИИ бартеров и крафтов (без цен — цены берём из `prices` при
