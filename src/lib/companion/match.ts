@@ -37,7 +37,21 @@ function dice(a: Set<string>, b: Set<string>): number {
   return (2 * inter) / (a.size + b.size);
 }
 
-/** Расстояние Левенштейна (посимвольное) — различает близнецов вроде «С-1» vs «С-3». */
+// Визуально/OCR-путаемые цифры (3↔5, 8↔6, 0↔8…): замена одной на другую дёшева,
+// т.к. это типичный мисрид, а не другой предмет. «1» ни с чем не путается (палочка).
+const DIGIT_CONFUSE = new Set(
+  ['35', '38', '58', '68', '08', '69', '89', '06', '56'].flatMap((p) => [p, p[1] + p[0]]),
+);
+function subCost(a: string, b: string): number {
+  if (a === b) return 0;
+  if (a >= '0' && a <= '9' && b >= '0' && b <= '9') return DIGIT_CONFUSE.has(a + b) ? 0.4 : 1;
+  return 1;
+}
+
+/**
+ * Взвешенное расстояние Левенштейна: замена похожих цифр (OCR-мисрид 3↔5) стоит меньше.
+ * Различает близнецов «С-1»/«С-3» И правильно снапит мисрид «С-5» на С-3 (а не С-1).
+ */
 function levenshtein(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
@@ -47,8 +61,7 @@ function levenshtein(a: string, b: string): number {
   for (let i = 1; i <= m; i++) {
     const cur = [i];
     for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + subCost(a[i - 1], b[j - 1]));
     }
     prev = cur;
   }
@@ -76,21 +89,17 @@ export function buildMatcher(catalog: CatalogEntry[]): (text: string) => MatchRe
     // Порог — отсекаем мусорный OCR. 0.5 подобран под шум кириллицы; тюнится живьём.
     if (!top || top.score < 0.5) return null;
 
-    // Близкие по Dice → выбираем ближайшего по edit-distance к OCR-строке.
+    // Близкие по Dice → снапим на РЕАЛЬНЫЙ предмет по взвешенному edit-distance.
+    // Каталог (5044) — единственный источник истины: «С-5» не существует → это мисрид,
+    // а 5↔3 путаемы (5↔1 нет) → снап на С-3. Не дропаем, не изобретаем.
     const close = scored.filter((s) => top.score - s.score <= TIE);
-    if (close.length > 1) {
-      const winner = close.reduce((best, s) =>
-        levenshtein(qn, s.x.norm) < levenshtein(qn, best.x.norm) ? s : best,
-      );
-      // Семья твинов (С-1/С-3, РБ-ВО/РБ-ВП): цифра-дискриминатор высоко различительна,
-      // а OCR её путает (3↔5). Если цифры запроса НЕ совпали с выбранным — это мисрид
-      // цифры ИЛИ не тот предмет → НЕ гадаем (иначе С-3-мисрид «С-5» отравил бы С-1).
-      const qd = (qn.match(/\d+/g) ?? []).join('');
-      const wd = (winner.x.norm.match(/\d+/g) ?? []).join('');
-      if (qd && qd !== wd) return null;
-      return { inGameId: winner.x.entry.inGameId, name: winner.x.entry.name, score: top.score };
-    }
+    const winner =
+      close.length > 1
+        ? close.reduce((best, s) =>
+            levenshtein(qn, s.x.norm) < levenshtein(qn, best.x.norm) ? s : best,
+          )
+        : top;
 
-    return { inGameId: top.x.entry.inGameId, name: top.x.entry.name, score: top.score };
+    return { inGameId: winner.x.entry.inGameId, name: winner.x.entry.name, score: top.score };
   };
 }
