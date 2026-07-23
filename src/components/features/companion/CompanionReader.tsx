@@ -18,7 +18,7 @@ interface DirWithFile {
 }
 
 export function CompanionReader() {
-  const { active, status, gameMode, offers, contributed, setActive, setStatus, setGameMode, setOffers, addContributed } =
+  const { active, status, gameMode, offers, contributed, setActive, setStatus, setGameMode, addOffers, clearOffers, addContributed } =
     useCompanionStore();
 
   const intervalRef = useRef<number | null>(null);
@@ -47,7 +47,7 @@ export function CompanionReader() {
         const file = await fileHandle.getFile();
         const { parseFleaScreenshot } = await import('@/lib/companion/ocr');
         const found = await parseFleaScreenshot(file, matchRef.current ?? (() => null));
-        setOffers(found);
+        addOffers(found); // накапливаем: скрин за скрином складываются в общий список
       } catch (e) {
         setStatus({ kind: 'error', message: e instanceof Error ? e.message : 'Ошибка распознавания' });
         return;
@@ -56,7 +56,7 @@ export function CompanionReader() {
       }
       setStatus({ kind: 'watching' });
     },
-    [setOffers, setStatus],
+    [addOffers, setStatus],
   );
 
   const start = useCallback(async () => {
@@ -97,9 +97,9 @@ export function CompanionReader() {
     lastNameRef.current = null;
     setActive(false);
     setStatus({ kind: 'idle' });
-    setOffers([]);
+    clearOffers();
     void import('@/lib/companion/ocr').then((m) => m.disposeOcr());
-  }, [setActive, setStatus, setOffers]);
+  }, [setActive, setStatus, clearOffers]);
 
   const submit = useCallback(async () => {
     if (offers.length === 0) return;
@@ -120,12 +120,12 @@ export function CompanionReader() {
       }
       const { accepted } = (await res.json()) as { accepted: number };
       addContributed(accepted);
-      setOffers([]);
+      clearOffers();
       setStatus({ kind: active ? 'watching' : 'idle' });
     } catch {
       setStatus({ kind: 'error', message: 'Сеть недоступна' });
     }
-  }, [offers, gameMode, active, addContributed, setOffers, setStatus]);
+  }, [offers, gameMode, active, addContributed, clearOffers, setStatus]);
 
   useEffect(
     () => () => {
@@ -189,13 +189,25 @@ export function CompanionReader() {
         </span>
       </div>
 
-      {/* превью распознанных офферов */}
+      {/* превью накопленных офферов (складываются со всех скриншотов сессии) */}
       {offers.length > 0 && (
         <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+              {offers.length} офферов · {new Set(offers.map((o) => o.inGameId)).size} предметов
+            </span>
+            <button
+              type="button"
+              onClick={clearOffers}
+              className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted transition-colors hover:text-(--primary)"
+            >
+              Очистить
+            </button>
+          </div>
           <div className="max-h-64 overflow-y-auto rounded-xs border border-lines">
             {offers.map((o, i) => (
               <div
-                key={`${o.inGameId}-${i}`}
+                key={`${o.inGameId}-${o.price}-${i}`}
                 className="flex items-center justify-between border-b border-lines px-3 py-1.5 last:border-b-0"
               >
                 <span className="truncate font-blender-book text-type-caption text-text-secondary">{o.name}</span>

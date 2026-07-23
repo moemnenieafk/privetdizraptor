@@ -27,10 +27,14 @@ interface CompanionState {
   setActive: (v: boolean) => void;
   setStatus: (s: CompanionStatus) => void;
   setGameMode: (m: 'regular' | 'pve') => void;
-  setOffers: (o: ScannedOffer[]) => void;
+  /** Накопить офферы нового скриншота в общий список (дедуп по предмет+цена). */
+  addOffers: (o: ScannedOffer[]) => void;
+  clearOffers: () => void;
   addContributed: (n: number) => void;
   reset: () => void;
 }
+
+const offerKey = (o: ScannedOffer) => `${o.inGameId}:${o.price}`;
 
 export const useCompanionStore = create<CompanionState>((set) => ({
   active: false,
@@ -41,7 +45,20 @@ export const useCompanionStore = create<CompanionState>((set) => ({
   setActive: (active) => set({ active }),
   setStatus: (status) => set({ status }),
   setGameMode: (gameMode) => set({ gameMode }),
-  setOffers: (offers) => set({ offers }),
+  addOffers: (incoming) =>
+    set((s) => {
+      const seen = new Set(s.offers.map(offerKey));
+      const merged = [...s.offers];
+      for (const o of incoming) {
+        const k = offerKey(o);
+        if (!seen.has(k)) {
+          seen.add(k);
+          merged.push(o);
+        }
+      }
+      return { offers: merged };
+    }),
+  clearOffers: () => set({ offers: [] }),
   addContributed: (n) => set((s) => ({ contributed: s.contributed + n })),
   reset: () => set({ active: false, status: { kind: 'idle' }, offers: [] }),
 }));
