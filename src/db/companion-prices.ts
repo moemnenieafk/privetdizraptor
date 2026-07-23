@@ -101,6 +101,25 @@ function median(nums: number[]): number {
   return s[Math.floor(s.length / 2)];
 }
 
+/** Взвешенная медиана: первое значение, где накопленный вес достигает половины суммы. */
+function weightedMedian(items: { value: number; weight: number }[]): number {
+  const sorted = [...items].sort((a, b) => a.value - b.value);
+  const total = sorted.reduce((s, i) => s + i.weight, 0);
+  let acc = 0;
+  for (const it of sorted) {
+    acc += it.weight;
+    if (acc >= total / 2) return it.value;
+  }
+  return sorted[sorted.length - 1].value;
+}
+
+/**
+ * Насколько карма тилтит вес голоса: `вес = 1 + карма × TILT`. Floor = 1 → новичок
+ * (карма ~0) всё равно голосует, ветеран весит больше. TILT=1 — мягкий тилт под
+ * Скупщик-философию медленного грайнда (карма 2–3 → вес 3–4 против новичка 1). Тюнится.
+ */
+export const KARMA_VOTE_TILT = 1;
+
 export interface CompanionOfferInput {
   inGameId: string;
   price: number;
@@ -198,45 +217,49 @@ export async function getCompanionPriceMap(
   gameMode: CompanionGameMode = "regular",
 ): Promise<Map<string, CompanionPrice>> {
   try {
-    // Квалификация строки: есть доверенный оффер (moderator/admin) ЛИБО ≥N независимых
-    // авторов. Цена: если есть доверенные — их медиана (истина, минуя толпу), иначе —
-    // медиана толпы. Медиану доверенных считаем в JS из массива (FILTER на percentile_cont
-    // ненадёжен), толпу — percentile_cont в SQL.
-    const rows = (await db.execute(sql`
-      select
-        in_game_id                                             as "inGameId",
-        percentile_cont(0.5) within group (order by price)::int as "crowdMedian",
-        array_agg(price) filter (where trusted)                as "trustedPrices",
-        count(*)::int                                          as "offers",
-        count(distinct submitted_by)::int                     as "submitters",
-        bool_or(trusted)                                       as "hasTrusted",
-        max(submitted_at)                                     as "freshestAt"
-      from public.companion_flea_offers
-      where game_id = ${gameId}
-        and game_mode = ${gameMode}
-        and submitted_at >= now() - make_interval(mins => ${TRUST.WINDOW_MIN}::int)
-      group by in_game_id
-      having bool_or(trusted) or count(distinct submitted_by) >= ${TRUST.MIN_SUBMITTERS}
+    // Тянем сырьё окна + карму автора; взвешенную медиану считаем в JS (percentile_cont
+    // с весами в SQL нет). Цена: доверенные (mod/admin) → их медиана (истина, минуя толпу);
+    // иначе — медиана толпы, ВЗВЕШЕННАЯ по карме (вес = 1 + карма×TILT). Квалификация:
+    // есть доверенный ЛИБО ≥N независимых авторов.
+    const raw = (await db.execute(sql`
+      select o.in_game_id as "inGameId", o.price::int as "price", o.trusted as "trusted",
+        o.submitted_by as "submittedBy", o.submitted_at as "submittedAt",
+        coalesce(pr.companion_karma, 0)::float8 as "karma"
+      from public.companion_flea_offers o
+      left join public.profiles pr on pr.id = o.submitted_by
+      where o.game_id = ${gameId}
+        and o.game_mode = ${gameMode}
+        and o.submitted_at >= now() - make_interval(mins => ${TRUST.WINDOW_MIN}::int)
     `)) as unknown as Array<{
       inGameId: string;
-      crowdMedian: number;
-      trustedPrices: number[] | null;
-      offers: number;
-      submitters: number;
-      hasTrusted: boolean;
-      freshestAt: string | Date;
+      price: number;
+      trusted: boolean;
+      submittedBy: string;
+      submittedAt: string | Date;
+      karma: number;
     }>;
 
+    // Группируем по предмету.
+    const groups = new Map<string, typeof raw>();
+    for (const o of raw) {
+      const g = groups.get(o.inGameId);
+      if (g) g.push(o);
+      else groups.set(o.inGameId, [o]);
+    }
+
     const map = new Map<string, CompanionPrice>();
-    for (const r of rows) {
-      const trusted = r.hasTrusted && !!r.trustedPrices?.length;
-      map.set(r.inGameId, {
-        price: trusted ? median(r.trustedPrices as number[]) : r.crowdMedian,
-        offers: r.offers,
-        submitters: r.submitters,
-        trusted,
-        freshestAt: new Date(r.freshestAt),
-      });
+    for (const [inGameId, offers] of groups) {
+      const submitters = new Set(offers.map((o) => o.submittedBy)).size;
+      const trustedOffers = offers.filter((o) => o.trusted);
+      const hasTrusted = trustedOffers.length > 0;
+      if (!hasTrusted && submitters < TRUST.MIN_SUBMITTERS) continue; // не квалифицируется
+
+      const price = hasTrusted
+        ? median(trustedOffers.map((o) => o.price))
+        : weightedMedian(offers.map((o) => ({ value: o.price, weight: 1 + o.karma * KARMA_VOTE_TILT })));
+
+      const freshestAt = new Date(Math.max(...offers.map((o) => new Date(o.submittedAt).getTime())));
+      map.set(inGameId, { price, offers: offers.length, submitters, trusted: hasTrusted, freshestAt });
     }
     return map;
   } catch (e) {
