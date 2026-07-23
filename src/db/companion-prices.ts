@@ -7,6 +7,57 @@ import { companionFleaOffers } from "./schema";
 import { eftGameId } from "./eft";
 import { memoTTL } from "../lib/server-cache";
 
+/** Старше этого — «устарело» в worklist (2× окна свежести). */
+const WORKLIST_STALE_MIN = 60;
+
+export interface WorklistItem {
+  inGameId: string;
+  slug: string; // normalizedName для ссылки /eft/items/item/<slug>
+  name: string; // ru-имя
+  value: number; // ценность (tarkov.dev avg24h/lastLow) — для приоритета
+  lastAt: string | null; // ISO последнего оффера или null
+  status: "stale" | "no-data";
+}
+
+/**
+ * «Цены, которые стоит обновить»: дорогие предметы БЕЗ свежей companion-цены
+ * (нет данных ИЛИ устарело). Приоритет по ценности — обновлять дорогое важнее хлама.
+ */
+export async function getCompanionWorklist(limit = 30): Promise<WorklistItem[]> {
+  try {
+    const gameId = await eftGameId();
+    const rows = (await db.execute(sql`
+      select p.in_game_id as "inGameId", p.normalized_name as "slug", i.name as "name",
+        coalesce(p.avg24h_price, p.last_low_price)::int as "value",
+        c.last_at as "lastAt"
+      from public.prices p
+      join public.items i on i.in_game_id = p.in_game_id and i.game_id = p.game_id
+      left join (
+        select in_game_id, max(submitted_at) as last_at
+        from public.companion_flea_offers where game_id = ${gameId} group by in_game_id
+      ) c on c.in_game_id = p.in_game_id
+      where p.game_id = ${gameId}
+        and coalesce(p.avg24h_price, p.last_low_price) > 0
+        and p.normalized_name is not null
+        and (c.last_at is null or c.last_at < now() - make_interval(mins => ${WORKLIST_STALE_MIN}::int))
+      order by "value" desc
+      limit ${limit}
+    `)) as unknown as Array<{ inGameId: string; slug: string; name: string; value: number; lastAt: string | Date | null }>;
+
+    return rows.map((r) => ({
+      inGameId: r.inGameId,
+      slug: r.slug,
+      name: r.name,
+      value: r.value,
+      lastAt: r.lastAt ? new Date(r.lastAt).toISOString() : null,
+      status: r.lastAt ? "stale" : "no-data",
+    }));
+  } catch (e) {
+    console.error("[getCompanionWorklist]", e);
+    return [];
+  }
+}
+
 export type CompanionGameMode = "regular" | "pve";
 
 // ── Конфиг доверия (тюнится тут; дефолты — из решения V4DYA 2026-07-23) ──────────
