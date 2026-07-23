@@ -497,6 +497,10 @@ export const profiles = pgTable("profiles", {
   // модератор через /api/cron/set-streamer, показывает бейдж + твич-рамку на /u/.
   // Колонка additive — заводится через /api/cron/migrate-streamer.
   streamer: boolean("streamer").notNull().default(false),
+  // Репутация компаньона цен: микро-начисление за выгрузку (как лояльность Скупщика,
+  // ~0.01). Медленный грайнд → вес голоса не накрутить мультиаккаунтами. Колонка
+  // additive — заводится через supabase/companion-rls.sql (db:sql, без db:push).
+  companionKarma: real("companion_karma").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

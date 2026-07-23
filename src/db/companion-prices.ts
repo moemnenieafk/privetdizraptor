@@ -106,6 +106,34 @@ export interface CompanionOfferInput {
   price: number;
 }
 
+/**
+ * Карма за ОДНУ выгрузку (submit с ≥1 принятым предложением). Микро-начисление —
+ * как лояльность Скупщика в EFT (0.01). Медленный грайнд: вес голоса не накрутить
+ * мультиаккаунтами. Тюнится (до 0.001). Начисляем только за принятое (прошло валидацию).
+ */
+export const KARMA_PER_UPLOAD = 0.01;
+
+/** Атомарно +KARMA_PER_UPLOAD к репутации автора. Возвращает новое значение. */
+export async function addCompanionKarma(userId: string): Promise<number> {
+  const rows = (await db.execute(sql`
+    update public.profiles set companion_karma = companion_karma + ${KARMA_PER_UPLOAD}
+    where id = ${userId} returning companion_karma as "karma"
+  `)) as unknown as Array<{ karma: number }>;
+  return rows[0]?.karma ?? 0;
+}
+
+/** Текущая репутация автора. */
+export async function getCompanionKarma(userId: string): Promise<number> {
+  try {
+    const rows = (await db.execute(sql`
+      select companion_karma as "karma" from public.profiles where id = ${userId}
+    `)) as unknown as Array<{ karma: number }>;
+    return rows[0]?.karma ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 /** Мемо-обёртка агрегата под EFT (резолвит gameId, кэш 60с — окно свежести 30 мин). */
 export function getEftCompanionMap(
   gameMode: CompanionGameMode = "regular",

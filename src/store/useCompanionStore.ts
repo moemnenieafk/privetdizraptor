@@ -22,8 +22,10 @@ interface CompanionState {
   gameMode: 'regular' | 'pve';
   /** Последняя пачка распознанных офферов (превью перед/после отправки). */
   offers: ScannedOffer[];
-  /** Счётчик принятых сервером офферов за сессию (для мотивации/кармы). */
+  /** Счётчик принятых сервером предложений за сессию. */
   contributed: number;
+  /** Репутация компаньона (накопительная, приходит с сервера). */
+  karma: number;
   setActive: (v: boolean) => void;
   setStatus: (s: CompanionStatus) => void;
   setGameMode: (m: 'regular' | 'pve') => void;
@@ -31,6 +33,7 @@ interface CompanionState {
   addOffers: (o: ScannedOffer[]) => void;
   clearOffers: () => void;
   addContributed: (n: number) => void;
+  setKarma: (k: number) => void;
   reset: () => void;
 }
 
@@ -42,6 +45,7 @@ export const useCompanionStore = create<CompanionState>((set) => ({
   gameMode: 'regular',
   offers: [],
   contributed: 0,
+  karma: 0,
   setActive: (active) => set({ active }),
   setStatus: (status) => set({ status }),
   setGameMode: (gameMode) => set({ gameMode }),
@@ -60,5 +64,6 @@ export const useCompanionStore = create<CompanionState>((set) => ({
     }),
   clearOffers: () => set({ offers: [] }),
   addContributed: (n) => set((s) => ({ contributed: s.contributed + n })),
+  setKarma: (karma) => set({ karma }),
   reset: () => set({ active: false, status: { kind: 'idle' }, offers: [] }),
 }));

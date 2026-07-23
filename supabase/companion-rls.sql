@@ -23,6 +23,9 @@ create table if not exists public.companion_flea_offers (
 -- Для уже созданной таблицы (аддитивно, идемпотентно).
 alter table public.companion_flea_offers add column if not exists trusted boolean not null default false;
 
+-- Репутация компаньона на profiles (микро-начисление за выгрузку, ~0.01). Additive.
+alter table public.profiles add column if not exists companion_karma real not null default 0;
+
 create index if not exists companion_offers_item_idx
   on public.companion_flea_offers (game_id, in_game_id, game_mode);
 create index if not exists companion_offers_time_idx

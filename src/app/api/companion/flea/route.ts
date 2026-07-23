@@ -13,6 +13,8 @@ import { rateLimit } from "@/lib/rate-limit";
 import { eftGameId } from "@/db/eft";
 import {
   insertCompanionOffers,
+  addCompanionKarma,
+  getCompanionKarma,
   TRUST,
   type CompanionGameMode,
   type CompanionOfferInput,
@@ -69,5 +71,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   const gameId = await eftGameId();
   const accepted = await insertCompanionOffers(gameId, gameMode, me.id, offers, trusted);
 
-  return NextResponse.json({ ok: true, accepted, trusted, received: offers.length });
+  // Карма — микро-начисление за принятую выгрузку (Скупщик-стайл). Без принятого не капает.
+  const karma = accepted > 0 ? await addCompanionKarma(me.id) : await getCompanionKarma(me.id);
+
+  return NextResponse.json({ ok: true, accepted, trusted, karma, received: offers.length });
 }

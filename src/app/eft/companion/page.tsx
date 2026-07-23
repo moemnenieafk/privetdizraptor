@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CompanionReader } from '@/components/features/companion/CompanionReader';
-import { getCompanionWorklist } from '@/db/companion-prices';
+import { getCompanionWorklist, getCompanionKarma } from '@/db/companion-prices';
+import { getMe } from '@/lib/auth/me';
 
 export const metadata: Metadata = {
   title: 'Компаньон цен · CTA',
@@ -16,7 +17,11 @@ const STEPS = [
 ];
 
 export default async function CompanionPage() {
-  const worklist = await getCompanionWorklist(30);
+  const me = await getMe();
+  const [worklist, initialKarma] = await Promise.all([
+    getCompanionWorklist(30),
+    me ? getCompanionKarma(me.id) : Promise.resolve(0),
+  ]);
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
@@ -28,7 +33,7 @@ export default async function CompanionPage() {
         </p>
       </header>
 
-      <CompanionReader />
+      <CompanionReader initialKarma={initialKarma} />
 
       {worklist.length > 0 && (
         <section className="flex flex-col gap-3">
