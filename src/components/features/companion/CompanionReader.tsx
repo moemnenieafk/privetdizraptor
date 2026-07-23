@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Radar, Send, FolderOpen } from 'lucide-react';
 import { useCompanionStore } from '@/store/useCompanionStore';
 import {
@@ -25,6 +25,8 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
   useEffect(() => {
     if (initialKarma != null) setKarma(initialKarma);
   }, [initialKarma, setKarma]);
+
+  const [lastGain, setLastGain] = useState(0); // сколько кармы дала последняя выгрузка
 
   const intervalRef = useRef<number | null>(null);
   const lastNameRef = useRef<string | null>(null);
@@ -123,9 +125,10 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
         setStatus({ kind: 'error', message: 'Сервер отклонил отправку' });
         return;
       }
-      const { accepted, karma: newKarma } = (await res.json()) as { accepted: number; karma?: number };
+      const { accepted, karma: newKarma, gained } = (await res.json()) as { accepted: number; karma?: number; gained?: number };
       addContributed(accepted);
       if (typeof newKarma === 'number') setKarma(newKarma);
+      if (typeof gained === 'number') setLastGain(gained);
       clearOffers();
       setStatus({ kind: active ? 'watching' : 'idle' });
     } catch {
@@ -192,6 +195,7 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
         ))}
         <span className="ml-auto font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
           репутация: <span className="text-(--primary)">{karma.toFixed(2)}</span>
+          {lastGain > 0 && <span className="text-(--color-success)"> +{lastGain.toFixed(3)}</span>}
           {contributed > 0 && ` · +${contributed} за сессию`}
         </span>
       </div>

@@ -15,6 +15,7 @@ import {
   insertCompanionOffers,
   addCompanionKarma,
   getCompanionKarma,
+  uploadKarmaFor,
   TRUST,
   type CompanionGameMode,
   type CompanionOfferInput,
@@ -69,10 +70,13 @@ export async function POST(req: Request): Promise<NextResponse> {
   // в обход порога ≥3 и медианы толпы (см. companion-prices.getCompanionPriceMap).
   const trusted = canModerate(me.role);
   const gameId = await eftGameId();
+
+  // Карму считаем ДО вставки (по ПРЕЖНЕЙ свежести предметов): база + бонус за протухшие.
+  const karmaAmount = await uploadKarmaFor(gameId, gameMode, offers.map((o) => o.inGameId));
   const accepted = await insertCompanionOffers(gameId, gameMode, me.id, offers, trusted);
 
-  // Карма — микро-начисление за принятую выгрузку (Скупщик-стайл). Без принятого не капает.
-  const karma = accepted > 0 ? await addCompanionKarma(me.id) : await getCompanionKarma(me.id);
+  // Начисляем только за принятую выгрузку (Скупщик-стайл микро-начисление).
+  const karma = accepted > 0 ? await addCompanionKarma(me.id, karmaAmount) : await getCompanionKarma(me.id);
 
-  return NextResponse.json({ ok: true, accepted, trusted, karma, received: offers.length });
+  return NextResponse.json({ ok: true, accepted, trusted, karma, gained: accepted > 0 ? karmaAmount : 0, received: offers.length });
 }

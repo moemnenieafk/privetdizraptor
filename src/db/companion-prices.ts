@@ -1,7 +1,7 @@
 // Агрегатор краудсорс-цен компаньона: сырьё `companion_flea_offers` → «живая» цена.
 // Фаза 0 ([[eft-live-price-companion]]): ТОЛЬКО захват + агрегат. Перезапись боевой
 // цены в `prices` — Фаза 2 (после quality-гейтов). Здесь ничего не мутируем в prices.
-import { sql } from "drizzle-orm";
+import { sql, and, eq, inArray } from "drizzle-orm";
 import { db } from "./index";
 import { companionFleaOffers } from "./schema";
 import { eftGameId } from "./eft";
@@ -112,14 +112,58 @@ export interface CompanionOfferInput {
  * мультиаккаунтами. Тюнится (до 0.001). Начисляем только за принятое (прошло валидацию).
  */
 export const KARMA_PER_UPLOAD = 0.01;
+/** Микро-бонус: обновил устаревшую цену (>60мин) — чуточку больше. */
+const KARMA_STALE_BONUS = 0.01;
+/** Обновил ОЧЕНЬ старую (>6ч) или предмет без данных — направляем усилие туда, где нужнее. */
+const KARMA_VERY_STALE_BONUS = 0.02;
+const VERY_STALE_MIN = 360;
 
-/** Атомарно +KARMA_PER_UPLOAD к репутации автора. Возвращает новое значение. */
-export async function addCompanionKarma(userId: string): Promise<number> {
+/** Атомарно +amount к репутации автора. Возвращает новое значение. */
+export async function addCompanionKarma(userId: string, amount: number = KARMA_PER_UPLOAD): Promise<number> {
   const rows = (await db.execute(sql`
-    update public.profiles set companion_karma = companion_karma + ${KARMA_PER_UPLOAD}
+    update public.profiles set companion_karma = companion_karma + ${amount}
     where id = ${userId} returning companion_karma as "karma"
   `)) as unknown as Array<{ karma: number }>;
   return rows[0]?.karma ?? 0;
+}
+
+/**
+ * Сколько кармы дать за выгрузку: база + бонус по СТЕПЕНИ устаревания обновлённого
+ * (берём самый протухший предмет пачки). Вызывать ДО вставки — считает прежнее состояние.
+ * Свежие обновления — только база; чем старее была цена, тем щедрее (доска заказов).
+ */
+export async function uploadKarmaFor(
+  gameId: string,
+  gameMode: CompanionGameMode,
+  inGameIds: string[],
+): Promise<number> {
+  const ids = [...new Set(inGameIds)];
+  if (ids.length === 0) return KARMA_PER_UPLOAD;
+  try {
+    const rows = await db
+      .select({ inGameId: companionFleaOffers.inGameId, lastAt: sql<string>`max(${companionFleaOffers.submittedAt})` })
+      .from(companionFleaOffers)
+      .where(
+        and(
+          eq(companionFleaOffers.gameId, gameId),
+          eq(companionFleaOffers.gameMode, gameMode),
+          inArray(companionFleaOffers.inGameId, ids),
+        ),
+      )
+      .groupBy(companionFleaOffers.inGameId);
+    const lastMap = new Map(rows.map((r) => [r.inGameId, new Date(r.lastAt).getTime()]));
+    const now = Date.now();
+    let bonus = 0;
+    for (const id of ids) {
+      const last = lastMap.get(id);
+      const ageMin = last == null ? Infinity : (now - last) / 60000; // нет данных = максимально «старо»
+      if (ageMin >= VERY_STALE_MIN) bonus = Math.max(bonus, KARMA_VERY_STALE_BONUS);
+      else if (ageMin >= WORKLIST_STALE_MIN) bonus = Math.max(bonus, KARMA_STALE_BONUS);
+    }
+    return Math.round((KARMA_PER_UPLOAD + bonus) * 1000) / 1000;
+  } catch {
+    return KARMA_PER_UPLOAD;
+  }
 }
 
 /** Текущая репутация автора. */
