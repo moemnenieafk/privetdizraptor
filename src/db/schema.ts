@@ -918,6 +918,9 @@ export const entityComments = pgTable(
     index("entity_comments_target_idx").on(t.targetType, t.targetId, t.createdAt),
     index("entity_comments_score_idx").on(t.targetType, t.targetId, t.score),
     index("entity_comments_recent_idx").on(t.createdAt),
+    // FK-индексы (гигиена БД 2026-07-23): ускоряют джойны и delete-каскад при удалении юзера.
+    index("entity_comments_user_idx").on(t.userId),
+    index("entity_comments_hidden_by_idx").on(t.hiddenBy),
   ],
 );
 
