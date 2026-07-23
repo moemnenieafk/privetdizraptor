@@ -277,6 +277,34 @@ export const companionFleaOffers = pgTable(
   ],
 );
 
+/* ───────────────────────── companion: очередь аномалий (модерация) ───────────────────────── */
+/**
+ * Аномальные companion-цены на ревью (см. [[companion-anomaly-detection]]). Companion —
+ * внутренний источник, публикуется только после модерации. Отклонение агрегата от текущей
+ * цены сверх порога (относит. R% ИЛИ абсолют. A₽) → сюда, модератор approve/reject/бан.
+ * Одна строка на предмет (PK game+item): детект апсертит, резолв не переоткрывается.
+ */
+export const companionAnomalies = pgTable(
+  "companion_anomalies",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    inGameId: text("in_game_id").notNull(),
+    companionPrice: integer("companion_price").notNull(), // агрегат компаньона
+    refPrice: integer("ref_price").notNull(), // текущая цена (tarkov.dev avg24h/lastLow)
+    deviationPct: real("deviation_pct").notNull(), // |comp−ref|/ref
+    deviationAbs: integer("deviation_abs").notNull(), // |comp−ref| ₽
+    offers: integer("offers").notNull(),
+    submitters: integer("submitters").notNull(),
+    status: text("status").notNull().default("pending"), // pending | approved | rejected
+    detectedAt: timestamp("detected_at", { withTimezone: true }).defaultNow().notNull(),
+    reviewedBy: uuid("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [primaryKey({ columns: [t.gameId, t.inGameId] }), index("companion_anomalies_status_idx").on(t.status)],
+);
+
 /* ───────────────────────── barters / crafts (self-mirror tarkov.dev) ───────────────────────── */
 /**
  * Зеркало ТОПОЛОГИИ бартеров и крафтов (без цен — цены берём из `prices` при
@@ -501,6 +529,9 @@ export const profiles = pgTable("profiles", {
   // ~0.01). Медленный грайнд → вес голоса не накрутить мультиаккаунтами. Колонка
   // additive — заводится через supabase/companion-rls.sql (db:sql, без db:push).
   companionKarma: real("companion_karma").notNull().default(0),
+  // Бан (zero-tolerance к ботам/скрапингу/скаму): банит модератор из очереди аномалий,
+  // блокирует сабмит компаньона. Additive — заводится через supabase/companion-rls.sql.
+  banned: boolean("banned").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

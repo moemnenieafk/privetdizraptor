@@ -25,6 +25,29 @@ alter table public.companion_flea_offers add column if not exists trusted boolea
 
 -- Репутация компаньона на profiles (микро-начисление за выгрузку, ~0.01). Additive.
 alter table public.profiles add column if not exists companion_karma real not null default 0;
+-- Бан автора (zero-tolerance к ботам/скрапингу/скаму) — блокирует сабмит компаньона. Additive.
+alter table public.profiles add column if not exists banned boolean not null default false;
+
+-- Очередь аномалий (модерация companion-цен). Внутренняя: публичного доступа нет,
+-- читают/пишут owner-ролью серверные роуты (детект + админ-действия) после проверки роли.
+create table if not exists public.companion_anomalies (
+  game_id         uuid not null references public.games(id) on delete cascade,
+  in_game_id      text not null,
+  companion_price integer not null,
+  ref_price       integer not null,
+  deviation_pct   real not null,
+  deviation_abs   integer not null,
+  offers          integer not null,
+  submitters      integer not null,
+  status          text not null default 'pending',
+  detected_at     timestamptz not null default now(),
+  reviewed_by     uuid,
+  reviewed_at     timestamptz,
+  primary key (game_id, in_game_id)
+);
+create index if not exists companion_anomalies_status_idx on public.companion_anomalies (status);
+alter table public.companion_anomalies enable row level security;
+drop policy if exists "companion_anomalies_read_all" on public.companion_anomalies;
 
 create index if not exists companion_offers_item_idx
   on public.companion_flea_offers (game_id, in_game_id, game_mode);

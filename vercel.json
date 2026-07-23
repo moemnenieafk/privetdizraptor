@@ -1,6 +1,7 @@
 {
   "crons": [
-    { "path": "/api/cron/sync-prices", "schedule": "0 5 * * *" }
+    { "path": "/api/cron/sync-prices", "schedule": "0 5 * * *" },
+    { "path": "/api/cron/detect-anomalies", "schedule": "0 6 * * *" }
   ],
   "ignoreCommand": "bash scripts/vercel-ignore.sh"
 }

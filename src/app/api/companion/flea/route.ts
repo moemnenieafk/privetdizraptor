@@ -20,6 +20,7 @@ import {
   type CompanionGameMode,
   type CompanionOfferInput,
 } from "@/db/companion-prices";
+import { isBanned, detectCompanionAnomalies } from "@/db/companion-anomalies";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +45,7 @@ function parseOffers(raw: unknown): CompanionOfferInput[] | null {
 export async function POST(req: Request): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return err(401, "Войдите, чтобы отправлять цены");
+  if (await isBanned(me.id)) return err(403, "Доступ к компаньону заблокирован");
 
   if (bodyTooLarge(req, JSON_BODY_CAP)) return err(413, "Слишком большой запрос");
   let body: { gameMode?: unknown; offers?: unknown };
@@ -77,6 +79,9 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   // Начисляем только за принятую выгрузку (Скупщик-стайл микро-начисление).
   const karma = accepted > 0 ? await addCompanionKarma(me.id, karmaAmount) : await getCompanionKarma(me.id);
+
+  // Инлайн-детект аномалий по обновлённым предметам (плюс периодический крон-свип).
+  if (accepted > 0) await detectCompanionAnomalies(gameMode, offers.map((o) => o.inGameId));
 
   return NextResponse.json({ ok: true, accepted, trusted, karma, gained: accepted > 0 ? karmaAmount : 0, received: offers.length });
 }
