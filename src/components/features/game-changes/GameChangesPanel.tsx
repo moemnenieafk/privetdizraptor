@@ -139,24 +139,68 @@ function FieldLine({ c }: { c: GameChange }) {
   );
 }
 
-function ItemCard({ g }: { g: ItemGroup }) {
+type CatKey = 'stat' | 'trader' | 'craft' | 'quest';
+const CAT_LABEL: Record<CatKey, string> = {
+  stat: 'Стат',
+  trader: 'Торговец',
+  craft: 'Убежище',
+  quest: 'Квест',
+};
+
+interface CatGroup {
+  cat: CatKey;
+  scope: string | null;
+  group: ItemGroup;
+}
+
+// Плоский список групп «предмет × категория» для одного среза — под двухколоночный вывод.
+function buildCatGroups(set: Changeset): CatGroup[] {
+  const out: CatGroup[] = [];
+  const cats: CatKey[] = ['stat', 'trader', 'craft', 'quest'];
+  for (const cat of cats) {
+    const changes = set.changes.filter((c) => c.category === cat);
+    if (changes.length === 0) continue;
+    if (cat === 'stat') {
+      for (const group of groupByItem(changes)) out.push({ cat, scope: null, group });
+    } else {
+      for (const { trader: scope, changes: sc } of groupByScope(changes)) {
+        for (const group of groupByItem(sc)) out.push({ cat, scope, group });
+      }
+    }
+  }
+  return out;
+}
+
+function CatTag({ cat, scope }: { cat: CatKey; scope: string | null }) {
+  const label = scope ? `${CAT_LABEL[cat]} · ${scope}` : CAT_LABEL[cat];
+  return (
+    <span className="shrink-0 rounded-xs border border-(--primary)/40 px-1.5 font-blender-medium text-type-micro uppercase tracking-widest text-(--primary)">
+      {label}
+    </span>
+  );
+}
+
+function ChangeCard({ cat, scope, group: g }: CatGroup) {
   const title = g.shortName?.trim() || g.name;
   return (
     <div className="flex flex-col gap-1 rounded-xs border border-lines-hover bg-card-menu px-3 py-2">
-      <div className="flex items-center gap-2">
-        {g.status === 'added' && <Plus className="h-3.5 w-3.5 shrink-0 text-nvg-green" aria-hidden="true" />}
-        {g.status === 'removed' && <Minus className="h-3.5 w-3.5 shrink-0 text-danger" aria-hidden="true" />}
-        <span
-          className={`font-blender-book text-sm ${g.status === 'removed' ? 'text-text-secondary line-through' : 'text-text-primary'}`}
-        >
-          {title}
-        </span>
-        {g.status === 'added' && (
-          <span className="font-blender-medium text-xs uppercase tracking-widest text-nvg-green">новый</span>
-        )}
-        {g.status === 'removed' && (
-          <span className="font-blender-medium text-xs uppercase tracking-widest text-danger">убран</span>
-        )}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          {g.status === 'added' && <Plus className="h-3.5 w-3.5 shrink-0 text-nvg-green" aria-hidden="true" />}
+          {g.status === 'removed' && <Minus className="h-3.5 w-3.5 shrink-0 text-danger" aria-hidden="true" />}
+          <span
+            className={`font-blender-book text-sm ${g.status === 'removed' ? 'text-text-secondary line-through' : 'text-text-primary'}`}
+          >
+            {title}
+          </span>
+          {g.status === 'added' && (
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-nvg-green">новый</span>
+          )}
+          {g.status === 'removed' && (
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-danger">убран</span>
+          )}
+        </div>
+        <CatTag cat={cat} scope={scope} />
       </div>
       {g.fields.length > 0 && (
         <div className="flex flex-col gap-1 pl-1">
@@ -164,6 +208,36 @@ function ItemCard({ g }: { g: ItemGroup }) {
             <FieldLine key={`${c.field}-${i}`} c={c} />
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+function Column({
+  title,
+  tone,
+  groups,
+  empty,
+}: {
+  title: string;
+  tone: string;
+  groups: CatGroup[];
+  empty: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-2 border-b border-lines-hover pb-1.5">
+        <span className={`font-blender-medium text-xs uppercase tracking-widest ${tone}`}>{title}</span>
+        <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
+          {groups.length}
+        </span>
+      </div>
+      {groups.length === 0 ? (
+        <p className="py-2 font-blender-book text-xs text-text-muted">{empty}</p>
+      ) : (
+        groups.map((cg, i) => (
+          <ChangeCard key={`${cg.cat}-${cg.scope ?? ''}-${cg.group.name}-${i}`} {...cg} />
+        ))
       )}
     </div>
   );
@@ -282,69 +356,28 @@ function DigestBlock({ set, digest, canEdit }: { set: Changeset; digest: DigestV
 function Details({ changesets, digests, canEdit }: { changesets: Changeset[]; digests: DigestMap; canEdit: boolean }) {
   return (
     <div className="flex flex-col gap-5">
-      {changesets.map((set) => (
-        <div key={set.date} className="flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-2 border-b border-lines-hover pb-1.5">
-            <span className="font-blender-medium text-xs uppercase tracking-widest text-text-primary">
-              {fmtDay(set.date)}
-            </span>
-            <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
-              {set.total} изм.
-            </span>
+      {changesets.map((set) => {
+        const all = buildCatGroups(set);
+        const left = all.filter((cg) => cg.group.status !== 'removed');
+        const right = all.filter((cg) => cg.group.status === 'removed');
+        return (
+          <div key={set.date} className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-2 border-b border-lines-hover pb-1.5">
+              <span className="font-blender-medium text-xs uppercase tracking-widest text-text-primary">
+                {fmtDay(set.date)}
+              </span>
+              <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
+                {set.total} изм.
+              </span>
+            </div>
+            <DigestBlock set={set} digest={digests[set.date]} canEdit={canEdit} />
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <Column title="Изменено и добавлено" tone="text-nvg-green" groups={left} empty="Без добавлений и правок." />
+              <Column title="Убрано" tone="text-danger" groups={right} empty="Ничего не убрано." />
+            </div>
           </div>
-          <DigestBlock set={set} digest={digests[set.date]} canEdit={canEdit} />
-          {(() => {
-            const stat = set.changes.filter((c) => c.category === 'stat');
-            const trader = set.changes.filter((c) => c.category === 'trader');
-            const craft = set.changes.filter((c) => c.category === 'craft');
-            const quest = set.changes.filter((c) => c.category === 'quest');
-            return (
-              <div className="flex flex-col gap-3">
-                {stat.length > 0 && (
-                  <div className="flex flex-col gap-1.5">
-                    <span className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">
-                      Статы предметов
-                    </span>
-                    {groupByItem(stat).map((g, i) => (
-                      <ItemCard key={`${set.date}-stat-${g.name}-${i}`} g={g} />
-                    ))}
-                  </div>
-                )}
-                {groupByScope(trader).map(({ trader: tr, changes }) => (
-                  <div key={`${set.date}-tr-${tr}`} className="flex flex-col gap-1.5">
-                    <span className="font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
-                      Торговец · {tr}
-                    </span>
-                    {groupByItem(changes).map((g, i) => (
-                      <ItemCard key={`${set.date}-${tr}-${g.name}-${i}`} g={g} />
-                    ))}
-                  </div>
-                ))}
-                {groupByScope(craft).map(({ trader: area, changes }) => (
-                  <div key={`${set.date}-cr-${area}`} className="flex flex-col gap-1.5">
-                    <span className="font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
-                      Убежище · {area}
-                    </span>
-                    {groupByItem(changes).map((g, i) => (
-                      <ItemCard key={`${set.date}-${area}-${g.name}-${i}`} g={g} />
-                    ))}
-                  </div>
-                ))}
-                {groupByScope(quest).map(({ trader: tr, changes }) => (
-                  <div key={`${set.date}-q-${tr}`} className="flex flex-col gap-1.5">
-                    <span className="font-blender-medium text-xs uppercase tracking-widest text-(--primary)">
-                      Квесты · {tr}
-                    </span>
-                    {groupByItem(changes).map((g, i) => (
-                      <ItemCard key={`${set.date}-q-${tr}-${g.name}-${i}`} g={g} />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
