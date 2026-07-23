@@ -71,6 +71,11 @@ export const TRUST = {
   PRICE_MAX: 1_000_000_000,
   /** Максимум офферов в одном сабмите (анти-флуд на приёме). */
   MAX_OFFERS_PER_REQUEST: 500,
+  /** Разброс-гейт: если цены предмета в окне расходятся сильнее чем в SPREAD_MAX раз
+   *  (max/min), цена НЕнадёжна — смешаны состояния (ключ 314: 1/10 исп. ~770к vs 10/10
+   *  ~5кк, разное состояние брони/оружия) или манипуляция. Не публикуем такой агрегат.
+   *  Полноценный учёт состояния (OCR использований) — отдельно. */
+  SPREAD_MAX: 3,
   /** Якорь на tarkov.dev: companion-цена публикуется только в этом коридоре от ref
    *  (avg24h/lastLow). Широкий (1/3…3×) — пропускает реальные колебания рынка, но
    *  ловит грубые OCR-мисриды (пропуск разряда = 10×) и накрутку. Применяется ко ВСЕМ,
@@ -253,6 +258,12 @@ export async function getCompanionPriceMap(
       const trustedOffers = offers.filter((o) => o.trusted);
       const hasTrusted = trustedOffers.length > 0;
       if (!hasTrusted && submitters < TRUST.MIN_SUBMITTERS) continue; // не квалифицируется
+
+      // Разброс-гейт: смешаны состояния (ключи/износ) или манипуляция → цена ненадёжна.
+      const usedPrices = (hasTrusted ? trustedOffers : offers).map((o) => o.price);
+      const lo = Math.min(...usedPrices);
+      const hi = Math.max(...usedPrices);
+      if (lo > 0 && hi / lo > TRUST.SPREAD_MAX) continue;
 
       const price = hasTrusted
         ? median(trustedOffers.map((o) => o.price))
