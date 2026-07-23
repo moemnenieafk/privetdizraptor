@@ -48,7 +48,7 @@ export default async function GameUpdatesPage() {
       <div className="w-full max-w-275 px-4 xl:px-0">
         <header className="mb-8">
           <div className="mb-2 flex items-center gap-3">
-            <img src="/icons/eft/05-gamesetting/timeline.svg" alt="" className="h-8 w-8" />
+            <span aria-hidden="true" className="h-8 w-8 icon-mask icon-eft-lore-game-updates bg-(--primary)" />
             <h1 className="font-blender-medium text-3xl uppercase tracking-widest text-text-primary">
               Обновления игры
             </h1>
