@@ -37,19 +37,54 @@ function dice(a: Set<string>, b: Set<string>): number {
   return (2 * inter) / (a.size + b.size);
 }
 
-/** Матчер из каталога: предвычисляем биграммы имён один раз. */
+/** Расстояние Левенштейна (посимвольное) — различает близнецов вроде «С-1» vs «С-3». */
+function levenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+
+/**
+ * Матчер из каталога. Dice-биграммы дают шорт-лист (устойчивы к шуму/перестановкам),
+ * а близкие кандидаты (в пределах TIE от лучшего) разрешаем по edit-distance —
+ * различает имена-близнецы, отличающиеся одним символом («…отсека С-1» vs «С-3»,
+ * «РБ-ВО» vs «РБ-ВП»), где биграммы почти равны и тайбрейк брал не тот.
+ */
 export function buildMatcher(catalog: CatalogEntry[]): (text: string) => MatchResult | null {
-  const index = catalog.map((e) => ({ entry: e, grams: bigrams(normalize(e.name)) }));
+  const index = catalog.map((e) => ({ entry: e, grams: bigrams(normalize(e.name)), norm: normalize(e.name) }));
+  const TIE = 0.08;
 
   return (text: string): MatchResult | null => {
-    const q = bigrams(normalize(text));
+    const qn = normalize(text);
+    const q = bigrams(qn);
     if (q.size === 0) return null;
-    let best: MatchResult | null = null;
-    for (const { entry, grams } of index) {
-      const score = dice(q, grams);
-      if (!best || score > best.score) best = { inGameId: entry.inGameId, name: entry.name, score };
-    }
+
+    const scored = index.map((x) => ({ x, score: dice(q, x.grams) }));
+    scored.sort((a, b) => b.score - a.score);
+    const top = scored[0];
     // Порог — отсекаем мусорный OCR. 0.5 подобран под шум кириллицы; тюнится живьём.
-    return best && best.score >= 0.5 ? best : null;
+    if (!top || top.score < 0.5) return null;
+
+    // Близкие по Dice → выбираем ближайшего по edit-distance к OCR-строке.
+    const close = scored.filter((s) => top.score - s.score <= TIE);
+    const winner =
+      close.length > 1
+        ? close.reduce((best, s) =>
+            levenshtein(qn, s.x.norm) < levenshtein(qn, best.x.norm) ? s : best,
+          )
+        : top;
+
+    return { inGameId: winner.x.entry.inGameId, name: winner.x.entry.name, score: top.score };
   };
 }
