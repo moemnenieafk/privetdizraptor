@@ -35,17 +35,6 @@ export default async function SeasonPerksPage({ searchParams }: Props) {
 
         <SeasonIntro season={season} />
 
-        <header className="mt-7 mb-7 border-b border-lines-hover pb-5">
-          <h1 className="font-blender-medium text-2xl uppercase tracking-widest text-text-primary">
-            Конструктор перков
-          </h1>
-          <p className="mt-2 max-w-2xl font-blender-book text-sm leading-relaxed text-text-secondary">
-            Добро пожаловать в конструктор перков! Соберите своего сезонного персонажа под свой
-            стиль игры: негативные модификаторы дают очки, позитивные — их тратят, а баланс
-            должен остаться неотрицательным (конфликтующие перки конструктор отсечёт сам).
-            Понравился билд — поделитесь ссылкой с друзьями.
-          </p>
-        </header>
 
         <SeasonBuildGallery season={season} />
 

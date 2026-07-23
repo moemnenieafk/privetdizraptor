@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { PageHeader } from '@/components/ui/PageHeader';
 import { CURRENT_SEASON } from '@/data/eft-seasons';
 import { seasonPerks, personalPerks } from '@/lib/season-points';
 import { SeasonLogo } from '@/components/features/seasons/SeasonLogo';
@@ -39,12 +38,6 @@ export default function SeasonsHubPage() {
   return (
     <main className="flex w-full flex-col items-center pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <PageHeader
-          title="Сезоны"
-          description="Сезонный персонаж — отдельный вызов с набором модификаторов. Собирайте билд перков в интерактивном конструкторе."
-          iconClass="icon-eft-progress"
-        />
-
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           {/* ── Активный сезон ─────────────────────────────────────────── */}
           <article className="group relative flex flex-col gap-6 overflow-hidden rounded-lg border border-lines-hover bg-card-menu p-6 transition-all duration-300 hover:border-(--primary)/50 hover:shadow-[0_8px_30px_color-mix(in_srgb,var(--primary)_15%,transparent)]">

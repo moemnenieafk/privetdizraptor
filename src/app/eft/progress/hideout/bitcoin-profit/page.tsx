@@ -44,13 +44,6 @@ export default async function BitcoinProfitPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <header className="mb-8">
-          <h1 className="text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">Прибыль Bitcoin</h1>
-          <p className="mt-2 text-sm text-text-secondary font-blender-book">
-            Калькулятор биткоин-фермы: скорость добычи по числу видеокарт, прибыль и окупаемость GPU. Цены — из нашего
-            зеркала.
-          </p>
-        </header>
         <BitcoinProfitClient prices={prices} />
       </div>
     </main>

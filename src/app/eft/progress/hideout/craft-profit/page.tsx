@@ -105,13 +105,6 @@ export default async function CraftProfitPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <header className="mb-8">
-          <h1 className="text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">Прибыль крафта</h1>
-          <p className="mt-2 text-sm text-text-secondary font-blender-book">
-            Рентабельность крафтов убежища: затраты на ингредиенты против выручки, сгруппировано по станциям и
-            отсортировано по прибыли в час.
-          </p>
-        </header>
         <CraftProfitClient crafts={crafts} hideoutStations={stations} />
       </div>
     </main>

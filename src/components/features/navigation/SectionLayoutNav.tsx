@@ -8,7 +8,7 @@ interface SectionLayoutNavProps {
   /** Корень раздела, например '/eft/progress'. */
   rootPath: string;
   /** Подписи левого блока, если активный путь не найден в словаре (служебные страницы). */
-  fallbackTitle: string;
+  fallbackTitle?: string;
   fallbackDescription?: string;
   fallbackIconUrl?: string;
   /** Ширина контейнера — под нестандартные раскладки (например, статья max-w-3xl). */
@@ -34,13 +34,16 @@ export function SectionLayoutNav({
   if (pathname === rootPath) return null;
 
   const node = findSectionNode(rootPath, pathname);
+  // Путь вне дерева навигации (линейные маршруты вроде Пути Новобранца,
+  // легаси-роуты) — HubNav не показываем, у таких страниц свой заголовок.
+  if (!node && !fallbackTitle) return null;
 
   return (
     <div className="pt-7">
       <SectionHubNav
         rootPath={rootPath}
         variant="full"
-        title={node?.label ?? fallbackTitle}
+        title={node?.label ?? fallbackTitle ?? ''}
         description={node?.description ?? fallbackDescription}
         iconUrl={node?.iconUrl ?? fallbackIconUrl}
         widthClass={widthClass}

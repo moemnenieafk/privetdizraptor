@@ -21,21 +21,6 @@ export default async function FindLoadoutsPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <header className="mb-8">
-          <div className="mb-2 flex items-center gap-3">
-            <i
-              className="icon-eft-prog-find-loadout text-3xl text-(--primary)"
-              aria-hidden="true"
-            />
-            <h1 className="font-blender-medium text-3xl uppercase tracking-widest text-text-primary">
-              Найти сборку
-            </h1>
-          </div>
-          <p className="max-w-xl font-blender-book text-sm text-text-secondary">
-            Сборки под квесты «Оружейник», готовые пресеты из игры и мета текущего патча.
-            Любую можно открыть в конструкторе и доработать под себя.
-          </p>
-        </header>
 
         <FindLoadoutsClient gunsmith={gunsmith} presets={presets} />
       </div>

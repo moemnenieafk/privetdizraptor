@@ -1,4 +1,3 @@
-import { PageHeader } from '@/components/ui/PageHeader';
 import { MyLoadoutsClient } from '@/components/features/loadouts/MyLoadoutsClient';
 
 // Мои сборки. Статический сегмент перебивает динамический [action] — раньше /my падал
@@ -11,11 +10,6 @@ export default function MyLoadoutsPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <PageHeader
-          title="Мои сборки"
-          description="Ваши сохранённые сборки: статы, обвес и дельта к стоку. Любую можно открыть в конструкторе, скопировать или удалить."
-          iconClass="icon-eft-prog-gun-loadouts"
-        />
         <MyLoadoutsClient />
       </div>
     </main>

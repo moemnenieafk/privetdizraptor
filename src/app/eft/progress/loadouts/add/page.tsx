@@ -34,18 +34,6 @@ export default async function AddLoadoutPage({ searchParams }: Props) {
     return (
       <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
         <div className="w-full max-w-275 px-4 xl:px-0">
-          <header className="mb-8">
-            <div className="mb-2 flex items-center gap-3">
-              <i className="icon-eft-prog-gun-loadouts text-3xl text-(--primary)" aria-hidden="true" />
-              <h1 className="font-blender-medium text-3xl uppercase tracking-widest text-text-primary">
-                Создать сборку
-              </h1>
-            </div>
-            <p className="max-w-xl font-blender-book text-sm text-text-secondary">
-              Выберите ствол — дальше конструктор сам покажет, что в него влезает,
-              и пересчитает эргономику, отдачу и цену.
-            </p>
-          </header>
 
           <BaseSelector bases={bases} />
         </div>
