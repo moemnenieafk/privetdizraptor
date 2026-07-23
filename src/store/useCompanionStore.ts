@@ -26,6 +26,10 @@ interface CompanionState {
   contributed: number;
   /** Репутация компаньона (накопительная, приходит с сервера). */
   karma: number;
+  /** id предметов последней успешной выгрузки — worklist убирает их из списка. */
+  lastSubmittedIds: string[];
+  /** Счётчик выгрузок — тик для реакции worklist (даже если id повторяются). */
+  submitSeq: number;
   setActive: (v: boolean) => void;
   setStatus: (s: CompanionStatus) => void;
   setGameMode: (m: 'regular' | 'pve') => void;
@@ -34,6 +38,8 @@ interface CompanionState {
   clearOffers: () => void;
   addContributed: (n: number) => void;
   setKarma: (k: number) => void;
+  /** Отметить успешную выгрузку: id предметов + тик seq (для worklist). */
+  markSubmitted: (ids: string[]) => void;
   reset: () => void;
 }
 
@@ -46,6 +52,8 @@ export const useCompanionStore = create<CompanionState>((set) => ({
   offers: [],
   contributed: 0,
   karma: 0,
+  lastSubmittedIds: [],
+  submitSeq: 0,
   setActive: (active) => set({ active }),
   setStatus: (status) => set({ status }),
   setGameMode: (gameMode) => set({ gameMode }),
@@ -65,5 +73,6 @@ export const useCompanionStore = create<CompanionState>((set) => ({
   clearOffers: () => set({ offers: [] }),
   addContributed: (n) => set((s) => ({ contributed: s.contributed + n })),
   setKarma: (karma) => set({ karma }),
+  markSubmitted: (ids) => set((s) => ({ lastSubmittedIds: ids, submitSeq: s.submitSeq + 1 })),
   reset: () => set({ active: false, status: { kind: 'idle' }, offers: [] }),
 }));

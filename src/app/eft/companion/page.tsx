@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { CompanionReader } from '@/components/features/companion/CompanionReader';
+import { CompanionWorklist } from '@/components/features/companion/CompanionWorklist';
 import { getCompanionWorklist, getCompanionKarma } from '@/db/companion-prices';
 import { getMe } from '@/lib/auth/me';
 
@@ -35,36 +35,7 @@ export default async function CompanionPage() {
 
       <CompanionReader initialKarma={initialKarma} />
 
-      {worklist.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-              Цены, которые стоит обновить
-            </span>
-            <span className="h-px flex-1 bg-lines" />
-          </div>
-          <ul className="flex flex-col divide-y divide-lines overflow-hidden rounded-sm border border-lines">
-            {worklist.map((w) => (
-              <li key={w.inGameId}>
-                <Link
-                  href={`/eft/items/item/${w.slug}`}
-                  className="flex items-center justify-between gap-3 px-3 py-2 transition-colors hover:bg-(--color-base)/60"
-                >
-                  <span className="truncate font-blender-book text-type-caption text-text-secondary">{w.name}</span>
-                  <span className="flex shrink-0 items-center gap-3">
-                    <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-                      {w.status === 'no-data' ? 'нет данных' : 'устарело'}
-                    </span>
-                    <span className="font-blender-medium text-xs text-text-secondary">
-                      ~{w.value.toLocaleString('ru-RU')} ₽
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <CompanionWorklist initial={worklist} />
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-3">

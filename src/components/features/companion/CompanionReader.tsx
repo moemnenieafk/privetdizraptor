@@ -18,7 +18,7 @@ interface DirWithFile {
 }
 
 export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
-  const { active, status, gameMode, offers, contributed, karma, setActive, setStatus, setGameMode, addOffers, clearOffers, addContributed, setKarma } =
+  const { active, status, gameMode, offers, contributed, karma, setActive, setStatus, setGameMode, addOffers, clearOffers, addContributed, setKarma, markSubmitted } =
     useCompanionStore();
 
   // Начальная репутация с сервера (один раз).
@@ -129,12 +129,13 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
       addContributed(accepted);
       if (typeof newKarma === 'number') setKarma(newKarma);
       if (typeof gained === 'number') setLastGain(gained);
+      if (accepted > 0) markSubmitted([...new Set(offers.map((o) => o.inGameId))]); // worklist уберёт эти предметы
       clearOffers();
       setStatus({ kind: active ? 'watching' : 'idle' });
     } catch {
       setStatus({ kind: 'error', message: 'Сеть недоступна' });
     }
-  }, [offers, gameMode, active, addContributed, clearOffers, setStatus, setKarma]);
+  }, [offers, gameMode, active, addContributed, clearOffers, setStatus, setKarma, markSubmitted]);
 
   useEffect(
     () => () => {
