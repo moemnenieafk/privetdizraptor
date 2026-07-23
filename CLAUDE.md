@@ -3,7 +3,7 @@
 ## 1. ROLES & PROJECT
 - **AI_ROLE:** Lead Frontend Architect & Technical Executor.
 - **USER_ROLE:** V4DYA — Creator & Lead UI/UX Designer. Thinks in design systems, visual hierarchy, UX flows.
-- **PROJECT:** Centre Tactical Adaptation (CTA) — Hardcore Extraction Shooter Portal.
+- **PROJECT:** Centre Tactical Adaptation (CTA) — **мультигейм-портал** по hardcore extraction shooters (Escape from Tarkov, Gray Zone Warfare, Arena Breakout: Infinite и далее). Каждая игра — свой раздел-неймспейс (`/eft/…`, `/gzw/…`, `/abi/…`) поверх общего движка, дизайн-системы и бэкенда. EFT — первая и эталонная реализация; новые игры повторяют её паттерны, а не форкают их.
 - **INTERACTION_MODEL:** User provides design intent and raw Figma code. Translate it into optimized Next.js/Tailwind components. Autonomous architect: generate ALL files involved in a feature.
 
 ## 2. KNOWLEDGE BASE
@@ -31,10 +31,10 @@ Consult before planning architecture or styling:
 4. **TYPESCRIPT:** `any` is FORBIDDEN. Use Discriminated Unions. `string | number` for sort comparators.
 5. **TAILWIND ORDER:** Position → Size → Typography → Colors → Breakpoints.
 6. **SSR:** Heavy libs (Leaflet, Canvas) → `next/dynamic` with `ssr: false`.
-7. **STATE:** UI pure. Quest trees, Barter math → Zustand or isolated helpers.
+7. **STATE:** UI pure. Доменная логика ЛЮБОЙ игры (квест-деревья, бартер/экономик-математика, лоадауты, прогресс) → Zustand or isolated helpers, не в разметке.
 8. **SKELETONS:** Never spinners. `animate-pulse` skeleton screens for loading states.
-9. **NO EXTERNAL WIKI LINKS:** Global ban on links to tarkov.wiki, escapefromtarkov.fandom.com, or any external wiki/database. CTA is the aggregator — all data stays internal. Route to internal pages (`/eft/items/`, `/eft/questmap`, etc.) instead.
-11. **BACKEND AUTONOMY:** EFT-данные (каталог, цены/экономика, бартеры, крафты, ачивки, карты, торговцы) ПОЛНОСТЬЮ зеркалятся в нашу Supabase серверным кроном. UI читает ТОЛЬКО наш бэкенд: в RSC — `getEftCatalog()` (`src/lib/eft-catalog.ts`) + `getEftPriceMapFromDb()` (`src/db/prices.ts`); по HTTP — `src/lib/cta-api.ts`; иконки — `itemIconUrl()` (`src/lib/item-icon.ts`). **ЗАПРЕЩЕНО** добавлять рантайм-вызовы `api.tarkov.dev` в страницах/компонентах/server-actions — единственная легальная точка контакта это серверный крон `/api/cron/sync-prices`. Нужен незеркалённый датасет → заведи mirror-таблицу + синк в крон (рецепт в скилле `cta-backend`), НЕ фетч на запрос. Граница сессий: `src/db/schema.ts` + `db:push` ведёт ТОЛЬКО бэкенд-сессия.
+9. **NO EXTERNAL WIKI LINKS (мультигейм):** Global ban on user-facing links to ЛЮБЫМ внешним вики/базам ЛЮБОЙ игры портала — tarkov.wiki, `*.fandom.com` (escapefromtarkov, gray-zone-warfare, …), gzwitems.com, tarkov-market, arena-breakout-market и т.п. CTA is the aggregator — all data stays internal. Route to internal per-game pages (`/eft/items/`, `/eft/questmap`, `/gzw/…`, `/abi/…`, etc.) instead. (Это про ИСХОДЯЩИЕ ссылки юзера; серверной инжест данных из таких источников в наше зеркало — отдельно, см. §4.11.)
+11. **BACKEND AUTONOMY (мультигейм):** Игровые данные ЛЮБОЙ игры портала (EFT, Gray Zone Warfare, Arena Breakout: Infinite и др.) — каталог, цены/экономика, бартеры, крафты, ачивки, карты, торговцы — ПОЛНОСТЬЮ зеркалятся в нашу Supabase серверным кроном (по одному синку на игру/датасет). UI читает ТОЛЬКО наш бэкенд: в RSC — каноничный ридер каталога/цен из БД (эталон EFT: `getEftCatalog()` `src/lib/eft-catalog.ts` + `getEftPriceMapFromDb()` `src/db/prices.ts`); по HTTP — `src/lib/cta-api.ts`; иконки — `itemIconUrl()` (`src/lib/item-icon.ts`). Для новой игры — реализуй тот же паттерн ридера, НЕ изобретай рантайм-фетч. **ЗАПРЕЩЕНО** добавлять рантайм-вызовы ЛЮБОГО внешнего игрового источника (`api.tarkov.dev` и аналоги: `gzwitems.com`, ABI-фиды и т.п.) в страницах/компонентах/server-actions — единственные легальные точки контакта наружу это серверные кроны-синки (`/api/cron/sync-*`). Легальные ЗАПИСИ в нашу БД помимо кронов: краудсорс-инжест компаньона (`/api/companion/*`, пишет в mirror-таблицы, см. [[eft-live-price-companion]]) и ручной ввод редактором через CMS — это записи в наше зеркало, а НЕ рантайм-фетч наружу. Нужен незеркалённый датасет → заведи mirror-таблицу + синк в крон (рецепт в скилле `cta-backend`), НЕ фетч на запрос. Граница сессий: `src/db/schema.ts` + `db:push` ведёт ТОЛЬКО бэкенд-сессия.
 
 ## 5. USER PROFILE
 - **Name:** Вадим (V4DYA). Communicates in Russian.
@@ -51,4 +51,4 @@ Consult before planning architecture or styling:
 → Tailwind v4 fix checklist: `/tw-fix`
 → New component scaffold: `/scaffold`
 → Code refactor rules: `/refactor`
-→ tarkov.dev GraphQL exact schema + field names: `/tarkov-api`
+→ tarkov.dev GraphQL schema + field names (EFT-специфичный источник): `/tarkov-api` · для других игр — свой синк-источник per §4.11 (GZW — датамайн файлов, ABI — фид)
