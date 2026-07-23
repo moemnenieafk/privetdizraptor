@@ -50,13 +50,6 @@ export interface EftPriceInfo {
   low24hPricePve?: number;
   sellForPve?: CtaVendorOffer[];
   buyForPve?: CtaVendorOffer[];
-  /** Живая цена от компаньона (краудсорс, [[eft-live-price-companion]]) — если свежая. */
-  companion?: {
-    price: number;
-    trusted: boolean; // от moderator/admin — авторитетная
-    at: string; // ISO самого свежего оффера
-    offers: number;
-  };
 }
 
 // TRADER_RU + FLEA_NORMALIZED_NAME/FLEA_VENDOR_RU переехали в @/lib/tarkov-labels

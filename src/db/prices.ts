@@ -11,7 +11,6 @@ import { eq, sql, and, inArray, type SQL } from "drizzle-orm";
 import { db } from "./index";
 import { prices, type PriceVendorOffer } from "./schema";
 import { eftGameId } from "./eft";
-import { getEftCompanionMap, withinAnchor } from "./companion-prices";
 import { getEftPriceMap, getLastPriceFetchError, type EftPriceInfo, type CtaVendorOffer } from "../lib/eft-prices";
 import { memoTTL } from "../lib/server-cache";
 
@@ -248,15 +247,9 @@ export async function getEftPriceBySlug(
     const gameId = await eftGameId();
     const rows = await selectPriceRows(and(eq(prices.gameId, gameId), eq(prices.normalizedName, slug)));
     const row = rows[0];
-    if (!row) return null;
-    const info = mapPriceRow(row);
-    // Наложение живой цены компаньона (краудсорс) поверх зеркала tarkov.dev, если свежая
-    // И проходит якорь на tarkov.dev-референс (отсев грубых OCR-мисридов/накрутки).
-    const cp = (await getEftCompanionMap("regular")).get(row.inGameId);
-    if (cp && withinAnchor(cp.price, info.avg24hPrice ?? info.lastLowPrice)) {
-      info.companion = { price: cp.price, trusted: cp.trusted, at: cp.freshestAt.toISOString(), offers: cp.offers };
-    }
-    return { id: row.inGameId, price: info };
+    // Companion-цены НЕ накладываем на показ игроку: это внутренний источник правды,
+    // публикуется только после модерации (см. [[eft-live-price-companion]] — очередь аномалий).
+    return row ? { id: row.inGameId, price: mapPriceRow(row) } : null;
   } catch (e) {
     console.error("[getEftPriceBySlug]", e);
     return null;

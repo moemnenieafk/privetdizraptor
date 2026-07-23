@@ -175,7 +175,6 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
           buyLevelRequired={buyLevelRequired}
           rates={rates}
           pricesAgeHours={pricesAgeHours}
-          companion={item.companion}
         />
 
         <WeaponModule properties={item.properties} />
