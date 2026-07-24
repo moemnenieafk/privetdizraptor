@@ -112,16 +112,21 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
     if (offers.length === 0) return;
     setStatus({ kind: 'submitting' });
     try {
-      const res = await fetch('/api/companion/flea', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gameMode,
-          offers: offers.map((o) => ({ inGameId: o.inGameId, price: o.price, uses: o.uses, maxUses: o.maxUses })),
-        }),
-      });
+      const post = () =>
+        fetch('/api/companion/flea', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gameMode,
+            offers: offers.map((o) => ({ inGameId: o.inGameId, price: o.price, uses: o.uses, maxUses: o.maxUses })),
+          }),
+        });
+      // 401 может быть гонкой протухания токена: первый запрос триггерит рефреш
+      // сессии в middleware (свежий cookie уже на ответе) → ретрай проходит.
+      let res = await post();
+      if (res.status === 401) res = await post();
       if (res.status === 401) {
-        setStatus({ kind: 'error', message: 'Войдите, чтобы отправлять цены' });
+        setStatus({ kind: 'error', message: 'Сессия истекла — обнови страницу и войди заново' });
         return;
       }
       if (!res.ok) {
