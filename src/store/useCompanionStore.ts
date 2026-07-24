@@ -37,6 +37,10 @@ interface CompanionState {
   setGameMode: (m: 'regular' | 'pve') => void;
   /** Накопить офферы нового скриншота в общий список (дедуп по предмет+цена). */
   addOffers: (o: ScannedOffer[]) => void;
+  /** Ручная правка цены оффера (юзер исправляет погрешность OCR перед отправкой). */
+  setOfferPrice: (index: number, price: number) => void;
+  /** Убрать оффер из списка (кривой/лишний). */
+  removeOffer: (index: number) => void;
   clearOffers: () => void;
   addContributed: (n: number) => void;
   setKarma: (k: number) => void;
@@ -72,6 +76,9 @@ export const useCompanionStore = create<CompanionState>((set) => ({
       }
       return { offers: merged };
     }),
+  setOfferPrice: (index, price) =>
+    set((s) => ({ offers: s.offers.map((o, i) => (i === index ? { ...o, price } : o)) })),
+  removeOffer: (index) => set((s) => ({ offers: s.offers.filter((_, i) => i !== index) })),
   clearOffers: () => set({ offers: [] }),
   addContributed: (n) => set((s) => ({ contributed: s.contributed + n })),
   setKarma: (karma) => set({ karma }),

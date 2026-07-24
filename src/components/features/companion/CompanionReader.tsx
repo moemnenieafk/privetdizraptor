@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Radar, Send, FolderOpen } from 'lucide-react';
+import { Radar, Send, FolderOpen, X } from 'lucide-react';
 import { useCompanionStore } from '@/store/useCompanionStore';
 import {
   ensureReadPermission,
@@ -18,7 +18,7 @@ interface DirWithFile {
 }
 
 export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
-  const { active, status, gameMode, offers, contributed, karma, setActive, setStatus, setGameMode, addOffers, clearOffers, addContributed, setKarma, markSubmitted } =
+  const { active, status, gameMode, offers, contributed, karma, setActive, setStatus, setGameMode, addOffers, setOfferPrice, removeOffer, clearOffers, addContributed, setKarma, markSubmitted } =
     useCompanionStore();
 
   // Начальная репутация с сервера (один раз).
@@ -118,7 +118,9 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             gameMode,
-            offers: offers.map((o) => ({ inGameId: o.inGameId, price: o.price, uses: o.uses, maxUses: o.maxUses })),
+            offers: offers
+              .filter((o) => o.price > 0)
+              .map((o) => ({ inGameId: o.inGameId, price: o.price, uses: o.uses, maxUses: o.maxUses })),
           }),
         });
       // 401 может быть гонкой протухания токена: первый запрос триггерит рефреш
@@ -226,12 +228,32 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
           </div>
           <div className="max-h-64 overflow-y-auto rounded-xs border border-lines">
             {offers.map((o, i) => (
-              <div
-                key={`${o.inGameId}-${o.price}-${i}`}
-                className="flex items-center justify-between border-b border-lines px-3 py-1.5 last:border-b-0"
-              >
-                <span className="truncate font-blender-book text-type-caption text-text-secondary">{o.name}</span>
-                <span className="font-blender-medium text-xs text-text-primary">{o.price.toLocaleString('ru-RU')} ₽</span>
+              <div key={i} className="flex items-center gap-2 border-b border-lines px-3 py-1.5 last:border-b-0">
+                <span className="min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-secondary">
+                  {o.name}
+                  {o.maxUses ? (
+                    <span className="ml-1.5 font-blender-medium text-text-muted">
+                      {o.uses}/{o.maxUses}
+                    </span>
+                  ) : null}
+                </span>
+                {/* Цена редактируема — юзер правит погрешность OCR перед отправкой. */}
+                <input
+                  inputMode="numeric"
+                  value={o.price ? o.price.toLocaleString('ru-RU') : ''}
+                  onChange={(e) => setOfferPrice(i, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0)}
+                  aria-label="Цена"
+                  className="w-28 rounded-xs bg-(--color-base)/60 px-2 py-0.5 text-right font-blender-medium text-xs text-text-primary outline-none focus:text-(--primary) focus:ring-1 focus:ring-(--primary)/50"
+                />
+                <span className="font-blender-medium text-xs text-text-muted">₽</span>
+                <button
+                  type="button"
+                  onClick={() => removeOffer(i)}
+                  aria-label="Убрать"
+                  className="shrink-0 text-text-muted transition-colors hover:text-(--color-danger)"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
           </div>
