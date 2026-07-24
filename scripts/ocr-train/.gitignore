@@ -1,0 +1,5 @@
+# Генерённый датасет и шрифты не коммитим (объём + лицензия шрифта Bender).
+data/
+fonts/*.otf
+fonts/*.ttf
+*.traineddata
