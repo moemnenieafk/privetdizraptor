@@ -6,6 +6,7 @@ import type { RushState } from './state';
 import { currentCard } from './state';
 import type { RushItem } from '@/lib/eft-barter-rush';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { TRADER_COLORS } from '@/data/traderColors';
 import { TRADER_IMG, BTN, CARD_TIME_MS, SWIPE_THRESHOLD } from './config';
 
 const AMBER = '#E68E25';
@@ -13,8 +14,15 @@ const SUCCESS = '#8DE736';
 const DANGER = '#C24339';
 const TEXT = '#F2F2F2';
 const MUTED = '#9AA0AE';
-const PANEL = '#242426';
 const LINE = '#313135';
+
+function hexToRgba(hex: string, a: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
 
 const CARD = { x: 40, y: 58, w: 560, h: 352 } as const;
 
@@ -141,8 +149,13 @@ function drawCard(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: RushSt
   ctx.save();
   ctx.translate(s.dx, 0);
 
-  // Тело карты.
-  ctx.fillStyle = PANEL;
+  // Тело карты: фон принимает глобальный цвет торговца — радиальный тинт из угла в тёмный
+  // (тот же паттерн, что у квест-нод: radial circle at 0% 0%, color-mix trader → #000).
+  const traderColor = TRADER_COLORS[c.traderNorm] ?? '#3A3A3F';
+  const g = ctx.createRadialGradient(CARD.x, CARD.y, 0, CARD.x, CARD.y, Math.hypot(CARD.w, CARD.h));
+  g.addColorStop(0, hexToRgba(traderColor, 0.34));
+  g.addColorStop(1, '#111113');
+  ctx.fillStyle = g;
   ctx.fillRect(CARD.x, CARD.y, CARD.w, CARD.h);
   ctx.strokeStyle = border;
   ctx.lineWidth = s.phase === 'reveal' ? 2.5 : 1;
