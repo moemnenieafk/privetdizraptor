@@ -1,0 +1,45 @@
+# Часто обновляет время завоза торговцев EFT (Фаза 3): дёргает лёгкий self-mirror
+# эндпоинт, который тянет свежий reset_time из tarkov.dev в Supabase. Держит виджет
+# «Завоз» точным (экстраполяция — лишь подстраховка) и ускоряет Фаза-2 калибровку.
+# Отдельно от sync-prices (тот тяжёлый, раз в час) — этот дешёвый, можно чаще.
+# Расписание GitHub — best-effort (возможна задержка 5–15 мин), для завоза это ок.
+#
+# Нужны в Settings → Secrets and variables → Actions (те же, что у sync-prices):
+#   • Secret   CRON_SECRET    — то же значение, что в Vercel env
+#   • Variable PROD_BASE_URL  — прод-домен, напр. https://privetdizraptor.vercel.app (без /api)
+name: sync-traders
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # каждые 15 минут (UTC)
+  workflow_dispatch: {} # + ручной запуск из вкладки Actions
+
+concurrency:
+  group: sync-traders
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger traders sync
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET в Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/sync-traders"
+          echo "GET $url"
+          code=$(curl -sS -m 60 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Синк торговцев не удался (HTTP $code)"
+            exit 1
+          fi

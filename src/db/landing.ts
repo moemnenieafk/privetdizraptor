@@ -113,6 +113,36 @@ export interface SyncLandingResult {
   tradersPruneSkipped: boolean;
 }
 
+// Общий SET для upsert торговцев (вкл. Фаза-2 калибровку интервала). Один источник
+// правды для дневного landing-синка и частого sync-traders (Фаза 3).
+const TRADERS_UPSERT_SET = {
+  name: sql`excluded.name`,
+  resetTime: sql`excluded.reset_time`,
+  restockIntervalSec: sql`CASE
+    WHEN ${traders.resetTime} IS NOT NULL AND excluded.reset_time IS NOT NULL
+     AND excluded.reset_time <> ${traders.resetTime}
+     AND EXTRACT(EPOCH FROM (excluded.reset_time::timestamptz - ${traders.resetTime}::timestamptz)) BETWEEN 3000 AND 18000
+    THEN round(EXTRACT(EPOCH FROM (excluded.reset_time::timestamptz - ${traders.resetTime}::timestamptz)))::int
+    ELSE ${traders.restockIntervalSec} END`,
+  levels: sql`excluded.levels`,
+  syncedAt: sql`now()`,
+};
+
+/**
+ * Лёгкий синк ТОЛЬКО торговцев (Фаза 3): частый крон держит reset_time свежим,
+ * чтобы виджет «Завоз» показывал точное время (экстраполяция — подстраховка),
+ * и Фаза-2 калибровка ловила смену интервала быстрее. Дешёвый: один запрос + upsert.
+ */
+export async function syncEftTraders(): Promise<{ traders: number; tradersDeleted: number; tradersPruneSkipped: boolean }> {
+  const gameId = await eftGameId();
+  const t = await fetchWithFallback<TraderRow>(() => tradersFromJson(gameId), () => tradersFromGraphQL(gameId), "traders");
+  if (t.length) {
+    await db.insert(traders).values(t).onConflictDoUpdate({ target: traders.normalizedName, set: TRADERS_UPSERT_SET });
+  }
+  const tP = await pruneStale(traders, traders.normalizedName, traders.gameId, gameId, t.map((x) => x.normalizedName), "traders");
+  return { traders: t.length, tradersDeleted: tP.deleted, tradersPruneSkipped: tP.skipped };
+}
+
 /** Тянет achievements+maps+traders из tarkov.dev и upsert'ит в наши таблицы. */
 export async function syncEftLandingData(): Promise<SyncLandingResult> {
   const gameId = await eftGameId();
@@ -163,24 +193,7 @@ export async function syncEftLandingData(): Promise<SyncLandingResult> {
     await db
       .insert(traders)
       .values(t)
-      .onConflictDoUpdate({
-        target: traders.normalizedName,
-        set: {
-          name: sql`excluded.name`,
-          resetTime: sql`excluded.reset_time`,
-          // Фаза 2: reset_time сменился → дельта = свежий интервал рестока. Часовой синк
-          // ловит одиночный интервал; берём последнюю дельту в разумной полосе (50м–5ч),
-          // мимо полосы (двойной интервал/дневной фолбэк/джиттер) — держим прежнее значение.
-          restockIntervalSec: sql`CASE
-            WHEN ${traders.resetTime} IS NOT NULL AND excluded.reset_time IS NOT NULL
-             AND excluded.reset_time <> ${traders.resetTime}
-             AND EXTRACT(EPOCH FROM (excluded.reset_time::timestamptz - ${traders.resetTime}::timestamptz)) BETWEEN 3000 AND 18000
-            THEN round(EXTRACT(EPOCH FROM (excluded.reset_time::timestamptz - ${traders.resetTime}::timestamptz)))::int
-            ELSE ${traders.restockIntervalSec} END`,
-          levels: sql`excluded.levels`,
-          syncedAt: sql`now()`,
-        },
-      });
+      .onConflictDoUpdate({ target: traders.normalizedName, set: TRADERS_UPSERT_SET });
   }
 
   // Чистим стейл-строки (achievements/maps/traders, исчезнувшие из источника при вайпе).
