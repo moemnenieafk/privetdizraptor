@@ -116,6 +116,7 @@
   .icon-eft-quests-therapist { background-image: url('/images/traders/eft/therapist.webp'); }
 
   /* ═══ EFT Предметы (03-items) ═══ */
+  .icon-eft-trader-restock { mask-image: url('/icons/eft/03-items/trader-restock.svg'); -webkit-mask-image: url('/icons/eft/03-items/trader-restock.svg'); }
   .icon-eft-armor-class-1 { mask-image: url('/icons/eft/03-items/gear/armor-class-1.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-1.svg'); }
   .icon-eft-armor-class-2 { mask-image: url('/icons/eft/03-items/gear/armor-class-2.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-2.svg'); }
   .icon-eft-armor-class-3 { mask-image: url('/icons/eft/03-items/gear/armor-class-3.svg'); -webkit-mask-image: url('/icons/eft/03-items/gear/armor-class-3.svg'); }

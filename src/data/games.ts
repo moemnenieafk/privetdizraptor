@@ -36,6 +36,10 @@ export interface Game {
   isInactive: boolean;
 }
 
+/** Отображаемое имя игры по её id раздела (fallback — сам id). */
+export const getGameTitle = (id: string): string =>
+  GAMES_DATA.find((g) => g.id === id)?.title ?? id;
+
 export const GAMES_DATA: Game[] = [
   {
     id: 'eft',

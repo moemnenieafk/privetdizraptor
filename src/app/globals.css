@@ -101,20 +101,8 @@
   --color-rarity-rare-badge: #A069AF; /* Редкое — светлый фиолет для бейджа/текста (читаемость) */
   /* Обычное — серый text-secondary (#9696A1), отдельный токен не нужен */
 
-  /* Цвета торговцев EFT */
-  --trader-prapor:      #4B5320;
-  --trader-therapist:   #45998B;
-  --trader-fence:       #66527E;
-  --trader-skier:       #AA7F43;
-  --trader-peacekeeper: #588AC4;
-  --trader-mechanic:    #5F9EA0;
-  --trader-ragman:      #6B9963;
-  --trader-jaeger:      #CC5500;
-  --trader-ref:         #B49634;
-  --trader-lightkeeper: #2ED399;
-  --trader-btrdriver:   #5F6345;
-  /* Псевдо-«трейдер» сюжетных карт: фирменный стальной цвет истории «Борей» (постер Figma). */
-  --trader-boreas:      #80ACBF;
+  /* Цвета торговцев EFT → вынесены в :root ниже: Tailwind v4 tree-shake'ит
+     @theme-переменные без утилит, а эти дёргаются только через inline var(). */
 
   --color-primary: var(--primary);
   
@@ -129,6 +117,25 @@
 
   --font-blender-book: "BlenderPro-Book", sans-serif;
   --font-blender-medium: "BlenderPro-Medium", sans-serif;
+}
+
+/* Цвета торговцев EFT — держим в :root (не в @theme): Tailwind v4 tree-shake'ит
+   theme-переменные без утилит, а эти используются только через inline var() в
+   компонентах (тринт квест-нод/дровера, ресток-карточки). */
+:root {
+  --trader-prapor:      #4B5320;
+  --trader-therapist:   #45998B;
+  --trader-fence:       #66527E;
+  --trader-skier:       #AA7F43;
+  --trader-peacekeeper: #588AC4;
+  --trader-mechanic:    #5F9EA0;
+  --trader-ragman:      #6B9963;
+  --trader-jaeger:      #CC5500;
+  --trader-ref:         #B49634;
+  --trader-lightkeeper: #2ED399;
+  --trader-btrdriver:   #5F6345;
+  /* Псевдо-«трейдер» сюжетных карт: стальной цвет истории «Борей» (постер Figma). */
+  --trader-boreas:      #80ACBF;
 }
 
 :root {

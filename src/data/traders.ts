@@ -10,6 +10,12 @@ export interface Trader {
   specializes: string;
   currency: string;
   description: string;
+  /**
+   * Интервал рестока в секундах. Фаза 1 — не задан (роут подставляет
+   * DEFAULT_RESTOCK_INTERVAL_SEC); Фаза 2 — крон калибрует per-trader по дельте
+   * двух подряд resetTime и кладёт сюда/в БД. Fence/Lightkeeper/BTR рестока не имеют.
+   */
+  restockIntervalSec?: number;
 }
 
 export const TRADERS: Trader[] = [

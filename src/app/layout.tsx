@@ -8,6 +8,7 @@ import { PlayerProfileSync } from "@/components/providers/PlayerProfileSync";
 import { RoleAutoWire } from "@/components/providers/RoleAutoWire";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import { RestockDock } from "@/components/features/traders/restock/RestockDock";
 import { StreamDockLayer } from "@/components/features/streams/StreamDock";
 import { FeedbackProvider } from "@/components/providers/FeedbackProvider";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
@@ -92,6 +93,7 @@ export default function RootLayout({
               </ConditionalLayout>
             </FeedbackProvider>
             <ScrollToTop />
+            <RestockDock />
             <StreamDockLayer />
           </ThemeProvider>
         </div>
