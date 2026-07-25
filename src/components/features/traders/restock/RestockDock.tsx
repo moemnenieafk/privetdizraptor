@@ -2,17 +2,31 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useGameMode } from '@/hooks/useGameMode';
 import { useRestockStore, useRestockTick } from '@/store/useRestockStore';
 import { nextRestockMs, formatRestockHMS } from '@/lib/eft-restock';
 import { RestockDrawer } from './RestockDrawer';
 
 /**
- * Плавающий закреплённый виджет рестока — доком к правой кромке, сверху
- * (вне потока контента, как ScrollToTop). Показывает живой таймер ближайшего
- * рестока; клик открывает полный модал.
+ * Гейт по разделу: завоз — EFT-специфичная фича (данные/API — всё `/eft`).
+ * На главной (игра не выбрана) и в других разделах виджет не монтируется вовсе —
+ * ни тика, ни загрузки. Принцип: плавающие виджеты игры показываем только под её
+ * неймспейсом (`/eft/*`), не на хабе выбора игры.
  */
 export function RestockDock() {
+  const pathname = usePathname();
+  const game = (pathname || '').split('/').filter(Boolean)[0];
+  if (game !== 'eft') return null;
+  return <RestockDockActive />;
+}
+
+/**
+ * Плавающий закреплённый виджет завоза — доком к правой кромке, сверху
+ * (вне потока контента, как ScrollToTop). Показывает живой таймер ближайшего
+ * завоза; клик открывает боковой drawer.
+ */
+function RestockDockActive() {
   const mode = useGameMode();
   const traders = useRestockStore((s) => s.traders);
   const now = useRestockStore((s) => s.now);
