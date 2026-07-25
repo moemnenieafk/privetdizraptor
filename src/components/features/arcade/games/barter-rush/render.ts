@@ -42,11 +42,14 @@ function formatRub(n: number): string {
 }
 
 function drawIcon(ctx: CanvasRenderingContext2D, sprites: SpriteCache, item: RushItem, x: number, y: number, size: number): void {
+  const r = Math.max(3, Math.round(size * 0.1));
+  ctx.beginPath();
+  ctx.roundRect(x, y, size, size, r);
   ctx.fillStyle = getTarkovBackgroundColor(item.bg);
-  ctx.fillRect(x, y, size, size);
+  ctx.fill();
   ctx.strokeStyle = LINE;
   ctx.lineWidth = 1;
-  ctx.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
+  ctx.stroke();
   const img = sprites.get(item.img);
   const pad = Math.round(size * 0.08);
   if (img) {
@@ -156,23 +159,33 @@ function drawCard(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: RushSt
   const g = ctx.createRadialGradient(CARD.x, CARD.y, 0, CARD.x, CARD.y, Math.hypot(CARD.w, CARD.h));
   g.addColorStop(0, hexToRgba(traderColor, 0.12));
   g.addColorStop(1, 'rgba(0, 0, 0, 0.85)');
+  const R = 14;
+  const cardPath = () => {
+    ctx.beginPath();
+    ctx.roundRect(CARD.x, CARD.y, CARD.w, CARD.h, R);
+  };
   // База под альфа-градиентом, чтобы карта читалась как панель на тёмном канвасе.
+  cardPath();
   ctx.fillStyle = '#141416';
-  ctx.fillRect(CARD.x, CARD.y, CARD.w, CARD.h);
+  ctx.fill();
+  cardPath();
   ctx.fillStyle = g;
-  ctx.fillRect(CARD.x, CARD.y, CARD.w, CARD.h);
-  ctx.strokeStyle = border;
-  ctx.lineWidth = s.phase === 'reveal' ? 2.5 : 1;
-  ctx.strokeRect(CARD.x + 0.5, CARD.y + 0.5, CARD.w - 1, CARD.h - 1);
+  ctx.fill();
 
-  // Свайп-подсказки.
+  // Свайп-подсказки (в скруглённых границах карты).
   if (s.phase === 'playing' && s.dx !== 0) {
     const k = Math.min(1, Math.abs(s.dx) / SWIPE_THRESHOLD);
+    cardPath();
     ctx.globalAlpha = 0.18 * k;
     ctx.fillStyle = s.dx > 0 ? SUCCESS : DANGER;
-    ctx.fillRect(CARD.x, CARD.y, CARD.w, CARD.h);
+    ctx.fill();
     ctx.globalAlpha = 1;
   }
+
+  cardPath();
+  ctx.strokeStyle = border;
+  ctx.lineWidth = s.phase === 'reveal' ? 2.5 : 1;
+  ctx.stroke();
 
   // Шапка: торговец.
   const trader = sprites.get(TRADER_IMG(c.traderNorm));
@@ -250,11 +263,13 @@ function drawBottom(ctx: CanvasRenderingContext2D, s: RushState): void {
 
   // playing: кнопки оценки.
   const drawBtn = (b: { x: number; w: number }, label: string, color: string) => {
+    ctx.beginPath();
+    ctx.roundRect(b.x, BTN.y, b.w, BTN.h, 12);
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.fillRect(b.x, BTN.y, b.w, BTN.h);
+    ctx.fill();
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(b.x + 0.5, BTN.y + 0.5, b.w - 1, BTN.h - 1);
+    ctx.stroke();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     font(ctx, 17);
