@@ -146,7 +146,7 @@ export function ArcadeHost() {
       />
     );
   } else if (isTouch && immersive && !isLandscape) {
-    screenContent = <RotateScreen onBack={exit} />;
+    screenContent = <RotateScreen />;
   } else {
     // Тач в ленте: канвас не запускаем — постер с «Играть» ведёт в фуллскрин.
     screenContent = (

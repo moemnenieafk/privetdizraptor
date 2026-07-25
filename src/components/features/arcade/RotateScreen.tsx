@@ -1,49 +1,26 @@
-'use client';
+// Мобильный портрет-гейт (общий для всех игр зала): канвас в ленте на тач не запускаем, играть —
+// только в ландшафтном фуллскрине. Иконка поворота (public/icons/rotate-screen-icon.svg) через
+// систему icon-mask (globals.css): маска красится в --primary. Выход — верхняя кнопка ВЫХОД·ESC.
 
-import { ArrowLeft } from 'lucide-react';
+const ICON = "url('/icons/rotate-screen-icon.svg')";
 
-// Мобильный портрет-гейт: канвас в ленте на тач не запускаем (экран мелкий), играть — только
-// в ландшафтном фуллскрине. Экран поворота ОБЯЗАН иметь кнопку выхода (иначе ловушка при
-// системной блокировке ориентации). Анимация иконки глушится под prefers-reduced-motion.
-interface RotateScreenProps {
-  onBack: () => void;
-}
-
-export function RotateScreen({ onBack }: RotateScreenProps) {
+export function RotateScreen() {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-black px-4 text-center select-none">
-      {/* Телефон, поворачивающийся из портрета в ландшафт (currentColor → берёт токен). */}
-      <svg
-        viewBox="0 0 48 48"
-        className="h-14 w-14 origin-center text-(--primary) motion-safe:animate-[arcade-rotate_1.8s_ease-in-out_infinite]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+    <div className="flex h-full w-full flex-col items-center justify-center gap-5 bg-black px-6 text-center select-none">
+      <span
         aria-hidden
-      >
-        <rect x="17" y="6" width="14" height="26" rx="3" />
-        <line x1="21.5" y1="28.5" x2="26.5" y2="28.5" />
-        <path d="M8 36a16 16 0 0 0 14 6" />
-        <polyline points="6 30 8 36 14 34" />
-      </svg>
-
-      <span className="font-blender-medium text-xs uppercase tracking-widest text-text-primary">
-        Поверни телефон
+        className="icon-mask h-24 w-32 text-(--primary)"
+        style={{
+          WebkitMaskImage: ICON,
+          maskImage: ICON,
+          WebkitMaskSize: 'contain',
+          WebkitMaskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
+        }}
+      />
+      <span className="font-blender-medium text-sm uppercase tracking-wide text-text-primary">
+        Разверни телефон, чтобы начать играть
       </span>
-      <span className="text-type-micro font-blender-book text-text-secondary">
-        Игра идёт в горизонтальном режиме
-      </span>
-
-      <button
-        type="button"
-        onClick={onBack}
-        className="mt-2 flex h-9 items-center gap-1.5 rounded-xs border border-lines-hover px-3 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
-      >
-        <ArrowLeft size={14} />
-        Назад
-      </button>
     </div>
   );
 }

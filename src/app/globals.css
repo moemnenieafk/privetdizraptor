@@ -407,12 +407,6 @@ html {
     to { opacity: 1; }
   }
 
-  /* Аркада: подсказка «поверни телефон» (глушится под prefers-reduced-motion) */
-  @keyframes arcade-rotate {
-    0%, 35% { transform: rotate(0deg); }
-    65%, 100% { transform: rotate(90deg); }
-  }
-
   /* Базовое состояние для элементов, которые будут анимироваться (скрыты) */
   .animate-on-scroll {
     opacity: 0;
