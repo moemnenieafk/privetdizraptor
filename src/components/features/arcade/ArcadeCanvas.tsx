@@ -126,9 +126,13 @@ export function ArcadeCanvas({ load, preset, ariaLabel, lockTouch, gameData }: A
       realDown = false;
       display.releasePointerCapture?.(e.pointerId);
     };
-    const onLeave = () => {
-      active = false;
+    const onLeave = (e: PointerEvent) => {
       realDown = false;
+      // На тач pointerleave прилетает СРАЗУ за pointerup и, обнуляя active, съедал кадр с
+      // released-эджем → тап по сетке в game02 не срабатывал (тулбар жив, т.к. он на pressed).
+      // Для тача не деактивируем: позиция валидна ещё кадр — отпускание доходит до игры.
+      // Для мыши прячем курсор как раньше.
+      if (e.pointerType === 'mouse') active = false;
     };
     display.addEventListener('pointerdown', onDown);
     display.addEventListener('pointermove', onMove);
