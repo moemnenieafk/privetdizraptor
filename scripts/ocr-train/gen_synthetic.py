@@ -31,20 +31,19 @@ def rand_price() -> int:
     return random.randint(lo, hi)
 
 def make_line() -> str:
+    # Только то, что читает ЦЕНОВОЙ воркер: цифры, пробел-разряд, /, валюта.
+    # Кириллицу (имена) не включаем — их добивает каталог-матч, а тут раздула бы charset.
     kind = random.random()
-    if kind < 0.72:                    # цена
+    if kind < 0.8:                     # цена
         p = rand_price()
         s = group_ru(p)
         if random.random() < 0.5:      # иногда с валютой (учим ₽/$/€ ≠ цифра)
             s += " " + random.choice(["₽","$","€"])
         return s
-    elif kind < 0.9:                   # использования X/Y (ключи/износ)
+    else:                              # использования X/Y (ключи/износ)
         y = random.choice([10,20,30,40,60])
         x = random.randint(1, y)
         return f"{x}/{y}"
-    else:                              # "Всего N  X/Y" (полная строка предложения)
-        y = random.choice([10,20,40]); x = random.randint(1,y)
-        return f"Всего {random.randint(1,10)}  {x}/{y}"
 
 def render(text: str, font: ImageFont.FreeTypeFont) -> Image.Image:
     tmp = Image.new("L", (10,10)); d = ImageDraw.Draw(tmp)
