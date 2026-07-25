@@ -12,15 +12,21 @@ import { GameSelector } from './GameSelector';
 import { SkinShop } from './SkinShop';
 import { RotateScreen } from './RotateScreen';
 import { gameMeta, DEFAULT_GAME_ID } from './registry';
+import type { RushCard } from '@/lib/eft-barter-rush';
 
 type WakeLockSentinelLike = { release: () => Promise<void> };
 type WakeLockNavigator = Navigator & {
   wakeLock?: { request: (type: 'screen') => Promise<WakeLockSentinelLike> };
 };
 
+interface ArcadeHostProps {
+  /** Колода бартеров для game03 (фетчится на сервере аркадной страницей). */
+  initialBarters?: readonly RushCard[];
+}
+
 // Зал автоматов. Десктоп: канвас в ленте + клоузап-фуллскрин. Тач: в ленте канвас НЕ запускаем
 // (экран мелкий) — постер «Играть» → фуллскрин; портрет → экран поворота; ландшафт → игра.
-export function ArcadeHost() {
+export function ArcadeHost({ initialBarters }: ArcadeHostProps) {
   const selectedGameId = useArcadeStore((s) => s.selectedGameId);
   const selectGame = useArcadeStore((s) => s.selectGame);
   const muted = useArcadeStore((s) => s.muted);
@@ -142,6 +148,7 @@ export function ArcadeHost() {
         load={load}
         preset={immersive ? 'fullscreen' : 'site'}
         lockTouch={immersive}
+        gameData={{ barterDeck: initialBarters }}
         ariaLabel={`Мини-игра: ${meta?.title ?? ''}`}
       />
     );

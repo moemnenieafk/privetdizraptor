@@ -30,6 +30,14 @@ export const ARCADE_GAMES: readonly ArcadeGameMeta[] = [
     status: 'ready',
     load: () => import('./games/tarkov-match3').then((m) => m.createGame),
   },
+  {
+    id: 'barter-rush',
+    title: 'Прибыль бартера',
+    logo: 'ПРИБЫЛЬ\nБАРТЕРА',
+    tagline: 'Оцени сделку на глаз · свайп ← →',
+    status: 'ready',
+    load: () => import('./games/barter-rush').then((m) => m.createGame),
+  },
 ];
 
 export function gameMeta(id: string): ArcadeGameMeta | undefined {

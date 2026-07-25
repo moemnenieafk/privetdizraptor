@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArcadeHost } from '@/components/features/arcade/ArcadeHost';
+import { getRushDeck } from '@/lib/eft-barter-rush';
 
 export const metadata: Metadata = { title: 'Зал автоматов | Кто ты в Игре | ЦТА' };
 
-export default function ArcadePage() {
+// Колода бартеров для game03 зеркалится из нашей Supabase (как /eft/progress/barter).
+export const revalidate = 3600;
+
+export default async function ArcadePage() {
+  const barterDeck = await getRushDeck();
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
@@ -25,7 +30,7 @@ export default function ArcadePage() {
             Занял очередь в рейд — разомнись на автомате. Аркадные мини-игры по вселенной Таркова.
           </p>
         </header>
-        <ArcadeHost />
+        <ArcadeHost initialBarters={barterDeck} />
       </div>
     </main>
   );

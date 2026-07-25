@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { ArcadeGame, ArcadeGameFactory } from './types';
+import type { ArcadeGame, ArcadeGameData, ArcadeGameFactory } from './types';
 import { ARCADE_W, ARCADE_H } from './types';
 import { createCrtRenderer, type CrtPreset, type CrtRenderer } from './crt';
 
@@ -12,22 +12,29 @@ interface ArcadeCanvasProps {
   ariaLabel: string;
   /** touch-action:none — ТОЛЬКО когда игра активна и в фуллскрине (в ленте страница обязана скроллиться). */
   lockTouch?: boolean;
+  /** Серверные данные для игры (напр. колода бартеров game03). */
+  gameData?: ArcadeGameData;
 }
 
 // Хост канваса: offscreen 2D 640×480 (игра рисует) → CRT-пасс на display-канвасе.
 // Ввод — только Pointer Events (одна ветка мышь+тач), координаты простым масштабом от rect.
 // Пауза при уходе вкладки в фон и из вьюпорта. Полный клинап rAF/слушателей.
-export function ArcadeCanvas({ load, preset, ariaLabel, lockTouch }: ArcadeCanvasProps) {
+export function ArcadeCanvas({ load, preset, ariaLabel, lockTouch, gameData }: ArcadeCanvasProps) {
   const displayRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
 
   // Мутабельный ввод, живёт между кадрами (НЕ в React-стейте).
   const keys = useRef<Set<string>>(new Set());
   const presetRef = useRef<CrtPreset>(preset);
+  const gameDataRef = useRef(gameData);
 
   useEffect(() => {
     presetRef.current = preset;
   }, [preset]);
+
+  useEffect(() => {
+    gameDataRef.current = gameData;
+  }, [gameData]);
 
   useEffect(() => {
     const display = displayRef.current;
@@ -138,7 +145,7 @@ export function ArcadeCanvas({ load, preset, ariaLabel, lockTouch }: ArcadeCanva
     // ─── Загрузка модуля игры ───
     load().then((factory) => {
       if (disposed) return;
-      game = factory();
+      game = factory(gameDataRef.current);
       game.init({ ctx: gctx, width: ARCADE_W, height: ARCADE_H, input: { keys: keySet, pointer: buildPointer() } });
       setLoading(false);
       raf = requestAnimationFrame(loop);

@@ -20,7 +20,7 @@ export class SpriteCache {
         try {
           await img.decode();
         } catch {
-          /* битый файл — get() вернёт null */
+          /* битый файл — get() вернёт null, рисуем плейсхолдер */
         }
       }),
     );

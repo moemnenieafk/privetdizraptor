@@ -58,6 +58,14 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        // Зеркало иконок предметов (Cloudflare R2). Нужно, чтобы гнать иконки через
+        // /_next/image (same-origin) в канвас-игру аркады — иначе CORS/taint ломает WebGL-CRT.
+        protocol: 'https',
+        hostname: '**.r2.dev',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   experimental: {

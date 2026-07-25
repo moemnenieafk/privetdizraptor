@@ -1,0 +1,279 @@
+// Рисование game03 «Прибыль бартера» в канвасе (под CRT). Цвета — литералы NIGHTFALL.
+
+import { ARCADE_W, ARCADE_H } from '../../types';
+import type { SpriteCache } from '../../sprites';
+import type { RushState } from './state';
+import { currentCard } from './state';
+import type { RushItem } from '@/lib/eft-barter-rush';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { TRADER_IMG, BTN, CARD_TIME_MS, SWIPE_THRESHOLD } from './config';
+
+const AMBER = '#E68E25';
+const SUCCESS = '#8DE736';
+const DANGER = '#C24339';
+const TEXT = '#F2F2F2';
+const MUTED = '#9AA0AE';
+const PANEL = '#242426';
+const LINE = '#313135';
+
+const CARD = { x: 40, y: 58, w: 560, h: 352 } as const;
+
+export interface RushDrawOpts {
+  best: number;
+  reducedMotion: boolean;
+}
+
+function font(ctx: CanvasRenderingContext2D, px: number): void {
+  ctx.font = `${px}px "BlenderPro-Medium", sans-serif`;
+}
+function verdictColor(v: string): string {
+  return v === 'profitable' ? SUCCESS : v === 'unprofitable' ? DANGER : MUTED;
+}
+function formatRub(n: number): string {
+  return `₽ ${new Intl.NumberFormat('ru-RU').format(Math.round(n))}`;
+}
+
+function drawIcon(ctx: CanvasRenderingContext2D, sprites: SpriteCache, item: RushItem, x: number, y: number, size: number): void {
+  ctx.fillStyle = getTarkovBackgroundColor(item.bg);
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
+  const img = sprites.get(item.img);
+  const pad = Math.round(size * 0.08);
+  if (img) {
+    ctx.drawImage(img, x + pad, y + pad, size - pad * 2, size - pad * 2);
+  } else {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    font(ctx, 9);
+    ctx.fillStyle = MUTED;
+    ctx.fillText(item.shortName.slice(0, 6), x + size / 2, y + size / 2, size - 4);
+    ctx.textBaseline = 'alphabetic';
+  }
+  if (item.count > 1) {
+    const t = `×${Math.ceil(item.count)}`;
+    font(ctx, 11);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'alphabetic';
+    const tw = ctx.measureText(t).width;
+    ctx.fillStyle = 'rgba(0,0,0,0.72)';
+    ctx.fillRect(x + size - tw - 5, y + size - 14, tw + 5, 14);
+    ctx.fillStyle = TEXT;
+    ctx.fillText(t, x + size - 2, y + size - 3);
+  }
+}
+
+function drawHud(ctx: CanvasRenderingContext2D, s: RushState, opts: RushDrawOpts): void {
+  ctx.textBaseline = 'alphabetic';
+  // Счёт.
+  ctx.textAlign = 'left';
+  font(ctx, 12);
+  ctx.fillStyle = MUTED;
+  ctx.fillText('СЧЁТ', 14, 18);
+  font(ctx, 20);
+  ctx.fillStyle = AMBER;
+  ctx.fillText(s.score.toLocaleString('ru-RU'), 14, 40);
+
+  // Комбо.
+  ctx.textAlign = 'center';
+  font(ctx, 12);
+  ctx.fillStyle = MUTED;
+  ctx.fillText('КОМБО', ARCADE_W / 2, 18);
+  font(ctx, 18);
+  ctx.fillStyle = s.combo > 0 ? SUCCESS : MUTED;
+  ctx.fillText(s.combo > 0 ? `${s.combo}× · ×${Math.min(5, 1 + Math.floor(s.combo / 3))}` : '—', ARCADE_W / 2, 40);
+
+  // Жизни + рекорд.
+  ctx.textAlign = 'right';
+  font(ctx, 16);
+  let hearts = '';
+  for (let i = 0; i < 3; i++) hearts += i < s.lives ? '♥ ' : '♡ ';
+  ctx.fillStyle = DANGER;
+  ctx.fillText(hearts.trim(), ARCADE_W - 12, 20);
+  font(ctx, 11);
+  ctx.fillStyle = MUTED;
+  ctx.fillText(`РЕКОРД ${Math.max(opts.best, s.score).toLocaleString('ru-RU')}`, ARCADE_W - 12, 40);
+}
+
+function drawTimer(ctx: CanvasRenderingContext2D, s: RushState): void {
+  const frac = Math.max(0, Math.min(1, s.timeLeft / CARD_TIME_MS));
+  ctx.fillStyle = LINE;
+  ctx.fillRect(CARD.x, 48, CARD.w, 5);
+  ctx.fillStyle = frac > 0.5 ? SUCCESS : frac > 0.25 ? AMBER : DANGER;
+  ctx.fillRect(CARD.x, 48, CARD.w * frac, 5);
+}
+
+function drawCard(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: RushState): void {
+  const c = currentCard(s);
+  if (!c) return;
+  const border = s.phase === 'reveal' && s.result ? verdictColor(s.result.verdict) : LINE;
+
+  ctx.save();
+  ctx.translate(s.dx, 0);
+
+  // Тело карты.
+  ctx.fillStyle = PANEL;
+  ctx.fillRect(CARD.x, CARD.y, CARD.w, CARD.h);
+  ctx.strokeStyle = border;
+  ctx.lineWidth = s.phase === 'reveal' ? 2.5 : 1;
+  ctx.strokeRect(CARD.x + 0.5, CARD.y + 0.5, CARD.w - 1, CARD.h - 1);
+
+  // Свайп-подсказки.
+  if (s.phase === 'playing' && s.dx !== 0) {
+    const k = Math.min(1, Math.abs(s.dx) / SWIPE_THRESHOLD);
+    ctx.globalAlpha = 0.18 * k;
+    ctx.fillStyle = s.dx > 0 ? SUCCESS : DANGER;
+    ctx.fillRect(CARD.x, CARD.y, CARD.w, CARD.h);
+    ctx.globalAlpha = 1;
+  }
+
+  // Торговец.
+  const trader = sprites.get(TRADER_IMG(c.traderNorm));
+  if (trader) ctx.drawImage(trader, CARD.x + 12, CARD.y + 12, 30, 30);
+  else {
+    ctx.fillStyle = LINE;
+    ctx.fillRect(CARD.x + 12, CARD.y + 12, 30, 30);
+  }
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  font(ctx, 14);
+  ctx.fillStyle = TEXT;
+  ctx.fillText(`${c.traderName} LL${c.level}`, CARD.x + 50, CARD.y + 32, 380);
+  ctx.textAlign = 'right';
+  font(ctx, 10);
+  ctx.fillStyle = MUTED;
+  ctx.fillText('БАРТЕР', CARD.x + CARD.w - 12, CARD.y + 26);
+
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(CARD.x, CARD.y + 50);
+  ctx.lineTo(CARD.x + CARD.w, CARD.y + 50);
+  ctx.stroke();
+
+  // Получаешь.
+  ctx.textAlign = 'left';
+  font(ctx, 10);
+  ctx.fillStyle = MUTED;
+  ctx.fillText('ПОЛУЧАЕШЬ', CARD.x + 16, CARD.y + 72);
+  drawIcon(ctx, sprites, c.reward, CARD.x + 16, CARD.y + 80, 60);
+  font(ctx, 16);
+  ctx.fillStyle = TEXT;
+  ctx.fillText(c.rewardLabel, CARD.x + 88, CARD.y + 114, CARD.w - 104);
+
+  // Отдаёшь.
+  font(ctx, 10);
+  ctx.fillStyle = MUTED;
+  ctx.fillText('ОТДАЁШЬ', CARD.x + 16, CARD.y + 168);
+  const size = 44;
+  const gap = 6;
+  const perRow = Math.floor((CARD.w - 32 + gap) / (size + gap));
+  c.required.forEach((ri, i) => {
+    const col = i % perRow;
+    const row = Math.floor(i / perRow);
+    if (row > 1) return; // максимум 2 ряда
+    drawIcon(ctx, sprites, ri, CARD.x + 16 + col * (size + gap), CARD.y + 178 + row * (size + gap), size);
+  });
+
+  ctx.restore();
+}
+
+function drawBottom(ctx: CanvasRenderingContext2D, s: RushState): void {
+  if (s.phase === 'reveal' && s.result) {
+    const r = s.result;
+    const col = verdictColor(r.verdict);
+    ctx.textAlign = 'left';
+    font(ctx, 15);
+    ctx.fillStyle = r.correct ? SUCCESS : DANGER;
+    ctx.fillText(r.timeout ? '⏱ ПРОСРОЧИЛ' : r.correct ? '▲ ВЕРНО' : '✕ МИМО КАССЫ', 24, BTN.y + 18);
+    if (r.correct && r.points > 0) {
+      let bonus = `+${r.points}`;
+      if (r.mult > 1) bonus += ` ×${r.mult}`;
+      if (r.fast) bonus += ' быстро';
+      font(ctx, 14);
+      ctx.fillStyle = AMBER;
+      ctx.fillText(bonus, 150, BTN.y + 18);
+    }
+    // Вердикт + профит.
+    ctx.textAlign = 'left';
+    font(ctx, 12);
+    ctx.fillStyle = col;
+    const label = r.verdict === 'profitable' ? 'ВЫГОДНЫЙ' : r.verdict === 'unprofitable' ? 'НЕВЫГОДНЫЙ' : 'НЕЙТРАЛЬНЫЙ';
+    ctx.fillText(`${label} · ROI ${r.roi >= 0 ? '+' : '−'}${Math.abs(r.roi).toFixed(0)}%`, 24, BTN.y + 40);
+    ctx.textAlign = 'right';
+    font(ctx, 22);
+    ctx.fillStyle = col;
+    ctx.fillText(`${r.netProfit >= 0 ? '+' : '−'}${formatRub(Math.abs(r.netProfit))}`, ARCADE_W - 24, BTN.y + 38);
+    ctx.textAlign = 'center';
+    font(ctx, 10);
+    ctx.fillStyle = MUTED;
+    ctx.fillText('ТАП — ДАЛЬШЕ', ARCADE_W / 2, ARCADE_H - 6);
+    return;
+  }
+
+  // playing: кнопки оценки.
+  const drawBtn = (b: { x: number; w: number }, label: string, color: string) => {
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(b.x, BTN.y, b.w, BTN.h);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(b.x + 0.5, BTN.y + 0.5, b.w - 1, BTN.h - 1);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    font(ctx, 17);
+    ctx.fillStyle = color;
+    ctx.fillText(label, b.x + b.w / 2, BTN.y + BTN.h / 2 + 1);
+    ctx.textBaseline = 'alphabetic';
+  };
+  drawBtn(BTN.mimo, '↞ МИМО', DANGER);
+  drawBtn(BTN.vygoda, 'ВЫГОДА ↠', SUCCESS);
+}
+
+function overlay(ctx: CanvasRenderingContext2D, a: number): void {
+  ctx.fillStyle = `rgba(0,0,0,${a})`;
+  ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
+}
+function center(ctx: CanvasRenderingContext2D, text: string, y: number, px: number, color: string): void {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  font(ctx, px);
+  ctx.fillStyle = color;
+  ctx.fillText(text, ARCADE_W / 2, y);
+}
+
+export function draw(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: RushState, opts: RushDrawOpts, ready: boolean): void {
+  ctx.fillStyle = '#0b0b0d';
+  ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
+
+  if (!ready || s.phase === 'loading') {
+    center(ctx, 'ЗАГРУЗКА…', ARCADE_H / 2, 18, MUTED);
+    return;
+  }
+  if (s.phase === 'empty') {
+    center(ctx, 'НЕТ ДАННЫХ О БАРТЕРАХ', ARCADE_H / 2, 16, MUTED);
+    return;
+  }
+
+  drawHud(ctx, s, opts);
+  if (s.phase === 'playing') drawTimer(ctx, s);
+  drawCard(ctx, sprites, s);
+  drawBottom(ctx, s);
+
+  if (s.phase === 'brief') {
+    overlay(ctx, 0.74);
+    center(ctx, 'ПРИБЫЛЬ БАРТЕРА', ARCADE_H / 2 - 58, 30, AMBER);
+    center(ctx, 'Оцени сделку на глаз: выгодна или нет.', ARCADE_H / 2 - 18, 15, TEXT);
+    center(ctx, 'Свайп → ВЫГОДА, ← МИМО (или кнопки).', ARCADE_H / 2 + 6, 14, MUTED);
+    center(ctx, 'Успей до таймера. 3 ошибки — смена окончена.', ARCADE_H / 2 + 28, 14, MUTED);
+    center(ctx, 'ТАП — СТАРТ', ARCADE_H / 2 + 66, 16, AMBER);
+  }
+
+  if (s.phase === 'over') {
+    overlay(ctx, 0.78);
+    center(ctx, 'СМЕНА ОКОНЧЕНА', ARCADE_H / 2 - 48, 30, DANGER);
+    center(ctx, `Счёт ${s.score.toLocaleString('ru-RU')}`, ARCADE_H / 2 - 6, 22, AMBER);
+    center(ctx, `Рекорд ${Math.max(opts.best, s.score).toLocaleString('ru-RU')}`, ARCADE_H / 2 + 22, 15, MUTED);
+    center(ctx, 'ТАП — ЗАНОВО', ARCADE_H / 2 + 58, 16, TEXT);
+  }
+}
