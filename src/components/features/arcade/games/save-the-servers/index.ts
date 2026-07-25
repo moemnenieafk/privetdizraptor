@@ -11,9 +11,10 @@ import {
   backplateSrc,
   itemSrc,
   cursorSrc,
+  errorSrc,
+  flashSrc,
+  ERROR_VARIANTS,
   weaponById,
-  hitRadiusForTier,
-  WEAPONS,
   PELMEN_VARIANTS,
 } from './config';
 
@@ -31,8 +32,20 @@ export function createGame(): ArcadeGame {
 
   const loadSkin = (file: string) => sprites.load([cursorSrc(file, 1), cursorSrc(file, 2)]);
 
+  // Флэш-граната «Заря» — реальный трек (посекундный таймлайн визуала синхронен со звуком).
+  const flashAudio = typeof Audio !== 'undefined' ? new Audio(flashSrc) : null;
+  if (flashAudio) flashAudio.preload = 'auto';
+
   const sfx = (name: GameSound) => {
-    if (!useArcadeStore.getState().muted) playSfx(name);
+    if (useArcadeStore.getState().muted) return;
+    if (name === 'flash') {
+      if (flashAudio) {
+        flashAudio.currentTime = 0;
+        void flashAudio.play().catch(() => {});
+      }
+      return;
+    }
+    playSfx(name);
   };
 
   const hooks = {
@@ -56,8 +69,11 @@ export function createGame(): ArcadeGame {
         .load([
           backplateSrc(backplateN),
           itemSrc('pevko'),
+          itemSrc('goldpevko'),
           itemSrc('heal'),
+          itemSrc('zvezda'),
           ...PELMEN_VARIANTS.map((v) => itemSrc(v)),
+          ...Array.from({ length: ERROR_VARIANTS }, (_, i) => errorSrc(i + 1)),
           cursorSrc(skinFile, 1),
           cursorSrc(skinFile, 2),
         ])
@@ -70,12 +86,9 @@ export function createGame(): ArcadeGame {
     frame({ ctx, input }, dtMs) {
       updateFrame(state, input, dtMs, acc, hooks);
 
-      // Старт нового забега: перечитываем скин + ставим радиус хитбокса по тиру оружия.
+      // Старт нового забега: перечитываем выбранный скин для курсора (хитбокс фиксирован).
       if (state.phase === 'playing' && prevPhase !== 'playing') {
-        const selectedId = useSaveTheServersStore.getState().selectedSkin;
-        const idx = Math.max(0, WEAPONS.findIndex((w) => w.id === selectedId));
-        state.hitRadius = hitRadiusForTier(idx);
-        const file = weaponById(selectedId).file;
+        const file = weaponById(useSaveTheServersStore.getState().selectedSkin).file;
         if (file !== skinFile) {
           skinFile = file;
           void loadSkin(file);

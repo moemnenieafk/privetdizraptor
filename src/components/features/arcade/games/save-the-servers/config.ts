@@ -5,24 +5,14 @@
 export const STEP_HZ = 60;
 export const STEP_MS = 1000 / STEP_HZ;
 
-// ─── Физика ───
+// ─── Физика (спека v1.4: простой клик, без заряда/свайпа) ───
 export const GRAVITY = 0.4; // px/шаг²
-export const CLICK_VY = -10; // импульс вверх при лёгком касании, px/шаг
-export const CLICK_VY_MAX = -18; // импульс при полном заряде (зажатие ЛКМ)
+export const CLICK_VY = -12; // импульс вверх при клике, px/шаг
 export const CLICK_VX_MAX = 4; // боковой сдвиг ±, зависит от точки попадания
 export const WALL_BOUNCE = 0.8; // упругость боковых стен
 
-// ─── Взмах и заряд ───
-export const CHARGE_MS = 450; // время удержания ЛКМ до полного заряда
-export const SWING_MIN = 6; // мин. смещение курсора за кадр, чтобы считать «взмахом» (лог. px)
-export const HIT_CD_MS = 120; // кулдаун повторного удара по одному объекту в рамках свипа
-
-// Хитбокс курсора растёт с тиром выбранного оружия (index в WEAPONS) — СОВСЕМ чуть-чуть.
-export const HIT_RADIUS = 40; // база (bars, index 0)
-export const HIT_RADIUS_PER_TIER = 2; // +px за ступень (до +30 у cepen)
-export function hitRadiusForTier(index: number): number {
-  return HIT_RADIUS + index * HIT_RADIUS_PER_TIER;
-}
+// Фиксированный радиус попадания курсора (одинаков для всех скинов — спека).
+export const HIT_RADIUS = 44;
 
 // ─── Юмор/жизнь: вращение и «поп» ───
 export const SPIN_IDLE = 0.035; // разброс базовой закрутки при спавне (рад/шаг)
@@ -31,20 +21,17 @@ export const SPIN_DAMP = 0.99; // затухание вращения за ша�
 export const HITPOP_MS = 170; // длительность squash-«попа» при ударе
 export const HITRING_MS = 260; // кольцо-фидбэк радиуса на клике
 
-// ─── Бутылка ───
-export const BOTTLE_BASE_H = 132; // высота при 100% (лог. px); ширина из пропорции спрайта
-export const BOTTLE_SHRINK_TO = 0.8; // усадка к концу разгона
-export const BOTTLE_SHRINK_MS = 60_000; // разгон: 100%→80% за первую минуту
+// ─── Бутылка (спека v1.4: фиксированный размер, БЕЗ масштабирования) ───
+export const BOTTLE_BASE_H = 132; // высота (лог. px); ширина из пропорции спрайта
 export const GOLDEN_CHANCE = 0.15; // шанс золотой бутылки (+2 очка/клик)
 
-// ─── HP ───
-export const HP_MAX = 2;
+// ─── HP (спека v1.4: старт 2, оверхил без потолка) ───
 export const HP_START = 2;
 
-// ─── Таймлайн числа бутылок ───
-// t<60с → 1; далее +1 каждые 120с. Границы стадий (для отката Пельменем): 0,60,180,300,…
-export const RAMP_END_MS = 60_000;
-export const STAGE_STEP_MS = 120_000;
+// ─── Таймлайн числа бутылок (спека §3: 30с вступление, далее +1 каждую минуту) ───
+// t<30с → 1; далее +1 каждые 60с. Границы стадий (для отката Пельменем): 0,30,90,150,…
+export const RAMP_END_MS = 30_000;
+export const STAGE_STEP_MS = 60_000;
 export function bottlesAt(tMs: number): number {
   if (tMs < RAMP_END_MS) return 1;
   return 2 + Math.floor((tMs - RAMP_END_MS) / STAGE_STEP_MS);
@@ -57,7 +44,7 @@ export function stageStartMs(tMs: number): number {
 
 // ─── Пельмень Буянова ───
 export const PELMEN_MIN_BOTTLES = 2; // с какой стадии может вылетать (тюним 2/3 на тесте)
-export const PELMEN_TARGET = 10; // кликов для срабатывания
+export const PELMEN_TARGET = 5; // кликов для срабатывания (спека §4: снижено с 10)
 export const PELMEN_SPAWN_MS = 25_000; // как часто пробуем спавнить
 export const PELMEN_VARIANTS = ['pelmen1', 'pelmen2', 'pelmen3'] as const;
 export const PELMEN_SIZE = 96; // лог. px
@@ -73,14 +60,21 @@ export const STAR_SPAWN_MS = 45_000;
 export const SPARK_MS = 420; // вспышка искр при потере HP
 
 // ─── Дебаффы ───
-export const DEBUFF_ERROR_MS = 2_000; // «Backend Error 228»
-export const DEBUFF_FLASH_MS = 500; // флэш «Заря»
+export const DEBUFF_ERROR_MS = 3_000; // окно ошибки BSG (спека §5.2: 3с или по OK)
 export const DEBUFF_TREMOR_MS = 3_000; // «Боль/Тремор»
 export const DEBUFF_MIN_INTERVAL_MS = 18_000; // не чаще чем раз в N
+export const ERROR_VARIANTS = 7; // error1..error7
+
+// ─── Флэш «Заря» (синхрон с flashgrenade.mp3, спека §5.1) ───
+export const FLASH_TOTAL_MS = 6_000; // длительность дебаффа = длина трека
+export const FLASH_BLAST_AT = 3_000; // до 3с — тишина/подготовка (взрыв на 3-4с)
+export const FLASH_PEAK_AT = 3_500; // пик ослепления
+export const FLASH_PEAK = 0.85; // максимум белизны (очертания бутылок чуть видны)
+export const FLASH_PEAK_REDUCED = 0.45; // мягче под prefers-reduced-motion
 
 // ─── Баффы ───
-export const BUFF_STAR_MS = 30_000; // «Золотая Звезда»: ×1.5 размер + иммунитет к дебаффам
-export const BUFF_STAR_SCALE = 1.5;
+export const BUFF_STAR_MS = 15_000; // «Золотая Звезда»: замедление падения на 15с (спека §5.2.1)
+export const STAR_FALL_FACTOR = 0.5; // множитель гравитации бутылок при активной звезде
 export const HEAL_SPAWN_MS = 40_000; // частота попыток спавна хилки
 export const PICKUP_SPEED = 2.6; // скорость пролёта хилки/звезды через экран, px/шаг
 
@@ -127,3 +121,5 @@ export const ASSET_BASE = '/images/arcade/game01';
 export const cursorSrc = (file: string, state: 1 | 2) => `${ASSET_BASE}/cursor/${file}${state}.webp`;
 export const itemSrc = (name: string) => `${ASSET_BASE}/items/${name}.webp`;
 export const backplateSrc = (n: number) => `${ASSET_BASE}/backplate/backplate${n}.webp`;
+export const errorSrc = (n: number) => `${ASSET_BASE}/errors/webp/error${n}.webp`;
+export const flashSrc = `${ASSET_BASE}/flashgrenade.mp3`;

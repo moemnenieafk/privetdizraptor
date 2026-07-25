@@ -1,27 +1,27 @@
 // Рисование game01. HUD и эффекты — В КАНВАСЕ (попадают под CRT-пасс). Цвета — литералы
 // NIGHTFALL (в канвасе нет доступа к CSS-токенам), держим их именованными для бренда.
+// v1.4: фиксированный размер бутылок, goldpevko/zvezda/error-ассеты, флэш по таймлайну трека.
 
 import { ARCADE_W, ARCADE_H } from '../../types';
 import type { SpriteCache } from './sprites';
-import {
-  bottleScaleNow,
-  starActive,
-  PEVKO_RATIO,
-  type GameState,
-} from './state';
+import { starActive, PEVKO_RATIO, type GameState } from './state';
 import {
   BOTTLE_BASE_H,
-  HP_MAX,
   PELMEN_SIZE,
   PELMEN_TARGET,
   PICKUP_SIZE,
-  DEBUFF_FLASH_MS,
   SPARK_MS,
   HITPOP_MS,
   HITRING_MS,
+  FLASH_BLAST_AT,
+  FLASH_PEAK_AT,
+  FLASH_TOTAL_MS,
+  FLASH_PEAK,
+  FLASH_PEAK_REDUCED,
   backplateSrc,
   itemSrc,
   cursorSrc,
+  errorSrc,
 } from './config';
 
 const AMBER = '#E68E25';
@@ -29,6 +29,7 @@ const TEXT = '#F2F2F2';
 const MUTED = '#9AA0AE';
 const DANGER = '#C24339';
 const GOLD = '#EBC33A';
+const GREEN = '#8DE736';
 const BG = '#0b0b0d';
 
 export interface DrawOpts {
@@ -63,29 +64,25 @@ function drawBackplate(ctx: CanvasRenderingContext2D, sprites: SpriteCache, n: n
 }
 
 function drawBottles(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: GameState): void {
-  const img = sprites.get(itemSrc('pevko'));
-  const bh = BOTTLE_BASE_H * bottleScaleNow(s);
+  const pevko = sprites.get(itemSrc('pevko'));
+  const gold = sprites.get(itemSrc('goldpevko'));
+  const bh = BOTTLE_BASE_H; // фиксированный размер — без масштабирования (спека §1)
   const bw = bh * PEVKO_RATIO;
   for (const b of s.bottles) {
-    // squash-«поп» после удара.
+    // squash-«поп» — короткий фидбэк удара (не геймплейное масштабирование).
     const pop = b.hitAt >= 0 && s.nowMs - b.hitAt < HITPOP_MS ? 1 + 0.22 * (1 - (s.nowMs - b.hitAt) / HITPOP_MS) : 1;
+    const img = b.golden ? (gold ?? pevko) : pevko;
     ctx.save();
     ctx.translate(b.x, b.y);
     ctx.rotate(b.angle);
     ctx.scale(pop, pop);
-    if (b.golden && img) {
+    if (b.golden) {
       ctx.shadowColor = GOLD;
       ctx.shadowBlur = 14;
-      ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh);
-      ctx.shadowBlur = 0;
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.globalAlpha = 0.35;
-      ctx.fillStyle = GOLD;
-      ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
-    } else if (img) {
-      ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh);
-    } else {
-      ctx.fillStyle = '#c9a227';
+    }
+    if (img) ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh);
+    else {
+      ctx.fillStyle = b.golden ? GOLD : '#c9a227';
       ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
     }
     ctx.restore();
@@ -118,49 +115,41 @@ function drawHitFx(ctx: CanvasRenderingContext2D, s: GameState): void {
   ctx.restore();
 }
 
-function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
-  ctx.save();
-  ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const ang = (Math.PI / 5) * i - Math.PI / 2;
-    const rad = i % 2 === 0 ? r : r * 0.45;
-    const x = cx + Math.cos(ang) * rad;
-    const y = cy + Math.sin(ang) * rad;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.shadowColor = GOLD;
-  ctx.shadowBlur = 16;
-  ctx.fillStyle = GOLD;
-  ctx.fill();
-  ctx.restore();
-}
-
 function drawPickups(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: GameState): void {
   for (const p of s.pickups) {
-    if (p.kind === 'heal') {
-      const img = sprites.get(itemSrc('heal'));
-      const sz = PICKUP_SIZE;
-      if (img) ctx.drawImage(img, p.x - sz / 2, p.y - sz / 2, sz, sz);
+    const img = sprites.get(itemSrc(p.kind === 'heal' ? 'heal' : 'zvezda'));
+    const sz = PICKUP_SIZE;
+    if (img) {
+      ctx.drawImage(img, p.x - sz / 2, p.y - sz / 2, sz, sz);
     } else {
-      drawStar(ctx, p.x, p.y, PICKUP_SIZE / 2);
+      ctx.save();
+      ctx.fillStyle = p.kind === 'heal' ? GREEN : GOLD;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, sz / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   }
 }
 
 function drawHud(ctx: CanvasRenderingContext2D, s: GameState): void {
-  // HP-пипсы (слева сверху).
+  // HP-пипсы (оверхил без потолка): до 6 пипсов + «×N», если больше.
   const pipW = 16;
   const gap = 6;
-  for (let i = 0; i < HP_MAX; i++) {
-    const x = 14 + i * (pipW + gap);
-    ctx.fillStyle = i < s.hp ? AMBER : '#2b2b30';
-    ctx.fillRect(x, 14, pipW, 12);
+  const maxPips = 6;
+  const shown = Math.min(s.hp, maxPips);
+  for (let i = 0; i < shown; i++) {
+    ctx.fillStyle = AMBER;
+    ctx.fillRect(14 + i * (pipW + gap), 14, pipW, 12);
   }
-
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
+  if (s.hp > maxPips) {
+    font(ctx, 13);
+    ctx.fillStyle = AMBER;
+    ctx.fillText(`×${s.hp}`, 14 + maxPips * (pipW + gap) + 2, 25);
+  }
+
   font(ctx, 22);
   ctx.fillStyle = AMBER;
   ctx.fillText(String(s.score), 14, 52);
@@ -171,7 +160,7 @@ function drawHud(ctx: CanvasRenderingContext2D, s: GameState): void {
   ctx.fillStyle = TEXT;
   ctx.fillText(fmtTime(s.gameMs), ARCADE_W / 2, 28);
 
-  // Виджет Пельменя (справа), не перекрывает бутылки.
+  // Виджет Пельменя (справа).
   if (s.pelmen) {
     ctx.textAlign = 'right';
     font(ctx, 15);
@@ -179,17 +168,17 @@ function drawHud(ctx: CanvasRenderingContext2D, s: GameState): void {
     ctx.fillText(`ПЕЛЬМЕНЬ ${s.pelmen.clicks}/${PELMEN_TARGET}`, ARCADE_W - 14, 26);
   }
 
-  // Бафф «Звезда» — таймер под виджетом.
+  // Бафф «Звезда» (замедление падения) — таймер под виджетом.
   if (starActive(s)) {
     ctx.textAlign = 'right';
     font(ctx, 13);
     ctx.fillStyle = GOLD;
     const left = Math.ceil((s.starUntil - s.nowMs) / 1000);
-    ctx.fillText(`★ ЗВЕЗДА ${left}с`, ARCADE_W - 14, s.pelmen ? 46 : 26);
+    ctx.fillText(`★ ЗАМЕДЛЕНИЕ ${left}с`, ARCADE_W - 14, s.pelmen ? 46 : 26);
   }
 }
 
-function drawEffects(ctx: CanvasRenderingContext2D, s: GameState, reduced: boolean): void {
+function drawEffects(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: GameState, reduced: boolean): void {
   // Искры при потере HP (низ экрана).
   if (s.nowMs < s.sparkUntil) {
     const k = (s.sparkUntil - s.nowMs) / SPARK_MS;
@@ -215,52 +204,51 @@ function drawEffects(ctx: CanvasRenderingContext2D, s: GameState, reduced: boole
   // Дебафф «Тремор»: тёмная пульсация по краям.
   if (s.debuff?.kind === 'tremor') {
     const pulse = reduced ? 0.35 : 0.28 + 0.14 * Math.sin(s.nowMs / 90);
-    const g = ctx.createRadialGradient(
-      ARCADE_W / 2,
-      ARCADE_H / 2,
-      ARCADE_H * 0.3,
-      ARCADE_W / 2,
-      ARCADE_H / 2,
-      ARCADE_H * 0.72,
-    );
+    const g = ctx.createRadialGradient(ARCADE_W / 2, ARCADE_H / 2, ARCADE_H * 0.3, ARCADE_W / 2, ARCADE_H / 2, ARCADE_H * 0.72);
     g.addColorStop(0, 'rgba(0,0,0,0)');
     g.addColorStop(1, `rgba(0,0,0,${pulse})`);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
   }
 
-  // Окно «Backend Error 228».
+  // Окно ошибки BSG (спека §5.2: картинка error<N>, opacity 0.8, бутылка за ним видна).
   if (s.debuff?.kind === 'error' && s.errorBox) {
     const b = s.errorBox;
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
-    ctx.fillStyle = '#c9c9cf';
-    ctx.fillRect(b.x, b.y, b.w, b.h);
-    ctx.fillStyle = '#3a3a40';
-    ctx.fillRect(b.x, b.y, b.w, 26);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    font(ctx, 14);
-    ctx.fillStyle = '#f2f2f2';
-    ctx.fillText('BACKEND ERROR 228', b.x + 12, b.y + 13);
-    ctx.fillStyle = '#1a1a1e';
-    font(ctx, 13);
-    ctx.fillText('Стойка перегружена. Продолжай чеканить.', b.x + 14, b.y + 58);
-    // Кнопка OK.
-    ctx.fillStyle = AMBER;
-    ctx.fillRect(b.okX, b.okY, b.okW, b.okH);
-    ctx.fillStyle = '#141416';
-    ctx.textAlign = 'center';
-    font(ctx, 14);
-    ctx.fillText('OK', b.okX + b.okW / 2, b.okY + b.okH / 2 + 1);
+    const img = sprites.get(errorSrc(b.variant));
+    ctx.save();
+    ctx.globalAlpha = 0.8;
+    if (img) {
+      ctx.drawImage(img, b.x, b.y, b.w, b.h);
+    } else {
+      ctx.fillStyle = '#c9c9cf';
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.fillStyle = '#3a3a40';
+      ctx.fillRect(b.x, b.y, b.w, 26);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#f2f2f2';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      font(ctx, 14);
+      ctx.fillText('BACKEND ERROR 228', b.x + 12, b.y + 13);
+    }
+    ctx.restore();
     ctx.textBaseline = 'alphabetic';
   }
 
-  // Флэш «Заря».
-  if (s.nowMs < s.flashUntil) {
-    const a = reduced ? 0.4 : (s.flashUntil - s.nowMs) / DEBUFF_FLASH_MS;
-    ctx.fillStyle = `rgba(255,255,255,${a})`;
-    ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
+  // Флэш «Заря» — посекундный таймлайн трека flashgrenade.mp3 (спека §5.1).
+  if (s.debuff?.kind === 'flash' && s.flashStart >= 0) {
+    const el = s.nowMs - s.flashStart;
+    const peak = reduced ? FLASH_PEAK_REDUCED : FLASH_PEAK;
+    let a = 0;
+    if (el >= FLASH_BLAST_AT && el < FLASH_PEAK_AT) {
+      a = peak * ((el - FLASH_BLAST_AT) / (FLASH_PEAK_AT - FLASH_BLAST_AT)); // взрыв: рост 0→пик
+    } else if (el >= FLASH_PEAK_AT && el < FLASH_TOTAL_MS) {
+      a = peak * (1 - (el - FLASH_PEAK_AT) / (FLASH_TOTAL_MS - FLASH_PEAK_AT)); // затухание пик→0
+    }
+    if (a > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${a})`;
+      ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
+    }
   }
 }
 
@@ -276,22 +264,6 @@ function drawCursor(ctx: CanvasRenderingContext2D, sprites: SpriteCache, opts: D
   const img = sprites.get(cursorSrc(opts.cursorFile, p.down ? 2 : 1));
   const size = 104;
   if (img) ctx.drawImage(img, px - size * 0.28, py - size * 0.72, size, size);
-
-  // Индикатор заряда: кольцо заполняется удержанием ЛКМ; на максимуме — золотое.
-  if (p.down && s.charge > 0.05) {
-    ctx.save();
-    ctx.lineWidth = 3;
-    ctx.globalAlpha = 0.9;
-    ctx.strokeStyle = s.charge >= 1 ? GOLD : AMBER;
-    if (s.charge >= 1) {
-      ctx.shadowColor = GOLD;
-      ctx.shadowBlur = 10;
-    }
-    ctx.beginPath();
-    ctx.arc(px, py, 22, -Math.PI / 2, -Math.PI / 2 + s.charge * Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
 }
 
 function centerText(ctx: CanvasRenderingContext2D, text: string, y: number, size: number, color: string): void {
@@ -324,7 +296,7 @@ export function draw(
     drawPelmen(ctx, sprites, s);
     drawHitFx(ctx, s);
     drawHud(ctx, s);
-    drawEffects(ctx, s, opts.reducedMotion);
+    drawEffects(ctx, sprites, s, opts.reducedMotion);
   }
 
   if (s.phase === 'idle') {
@@ -339,7 +311,7 @@ export function draw(
   if (s.phase === 'over') {
     ctx.fillStyle = 'rgba(0,0,0,0.66)';
     ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
-    centerText(ctx, 'СЕРВЕРА СГОРЕЛИ', ARCADE_H / 2 - 40, 32, DANGER);
+    centerText(ctx, 'СЕРВЕРА СГОРЕЛИ · ERROR 228', ARCADE_H / 2 - 40, 26, DANGER);
     centerText(ctx, `СЧЁТ ${s.score}`, ARCADE_H / 2, 26, AMBER);
     centerText(ctx, `рекорд ${Math.max(bestScore, s.score)}`, ARCADE_H / 2 + 30, 15, MUTED);
     centerText(ctx, 'клик — заново', ARCADE_H / 2 + 62, 16, TEXT);

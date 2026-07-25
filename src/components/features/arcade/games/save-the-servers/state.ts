@@ -1,30 +1,25 @@
 // Движок game01 «Спаси сервера»: состояние + обновление. Чистая логика, без рисования.
 // Физика на фиксированном шаге 60 Гц; клик-edge детектится на уровне кадра (см. index.ts).
+// v1.4: простой клик (импульс на нажатии), фиксированный размер бутылок, оверхил без потолка.
 
 import type { ArcadeInput } from '../../types';
 import { ARCADE_W, ARCADE_H } from '../../types';
 import {
   GRAVITY,
   CLICK_VY,
-  CLICK_VY_MAX,
   CLICK_VX_MAX,
   WALL_BOUNCE,
-  CHARGE_MS,
-  SWING_MIN,
-  HIT_CD_MS,
   HIT_RADIUS,
   SPIN_IDLE,
   SPIN_ON_HIT,
   SPIN_DAMP,
   HITRING_MS,
   BOTTLE_BASE_H,
-  BOTTLE_SHRINK_TO,
-  BOTTLE_SHRINK_MS,
   GOLDEN_CHANCE,
-  HP_MAX,
   HP_START,
   bottlesAt,
   stageStartMs,
+  STAGE_STEP_MS,
   PELMEN_MIN_BOTTLES,
   PELMEN_TARGET,
   PELMEN_SPAWN_MS,
@@ -32,11 +27,12 @@ import {
   PELMEN_HIT,
   PICKUP_HIT,
   DEBUFF_ERROR_MS,
-  DEBUFF_FLASH_MS,
   DEBUFF_TREMOR_MS,
   DEBUFF_MIN_INTERVAL_MS,
+  ERROR_VARIANTS,
+  FLASH_TOTAL_MS,
   BUFF_STAR_MS,
-  BUFF_STAR_SCALE,
+  STAR_FALL_FACTOR,
   HEAL_SPAWN_MS,
   STAR_SPAWN_MS,
   PICKUP_SPEED,
@@ -61,7 +57,6 @@ export interface Bottle {
   angle: number;
   angVel: number;
   hitAt: number; // nowMs последнего удара — для squash-«попа»
-  hitCdUntil: number; // кулдаун повторного удара в рамках одного свипа
 }
 export interface Pickup {
   kind: 'heal' | 'star';
@@ -78,7 +73,6 @@ export interface Pelmen {
   clicks: number;
   angle: number;
   angVel: number;
-  hitCdUntil: number;
 }
 export interface HitFx {
   x: number;
@@ -91,10 +85,7 @@ export interface ErrorBox {
   y: number;
   w: number;
   h: number;
-  okX: number;
-  okY: number;
-  okW: number;
-  okH: number;
+  variant: number; // 1..ERROR_VARIANTS — какой error<N>.webp
 }
 export interface Debuff {
   kind: DebuffKind;
@@ -111,16 +102,11 @@ export interface GameState {
   gameMs: number; // таймлайн сложности (Пельмень откатывает)
   nowMs: number; // монотонный клок эффектов/спавнов
   prevDown: boolean;
-  lastPx: number; // курсор в прошлом кадре — для свипа взмаха
-  lastPy: number;
-  holdMs: number; // сколько удерживается ЛКМ (заряд)
-  charge: number; // 0..1 — нормализованный заряд (для рендера)
   starUntil: number;
   debuff: Debuff | null;
   errorBox: ErrorBox | null;
-  flashUntil: number;
+  flashStart: number; // nowMs старта флэша (для посекундного таймлайна), -1 = нет
   sparkUntil: number;
-  hitRadius: number; // радиус попадания от тира оружия (ставит index.ts на старте)
   hitFx: HitFx | null;
   nextBottleAt: number;
   nextPelmenAt: number;
@@ -129,7 +115,7 @@ export interface GameState {
   nextDebuffAt: number;
 }
 
-export type GameSound = 'bounce' | 'thud' | 'powerup' | 'alarm' | 'burst';
+export type GameSound = 'bounce' | 'thud' | 'powerup' | 'flash' | 'burst';
 
 export interface UpdateHooks {
   onGameOver: (score: number) => void;
@@ -147,16 +133,11 @@ export function createState(): GameState {
     gameMs: 0,
     nowMs: 0,
     prevDown: false,
-    lastPx: ARCADE_W / 2,
-    lastPy: ARCADE_H / 2,
-    holdMs: 0,
-    charge: 0,
     starUntil: -1,
     debuff: null,
     errorBox: null,
-    flashUntil: -1,
+    flashStart: -1,
     sparkUntil: -1,
-    hitRadius: HIT_RADIUS,
     hitFx: null,
     nextBottleAt: 0,
     nextPelmenAt: PELMEN_SPAWN_MS,
@@ -170,13 +151,6 @@ export function starActive(s: GameState): boolean {
   return s.nowMs < s.starUntil;
 }
 
-/** Текущий масштаб бутылки: разгонная усадка × бафф «Золотая Звезда». */
-export function bottleScaleNow(s: GameState): number {
-  const k = Math.min(1, s.gameMs / BOTTLE_SHRINK_MS);
-  const ramp = 1 - (1 - BOTTLE_SHRINK_TO) * k;
-  return ramp * (starActive(s) ? BUFF_STAR_SCALE : 1);
-}
-
 export function startRun(s: GameState): void {
   s.phase = 'playing';
   s.bottles = [];
@@ -186,15 +160,12 @@ export function startRun(s: GameState): void {
   s.score = 0;
   s.gameMs = 0;
   s.nowMs = 0;
-  s.holdMs = 0;
-  s.charge = 0;
   s.starUntil = -1;
   s.debuff = null;
   s.errorBox = null;
-  s.flashUntil = -1;
+  s.flashStart = -1;
   s.sparkUntil = -1;
   s.hitFx = null;
-  // hitRadius НЕ сбрасываем к базе тут — его ставит index.ts по тиру скина на входе в playing.
   s.nextBottleAt = 0;
   s.nextPelmenAt = PELMEN_SPAWN_MS;
   s.nextHealAt = HEAL_SPAWN_MS;
@@ -217,21 +188,21 @@ function spawnBottle(s: GameState): void {
     angle: rand(-0.3, 0.3),
     angVel: rand(-SPIN_IDLE, SPIN_IDLE),
     hitAt: -1,
-    hitCdUntil: -1,
   });
 }
 
 function spawnPelmen(s: GameState): void {
+  // Вход «по дуге» сбоку (спека §4: строго рандомно по дуге).
+  const fromLeft = Math.random() < 0.5;
   s.pelmen = {
-    x: rand(ARCADE_W * 0.3, ARCADE_W * 0.7),
-    y: 80,
-    vx: rand(-1.5, 1.5),
-    vy: 0,
+    x: fromLeft ? 40 : ARCADE_W - 40,
+    y: rand(140, 220),
+    vx: (fromLeft ? 1 : -1) * rand(2.2, 3.4),
+    vy: rand(-4.5, -3),
     variant: PELMEN_VARIANTS[Math.floor(Math.random() * PELMEN_VARIANTS.length)],
     clicks: 0,
     angle: rand(-0.3, 0.3),
     angVel: rand(-SPIN_IDLE, SPIN_IDLE),
-    hitCdUntil: -1,
   };
 }
 
@@ -250,58 +221,50 @@ function triggerDebuff(s: GameState, hooks: UpdateHooks): void {
   const kind: DebuffKind = roll < 0.34 ? 'error' : roll < 0.67 ? 'flash' : 'tremor';
   if (kind === 'error') {
     const w = 300;
-    const h = 120;
-    const x = (ARCADE_W - w) / 2;
-    const y = (ARCADE_H - h) / 2;
-    const okW = 84;
-    const okH = 34;
-    s.errorBox = { x, y, w, h, okX: x + w - okW - 16, okY: y + h - okH - 14, okW, okH };
+    const h = 172;
+    const x = rand(16, ARCADE_W - w - 16);
+    const y = rand(46, ARCADE_H - h - 70);
+    s.errorBox = { x, y, w, h, variant: 1 + Math.floor(Math.random() * ERROR_VARIANTS) };
     s.debuff = { kind, until: s.nowMs + DEBUFF_ERROR_MS };
   } else if (kind === 'flash') {
-    s.flashUntil = s.nowMs + DEBUFF_FLASH_MS;
-    s.debuff = { kind, until: s.nowMs + DEBUFF_FLASH_MS };
-    hooks.sfx('alarm');
+    s.flashStart = s.nowMs;
+    s.debuff = { kind, until: s.nowMs + FLASH_TOTAL_MS };
+    hooks.sfx('flash');
   } else {
     s.debuff = { kind, until: s.nowMs + DEBUFF_TREMOR_MS };
   }
 }
 
-/** Квадрат расстояния от точки (cx,cy) до отрезка (x0,y0)-(x1,y1). */
-function segDist2(cx: number, cy: number, x0: number, y0: number, x1: number, y1: number): number {
-  const dx = x1 - x0;
-  const dy = y1 - y0;
-  const len2 = dx * dx + dy * dy;
-  let t = len2 > 0 ? ((cx - x0) * dx + (cy - y0) * dy) / len2 : 0;
-  t = Math.max(0, Math.min(1, t));
-  const ex = cx - (x0 + t * dx);
-  const ey = cy - (y0 + t * dy);
-  return ex * ex + ey * ey;
-}
+/** Простой клик (спека v1.4): импульс бутылкам в фиксированном радиусе точки. Приоритет —
+ *  клик по бутылке над кнопкой OK окна ошибки (окно само закроется через 3с). */
+function handleClick(s: GameState, px: number, py: number, hooks: UpdateHooks): void {
+  s.hitFx = { x: px, y: py, r: HIT_RADIUS, until: s.nowMs + HITRING_MS };
 
-/** Взмах: свип отрезком прошлый→текущий курсор. Бьёт ВСЕ задетые объекты (кулдаун на объект).
- *  Сила удара — от заряда (зажатие ЛКМ): чем больше charge, тем выше подлёт бутылки. */
-function handleSwing(s: GameState, x0: number, y0: number, x1: number, y1: number, hooks: UpdateHooks): void {
-  // OK по окну ошибки (по конечной точке взмаха) закрывает дебафф.
-  if (s.debuff?.kind === 'error' && s.errorBox) {
-    const b = s.errorBox;
-    if (x1 >= b.okX && x1 <= b.okX + b.okW && y1 >= b.okY && y1 <= b.okY + b.okH) {
-      s.debuff = null;
-      s.errorBox = null;
-      hooks.sfx('bounce');
-      return;
+  const bw = BOTTLE_BASE_H * PEVKO_RATIO;
+  const reach = HIT_RADIUS + bw / 2;
+
+  // Бутылки — все в радиусе (приоритет над OK).
+  let hitAnyBottle = false;
+  for (const b of s.bottles) {
+    const dx = px - b.x;
+    const dy = py - b.y;
+    if (dx * dx + dy * dy <= reach * reach) {
+      b.vy = CLICK_VY;
+      b.vx = (-dx / (bw / 2)) * CLICK_VX_MAX;
+      b.angVel += (dx / (bw / 2)) * SPIN_ON_HIT + rand(-0.03, 0.03);
+      b.hitAt = s.nowMs;
+      s.score += b.golden ? SCORE_GOLDEN : SCORE_PER_CLICK;
+      hitAnyBottle = true;
     }
   }
+  if (hitAnyBottle) hooks.sfx('bounce');
 
-  // Кольцо-фидбэк радиуса на конце взмаха.
-  s.hitFx = { x: x1, y: y1, r: s.hitRadius, until: s.nowMs + HITRING_MS };
-
-  const launchVy = CLICK_VY + (CLICK_VY_MAX - CLICK_VY) * s.charge; // заряд усиливает подлёт
-  const bw = BOTTLE_BASE_H * bottleScaleNow(s) * PEVKO_RATIO;
-
-  // Пикапы — сбор при пересечении свипом.
+  // Пикапы — сбор при попадании в радиус.
   s.pickups = s.pickups.filter((p) => {
-    if (segDist2(p.x, p.y, x0, y0, x1, y1) <= PICKUP_HIT * PICKUP_HIT) {
-      if (p.kind === 'heal') s.hp = Math.min(HP_MAX, s.hp + 1);
+    const dx = px - p.x;
+    const dy = py - p.y;
+    if (dx * dx + dy * dy <= PICKUP_HIT * PICKUP_HIT) {
+      if (p.kind === 'heal') s.hp += 1; // оверхил без потолка (спека §2)
       else s.starUntil = s.nowMs + BUFF_STAR_MS;
       hooks.sfx('powerup');
       return false;
@@ -310,54 +273,63 @@ function handleSwing(s: GameState, x0: number, y0: number, x1: number, y1: numbe
   });
 
   // Пельмень.
-  if (s.pelmen && s.nowMs >= s.pelmen.hitCdUntil && segDist2(s.pelmen.x, s.pelmen.y, x0, y0, x1, y1) <= PELMEN_HIT * PELMEN_HIT) {
+  if (s.pelmen) {
     const pl = s.pelmen;
-    const off = x1 - pl.x;
-    pl.vy = launchVy;
-    pl.vx = (-off / PELMEN_HIT) * CLICK_VX_MAX;
-    pl.angVel += (off / PELMEN_HIT) * SPIN_ON_HIT;
-    pl.clicks += 1;
-    pl.hitCdUntil = s.nowMs + HIT_CD_MS;
-    if (pl.clicks >= PELMEN_TARGET) {
-      if (s.bottles.length > 0) s.bottles.pop();
-      s.gameMs = stageStartMs(s.gameMs);
-      s.pelmen = null;
-      s.nextPelmenAt = s.nowMs + PELMEN_SPAWN_MS;
-      hooks.sfx('powerup');
-    } else {
-      hooks.sfx('bounce');
+    const dx = px - pl.x;
+    const dy = py - pl.y;
+    if (dx * dx + dy * dy <= PELMEN_HIT * PELMEN_HIT) {
+      pl.vy = CLICK_VY;
+      pl.vx = (-dx / PELMEN_HIT) * CLICK_VX_MAX;
+      pl.angVel += (dx / PELMEN_HIT) * SPIN_ON_HIT;
+      pl.clicks += 1;
+      if (pl.clicks >= PELMEN_TARGET) {
+        removeOrdinaryBottle(s);
+        // Сброс сложности на ПРЕДЫДУЩУЮ стадию +1с (спека §4: 03:48→02:31): реальный откат на
+        // минуту вниз, приземляемся на 1с внутри стадии, чтобы спавн на границе не триггерился.
+        s.gameMs = Math.max(0, stageStartMs(s.gameMs) - STAGE_STEP_MS + 1000);
+        s.nextBottleAt = s.nowMs + BOTTLE_SPAWN_SPACING_MS;
+        s.pelmen = null;
+        s.nextPelmenAt = s.nowMs + PELMEN_SPAWN_MS;
+        hooks.sfx('powerup');
+      } else {
+        hooks.sfx('bounce');
+      }
     }
   }
 
-  // Бутылки — ВСЕ задетые свипом (кулдаун на объект, чтобы один взмах не бил дважды).
-  const reach = s.hitRadius + bw / 2;
-  let hitAny = false;
-  for (const b of s.bottles) {
-    if (s.nowMs < b.hitCdUntil) continue;
-    if (segDist2(b.x, b.y, x0, y0, x1, y1) <= reach * reach) {
-      const off = x1 - b.x;
-      b.vy = launchVy;
-      b.vx = (-off / (bw / 2)) * CLICK_VX_MAX;
-      b.angVel += (off / (bw / 2)) * SPIN_ON_HIT + rand(-0.03, 0.03);
-      b.hitAt = s.nowMs;
-      b.hitCdUntil = s.nowMs + HIT_CD_MS;
-      s.score += b.golden ? SCORE_GOLDEN : SCORE_PER_CLICK;
-      hitAny = true;
+  // OK/окно ошибки: закрыть, ТОЛЬКО если клик попал в окно и НИ ОДНА бутылка не подбита.
+  if (!hitAnyBottle && s.debuff?.kind === 'error' && s.errorBox) {
+    const b = s.errorBox;
+    if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
+      s.debuff = null;
+      s.errorBox = null;
+      hooks.sfx('bounce');
     }
   }
-  if (hitAny) hooks.sfx('bounce');
+}
+
+/** Убрать 1 ОБЫЧНУЮ бутылку, золотую беречь (спека §4). Если все золотые — убрать последнюю. */
+function removeOrdinaryBottle(s: GameState): void {
+  for (let i = s.bottles.length - 1; i >= 0; i--) {
+    if (!s.bottles[i].golden) {
+      s.bottles.splice(i, 1);
+      return;
+    }
+  }
+  if (s.bottles.length > 0) s.bottles.pop();
 }
 
 function stepPhysics(s: GameState, hooks: UpdateHooks): void {
   s.gameMs += STEP_MS;
   s.nowMs += STEP_MS;
 
-  const bh = BOTTLE_BASE_H * bottleScaleNow(s);
+  const bh = BOTTLE_BASE_H;
   const bw = bh * PEVKO_RATIO;
+  const g = GRAVITY * (starActive(s) ? STAR_FALL_FACTOR : 1); // звезда замедляет падение
 
   // Бутылки.
   for (const b of s.bottles) {
-    b.vy += GRAVITY;
+    b.vy += g;
     b.x += b.vx;
     b.y += b.vy;
     b.angle += b.angVel;
@@ -386,7 +358,7 @@ function stepPhysics(s: GameState, hooks: UpdateHooks): void {
     }
   }
 
-  // Пельмень.
+  // Пельмень (гравитация не замедляется звездой — это отдельный объект).
   if (s.pelmen) {
     const pl = s.pelmen;
     pl.vy += GRAVITY;
@@ -422,7 +394,7 @@ function stepPhysics(s: GameState, hooks: UpdateHooks): void {
     s.nextPelmenAt = s.nowMs + PELMEN_SPAWN_MS;
   }
   if (s.nowMs >= s.nextHealAt) {
-    if (s.hp < HP_MAX) spawnPickup(s, 'heal');
+    spawnPickup(s, 'heal'); // оверхил: спавним всегда по таймеру
     s.nextHealAt = s.nowMs + HEAL_SPAWN_MS;
   }
   if (!starActive(s) && s.nowMs >= s.nextStarAt) {
@@ -438,42 +410,27 @@ function stepPhysics(s: GameState, hooks: UpdateHooks): void {
   if (s.debuff && s.nowMs >= s.debuff.until) {
     s.debuff = null;
     s.errorBox = null;
+    s.flashStart = -1;
   }
 }
 
-/** Один кадр: заряд (зажатие ЛКМ) + детект взмаха (свип) + фиксированные шаги физики. */
+/** Один кадр: клик-edge (простой клик) + фиксированные шаги физики. */
 export function updateFrame(s: GameState, input: ArcadeInput, dtMs: number, acc: { v: number }, hooks: UpdateHooks): void {
   const p = input.pointer;
-  const cx = p ? p.x : s.lastPx;
-  const cy = p ? p.y : s.lastPy;
+  const cx = p ? p.x : ARCADE_W / 2;
+  const cy = p ? p.y : ARCADE_H / 2;
   const down = !!p?.down;
   const pressed = down && !s.prevDown;
+  s.prevDown = down;
 
   if (s.phase === 'idle' || s.phase === 'over') {
     if (pressed) startRun(s);
-    s.prevDown = down;
-    s.lastPx = cx;
-    s.lastPy = cy;
-    s.holdMs = 0;
-    s.charge = 0;
     return;
   }
 
   if (s.phase !== 'playing') return;
 
-  // Заряд от удержания ЛКМ.
-  s.holdMs = down ? s.holdMs + dtMs : 0;
-  s.charge = Math.min(1, s.holdMs / CHARGE_MS);
-
-  // Взмах: свип, если нажато И (первое нажатие ИЛИ курсор сместился достаточно).
-  if (down) {
-    const moved = Math.hypot(cx - s.lastPx, cy - s.lastPy);
-    if (pressed || moved >= SWING_MIN) handleSwing(s, s.lastPx, s.lastPy, cx, cy, hooks);
-  }
-
-  s.prevDown = down;
-  s.lastPx = cx;
-  s.lastPy = cy;
+  if (pressed) handleClick(s, cx, cy, hooks);
 
   acc.v += Math.min(dtMs, 100);
   while (acc.v >= STEP_MS && s.phase === 'playing') {
