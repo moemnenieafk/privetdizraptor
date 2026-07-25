@@ -23,11 +23,12 @@ export const ARCADE_GAMES: readonly ArcadeGameMeta[] = [
     load: () => import('./games/save-the-servers').then((m) => m.createGame),
   },
   {
-    id: 'game02',
-    title: 'Скоро',
-    logo: '???',
-    tagline: 'Новый автомат в разработке',
-    status: 'soon',
+    id: 'tarkov-match3',
+    title: 'Три в ряд',
+    logo: 'ТРИ В\nРЯД',
+    tagline: 'Match-3 · заказы торговцев за ₽',
+    status: 'ready',
+    load: () => import('./games/tarkov-match3').then((m) => m.createGame),
   },
 ];
 
