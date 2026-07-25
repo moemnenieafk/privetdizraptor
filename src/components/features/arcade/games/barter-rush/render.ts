@@ -149,12 +149,16 @@ function drawCard(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: RushSt
   ctx.save();
   ctx.translate(s.dx, 0);
 
-  // Тело карты: фон принимает глобальный цвет торговца — радиальный тинт из угла в тёмный
-  // (тот же паттерн, что у квест-нод: radial circle at 0% 0%, color-mix trader → #000).
+  // Фон принимает глобальный цвет торговца — тот же рецепт, что «фон» в Карте заданий
+  // (QuestDetail pageBg): radial-gradient(circle at 0% 0%, color-mix(trader 12%, transparent),
+  // rgba(0,0,0,0.85)). Тинт через прозрачность из угла, конец — альфа-чёрный.
   const traderColor = TRADER_COLORS[c.traderNorm] ?? '#3A3A3F';
   const g = ctx.createRadialGradient(CARD.x, CARD.y, 0, CARD.x, CARD.y, Math.hypot(CARD.w, CARD.h));
-  g.addColorStop(0, hexToRgba(traderColor, 0.34));
-  g.addColorStop(1, '#111113');
+  g.addColorStop(0, hexToRgba(traderColor, 0.12));
+  g.addColorStop(1, 'rgba(0, 0, 0, 0.85)');
+  // База под альфа-градиентом, чтобы карта читалась как панель на тёмном канвасе.
+  ctx.fillStyle = '#141416';
+  ctx.fillRect(CARD.x, CARD.y, CARD.w, CARD.h);
   ctx.fillStyle = g;
   ctx.fillRect(CARD.x, CARD.y, CARD.w, CARD.h);
   ctx.strokeStyle = border;
