@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Volume2, VolumeX, Maximize2, X, Play } from 'lucide-react';
 import { ArcadeFrame } from '@/components/ui/ArcadeFrame';
-import { resolvePlate } from '@/lib/arcade-screen';
 import { useSaveTheServersStore } from '@/store/useSaveTheServersStore';
 import { useArcadeStore } from '@/store/useArcadeStore';
 import { playSfx } from '@/lib/sfx';
@@ -136,8 +135,6 @@ export function ArcadeHost({ initialBarters }: ArcadeHostProps) {
     if (willUnmute) playSfx('confirm'); // жест пользователя разблокирует AudioContext
   };
 
-  const plateRatio = resolvePlate(immersive ? 'fullscreen' : 'site').ratio;
-
   // Содержимое «экрана» автомата.
   let screenContent: ReactNode;
   if (!hydrated) {
@@ -197,12 +194,16 @@ export function ArcadeHost({ initialBarters }: ArcadeHostProps) {
           : undefined
       }
     >
-      <div
-        className={immersive ? 'max-h-dvh' : 'w-full max-w-80'}
-        style={immersive ? { width: `min(100vw, calc(100dvh * ${plateRatio}))` } : undefined}
-      >
-        <ArcadeFrame view={immersive ? 'fullscreen' : 'site'}>{screenContent}</ArcadeFrame>
-      </div>
+      {immersive ? (
+        // Фуллскрин без рамки автомата: чистый 4:3 экран на всю высоту, фон чёрный (совпадает с экраном).
+        <div className="relative bg-black" style={{ width: 'min(100vw, calc(100dvh * 4 / 3))', aspectRatio: '4 / 3' }}>
+          {screenContent}
+        </div>
+      ) : (
+        <div className="w-full max-w-80">
+          <ArcadeFrame view="site">{screenContent}</ArcadeFrame>
+        </div>
+      )}
 
       {immersive ? (
         <div className="fixed top-4 right-4 z-71 flex items-center gap-2" style={{ paddingRight: 'env(safe-area-inset-right)' }}>
