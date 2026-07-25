@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import useEmblaCarousel from 'embla-carousel-react';
 import type { EmblaOptionsType } from 'embla-carousel';
 
@@ -27,6 +27,32 @@ export const Carousel: React.FC<CarouselProps> = ({
   }), [options]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(emblaOptions);
+
+  // На широких экранах (2К/ultrawide) суммарная ширина слайдов может не заполнять
+  // вьюпорт — тогда Embla с loop:true не может разложить клоны и луп ломается/щёлкает
+  // рывком. Включаем loop только когда контент реально шире вьюпорта; пересчитываем
+  // на resize.
+  const loopStateRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    const root = emblaApi.rootNode();
+    const container = emblaApi.containerNode();
+
+    const evaluateLoop = () => {
+      const fits = container.scrollWidth > root.clientWidth + 1;
+      const wantLoop = (emblaOptions.loop ?? false) && fits;
+      if (loopStateRef.current === wantLoop) return;
+      loopStateRef.current = wantLoop;
+      emblaApi.reInit({ ...emblaOptions, loop: wantLoop });
+    };
+
+    evaluateLoop();
+    const observer = new ResizeObserver(evaluateLoop);
+    observer.observe(root);
+
+    return () => observer.disconnect();
+  }, [emblaApi, emblaOptions]);
 
   useEffect(() => {
     if (!emblaApi) return;

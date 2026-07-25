@@ -320,6 +320,26 @@ html {
     border-color: var(--color-text-muted);
   }
 
+  /* Крупные карточки выбора игры (главная): тяжёлый ховер — видео + неон-тень.
+     box-shadow НЕ гоним через transition (per-frame repaint размытой области =
+     рывок подъёма на 2К/ultrawide), а промоутим слой под transform: тень снапится
+     мгновенно, а сам подъём идёт на GPU. */
+  .game-card {
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), border-color 300ms;
+    will-change: transform;
+  }
+
+  /* Уважаем системную настройку «уменьшить движение»: без подъёма и снапа. */
+  @media (prefers-reduced-motion: reduce) {
+    .tactical-card-base,
+    .game-card {
+      transition: none;
+    }
+    .tactical-card-base:not(.is-inactive):hover {
+      transform: none;
+    }
+  }
+
   @keyframes flash-success {
     50% {
       color: var(--color-nvg-green);

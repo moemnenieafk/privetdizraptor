@@ -30,11 +30,10 @@ export type Game = {
 // Define the props for the GameCard component
 interface GameCardProps {
   game: Game;
-  isLoading: boolean;
   index: number;
 }
 
-export function GameCard({ game, isLoading, index }: GameCardProps) {
+export function GameCard({ game, index }: GameCardProps) {
   const [videoError, setVideoError] = useState(false);
   const cardRef = useRef<HTMLAnchorElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -67,11 +66,10 @@ export function GameCard({ game, isLoading, index }: GameCardProps) {
       onClick={(e) => {
         if (game.isInactive) e.preventDefault();
       }}
-      className={`w-full aspect-[348/564] max-w-[348px] shrink-0 relative overflow-hidden group tactical-card-base ${game.hoverClass} ${game.themeClass} ${game.isInactive ? "is-inactive cursor-not-allowed" : ""}
-                  ${isLoading ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
+      className={`w-full aspect-[348/564] max-w-[348px] shrink-0 relative overflow-hidden group tactical-card-base game-card ${game.hoverClass} ${game.themeClass} ${game.isInactive ? "is-inactive cursor-not-allowed" : ""} motion-safe:animate-[fade-in-up_0.5s_ease-out_both]`}
       style={{
-        // Задержка появления карточек после исчезновения прелоадера (500ms) + эффект "волны" (150ms на карту)
-        transitionDelay: `${500 + index * 150}ms`
+        // Волновое появление карточек: стагер по индексу (motion-safe — уважает reduce-motion)
+        animationDelay: `${index * 100}ms`,
       }}
     >
       {/* ТАКТИЧЕСКИЙ ТУЛТИП */}

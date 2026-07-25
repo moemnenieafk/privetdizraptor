@@ -25,7 +25,7 @@ export function HomeClient() {
         <div className="w-full z-10 justify-start min-h-0">
           <Carousel>
             {GAMES_DATA.map((game, index) => (
-              <GameCard key={game.id} game={game} isLoading={false} index={index} />
+              <GameCard key={game.id} game={game} index={index} />
             ))}
           </Carousel>
         </div>
