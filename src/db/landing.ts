@@ -165,7 +165,21 @@ export async function syncEftLandingData(): Promise<SyncLandingResult> {
       .values(t)
       .onConflictDoUpdate({
         target: traders.normalizedName,
-        set: { name: sql`excluded.name`, resetTime: sql`excluded.reset_time`, levels: sql`excluded.levels`, syncedAt: sql`now()` },
+        set: {
+          name: sql`excluded.name`,
+          resetTime: sql`excluded.reset_time`,
+          // Фаза 2: reset_time сменился → дельта = свежий интервал рестока. Часовой синк
+          // ловит одиночный интервал; берём последнюю дельту в разумной полосе (50м–5ч),
+          // мимо полосы (двойной интервал/дневной фолбэк/джиттер) — держим прежнее значение.
+          restockIntervalSec: sql`CASE
+            WHEN ${traders.resetTime} IS NOT NULL AND excluded.reset_time IS NOT NULL
+             AND excluded.reset_time <> ${traders.resetTime}
+             AND EXTRACT(EPOCH FROM (excluded.reset_time::timestamptz - ${traders.resetTime}::timestamptz)) BETWEEN 3000 AND 18000
+            THEN round(EXTRACT(EPOCH FROM (excluded.reset_time::timestamptz - ${traders.resetTime}::timestamptz)))::int
+            ELSE ${traders.restockIntervalSec} END`,
+          levels: sql`excluded.levels`,
+          syncedAt: sql`now()`,
+        },
       });
   }
 
@@ -245,13 +259,13 @@ export async function getEftMaps(): Promise<MapDTO[]> {
   }
 }
 
-export interface TraderDTO { normalizedName: string; name: string; resetTime: string | null; levels: { level: number; requiredPlayerLevel: number }[] }
+export interface TraderDTO { normalizedName: string; name: string; resetTime: string | null; restockIntervalSec: number | null; levels: { level: number; requiredPlayerLevel: number }[] }
 
 export async function getEftTraders(): Promise<TraderDTO[]> {
   try {
     const gameId = await eftGameId();
     const rows = await db.select().from(traders).where(eq(traders.gameId, gameId));
-    return rows.map((r) => ({ normalizedName: r.normalizedName, name: r.name, resetTime: r.resetTime ?? null, levels: r.levels ?? [] }));
+    return rows.map((r) => ({ normalizedName: r.normalizedName, name: r.name, resetTime: r.resetTime ?? null, restockIntervalSec: r.restockIntervalSec ?? null, levels: r.levels ?? [] }));
   } catch (e) {
     console.error("[getEftTraders]", e);
     return [];

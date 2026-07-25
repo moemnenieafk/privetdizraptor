@@ -31,7 +31,8 @@ export async function GET(req: Request): Promise<NextResponse> {
         image: meta?.image ?? "",
         currency: meta?.currency ?? "₽",
         resetTime: r.resetTime,
-        intervalSec: meta?.restockIntervalSec ?? DEFAULT_RESTOCK_INTERVAL_SEC,
+        // приоритет: калибровка из БД (Фаза 2) → статик-оверрайд → бутстрап-дефолт
+        intervalSec: r.restockIntervalSec ?? meta?.restockIntervalSec ?? DEFAULT_RESTOCK_INTERVAL_SEC,
       };
     })
     // ближайший ресток — первым (клиент всё равно пересортирует по живому now)

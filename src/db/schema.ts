@@ -380,6 +380,9 @@ export const traders = pgTable("traders", {
   gameId: uuid("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   resetTime: text("reset_time"),
+  // Калиброванный интервал рестока (сек), Фаза 2: дельта соседних reset_time при
+  // часовом синке = один интервал. null → клиент берёт бутстрап-дефолт.
+  restockIntervalSec: integer("restock_interval_sec"),
   levels: jsonb("levels").$type<{ level: number; requiredPlayerLevel: number }[]>(),
   syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
 });
