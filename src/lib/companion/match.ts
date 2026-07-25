@@ -5,12 +5,14 @@
 export interface CatalogEntry {
   inGameId: string;
   name: string;
+  maxUses?: number; // макс. использований (ключи/износ) — статик-свойство из каталога
 }
 
 export interface MatchResult {
   inGameId: string;
   name: string;
   score: number; // 0..1
+  maxUses?: number; // проброшен из каталога: есть только у ключей/износа
 }
 
 /** Нормализация: нижний регистр, только буквы/цифры (кир+лат), схлопнуть пробелы. */
@@ -100,6 +102,6 @@ export function buildMatcher(catalog: CatalogEntry[]): (text: string) => MatchRe
           )
         : top;
 
-    return { inGameId: winner.x.entry.inGameId, name: winner.x.entry.name, score: top.score };
+    return { inGameId: winner.x.entry.inGameId, name: winner.x.entry.name, score: top.score, maxUses: winner.x.entry.maxUses };
   };
 }

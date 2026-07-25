@@ -9,7 +9,12 @@ export const revalidate = 3600; // каталог статичен в преде
 
 export async function GET(): Promise<NextResponse> {
   const catalog = await getEftCatalog();
-  const items = catalog.map((i) => ({ inGameId: i.id, name: i.name }));
+  const items = catalog.map((i) => {
+    // properties.uses — макс. использований ключа/износа; отдаём как maxUses (разница 1/Y vs Y/Y цены).
+    const u = i.properties?.uses;
+    const maxUses = typeof u === "number" && u > 1 ? u : undefined;
+    return maxUses ? { inGameId: i.id, name: i.name, maxUses } : { inGameId: i.id, name: i.name };
+  });
   return NextResponse.json(
     { items },
     { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } },

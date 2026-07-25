@@ -18,7 +18,7 @@ interface DirWithFile {
 }
 
 export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
-  const { active, status, gameMode, offers, contributed, karma, setActive, setStatus, setGameMode, addOffers, setOfferPrice, removeOffer, clearOffers, addContributed, setKarma, markSubmitted } =
+  const { active, status, gameMode, offers, contributed, karma, setActive, setStatus, setGameMode, addOffers, setOfferPrice, setOfferUses, removeOffer, clearOffers, addContributed, setKarma, markSubmitted } =
     useCompanionStore();
 
   // Начальная репутация с сервера (один раз).
@@ -231,12 +231,21 @@ export function CompanionReader({ initialKarma }: { initialKarma?: number }) {
               <div key={i} className="flex items-center gap-2 border-b border-lines px-3 py-1.5 last:border-b-0">
                 <span className="min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-secondary">
                   {o.name}
-                  {o.maxUses ? (
-                    <span className="ml-1.5 font-blender-medium text-text-muted">
-                      {o.uses}/{o.maxUses}
-                    </span>
-                  ) : null}
                 </span>
+                {/* Использования X/Y (ключи/износ): Y из каталога, X редактируемо — цвет X на скрине
+                    красный → OCR ненадёжен, дефолт «полный», юзер правит партиал. */}
+                {o.maxUses ? (
+                  <span className="flex items-center gap-0.5 font-blender-medium text-xs text-text-muted">
+                    <input
+                      inputMode="numeric"
+                      value={o.uses ?? o.maxUses}
+                      onChange={(e) => setOfferUses(i, parseInt(e.target.value.replace(/\D/g, ''), 10) || 1)}
+                      aria-label="Использования"
+                      className="w-8 rounded-xs bg-(--color-base)/60 px-1 py-0.5 text-right text-text-primary outline-none focus:text-(--primary) focus:ring-1 focus:ring-(--primary)/50"
+                    />
+                    <span>/{o.maxUses}</span>
+                  </span>
+                ) : null}
                 {/* Цена редактируема — юзер правит погрешность OCR перед отправкой. */}
                 <input
                   inputMode="numeric"

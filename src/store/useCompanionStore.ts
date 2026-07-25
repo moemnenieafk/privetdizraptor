@@ -39,6 +39,8 @@ interface CompanionState {
   addOffers: (o: ScannedOffer[]) => void;
   /** Ручная правка цены оффера (юзер исправляет погрешность OCR перед отправкой). */
   setOfferPrice: (index: number, price: number) => void;
+  /** Ручная правка текущих использований X (ключи/износ): дефолт «полный», юзер ставит партиал. */
+  setOfferUses: (index: number, uses: number) => void;
   /** Убрать оффер из списка (кривой/лишний). */
   removeOffer: (index: number) => void;
   clearOffers: () => void;
@@ -78,6 +80,12 @@ export const useCompanionStore = create<CompanionState>((set) => ({
     }),
   setOfferPrice: (index, price) =>
     set((s) => ({ offers: s.offers.map((o, i) => (i === index ? { ...o, price } : o)) })),
+  setOfferUses: (index, uses) =>
+    set((s) => ({
+      offers: s.offers.map((o, i) =>
+        i === index && o.maxUses ? { ...o, uses: Math.max(1, Math.min(o.maxUses, uses)) } : o,
+      ),
+    })),
   removeOffer: (index) => set((s) => ({ offers: s.offers.filter((_, i) => i !== index) })),
   clearOffers: () => set({ offers: [] }),
   addContributed: (n) => set((s) => ({ contributed: s.contributed + n })),
