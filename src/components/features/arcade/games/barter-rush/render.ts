@@ -104,6 +104,35 @@ function drawTimer(ctx: CanvasRenderingContext2D, s: RushState): void {
   ctx.fillRect(CARD.x, 48, CARD.w * frac, 5);
 }
 
+// Лейбл секции по центру с линиями по бокам (как в детальной карточке бартера).
+function sectionLabel(ctx: CanvasRenderingContext2D, text: string, cy: number): void {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  font(ctx, 10);
+  const tw = ctx.measureText(text).width;
+  ctx.fillStyle = MUTED;
+  ctx.fillText(text, ARCADE_W / 2, cy);
+  ctx.strokeStyle = LINE;
+  ctx.lineWidth = 1;
+  const gap = tw / 2 + 14;
+  ctx.beginPath();
+  ctx.moveTo(CARD.x + 26, cy - 4);
+  ctx.lineTo(ARCADE_W / 2 - gap, cy - 4);
+  ctx.moveTo(ARCADE_W / 2 + gap, cy - 4);
+  ctx.lineTo(CARD.x + CARD.w - 26, cy - 4);
+  ctx.stroke();
+}
+
+// Плитка предмета: крупная иконка + название под ней (без цен — их видно только во вскрытии).
+function itemTile(ctx: CanvasRenderingContext2D, sprites: SpriteCache, item: RushItem, cx: number, topY: number, size: number): void {
+  drawIcon(ctx, sprites, item, Math.round(cx - size / 2), topY, size);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  font(ctx, 11);
+  ctx.fillStyle = TEXT;
+  ctx.fillText(item.shortName, cx, topY + size + 14, size + 28);
+}
+
 function drawCard(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: RushState): void {
   const c = currentCard(s);
   if (!c) return;
@@ -128,53 +157,43 @@ function drawCard(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: RushSt
     ctx.globalAlpha = 1;
   }
 
-  // Торговец.
+  // Шапка: торговец.
   const trader = sprites.get(TRADER_IMG(c.traderNorm));
-  if (trader) ctx.drawImage(trader, CARD.x + 12, CARD.y + 12, 30, 30);
+  if (trader) ctx.drawImage(trader, CARD.x + 14, CARD.y + 12, 34, 34);
   else {
     ctx.fillStyle = LINE;
-    ctx.fillRect(CARD.x + 12, CARD.y + 12, 30, 30);
+    ctx.fillRect(CARD.x + 14, CARD.y + 12, 34, 34);
   }
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  font(ctx, 14);
+  font(ctx, 15);
   ctx.fillStyle = TEXT;
-  ctx.fillText(`${c.traderName} LL${c.level}`, CARD.x + 50, CARD.y + 32, 380);
+  ctx.fillText(`${c.traderName} LL${c.level}`, CARD.x + 56, CARD.y + 34, 360);
   ctx.textAlign = 'right';
   font(ctx, 10);
   ctx.fillStyle = MUTED;
-  ctx.fillText('БАРТЕР', CARD.x + CARD.w - 12, CARD.y + 26);
+  ctx.fillText('БАРТЕР', CARD.x + CARD.w - 14, CARD.y + 28);
 
-  ctx.strokeStyle = LINE;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(CARD.x, CARD.y + 50);
-  ctx.lineTo(CARD.x + CARD.w, CARD.y + 50);
-  ctx.stroke();
+  // ─── ОТДАЮ ─── (центрированный ряд крупных иконок).
+  sectionLabel(ctx, 'ОТДАЮ', CARD.y + 80);
+  const req = c.required.slice(0, 6);
+  const n = req.length;
+  const isize = n <= 3 ? 60 : n <= 4 ? 54 : n <= 5 ? 48 : 42;
+  const gap = 16;
+  const totalW = n * isize + (n - 1) * gap;
+  const startX = ARCADE_W / 2 - totalW / 2;
+  const reqTop = CARD.y + 94;
+  req.forEach((ri, i) => itemTile(ctx, sprites, ri, startX + i * (isize + gap) + isize / 2, reqTop, isize));
 
-  // Получаешь.
-  ctx.textAlign = 'left';
-  font(ctx, 10);
-  ctx.fillStyle = MUTED;
-  ctx.fillText('ПОЛУЧАЕШЬ', CARD.x + 16, CARD.y + 72);
-  drawIcon(ctx, sprites, c.reward, CARD.x + 16, CARD.y + 80, 60);
-  font(ctx, 16);
+  // ─── ПОЛУЧАЮ ─── (одна крупная иконка по центру).
+  sectionLabel(ctx, 'ПОЛУЧАЮ', CARD.y + 208);
+  const rsize = 78;
+  drawIcon(ctx, sprites, c.reward, Math.round(ARCADE_W / 2 - rsize / 2), CARD.y + 222, rsize);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  font(ctx, 15);
   ctx.fillStyle = TEXT;
-  ctx.fillText(c.rewardLabel, CARD.x + 88, CARD.y + 114, CARD.w - 104);
-
-  // Отдаёшь.
-  font(ctx, 10);
-  ctx.fillStyle = MUTED;
-  ctx.fillText('ОТДАЁШЬ', CARD.x + 16, CARD.y + 168);
-  const size = 44;
-  const gap = 6;
-  const perRow = Math.floor((CARD.w - 32 + gap) / (size + gap));
-  c.required.forEach((ri, i) => {
-    const col = i % perRow;
-    const row = Math.floor(i / perRow);
-    if (row > 1) return; // максимум 2 ряда
-    drawIcon(ctx, sprites, ri, CARD.x + 16 + col * (size + gap), CARD.y + 178 + row * (size + gap), size);
-  });
+  ctx.fillText(c.rewardLabel, ARCADE_W / 2, CARD.y + 222 + rsize + 18, CARD.w - 60);
 
   ctx.restore();
 }
