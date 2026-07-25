@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { PackageX } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useIsPve } from '@/hooks/useGameMode';
@@ -179,10 +180,13 @@ function EmptyValue() {
 function PriceCard({
   label,
   note,
+  noteIcon,
   children,
 }: {
   label: string;
   note?: string | null;
+  /** Иконка компаньона рядом с note (метка «цена из живого зеркала барахолки»). */
+  noteIcon?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -192,7 +196,22 @@ function PriceCard({
           {label}
         </span>
         {note && (
-          <span className="ml-auto shrink-0 font-blender-medium text-[8px] text-text-muted">{note}</span>
+          <span className="ml-auto flex shrink-0 items-center gap-1 font-blender-medium text-[8px] uppercase tracking-widest text-text-muted">
+            {note}
+            {noteIcon && (
+              <Link
+                href="/eft/companion"
+                title="Открыть Компаньон цен"
+                aria-label="Открыть Компаньон цен"
+                className="group inline-flex shrink-0 items-center"
+              >
+                <span
+                  className="icon-eft-fleamarker-companion h-3 w-3 shrink-0 bg-text-muted mask-contain mask-center mask-no-repeat transition-colors group-hover:bg-(--primary)"
+                  aria-hidden="true"
+                />
+              </Link>
+            )}
+          </span>
         )}
       </div>
       <div className="flex min-h-12 items-center gap-4">{children}</div>
@@ -313,7 +332,7 @@ export function ItemPriceBlock({
         </PriceCard>
 
         {/* Купить на барахолке */}
-        <PriceCard label="Купить на барахолке" note={age}>
+        <PriceCard label="Купить на барахолке" note={age} noteIcon>
           {fleaBuy ? (
             <>
               <IconFrame tint="bg-tactical-amber/10">
@@ -348,7 +367,7 @@ export function ItemPriceBlock({
         </PriceCard>
 
         {/* Продать на барахолке */}
-        <PriceCard label="Продать на барахолке" note={age}>
+        <PriceCard label="Продать на барахолке" note={age} noteIcon>
           {fleaSell ? (
             <>
               <IconFrame tint="bg-tactical-amber/10">
