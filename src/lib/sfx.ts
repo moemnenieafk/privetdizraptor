@@ -1,7 +1,19 @@
 // Звуковой движок на Web Audio API — синтез на лету (без файлов/лицензий).
 // Чистые «тактические» тоны: blip-подтверждение, монеты, ранг-ап-арпеджио, чайм-анлок, клик.
 
-export type SfxName = 'confirm' | 'coins' | 'rank-up' | 'unlock' | 'tick' | 'reel';
+export type SfxName =
+  | 'confirm'
+  | 'coins'
+  | 'rank-up'
+  | 'unlock'
+  | 'tick'
+  | 'reel'
+  // Аркада «Спаси сервера»:
+  | 'bounce'
+  | 'thud'
+  | 'powerup'
+  | 'alarm'
+  | 'burst';
 
 interface AudioWindow {
   AudioContext?: typeof AudioContext;
@@ -83,6 +95,33 @@ export function playSfx(name: SfxName): void {
     case 'rank-up':
       [523, 659, 784, 1047].forEach((f, i) =>
         tone(c, { freq: f, start: i * 0.09, dur: 0.24, type: 'triangle', gain: 0.28 }),
+      );
+      break;
+
+    // ─── Аркада ───
+    case 'bounce':
+      // Короткий «чек» вверх — чеканка бутылки.
+      tone(c, { freq: 420, freqTo: 720, dur: 0.07, type: 'square', gain: 0.16 });
+      break;
+    case 'thud':
+      // Низкий удар — потеря HP, искры.
+      tone(c, { freq: 240, freqTo: 90, dur: 0.22, type: 'sawtooth', gain: 0.24 });
+      break;
+    case 'powerup':
+      // Восходящее арпеджио — хилка/звезда/пельмень-спасение.
+      [523, 698, 880, 1175].forEach((f, i) =>
+        tone(c, { freq: f, start: i * 0.06, dur: 0.14, type: 'sine', gain: 0.2 }),
+      );
+      break;
+    case 'alarm':
+      // Звон в ушах — флэш «Заря».
+      tone(c, { freq: 1650, dur: 0.42, type: 'sine', gain: 0.14 });
+      tone(c, { freq: 1660, start: 0.02, dur: 0.4, type: 'sine', gain: 0.1 });
+      break;
+    case 'burst':
+      // Нисходящий крах — Game Over.
+      [660, 495, 370, 247].forEach((f, i) =>
+        tone(c, { freq: f, start: i * 0.1, dur: 0.26, type: 'sawtooth', gain: 0.26 }),
       );
       break;
   }

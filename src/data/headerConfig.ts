@@ -89,6 +89,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       questmap: 'Карта Заданий',
       hub: 'Мой хаб',
       rookie: 'Кто ты в Игре',
+      arcade: 'Зал автоматов',
       progress: 'Прогресс',
       seasons: 'Сезоны',
       perks: 'Конструктор перков',
