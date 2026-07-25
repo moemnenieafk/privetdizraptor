@@ -10,23 +10,29 @@ interface ArcadeCanvasProps {
   load: () => Promise<ArcadeGameFactory>;
   preset: CrtPreset;
   ariaLabel: string;
+  /** touch-action:none — ТОЛЬКО когда игра активна и в фуллскрине (в ленте страница обязана скроллиться). */
+  lockTouch?: boolean;
 }
 
 // Хост канваса: offscreen 2D 640×480 (игра рисует) → CRT-пасс на display-канвасе.
 // Ввод — только Pointer Events (одна ветка мышь+тач), координаты простым масштабом от rect.
 // Пауза при уходе вкладки в фон и из вьюпорта. Полный клинап rAF/слушателей.
-export function ArcadeCanvas({ load, preset, ariaLabel }: ArcadeCanvasProps) {
+export function ArcadeCanvas({ load, preset, ariaLabel, lockTouch }: ArcadeCanvasProps) {
   const displayRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
 
   // Мутабельный ввод, живёт между кадрами (НЕ в React-стейте).
   const keys = useRef<Set<string>>(new Set());
   const presetRef = useRef<CrtPreset>(preset);
-  presetRef.current = preset;
+
+  useEffect(() => {
+    presetRef.current = preset;
+  }, [preset]);
 
   useEffect(() => {
     const display = displayRef.current;
     if (!display) return;
+    const keySet = keys.current;
 
     // Offscreen-канвас игры.
     const offscreen = document.createElement('canvas');
@@ -69,7 +75,7 @@ export function ArcadeCanvas({ load, preset, ariaLabel }: ArcadeCanvasProps) {
       last = now;
       crt.setPreset(presetRef.current);
       game.frame(
-        { ctx: gctx, width: ARCADE_W, height: ARCADE_H, input: { keys: keys.current, pointer: buildPointer() } },
+        { ctx: gctx, width: ARCADE_W, height: ARCADE_H, input: { keys: keySet, pointer: buildPointer() } },
         dt,
       );
       crt.render(offscreen);
@@ -124,8 +130,8 @@ export function ArcadeCanvas({ load, preset, ariaLabel }: ArcadeCanvasProps) {
     display.addEventListener('pointerleave', onLeave);
 
     // ─── Клавиатура (a11y: игра проходима с клавиатуры) ───
-    const onKeyDown = (e: KeyboardEvent) => keys.current.add(e.key);
-    const onKeyUp = (e: KeyboardEvent) => keys.current.delete(e.key);
+    const onKeyDown = (e: KeyboardEvent) => keySet.add(e.key);
+    const onKeyUp = (e: KeyboardEvent) => keySet.delete(e.key);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
@@ -133,7 +139,7 @@ export function ArcadeCanvas({ load, preset, ariaLabel }: ArcadeCanvasProps) {
     load().then((factory) => {
       if (disposed) return;
       game = factory();
-      game.init({ ctx: gctx, width: ARCADE_W, height: ARCADE_H, input: { keys: keys.current, pointer: buildPointer() } });
+      game.init({ ctx: gctx, width: ARCADE_W, height: ARCADE_H, input: { keys: keySet, pointer: buildPointer() } });
       setLoading(false);
       raf = requestAnimationFrame(loop);
     });
@@ -151,11 +157,10 @@ export function ArcadeCanvas({ load, preset, ariaLabel }: ArcadeCanvasProps) {
       display.removeEventListener('pointerleave', onLeave);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
-      keys.current.clear();
+      keySet.clear();
       game?.dispose();
       crt.dispose();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
 
   return (
@@ -165,7 +170,8 @@ export function ArcadeCanvas({ load, preset, ariaLabel }: ArcadeCanvasProps) {
         aria-label={ariaLabel}
         role="img"
         tabIndex={0}
-        className="absolute inset-0 h-full w-full select-none outline-none [image-rendering:pixelated]"
+        className="absolute inset-0 h-full w-full select-none outline-none [image-rendering:pixelated] [-webkit-touch-callout:none]"
+        style={{ touchAction: lockTouch ? 'none' : 'auto' }}
       />
       {loading && (
         <div className="absolute inset-0 animate-pulse bg-black" aria-hidden />

@@ -171,20 +171,25 @@ function createWebglRenderer(display: HTMLCanvasElement, initial: CrtPreset): Cr
       applyParams();
     },
     dispose() {
+      // НЕ зовём WEBGL_lose_context: повторный getContext('webgl') на этом же канвасе
+      // (ремаунт в dev/StrictMode) должен вернуть рабочий контекст, а не «отравить» канвас
+      // так, что 2D-фолбэк потом получит null. Ресурсы освобождаем явно.
       gl.deleteTexture(tex);
       gl.deleteBuffer(buf);
       gl.deleteProgram(prog);
       gl.deleteShader(vs);
       gl.deleteShader(fs);
-      const lose = gl.getExtension('WEBGL_lose_context');
-      lose?.loseContext();
     },
   };
 }
 
 // 2D-фолбэк: блит + сканлайны + вигнетка (без barrel-выпуклости).
 function create2dRenderer(display: HTMLCanvasElement, initial: CrtPreset): CrtRenderer {
-  const ctx = display.getContext('2d')!;
+  const ctx = display.getContext('2d');
+  if (!ctx) {
+    // Канвас уже занят другим контекстом (нет ни WebGL, ни 2D) — no-op, но без краша.
+    return { render() {}, resize() {}, setPreset() {}, dispose() {} };
+  }
   let params = PRESETS[initial];
 
   return {
