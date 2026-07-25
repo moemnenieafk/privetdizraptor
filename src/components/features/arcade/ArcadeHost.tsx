@@ -27,21 +27,21 @@ export function ArcadeHost() {
   const toggleMuted = useArcadeStore((s) => s.toggleMuted);
 
   const [immersive, setImmersive] = useState(false);
+  // ВАЖНО: isTouch/isLandscape детектим ТОЛЬКО в эффекте (не в ленивом init) — иначе SSR
+  // (desktop-раскладка) не совпадёт с тач-клиентом → ошибка гидрации. До hydrated экран —
+  // скелетон, а контролы стартуют в desktop-виде на сервере и клиенте одинаково.
   const [hydrated, setHydrated] = useState(false);
-  // Тач фиксируем один раз; ориентацию — matchMedia (НЕ window.orientation/resize).
-  const [isTouch] = useState<boolean>(
-    () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
-  );
-  const [isLandscape, setIsLandscape] = useState<boolean>(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(orientation: landscape)').matches : true,
-  );
+  const [isTouch, setIsTouch] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(true);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     void useArcadeStore.persist.rehydrate();
     void useSaveTheServersStore.persist.rehydrate();
+    setIsTouch(window.matchMedia('(pointer: coarse)').matches);
     const mq = window.matchMedia('(orientation: landscape)');
     const onOri = () => setIsLandscape(mq.matches);
+    onOri();
     mq.addEventListener('change', onOri);
     setHydrated(true);
     return () => mq.removeEventListener('change', onOri);
