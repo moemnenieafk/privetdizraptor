@@ -80,3 +80,7 @@ map-exports/
 
 # Логи локального dev-сервера (next dev) — артефакт, не исходник.
 .devlog.*
+
+# tesseract.js в Node качает языковые traineddata в CWD (корень) при OCR-скриптах —
+# это кэш, не исходник. Модель компаньона живёт в public/tessdata/ (её НЕ игнорим).
+/*.traineddata

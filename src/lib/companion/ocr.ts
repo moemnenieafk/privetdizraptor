@@ -24,7 +24,15 @@ export const GEO = {
 } as const;
 
 const NAME_UP = 2; // апскейл колонки имён под OCR
-const PRICE_UP = 4; // апскейл кропа цены (x4 нужен для 7–8-значных: миллионы читались как «17»)
+const PRICE_UP = 4; // апскейл кропа цены (x4 нужен для 7–8-значных чисел)
+
+// Дообученная на шрифте барахолки (Bender) модель — чинит корневой 0↔6 (перечёркнутый ноль).
+// Файл public/tessdata/eftflea.traineddata (несжатый → gzip:false), OEM 1 = LSTM-only (файн-тюнили LSTM).
+// Fine-tune: eng→eftflea, синтетика scripts/ocr-train/gen_synthetic.py (8000 пар), Colab-ран.
+// Живой тест на реальном скрине: eftflea 4/5 vs eng 1/5 (docs/research/companion-ocr-evolution.md).
+const FLEA_LANG = 'eftflea';
+const FLEA_OPTS = { langPath: '/tessdata', gzip: false } as const;
+const LSTM_ONLY = 1; // OEM.LSTM_ONLY
 
 let nameWorker: Worker | null = null;
 let priceWorker: Worker | null = null;
@@ -40,7 +48,7 @@ async function getNameWorker(): Promise<Worker> {
 
 async function getPriceWorker(): Promise<Worker> {
   if (priceWorker) return priceWorker;
-  const w = await createWorker('eng');
+  const w = await createWorker(FLEA_LANG, LSTM_ONLY, FLEA_OPTS);
   await w.setParameters({ tessedit_char_whitelist: '0123456789', tessedit_pageseg_mode: PSM.SINGLE_LINE });
   priceWorker = w;
   return w;
@@ -48,7 +56,7 @@ async function getPriceWorker(): Promise<Worker> {
 
 async function getUsesWorker(): Promise<Worker> {
   if (usesWorker) return usesWorker;
-  const w = await createWorker('eng');
+  const w = await createWorker(FLEA_LANG, LSTM_ONLY, FLEA_OPTS);
   await w.setParameters({ tessedit_char_whitelist: '0123456789/', tessedit_pageseg_mode: PSM.SINGLE_LINE });
   usesWorker = w;
   return w;
@@ -68,13 +76,12 @@ interface Region {
   height: number;
 }
 
-type CanvasMode = 'gray' | 'bin' | 'norm';
+type CanvasMode = 'gray' | 'bin';
 
 /**
- * Вырезать регион исходника в canvas с апскейлом. Режимы:
- *  bin  — бинаризация (порог 150): чётко для ≤6-значных, но нули МИЛЛИОНОВ ломает в «6».
- *  norm — min-max контраст-стретч: нули миллионов читает верно (плохие чтения обрезаются,
- *         не искажаются) → на ≥1М берём длиннейшее чтение по оффсетам.
+ * Вырезать регион исходника в canvas с апскейлом.
+ *  gray — просто grayscale (колонка имён и т.п.).
+ *  bin  — бинаризация (порог 150): чёткий контраст под дообученную eftflea (нули читает верно).
  */
 function regionCanvas(bitmap: ImageBitmap, r: Region, up: number, mode: CanvasMode = 'gray'): HTMLCanvasElement {
   const c = document.createElement('canvas');
@@ -89,23 +96,9 @@ function regionCanvas(bitmap: ImageBitmap, r: Region, up: number, mode: CanvasMo
   ctx.filter = 'none';
   const img = ctx.getImageData(0, 0, c.width, c.height);
   const d = img.data;
-  if (mode === 'bin') {
-    for (let i = 0; i < d.length; i += 4) {
-      const v = d[i] >= 150 ? 255 : 0;
-      d[i] = d[i + 1] = d[i + 2] = v;
-    }
-  } else {
-    let mn = 255;
-    let mx = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      if (d[i] < mn) mn = d[i];
-      if (d[i] > mx) mx = d[i];
-    }
-    const range = mx - mn || 1;
-    for (let i = 0; i < d.length; i += 4) {
-      const v = ((d[i] - mn) * 255) / range;
-      d[i] = d[i + 1] = d[i + 2] = v;
-    }
+  for (let i = 0; i < d.length; i += 4) {
+    const v = d[i] >= 150 ? 255 : 0;
+    d[i] = d[i + 1] = d[i + 2] = v;
   }
   ctx.putImageData(img, 0, 0);
   return c;
@@ -172,21 +165,13 @@ export async function parseFleaScreenshot(
         width: GEO.price.width * sx,
         height: GEO.price.cropH * sy,
       };
+      // Один bin-read. Прежний norm-dual-read по миллионам был костылём под слепоту eng к
+      // перечёркнутому нулю Bender (bin ломал нули → 11 000 000 читалось как 11 600 600).
+      // Дообученная eftflea читает нули верно, а norm-склейка ей ВРЕДИЛА (шум → 15-значный мусор):
+      // живой тест на реальном скрине bin-only 4/5 vs norm 3/5 vs eng 1/5. Убрано (2026-07-25).
       const priceCanvas = regionCanvas(bitmap, priceRegion, PRICE_UP, 'bin');
-      let price = parseInt((await pW.recognize(priceCanvas)).data.text.replace(/\D/g, ''), 10);
+      const price = parseInt((await pW.recognize(priceCanvas)).data.text.replace(/\D/g, ''), 10);
       if (!Number.isFinite(price) || price <= 0) continue;
-
-      // Миллионы: bin ломает нули (11 000 000 → 11 600 600). Порог лишь ДЕТЕКТИТ размер;
-      // значение берём режимом norm (нули верны, плохие чтения обрезаются) — длиннейшее ≥1М.
-      if (price >= 1_000_000) {
-        let best = 0;
-        for (const ddy of [0, 4, 8, 12, 16]) {
-          const rc = regionCanvas(bitmap, { ...priceRegion, top: priceRegion.top + ddy * sy }, PRICE_UP, 'norm');
-          const p = parseInt((await pW.recognize(rc)).data.text.replace(/\D/g, ''), 10);
-          if (Number.isFinite(p) && p >= 1_000_000 && String(p).length > String(best).length) best = p;
-        }
-        if (best >= 1_000_000) price = best;
-      }
 
       // Использования X/Y (ключи/износ) — строка «Всего N 🔧 X/Y» под именем. Нет «/» → нет износа.
       let uses: number | undefined;

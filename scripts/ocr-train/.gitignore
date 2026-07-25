@@ -3,3 +3,4 @@ data/
 fonts/*.otf
 fonts/*.ttf
 *.traineddata
+*.zip
