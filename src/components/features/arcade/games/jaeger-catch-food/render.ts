@@ -51,8 +51,15 @@ function drawItems(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: Jaege
       ctx.shadowColor = GOLD;
       ctx.shadowBlur = 12;
     }
-    if (img) ctx.drawImage(img, -ITEM_SIZE / 2, -ITEM_SIZE / 2, ITEM_SIZE, ITEM_SIZE);
-    else {
+    if (img) {
+      // Сохраняем натуральные пропорции ассета (вписываем по большей стороне в ITEM_SIZE).
+      const nw = img.naturalWidth || 1;
+      const nh = img.naturalHeight || 1;
+      const k = ITEM_SIZE / Math.max(nw, nh);
+      const w = nw * k;
+      const h = nh * k;
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    } else {
       ctx.fillStyle = it.category === 'damage' ? DANGER : it.category === 'bonus' ? GOLD : AMBER;
       ctx.beginPath();
       ctx.arc(0, 0, ITEM_SIZE / 2, 0, TAU);
