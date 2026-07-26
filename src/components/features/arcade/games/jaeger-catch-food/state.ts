@@ -7,11 +7,13 @@ import {
   RAMPS,
   QUAD_X,
   QUAD_Y,
-  LOOT,
+  LOOT_SPRITES,
+  BONUS_SPRITE,
+  DAMAGE_SPRITES,
   type Pos,
-  type ItemKind,
+  type ItemCategory,
   SCORE_NORMAL,
-  SCORE_BTC,
+  SCORE_BONUS,
   GRENADE_CHANCE,
   BTC_MIN,
   BTC_MAX,
@@ -26,7 +28,8 @@ export type Phase = 'loading' | 'idle' | 'playing' | 'over';
 
 export interface FallItem {
   ramp: Pos;
-  kind: ItemKind;
+  category: ItemCategory; // food (+1) | bonus (+5) | damage (штраф)
+  sprite: string; // имя ассета
   t: number; // 0 (верх ската) → 1 (у корзины)
   rollMs: number;
   spin: number; // направление вращения: +1 (левые скаты) / −1 (правые)
@@ -90,18 +93,22 @@ export function startRun(s: JaegerState): void {
 
 function spawnItem(s: JaegerState): void {
   const ramp = POSITIONS[randInt(0, POSITIONS.length - 1)];
-  let kind: ItemKind;
+  let category: ItemCategory;
+  let sprite: string;
   s.btcCountdown -= 1;
   if (s.btcCountdown <= 0) {
-    kind = 'btc';
+    category = 'bonus';
+    sprite = BONUS_SPRITE;
     s.btcCountdown = randInt(BTC_MIN, BTC_MAX);
   } else if (Math.random() < GRENADE_CHANCE) {
-    kind = 'm67';
+    category = 'damage';
+    sprite = DAMAGE_SPRITES[randInt(0, DAMAGE_SPRITES.length - 1)];
   } else {
-    kind = LOOT[randInt(0, LOOT.length - 1)];
+    category = 'food';
+    sprite = LOOT_SPRITES[randInt(0, LOOT_SPRITES.length - 1)];
   }
   const spin = ramp === 'ul' || ramp === 'dl' ? 1 : -1; // левые катятся по часовой, правые — против
-  s.items.push({ ramp, kind, t: 0, rollMs: rollMsFor(s.score), spin });
+  s.items.push({ ramp, category, sprite, t: 0, rollMs: rollMsFor(s.score), spin });
 }
 
 /** Начислить очки + цикличный сброс промахов (GDD §5): кратное 100 → все, кратное 50 → −1. */
@@ -128,15 +135,15 @@ function addMiss(s: JaegerState, pos: Pos, hooks: JaegerHooks): void {
 
 function resolveItem(s: JaegerState, it: FallItem, hooks: JaegerHooks): void {
   const caught = s.basket === it.ramp;
-  if (it.kind === 'm67') {
+  if (it.category === 'damage') {
     // Граната: поймал — штраф; пропустил — безопасно.
     if (caught) addMiss(s, it.ramp, hooks);
     return;
   }
   if (caught) {
-    addScore(s, it.kind === 'btc' ? SCORE_BTC : SCORE_NORMAL);
+    addScore(s, it.category === 'bonus' ? SCORE_BONUS : SCORE_NORMAL);
     s.catchFx = { pos: it.ramp, until: s.nowMs + 300, good: true };
-    hooks.sfx(it.kind === 'btc' ? 'coin' : 'catch');
+    hooks.sfx(it.category === 'bonus' ? 'coin' : 'catch');
   } else {
     addMiss(s, it.ramp, hooks); // уронил лут — промах
   }

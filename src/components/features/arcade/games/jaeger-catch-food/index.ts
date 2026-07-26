@@ -7,7 +7,7 @@ import { playSfx, type SfxName } from '@/lib/sfx';
 import { SpriteCache } from '../../sprites';
 import { createState, updateFrame, type JaegerHooks, type JaegerSound } from './state';
 import { draw } from './render';
-import { assetSrc, JAEGER_SPRITE, LOOT } from './config';
+import { assetSrc, JAEGER_SPRITE, LOOT_SPRITES, BONUS_SPRITE, DAMAGE_SPRITES } from './config';
 
 const SFX_MAP: Record<JaegerSound, SfxName> = { catch: 'bounce', coin: 'coins', miss: 'thud', over: 'burst' };
 
@@ -39,9 +39,9 @@ export function createGame(): ArcadeGame {
       void useJaegerStore.persist.rehydrate();
       const list = [
         assetSrc('backplate'),
-        assetSrc('btc'),
-        assetSrc('m67'),
-        ...LOOT.map((n) => assetSrc(n)),
+        assetSrc(BONUS_SPRITE),
+        ...DAMAGE_SPRITES.map((n) => assetSrc(n)),
+        ...LOOT_SPRITES.map((n) => assetSrc(n)),
         ...Object.values(JAEGER_SPRITE).map((n) => assetSrc(n)),
       ];
       void sprites.load(list).then(() => {

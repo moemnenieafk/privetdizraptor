@@ -2,7 +2,6 @@
 // Ассеты в /images/arcade/game03 (нумерация паков V4DYA), код-id игры — jaeger-catch-food.
 
 export const ASSET_BASE = '/images/arcade/game03';
-export const assetSrc = (name: string) => `${ASSET_BASE}/${name}.webp`;
 
 export type Pos = 'ul' | 'dl' | 'ur' | 'dr';
 export const POSITIONS: readonly Pos[] = ['ul', 'dl', 'ur', 'dr'];
@@ -37,15 +36,31 @@ export const QUAD_Y = 288;
 export const ITEM_SIZE = 46;
 export const ITEM_TURNS = 2.4; // оборотов вращения предмета за спуск (скатывается «по кругу»)
 
-// ─── Предметы ───
-export type LootKind = 'tushonka' | 'iskra' | 'lapsha';
-export const LOOT: readonly LootKind[] = ['tushonka', 'iskra', 'lapsha'];
-export type ItemKind = LootKind | 'btc' | 'm67';
+// ─── Предметы (ассеты V4DYA по подпапкам) ───
+// food/ + drink/ — обычный лут (+1); bonus/btc — редкий (+5); damage/ — гранаты (штраф).
+export const FOOD = [
+  'ekopure', 'emelya', 'galetu', 'goroshek', 'iskra', 'kirieshki', 'kolbaca', 'lapsha', 'mre',
+  'olivie', 'pashtet', 'saira', 'sgushenka', 'shproti', 'slickers', 'sushenoemyaso',
+  'tushenka-malenkaya', 'tushonka',
+] as const;
+export const DRINK = ['aquamari', 'hotrod', 'kvas', 'maxenergy', 'moloko', 'ratcola', 'tarcola'] as const;
+export const LOOT_SPRITES: readonly string[] = [...FOOD, ...DRINK];
+export const BONUS_SPRITE = 'btc';
+export const DAMAGE_SPRITES = ['m67', 'rgd5'] as const;
 
+// Роутинг ассета по подпапке; backplate/jaeger*/траектории — в корне (нет в DIR).
+const DIR: Record<string, string> = {};
+for (const n of FOOD) DIR[n] = 'food';
+for (const n of DRINK) DIR[n] = 'drink';
+DIR[BONUS_SPRITE] = 'bonus';
+for (const n of DAMAGE_SPRITES) DIR[n] = 'damage';
+export const assetSrc = (name: string) => `${ASSET_BASE}/${DIR[name] ? `${DIR[name]}/` : ''}${name}.webp`;
+
+export type ItemCategory = 'food' | 'bonus' | 'damage';
 export const SCORE_NORMAL = 1;
-export const SCORE_BTC = 5;
-export const GRENADE_CHANCE = 0.18; // доля штрафной гранаты среди не-btc спавнов
-export const BTC_MIN = 25; // 1 биткоин на 25–75 спавнов (GDD §3)
+export const SCORE_BONUS = 5;
+export const GRENADE_CHANCE = 0.18; // доля штрафной гранаты среди не-bonus спавнов
+export const BTC_MIN = 25; // 1 бонус на 25–75 спавнов (GDD §3)
 export const BTC_MAX = 75;
 
 // ─── Жизни ───

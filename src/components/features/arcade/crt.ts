@@ -22,8 +22,8 @@ interface CrtParams {
 }
 
 const PRESETS: Record<CrtPreset, CrtParams> = {
-  site: { curvature: 0.12, scanline: 0.12, vignette: 0.22, chroma: 0.0016, mask: 0.1 },
-  fullscreen: { curvature: 0.22, scanline: 0.18, vignette: 0.34, chroma: 0.0028, mask: 0.16 },
+  site: { curvature: 0.12, scanline: 0.12, vignette: 0.1, chroma: 0.0016, mask: 0.1 },
+  fullscreen: { curvature: 0.22, scanline: 0.18, vignette: 0.16, chroma: 0.0028, mask: 0.16 },
 };
 
 const VERT = `#version 100
@@ -206,10 +206,10 @@ function create2dRenderer(display: HTMLCanvasElement, initial: CrtPreset): CrtRe
       for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1);
       ctx.globalAlpha = 1;
 
-      // Вигнетка.
-      const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.62);
+      // Вигнетка (слабее — чтобы не затемнять важные элементы игр).
+      const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.42, w / 2, h / 2, Math.max(w, h) * 0.66);
       g.addColorStop(0, 'rgba(0,0,0,0)');
-      g.addColorStop(1, `rgba(0,0,0,${0.28 + params.vignette})`);
+      g.addColorStop(1, `rgba(0,0,0,${0.12 + params.vignette})`);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
     },

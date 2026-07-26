@@ -43,17 +43,17 @@ function drawItems(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: Jaege
   for (const it of s.items) {
     const { x, y } = itemXY(it);
     const angle = it.spin * it.t * ITEM_TURNS * TAU; // скатывается «по кругу» — вращается по ходу
-    const img = sprites.get(assetSrc(it.kind));
+    const img = sprites.get(assetSrc(it.sprite));
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
-    if (it.kind === 'btc') {
+    if (it.category === 'bonus') {
       ctx.shadowColor = GOLD;
       ctx.shadowBlur = 12;
     }
     if (img) ctx.drawImage(img, -ITEM_SIZE / 2, -ITEM_SIZE / 2, ITEM_SIZE, ITEM_SIZE);
     else {
-      ctx.fillStyle = it.kind === 'm67' ? DANGER : it.kind === 'btc' ? GOLD : AMBER;
+      ctx.fillStyle = it.category === 'damage' ? DANGER : it.category === 'bonus' ? GOLD : AMBER;
       ctx.beginPath();
       ctx.arc(0, 0, ITEM_SIZE / 2, 0, TAU);
       ctx.fill();
