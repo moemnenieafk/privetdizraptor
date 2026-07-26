@@ -218,9 +218,9 @@
   .icon-eft-questitems { mask-image: url('/icons/eft/03-items/questitems.svg'); -webkit-mask-image: url('/icons/eft/03-items/questitems.svg'); }
   .icon-eft-savings { mask-image: url('/icons/eft/03-items/savings-icon.svg'); -webkit-mask-image: url('/icons/eft/03-items/savings-icon.svg'); }
   .icon-eft-skill-effect { mask-image: url('/icons/eft/03-items/meds/skill-effect.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/skill-effect.svg'); }
-  .icon-eft-stamin-recovery { mask-image: url('/icons/eft/03-items/meds/stamin-recovery.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/stamin-recovery.svg'); }
+  .icon-eft-stamina-recovery { mask-image: url('/icons/eft/03-items/meds/stamina-recovery.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/stamina-recovery.svg'); }
   .icon-eft-stamina-max { mask-image: url('/icons/eft/03-items/meds/stamina-max.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/stamina-max.svg'); }
-  .icon-eft-takeof-contusion { mask-image: url('/icons/eft/03-items/meds/takeof-contusion.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/takeof-contusion.svg'); }
+  .icon-eft-takeof-concussion { mask-image: url('/icons/eft/03-items/meds/takeof-concussion.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/takeof-concussion.svg'); }
   .icon-eft-takeof-pain { mask-image: url('/icons/eft/03-items/meds/takeof-pain.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/takeof-pain.svg'); }
   .icon-eft-time-effect { mask-image: url('/icons/eft/03-items/meds/time-effect.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/time-effect.svg'); }
   .icon-eft-underbarrel-launchers { mask-image: url('/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg'); -webkit-mask-image: url('/icons/eft/03-items/guns/gun-modes/underbarrel-launchers.svg'); }
@@ -389,6 +389,73 @@
   .icon-eft-profile-usec-label { mask-image: url('/icons/eft/profile-pannel/USEC_label_icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/USEC_label_icon.svg'); }
   .icon-eft-profile-usec-logo { mask-image: url('/icons/eft/profile-pannel/USEC-logo-sign.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/USEC-logo-sign.svg'); }
   .icon-eft-profile-warning { mask-image: url('/icons/eft/profile-pannel/warning-attention-icon.svg'); -webkit-mask-image: url('/icons/eft/profile-pannel/warning-attention-icon.svg'); }
+
+  /* ═══ EFT Персонаж — навыки (character/skills) ═══ */
+  /* Цветной игровой арт 512×512 (webp, скруглённые углы вшиты) → background-image
+     поверх базового .icon-bg. НЕ маски: перекрашивать нечего. */
+  /* — mental — интеллектуальные — */
+  .icon-eft-skill-attention { background-image: url('/images/character/skills/mental/attention.webp'); }
+  .icon-eft-skill-charisma { background-image: url('/images/character/skills/mental/charisma.webp'); }
+  .icon-eft-skill-intellect { background-image: url('/images/character/skills/mental/intellect.webp'); }
+  .icon-eft-skill-memory { background-image: url('/images/character/skills/mental/memory.webp'); }
+  .icon-eft-skill-perception { background-image: url('/images/character/skills/mental/perception.webp'); }
+  /* — physical — физические — */
+  .icon-eft-skill-endurance { background-image: url('/images/character/skills/physical/endurance.webp'); }
+  .icon-eft-skill-health { background-image: url('/images/character/skills/physical/health.webp'); }
+  .icon-eft-skill-immunity { background-image: url('/images/character/skills/physical/immunity.webp'); }
+  .icon-eft-skill-metabolism { background-image: url('/images/character/skills/physical/metabolism.webp'); }
+  .icon-eft-skill-strength { background-image: url('/images/character/skills/physical/strength.webp'); }
+  .icon-eft-skill-stress-resistance { background-image: url('/images/character/skills/physical/stress-resistance.webp'); }
+  .icon-eft-skill-vitality { background-image: url('/images/character/skills/physical/vitality.webp'); }
+  /* — practical — практические — */
+  .icon-eft-skill-covet-movement { background-image: url('/images/character/skills/practical/covet-movement.webp'); }
+  .icon-eft-skill-crafting { background-image: url('/images/character/skills/practical/crafting.webp'); }
+  .icon-eft-skill-hideout-management { background-image: url('/images/character/skills/practical/hideout-management.webp'); }
+  .icon-eft-skill-mag-drills { background-image: url('/images/character/skills/practical/mag-drills.webp'); }
+  .icon-eft-skill-search { background-image: url('/images/character/skills/practical/search.webp'); }
+  .icon-eft-skill-surgery { background-image: url('/images/character/skills/practical/surgery.webp'); }
+  .icon-eft-skill-weapon-maintenance { background-image: url('/images/character/skills/practical/weapon-maintenance.webp'); }
+
+  /* ═══ EFT Персонаж — состояния (character/status-effects) ═══ */
+  /* — базовые шкалы — */
+  .icon-eft-effect-energy { background-image: url('/images/character/status-effects/energy.webp'); }
+  .icon-eft-effect-hydration { background-image: url('/images/character/status-effects/hydration.webp'); }
+  .icon-eft-effect-temperature-default { background-image: url('/images/character/status-effects/temperature-default.webp'); }
+  /* — negative — дебаффы — */
+  .icon-eft-effect-concussion { background-image: url('/images/character/status-effects/negative/concussion.webp'); }
+  .icon-eft-effect-critical-overweight { background-image: url('/images/character/status-effects/negative/critical-overweight.webp'); }
+  .icon-eft-effect-damage-income-without-head { background-image: url('/images/character/status-effects/negative/damage-income-without-head.webp'); }
+  .icon-eft-effect-debuff { background-image: url('/images/character/status-effects/negative/debuff.webp'); }
+  .icon-eft-effect-dehydration { background-image: url('/images/character/status-effects/negative/dehydration.webp'); }
+  .icon-eft-effect-fatigue { background-image: url('/images/character/status-effects/negative/fatigue.webp'); }
+  .icon-eft-effect-fatigue-energy { background-image: url('/images/character/status-effects/negative/fatigue-energy.webp'); }
+  .icon-eft-effect-flash { background-image: url('/images/character/status-effects/negative/flash.webp'); }
+  .icon-eft-effect-fracture { background-image: url('/images/character/status-effects/negative/fracture.webp'); }
+  .icon-eft-effect-fresh-wound { background-image: url('/images/character/status-effects/negative/fresh-wound.webp'); }
+  .icon-eft-effect-hands-tremor { background-image: url('/images/character/status-effects/negative/hands-tremor.webp'); }
+  .icon-eft-effect-heavy-bleeding { background-image: url('/images/character/status-effects/negative/heavy-bleeding.webp'); }
+  .icon-eft-effect-light-bleeding { background-image: url('/images/character/status-effects/negative/light-bleeding.webp'); }
+  .icon-eft-effect-mild-muscle-pain { background-image: url('/images/character/status-effects/negative/mild-muscle-pain.webp'); }
+  .icon-eft-effect-overweight { background-image: url('/images/character/status-effects/negative/overweight.webp'); }
+  .icon-eft-effect-pain { background-image: url('/images/character/status-effects/negative/pain.webp'); }
+  .icon-eft-effect-panic-attack { background-image: url('/images/character/status-effects/negative/panic-attack.webp'); }
+  .icon-eft-effect-poisoning { background-image: url('/images/character/status-effects/negative/poisoning.webp'); }
+  .icon-eft-effect-radiation { background-image: url('/images/character/status-effects/negative/radiation.webp'); }
+  .icon-eft-effect-severe-muscle-pain { background-image: url('/images/character/status-effects/negative/severe-muscle-pain.webp'); }
+  .icon-eft-effect-stun { background-image: url('/images/character/status-effects/negative/stun.webp'); }
+  .icon-eft-effect-temperature-high { background-image: url('/images/character/status-effects/negative/temperature-high.webp'); }
+  .icon-eft-effect-tunnel-vision { background-image: url('/images/character/status-effects/negative/tunnel-vision.webp'); }
+  /* — positive — баффы — */
+  .icon-eft-effect-berserk { background-image: url('/images/character/status-effects/positive/berserk.webp'); }
+  .icon-eft-effect-buff { background-image: url('/images/character/status-effects/positive/buff.webp'); }
+  .icon-eft-effect-buff-weight { background-image: url('/images/character/status-effects/positive/buff-weight.webp'); }
+  .icon-eft-effect-max-energy { background-image: url('/images/character/status-effects/positive/max-energy.webp'); }
+  .icon-eft-effect-on-painkillers { background-image: url('/images/character/status-effects/positive/on-painkillers.webp'); }
+  .icon-eft-effect-regeneration { background-image: url('/images/character/status-effects/positive/regeneration.webp'); }
+  .icon-eft-effect-restore-hp { background-image: url('/images/character/status-effects/positive/restore-hp.webp'); }
+  .icon-eft-effect-skill-effect { background-image: url('/images/character/status-effects/positive/skill-effect.webp'); }
+  .icon-eft-effect-stamina-recovery { background-image: url('/images/character/status-effects/positive/stamina-recovery.webp'); }
+  .icon-eft-effect-temperature-low { background-image: url('/images/character/status-effects/positive/temperature-low.webp'); }
 
   /* ═══ Аккаунт-центр ═══ */
   .icon-account_billing_icon { mask-image: url('/icons/account_center/account_billing_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_billing_icon.svg'); }
