@@ -15,7 +15,9 @@ export const JAEGER_SPRITE: Record<Pos, string> = {
   dr: 'jaegerdownright',
 };
 
-// Геометрия скатов (лог. 640×480): start (верх ската) → catch (у корзины Егеря).
+// Точные прямые траектории от V4DYA (SVG trajectory-*.svg, viewBox 3840×2867 = система координат
+// арта). Переведены в лог. 640×480 (×640/3840, ×480/2867). start за краем экрана (предмет
+// вкатывается с крыши) → catch у корзины Егеря. Прямая линия (предмет скатывается + вращается).
 export interface Ramp {
   sx: number;
   sy: number;
@@ -23,16 +25,17 @@ export interface Ramp {
   cy: number;
 }
 export const RAMPS: Record<Pos, Ramp> = {
-  ul: { sx: 46, sy: 52, cx: 250, cy: 250 },
-  dl: { sx: 22, sy: 198, cx: 250, cy: 338 },
-  ur: { sx: 594, sy: 52, cx: 390, cy: 250 },
-  dr: { sx: 618, sy: 198, cx: 390, cy: 338 },
+  ul: { sx: -22, sy: 122, cx: 192, cy: 238 },
+  dl: { sx: -22, sy: 222, cx: 192, cy: 337 },
+  ur: { sx: 662, sy: 122, cx: 448, cy: 238 },
+  dr: { sx: 662, sy: 222, cx: 448, cy: 337 },
 };
 
-export const JAEGER_CX = 320;
-export const JAEGER_CY = 336;
-export const JAEGER_H = 190; // высота спрайта Егеря (лог. px)
-export const ITEM_SIZE = 44;
+// Пороги квадрантов для тач-управления (лево/право и верх/низ по позициям корзин).
+export const QUAD_X = 320;
+export const QUAD_Y = 288;
+export const ITEM_SIZE = 46;
+export const ITEM_TURNS = 2.4; // оборотов вращения предмета за спуск (скатывается «по кругу»)
 
 // ─── Предметы ───
 export type LootKind = 'tushonka' | 'iskra' | 'lapsha';

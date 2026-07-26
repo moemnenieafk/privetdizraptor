@@ -1,20 +1,10 @@
-// Рисование game04 «Егерь ловит покушать». Ретро-LCD: backplate + простые скаты + поза Егеря +
-// предметы на скатах + HUD. Цвета — литералы NIGHTFALL (в канвасе нет CSS-токенов).
+// Рисование game04 «Егерь ловит покушать» под НОВЫЙ фон 4:3: backplate (со скатами-крышами) +
+// предметы, катящиеся по дуге с вращением + полноэкранная поза Егеря + HUD. Цвета — NIGHTFALL.
 
 import { ARCADE_W, ARCADE_H } from '../../types';
 import type { SpriteCache } from '../../sprites';
 import { itemXY, type JaegerState } from './state';
-import {
-  assetSrc,
-  RAMPS,
-  POSITIONS,
-  JAEGER_SPRITE,
-  JAEGER_CX,
-  JAEGER_CY,
-  JAEGER_H,
-  ITEM_SIZE,
-  MAX_MISSES,
-} from './config';
+import { assetSrc, RAMPS, JAEGER_SPRITE, ITEM_SIZE, ITEM_TURNS, MAX_MISSES } from './config';
 
 const AMBER = '#E68E25';
 const TEXT = '#F2F2F2';
@@ -23,6 +13,7 @@ const DANGER = '#C24339';
 const GREEN = '#8DE736';
 const GOLD = '#EBC33A';
 const BG = '#0b0b0d';
+const TAU = Math.PI * 2;
 
 function font(ctx: CanvasRenderingContext2D, px: number): void {
   ctx.font = `${px}px "BlenderPro-Medium", "Bender", sans-serif`;
@@ -48,56 +39,32 @@ function drawBackplate(ctx: CanvasRenderingContext2D, sprites: SpriteCache): voi
   ctx.drawImage(img, (ARCADE_W - w) / 2, (ARCADE_H - h) / 2, w, h);
 }
 
-function drawRamps(ctx: CanvasRenderingContext2D): void {
-  ctx.save();
-  ctx.lineCap = 'round';
-  for (const pos of POSITIONS) {
-    const r = RAMPS[pos];
-    ctx.strokeStyle = 'rgba(230,142,37,0.30)';
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(r.sx, r.sy);
-    ctx.lineTo(r.cx, r.cy);
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(230,142,37,0.55)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(r.sx, r.sy);
-    ctx.lineTo(r.cx, r.cy);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
 function drawItems(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: JaegerState): void {
   for (const it of s.items) {
     const { x, y } = itemXY(it);
+    const angle = it.spin * it.t * ITEM_TURNS * TAU; // скатывается «по кругу» — вращается по ходу
     const img = sprites.get(assetSrc(it.kind));
-    if (img) {
-      if (it.kind === 'btc') {
-        ctx.save();
-        ctx.shadowColor = GOLD;
-        ctx.shadowBlur = 12;
-        ctx.drawImage(img, x - ITEM_SIZE / 2, y - ITEM_SIZE / 2, ITEM_SIZE, ITEM_SIZE);
-        ctx.restore();
-      } else {
-        ctx.drawImage(img, x - ITEM_SIZE / 2, y - ITEM_SIZE / 2, ITEM_SIZE, ITEM_SIZE);
-      }
-    } else {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    if (it.kind === 'btc') {
+      ctx.shadowColor = GOLD;
+      ctx.shadowBlur = 12;
+    }
+    if (img) ctx.drawImage(img, -ITEM_SIZE / 2, -ITEM_SIZE / 2, ITEM_SIZE, ITEM_SIZE);
+    else {
       ctx.fillStyle = it.kind === 'm67' ? DANGER : it.kind === 'btc' ? GOLD : AMBER;
       ctx.beginPath();
-      ctx.arc(x, y, ITEM_SIZE / 2, 0, Math.PI * 2);
+      ctx.arc(0, 0, ITEM_SIZE / 2, 0, TAU);
       ctx.fill();
     }
+    ctx.restore();
   }
 }
 
 function drawJaeger(ctx: CanvasRenderingContext2D, sprites: SpriteCache, s: JaegerState): void {
   const img = sprites.get(assetSrc(JAEGER_SPRITE[s.basket]));
-  if (!img) return;
-  const h = JAEGER_H;
-  const w = h * (img.naturalWidth / img.naturalHeight);
-  ctx.drawImage(img, JAEGER_CX - w / 2, JAEGER_CY - h / 2, w, h);
+  if (img) ctx.drawImage(img, 0, 0, ARCADE_W, ARCADE_H); // полноэкранная поза (корзина запечена в арте)
 }
 
 function drawCatchFx(ctx: CanvasRenderingContext2D, s: JaegerState): void {
@@ -109,20 +76,18 @@ function drawCatchFx(ctx: CanvasRenderingContext2D, s: JaegerState): void {
   ctx.strokeStyle = s.catchFx.good ? GREEN : DANGER;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(r.cx, r.cy, 18 + (1 - k) * 16, 0, Math.PI * 2);
+  ctx.arc(r.cx, r.cy, 18 + (1 - k) * 16, 0, TAU);
   ctx.stroke();
   ctx.restore();
 }
 
 function drawHud(ctx: CanvasRenderingContext2D, s: JaegerState): void {
-  // Промахи (3 пипса, использованные — красные).
   const pipW = 16;
   const gap = 6;
   for (let i = 0; i < MAX_MISSES; i++) {
-    ctx.fillStyle = i < s.misses ? DANGER : '#2b2b30';
+    ctx.fillStyle = i < s.misses ? DANGER : 'rgba(0,0,0,0.45)';
     ctx.fillRect(14 + i * (pipW + gap), 14, pipW, 12);
   }
-  // Счёт (центр сверху).
   center(ctx, String(s.score), 30, 24, AMBER);
 }
 
@@ -141,22 +106,21 @@ export function draw(
   drawBackplate(ctx, sprites);
 
   if (!ready || s.phase === 'loading') {
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
     center(ctx, 'ЗАГРУЗКА…', ARCADE_H / 2, 18, MUTED);
     return;
   }
 
-  drawRamps(ctx);
   if (s.phase === 'playing' || s.phase === 'over') {
     drawItems(ctx, sprites, s);
-    drawCatchFx(ctx, s);
     drawJaeger(ctx, sprites, s);
+    drawCatchFx(ctx, s);
     drawHud(ctx, s);
   }
 
   if (s.phase === 'idle') {
-    ctx.fillStyle = 'rgba(0,0,0,0.62)';
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(0, 0, ARCADE_W, ARCADE_H);
     center(ctx, 'ЕГЕРЬ ЛОВИТ ПОКУШАТЬ', ARCADE_H / 2 - 60, 30, TEXT);
     center(ctx, 'Лови лут корзиной, не поймай гранату', ARCADE_H / 2 - 26, 15, MUTED);

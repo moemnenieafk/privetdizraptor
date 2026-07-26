@@ -5,7 +5,8 @@ import type { ArcadeInput } from '../../types';
 import {
   POSITIONS,
   RAMPS,
-  JAEGER_CX,
+  QUAD_X,
+  QUAD_Y,
   LOOT,
   type Pos,
   type ItemKind,
@@ -28,6 +29,7 @@ export interface FallItem {
   kind: ItemKind;
   t: number; // 0 (верх ската) → 1 (у корзины)
   rollMs: number;
+  spin: number; // направление вращения: +1 (левые скаты) / −1 (правые)
 }
 
 export interface CatchFx {
@@ -98,7 +100,8 @@ function spawnItem(s: JaegerState): void {
   } else {
     kind = LOOT[randInt(0, LOOT.length - 1)];
   }
-  s.items.push({ ramp, kind, t: 0, rollMs: rollMsFor(s.score) });
+  const spin = ramp === 'ul' || ramp === 'dl' ? 1 : -1; // левые катятся по часовой, правые — против
+  s.items.push({ ramp, kind, t: 0, rollMs: rollMsFor(s.score), spin });
 }
 
 /** Начислить очки + цикличный сброс промахов (GDD §5): кратное 100 → все, кратное 50 → −1. */
@@ -148,8 +151,8 @@ function keyPos(keys: ReadonlySet<string>): Pos | null {
 }
 
 function quadrant(px: number, py: number): Pos {
-  const up = py < 294; // между верхними (250) и нижними (338) точками ловли
-  const left = px < JAEGER_CX;
+  const up = py < QUAD_Y;
+  const left = px < QUAD_X;
   return left ? (up ? 'ul' : 'dl') : up ? 'ur' : 'dr';
 }
 
@@ -189,7 +192,7 @@ export function updateFrame(s: JaegerState, input: ArcadeInput, dtMs: number, ho
   }
 }
 
-/** Позиция точки предмета на скате (для рендера). */
+/** Позиция предмета на прямой траектории start→catch (точные линии V4DYA) — для рендера. */
 export function itemXY(it: FallItem): { x: number; y: number } {
   const r = RAMPS[it.ramp];
   return { x: r.sx + (r.cx - r.sx) * it.t, y: r.sy + (r.cy - r.sy) * it.t };
