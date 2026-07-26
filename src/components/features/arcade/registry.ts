@@ -38,6 +38,14 @@ export const ARCADE_GAMES: readonly ArcadeGameMeta[] = [
     status: 'ready',
     load: () => import('./games/barter-rush').then((m) => m.createGame),
   },
+  {
+    id: 'jaeger-catch-food',
+    title: 'Егерь ловит покушать',
+    logo: 'ЕГЕРЬ\nЛОВИТ',
+    tagline: 'Лови лут, не поймай гранату',
+    status: 'ready',
+    load: () => import('./games/jaeger-catch-food').then((m) => m.createGame),
+  },
 ];
 
 export function gameMeta(id: string): ArcadeGameMeta | undefined {
