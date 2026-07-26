@@ -1,4 +1,4 @@
-// Сборка модуля game02 «Три в ряд»: движок + рендер + спрайты + экономика.
+// Сборка модуля game02 «Три в ряд» v0.3: движок + рендер + спрайты + экономика.
 
 import type { ArcadeGame } from '../../types';
 import { useMatch3Store } from '@/store/useMatch3Store';
@@ -7,9 +7,10 @@ import { playSfx, type SfxName } from '@/lib/sfx';
 import { SpriteCache } from '../../sprites';
 import { createLevelState, updateFrame, type Match3State, type Match3Hooks } from './state';
 import { draw } from './render';
-import { COLORS, TOOLS, itemSrc } from './config';
+import { COLORS, TOOLS, itemSrc, type ToolKind } from './config';
 
 const SPECIALS = ['rshg-horizontal', 'rshg-vertical', 'zaryad', 'rgo', 'kerman'] as const;
+const BLOCKS = ['wood', 'wood2', 'leaves'] as const;
 
 export function createGame(): ArcadeGame {
   const sprites = new SpriteCache();
@@ -17,6 +18,7 @@ export function createGame(): ArcadeGame {
   const reducedMotion =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let ready = false;
+  let resumed = false; // применили ли уровень из стора после (асинхронной) регидрации
 
   const sfx = (n: SfxName) => {
     if (!useArcadeStore.getState().muted) playSfx(n);
@@ -28,6 +30,9 @@ export function createGame(): ArcadeGame {
     getWallet: () => useMatch3Store.getState().rubles,
     spendWallet: (n) => useMatch3Store.getState().spendRubles(n),
     spendEnergy: () => useMatch3Store.getState().spendEnergy(),
+    addStar: () => useMatch3Store.getState().addStar(),
+    spendTool: (t) => useMatch3Store.getState().spendTool(t),
+    toolCount: (t) => useMatch3Store.getState().tools[t] ?? 0,
   };
 
   return {
@@ -39,7 +44,8 @@ export function createGame(): ArcadeGame {
       if (typeof document !== 'undefined' && 'fonts' in document) {
         void document.fonts.load('20px "BlenderPro-Medium"');
       }
-      const list = [...COLORS, ...SPECIALS, ...TOOLS, 'wood'].map((n) => itemSrc(n));
+      void useMatch3Store.persist.rehydrate();
+      const list = [...COLORS, ...SPECIALS, ...TOOLS, ...BLOCKS].map((n) => itemSrc(n));
       void sprites.load(list).then(() => {
         ready = true;
         if (state.phase === 'loading') state.phase = 'brief';
@@ -47,10 +53,27 @@ export function createGame(): ArcadeGame {
     },
 
     frame({ ctx, input }, dtMs) {
-      updateFrame(state, input, dtMs, hooks);
       const store = useMatch3Store.getState();
+      // Резюм на сохранённый уровень — однократно после (асинхронной) регидрации, до старта.
+      if (!resumed && store._hasHydrated) {
+        resumed = true;
+        if (store.currentLevel !== state.levelIndex && (state.phase === 'brief' || state.phase === 'loading')) {
+          const wasReady = state.phase !== 'loading';
+          Object.assign(state, createLevelState(store.currentLevel));
+          state.phase = wasReady ? 'brief' : 'loading';
+        }
+      }
+      updateFrame(state, input, dtMs, hooks);
       if (state.levelIndex !== store.currentLevel) store.setLevel(state.levelIndex);
-      draw(ctx, sprites, state, { wallet: store.rubles, energy: store.syncEnergy(), reducedMotion }, ready);
+      const toolCounts = {} as Record<ToolKind, number>;
+      for (const t of TOOLS) toolCounts[t] = store.tools[t] ?? 0;
+      draw(
+        ctx,
+        sprites,
+        state,
+        { wallet: store.rubles, energy: store.syncEnergy(), stars: store.stars, toolCounts, reducedMotion },
+        ready,
+      );
     },
 
     dispose() {},
