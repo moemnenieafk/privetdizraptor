@@ -23,7 +23,7 @@
     },
     {
       "label": "🧹 Lint",
-      "detail": "npm run lint — next lint",
+      "detail": "npm run lint — eslint",
       "type": "shell",
       "command": "npm run lint",
       "problemMatcher": ["$eslint-stylish"],
