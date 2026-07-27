@@ -1,9 +1,10 @@
-﻿import { Crosshair, Shield, HeartPulse, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
+﻿import { Crosshair, Shield, Hammer, Clock, Target, Bomb, Headphones } from 'lucide-react';
 import { SectionPanel, MetricCard, ProgressBar } from '@/components/ui/kit';
 import { SectionRule } from '@/components/ui/SectionRule';
 import { BarterOfferCard } from './BarterOfferCard';
 import { CraftOfferCard } from './CraftOfferCard';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
+import type { MedEffectsRaw } from '@/data/eft/medical-effects';
 import { formatCompactNumber } from '@/lib/formatters';
 
 // === ТИПЫ СВОЙСТВ ПРЕДМЕТОВ ===
@@ -30,12 +31,15 @@ export interface MedKitProperties {
   useTime: number;
   maxHealPerUse: number | null;
   cures: string[] | null;
+  /** Эффекты из зеркала (SPT-дамп игровой базы) — null у предметов вне снимка. */
+  medEffects: MedEffectsRaw | null;
 }
 
 export interface MedicalItemProperties {
   uses: number | null;
   useTime: number;
   cures: string[] | null;
+  medEffects: MedEffectsRaw | null;
 }
 
 export interface GridAllowedItem {
@@ -122,11 +126,11 @@ function isArmorProps(p: NonNullable<ItemProperties>): p is ArmorProperties {
   return 'class' in p && !('headZones' in p) && !('grids' in p);
 }
 
-function isMedKitProps(p: NonNullable<ItemProperties>): p is MedKitProperties {
+export function isMedKitProps(p: NonNullable<ItemProperties>): p is MedKitProperties {
   return 'hitpoints' in p;
 }
 
-function isMedicalItemProps(p: NonNullable<ItemProperties>): p is MedicalItemProperties {
+export function isMedicalItemProps(p: NonNullable<ItemProperties>): p is MedicalItemProperties {
   return 'useTime' in p && !('hitpoints' in p) && !('recoilVertical' in p) && !('penetrationPower' in p);
 }
 
@@ -280,44 +284,8 @@ export function ArmorModule({ properties }: { properties: ItemProperties }) {
   );
 }
 
-// === МОДУЛЬ МЕДКИТОВ ===
-
-export function MedKitModule({ properties }: { properties: ItemProperties }) {
-  if (!properties || !isMedKitProps(properties)) return null;
-
-  return (
-    <SectionPanel title="Медицинские данные" icon={<HeartPulse className="w-4 h-4" />} noDivider smallTitle bare>
-      <div className="grid grid-cols-2 gap-4">
-        <MetricCard label="Восстановление HP" value={`+${properties.hitpoints}`} accent="success" />
-        <MetricCard label="Время применения" value={`${properties.useTime} сек.`} accent="warning" />
-        {properties.maxHealPerUse != null && (
-          <MetricCard label="Макс. за применение" value={`+${properties.maxHealPerUse}`} accent="default" />
-        )}
-        {properties.cures && properties.cures.length > 0 && (
-          <MetricCard label="Лечит" value={properties.cures.join(', ')} className="col-span-2" />
-        )}
-      </div>
-    </SectionPanel>
-  );
-}
-
-// === МОДУЛЬ МЕДПРЕДМЕТОВ ===
-
-export function MedicalItemModule({ properties }: { properties: ItemProperties }) {
-  if (!properties || !isMedicalItemProps(properties)) return null;
-
-  return (
-    <SectionPanel title="Медицинские данные" icon={<HeartPulse className="w-4 h-4" />} noDivider smallTitle bare>
-      <div className="grid grid-cols-2 gap-4">
-        <MetricCard label="Время применения" value={`${properties.useTime} сек.`} accent="warning" />
-        <MetricCard label="Использований" value={properties.uses ?? 1} accent="primary" />
-        {properties.cures && properties.cures.length > 0 && (
-          <MetricCard label="Лечит" value={properties.cures.join(', ')} className="col-span-2" />
-        )}
-      </div>
-    </SectionPanel>
-  );
-}
+// Медицина живёт в MedicalEffectsModule — блок «Медицинские эффекты» по макету
+// MEDICAL_EFFECT: плитки + списки снимаемых/добавляемых эффектов.
 
 // === МОДУЛЬ ПАТРОНОВ ===
 

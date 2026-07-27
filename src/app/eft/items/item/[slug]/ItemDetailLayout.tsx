@@ -3,8 +3,6 @@ import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import {
   WeaponModule,
   ArmorModule,
-  MedKitModule,
-  MedicalItemModule,
   AmmoModule,
   GrenadeModule,
   HeadsetModule,
@@ -14,6 +12,7 @@ import {
   UsedInBarterModule,
   UsedInCraftModule,
 } from './ItemModules';
+import { MedicalEffectsModule } from './MedicalEffectsModule';
 import { ItemImage } from './ItemImage';
 import { SlotGrid } from './SlotGrid';
 import { ItemActions } from './ItemActions';
@@ -183,8 +182,7 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
         <AmmoModule properties={item.properties} />
         <GrenadeModule properties={item.properties} />
         <HeadsetModule properties={item.properties} />
-        <MedKitModule properties={item.properties} />
-        <MedicalItemModule properties={item.properties} />
+        <MedicalEffectsModule properties={item.properties} />
 
         {/* Что вмещает контейнер/рюкзак — категории и предметы из фильтров ячеек. */}
         <ContainerContents grids={capacityGrids} />

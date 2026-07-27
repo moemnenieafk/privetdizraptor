@@ -883,7 +883,24 @@
       "useTime": 2,
       "cures": [
         "LightBleeding"
-      ]
+      ],
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "LightBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -916,7 +933,24 @@
       "useTime": 5,
       "cures": [
         "Fracture"
-      ]
+      ],
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [
+          {
+            "effect": "Fracture",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -952,7 +986,29 @@
       ],
       "painkillerDuration": 80,
       "energyImpact": 0,
-      "hydrationImpact": 0
+      "hydrationImpact": 0,
+      "medEffects": {
+        "hpResource": 4,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 80,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Hydration",
+            "value": -19
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -990,7 +1046,41 @@
       ],
       "painkillerDuration": 300,
       "energyImpact": -10,
-      "hydrationImpact": -15
+      "hydrationImpact": -15,
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 300,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": -10
+          },
+          {
+            "resource": "Hydration",
+            "value": -15
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -1027,7 +1117,32 @@
         "LightBleeding"
       ],
       "hpCostLightBleeding": 45,
-      "hpCostHeavyBleeding": 175
+      "hpCostHeavyBleeding": 175,
+      "medEffects": {
+        "hpResource": 400,
+        "hpPerUse": 85,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 175,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "LightBleeding",
+            "cost": 45,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -10341,7 +10456,24 @@
       "useTime": 2,
       "cures": [
         "LightBleeding"
-      ]
+      ],
+      "medEffects": {
+        "hpResource": 2,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "LightBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -10378,7 +10510,73 @@
       ],
       "painkillerDuration": 350,
       "energyImpact": -19,
-      "hydrationImpact": 0
+      "hydrationImpact": 0,
+      "medEffects": {
+        "hpResource": 5,
+        "hpPerUse": 0,
+        "useTime": 7,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 350,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 400,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": -19
+          }
+        ],
+        "buffs": [
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 5,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 5,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "Contusion",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 5,
+            "value": 1,
+            "absolute": false
+          }
+        ]
+      }
     }
   },
   {
@@ -10412,7 +10610,24 @@
       "maxHealPerUse": 50,
       "cures": [],
       "hpCostLightBleeding": null,
-      "hpCostHeavyBleeding": null
+      "hpCostHeavyBleeding": null,
+      "medEffects": {
+        "hpResource": 100,
+        "hpPerUse": 50,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -10448,7 +10663,33 @@
       ],
       "painkillerDuration": 300,
       "energyImpact": -9,
-      "hydrationImpact": -9
+      "hydrationImpact": -9,
+      "medEffects": {
+        "hpResource": 3,
+        "hpPerUse": 0,
+        "useTime": 6,
+        "damage": [
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 300,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": -9
+          },
+          {
+            "resource": "Hydration",
+            "value": -9
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -17815,7 +18056,64 @@
         "LightBleeding"
       ],
       "hpCostLightBleeding": 40,
-      "hpCostHeavyBleeding": 130
+      "hpCostHeavyBleeding": 130,
+      "medEffects": {
+        "hpResource": 1800,
+        "hpPerUse": 175,
+        "useTime": 5,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Fracture",
+            "cost": 50,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "HeavyBleeding",
+            "cost": 130,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "LightBleeding",
+            "cost": 40,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -17851,7 +18149,24 @@
         "LightBleeding"
       ],
       "hpCostLightBleeding": 50,
-      "hpCostHeavyBleeding": null
+      "hpCostHeavyBleeding": null,
+      "medEffects": {
+        "hpResource": 220,
+        "hpPerUse": 70,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "LightBleeding",
+            "cost": 50,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -17888,7 +18203,40 @@
         "LightBleeding"
       ],
       "hpCostLightBleeding": 30,
-      "hpCostHeavyBleeding": 210
+      "hpCostHeavyBleeding": 210,
+      "medEffects": {
+        "hpResource": 300,
+        "hpPerUse": 50,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 210,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 0,
+            "healthPenaltyMax": 0
+          },
+          {
+            "effect": "LightBleeding",
+            "cost": 30,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 0,
+            "healthPenaltyMax": 0
+          },
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 0,
+            "healthPenaltyMax": 0
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -17924,7 +18272,43 @@
       ],
       "painkillerDuration": 150,
       "energyImpact": 5,
-      "hydrationImpact": -5
+      "hydrationImpact": -5,
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 150,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 5
+          },
+          {
+            "resource": "Hydration",
+            "value": -5
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Immunity",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -36445,7 +36829,24 @@
       "useTime": 3,
       "cures": [
         "Fracture"
-      ]
+      ],
+      "medEffects": {
+        "hpResource": 5,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "Fracture",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -36557,7 +36958,37 @@
       ],
       "painkillerDuration": 280,
       "energyImpact": 0,
-      "hydrationImpact": -17
+      "hydrationImpact": -17,
+      "medEffects": {
+        "hpResource": 8,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 280,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Hydration",
+            "value": -17
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -48300,7 +48731,87 @@
     "basePrice": 21060,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 240,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 240,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Metabolism",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Vitality",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 270,
+            "duration": 30,
+            "value": 0,
+            "absolute": true
+          },
+          {
+            "type": "QuantumTunnelling",
+            "skill": null,
+            "chance": 1,
+            "delay": 270,
+            "duration": 30,
+            "value": 0,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -48329,7 +48840,61 @@
     "basePrice": 35893,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 100,
+            "duration": 200,
+            "value": -0.25,
+            "absolute": true
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 100,
+            "duration": 200,
+            "value": -0.3,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -48358,7 +48923,52 @@
     "basePrice": 27950,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "MaxStamina",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 240,
+            "value": 30,
+            "absolute": true
+          },
+          {
+            "type": "StaminaRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 240,
+            "value": 2,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 200,
+            "duration": 40,
+            "value": 0,
+            "absolute": true
+          },
+          {
+            "type": "QuantumTunnelling",
+            "skill": null,
+            "chance": 1,
+            "delay": 200,
+            "duration": 40,
+            "value": 0,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -48387,7 +48997,78 @@
     "basePrice": 33540,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 180,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "LightBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 180,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Vitality",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Metabolism",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": -5,
+            "absolute": true
+          },
+          {
+            "type": "RemoveAllBloodLosses",
+            "skill": null,
+            "chance": 1,
+            "delay": 0,
+            "duration": 180,
+            "value": 0,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 170,
+            "duration": 40,
+            "value": 0,
+            "absolute": true
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 170,
+            "duration": 40,
+            "value": -1.4,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -48416,7 +49097,88 @@
     "basePrice": 37830,
     "updated": "2026-06-09T08:38:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 6.5,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 0.5,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Metabolism",
+            "chance": 1,
+            "delay": 1,
+            "duration": 90,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Immunity",
+            "chance": 1,
+            "delay": 1,
+            "duration": 90,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 65,
+            "duration": 20,
+            "value": -3,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 65,
+            "duration": 60,
+            "value": -5,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 65,
+            "duration": 60,
+            "value": -5,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -49514,7 +50276,87 @@
     "basePrice": 31460,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 60,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 60,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": -10,
+            "absolute": true
+          },
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 15,
+            "value": 4,
+            "absolute": true
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 50,
+            "duration": 30,
+            "value": -1,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 50,
+            "duration": 30,
+            "value": -0.8,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -58163,7 +59005,24 @@
         "LostLimb"
       ],
       "minLimbHealth": 0.25,
-      "maxLimbHealth": 0.45
+      "maxLimbHealth": 0.45,
+      "medEffects": {
+        "hpResource": 3,
+        "hpPerUse": 0,
+        "useTime": 16,
+        "damage": [
+          {
+            "effect": "DestroyedPart",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 25,
+            "healthPenaltyMax": 45
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -58200,7 +59059,32 @@
         "LostLimb"
       ],
       "minLimbHealth": 0.6,
-      "maxLimbHealth": 0.72
+      "maxLimbHealth": 0.72,
+      "medEffects": {
+        "hpResource": 9,
+        "hpPerUse": 0,
+        "useTime": 20,
+        "damage": [
+          {
+            "effect": "DestroyedPart",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 60,
+            "healthPenaltyMax": 72
+          },
+          {
+            "effect": "Fracture",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 0,
+            "healthPenaltyMax": 0
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -70074,7 +70958,24 @@
       "useTime": 5,
       "cures": [
         "HeavyBleeding"
-      ]
+      ],
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -70107,7 +71008,24 @@
       "useTime": 3,
       "cures": [
         "HeavyBleeding"
-      ]
+      ],
+      "medEffects": {
+        "hpResource": 3,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -71685,7 +72603,70 @@
     "basePrice": 30693,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 1,
+            "duration": 240,
+            "value": 30,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Perception",
+            "chance": 1,
+            "delay": 1,
+            "duration": 240,
+            "value": 30,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 240,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "StaminaRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 240,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 220,
+            "duration": 45,
+            "value": 0,
+            "absolute": false
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 120,
+            "duration": 120,
+            "value": -0.25,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -71714,7 +72695,70 @@
     "basePrice": 37570,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 120,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 120,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 120,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "MaxStamina",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 120,
+            "value": 30,
+            "absolute": true
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": -0.45,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": -0.45,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -71743,7 +72787,61 @@
     "basePrice": 40300,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 30,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 30,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Vitality",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 30,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 65,
+            "duration": 60,
+            "value": -10,
+            "absolute": true
+          },
+          {
+            "type": "StaminaRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 65,
+            "duration": 60,
+            "value": -0.8,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -71772,7 +72870,60 @@
     "basePrice": 45500,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 60,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "LightBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 60,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 5,
+            "absolute": true
+          },
+          {
+            "type": "RemoveAllBloodLosses",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 0,
+            "absolute": false
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 120,
+            "value": -0.3,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -71801,7 +72952,61 @@
     "basePrice": 55900,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "StaminaRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": 0.5,
+            "absolute": true
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 30,
+            "duration": 900,
+            "value": -0.1,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 30,
+            "duration": 900,
+            "value": -0.1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -71830,7 +73035,34 @@
     "basePrice": 43550,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "WeightLimit",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": 0.5,
+            "absolute": false
+          },
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": -0.1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -71859,7 +73091,151 @@
     "basePrice": 61893,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Intellect",
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Charisma",
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "MaxStamina",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "StaminaRate",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "WeightLimit",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 0.1,
+            "absolute": true
+          },
+          {
+            "type": "DamageModifier",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 0.2,
+            "absolute": false
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": 0,
+            "absolute": false
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": -1,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": -1,
+            "absolute": true
+          },
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 0.25,
+            "delay": 0,
+            "duration": 600,
+            "value": -600,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -77343,7 +78719,34 @@
     "basePrice": 80600,
     "updated": "2026-06-09T08:38:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "Antidote",
+            "skill": null,
+            "chance": 1,
+            "delay": 6,
+            "duration": 60,
+            "value": 0,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 6,
+            "duration": 60,
+            "value": -5,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -77372,7 +78775,61 @@
     "basePrice": 89700,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "BodyTemperature",
+            "skill": null,
+            "chance": 1,
+            "delay": 6,
+            "duration": 300,
+            "value": -7,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Metabolism",
+            "chance": 1,
+            "delay": 6,
+            "duration": 300,
+            "value": -20,
+            "absolute": true
+          },
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 6,
+            "duration": 420,
+            "value": -0.1,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 6,
+            "duration": 420,
+            "value": 0,
+            "absolute": false
+          },
+          {
+            "type": "Pain",
+            "skill": null,
+            "chance": 1,
+            "delay": 300,
+            "duration": 120,
+            "value": 0,
+            "absolute": false
+          }
+        ]
+      }
     }
   },
   {
@@ -77945,7 +79402,40 @@
         "LightBleeding"
       ],
       "hpCostLightBleeding": 30,
-      "hpCostHeavyBleeding": 170
+      "hpCostHeavyBleeding": 170,
+      "medEffects": {
+        "hpResource": 400,
+        "hpPerUse": 60,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 170,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 0,
+            "healthPenaltyMax": 0
+          },
+          {
+            "effect": "LightBleeding",
+            "cost": 30,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 0,
+            "healthPenaltyMax": 0
+          },
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": 0,
+            "healthPenaltyMax": 0
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -77978,7 +79468,24 @@
       "useTime": 3,
       "cures": [
         "HeavyBleeding"
-      ]
+      ],
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {
@@ -98232,7 +99739,88 @@
     "basePrice": 67000,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 0,
+            "duration": 1800,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 0,
+            "duration": 1800,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 0,
+            "duration": 1800,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Perception",
+            "chance": 1,
+            "delay": 0,
+            "duration": 1800,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "WeightLimit",
+            "skill": null,
+            "chance": 1,
+            "delay": 0,
+            "duration": 1800,
+            "value": 0.45,
+            "absolute": false
+          },
+          {
+            "type": "MaxStamina",
+            "skill": null,
+            "chance": 1,
+            "delay": 0,
+            "duration": 1800,
+            "value": -20,
+            "absolute": true
+          },
+          {
+            "type": "StaminaRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 0,
+            "duration": 1800,
+            "value": -1,
+            "absolute": true
+          },
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 0,
+            "duration": 1800,
+            "value": -1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -98261,7 +99849,61 @@
     "basePrice": 41000,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "BodyTemperature",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": -4,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 0.05,
+            "absolute": true
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 0.05,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Perception",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 30,
+            "absolute": true
+          },
+          {
+            "type": "BodyTemperature",
+            "skill": null,
+            "chance": 1,
+            "delay": 606,
+            "duration": 300,
+            "value": 6,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -98290,7 +99932,70 @@
     "basePrice": 65300,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 40,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 40,
+            "value": 3,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 40,
+            "value": 20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 41,
+            "duration": 180,
+            "value": -20,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Vitality",
+            "chance": 1,
+            "delay": 41,
+            "duration": 180,
+            "value": -20,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 41,
+            "duration": 20,
+            "value": 0,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -98319,7 +100024,105 @@
     "basePrice": 60000,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "Contusion",
+            "cost": 0,
+            "delay": 0,
+            "duration": 180,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 180,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "MaxStamina",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "StaminaRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": 3,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": -0.5,
+            "absolute": true
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 180,
+            "value": -0.5,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -98348,7 +100151,103 @@
     "basePrice": 66000,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [
+          {
+            "effect": "HeavyBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 60,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "Intoxication",
+            "cost": 0,
+            "delay": 0,
+            "duration": 60,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "LightBleeding",
+            "cost": 0,
+            "delay": 0,
+            "duration": 60,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 60,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Metabolism",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 5,
+            "absolute": true
+          },
+          {
+            "type": "Antidote",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 0,
+            "absolute": true
+          },
+          {
+            "type": "RemoveAllBloodLosses",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 0,
+            "absolute": true
+          },
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 1.5,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 60,
+            "duration": 60,
+            "value": -15,
+            "absolute": true
+          },
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 60,
+            "duration": 60,
+            "value": -1.1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -119307,7 +121206,52 @@
     "basePrice": 87460,
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
-      "__typename": "ItemPropertiesStim"
+      "__typename": "ItemPropertiesStim",
+      "medEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Perception",
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": 10,
+            "absolute": true
+          },
+          {
+            "type": "WeightLimit",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": 0.15,
+            "absolute": false
+          },
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 900,
+            "value": -0.1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -155453,7 +157397,24 @@
       "useTime": 3,
       "cures": [
         "Fracture"
-      ]
+      ],
+      "medEffects": {
+        "hpResource": 7,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [
+          {
+            "effect": "Fracture",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [],
+        "buffs": []
+      }
     }
   },
   {

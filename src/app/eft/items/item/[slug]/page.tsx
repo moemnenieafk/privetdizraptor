@@ -8,6 +8,7 @@ import { getItemChanges } from '@/db/game-changes';
 import { ItemChangeBadge } from '@/components/features/game-changes/ItemChangeBadge';
 import { itemIconUrl } from '@/lib/item-icon';
 import { EFT_QUESTS } from '@/data/quests';
+import type { MedEffectsRaw } from '@/data/eft/medical-effects';
 import { BreadcrumbsSetter } from '@/components/features/items/BreadcrumbsSetter';
 import { CatalogBackLink } from './CatalogBackLink';
 import type {
@@ -140,6 +141,13 @@ function mapDetailProperties(raw: Record<string, unknown> | null | undefined): I
         }))
       : [];
 
+  // Медицинские эффекты: наше зеркало игровой базы (scripts/dump-med-effects-spt.mjs).
+  // Форма фиксирована скриптом, поэтому достаточно проверки на объект.
+  const medEffects = (v: unknown): MedEffectsRaw | null =>
+    v && typeof v === 'object' && Array.isArray((v as MedEffectsRaw).buffs)
+      ? { ...(v as MedEffectsRaw), typename: String(raw.__typename) }
+      : null;
+
   switch (raw.__typename) {
     case 'ItemPropertiesWeapon':
       return { caliber: s(raw.caliber), fireRate: n(raw.fireRate), ergonomics: n(raw.ergonomics), recoilVertical: n(raw.recoilVertical), recoilHorizontal: n(raw.recoilHorizontal) };
@@ -152,11 +160,12 @@ function mapDetailProperties(raw: Record<string, unknown> | null | undefined): I
     case 'ItemPropertiesHelmet':
       return { class: n(raw.class) ?? 0, durability: n(raw.durability) ?? 0, deafening: s(raw.deafening), headZones: sa(raw.headZones), material: mat(raw.material), blocksHeadset: b(raw.blocksHeadset), speedPenalty: n(raw.speedPenalty), turnPenalty: n(raw.turnPenalty), ergoPenalty: n(raw.ergoPenalty) };
     case 'ItemPropertiesMedKit':
-      return { hitpoints: n(raw.hitpoints) ?? 0, useTime: n(raw.useTime) ?? 0, maxHealPerUse: n(raw.maxHealPerUse), cures: sa(raw.cures) };
+      return { hitpoints: n(raw.hitpoints) ?? 0, useTime: n(raw.useTime) ?? 0, maxHealPerUse: n(raw.maxHealPerUse), cures: sa(raw.cures), medEffects: medEffects(raw.medEffects) };
     case 'ItemPropertiesMedicalItem':
     case 'ItemPropertiesPainkiller':
+    case 'ItemPropertiesSurgicalKit':
     case 'ItemPropertiesStim':
-      return { uses: n(raw.uses), useTime: n(raw.useTime) ?? 0, cures: sa(raw.cures) };
+      return { uses: n(raw.uses), useTime: n(raw.useTime) ?? 0, cures: sa(raw.cures), medEffects: medEffects(raw.medEffects) };
     case 'ItemPropertiesContainer':
       return { grids: grids(raw.grids) };
     case 'ItemPropertiesBackpack':
