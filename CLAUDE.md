@@ -54,12 +54,13 @@ Consult before planning architecture or styling:
 → tarkov.dev GraphQL schema + field names (EFT-специфичный источник): `/tarkov-api` · для других игр — свой синк-источник per §4.11 (GZW — датамайн файлов, ABI — фид)
 
 ## 7. ВНЕШНИЕ СКИЛЛ-ПАКИ — ПРИОРИТЕТ
-Глобально стоят `mattpocock/skills` (41) и `nick-vels/skills` (`autopilot`) в `~/.claude/skills`.
+Глобально в `~/.claude/skills` стоят `mattpocock/skills` (31 после чистки) и `nick-vels/skills` (`autopilot`).
 Они писались под другой процесс, поэтому при конфликте с этим файлом **выигрывает этот файл**.
 
-1. **ИСТОЧНИК ЗАДАЧ — ВАЛТ, НЕ ТРЕКЕР.** Решения живут в `docs/decisions/` (Obsidian), проводит их в код `/execute-decision`. Скиллы, заводящие GitHub Issues как рабочую поверхность (`to-spec`, `to-tickets`, `triage`, `qa`, `wayfinder`, `request-refactor-plan`), НЕ применять без явной просьбы — иначе получаем два несовместимых процесса на одну задачу.
-2. **TDD ЖДЁТ ТЕСТ-РАННЕРА.** В проекте нет ни vitest, ни jest, ни `test`-скрипта — только `playwright.config.ts`. `tdd`, `implement`, `setup-pre-commit` не запускать, пока раннер не появится. Отдельный долг: `npm run lint` падает (`next lint` выпилен в Next 16, скрипт в package.json остался).
-3. **`git-guardrails-claude-code` НЕ СТАВИТЬ БЕЗ СПРОСА.** Он вешает хуки, блокирующие `git push` и `reset --hard`; рабочий поток V4DYA — регулярный пуш в main.
-4. **`/autopilot` — ТОЛЬКО ПО ЯВНОМУ ВЫЗОВУ.** Он сам пишет спеку, дробит на задачи и коммитит после каждой, без ревью — прямо против §3 (план + пауза) и §5 (участвовать в решениях). Вызвали `/autopilot` — §3 и §5 на эту сессию сняты осознанно; сам по себе он не включается.
-5. **NIGHTFALL (§6) и BACKEND AUTONOMY (§4.11) НЕ ПЕРЕОПРЕДЕЛЯЮТСЯ.** Никакой внешний скилл не отменяет запрет на raw HEX, `font-mono` и рантайм-фетч наружу.
-6. **Проектные скиллы бьют общие.** Есть профильный (`/nightfall`, `/cta-backend`, `/figma`, `/refactor`, `/tw-fix`, `/page`, `/scaffold`) — берём его, а не одноимённый общий.
+Снесены как вредные или чужие: `setup-pre-commit` и `git-guardrails-claude-code` (вешают хуки, второй блокирует `git push` — против рабочего потока V4DYA), `obsidian-vault` (зашит личный валт Мэтта), `migrate-to-shoehorn` (тестов нет), `edit-article`, `writing-beats/fragments/shape`, `teach`, `scaffold-exercises` (его статьи и курсы). Вернуть при нужде: `npx skills add mattpocock/skills -g -a claude-code -s <имя> -y`.
+
+1. **ИСТОЧНИК ЗАДАЧ — ВАЛТ, НЕ ТРЕКЕР.** Решения живут в `docs/decisions/` (Obsidian), проводит их в код `/execute-decision`. Скиллы, заводящие GitHub Issues как рабочую поверхность (`to-spec`, `to-tickets`, `triage`, `qa`, `wayfinder`, `request-refactor-plan`), НЕ применять без явной просьбы — иначе получаем два несовместимых процесса на одну задачу. Их не удаляли: это ядро пака (`triage` — 8 входящих связей, `implement` — 7), пригодятся, если проект когда-нибудь переедет на Issues.
+2. **TDD ЖДЁТ ТЕСТ-РАННЕРА.** В проекте нет ни vitest, ни jest, ни `test`-скрипта — только `playwright.config.ts`. `tdd` и `implement` не запускать, пока раннер не появится.
+3. **`/autopilot` — ТОЛЬКО ПО ЯВНОМУ ВЫЗОВУ.** Он сам пишет спеку, дробит на задачи и коммитит после каждой, без ревью — прямо против §3 (план + пауза) и §5 (участвовать в решениях). Вызвали `/autopilot` — §3 и §5 на эту сессию сняты осознанно; сам по себе он не включается.
+4. **NIGHTFALL (§6) и BACKEND AUTONOMY (§4.11) НЕ ПЕРЕОПРЕДЕЛЯЮТСЯ.** Никакой внешний скилл не отменяет запрет на raw HEX, `font-mono` и рантайм-фетч наружу.
+5. **Проектные скиллы бьют общие.** Есть профильный (`/nightfall`, `/cta-backend`, `/figma`, `/refactor`, `/tw-fix`, `/page`, `/scaffold`) — берём его, а не одноимённый общий.
