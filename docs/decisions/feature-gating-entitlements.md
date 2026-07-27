@@ -4,7 +4,6 @@ affects: architecture, entitlements, feature-flags, subscriptions, roles, karma,
 date: 2026-07-23
 owner: "[[monetization-subscriptions]]"
 ---
-
 # Спринт: включаемые фичи по уровням пользователя (Entitlements + Feature Flags)
 
 ## Проблема
