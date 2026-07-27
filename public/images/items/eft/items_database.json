@@ -288,7 +288,20 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 0,
       "hydration": 60,
-      "units": 60
+      "units": 60,
+      "itemEffects": {
+        "hpResource": 60,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Hydration",
+            "value": 60
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -318,7 +331,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 10,
       "hydration": -5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 10
+          },
+          {
+            "resource": "Hydration",
+            "value": -5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -884,7 +914,7 @@
       "cures": [
         "LightBleeding"
       ],
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -934,7 +964,7 @@
       "cures": [
         "Fracture"
       ],
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 5,
@@ -987,7 +1017,7 @@
       "painkillerDuration": 80,
       "energyImpact": 0,
       "hydrationImpact": 0,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 4,
         "hpPerUse": 0,
         "useTime": 3,
@@ -1047,7 +1077,7 @@
       "painkillerDuration": 300,
       "energyImpact": -10,
       "hydrationImpact": -15,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -1118,7 +1148,7 @@
       ],
       "hpCostLightBleeding": 45,
       "hpCostHeavyBleeding": 175,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 400,
         "hpPerUse": 85,
         "useTime": 3,
@@ -1198,7 +1228,34 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 8,
       "hydration": 30,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 8
+          },
+          {
+            "resource": "Hydration",
+            "value": 30
+          }
+        ],
+        "buffs": [
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 0.2,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -1228,7 +1285,52 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 30,
       "hydration": -15,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 30
+          },
+          {
+            "resource": "Hydration",
+            "value": -15
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Intellect",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -4548,7 +4650,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 48,
       "hydration": -2,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 48
+          },
+          {
+            "resource": "Hydration",
+            "value": -2
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -7162,7 +7281,52 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 75,
       "hydration": -65,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 75
+          },
+          {
+            "resource": "Hydration",
+            "value": -65
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Intellect",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 3,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 3,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 3,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -7542,7 +7706,34 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 20,
       "hydration": -10,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 20
+          },
+          {
+            "resource": "Hydration",
+            "value": -10
+          }
+        ],
+        "buffs": [
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": -0.2,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -7572,7 +7763,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 50,
       "hydration": -5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 50
+          },
+          {
+            "resource": "Hydration",
+            "value": -5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -7602,7 +7810,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 35,
       "hydration": 5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 35
+          },
+          {
+            "resource": "Hydration",
+            "value": 5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -7632,7 +7857,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 45,
       "hydration": -5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 45
+          },
+          {
+            "resource": "Hydration",
+            "value": -5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -7662,7 +7904,20 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 40,
       "hydration": 0,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 40
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -7692,7 +7947,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 40,
       "hydration": -13,
-      "units": 40
+      "units": 40,
+      "itemEffects": {
+        "hpResource": 40,
+        "hpPerUse": 0,
+        "useTime": 6,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 40
+          },
+          {
+            "resource": "Hydration",
+            "value": -13
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -7722,7 +7994,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 47,
       "hydration": -3,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 47
+          },
+          {
+            "resource": "Hydration",
+            "value": -3
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -7752,7 +8041,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 50,
       "hydration": -5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 50
+          },
+          {
+            "resource": "Hydration",
+            "value": -5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -10153,7 +10459,52 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 35,
       "hydration": -15,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 35
+          },
+          {
+            "resource": "Hydration",
+            "value": -15
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 1,
+            "duration": 120,
+            "value": 2,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 120,
+            "value": 2,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Intellect",
+            "chance": 1,
+            "delay": 1,
+            "duration": 120,
+            "value": 2,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -10183,7 +10534,20 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 0,
       "hydration": 15,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Hydration",
+            "value": 15
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -10213,7 +10577,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 5,
       "hydration": 25,
-      "units": 40
+      "units": 40,
+      "itemEffects": {
+        "hpResource": 40,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 5
+          },
+          {
+            "resource": "Hydration",
+            "value": 25
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -10243,7 +10624,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 6,
       "hydration": 30,
-      "units": 40
+      "units": 40,
+      "itemEffects": {
+        "hpResource": 40,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 6
+          },
+          {
+            "resource": "Hydration",
+            "value": 30
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -10273,7 +10671,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 8,
       "hydration": 28,
-      "units": 40
+      "units": 40,
+      "itemEffects": {
+        "hpResource": 40,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 8
+          },
+          {
+            "resource": "Hydration",
+            "value": 28
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -10303,7 +10718,52 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 12,
       "hydration": 20,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 12
+          },
+          {
+            "resource": "Hydration",
+            "value": 20
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": -1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "MagDrills",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -10333,7 +10793,34 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 5,
       "hydration": 15,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 5
+          },
+          {
+            "resource": "Hydration",
+            "value": 15
+          }
+        ],
+        "buffs": [
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 0.1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -10363,7 +10850,34 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 20,
       "hydration": 30,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 20
+          },
+          {
+            "resource": "Hydration",
+            "value": 30
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Immunity",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -10393,7 +10907,34 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 10,
       "hydration": -10,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 10
+          },
+          {
+            "resource": "Hydration",
+            "value": -10
+          }
+        ],
+        "buffs": [
+          {
+            "type": "HydrationRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": -0.2,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -10423,7 +10964,52 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 10,
       "hydration": 20,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 10
+          },
+          {
+            "resource": "Hydration",
+            "value": 20
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "MagDrills",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -10457,7 +11043,7 @@
       "cures": [
         "LightBleeding"
       ],
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 2,
         "hpPerUse": 0,
         "useTime": 2,
@@ -10511,7 +11097,7 @@
       "painkillerDuration": 350,
       "energyImpact": -19,
       "hydrationImpact": 0,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 5,
         "hpPerUse": 0,
         "useTime": 7,
@@ -10611,7 +11197,7 @@
       "cures": [],
       "hpCostLightBleeding": null,
       "hpCostHeavyBleeding": null,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 100,
         "hpPerUse": 50,
         "useTime": 2,
@@ -10664,7 +11250,7 @@
       "painkillerDuration": 300,
       "energyImpact": -9,
       "hydrationImpact": -9,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 3,
         "hpPerUse": 0,
         "useTime": 6,
@@ -17806,7 +18392,20 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 80,
       "hydration": 0,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 80
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -17836,7 +18435,30 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 70,
       "hydration": 0,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 70
+          }
+        ],
+        "buffs": [
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 0.1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -18057,7 +18679,7 @@
       ],
       "hpCostLightBleeding": 40,
       "hpCostHeavyBleeding": 130,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 1800,
         "hpPerUse": 175,
         "useTime": 5,
@@ -18150,7 +18772,7 @@
       ],
       "hpCostLightBleeding": 50,
       "hpCostHeavyBleeding": null,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 220,
         "hpPerUse": 70,
         "useTime": 3,
@@ -18204,7 +18826,7 @@
       ],
       "hpCostLightBleeding": 30,
       "hpCostHeavyBleeding": 210,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 300,
         "hpPerUse": 50,
         "useTime": 3,
@@ -18273,7 +18895,7 @@
       "painkillerDuration": 150,
       "energyImpact": 5,
       "hydrationImpact": -5,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 5,
@@ -21903,7 +22525,34 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 70,
       "hydration": -45,
-      "units": 70
+      "units": 70,
+      "itemEffects": {
+        "hpResource": 70,
+        "hpPerUse": 0,
+        "useTime": 9,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 70
+          },
+          {
+            "resource": "Hydration",
+            "value": -45
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Intellect",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": 1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -36830,7 +37479,7 @@
       "cures": [
         "Fracture"
       ],
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 5,
         "hpPerUse": 0,
         "useTime": 3,
@@ -36959,7 +37608,7 @@
       "painkillerDuration": 280,
       "energyImpact": 0,
       "hydrationImpact": -17,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 8,
         "hpPerUse": 0,
         "useTime": 5,
@@ -43322,7 +43971,34 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 100,
       "hydration": -99,
-      "units": 100
+      "units": 100,
+      "itemEffects": {
+        "hpResource": 100,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 100
+          },
+          {
+            "resource": "Hydration",
+            "value": -99
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "Metabolism",
+            "chance": 1,
+            "delay": 1,
+            "duration": 300,
+            "value": -3,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -43557,7 +44233,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 55,
       "hydration": -5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 55
+          },
+          {
+            "resource": "Hydration",
+            "value": -5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -48732,7 +49425,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -48841,7 +49534,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -48924,7 +49617,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -48998,7 +49691,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -49098,7 +49791,7 @@
     "updated": "2026-06-09T08:38:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -50157,7 +50850,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 20,
       "hydration": 100,
-      "units": 50
+      "units": 50,
+      "itemEffects": {
+        "hpResource": 50,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 20
+          },
+          {
+            "resource": "Hydration",
+            "value": 100
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -50277,7 +50987,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -59006,7 +59716,7 @@
       ],
       "minLimbHealth": 0.25,
       "maxLimbHealth": 0.45,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 3,
         "hpPerUse": 0,
         "useTime": 16,
@@ -59060,7 +59770,7 @@
       ],
       "minLimbHealth": 0.6,
       "maxLimbHealth": 0.72,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 9,
         "hpPerUse": 0,
         "useTime": 20,
@@ -60392,7 +61102,142 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 25,
       "hydration": 100,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 15,
+        "damage": [
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 25
+          },
+          {
+            "resource": "Hydration",
+            "value": 100
+          }
+        ],
+        "buffs": [
+          {
+            "type": "HealthRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 3,
+            "duration": 60,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Endurance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Strength",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Vitality",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Metabolism",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Immunity",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Intellect",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Memory",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Perception",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 1,
+            "duration": 600,
+            "value": 1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -60478,7 +61323,78 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 20,
       "hydration": -10,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 6,
+        "damage": [
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 500,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 20
+          },
+          {
+            "resource": "Hydration",
+            "value": -10
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 500,
+            "value": 3,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Memory",
+            "chance": 1,
+            "delay": 1,
+            "duration": 500,
+            "value": -5,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 1,
+            "duration": 500,
+            "value": -1,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 510,
+            "duration": 150,
+            "value": 0,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -62263,7 +63179,78 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 10,
       "hydration": -35,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 210,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 10
+          },
+          {
+            "resource": "Hydration",
+            "value": -35
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 210,
+            "value": 2,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Memory",
+            "chance": 1,
+            "delay": 1,
+            "duration": 210,
+            "value": -3,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 1,
+            "duration": 210,
+            "value": -2,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 220,
+            "duration": 60,
+            "value": 0,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -62293,7 +63280,74 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 0,
       "hydration": -50,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [
+          {
+            "effect": "Pain",
+            "cost": 0,
+            "delay": 0,
+            "duration": 250,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          },
+          {
+            "effect": "RadExposure",
+            "cost": 0,
+            "delay": 0,
+            "duration": 0,
+            "healthPenaltyMin": null,
+            "healthPenaltyMax": null
+          }
+        ],
+        "health": [
+          {
+            "resource": "Hydration",
+            "value": -50
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 1,
+            "duration": 250,
+            "value": 5,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Memory",
+            "chance": 1,
+            "delay": 1,
+            "duration": 250,
+            "value": -10,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Health",
+            "chance": 1,
+            "delay": 1,
+            "duration": 250,
+            "value": -5,
+            "absolute": true
+          },
+          {
+            "type": "HandsTremor",
+            "skill": null,
+            "chance": 1,
+            "delay": 255,
+            "duration": 120,
+            "value": 0,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -70959,7 +72013,7 @@
       "cures": [
         "HeavyBleeding"
       ],
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 5,
@@ -71009,7 +72063,7 @@
       "cures": [
         "HeavyBleeding"
       ],
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 3,
         "hpPerUse": 0,
         "useTime": 3,
@@ -71687,7 +72741,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 15,
       "hydration": 65,
-      "units": 60
+      "units": 60,
+      "itemEffects": {
+        "hpResource": 60,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 15
+          },
+          {
+            "resource": "Hydration",
+            "value": 65
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -72604,7 +73675,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -72696,7 +73767,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -72788,7 +73859,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -72871,7 +73942,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -72953,7 +74024,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -73036,7 +74107,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -73092,7 +74163,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -78690,7 +79761,26 @@
       "__typename": "ItemPropertiesMelee",
       "slashDamage": 25,
       "stabDamage": 32,
-      "hitRadius": 0.35
+      "hitRadius": 0.35,
+      "itemEffects": {
+        "hpResource": 2,
+        "hpPerUse": 0,
+        "useTime": 0,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "UnknownToxin",
+            "skill": null,
+            "chance": 1,
+            "delay": 6,
+            "duration": -1,
+            "value": 0,
+            "absolute": true
+          }
+        ],
+        "target": true
+      }
     }
   },
   {
@@ -78720,7 +79810,7 @@
     "updated": "2026-06-09T08:38:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -78776,7 +79866,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -79403,7 +80493,7 @@
       ],
       "hpCostLightBleeding": 30,
       "hpCostHeavyBleeding": 170,
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 400,
         "hpPerUse": 60,
         "useTime": 3,
@@ -79469,7 +80559,7 @@
       "cures": [
         "HeavyBleeding"
       ],
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 3,
@@ -79515,7 +80605,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 5,
       "hydration": 50,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 2,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 5
+          },
+          {
+            "resource": "Hydration",
+            "value": 50
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -83636,7 +84743,34 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 20,
       "hydration": 20,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 20
+          },
+          {
+            "resource": "Hydration",
+            "value": 20
+          }
+        ],
+        "buffs": [
+          {
+            "type": "EnergyRate",
+            "skill": null,
+            "chance": 1,
+            "delay": 1,
+            "duration": 60,
+            "value": 0.1,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -97118,7 +98252,52 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 10,
       "hydration": 40,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 10
+          },
+          {
+            "resource": "Hydration",
+            "value": 40
+          }
+        ],
+        "buffs": [
+          {
+            "type": "SkillRate",
+            "skill": "StressResistance",
+            "chance": 1,
+            "delay": 5,
+            "duration": 120,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Charisma",
+            "chance": 1,
+            "delay": 5,
+            "duration": 120,
+            "value": 1,
+            "absolute": true
+          },
+          {
+            "type": "SkillRate",
+            "skill": "Attention",
+            "chance": 1,
+            "delay": 5,
+            "duration": 120,
+            "value": -3,
+            "absolute": true
+          }
+        ]
+      }
     }
   },
   {
@@ -99454,7 +100633,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 50,
       "hydration": -5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 5,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 50
+          },
+          {
+            "resource": "Hydration",
+            "value": -5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -99740,7 +100936,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -99850,7 +101046,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -99933,7 +101129,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -100025,7 +101221,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -100152,7 +101348,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -112181,7 +113377,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 25,
       "hydration": -10,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 3,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 25
+          },
+          {
+            "resource": "Hydration",
+            "value": -10
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -118671,7 +119884,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 55,
       "hydration": -5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 4,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 55
+          },
+          {
+            "resource": "Hydration",
+            "value": -5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {
@@ -121207,7 +122437,7 @@
     "updated": "2026-06-09T08:28:01.000Z",
     "properties": {
       "__typename": "ItemPropertiesStim",
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 0,
         "hpPerUse": 0,
         "useTime": 2,
@@ -135194,7 +136424,44 @@
       "__typename": "ItemPropertiesMelee",
       "slashDamage": 166,
       "stabDamage": 199,
-      "hitRadius": 0.9
+      "hitRadius": 0.9,
+      "itemEffects": {
+        "hpResource": 0,
+        "hpPerUse": 0,
+        "useTime": 0,
+        "damage": [],
+        "health": [],
+        "buffs": [
+          {
+            "type": "Contusion",
+            "skill": null,
+            "chance": 1,
+            "delay": 0,
+            "duration": 20,
+            "value": 0,
+            "absolute": false
+          },
+          {
+            "type": "Fracture",
+            "skill": null,
+            "chance": 1,
+            "delay": 0,
+            "duration": 0,
+            "value": 0,
+            "absolute": false
+          },
+          {
+            "type": "Pain",
+            "skill": null,
+            "chance": 1,
+            "delay": 0,
+            "duration": 20,
+            "value": 0,
+            "absolute": false
+          }
+        ],
+        "target": true
+      }
     }
   },
   {
@@ -157398,7 +158665,7 @@
       "cures": [
         "Fracture"
       ],
-      "medEffects": {
+      "itemEffects": {
         "hpResource": 7,
         "hpPerUse": 0,
         "useTime": 3,
@@ -158264,7 +159531,24 @@
       "__typename": "ItemPropertiesFoodDrink",
       "energy": 50,
       "hydration": 5,
-      "units": 1
+      "units": 1,
+      "itemEffects": {
+        "hpResource": 1,
+        "hpPerUse": 0,
+        "useTime": 0,
+        "damage": [],
+        "health": [
+          {
+            "resource": "Energy",
+            "value": 50
+          },
+          {
+            "resource": "Hydration",
+            "value": 5
+          }
+        ],
+        "buffs": []
+      }
     }
   },
   {

@@ -12,7 +12,7 @@ import {
   UsedInBarterModule,
   UsedInCraftModule,
 } from './ItemModules';
-import { MedicalEffectsModule } from './MedicalEffectsModule';
+import { ItemEffectsModule } from './ItemEffectsModule';
 import { ItemImage } from './ItemImage';
 import { SlotGrid } from './SlotGrid';
 import { ItemActions } from './ItemActions';
@@ -182,7 +182,7 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
         <AmmoModule properties={item.properties} />
         <GrenadeModule properties={item.properties} />
         <HeadsetModule properties={item.properties} />
-        <MedicalEffectsModule properties={item.properties} />
+        <ItemEffectsModule properties={item.properties} />
 
         {/* Что вмещает контейнер/рюкзак — категории и предметы из фильтров ячеек. */}
         <ContainerContents grids={capacityGrids} />

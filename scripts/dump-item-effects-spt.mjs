@@ -1,18 +1,21 @@
 /**
- * АВТОНОМНЫЙ источник медицинских эффектов — SPT-снимок игровой базы.
+ * АВТОНОМНЫЙ источник эффектов предметов — SPT-снимок игровой базы.
  * НЕ зависит от api.tarkov.dev (у него этих данных попросту нет: у всех
  * инъекторов properties = {"__typename":"ItemPropertiesStim"} и ничего больше).
  *
- * Тянет templates/items.json (_props медикаментов) + globals.json
- * (config.Health.Effects.Stimulator.Buffs — таблица стим-баффов) → нормализует
- * в `properties.medEffects` и патчит public/images/items/eft/items_database.json,
+ * Покрывает ВСЁ, что несёт эффекты: медикаменты, провизию (еда/напитки/алкоголь)
+ * и холодное оружие с эффектами по цели.
+ *
+ * Тянет templates/items.json (_props) + globals.json
+ * (config.Health.Effects.Stimulator.Buffs — таблица баффов) → нормализует
+ * в `properties.itemEffects` и патчит public/images/items/eft/items_database.json,
  * сохраняя существующие __typename и поля.
  *
  * Правило §11: разовый серверный сбор в наше зеркало (дамп-файл), не рантайм-фетч.
  * После прогона: `tsx scripts/etl-items.ts` (перельёт properties_raw в БД).
  *
- * Запуск: node scripts/dump-med-effects-spt.mjs
- *         node scripts/dump-med-effects-spt.mjs --dry   (без записи, только отчёт)
+ * Запуск: node scripts/dump-item-effects-spt.mjs
+ *         node scripts/dump-item-effects-spt.mjs --dry   (без записи, только отчёт)
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
@@ -24,14 +27,22 @@ const CATALOG = 'public/images/items/eft/items_database.json';
 
 const DRY = process.argv.includes('--dry');
 
-/** Типы медикаментов в нашем каталоге. */
-const MED_TYPES = new Set([
+/**
+ * Типы, которые несут эффекты. Медикаменты и провизия — на себя, холодное
+ * оружие — на цель (см. `target` ниже).
+ */
+const EFFECT_TYPES = new Set([
   'ItemPropertiesMedKit',
   'ItemPropertiesMedicalItem',
   'ItemPropertiesSurgicalKit',
   'ItemPropertiesPainkiller',
   'ItemPropertiesStim',
+  'ItemPropertiesFoodDrink',
+  'ItemPropertiesMelee',
 ]);
+
+/** У холодного оружия баффы вешаются на того, кого ударили, а не на владельца. */
+const TARGET_TYPES = new Set(['ItemPropertiesMelee']);
 
 /**
  * Правки, ПРОВЕРЕННЫЕ V4DYA В ЖИВОЙ ИГРЕ. Снимок SPT отстаёт от лайва на патч-другой,
@@ -110,21 +121,28 @@ const catalog = JSON.parse(readFileSync(CATALOG, 'utf8'));
 let patched = 0;
 const fromCatalog = [];
 const fixed = [];
+const byType = {};
 const stats = { damage: 0, health: 0, buffs: 0 };
 
 for (const item of catalog) {
+  // Ключ из первой версии скрипта (только медикаменты) — чистим, чтобы в каталоге
+  // не оставалось двух источников правды.
+  if (item.properties?.medEffects) delete item.properties.medEffects;
+
   const typename = item.properties?.__typename;
-  if (!MED_TYPES.has(typename)) continue;
+  if (!EFFECT_TYPES.has(typename)) continue;
 
   const props = tpl[item.id]?._props;
+  let usedCatalog = false;
   let effects;
 
   if (props) {
     effects = {
-      // MedKit: запас HP аптечки. Остальные типы: количество применений (0 → одноразовый).
-      hpResource: num(props.MaxHpResource) ?? 0,
+      // MedKit: запас HP аптечки. Провизия: объём в единицах. Остальные: количество
+      // применений (0 → одноразовый).
+      hpResource: num(props.MaxHpResource) ?? num(props.MaxResource) ?? 0,
       hpPerUse: num(props.hpResourceRate) ?? 0,
-      useTime: num(props.medUseTime) ?? 0,
+      useTime: num(props.medUseTime) ?? num(props.foodUseTime) ?? 0,
       damage: mapDamage(props.effects_damage),
       health: mapHealth(props.effects_health),
       buffs: mapBuffs(props.StimulatorBuffs, buffTable),
@@ -133,8 +151,12 @@ for (const item of catalog) {
     // Предмет добавлен патчем позже снимка SPT — собираем из того, что уже есть
     // в каталоге. Списки эффектов беднее, зато метрики и снимаемые состояния верные.
     const p = item.properties;
+    const health = [];
+    if (num(p.energy)) health.push({ resource: 'Energy', value: p.energy });
+    if (num(p.hydration)) health.push({ resource: 'Hydration', value: p.hydration });
+
     effects = {
-      hpResource: num(p.hitpoints) ?? num(p.uses) ?? 0,
+      hpResource: num(p.hitpoints) ?? num(p.uses) ?? num(p.units) ?? 0,
       hpPerUse: num(p.maxHealPerUse) ?? 0,
       useTime: num(p.useTime) ?? 0,
       damage: (Array.isArray(p.cures) ? p.cures : []).map((c) => ({
@@ -145,10 +167,10 @@ for (const item of catalog) {
         healthPenaltyMin: null,
         healthPenaltyMax: null,
       })),
-      health: [],
+      health,
       buffs: [],
     };
-    fromCatalog.push(`${item.id} · ${item.names?.ru ?? item.names?.en ?? '?'}`);
+    usedCatalog = true;
   }
 
   const fix = LIVE_FIXES[item.id];
@@ -161,18 +183,29 @@ for (const item of catalog) {
     }
   }
 
-  item.properties.medEffects = effects;
+  const onTarget = TARGET_TYPES.has(typename);
+  const hasEffects = effects.damage.length > 0 || effects.health.length > 0 || effects.buffs.length > 0;
+  // Холодное оружие без баффов — обычный нож, блока эффектов у него нет.
+  // Расходники оставляем даже с одними метриками (запас/время применения).
+  if (!hasEffects && (onTarget || (effects.hpResource <= 0 && effects.useTime <= 0))) continue;
+
+  item.properties.itemEffects = onTarget ? { ...effects, target: true } : effects;
+  if (usedCatalog) fromCatalog.push(`${item.id} · ${item.names?.ru ?? item.names?.en ?? '?'}`);
 
   patched += 1;
+  byType[typename] = (byType[typename] ?? 0) + 1;
   if (effects.damage.length) stats.damage += 1;
   if (effects.health.length) stats.health += 1;
   if (effects.buffs.length) stats.buffs += 1;
 }
 
-console.log(`\nМедикаментов пропатчено: ${patched}`);
-console.log(`  со снимаемыми состояниями: ${stats.damage}`);
+console.log(`\nПредметов пропатчено: ${patched}`);
+for (const [t, n] of Object.entries(byType).sort((a, b) => b[1] - a[1])) {
+  console.log(`  ${t.replace('ItemProperties', '').padEnd(14)} ${n}`);
+}
+console.log(`\n  со снимаемыми состояниями: ${stats.damage}`);
 console.log(`  с изменением шкал:         ${stats.health}`);
-console.log(`  со стим-баффами:           ${stats.buffs}`);
+console.log(`  с баффами:                 ${stats.buffs}`);
 if (fromCatalog.length) {
   console.log(`\n⚠️ Нет в снимке SPT (${fromCatalog.length}) — собраны из каталога:`);
   fromCatalog.forEach((m) => console.log(`   ${m}`));

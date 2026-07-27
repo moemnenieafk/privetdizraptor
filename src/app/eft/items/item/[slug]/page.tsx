@@ -8,7 +8,7 @@ import { getItemChanges } from '@/db/game-changes';
 import { ItemChangeBadge } from '@/components/features/game-changes/ItemChangeBadge';
 import { itemIconUrl } from '@/lib/item-icon';
 import { EFT_QUESTS } from '@/data/quests';
-import type { MedEffectsRaw } from '@/data/eft/medical-effects';
+import type { ItemEffectsRaw } from '@/data/eft/item-effects';
 import { BreadcrumbsSetter } from '@/components/features/items/BreadcrumbsSetter';
 import { CatalogBackLink } from './CatalogBackLink';
 import type {
@@ -141,11 +141,11 @@ function mapDetailProperties(raw: Record<string, unknown> | null | undefined): I
         }))
       : [];
 
-  // Медицинские эффекты: наше зеркало игровой базы (scripts/dump-med-effects-spt.mjs).
+  // Эффекты предмета: наше зеркало игровой базы (scripts/dump-item-effects-spt.mjs).
   // Форма фиксирована скриптом, поэтому достаточно проверки на объект.
-  const medEffects = (v: unknown): MedEffectsRaw | null =>
-    v && typeof v === 'object' && Array.isArray((v as MedEffectsRaw).buffs)
-      ? { ...(v as MedEffectsRaw), typename: String(raw.__typename) }
+  const itemEffects = (v: unknown): ItemEffectsRaw | null =>
+    v && typeof v === 'object' && Array.isArray((v as ItemEffectsRaw).buffs)
+      ? { ...(v as ItemEffectsRaw), typename: String(raw.__typename) }
       : null;
 
   switch (raw.__typename) {
@@ -160,12 +160,16 @@ function mapDetailProperties(raw: Record<string, unknown> | null | undefined): I
     case 'ItemPropertiesHelmet':
       return { class: n(raw.class) ?? 0, durability: n(raw.durability) ?? 0, deafening: s(raw.deafening), headZones: sa(raw.headZones), material: mat(raw.material), blocksHeadset: b(raw.blocksHeadset), speedPenalty: n(raw.speedPenalty), turnPenalty: n(raw.turnPenalty), ergoPenalty: n(raw.ergoPenalty) };
     case 'ItemPropertiesMedKit':
-      return { hitpoints: n(raw.hitpoints) ?? 0, useTime: n(raw.useTime) ?? 0, maxHealPerUse: n(raw.maxHealPerUse), cures: sa(raw.cures), medEffects: medEffects(raw.medEffects) };
+      return { hitpoints: n(raw.hitpoints) ?? 0, useTime: n(raw.useTime) ?? 0, maxHealPerUse: n(raw.maxHealPerUse), cures: sa(raw.cures), itemEffects: itemEffects(raw.itemEffects) };
     case 'ItemPropertiesMedicalItem':
     case 'ItemPropertiesPainkiller':
     case 'ItemPropertiesSurgicalKit':
     case 'ItemPropertiesStim':
-      return { uses: n(raw.uses), useTime: n(raw.useTime) ?? 0, cures: sa(raw.cures), medEffects: medEffects(raw.medEffects) };
+      return { uses: n(raw.uses), useTime: n(raw.useTime) ?? 0, cures: sa(raw.cures), itemEffects: itemEffects(raw.itemEffects) };
+    case 'ItemPropertiesFoodDrink':
+      return { energy: n(raw.energy), hydration: n(raw.hydration), units: n(raw.units), itemEffects: itemEffects(raw.itemEffects) };
+    case 'ItemPropertiesMelee':
+      return { slashDamage: n(raw.slashDamage), stabDamage: n(raw.stabDamage), hitRadius: n(raw.hitRadius), itemEffects: itemEffects(raw.itemEffects) };
     case 'ItemPropertiesContainer':
       return { grids: grids(raw.grids) };
     case 'ItemPropertiesBackpack':

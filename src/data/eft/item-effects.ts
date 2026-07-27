@@ -1,11 +1,14 @@
 /**
- * Медицинские эффекты медикаментов EFT — СЛОВАРЬ ПОДАЧИ + сборка блока.
+ * Эффекты предметов EFT — СЛОВАРЬ ПОДАЧИ + сборка блока.
+ *
+ * Покрывает всё, что несёт эффекты: медикаменты, провизию и холодное оружие
+ * (у последнего эффекты вешаются на цель — см. `target`).
  *
  * Данные (типы эффектов, шансы, длительности, цены снятия в HP) живут в нашем
- * зеркале: `properties_raw.medEffects`, залито из игровой базы SPT скриптом
- * scripts/dump-med-effects-spt.mjs. Здесь только презентация — как назвать
+ * зеркале: `properties_raw.itemEffects`, залито из игровой базы SPT скриптом
+ * scripts/dump-item-effects-spt.mjs. Здесь только презентация — как назвать
  * `SkillRate/Endurance` по-русски, какой иконкой показать и в какую колонку
- * положить. Новый медикамент подхватывается автоматически: цифры приезжают
+ * положить. Новый предмет подхватывается автоматически: цифры приезжают
  * с дампом, подписи берутся отсюда.
  *
  * Иконки — ГОЛЫЕ имена классов из src/styles/icons.css, без размерных утилит:
@@ -15,9 +18,9 @@
 export type EffectPolarity = 'positive' | 'negative';
 export type TileAccent = 'success' | 'warning' | 'neutral';
 
-/* ─── Сырьё из зеркала (properties_raw.medEffects) ─── */
+/* ─── Сырьё из зеркала (properties_raw.itemEffects) ─── */
 
-export interface MedEffectDamage {
+export interface ItemEffectDamage {
   effect: string;
   cost: number;
   delay: number;
@@ -26,12 +29,12 @@ export interface MedEffectDamage {
   healthPenaltyMax: number | null;
 }
 
-export interface MedEffectHealth {
+export interface ItemEffectHealth {
   resource: string;
   value: number;
 }
 
-export interface MedEffectBuff {
+export interface ItemEffectBuff {
   type: string;
   skill: string | null;
   chance: number;
@@ -41,21 +44,23 @@ export interface MedEffectBuff {
   absolute: boolean;
 }
 
-export interface MedEffectsRaw {
+export interface ItemEffectsRaw {
   /** `__typename` предмета — подставляет маппер карточки, от него зависят плитки и заголовки групп. */
   typename: string;
-  /** MedKit — запас HP аптечки; остальные типы — количество применений (0 = одноразовый). */
+  /** MedKit — запас HP; провизия — объём в единицах; остальные — применений (0 = одноразовый). */
   hpResource: number;
   hpPerUse: number;
   useTime: number;
-  damage: MedEffectDamage[];
-  health: MedEffectHealth[];
-  buffs: MedEffectBuff[];
+  damage: ItemEffectDamage[];
+  health: ItemEffectHealth[];
+  buffs: ItemEffectBuff[];
+  /** Холодное оружие: эффекты накладываются на цель, а не на владельца. */
+  target?: boolean;
 }
 
 /* ─── Форма для рендера ─── */
 
-export interface MedicalTile {
+export interface EffectTileData {
   icon: string;
   label: string;
   value: string;
@@ -64,23 +69,23 @@ export interface MedicalTile {
   accent: TileAccent;
 }
 
-export interface MedicalRow {
+export interface EffectRowData {
   icon: string;
   label: string;
   note?: string;
   value?: string;
 }
 
-export interface MedicalGroup {
+export interface EffectGroupData {
   title: string;
   polarity: EffectPolarity;
   column: 'left' | 'right';
-  rows: MedicalRow[];
+  rows: EffectRowData[];
 }
 
-export interface MedicalEffects {
-  tiles: MedicalTile[];
-  groups: MedicalGroup[];
+export interface ItemEffects {
+  tiles: EffectTileData[];
+  groups: EffectGroupData[];
 }
 
 /* ─── Словари подачи ─── */
@@ -104,10 +109,14 @@ const DAMAGE_DICT: Record<string, { label: string; icon: string; order: number }
   },
 };
 
-/** Мгновенные шкалы из `effects_health`. */
-const HEALTH_DICT: Record<string, { label: string; icon: string }> = {
-  Energy: { label: 'Энергия', icon: 'icon-eft-effect-energy' },
-  Hydration: { label: 'Гидрация', icon: 'icon-eft-effect-hydration' },
+/**
+ * Мгновенные шкалы из `effects_health`. `tileIcon` — монохромная SVG-маска для
+ * плитки: строки показывают цветной растр, а плитка красит иконку через bg-*,
+ * и webp там превратился бы в залитый квадрат.
+ */
+const HEALTH_DICT: Record<string, { label: string; icon: string; tileIcon: string }> = {
+  Energy: { label: 'Энергия', icon: 'icon-eft-effect-energy', tileIcon: 'icon-eft-energy' },
+  Hydration: { label: 'Гидрация', icon: 'icon-eft-effect-hydration', tileIcon: 'icon-eft-hydration' },
 };
 
 /** Навыки (SkillName у баффов типа SkillRate). */
@@ -186,15 +195,20 @@ function minutes(sec: number): string {
   return `${nf.format(sec / 60)} мин.`;
 }
 
-/** Уточнение у строки: шанс срабатывания, а если он гарантированный — длительность. */
-function buffNote(chance: number, duration: number): string | undefined {
+/**
+ * Уточнение у строки: шанс срабатывания, а если он гарантированный — длительность
+ * или задержка. `duration: -1` в игре значит «до конца рейда» — тогда показываем
+ * задержку, она информативнее.
+ */
+function buffNote(chance: number, duration: number, delay: number): string | undefined {
   if (chance < 1) return `${Math.round(chance * 100)}% Шанс`;
-  return duration > 0 ? seconds(duration) : undefined;
+  if (duration > 0) return seconds(duration);
+  return delay > 0 ? `Задержка ${nf.format(delay)} сек` : undefined;
 }
 
 /* ─── Сборка ─── */
 
-function buffRow(buff: MedEffectBuff): { row: MedicalRow; polarity: EffectPolarity } | null {
+function buffRow(buff: ItemEffectBuff): { row: EffectRowData; polarity: EffectPolarity } | null {
   const isSkill = buff.type === 'SkillRate';
   const preset = isSkill ? SKILL_DICT[buff.skill ?? ''] : BUFF_DICT[buff.type];
   if (!preset) return null;
@@ -210,21 +224,33 @@ function buffRow(buff: MedEffectBuff): { row: MedicalRow; polarity: EffectPolari
   // Не абсолютные значения — это доля: 0.2 → +20%.
   const value = flag ? undefined : buff.absolute ? `${signed(buff.value)}${unit}` : `${signed(buff.value * 100)}%`;
 
-  return { row: { icon: preset.icon, label, note: buffNote(buff.chance, buff.duration), value }, polarity };
+  return {
+    row: { icon: preset.icon, label, note: buffNote(buff.chance, buff.duration, buff.delay), value },
+    polarity,
+  };
+}
+
+/** Заголовок блока — эффекты у еды, медицины и ножей про разное. */
+export function effectsBlockTitle(typename: string): string {
+  if (typename === 'ItemPropertiesFoodDrink') return 'Эффекты при употреблении';
+  if (typename === 'ItemPropertiesMelee') return 'Эффекты при попадании';
+  return 'Медицинские эффекты';
 }
 
 /**
- * Собирает блок «Медицинские эффекты» из зеркальных данных.
+ * Собирает блок эффектов из зеркальных данных.
  * Раскладка колонок повторяет макеты MEDICAL_EFFECT: отрицательные всегда
  * справа; если их нет — справа уезжает «Добавляет».
  */
-export function buildMedicalEffects(raw: MedEffectsRaw): MedicalEffects {
+export function buildItemEffects(raw: ItemEffectsRaw): ItemEffects {
   const isMedKit = raw.typename === 'ItemPropertiesMedKit';
   const isSurgical = raw.typename === 'ItemPropertiesSurgicalKit';
   const isStim = raw.typename === 'ItemPropertiesStim';
+  const isFood = raw.typename === 'ItemPropertiesFoodDrink';
+  const onTarget = raw.target === true;
 
   /* Плитки */
-  const tiles: MedicalTile[] = [];
+  const tiles: EffectTileData[] = [];
 
   if (isMedKit) {
     if (raw.hpResource > 0) {
@@ -243,6 +269,24 @@ export function buildMedicalEffects(raw: MedEffectsRaw): MedicalEffects {
         accent: 'warning',
       });
     }
+  } else if (isFood) {
+    // У еды/питья энергия и гидрация — это заголовочные цифры, а не строки списка.
+    for (const h of raw.health) {
+      if (h.value <= 0) continue;
+      const preset = HEALTH_DICT[h.resource];
+      if (preset) tiles.push({ icon: preset.tileIcon, label: preset.label, value: signed(h.value), accent: 'success' });
+    }
+    // Объём в единицах есть только у многопорционных (фляги, канистры).
+    if (raw.hpResource > 1) {
+      tiles.push({
+        icon: 'icon-eft-quests-loot',
+        label: 'Ресурс',
+        value: `${nf.format(raw.hpResource)}/${nf.format(raw.hpResource)}`,
+        accent: 'warning',
+      });
+    }
+  } else if (onTarget) {
+    // Нож: собственных метрик нет, только то, что он вешает на цель.
   } else if (isStim && raw.buffs.length > 0) {
     const duration = Math.max(...raw.buffs.map((b) => b.duration));
     const delay = Math.max(...raw.buffs.map((b) => b.delay));
@@ -264,7 +308,7 @@ export function buildMedicalEffects(raw: MedEffectsRaw): MedicalEffects {
     });
   }
 
-  if (raw.useTime > 0 && !isStim) {
+  if (raw.useTime > 0 && !isStim && !onTarget) {
     tiles.push({
       icon: 'icon-eft-time-effect',
       label: 'Время использования',
@@ -274,11 +318,11 @@ export function buildMedicalEffects(raw: MedEffectsRaw): MedicalEffects {
   }
 
   /* Строки. Порядок «Добавляет» по макету: состояния → баффы → шкалы. */
-  const cures: MedicalRow[] = [];
-  const addsFromDamage: MedicalRow[] = [];
-  const addsFromBuffs: MedicalRow[] = [];
-  const addsFromHealth: MedicalRow[] = [];
-  const negatives: MedicalRow[] = [];
+  const cures: EffectRowData[] = [];
+  const addsFromDamage: EffectRowData[] = [];
+  const addsFromBuffs: EffectRowData[] = [];
+  const addsFromHealth: EffectRowData[] = [];
+  const negatives: EffectRowData[] = [];
 
   const damage = [...raw.damage].sort(
     (a, b) => (DAMAGE_DICT[a.effect]?.order ?? 99) - (DAMAGE_DICT[b.effect]?.order ?? 99),
@@ -320,20 +364,27 @@ export function buildMedicalEffects(raw: MedEffectsRaw): MedicalEffects {
   for (const b of raw.buffs) {
     const built = buffRow(b);
     if (!built) continue;
+    // У ножа всё, что он вешает на цель, — это увечья: одной красной группой.
+    if (onTarget) {
+      negatives.push(built.row);
+      continue;
+    }
     (built.polarity === 'negative' ? negatives : addsFromBuffs).push(built.row);
   }
 
   for (const h of raw.health) {
+    // У еды положительные шкалы уже показаны плитками — в списке они бы дублировались.
+    if (isFood && h.value > 0) continue;
     const preset = HEALTH_DICT[h.resource];
     if (!preset) continue;
-    const row: MedicalRow = { icon: preset.icon, label: preset.label, value: signed(h.value) };
+    const row: EffectRowData = { icon: preset.icon, label: preset.label, value: signed(h.value) };
     (h.value < 0 ? negatives : addsFromHealth).push(row);
   }
 
   const adds = [...addsFromDamage, ...addsFromBuffs, ...addsFromHealth];
 
   /* Колонки: отрицательные всегда справа, иначе справа уезжает «Добавляет». */
-  const groups: MedicalGroup[] = [];
+  const groups: EffectGroupData[] = [];
   const hasNegatives = negatives.length > 0;
   const addsTitle = isStim ? 'Положительные' : 'Добавляет';
 
@@ -349,10 +400,12 @@ export function buildMedicalEffects(raw: MedEffectsRaw): MedicalEffects {
     });
   }
   if (hasNegatives) {
+    const negativeTitle = onTarget ? 'Накладывает на цель' : isStim ? 'Отрицательные' : 'Отрицательные действия';
     groups.push({
-      title: isStim ? 'Отрицательные' : 'Отрицательные действия',
+      title: negativeTitle,
       polarity: 'negative',
-      column: 'right',
+      // У ножа это единственная группа — ей место слева, а не в пустой правой колонке.
+      column: onTarget ? 'left' : 'right',
       rows: negatives,
     });
   }

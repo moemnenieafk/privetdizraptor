@@ -1,11 +1,12 @@
 import { SectionRule } from '@/components/ui/SectionRule';
 import {
-  buildMedicalEffects,
-  type MedicalEffects,
-  type MedicalGroup,
-  type MedicalRow,
-  type MedicalTile,
-} from '@/data/eft/medical-effects';
+  buildItemEffects,
+  effectsBlockTitle,
+  type ItemEffects,
+  type EffectGroupData,
+  type EffectRowData,
+  type EffectTileData,
+} from '@/data/eft/item-effects';
 import { isMedKitProps, isMedicalItemProps, type ItemProperties } from './ItemModules';
 
 /* Вёрстка снята с фреймов MEDICAL_EFFECT (Figma Z1c9wK3AtqBrBhSwNt8qZz):
@@ -29,15 +30,16 @@ const TILE_GLYPH: Record<string, string> = {
 
 const MASK = 'mask-contain mask-center mask-no-repeat';
 
-function EffectTile({ tile }: { tile: MedicalTile }) {
+function EffectTile({ tile }: { tile: EffectTileData }) {
   const accent = TILE_ACCENT[tile.accent];
   const wide = tile.note != null;
 
-  // На телефоне широкая плитка не держит 4 зоны в строку: уточнение уезжает
-  // отдельной строкой под остальным, высота растёт с 48 до двух рядов.
+  // Переносить содержимое разрешаем только широкой плитке инъектора: на телефоне
+  // она не держит 4 зоны в строку и уточнение уезжает вниз. Обычной плитке перенос
+  // противопоказан — значение отрывается от подписи.
   return (
     <div
-      className={`flex min-h-12 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded px-3.5 py-2 ${accent.box}`}
+      className={`flex min-h-12 flex-1 items-center justify-between gap-x-2 gap-y-1 rounded px-3.5 py-2 ${wide ? 'flex-wrap' : ''} ${accent.box}`}
     >
       <div className="flex shrink-0 items-center gap-2">
         <span className="flex size-6 items-center justify-center">
@@ -69,7 +71,7 @@ function EffectTile({ tile }: { tile: MedicalTile }) {
   );
 }
 
-function EffectRow({ row, polarity }: { row: MedicalRow; polarity: MedicalGroup['polarity'] }) {
+function EffectRow({ row, polarity }: { row: EffectRowData; polarity: EffectGroupData['polarity'] }) {
   const accent = ROW_ACCENT[polarity];
 
   return (
@@ -94,7 +96,7 @@ function EffectRow({ row, polarity }: { row: MedicalRow; polarity: MedicalGroup[
   );
 }
 
-function EffectColumn({ groups }: { groups: MedicalGroup[] }) {
+function EffectColumn({ groups }: { groups: EffectGroupData[] }) {
   return (
     <div className="flex flex-col gap-3.5">
       {groups.map((group) => (
@@ -119,9 +121,9 @@ function EffectColumn({ groups }: { groups: MedicalGroup[] }) {
  * Плитки из каталога — для медикамента, которого нет в снимке игровой базы
  * (напр. предмет добавили патчем позже дампа). Списки эффектов не рисуем.
  */
-function fallbackTiles(properties: ItemProperties): MedicalTile[] {
+function fallbackTiles(properties: ItemProperties): EffectTileData[] {
   if (!properties) return [];
-  const tiles: MedicalTile[] = [];
+  const tiles: EffectTileData[] = [];
 
   if (isMedKitProps(properties)) {
     if (properties.hitpoints > 0) {
@@ -162,30 +164,37 @@ function fallbackTiles(properties: ItemProperties): MedicalTile[] {
   return tiles;
 }
 
-export function MedicalEffectsModule({ properties }: { properties: ItemProperties }) {
-  const isMedical = properties != null && (isMedKitProps(properties) || isMedicalItemProps(properties));
-  const raw = isMedical ? properties.medEffects : null;
+/** Иконка шапки по типу предмета: медицина / провизия / холодное оружие. */
+const BLOCK_ICON: Record<string, string> = {
+  ItemPropertiesFoodDrink: 'icon-eft-eq-provisions',
+  ItemPropertiesMelee: 'icon-eft-guns-knifes',
+};
 
-  const data: MedicalEffects | null = raw
-    ? buildMedicalEffects(raw)
+export function ItemEffectsModule({ properties }: { properties: ItemProperties }) {
+  const raw = properties != null && 'itemEffects' in properties ? properties.itemEffects : null;
+
+  const data: ItemEffects | null = raw
+    ? buildItemEffects(raw)
     : properties
       ? { tiles: fallbackTiles(properties), groups: [] }
       : null;
 
-  if (!data || data.tiles.length === 0) return null;
+  if (!data || (data.tiles.length === 0 && data.groups.length === 0)) return null;
 
   const left = data.groups.filter((g) => g.column === 'left');
   const right = data.groups.filter((g) => g.column === 'right');
+  const typename = raw?.typename ?? '';
 
   return (
     <div className="flex flex-col gap-3.5">
       <SectionRule
-        title="Медицинские эффекты"
-        icon={<span className={`icon-eft-eq-meds size-4 bg-current ${MASK}`} />}
+        title={effectsBlockTitle(typename)}
+        icon={<span className={`${BLOCK_ICON[typename] ?? 'icon-eft-eq-meds'} size-4 bg-current ${MASK}`} />}
       />
 
-      {/* На телефоне плитки в столбик: три штуки в ряд ужимаются до нечитаемых. */}
-      <div className="flex flex-col gap-2 sm:flex-row">
+      {/* На телефоне плитки в столбик: три штуки в ряд ужимаются до нечитаемых.
+          Четвёртая (у еды с энергией, гидрацией и ресурсом) переносится строкой. */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {data.tiles.map((tile) => (
           <EffectTile key={tile.label} tile={tile} />
         ))}

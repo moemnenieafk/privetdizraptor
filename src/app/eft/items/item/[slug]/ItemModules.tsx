@@ -4,7 +4,7 @@ import { SectionRule } from '@/components/ui/SectionRule';
 import { BarterOfferCard } from './BarterOfferCard';
 import { CraftOfferCard } from './CraftOfferCard';
 import { Badge as SemanticBadge } from '@/components/features/items/Badge';
-import type { MedEffectsRaw } from '@/data/eft/medical-effects';
+import type { ItemEffectsRaw } from '@/data/eft/item-effects';
 import { formatCompactNumber } from '@/lib/formatters';
 
 // === ТИПЫ СВОЙСТВ ПРЕДМЕТОВ ===
@@ -32,14 +32,30 @@ export interface MedKitProperties {
   maxHealPerUse: number | null;
   cures: string[] | null;
   /** Эффекты из зеркала (SPT-дамп игровой базы) — null у предметов вне снимка. */
-  medEffects: MedEffectsRaw | null;
+  itemEffects: ItemEffectsRaw | null;
 }
 
 export interface MedicalItemProperties {
   uses: number | null;
   useTime: number;
   cures: string[] | null;
-  medEffects: MedEffectsRaw | null;
+  itemEffects: ItemEffectsRaw | null;
+}
+
+/** Провизия: энергия/гидрация — заголовочные цифры, остальное в itemEffects. */
+export interface FoodDrinkProperties {
+  energy: number | null;
+  hydration: number | null;
+  units: number | null;
+  itemEffects: ItemEffectsRaw | null;
+}
+
+/** Холодное оружие: эффекты в itemEffects вешаются на цель, а не на владельца. */
+export interface MeleeProperties {
+  slashDamage: number | null;
+  stabDamage: number | null;
+  hitRadius: number | null;
+  itemEffects: ItemEffectsRaw | null;
 }
 
 export interface GridAllowedItem {
@@ -108,6 +124,8 @@ export type ItemProperties =
   | ArmorProperties
   | MedKitProperties
   | MedicalItemProperties
+  | FoodDrinkProperties
+  | MeleeProperties
   | ContainerProperties
   | AmmoProperties
   | GrenadeProperties
@@ -284,7 +302,7 @@ export function ArmorModule({ properties }: { properties: ItemProperties }) {
   );
 }
 
-// Медицина живёт в MedicalEffectsModule — блок «Медицинские эффекты» по макету
+// Медицина живёт в ItemEffectsModule — блок «Медицинские эффекты» по макету
 // MEDICAL_EFFECT: плитки + списки снимаемых/добавляемых эффектов.
 
 // === МОДУЛЬ ПАТРОНОВ ===
