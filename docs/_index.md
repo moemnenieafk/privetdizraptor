@@ -21,7 +21,7 @@ type: index
 
 ```dataview
 TABLE WITHOUT ID file.link AS "Решение", status AS "Статус", affects AS "Зона", date AS "Заведено"
-FROM "decisions"
+FROM "docs/decisions"
 SORT status ASC, date ASC
 ```
 
