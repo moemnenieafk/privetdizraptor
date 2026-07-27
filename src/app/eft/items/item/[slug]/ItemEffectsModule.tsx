@@ -43,7 +43,11 @@ function EffectTile({ tile }: { tile: EffectTileData }) {
     >
       <div className="flex shrink-0 items-center gap-2">
         <span className="flex size-6 items-center justify-center">
-          <span className={`${tile.icon} ${TILE_GLYPH[tile.icon] ?? 'size-6'} bg-current ${MASK} ${accent.text}`} />
+          {tile.raster ? (
+            <span className={`size-6 icon-bg ${tile.icon}`} />
+          ) : (
+            <span className={`${tile.icon} ${TILE_GLYPH[tile.icon] ?? 'size-6'} bg-current ${MASK} ${accent.text}`} />
+          )}
         </span>
         <span className={`font-blender-medium text-xs uppercase leading-none ${accent.text}`}>{tile.label}</span>
       </div>

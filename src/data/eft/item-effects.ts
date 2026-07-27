@@ -62,6 +62,12 @@ export interface ItemEffectsRaw {
 
 export interface EffectTileData {
   icon: string;
+  /**
+   * Иконка — цветной webp, а не SVG-маска. Плитка по умолчанию красит иконку
+   * через bg-*, то есть использует её как маску, и от растра остался бы силуэт
+   * (залитый квадрат). С этим флагом рисуем фоном, как в строках.
+   */
+  raster?: boolean;
   label: string;
   value: string;
   valueAlt?: string;
@@ -109,14 +115,10 @@ const DAMAGE_DICT: Record<string, { label: string; icon: string; order: number }
   },
 };
 
-/**
- * Мгновенные шкалы из `effects_health`. `tileIcon` — монохромная SVG-маска для
- * плитки: строки показывают цветной растр, а плитка красит иконку через bg-*,
- * и webp там превратился бы в залитый квадрат.
- */
-const HEALTH_DICT: Record<string, { label: string; icon: string; tileIcon: string }> = {
-  Energy: { label: 'Энергия', icon: 'icon-eft-effect-energy', tileIcon: 'icon-eft-energy' },
-  Hydration: { label: 'Гидрация', icon: 'icon-eft-effect-hydration', tileIcon: 'icon-eft-hydration' },
+/** Мгновенные шкалы из `effects_health` — цветной растр из набора состояний. */
+const HEALTH_DICT: Record<string, { label: string; icon: string }> = {
+  Energy: { label: 'Энергия', icon: 'icon-eft-effect-energy' },
+  Hydration: { label: 'Гидрация', icon: 'icon-eft-effect-hydration' },
 };
 
 /** Навыки (SkillName у баффов типа SkillRate). */
@@ -274,7 +276,9 @@ export function buildItemEffects(raw: ItemEffectsRaw): ItemEffects {
     for (const h of raw.health) {
       if (h.value <= 0) continue;
       const preset = HEALTH_DICT[h.resource];
-      if (preset) tiles.push({ icon: preset.tileIcon, label: preset.label, value: signed(h.value), accent: 'success' });
+      if (preset) {
+        tiles.push({ icon: preset.icon, raster: true, label: preset.label, value: signed(h.value), accent: 'success' });
+      }
     }
     // Объём в единицах есть только у многопорционных (фляги, канистры).
     if (raw.hpResource > 1) {
