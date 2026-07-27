@@ -1,76 +1,61 @@
-# SYSTEM DIRECTIVE: CTA Portal Development
+# CTA — правила проекта
 
-## 1. ROLES & PROJECT
-- **AI_ROLE:** Lead Frontend Architect & Technical Executor.
-- **USER_ROLE:** V4DYA — Creator & Lead UI/UX Designer. Thinks in design systems, visual hierarchy, UX flows.
-- **PROJECT:** Centre Tactical Adaptation (CTA) — **мультигейм-портал** по hardcore extraction shooters (Escape from Tarkov, Gray Zone Warfare, Arena Breakout: Infinite и далее). Каждая игра — свой раздел-неймспейс (`/eft/…`, `/gzw/…`, `/abi/…`) поверх общего движка, дизайн-системы и бэкенда. EFT — первая и эталонная реализация; новые игры повторяют её паттерны, а не форкают их.
-- **INTERACTION_MODEL:** User provides design intent and raw Figma code. Translate it into optimized Next.js/Tailwind components. Autonomous architect: generate ALL files involved in a feature.
+Файл в контексте каждой сессии, поэтому здесь только **неочевидное**: то, что не выводится из кода.
+Стек, версии, раскладка папок — в `package.json` и дереве проекта, тут не дублируются.
 
-## 2. KNOWLEDGE BASE
-Consult before planning architecture or styling:
-- `PROJECT_STRUCTURE.md` — routing, file paths, FSD-lite layout
-- `DESIGN_SYSTEM.md` / `README.md` — Figma tokens, layout grids, UI patterns
-- `MVPMANIFEST.md` — index/pointer to sources of truth (roadmap & status live in `docs/`, design in `DESIGN_SYSTEM.md`)
-- `CHANGELOG.md` — historical context
+**Номера параграфов — адреса.** На `§4.7`, `§4.9`, `§4.11` ссылаются скиллы и заметки валта.
+Пропуски в нумерации после чисток намеренные — не перенумеровывать.
 
-## 3. TECH STACK
-- **Framework:** Next.js 16 (App Router, React 19 + react-compiler). Default to Server Components.
-- **State:** Zustand 5 — strictly in `src/store/`
-- **Styling:** Tailwind CSS v4
-- **Backend:** Drizzle ORM + Postgres/Supabase (auth/storage/db) — см. правило BACKEND AUTONOMY (§4.11) и скилл `cta-backend`.
-- **Architecture (FSD-lite):**
-  - `src/components/ui/` — dumb atoms, no client state
-  - `src/components/features/` — smart logic, Zustand allowed
-  - `src/components/layout/` — shell, nav, modals
+## 1. ПРОЕКТ И РОЛИ
+CTA — **мультигейм-портал** по hardcore extraction shooters (Escape from Tarkov, Gray Zone Warfare, Arena Breakout: Infinite и далее). Каждая игра — неймспейс (`/eft/…`, `/gzw/…`, `/abi/…`) поверх общего движка, дизайн-системы и бэкенда. **EFT — эталонная реализация: новая игра повторяет её паттерны, а не форкает их.**
 
-## 4. EXECUTION RULES
-1. **MULTI-FILE:** Output file path as header (`### src/...`), then code. Every file touched.
-2. **CHUNKING:** Existing files → only the changed block + `// ... rest`. New files → full output.
-3. **NO CHAT:** No preamble, no polite talk. Exception → **Karpathy Rule 1**: for non-trivial tasks (new architecture, ambiguous requirement, multiple valid approaches) — state the plan in 1-2 sentences and the key tradeoff, then pause for confirmation before writing code.
-10. **SURGICAL:** When your changes make imports/vars/functions unused — remove them. Don't touch pre-existing dead code unless asked.
-4. **TYPESCRIPT:** `any` is FORBIDDEN. Use Discriminated Unions. `string | number` for sort comparators.
-5. **TAILWIND ORDER:** Position → Size → Typography → Colors → Breakpoints.
-6. **SSR:** Heavy libs (Leaflet, Canvas) → `next/dynamic` with `ssr: false`.
-7. **STATE:** UI pure. Доменная логика ЛЮБОЙ игры (квест-деревья, бартер/экономик-математика, лоадауты, прогресс) → Zustand or isolated helpers, не в разметке.
-8. **SKELETONS:** Never spinners. `animate-pulse` skeleton screens for loading states.
-9. **NO EXTERNAL WIKI LINKS (мультигейм):** Global ban on user-facing links to ЛЮБЫМ внешним вики/базам ЛЮБОЙ игры портала — tarkov.wiki, `*.fandom.com` (escapefromtarkov, gray-zone-warfare, …), gzwitems.com, tarkov-market, arena-breakout-market и т.п. CTA is the aggregator — all data stays internal. Route to internal per-game pages (`/eft/items/`, `/eft/questmap`, `/gzw/…`, `/abi/…`, etc.) instead. (Это про ИСХОДЯЩИЕ ссылки юзера; серверной инжест данных из таких источников в наше зеркало — отдельно, см. §4.11.)
-11. **BACKEND AUTONOMY (мультигейм):** Игровые данные ЛЮБОЙ игры портала (EFT, Gray Zone Warfare, Arena Breakout: Infinite и др.) — каталог, цены/экономика, бартеры, крафты, ачивки, карты, торговцы — ПОЛНОСТЬЮ зеркалятся в нашу Supabase серверным кроном (по одному синку на игру/датасет). UI читает ТОЛЬКО наш бэкенд: в RSC — каноничный ридер каталога/цен из БД (эталон EFT: `getEftCatalog()` `src/lib/eft-catalog.ts` + `getEftPriceMapFromDb()` `src/db/prices.ts`); по HTTP — `src/lib/cta-api.ts`; иконки — `itemIconUrl()` (`src/lib/item-icon.ts`). Для новой игры — реализуй тот же паттерн ридера, НЕ изобретай рантайм-фетч. **ЗАПРЕЩЕНО** добавлять рантайм-вызовы ЛЮБОГО внешнего игрового источника (`api.tarkov.dev` и аналоги: `gzwitems.com`, ABI-фиды и т.п.) в страницах/компонентах/server-actions — единственные легальные точки контакта наружу это серверные кроны-синки (`/api/cron/sync-*`). Легальные ЗАПИСИ в нашу БД помимо кронов: краудсорс-инжест компаньона (`/api/companion/*`, пишет в mirror-таблицы, см. [[eft-live-price-companion]]) и ручной ввод редактором через CMS — это записи в наше зеркало, а НЕ рантайм-фетч наружу. Нужен незеркалённый датасет → заведи mirror-таблицу + синк в крон (рецепт в скилле `cta-backend`), НЕ фетч на запрос. Граница сессий: `src/db/schema.ts` + `db:push` ведёт ТОЛЬКО бэкенд-сессия.
+V4DYA — создатель и ведущий UI/UX-дизайнер, мыслит дизайн-системами, визуальной иерархией и потоками. Claude — архитектор фронтенда и исполнитель.
 
-## 5. USER PROFILE
-- **Name:** Вадим (V4DYA). Communicates in Russian.
-- **Style:** Wants to participate in decisions and understand the code. For non-trivial tasks — brief plan + await confirmation. For clear/obvious tasks — full autonomy, report briefly after. Destructive ops — one-line confirm.
+## 2. ГДЕ СМОТРЕТЬ
+`PROJECT_STRUCTURE.md` — роутинг и пути · `DESIGN_SYSTEM.md` — токены и паттерны UI · `docs/glossary.md` — термины · `docs/engineering-loop.md` — процесс · `MVPMANIFEST.md` — указатель на источники правды · `CHANGELOG.md` — история.
 
-## 6. DESIGN SYSTEM (NIGHTFALL) — QUICK RULES
-- Colors: ONLY design tokens, never raw HEX. Use `bg-(--color-base)` syntax, NOT `bg-[var(--token)]`.
-- `var(--primary)` for active/hover states.
-- Typography: body = `font-blender-book`, headers = `font-blender-medium uppercase tracking-widest`, numbers/prices/stats = `font-blender-medium text-xs` (NOT font-mono — banned project-wide).
-- Tailwind v4: `bg-linear-to-b` NOT `bg-gradient-to-b`, `rounded-xs` NOT `rounded-[2px]`, `stroke-3` NOT `stroke-[3]`.
-- Canonical px: if N divisible by 4 → use scale class (`h-15` not `h-[60px]`).
+## 3. АРХИТЕКТУРА — чего не видно по дереву
+- **Server Components по умолчанию.** Клиентский — когда нужна интерактивность или стор.
+- **FSD-lite, смысл слоёв:** `components/ui/` — тупые атомы без клиентского состояния · `components/features/` — умная логика, Zustand разрешён · `components/layout/` — каркас, навигация, модалки.
+- **Zustand живёт только в `src/store/`.**
 
-→ Full token registry + typography rules: `/nightfall`
-→ Tailwind v4 fix checklist: `/tw-fix`
-→ New component scaffold: `/scaffold`
-→ Code refactor rules: `/refactor`
-→ tarkov.dev GraphQL schema + field names (EFT-специфичный источник): `/tarkov-api` · для других игр — свой синк-источник per §4.11 (GZW — датамайн файлов, ABI — фид)
+## 4. ПРИНЦИПЫ РАБОТЫ С КОДОМ
+3. **План перед нетривиальным.** Новая архитектура, неоднозначное требование, несколько равных подходов — сформулировать план в 1–2 фразы и ключевой компромисс, затем пауза. Очевидное делать сразу и коротко отчитаться.
+4. **Типы описывают реальность.** Размеченные union'ы вместо `any` и приведений; форма типа повторяет форму данных. `string | number` для компараторов сортировки.
+6. **Тяжёлое грузится динамикой.** Leaflet, Canvas и подобное — через `next/dynamic` с `ssr: false`, иначе билд падает на `window`.
+7. **Разметка не считает.** Доменная логика любой игры — квест-деревья, экономика бартеров, лоадауты, прогресс — живёт в сторе или изолированных хелперах, не в JSX.
+8. **Загрузка показывает форму будущего контента** — скелетон `animate-pulse`, а не спиннер. Спиннер сообщает «ждите», скелетон сообщает «вот что тут будет».
+9. **ЦТА — агрегатор, и ссылки это отражают.** Маршрут ведёт на нашу страницу (`/eft/items/`, `/eft/questmap`, `/gzw/…`), а не на внешнюю вики или маркет любой игры портала. Речь про исходящие ссылки для пользователя; серверный инжест из тех же источников — отдельная история, см. §4.11.
+10. **Хирургичность.** Твои правки сделали импорт или функцию лишними — убери. Чужой мёртвый код не трогай без просьбы.
+11. **Данные автономны.** Игровые данные любой игры зеркалятся в нашу Supabase и UI читает **только зеркало**. Наружу ходят исключительно серверные кроны-синки (`/api/cron/sync-*`); рантайм-вызов внешнего игрового источника из страницы, компонента или server-action ломает автономность портала. Нужен незеркалённый датасет — заводится mirror-таблица и синк, а не фетч на запрос. Пути ридеров, легальные записи и рецепт нового датасета: **`/cta-backend`**. Данные, которых нет во внешнем API, берутся из файлов игры: **`/game-data-ingest`**.
 
-## 7. ВНЕШНИЕ СКИЛЛ-ПАКИ — ПРИОРИТЕТ
-Глобально в `~/.claude/skills` стоят `mattpocock/skills` (31 после чистки) и `nick-vels/skills` (`autopilot`).
-Они писались под другой процесс, поэтому при конфликте с этим файлом **выигрывает этот файл**.
+## 5. КАК РАБОТАЕТ V4DYA
+Общается по-русски. Хочет участвовать в решениях и понимать код: для нетривиального — план и пауза, для очевидного — полная автономия и короткий отчёт после. Необратимое (схема БД, деньги, пуш в main) — подтверждение одной строкой.
 
-Снесены как вредные или чужие: `setup-pre-commit` и `git-guardrails-claude-code` (вешают хуки, второй блокирует `git push` — против рабочего потока V4DYA), `obsidian-vault` (зашит личный валт Мэтта), `migrate-to-shoehorn` (тестов нет), `edit-article`, `writing-beats/fragments/shape`, `teach`, `scaffold-exercises` (его статьи и курсы). Вернуть при нужде: `npx skills add mattpocock/skills -g -a claude-code -s <имя> -y`.
+## 6. ДИЗАЙН-СИСТЕМА NIGHTFALL
+- **Цвет приходит из токена**, не из literal HEX. Синтаксис `bg-(--color-base)`, не `bg-[var(--token)]`. `var(--primary)` — активные и ховер-состояния.
+- **Типографика:** тело `font-blender-book`, заголовки `font-blender-medium uppercase tracking-widest`, числа и цены `font-blender-medium text-xs`. `font-mono` в проекте не используется.
+- **Размеры кратны 4** → класс шкалы (`h-15`, не `h-[60px]`).
 
-1. **ИСТОЧНИК ЗАДАЧ — ВАЛТ, НЕ ТРЕКЕР.** Решения живут в `docs/decisions/` (Obsidian), проводит их в код `/execute-decision`. Скиллы, заводящие GitHub Issues как рабочую поверхность (`to-spec`, `to-tickets`, `triage`, `qa`, `wayfinder`, `request-refactor-plan`), НЕ применять без явной просьбы — иначе получаем два несовместимых процесса на одну задачу. Их не удаляли: это ядро пака (`triage` — 8 входящих связей, `implement` — 7), пригодятся, если проект когда-нибудь переедет на Issues.
-2. **TDD ЖДЁТ ТЕСТ-РАННЕРА.** В проекте нет ни vitest, ни jest, ни `test`-скрипта — только `playwright.config.ts`. `tdd` и `implement` не запускать, пока раннер не появится.
-3. **`/autopilot` — ТОЛЬКО ПО ЯВНОМУ ВЫЗОВУ.** Он сам пишет спеку, дробит на задачи и коммитит после каждой, без ревью — прямо против §3 (план + пауза) и §5 (участвовать в решениях). Вызвали `/autopilot` — §3 и §5 на эту сессию сняты осознанно; сам по себе он не включается.
-4. **NIGHTFALL (§6) и BACKEND AUTONOMY (§4.11) НЕ ПЕРЕОПРЕДЕЛЯЮТСЯ.** Никакой внешний скилл не отменяет запрет на raw HEX, `font-mono` и рантайм-фетч наружу.
-5. **Проектные скиллы бьют общие.** Есть профильный (`/nightfall`, `/cta-backend`, `/figma`, `/refactor`, `/tw-fix`, `/page`, `/scaffold`, `/game-data-ingest`) — берём его, а не одноимённый общий.
-6. **РЕКОМЕНДОВАНЫ из пака:** `grilling` (метод сбора развилок — систематизирует шаг 2 петли), `grill-with-docs` (тот же допрос, но пишет ADR и глоссарий — закрывает шаг 1), `domain-modeling` / `ubiquitous-language` (ведение `docs/glossary.md`). Остальное — по ситуации.
+Полный реестр токенов: `/nightfall` · канон Tailwind v4: `/tw-fix` · новый компонент: `/scaffold` · рефактор: `/refactor` · перевод макета Figma: `/figma`
+
+## 7. ВНЕШНИЕ СКИЛЛ-ПАКИ
+Глобально в `~/.claude/skills` стоят `mattpocock/skills` (31 после чистки) и `autopilot`. Писались под другой процесс — **при конфликте выигрывает этот файл**.
+
+Снесены как вредные или чужие: `setup-pre-commit`, `git-guardrails-claude-code` (блокирует `git push`), `obsidian-vault` (зашит личный валт Мэтта), `migrate-to-shoehorn`, `edit-article`, `writing-*`, `teach`, `scaffold-exercises`. Вернуть: `npx skills add mattpocock/skills -g -a claude-code -s <имя> -y`.
+
+1. **Источник задач — валт, не трекер.** Решения в `docs/decisions/`, проводит их `/execute-decision`. Скиллы вокруг GitHub Issues (`to-spec`, `to-tickets`, `triage`, `qa`, `wayfinder`, `request-refactor-plan`) — только по явной просьбе, иначе получаем два процесса на одну задачу. Оставлены намеренно: это ядро пака, пригодится при переезде на Issues.
+2. **TDD ждёт тест-раннера.** Ни vitest, ни jest, ни `test`-скрипта — только `playwright.config.ts`. `tdd` и `implement` до появления раннера не запускать.
+3. **`/autopilot` — только по явному вызову.** Он пишет спеку, дробит на задачи и коммитит без ревью — против §4.3 и §5. Вызвали — эти два правила сняты на сессию осознанно.
+4. **NIGHTFALL (§6) и автономность данных (§4.11) не переопределяются** никаким внешним скиллом.
+5. **Проектный скилл бьёт общий.** Есть профильный (`/nightfall`, `/cta-backend`, `/figma`, `/refactor`, `/tw-fix`, `/page`, `/scaffold`, `/game-data-ingest`) — берём его.
+6. **Рекомендованы:** `grilling` (сбор развилок, шаг 2 петли), `grill-with-docs` (допрос + ADR и глоссарий, шаг 1), `domain-modeling` (ведение `docs/glossary.md`).
 
 ## 8. ИНЖЕНЕРНЫЙ ЦИКЛ — ЗАМЫКАНИЕ ПЕТЛИ
-Полный текст процесса: **`docs/engineering-loop.md`** (принят 2026-07-01, в силе). Шаблон спеки: `docs/_templates/task-spec.md`. Словарь терминов: **`docs/glossary.md`**.
+Полный процесс: **`docs/engineering-loop.md`** (принят 2026-07-01). Шаблон спеки: `docs/_templates/task-spec.md`. Термины: **`docs/glossary.md`**.
 
-§3 (план + пауза) и §5 (участие в решениях) — это шаги 2–3 петли, дублировать их здесь не нужно. Не срабатывают сами по себе два других шага:
+§4.3 и §5 — это шаги 2–3 петли. Сами по себе не срабатывают два других шага:
 
-1. **ШАГ 1 — СПЕКА.** Задача крупная (новая архитектура, много файлов, необратимое), а спеки в валте нет → одной фразой предложить составить по `task-spec.md` и **работать дальше**. Не блокировать: точная спека экономит токены, но её отсутствие не повод стоять.
-2. **ШАГ 5 — ЗАКРЫТИЕ ПЕТЛИ.** Задача закрыта — это не только пуш. Заметке в `docs/decisions/` ставится статус ✅, при необходимости обновляется срез в `docs/state/`. Без этого валт расходится с кодом и следующая сессия читает неправду.
-3. **НОВЫЙ ТЕРМИН — СНАЧАЛА В ГЛОССАРИЙ.** Имя в UI или в поле БД сперва попадает в `docs/glossary.md`, потом в код. Проверять охват заранее: «медицинские эффекты» звучало точно ровно до того, как выяснилось, что эффекты есть у еды и ножей — переименование стоило семи файлов уже после пуша.
+1. **Шаг 1 — спека.** Задача крупная (новая архитектура, много файлов, необратимое), спеки в валте нет → одной фразой предложить составить и **работать дальше**. Не блокировать: спека экономит токены, её отсутствие не повод стоять.
+2. **Шаг 5 — закрытие петли.** Закрыть задачу — не только запушить. Заметке в `docs/decisions/` ставится ✅, при необходимости обновляется срез в `docs/state/`. Иначе валт расходится с кодом и следующая сессия читает неправду.
+3. **Новый термин — сперва в глоссарий**, потом в код. Проверять охват заранее: «медицинские эффекты» звучало точно ровно до того, как выяснилось, что эффекты есть у еды и ножей — переименование стоило семи файлов уже после пуша.
