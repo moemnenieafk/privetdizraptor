@@ -1,3 +1,9 @@
+---
+type: design-doc
+status: 📋 дизайн-док мини-игры
+affects: arcade, minigames
+---
+
 # 🧩 GDD: Мини-игра «Три в ряд / Tarkov Match-3» (Spec v0.3)
 
 ## 📝 ЧЕЙНДЖЛОГ (Changelog v0.2 ➔ v0.3)

@@ -1,3 +1,9 @@
+---
+status: 🟡 реализация — фазы A–F сделаны (25.07)
+affects: arcade, minigames
+date: 2026-07-25
+---
+
 # ЦТА ARCADE — статус реализации
 
 Реализация по спеке [cta-arcade-handoff-final.md](cta-arcade-handoff-final.md) и исходному

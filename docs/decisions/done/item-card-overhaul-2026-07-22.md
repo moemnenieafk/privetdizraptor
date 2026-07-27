@@ -1,7 +1,8 @@
 ---
-status: 🟢 основное в main (коммит 858ea07) — хвосты ждут tarkov.dev / ручной раскладки
+status: ✅ сделано
 affects: item-detail, SlotGrid, barter, craft, container-grids, prices, SPT-autonomy, figma-skill
 date: 2026-07-22
+done: 2026-07-27
 commit: 858ea07
 ---
 
@@ -45,3 +46,14 @@ commit: 858ea07
 - Скрипты: `scripts/dump-container-grids-spt.mjs`, `dump-container-grids.mjs`
 - Прочее: `src/db/prices.ts` (курс), `src/lib/item-story-tours.ts`
 - Локально (НЕ в git): скилл `.claude/skills/game-asset-extraction` + `figma` (обновлены), авто-память `[[autonomy-prices-research]]`
+
+---
+
+## Закрытие (ревизия 2026-07-27)
+
+Основное ушло в main коммитом `858ea07`. Хвост «данных нет в tarkov.dev» закрыт 27.07: эффекты
+предметов приезжают из игровой базы SPT в наше зеркало — коммиты `59b65eb`, `d09c12e`, `1226fa7`,
+рецепт в скилле `/game-data-ingest`.
+
+Не входило в эту задачу и ждёт макета: блок урона холодного оружия (`slashDamage`, `stabDamage`,
+`hitRadius`) — типы заведены, вёрстки нет.
