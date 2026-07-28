@@ -3,7 +3,6 @@
 import type { MutableRefObject } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { Crosshair, Navigation } from 'lucide-react';
 import type { EftMapConfig, MapFloor } from '@/data/eft-map-config';
 import { useTrackingStore } from '@/store/useTrackingStore';
 import {
@@ -177,40 +176,4 @@ export function useEftTracker({ mapRef, config, floors, onRequestFloor }: Tracke
     toggle,
     toggleFollow: () => setFollow(!follow),
   };
-}
-
-/** Десктоп-кнопка «Позиция» (презентационная, единый инстанс трекера приходит пропсами). Скрыта на мобилке. */
-export function PlayerTrackerButton({ active, follow, requesting, supported, toggle, toggleFollow }: TrackerControls) {
-  return (
-    <div className="absolute top-3 right-28 z-[550] hidden items-center gap-2 lg:flex">
-      {active && (
-        <button
-          type="button"
-          onClick={toggleFollow}
-          aria-label="Следовать за игроком"
-          className={`flex h-8 w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
-            follow
-              ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-              : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
-          }`}
-        >
-          <Navigation className="h-3.5 w-3.5" />
-        </button>
-      )}
-      <button
-        type="button"
-        onClick={toggle}
-        disabled={!supported && !active}
-        title={!supported ? 'Нужен Chrome/Edge на ПК и карта с координатами' : undefined}
-        className={`flex items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-          active
-            ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-            : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
-        }`}
-      >
-        <Crosshair className={`h-3.5 w-3.5 ${requesting ? 'animate-pulse' : ''}`} />
-        {active ? 'Слежу' : 'Позиция'}
-      </button>
-    </div>
-  );
 }

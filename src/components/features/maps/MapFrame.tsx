@@ -23,6 +23,8 @@ import type { MapViewerApi, MapBossStat, MapQuestLite, MapQuestZone } from './ma
 interface NavMap {
   slug: string;
   name: string;
+  players: string | null;
+  raidDuration: number | null;
 }
 
 interface Props {
@@ -191,6 +193,8 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
 
   return (
     <div className={frameCls}>
+      {/* SEO/a11y: видимое имя карты живёт в выпадашке (span в кнопке) — h1 держим здесь. */}
+      <h1 className="sr-only">{data.name} — интерактивная карта Escape from Tarkov</h1>
       {/* Десктопный тулбар — прячем на мобилке (лента иконок + поиск живут здесь) */}
       <div className="hidden lg:block">
         <MapTopBar

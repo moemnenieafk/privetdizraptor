@@ -69,6 +69,9 @@ ds-bundle/
 \!non-related/
 \!future-requests/
 
+# Скретч-директория (референс-скрины Figma, временные выгрузки) — локальное, не в репо.
+/.tmp/
+
 # Render-pipeline стейджинг (webp по человекочитаемым именам ДО заливки в Supabase) — артефакт, не исходник.
 public/images/items/frago/
 # Отчёты find-missing (tsv/json выгрузки) — генерятся, в репо не держим.

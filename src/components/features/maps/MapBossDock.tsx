@@ -3,7 +3,7 @@
 import type { MapBossStat } from './map-frame-types';
 
 /**
- * Десктоп-док боссов — плавающий оверлей в нижнем-левом углу карты (каркас E11 §3).
+ * Десктоп-док боссов — плавающий оверлей внизу-по-центру карты (GRILL-2; был низ-лево).
  * Ряд кнопок (иконка 28px + % шанса); клик → подлёт к спавнам (onBossClick → focusPoints).
  * Мобилка использует свою раскладку (MapBottomBar) — сюда не идёт (hidden lg:block).
  *
@@ -20,7 +20,7 @@ export function MapBossDock({
   if (bosses.length === 0) return null;
 
   return (
-    <div className="absolute bottom-4 left-4 z-20 hidden lg:block">
+    <div className="absolute bottom-4 left-1/2 z-20 hidden -translate-x-1/2 lg:block">
       <div className="flex items-center gap-1 rounded-sm border border-lines-hover bg-[color-mix(in_srgb,var(--color-base)_88%,transparent)] p-1.5 backdrop-blur-sm">
         {bosses.map((b) => {
           const clickable = b.spawns.length > 0 && !!onBossClick;

@@ -638,21 +638,32 @@ export async function syncEftQuestZones(): Promise<SyncQuestZonesResult> {
 export interface InteractiveMapNav {
   slug: string;        // normalizedName
   name: string;        // ru-имя из maps
+  players: string | null;       // диапазон игроков рейда (напр. "10-12")
+  raidDuration: number | null;  // длительность рейда, мин
 }
 
 /**
- * Интерактивные карты (imageKey задан) + ru-имя — динамический источник для индекса
- * /eft/maps и навигации по разделу. Добавили/убрали карту в БД → список сам обновился.
+ * Интерактивные карты (imageKey задан) + ru-имя + мета рейда (игроки/время) — динамический
+ * источник для индекса /eft/maps и выпадашки выбора карты. Добавили/убрали карту в БД →
+ * список сам обновился. Игроки/время нужны выпадашке (строка карты показывает их).
  */
 export async function getEftInteractiveMapsWithNames(): Promise<InteractiveMapNav[]> {
   try {
     const gameId = await eftGameId();
     const rows = await db
-      .select({ slug: mapAssets.normalizedName, name: maps.name, imageKey: mapAssets.imageKey })
+      .select({
+        slug: mapAssets.normalizedName,
+        name: maps.name,
+        imageKey: mapAssets.imageKey,
+        players: mapAssets.players,
+        raidDuration: mapAssets.raidDuration,
+      })
       .from(mapAssets)
       .innerJoin(maps, eq(maps.id, mapAssets.mapId))
       .where(eq(mapAssets.gameId, gameId));
-    return rows.filter((r) => r.imageKey).map((r) => ({ slug: r.slug, name: r.name }));
+    return rows
+      .filter((r) => r.imageKey)
+      .map((r) => ({ slug: r.slug, name: r.name, players: r.players, raidDuration: r.raidDuration }));
   } catch (e) {
     console.error("[getEftInteractiveMapsWithNames]", e);
     return [];

@@ -3,12 +3,14 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LocateFixed, Minus, Pencil, Plus } from 'lucide-react';
+import { Crosshair, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
-import { PlayerTrackerButton, useEftTracker } from './PlayerTracker';
+import { useEftTracker } from './PlayerTracker';
 import { MobileMapBar } from './MobileMapBar';
+import { useMapUiStore } from '@/store/useMapUiStore';
+import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
 import { manualMarkerIcon } from './manual-marker-icon';
 import { ALL_LAYER_ITEMS, defaultLayerVisibility, layerKeyForMarker } from './map-layers';
@@ -195,8 +197,31 @@ export function MapViewerClient({
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
   const isStatic = !!data.config.staticMap;
 
-  const [layersOpen, setLayersOpen] = useState(false);
+  // Открытость панели слоёв поднята в стор (§E11 каркас #1): десктоп-триггер живёт в верхнем
+  // баре (MapFrame), мобильный — в MobileMapBar; оба пишут в один useMapUiStore.
+  const layersOpen = useMapUiStore((s) => s.layersOpen);
+  const setLayersOpen = useMapUiStore((s) => s.setLayersOpen);
+  const toggleLayers = useMapUiStore((s) => s.toggleLayers);
+
+  // Инстанс трекера один (нужен mapRef здесь). Кнопка+координаты живут в низ-право (GRILL-2),
+  // рендерятся ниже прямо из этого хука — публикация наверх больше не нужна.
   const tracker = useEftTracker({ mapRef, config: data.config, floors, onRequestFloor });
+  // Координаты игрока для readout низ-право (pose обновляется трекером ~1/сек — дёшево).
+  const pose = useTrackingStore((s) => s.pose);
+
+  // Линейка (measure): флаг из стора, точки/слой замера. Хендлеры клика — в init-эффекте карты
+  // (через ref, чтобы не пересоздавать карту). Выключение линейки очищает замер.
+  const rulerActive = useMapUiStore((s) => s.rulerActive);
+  const rulerActiveRef = useRef(rulerActive);
+  const rulerLayerRef = useRef<L.LayerGroup | null>(null);
+  const rulerPtsRef = useRef<{ x: number; z: number }[]>([]);
+  useEffect(() => {
+    rulerActiveRef.current = rulerActive;
+    if (!rulerActive) {
+      rulerPtsRef.current = [];
+      rulerLayerRef.current?.clearLayers();
+    }
+  }, [rulerActive]);
 
   // Применить этаж: затемнить чужие <g>-слои SVG + спрятать маркеры вне диапазона высоты.
   const applyFloor = useCallback(
@@ -461,6 +486,43 @@ export function MapViewerClient({
     };
     flashPointsRef.current = flashPoints;
 
+    // Линейка: ЛКМ ставит точку замера, ПКМ — сброс. Активность читаем через ref (без ре-инита).
+    const drawRuler = () => {
+      if (!rulerLayerRef.current) rulerLayerRef.current = L.layerGroup().addTo(map);
+      const g = rulerLayerRef.current;
+      g.clearLayers();
+      const pts = rulerPtsRef.current;
+      if (!pts.length) return;
+      if (pts.length >= 2) L.polyline(pts.map(ll), { className: 'cta-ruler-line', interactive: false }).addTo(g);
+      for (const p of pts) {
+        L.marker(ll(p), {
+          icon: L.divIcon({ className: 'cta-di', html: '<div class="cta-ruler-dot"></div>', iconSize: [8, 8], iconAnchor: [4, 4] }),
+          interactive: false,
+          keyboard: false,
+        }).addTo(g);
+      }
+      if (pts.length >= 2) {
+        let d = 0;
+        for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z);
+        L.marker(ll(pts[pts.length - 1]), {
+          icon: L.divIcon({ className: 'cta-di', html: `<div class="cta-ruler-label">${Math.round(d)} м</div>`, iconSize: [0, 0], iconAnchor: [0, 0] }),
+          interactive: false,
+          keyboard: false,
+        }).addTo(g);
+      }
+    };
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      if (!rulerActiveRef.current) return;
+      rulerPtsRef.current.push({ x: e.latlng.lng, z: e.latlng.lat });
+      drawRuler();
+    });
+    map.on('contextmenu', (e: L.LeafletMouseEvent) => {
+      if (!rulerActiveRef.current) return;
+      L.DomEvent.preventDefault(e.originalEvent);
+      rulerPtsRef.current = [];
+      drawRuler();
+    });
+
     const api: MapViewerApi = {
       flyTo: (p, zoom) => map.flyTo(ll(p), zoom ?? Math.min(cfg.maxZoom, 4), { duration: 0.6 }),
       focusPoints: (pts) => {
@@ -503,6 +565,8 @@ export function MapViewerClient({
       positionsByLayerRef.current = {};
       flashRef.current = null;
       if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      rulerLayerRef.current = null;
+      rulerPtsRef.current = [];
       loadImageRef.current = null;
       map.remove();
       mapRef.current = null;
@@ -554,7 +618,11 @@ export function MapViewerClient({
     applyFloorRef.current(activeFloorRef.current);
   }, [vis, isStatic, mapInst]);
 
-  const rootCls = ['cta-map-root absolute inset-0 overflow-hidden bg-(--color-base)', data.config.soloFloors ? 'solo-floors' : '']
+  const rootCls = [
+    'cta-map-root absolute inset-0 overflow-hidden bg-(--color-base)',
+    data.config.soloFloors ? 'solo-floors' : '',
+    rulerActive ? 'cta-ruler-mode' : '',
+  ]
     .filter(Boolean)
     .join(' ');
 
@@ -627,15 +695,13 @@ export function MapViewerClient({
         />
       )}
 
-      <PlayerTrackerButton {...tracker} />
-
       <MobileMapBar
         activeMapIconClass={mapIconClass(data.slug)}
         activeMapName={data.name}
         tracker={tracker}
         hasLayers={!isStatic}
         layersOpen={layersOpen}
-        onLayersToggle={() => setLayersOpen((v) => !v)}
+        onLayersToggle={toggleLayers}
       />
 
       {/* Зум + атрибуция */}
@@ -651,6 +717,54 @@ export function MapViewerClient({
             <LocateFixed className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Трекер позиции игрока + координаты (низ-право, GRILL-2). Только карты с проекцией. */}
+        {data.config.transform && (
+          <div className="flex flex-col items-end gap-1.5">
+            {tracker.active && pose && (
+              <span className="rounded-xs bg-(--color-base)/80 px-2 py-1 font-blender-medium text-type-micro tabular-nums text-(--primary) backdrop-blur-md">
+                X {Math.round(pose.x)} · Y {Math.round(pose.z)}
+              </span>
+            )}
+            <div className="flex items-center gap-1.5">
+              {tracker.active && (
+                <button
+                  type="button"
+                  onClick={tracker.toggleFollow}
+                  aria-label="Следовать за игроком"
+                  title="Следовать за игроком"
+                  className={`flex h-8 w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
+                    tracker.follow
+                      ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+                      : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
+                  }`}
+                >
+                  <Navigation className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={tracker.toggle}
+                disabled={!tracker.supported && !tracker.active}
+                title={
+                  !tracker.supported && !tracker.active
+                    ? 'Нужен Chrome/Edge на ПК'
+                    : tracker.active
+                      ? 'Слежу за позицией'
+                      : 'Определить позицию'
+                }
+                aria-label="Определить позицию"
+                className={`flex h-8 w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                  tracker.active
+                    ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+                    : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
+                }`}
+              >
+                <Crosshair className={`h-3.5 w-3.5 ${tracker.requesting ? 'animate-pulse' : ''}`} />
+              </button>
+            </div>
+          </div>
+        )}
         {data.author ? (
           <span className="rounded-xs bg-(--color-base)/70 px-2 py-0.5 font-blender-book text-[10px] tracking-wide text-text-muted/70 backdrop-blur-md">
             Карта: {data.author}

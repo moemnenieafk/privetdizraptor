@@ -1,20 +1,17 @@
 'use client';
 
 import { useRef } from 'react';
-import { MapNavStrip } from './MapNavStrip';
+import { Layers, Ruler } from 'lucide-react';
+import { MapNavDropdown, type NavMapItem } from './MapNavDropdown';
 import { MapSearch } from './MapSearch';
 import { FullscreenToggleButton } from '@/components/ui/FullscreenToggleButton';
+import { useMapUiStore } from '@/store/useMapUiStore';
 import type { MapView } from './map-types';
 import type { MapViewerApi, MapQuestLite } from './map-frame-types';
 
-interface NavMap {
-  slug: string;
-  name: string;
-}
-
 interface Props {
   data: MapView;
-  navMaps: NavMap[];
+  navMaps: NavMapItem[];
   quests: MapQuestLite[];
   searchOpen: boolean;
   onSearchToggle: () => void;
@@ -24,14 +21,22 @@ interface Props {
   apiRef: React.RefObject<MapViewerApi | null>;
 }
 
-export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, onSearchClose, isFullscreen, onToggleFullscreen, apiRef }: Props) {
-  const anchorRef = useRef<HTMLDivElement>(null);
-
-  const searchBtnCls = `flex h-7 w-7 shrink-0 items-center justify-center rounded border transition-colors ${
-    searchOpen
+/** Класс кнопки-тоггла бара (стиль эталонной кнопки поиска / FullscreenToggleButton). */
+const toggleCls = (active: boolean): string =>
+  `flex h-7 w-7 shrink-0 items-center justify-center rounded border transition-colors ${
+    active
       ? 'bg-(--primary)/20 border-(--primary)/40 text-(--primary)'
       : 'border-lines-hover text-(--color-text-secondary) hover:border-(--primary)/40 hover:text-(--primary)'
   }`;
+
+export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, onSearchClose, isFullscreen, onToggleFullscreen, apiRef }: Props) {
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const layersOpen = useMapUiStore((s) => s.layersOpen);
+  const toggleLayers = useMapUiStore((s) => s.toggleLayers);
+  const rulerActive = useMapUiStore((s) => s.rulerActive);
+  const toggleRuler = useMapUiStore((s) => s.toggleRuler);
+
+  const hasLayers = !data.config.staticMap;
 
   return (
     <div className="relative flex items-center gap-3 px-3.5 h-14 bg-card-menu shrink-0 overflow-x-auto scrollbar-hidden">
@@ -39,7 +44,7 @@ export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, o
       <div ref={anchorRef} className="relative flex flex-1 items-center gap-2">
         {!data.config.staticMap && (
           <>
-            <button type="button" onClick={onSearchToggle} title="Поиск (Ctrl+F)" className={searchBtnCls}>
+            <button type="button" onClick={onSearchToggle} title="Поиск (Ctrl+F)" className={toggleCls(searchOpen)}>
               <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
             </button>
             {searchOpen && (
@@ -49,23 +54,47 @@ export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, o
         )}
       </div>
 
-      {/* По центру — навигация по картам */}
+      {/* Линейка (measure) — центр-слева, перед выпадашкой */}
+      {hasLayers && (
+        <button
+          type="button"
+          onClick={toggleRuler}
+          title="Линейка — замер расстояния (ЛКМ точки, ПКМ сброс)"
+          aria-label="Линейка"
+          className={toggleCls(rulerActive)}
+        >
+          <Ruler className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      {/* По центру — выпадашка выбора карты (иконка+имя+игроки+время+▼) */}
       <div className="flex shrink-0 items-center justify-center">
-        <MapNavStrip maps={navMaps} activeSlug={data.slug} />
+        <MapNavDropdown
+          maps={navMaps}
+          activeSlug={data.slug}
+          activeName={data.name}
+          activePlayers={data.players}
+          activeRaidDuration={data.raidDuration}
+        />
       </div>
 
-      {/* Справа — инфо рейда + название + фуллскрин */}
-      <div className="flex flex-1 items-center justify-end gap-3">
-        {(data.players || data.raidDuration != null) && (
-          <div className="hidden shrink-0 items-center gap-3 font-blender-medium text-type-caption uppercase tracking-widest text-text-secondary xl:flex">
-            {data.players && <span>{data.players} игроков</span>}
-            {data.raidDuration != null && <span>{data.raidDuration} мин</span>}
-          </div>
-        )}
-        <h1 className="whitespace-nowrap font-blender-medium text-lg uppercase leading-none tracking-widest text-text-primary">
-          {data.name}
-        </h1>
-        <FullscreenToggleButton isFullscreen={isFullscreen} onToggle={onToggleFullscreen} />
+      {/* Справа — тогглы (Слои · фуллскрин); имя+инфо рейда — в выпадашке, трекер — низ-право */}
+      <div className="flex flex-1 items-center justify-end gap-2">
+        <div className="flex shrink-0 items-center gap-2">
+          {hasLayers && (
+            <button
+              type="button"
+              onClick={toggleLayers}
+              title="Слои и фильтры"
+              aria-label="Слои и фильтры"
+              className={toggleCls(layersOpen)}
+            >
+              <Layers className="h-3.5 w-3.5" />
+            </button>
+          )}
+
+          <FullscreenToggleButton isFullscreen={isFullscreen} onToggle={onToggleFullscreen} />
+        </div>
       </div>
     </div>
   );

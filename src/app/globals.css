@@ -877,6 +877,22 @@ html {
   50% { fill-opacity: 0.3; stroke-opacity: 1; }
 }
 
+/* линейка (measure-инструмент): клик ставит точки, ПКМ сбрасывает */
+.cta-ruler-mode .leaflet-container { cursor: crosshair !important; }
+.cta-ruler-line { stroke: var(--primary); stroke-width: 2; stroke-dasharray: 6 5; fill: none; }
+.cta-ruler-dot {
+  width: 8px; height: 8px; border-radius: 9999px;
+  background: var(--primary); border: 1.5px solid var(--color-base);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+.cta-ruler-label {
+  transform: translate(10px, -50%);
+  padding: 2px 6px; border-radius: 3px; white-space: nowrap;
+  background: color-mix(in srgb, var(--color-base) 88%, transparent);
+  border: 1px solid var(--primary); color: var(--primary);
+  font-family: var(--font-blender-medium); font-size: 11px; line-height: 1;
+}
+
 /* ─── Доступность: уважаем системную настройку «уменьшить движение» ────────────
    Единый глобальный guard: гасит анимации/транзишены/скролл-моушен для
    пользователей с prefers-reduced-motion: reduce. Аддитивно — на остальных не

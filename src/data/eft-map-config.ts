@@ -441,10 +441,15 @@ export function getMapConfig(slug: string): EftMapConfig | undefined {
 }
 
 /** Статичные карты (наш арт в /public) — для индекса и навигации (их нет в БД). */
-export function getStaticMaps(): { slug: string; name: string }[] {
+export function getStaticMaps(): { slug: string; name: string; players: string | null; raidDuration: number | null }[] {
   return Object.values(EFT_MAP_CONFIG)
     .filter((c) => c.staticMap && c.svgFile)
-    .map((c) => ({ slug: c.slug, name: c.displayName ?? c.slug }));
+    .map((c) => ({
+      slug: c.slug,
+      name: c.displayName ?? c.slug,
+      players: c.raid?.players ?? null,
+      raidDuration: c.raid?.duration ?? null,
+    }));
 }
 
 /** Все интерактивные карты с SVG-подложкой (для скрипта заливки и индекса). */

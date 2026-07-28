@@ -6,13 +6,13 @@ import { LAYER_GROUPS, type LayerItem } from './map-layers';
 import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
 
 /**
- * Drawer «Слои» интерактивной карты (паттерн tarkov.dev, дизайн NIGHTFALL): кнопка-стопка
- * раскрывает панель — дерево чекбоксов. 3 уровня: группа → под-слой ИЛИ раскрываемый узел
- * (Контейнеры/Случайная добыча) с детьми-типами. Чекбокс группы/узла вкл/выкл всех потомков
- * (частичное — «минус»). Пустые под-слои скрываются. У каждого — иконка (резолвер) + счётчик.
+ * Drawer «Легенда карты» (слои + легенда + счётчики + текст-фильтр слиты, GRILL-2). Дерево
+ * чекбоксов: группа → под-слой ИЛИ раскрываемый узел (Контейнеры/Случайная добыча) с детьми-
+ * типами. Чекбокс группы/узла вкл/выкл всех потомков (частичное — «минус»). Иконка каждого листа
+ * = сам маркер (легенда) + счётчик. Пустые/не совпавшие с текст-фильтром под-слои скрыты.
  *
- * Открытие управляемое: на мобилке триггер живёт в MobileMapBar (open/onOpenChange приходят
- * из MapViewerClient), десктопный триггер-стопка скрыт на узких экранах (hidden lg:flex).
+ * Открытие управляемое (useMapUiStore): десктоп-триггер «Слои» — в верхнем баре (MapTopBar),
+ * мобильный — в MobileMapBar. open/onOpenChange приходят из MapViewerClient.
  */
 
 const leafKeys = (i: LayerItem): string[] => (i.children ? i.children.map((c) => c.key) : [i.key]);
@@ -84,6 +84,12 @@ export function MapLayersDrawer({
   const open = openProp ?? internalOpen;
   const setOpen = (v: boolean) => (onOpenChange ? onOpenChange(v) : setInternalOpen(v));
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ containers: true, loose: true });
+  const [filter, setFilter] = useState('');
+
+  // Мульти-фильтр: термины через запятую (OR). Пусто → показываем всё. Совпадение по имени
+  // группы/узла/листа. Регистронезависимо (сам ввод — uppercase, сравнение — lower).
+  const terms = filter.toLowerCase().split(',').map((t) => t.trim()).filter(Boolean);
+  const hit = (label: string): boolean => terms.length === 0 || terms.some((t) => label.toLowerCase().includes(t));
 
   const countOf = (i: LayerItem): number => leafKeys(i).reduce((s, k) => s + (counts[k] ?? 0), 0);
   const stateOf = (keys: string[]): 'on' | 'off' | 'partial' => {
@@ -91,13 +97,18 @@ export function MapLayersDrawer({
     return on === 0 ? 'off' : on === keys.length ? 'on' : 'partial';
   };
 
-  // Прячем под-слои/узлы без маркеров на этой карте.
-  const groups = LAYER_GROUPS.map((g) => ({
-    ...g,
-    items: g.items
-      .map((i) => (i.children ? { ...i, children: i.children.filter((c) => (counts[c.key] ?? 0) > 0) } : i))
-      .filter((i) => countOf(i) > 0),
-  })).filter((g) => g.items.length > 0);
+  // Прячем под-слои/узлы без маркеров на этой карте + применяем текст-фильтр.
+  const groups = LAYER_GROUPS.map((g) => {
+    const gHit = hit(g.group);
+    const items = g.items
+      .map((i) => {
+        if (!i.children) return i;
+        const nHit = gHit || hit(i.label);
+        return { ...i, children: i.children.filter((c) => (counts[c.key] ?? 0) > 0 && (nHit || hit(c.label))) };
+      })
+      .filter((i) => (i.children ? i.children.length > 0 : (counts[i.key] ?? 0) > 0 && (gHit || hit(i.label))));
+    return { ...g, items };
+  }).filter((g) => g.items.length > 0);
 
   const renderLeaf = (i: LayerItem, deep: boolean) => {
     const active = !!vis[i.key];
@@ -152,18 +163,7 @@ export function MapLayersDrawer({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className={`absolute top-3 right-3 z-[520] hidden items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors lg:flex ${
-          open
-            ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-            : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
-        }`}
-      >
-        <Layers className="h-3.5 w-3.5" /> Слои
-      </button>
-
+      {/* Десктоп-триггер «Слои» переехал в верхний бар (MapTopBar); открытие — через useMapUiStore. */}
       <div
         className={`absolute top-0 right-0 z-[540] flex h-full w-72 flex-col border-l border-lines-hover bg-(--color-base)/95 backdrop-blur-md transition-transform duration-200 ${
           open ? 'translate-x-0' : 'translate-x-full'
@@ -171,13 +171,37 @@ export function MapLayersDrawer({
       >
         <div className="flex items-center gap-2 border-b border-lines-hover px-4 py-3 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary)">
           <Layers className="h-4 w-4" />
-          <span className="flex-1">Слои карты</span>
+          <span className="flex-1">Легенда карты</span>
           <button type="button" onClick={() => setOpen(false)} className="text-text-muted transition-colors hover:text-(--primary)" aria-label="Закрыть">
             <X className="h-4 w-4" />
           </button>
         </div>
 
+        {/* Мульти-фильтр по маркерам (термины через запятую) */}
+        <div className="border-b border-lines-hover px-3 py-2.5">
+          <p className="mb-2 font-blender-book text-[10px] leading-snug text-text-muted">
+            Доступна мульти-фильтрация, например: Платный, Босс, Опасности
+          </p>
+          <div className="flex h-8 items-center gap-2 rounded-xs border border-lines-hover bg-(--color-base)/60 px-2.5">
+            <Layers className="h-3.5 w-3.5 shrink-0 text-text-muted" />
+            <input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Фильтр по маркерам"
+              className="w-full bg-transparent font-blender-medium text-type-caption uppercase tracking-widest text-text-secondary outline-none placeholder:text-text-muted/60"
+            />
+            {filter && (
+              <button type="button" onClick={() => setFilter('')} aria-label="Очистить фильтр" className="shrink-0 text-text-muted transition-colors hover:text-(--primary)">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="scrollbar-compact flex flex-1 flex-col gap-1 overflow-y-auto p-2">
+          {groups.length === 0 && (
+            <p className="px-3 py-6 text-center font-blender-book text-xs text-text-muted">Ничего не найдено</p>
+          )}
           {groups.map((g) => {
             const keys = g.items.flatMap(leafKeys);
             const st = stateOf(keys);

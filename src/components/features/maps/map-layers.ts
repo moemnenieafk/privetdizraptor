@@ -110,6 +110,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
       { key: 'extract-redrebel', label: 'Альпинист (Red Rebel)', sample: { type: 'extract', label: 'Тропа альпиниста' } },
       { key: 'extract-nobackpack', label: 'Без рюкзака', sample: { type: 'extract', label: 'Вентиляционная шахта' } },
       { key: 'extract-greenflare', label: 'Зелёный сигнал', sample: { type: 'extract', label: '(Сигнал)' } },
+      { key: 'transit', label: 'Переходы', sample: { type: 'transit' } },
     ],
   },
   {
@@ -128,6 +129,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
     items: [
       { key: 'lock', label: 'Замки', sample: { type: 'lock' } },
       { key: 'switch', label: 'Рычаги', sample: { type: 'switch' } },
+      { key: 'stationary', label: 'Стационарное оружие', sample: { type: 'stationary_weapon' } },
     ],
   },
   {
@@ -156,19 +158,15 @@ export const LAYER_GROUPS: LayerGroup[] = [
           defaultOff: true,
         })),
       },
-      { key: 'stationary', label: 'Стационарки', sample: { type: 'stationary_weapon' } },
     ],
   },
   {
-    group: 'Навигация',
-    items: [{ key: 'transit', label: 'Переходы', sample: { type: 'transit' } }],
+    group: 'Задания',
+    items: [{ key: 'quest_zone', label: 'Зоны квестов', sample: { type: 'quest_zone' } }],
   },
   {
-    group: 'Прочее',
-    items: [
-      { key: 'hazard', label: 'Опасности', sample: { type: 'hazard' } },
-      { key: 'quest_zone', label: 'Зоны квестов', sample: { type: 'quest_zone' } },
-    ],
+    group: 'Опасности',
+    items: [{ key: 'hazard', label: 'Опасности', sample: { type: 'hazard' } }],
   },
 ];
 
