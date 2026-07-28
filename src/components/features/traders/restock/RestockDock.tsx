@@ -38,13 +38,24 @@ function RestockDockActive() {
     load(mode);
   }, [mode, load]);
 
-  // Прячемся, пока открыт боковой drawer квеста: он в контексте наложения страницы и
-  // иначе оказывается под нашим корневым fixed z-40. Тот же body-атрибут-мост, что у StreamDock.
+  // Прячемся: (1) пока открыт боковой drawer квеста — он в контексте наложения страницы и иначе
+  // оказывается под нашим корневым fixed z-40; (2) в любом фуллскрин-режиме фрейма (карты и
+  // квест-карта, оба z-[200]) — как StreamDock/StreamStatus. Единый body-атрибут-мост, один observer.
   const [questDrawerOpen, setQuestDrawerOpen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   useEffect(() => {
-    const check = () => setQuestDrawerOpen(document.body.hasAttribute('data-quest-drawer'));
+    const check = () => {
+      setQuestDrawerOpen(document.body.hasAttribute('data-quest-drawer'));
+      setFullscreen(
+        document.body.hasAttribute('data-app-fullscreen') ||
+          document.body.hasAttribute('data-quest-fullscreen'),
+      );
+    };
     const observer = new MutationObserver(check);
-    observer.observe(document.body, { attributes: true, attributeFilter: ['data-quest-drawer'] });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['data-quest-drawer', 'data-app-fullscreen', 'data-quest-fullscreen'],
+    });
     check();
     return () => observer.disconnect();
   }, []);
@@ -68,10 +79,11 @@ function RestockDockActive() {
         onClick={() => setOpen(true)}
         aria-label="Завоз у торговцев"
         title="Завоз у торговцев"
-        className={`fixed right-0 top-40 z-40 flex items-center gap-2 rounded-l border border-r-0 border-lines-hover py-2 pr-2 pl-3 shadow-lg backdrop-blur-sm transition-all duration-300
+        className={`fixed right-0 top-6 z-40 flex items-center gap-2 rounded-l border border-r-0 border-lines-hover py-2 pr-2 pl-3 shadow-lg backdrop-blur-sm transition-all duration-300
           bg-[color-mix(in_srgb,var(--color-base)_90%,transparent)]
           hover:border-(--primary) hover:shadow-[0_0_16px_color-mix(in_srgb,var(--primary)_25%,transparent)]
-          ${questDrawerOpen ? 'pointer-events-none opacity-0' : ''}`}
+          ${questDrawerOpen ? 'pointer-events-none opacity-0' : ''}
+          ${fullscreen ? 'invisible pointer-events-none' : ''}`}
       >
         <span className="h-4 w-4 shrink-0 icon-mask icon-eft-trader-restock text-tactical-amber" />
         <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-xs bg-(--color-base)">
