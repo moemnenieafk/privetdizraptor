@@ -58,6 +58,19 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
   const apiRef = useRef<MapViewerApi | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
+  // Реальная высота шапки (ROW 1) → фрейм = 100svh − эта высота = ровно остаток вьюпорта, без
+  // скролла. Заменяет хардкод 5.5rem. ResizeObserver ловит адаптивный паддинг шапки (clamp) на ресайзе.
+  const [headerOffset, setHeaderOffset] = useState(88);
+  useEffect(() => {
+    const header = document.querySelector('header');
+    if (!header) return;
+    const measure = () => setHeaderOffset(header.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(header);
+    return () => ro.disconnect();
+  }, []);
+
   const handleReady = useCallback((api: MapViewerApi) => {
     apiRef.current = api;
     setReady(true);
@@ -184,19 +197,21 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
   }, [floors.length, stepFloor]);
 
   // near-fullscreen по умолчанию: край-в-край под шапкой, без bounded-box/паддингов/рамки.
-  // Высота — definite (100svh − высота ROW 1 шапки), т.к. Leaflet-контейнеру нужна конкретная
-  // высота, а flex-1 от body(min-h-screen) её не доносит. Оффсет 5.5rem под ROW 1 (тюнится).
-  // Полный фуллскрин — опция, прячет и шапку.
+  // Высота — definite (100svh − реальная высота ROW 1 = headerOffset), т.к. Leaflet-контейнеру
+  // нужна конкретная высота, а flex-1 от body(min-h-screen) её не доносит. Фрейм = ровно остаток
+  // вьюпорта → страница не скроллится. Полный фуллскрин — опция, прячет и шапку.
   const frameCls = isFullscreen
     ? 'fixed inset-0 z-[200] flex flex-col bg-(--color-base)'
-    : 'relative flex h-[calc(100svh-5.5rem)] w-full flex-col overflow-hidden bg-(--color-base)';
+    : 'relative flex w-full flex-col overflow-hidden bg-(--color-base)';
+  const frameStyle = isFullscreen ? undefined : { height: `calc(100svh - ${headerOffset}px)` };
 
   return (
-    <div className={frameCls}>
+    <div className={frameCls} style={frameStyle}>
       {/* SEO/a11y: видимое имя карты живёт в выпадашке (span в кнопке) — h1 держим здесь. */}
       <h1 className="sr-only">{data.name} — интерактивная карта Escape from Tarkov</h1>
-      {/* Десктопный тулбар — прячем на мобилке (лента иконок + поиск живут здесь) */}
-      <div className="hidden lg:block">
+      {/* Десктопный тулбар — плавающий оверлей поверх карты (край-в-край): бар прозрачный,
+          сквозь него видно карту. Прячем на мобилке (там своя лента в MobileMapBar). */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 hidden lg:block">
         <MapTopBar
           data={data}
           navMaps={navMaps}

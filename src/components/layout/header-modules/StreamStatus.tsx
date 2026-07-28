@@ -82,9 +82,13 @@ export default function StreamStatus() {
   const s = isLive ? liveS : offlineS;
 
   return (
-    // Плавающий оверлей: прибит к правому-нижнему углу. Обёртка кликопрозрачна
-    // (pointer-events-none), интерактив — на кнопке (-auto).
-    <div className="fixed bottom-4 right-4 z-70 flex flex-col items-end gap-2 pointer-events-none">
+    // Плавающий оверлей: левый край блока встаёт на кромку 1100px-контента, сам блок — ЗА неё,
+    // в правый гуттер (сдвиг от кромки на ширину блока = w-40 = 10rem). Так не налезает ни на
+    // контент, ни на контролы карты у края. На узких — фолбэк к 1rem. Обёртка кликопрозрачна.
+    <div
+      className="fixed bottom-4 z-70 flex flex-col items-end gap-2 pointer-events-none"
+      style={{ right: 'max(1rem, calc((100vw - 1100px) / 2 - 10rem - 56px))' }}
+    >
       {/* ═══ Кнопка-индикатор стрима ═══ */}
       <a
         href={isLive ? undefined : 'https://www.twitch.tv/fullkamen'}
@@ -93,11 +97,14 @@ export default function StreamStatus() {
         role={isLive ? 'button' : undefined}
         onClick={isLive ? (e) => { e.preventDefault(); expandDock('fullkamen'); } : undefined}
         title={isLive ? 'Развернуть окно стрима' : undefined}
+        // Сплошной #141416 под градиент-свечением — чтобы кнопка не была прозрачной (иначе
+        // s.bg-градиент перебивает bg-класс). Работает в обеих вариациях (LIVE/OFFLINE).
+        style={{ backgroundColor: 'var(--color-base)' }}
         className={`group relative flex shrink-0 items-center justify-center gap-2 w-10 sm:w-40 h-10 rounded-sm transition-all duration-500
           ${isQuestFullscreen ? 'invisible pointer-events-none' : 'pointer-events-auto'}
           ${isLoading
-            ? 'border-[0.5px] border-lines-hover bg-darkbase'
-            : `${s.border} ${s.bg} ${s.shadow} bg-darkbase hover:brightness-125`
+            ? 'border-[0.5px] border-lines-hover'
+            : `${s.border} ${s.bg} ${s.shadow} hover:brightness-125`
           }`}
       >
         {/* Гекс-скобки вплотную к пилюле (только LIVE, десктоп), красные */}

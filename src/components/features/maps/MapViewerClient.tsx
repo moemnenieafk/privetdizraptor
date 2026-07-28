@@ -52,17 +52,6 @@ function makeCRS(cfg: EftMapConfig): L.CRS {
 const bb = (b: [[number, number], [number, number]]): L.LatLngBounds =>
   L.latLngBounds([b[0][1], b[0][0]], [b[1][1], b[1][0]]);
 
-function scaledBounds(b: [[number, number], [number, number]], f: number): L.LatLngBoundsExpression {
-  const cx = (b[0][0] + b[1][0]) / 2;
-  const cy = (b[0][1] + b[1][1]) / 2;
-  const w = (b[1][0] - b[0][0]) * f;
-  const h = (b[1][1] - b[0][1]) * f;
-  return [
-    [cy - h / 2, cx - w / 2],
-    [cy + h / 2, cx + w / 2],
-  ];
-}
-
 const ll = (p: { x: number; z: number }): [number, number] => [p.z, p.x];
 
 /* ───────────────── маркеры ───────────────── */
@@ -273,8 +262,8 @@ export function MapViewerClient({
       scrollWheelZoom: true,
       wheelPxPerZoomLevel: 120,
       minZoom: cfg.minZoom,
-      maxZoom: cfg.maxZoom,
-      maxBoundsViscosity: 0.6,
+      // +2 уровня к максимальному зуму (карта векторная — остаётся резкой); «зазумить максимально».
+      maxZoom: cfg.maxZoom + 2,
     });
     mapRef.current = map;
     setMapInst(map);
@@ -319,7 +308,7 @@ export function MapViewerClient({
     loadImageRef.current = loadImage;
 
     if (cfg.bounds) {
-      map.setMaxBounds(scaledBounds(cfg.bounds, 1.5));
+      // Без maxBounds — карту можно свободно увести в сторону (не «отпружинивает» к центру).
       if (!isStatic) loadImage(data.imageUrl);
       map.fitBounds(bb(cfg.bounds));
     }
@@ -493,15 +482,18 @@ export function MapViewerClient({
       g.clearLayers();
       const pts = rulerPtsRef.current;
       if (!pts.length) return;
-      if (pts.length >= 2) L.polyline(pts.map(ll), { className: 'cta-ruler-line', interactive: false }).addTo(g);
-      for (const p of pts) {
+      const hasLabel = pts.length >= 2;
+      if (hasLabel) L.polyline(pts.map(ll), { className: 'cta-ruler-line', interactive: false }).addTo(g);
+      pts.forEach((p, i) => {
+        // Последнюю точку помечает блок дистанции — точку-дубль тут не рисуем (иначе налезает на цифру).
+        if (hasLabel && i === pts.length - 1) return;
         L.marker(ll(p), {
           icon: L.divIcon({ className: 'cta-di', html: '<div class="cta-ruler-dot"></div>', iconSize: [8, 8], iconAnchor: [4, 4] }),
           interactive: false,
           keyboard: false,
         }).addTo(g);
-      }
-      if (pts.length >= 2) {
+      });
+      if (hasLabel) {
         let d = 0;
         for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z);
         L.marker(ll(pts[pts.length - 1]), {
@@ -678,7 +670,7 @@ export function MapViewerClient({
           className={`absolute top-3 right-3 z-[550] flex items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors ${
             editing
               ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-              : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
+              : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
           }`}
         >
           <Pencil className="h-3.5 w-3.5" /> Правка
@@ -705,16 +697,16 @@ export function MapViewerClient({
       />
 
       {/* Зум + атрибуция */}
-      <div className="absolute right-3 bottom-3 z-[500] flex flex-col items-end gap-2">
-        <div className="flex flex-col overflow-hidden rounded-sm border border-lines-hover bg-(--color-base)/80 backdrop-blur-md">
-          <button type="button" onClick={zoomIn} aria-label="Приблизить" className="border-b border-lines-hover p-2 text-text-secondary transition-colors hover:bg-card-menu hover:text-(--primary)">
-            <Plus className="h-4 w-4" />
+      <div className="absolute right-3.5 bottom-3.5 z-[500] flex flex-col items-end gap-2">
+        <div className="flex flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
+          <button type="button" onClick={zoomIn} aria-label="Приблизить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
+            <Plus className="h-5.5 w-5.5" />
           </button>
-          <button type="button" onClick={zoomOut} aria-label="Отдалить" className="border-b border-lines-hover p-2 text-text-secondary transition-colors hover:bg-card-menu hover:text-(--primary)">
-            <Minus className="h-4 w-4" />
+          <button type="button" onClick={zoomOut} aria-label="Отдалить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
+            <Minus className="h-5.5 w-5.5" />
           </button>
-          <button type="button" onClick={resetView} aria-label="Сбросить вид" className="p-2 text-text-secondary transition-colors hover:bg-card-menu hover:text-(--primary)">
-            <LocateFixed className="h-4 w-4" />
+          <button type="button" onClick={resetView} aria-label="Сбросить вид" className="flex h-9 w-9 items-center justify-center text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
+            <LocateFixed className="h-5.5 w-5.5" />
           </button>
         </div>
 
@@ -733,13 +725,13 @@ export function MapViewerClient({
                   onClick={tracker.toggleFollow}
                   aria-label="Следовать за игроком"
                   title="Следовать за игроком"
-                  className={`flex h-8 w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
+                  className={`flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
                     tracker.follow
                       ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-                      : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
+                      : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
                   }`}
                 >
-                  <Navigation className="h-3.5 w-3.5" />
+                  <Navigation className="h-5.5 w-5.5" />
                 </button>
               )}
               <button
@@ -754,13 +746,13 @@ export function MapViewerClient({
                       : 'Определить позицию'
                 }
                 aria-label="Определить позицию"
-                className={`flex h-8 w-8 items-center justify-center rounded-sm border backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                   tracker.active
                     ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-                    : 'border-lines-hover bg-(--color-base)/80 text-text-secondary hover:text-(--primary)'
+                    : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
                 }`}
               >
-                <Crosshair className={`h-3.5 w-3.5 ${tracker.requesting ? 'animate-pulse' : ''}`} />
+                <Crosshair className={`h-5.5 w-5.5 ${tracker.requesting ? 'animate-pulse' : ''}`} />
               </button>
             </div>
           </div>

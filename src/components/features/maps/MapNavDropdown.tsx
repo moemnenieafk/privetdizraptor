@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, Clock, Users } from 'lucide-react';
+import { Clock, Users } from 'lucide-react';
 import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 export interface NavMapItem {
@@ -15,7 +15,7 @@ export interface NavMapItem {
 function RaidMeta({ players, duration }: { players: string | null; duration: number | null }) {
   if (!players && duration == null) return null;
   return (
-    <span className="flex shrink-0 items-center gap-3 font-blender-book text-type-caption text-text-muted">
+    <span className="flex shrink-0 items-center gap-3 font-blender-book text-type-caption text-text-secondary">
       {players && (
         <span className="flex items-center gap-1.5">
           <Users className="h-3.5 w-3.5" /> {players} игроков
@@ -87,21 +87,21 @@ export function MapNavDropdown({ maps, activeSlug, activeName, activePlayers, ac
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`flex h-11 items-center gap-3 rounded-sm border px-3 transition-colors ${
-          open ? 'border-(--primary)/40 bg-card-menu' : 'border-lines-hover bg-card-menu/50 hover:bg-card-menu'
+        className={`pointer-events-auto flex h-14 w-134 items-center gap-4 rounded-t-none rounded-b-lg border px-7 transition-colors ${
+          open ? 'border-(--primary)/40 bg-card-menu' : 'border-lines-hover bg-card-menu hover:border-(--primary)/40'
         }`}
       >
-        {activeIcon ? <span className={`icon-mask ${activeIcon} h-7 w-7 shrink-0 text-(--primary)`} /> : null}
-        <span className="whitespace-nowrap font-blender-medium text-lg uppercase leading-none tracking-widest text-(--primary)">
+        {activeIcon ? <span className={`icon-mask ${activeIcon} h-7 w-7 shrink-0 text-text-primary`} /> : null}
+        <span className="whitespace-nowrap font-blender-medium text-lg uppercase leading-none tracking-widest text-text-primary">
           {activeName}
         </span>
+        <span className="flex-1" />
         <RaidMeta players={activePlayers} duration={activeRaidDuration} />
-        <ChevronDown className={`h-4 w-4 shrink-0 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && pos && (
         <div
-          className="fixed z-[560] max-h-[70vh] w-128 -translate-x-1/2 overflow-y-auto scrollbar-compact rounded-sm border border-lines-hover bg-(--color-base)/95 py-1 shadow-lg backdrop-blur-md"
+          className="pointer-events-auto fixed z-[560] max-h-[70vh] w-134 -translate-x-1/2 overflow-y-auto scrollbar-compact rounded-sm border border-lines-hover bg-(--color-base)/95 py-1 shadow-lg backdrop-blur-md"
           style={{ top: pos.top, left: pos.left }}
         >
           {sorted.map((m) => {

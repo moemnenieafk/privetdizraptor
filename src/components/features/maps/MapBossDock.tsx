@@ -20,8 +20,8 @@ export function MapBossDock({
   if (bosses.length === 0) return null;
 
   return (
-    <div className="absolute bottom-4 left-1/2 z-20 hidden -translate-x-1/2 lg:block">
-      <div className="flex items-center gap-1 rounded-sm border border-lines-hover bg-[color-mix(in_srgb,var(--color-base)_88%,transparent)] p-1.5 backdrop-blur-sm">
+    <div className="absolute bottom-0 left-1/2 z-20 hidden -translate-x-1/2 lg:block">
+      <div className="flex h-14 items-center gap-2 rounded-t-lg border border-lines-hover bg-card-menu px-7 backdrop-blur-sm">
         {bosses.map((b) => {
           const clickable = b.spawns.length > 0 && !!onBossClick;
           return (

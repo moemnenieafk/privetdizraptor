@@ -165,20 +165,25 @@ export function MapLayersDrawer({
     <>
       {/* Десктоп-триггер «Слои» переехал в верхний бар (MapTopBar); открытие — через useMapUiStore. */}
       <div
-        className={`absolute top-0 right-0 z-[540] flex h-full w-72 flex-col border-l border-lines-hover bg-(--color-base)/95 backdrop-blur-md transition-transform duration-200 ${
+        className={`absolute top-0 right-0 z-[540] flex h-full w-87 flex-col border-l border-lines-hover bg-(--color-base)/95 backdrop-blur-md transition-transform duration-200 ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex items-center gap-2 border-b border-lines-hover px-4 py-3 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary)">
-          <Layers className="h-4 w-4" />
-          <span className="flex-1">Легенда карты</span>
-          <button type="button" onClick={() => setOpen(false)} className="text-text-muted transition-colors hover:text-(--primary)" aria-label="Закрыть">
-            <X className="h-4 w-4" />
+        {/* Шапка 56px: заголовок + кнопка-закрыть = амбер-кнопка слоёв (та же, что открывает в баре). */}
+        <div className="flex h-14 shrink-0 items-center justify-end gap-3 px-3.5">
+          <span className="font-blender-medium text-base uppercase tracking-widest text-text-primary">Легенда карты</span>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Закрыть легенду"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-(--primary) bg-(--primary) text-(--color-base)"
+          >
+            <Layers className="h-5.5 w-5.5" />
           </button>
         </div>
 
         {/* Мульти-фильтр по маркерам (термины через запятую) */}
-        <div className="border-b border-lines-hover px-3 py-2.5">
+        <div className="px-3 py-2.5">
           <p className="mb-2 font-blender-book text-[10px] leading-snug text-text-muted">
             Доступна мульти-фильтрация, например: Платный, Босс, Опасности
           </p>

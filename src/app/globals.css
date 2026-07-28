@@ -886,6 +886,7 @@ html {
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
 }
 .cta-ruler-label {
+  display: inline-block; width: max-content;
   transform: translate(10px, -50%);
   padding: 2px 6px; border-radius: 3px; white-space: nowrap;
   background: color-mix(in srgb, var(--color-base) 88%, transparent);

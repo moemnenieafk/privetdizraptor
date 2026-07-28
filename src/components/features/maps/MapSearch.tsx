@@ -74,7 +74,7 @@ export function MapSearch({ markers, quests, apiRef, anchorRef, onClose }: Props
   };
 
   return (
-    <div className="animate-quest-search fixed z-200" style={{ top: pos.top, left: pos.left }}>
+    <div className="animate-quest-search pointer-events-auto fixed z-200" style={{ top: pos.top, left: pos.left }}>
       <div className="flex items-center gap-2 px-3 w-87 h-9 bg-(--color-darkbase) border border-(--primary) rounded-xs">
         <span className="icon-mask icon-eft-search-icon w-3.5 h-3.5 text-(--primary) shrink-0" />
         <input
