@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapViewerLoader } from './MapViewerLoader';
 import { MapTopBar } from './MapTopBar';
 import { MapBottomBar } from './MapBottomBar';
+import { MapBossDock } from './MapBossDock';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useMapViewStore } from '@/store/useMapViewStore';
@@ -221,15 +222,20 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
         {floors.length > 1 && (
           <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />
         )}
+        {/* Десктоп-док боссов — плавающий оверлей низ-лево (каркас E11 §3) */}
+        <MapBossDock bosses={bosses} onBossClick={focusBoss} />
       </div>
-      <MapBottomBar
-        data={data}
-        questIds={questIds}
-        bosses={bosses}
-        isFullscreen={isFullscreen}
-        onToggleFullscreen={toggle}
-        onBossClick={focusBoss}
-      />
+      {/* Нижний бар — только мобилка (десктоп: фуллскрин→верхний бар, боссы→MapBossDock) */}
+      <div className="shrink-0 lg:hidden">
+        <MapBottomBar
+          data={data}
+          questIds={questIds}
+          bosses={bosses}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggle}
+          onBossClick={focusBoss}
+        />
+      </div>
     </div>
   );
 }
