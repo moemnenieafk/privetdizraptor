@@ -49,6 +49,9 @@ next-env.d.ts
 # Claude Code internal
 .claude/
 
+# Голосовые заметки — исходное аудио; в репо держим только транскрипты (docs/voice-notes/transcripts/).
+docs/voice-notes/*.ogg
+
 # Item icons — отдаём из Supabase Storage (bucket cta-media), в репо не держим.
 # Локальные .webp остаются на диске как офлайн-фолбэк (см. src/lib/item-icon.ts).
 # items_database.json / fetch_tarkov_db.py / search_index.txt — остаются в гите.
