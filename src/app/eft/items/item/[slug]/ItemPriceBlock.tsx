@@ -205,12 +205,21 @@ function PriceCard({
         <span className="font-blender-medium text-xs uppercase tracking-[0.08em] text-text-secondary">
           {label}
         </span>
-        {note && (
-          <span
-            className={`ml-auto flex shrink-0 items-center gap-2 font-blender-medium text-[8px] uppercase tracking-widest ${noteAccent ? 'text-(--primary)' : 'text-text-muted'}`}
+        {note && noteAccent && (
+          // Ссылка на полный журнал: панель «Недавно изменено» с кнопкой «Все
+          // обновления» убрана, и бейдж занял её место как вход в ченджлог.
+          <Link
+            href="/eft/gamesetting/game-updates"
+            title="Все изменения игры"
+            className="ml-auto flex shrink-0 items-center gap-2 font-blender-medium text-[8px] uppercase tracking-widest text-(--primary) transition-colors hover:text-text-primary"
           >
             {note}
-            {noteAccent && <Activity className="h-3 w-3 shrink-0" aria-hidden="true" />}
+            <Activity className="h-3 w-3 shrink-0" aria-hidden="true" />
+          </Link>
+        )}
+        {note && !noteAccent && (
+          <span className="ml-auto flex shrink-0 items-center gap-2 font-blender-medium text-[8px] uppercase tracking-widest text-text-muted">
+            {note}
             {noteIcon && (
               <Link
                 href="/eft/companion"
