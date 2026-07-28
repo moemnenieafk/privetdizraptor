@@ -5,7 +5,6 @@ import { items, itemProperties, prices, barters, crafts } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
 import { getEftPriceBySlug, getEftPricesByIds, getEftPricesByCategory, getCurrencyRates, getPricesAgeHours } from '@/db/prices';
 import { getItemChanges } from '@/db/game-changes';
-import { ItemChangeBadge } from '@/components/features/game-changes/ItemChangeBadge';
 import { itemIconUrl } from '@/lib/item-icon';
 import { EFT_QUESTS } from '@/data/quests';
 import type { ItemEffectsRaw } from '@/data/eft/item-effects';
@@ -519,6 +518,21 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
     getItemChanges(item.id),
   ]);
 
+  // Панели «Недавно изменено» больше нет: у всех предметов, где она была, она
+  // вырождалась в повтор одного поля. Из журнала берём только базовую цену —
+  // карточка «Продать торговцу» покажет её второй строкой (полный журнал на
+  // /eft/gamesetting/game-updates).
+  //
+  // Берём значение ИЗ ЖУРНАЛА, а не items.basePrice: каталог наливается статическим
+  // снапшотом через db:etl и стоит на месте, а журнал питается живым источником и
+  // уходит вперёд. У Биткоина расхождение доходило до 50к — каталог показывал бы
+  // самую старую цену вместо последней. Записи уже отсортированы по detectedAt desc.
+  const latestBasePrice = (() => {
+    const hit = recentChanges.find((c) => c.field === 'basePrice' && c.newValue);
+    const n = hit ? Number(String(hit.newValue).replace(/\s/g, '')) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
+
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
       <BreadcrumbsSetter name={item.name} types={item.types} />
@@ -528,9 +542,14 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
           <CatalogBackLink focusId={item.id} />
         </div>
 
-        <ItemChangeBadge changes={recentChanges} />
-
-        <ItemDetailLayout item={item} similar={similar} buyLevelRequired={buyLevelRequired} rates={rates} pricesAgeHours={pricesAgeHours} />
+        <ItemDetailLayout
+          item={item}
+          similar={similar}
+          buyLevelRequired={buyLevelRequired}
+          rates={rates}
+          pricesAgeHours={pricesAgeHours}
+          latestBasePrice={latestBasePrice}
+        />
 
       </div>
     </main>

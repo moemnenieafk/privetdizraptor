@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { PackageX } from 'lucide-react';
+import { Activity, PackageX } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useIsPve } from '@/hooks/useGameMode';
 import { VendorImage } from './ItemImage';
@@ -19,6 +19,13 @@ interface ItemPriceBlockProps {
   rates?: { usd: number | null; eur: number | null };
   /** Возраст зеркала цен в часах — показывается только у карточек барахолки. */
   pricesAgeHours?: number | null;
+  /**
+   * Свежая базовая цена ИЗ ЖУРНАЛА изменений (не из каталога — он отстаёт).
+   * Второй строкой у «Продать торговцу»: торговая цена от базовой производная,
+   * и у волатильных предметов вроде Биткоина это объясняет сдвиг цифры сверху.
+   * null → строки и бейджа нет.
+   */
+  latestBasePrice?: number | null;
 }
 
 /**
@@ -181,12 +188,15 @@ function PriceCard({
   label,
   note,
   noteIcon,
+  noteAccent,
   children,
 }: {
   label: string;
   note?: string | null;
   /** Иконка компаньона рядом с note (метка «цена из живого зеркала барахолки»). */
   noteIcon?: boolean;
+  /** Янтарная подпись с пульсом вместо приглушённой — метка «недавно изменено». */
+  noteAccent?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -196,8 +206,11 @@ function PriceCard({
           {label}
         </span>
         {note && (
-          <span className="ml-auto flex shrink-0 items-center gap-1 font-blender-medium text-[8px] uppercase tracking-widest text-text-muted">
+          <span
+            className={`ml-auto flex shrink-0 items-center gap-2 font-blender-medium text-[8px] uppercase tracking-widest ${noteAccent ? 'text-(--primary)' : 'text-text-muted'}`}
+          >
             {note}
+            {noteAccent && <Activity className="h-3 w-3 shrink-0" aria-hidden="true" />}
             {noteIcon && (
               <Link
                 href="/eft/companion"
@@ -269,8 +282,10 @@ export function ItemPriceBlock({
   buyLevelRequired,
   rates,
   pricesAgeHours,
+  latestBasePrice,
 }: ItemPriceBlockProps) {
   const isPve = useIsPve();
+  const showBaseLine = Boolean(latestBasePrice && latestBasePrice > 0);
   const traderBuys = buyFor.filter((b) => !isFlea(b.vendor));
   const fleaBuy = buyFor.find((b) => isFlea(b.vendor));
   const traderSells = sellFor.filter((s) => !isFlea(s.vendor));
@@ -348,7 +363,11 @@ export function ItemPriceBlock({
         </PriceCard>
 
         {/* Продать торговцу */}
-        <PriceCard label="Продать торговцу">
+        <PriceCard
+          label="Продать торговцу"
+          note={showBaseLine ? 'Недавно изменено' : null}
+          noteAccent={showBaseLine}
+        >
           {bestTraderSell ? (
             <>
               <VendorImage
@@ -356,8 +375,15 @@ export function ItemPriceBlock({
                 name={bestTraderSell.vendor.name}
                 className="h-12 w-12 shrink-0 rounded object-cover"
               />
-              <span className="ml-auto flex min-w-0 flex-col items-end gap-1 text-right">
+              <span className="ml-auto flex min-w-0 flex-col items-end gap-2 text-right">
                 <BigPrice value={rub(bestTraderSell)} className={traderSellClass} />
+                {/* Базовая цена: торговая от неё производная, поэтому при свежей
+                    правке показываем причину сдвига прямо под ценой. */}
+                {showBaseLine && (
+                  <span className="font-blender-medium text-lg leading-none text-(--primary)">
+                    {fmtRub(latestBasePrice!)}
+                  </span>
+                )}
                 <CurrencyNote offer={bestTraderSell} />
               </span>
             </>

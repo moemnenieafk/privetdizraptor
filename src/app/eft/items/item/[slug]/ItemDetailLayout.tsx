@@ -33,6 +33,8 @@ interface ItemDetailLayoutProps {
   buyLevelRequired?: number | null;
   rates?: { usd: number | null; eur: number | null };
   pricesAgeHours?: number | null;
+  /** Свежая базовая цена из журнала изменений — карточка покажет её второй строкой. */
+  latestBasePrice?: number | null;
 }
 
 // ─── Статус-бейдж: иконка (как в EftItemTile/Indicator) + текст ──────────────
@@ -66,7 +68,7 @@ function StatusBadge({ label, variant, iconClass }: StatusBadgeData) {
   );
 }
 
-export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, pricesAgeHours }: ItemDetailLayoutProps) {
+export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, pricesAgeHours, latestBasePrice }: ItemDetailLayoutProps) {
   const hasBarter = item.barters.length > 0;
   const hasCraft = item.crafts.length > 0;
   const hasQuest = (item.usedInTasks?.length ?? 0) > 0;
@@ -174,6 +176,7 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
           buyLevelRequired={buyLevelRequired}
           rates={rates}
           pricesAgeHours={pricesAgeHours}
+          latestBasePrice={latestBasePrice}
         />
 
         <WeaponModule properties={item.properties} />
