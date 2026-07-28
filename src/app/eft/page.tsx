@@ -2,7 +2,7 @@
 import React from 'react';
 import { HubCard } from '@/components/ui/HubCard';
 
-// Данные для 6 главных карточек навигации
+// Данные для карточек навигации хаба EFT
 const EFT_HUB_CARDS = [
   {
     id: 'maps',
@@ -26,14 +26,6 @@ const EFT_HUB_CARDS = [
     description: 'Уникальные внутриигровые события',
     href: '/eft/quests/events',
     iconPath: '/icons/eft/02-quests/ingame-events.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'price-slot',
-    title: 'Цена за слот',
-    description: 'Расчёт цены за слот в схроне или инвентаре',
-    href: '/eft/progress/price-slot',
-    iconPath: '/icons/eft/03-items/price-per-slot.svg',
     variant: 'rectangle' as const,
   },
   {

@@ -743,6 +743,15 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     return () => document.body.removeAttribute('data-quest-fullscreen');
   }, [isFullscreen]);
 
+  // Пока открыт боковой drawer квеста — прячем плавающий «Завоз». Он живёт в корневом
+  // fixed-контексте (z-40 в layout), а drawer заперт в контексте наложения страницы,
+  // поэтому z-index'ом его не перекрыть. Сигнал — body-атрибут, как у фуллскрина.
+  useEffect(() => {
+    if (selectedTask) document.body.setAttribute('data-quest-drawer', '');
+    else document.body.removeAttribute('data-quest-drawer');
+    return () => document.body.removeAttribute('data-quest-drawer');
+  }, [selectedTask]);
+
   // ── Keyboard ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

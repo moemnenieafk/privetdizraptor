@@ -7,7 +7,7 @@
 // Пикер — единственное модальное состояние, живёт здесь: канвас только сообщает
 // «открой слот X по пути Y», выбор возвращается в стор.
 import { useEffect, useMemo, useState } from 'react';
-import { RotateCcw, Save, Undo2 } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Save, Undo2 } from 'lucide-react';
 import { useBuildStore } from '@/store/useBuildStore';
 import { useBuildQuota } from '@/hooks/useBuildQuota';
 import { Paywall } from '@/components/features/subscription/Paywall';
@@ -83,7 +83,17 @@ export function WeaponBuilder({
   const result = calcBuild(draft, index);
   const delta = calcDelta(draft, index);
 
+  // Жёсткая валидация: не сохраняем сборку с пустыми обязательными слотами
+  // (цевьё, газовая камера и т.п.). Движок помечает их как missing_required.
+  const missingRequiredNames = [
+    ...new Set(
+      result.issues.flatMap((i) => (i.type === 'missing_required' ? [i.slotName] : [])),
+    ),
+  ];
+  const canSaveBuild = missingRequiredNames.length === 0;
+
   const handleSave = () => {
+    if (!canSaveBuild) return;
     const title = name.trim() || `${baseName} — сборка`;
     const id = saveDraft(title);
     if (id) setSavedAt(Date.now());
@@ -169,22 +179,31 @@ export function WeaponBuilder({
         </div>
 
         {quota.canSave ? (
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={`${baseName} — сборка`}
-              className="h-11 flex-1 rounded-sm border border-lines-hover bg-(--color-darkbase) px-3 font-blender-book text-sm text-text-primary placeholder:text-text-secondary focus:border-(--primary) focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleSave}
-              className="flex h-11 items-center justify-center gap-2 rounded-xs border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] px-5 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]"
-            >
-              <Save className="h-4 w-4" aria-hidden="true" />
-              Сохранить
-            </button>
+          <div className="flex flex-col gap-2">
+            {!canSaveBuild && (
+              <p className="flex items-center gap-2 rounded-xs border border-danger/40 bg-danger/10 p-3 font-blender-book text-xs text-danger">
+                <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                Заполните обязательные слоты: {missingRequiredNames.join(', ')}
+              </p>
+            )}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={`${baseName} — сборка`}
+                className="h-11 flex-1 rounded-sm border border-lines-hover bg-(--color-darkbase) px-3 font-blender-book text-sm text-text-primary placeholder:text-text-secondary focus:border-(--primary) focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={!canSaveBuild}
+                className="flex h-11 items-center justify-center gap-2 rounded-xs border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] px-5 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] disabled:pointer-events-none disabled:opacity-40"
+              >
+                <Save className="h-4 w-4" aria-hidden="true" />
+                Сохранить
+              </button>
+            </div>
           </div>
         ) : (
           <Paywall feature="weapon_builds">

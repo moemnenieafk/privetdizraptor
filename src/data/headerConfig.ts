@@ -31,8 +31,6 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       privacy: 'Политика конфиденциальности',
       offer: 'Оферта',
       eula: 'Пользовательское соглашение',
-      'price-slot': 'Цена за слот',
-      'loot-rate': 'Рейтинг предметов',
       comlink: 'Связь',
       'find-partner': 'Поиск напарника',
       candidates: 'Кандидаты',
@@ -565,9 +563,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             ]
           },
           { id: 'p-tracker', label: 'Трекер предметов', description: 'Отмечайте найденные предметы для квестов, убежища и бартеров в удобном чек-листе.', path: '/eft/progress/tracker', iconUrl: '/icons/eft/04-progression/items-tracker.svg' },
-          { id: 'p-needed', label: 'Важные предметы', description: 'Полный список всех предметов, необходимых для выполнения заданий и постройки убежища.', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
-          { id: 'p-loot-rate', label: 'Рейтинг предметов', description: 'Все предметы игры, отсортированные по цене за клеточку инвентаря — с фильтром по категориям.', path: '/eft/progress/loot-rate', iconUrl: '/icons/eft/03-items/loot-tier.svg' },
-          { id: 'p-price-slot', label: 'Цена за слот', description: 'Рейтинг по чистой выручке за ячейку (₽/слот): налог барахолки, модификаторы убежища, сравнение маршрутов сбыта.', path: '/eft/progress/price-slot', iconUrl: '/icons/eft/03-items/price-per-slot.svg' }
+          { id: 'p-needed', label: 'Важные предметы', description: 'Полный список всех предметов, необходимых для выполнения заданий и постройки убежища.', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' }
         ]
       },
       { 

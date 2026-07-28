@@ -54,8 +54,8 @@ export function BaseSelector({ bases }: BaseSelectorProps) {
         />
       </div>
 
-      {/* Калибры */}
-      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+      {/* Калибры — сетка в несколько строк, без горизонтальной прокрутки */}
+      <div className="flex flex-wrap gap-1.5">
         <button
           type="button"
           onClick={() => setCaliber(null)}

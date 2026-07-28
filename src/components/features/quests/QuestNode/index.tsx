@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useRef, useState, useEffect } from 'react';
+import { memo, useState } from 'react';
 import type { QuestNodeData } from '@/types/quest';
 import type { TaskObjective, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
@@ -31,25 +31,9 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
     onToggle, onForceComplete, onSelect, onHover, onPin,
   } = data;
 
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isHolding, setIsHolding] = useState(false);
-
-  useEffect(() => () => { if (holdTimerRef.current) clearTimeout(holdTimerRef.current); }, []);
-
-  const startHold = (e: React.MouseEvent | React.TouchEvent) => {
-    if (status !== 'locked') return;
-    e.preventDefault();
-    setIsHolding(true);
-    holdTimerRef.current = setTimeout(() => {
-      onForceComplete(task.id);
-      setIsHolding(false);
-    }, 5000);
-  };
-
-  const cancelHold = () => {
-    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-    setIsHolding(false);
-  };
+  // Разблокировка заблокированного квеста: клик → мини-подтверждение «Уже прошёл? Да/Нет»
+  // → onForceComplete (проставляет предков-пререквизиты + сам квест). Защита от случайного разблока.
+  const [confirming, setConfirming] = useState(false);
 
   const [heroFailed, setHeroFailed] = useState(false);
 
@@ -117,7 +101,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
     status === 'completed'
       ? 'bg-success/10 text-success'
       : status === 'locked'
-      ? 'opacity-50 border border-lines-hover text-text-secondary select-none'
+      ? 'border border-lines-hover text-text-secondary hover:border-(--primary) hover:text-(--primary)'
       : '',
   ].filter(Boolean).join(' ');
 
@@ -282,30 +266,39 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
         )}
 
         <footer className="px-4 pb-4 pt-3 flex items-center gap-2">
-          <button
-            data-no-pan
-            onClick={e => { e.stopPropagation(); if (status !== 'locked') onToggle(task.id); }}
-            onMouseDown={startHold}
-            onMouseUp={cancelHold}
-            onMouseLeave={cancelHold}
-            onTouchStart={startHold}
-            onTouchEnd={cancelHold}
-            style={footerBtnStyle}
-            className={`${footerBtnCls} relative overflow-hidden`}
-          >
-            {isHolding && (
-              <div
-                className="absolute inset-0 bg-danger/20 origin-left"
-                style={{ animation: 'hold-fill 5s linear forwards' }}
-              />
-            )}
-            <span className="relative z-10">
+          {status === 'locked' && confirming ? (
+            <>
+              <button
+                data-no-pan
+                onClick={e => { e.stopPropagation(); onForceComplete(task.id); setConfirming(false); }}
+                className="h-9 flex-1 rounded-xs bg-success/10 text-success text-xs font-blender-medium uppercase tracking-widest transition-colors hover:bg-success/20"
+              >
+                Уже прошёл
+              </button>
+              <button
+                data-no-pan
+                onClick={e => { e.stopPropagation(); setConfirming(false); }}
+                className="h-9 shrink-0 rounded-xs border border-lines-hover px-4 text-xs font-blender-medium uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+              >
+                Нет
+              </button>
+            </>
+          ) : (
+            <button
+              data-no-pan
+              onClick={e => {
+                e.stopPropagation();
+                if (status === 'locked') setConfirming(true);
+                else onToggle(task.id);
+              }}
+              style={footerBtnStyle}
+              className={footerBtnCls}
+            >
               {status === 'completed' ? '✓ ВЫПОЛНЕНО'
-                : status === 'locked' && isHolding ? 'Уже выполнил? Другалёк'
-                : status === 'locked'              ? 'ЗАБЛОКИРОВАНО'
+                : status === 'locked' ? 'ЗАБЛОКИРОВАНО'
                 : 'ВЫПОЛНЕНО?'}
-            </span>
-          </button>
+            </button>
+          )}
           {!hidePin && (
           <button
             data-no-pan

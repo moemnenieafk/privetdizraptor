@@ -110,11 +110,6 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     description: 'Хронология всех внутриигровых ивентов: сюжетные главы, праздничные события, изменения боссов, экономики и механик.',
     iconClass: 'icon-eft-quests-events',
   },
-  'eft-items-loot-rate': {
-    title: 'Рейтинг предметов',
-    description: 'Актуальный рейтинг ценности лута. Узнайте, какие предметы стоит выносить из рейда в первую очередь для максимальной выгоды.',
-    iconClass: 'icon-eft-items-loot-tier',
-  },
   // ─── Снаряжение ───────────────────────────────────────────────────────────────
   'eft-items-gear': {
     title: 'Снаряжение',
@@ -327,11 +322,6 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     title: 'Напитки',
     description: 'Питьевые запасы. Поддержание уровня гидратации — прямая боевая необходимость.',
     iconClass: 'icon-eft-eq-drinks',
-  },
-  'eft-items-price-slot': {
-    title: 'Цена за слот',
-    description: 'Инструмент для оценки прибыльности предметов. Узнайте, что выгоднее всего класть в рюкзак во время рейда.',
-    iconClass: 'icon-eft-items-price-slot',
   },
   // ─── Бартер-предметы ──────────────────────────────────────────────────────────
   'eft-items-barter': {
