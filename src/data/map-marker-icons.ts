@@ -243,13 +243,13 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
     case 'lock': {
       const lk = lockKind(m);
       // Ключ-карта/интерком и стандартная кодовая панель — цветной webp-арт V4DYA; меченый — svg.
-      if (lk === 'marked') return { url: `${SVG}/lock/lock-mechanical-marked.svg`, mode: 'img', size: 26 };
+      if (lk === 'marked') return { url: `${SVG}/interactive/lock/lock-mechanical-marked.svg`, mode: 'img', size: 26 };
       const file = lk === 'keycard' ? 'lock-keycard-pannel' : 'lock-standard-security-keypad';
       return { url: `${WEBP}/lock/${file}.webp`, mode: 'img', size: 30 };
     }
 
     case 'switch':
-      return { url: `${SVG}/switch/switch-lever.svg`, mode: 'img', size: 26 };
+      return { url: `${SVG}/interactive/switch/switch-lever.svg`, mode: 'img', size: 26 };
 
     case 'loot':
     case 'loot_loose':
