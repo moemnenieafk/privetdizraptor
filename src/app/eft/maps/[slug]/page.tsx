@@ -93,7 +93,7 @@ export default async function MapPage({ params, searchParams }: Props) {
     };
     const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
     return (
-      <main className="w-full px-4 pt-4 pb-8 xl:px-8">
+      <main className="w-full">
         <MapFrame data={view} navMaps={navMaps} quests={[]} bosses={[]} questZones={questZones} focusQuestId={focusQuestId} />
       </main>
     );
@@ -240,7 +240,7 @@ export default async function MapPage({ params, searchParams }: Props) {
       const quests = questsForMap(slug);
 
       return (
-        <main className="w-full px-4 pt-4 pb-8 xl:px-8">
+        <main className="w-full">
           <MapFrame
             data={view}
             navMaps={navMaps}

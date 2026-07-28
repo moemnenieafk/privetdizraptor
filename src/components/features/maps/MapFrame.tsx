@@ -13,6 +13,8 @@ import { MapTopBar } from './MapTopBar';
 import { MapBottomBar } from './MapBottomBar';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
 import { useFullscreen } from '@/hooks/useFullscreen';
+import { useMapViewStore } from '@/store/useMapViewStore';
+import { useMapViewUrlSync } from './useMapViewUrlSync';
 import { buildMapFloors, orderFloorsByLevel } from '@/data/eft-map-config';
 import type { MapView } from './map-types';
 import type { MapViewerApi, MapBossStat, MapQuestLite, MapQuestZone } from './map-frame-types';
@@ -45,7 +47,10 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
   const { isFullscreen, toggle, exit } = useFullscreen();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFloor, setActiveFloor] = useState(0);
+  // Этаж живёт в useMapViewStore (§18.1) — эфемерный вид + синк с URL (permalink).
+  const activeFloor = useMapViewStore((s) => s.floor);
+  const setActiveFloor = useMapViewStore((s) => s.setFloor);
+  useMapViewUrlSync();
   const [ready, setReady] = useState(false);
   const apiRef = useRef<MapViewerApi | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -98,14 +103,13 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
   // Шаг по визуальному стеку этажей: dir −1 = вверх (выше уровень), +1 = вниз. Без зацикливания.
   const stepFloor = useCallback(
     (dir: -1 | 1) => {
-      setActiveFloor((cur) => {
-        const pos = floorOrder.indexOf(cur);
-        if (pos < 0) return cur;
-        const next = Math.min(Math.max(pos + dir, 0), floorOrder.length - 1);
-        return floorOrder[next];
-      });
+      const cur = useMapViewStore.getState().floor;
+      const pos = floorOrder.indexOf(cur);
+      if (pos < 0) return;
+      const next = Math.min(Math.max(pos + dir, 0), floorOrder.length - 1);
+      setActiveFloor(floorOrder[next]);
     },
-    [floorOrder],
+    [floorOrder, setActiveFloor],
   );
 
   // Сброс этажа при смене карты — коррекция стейта при смене пропа (без эффекта).
@@ -176,9 +180,13 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
     return () => el.removeEventListener('wheel', onWheel, { capture: true });
   }, [floors.length, stepFloor]);
 
+  // near-fullscreen по умолчанию: край-в-край под шапкой, без bounded-box/паддингов/рамки.
+  // Высота — definite (100svh − высота ROW 1 шапки), т.к. Leaflet-контейнеру нужна конкретная
+  // высота, а flex-1 от body(min-h-screen) её не доносит. Оффсет 5.5rem под ROW 1 (тюнится).
+  // Полный фуллскрин — опция, прячет и шапку.
   const frameCls = isFullscreen
     ? 'fixed inset-0 z-[200] flex flex-col bg-(--color-base)'
-    : 'relative mx-auto flex h-[calc(100svh-220px)] max-h-192 min-h-105 w-full max-w-275 flex-col overflow-hidden rounded-lg border border-lines-hover bg-(--color-base)';
+    : 'relative flex h-[calc(100svh-5.5rem)] w-full flex-col overflow-hidden bg-(--color-base)';
 
   return (
     <div className={frameCls}>
@@ -191,6 +199,8 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
           searchOpen={searchOpen}
           onSearchToggle={() => setSearchOpen((v) => !v)}
           onSearchClose={() => setSearchOpen(false)}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggle}
           apiRef={apiRef}
         />
       </div>

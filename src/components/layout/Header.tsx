@@ -29,6 +29,9 @@ export function Header() {
   const menuItems = config?.menuItems || [];
   const isHomePage = pathname === '/';
   const showFeatures = !isHomePage;
+  // На карт-страницах ROW 2 (лого игры + глоб. поиск + «Я новичок» + крошки) скрыт:
+  // near-fullscreen каркас отдаёт вертикаль карте, оставляя только ROW 1.
+  const isMapRoute = (pathname || '').startsWith('/eft/maps');
 
   return (
     <>
@@ -58,8 +61,8 @@ export function Header() {
           )}
         </div>
 
-        {/* ═══ ROW 2 ═══ */}
-        {showFeatures && (
+        {/* ═══ ROW 2 ═══ (скрыт на карт-страницах: near-fullscreen каркас) */}
+        {showFeatures && !isMapRoute && (
           <div className="px-4 xl:px-0 max-w-275 mx-auto">
             <div className="flex items-center gap-7 pb-3">
               <div className="hidden xl:flex shrink-0">

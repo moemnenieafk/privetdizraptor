@@ -434,6 +434,14 @@ export function MapViewerClient({
     requestAnimationFrame(() => {
       if (mapRef.current === map) map.invalidateSize();
     });
+
+    // Контейнер на flex-1 получает высоту ПОСЛЕ init Leaflet (осадка флекса), плюс
+    // фуллскрин / ресайз окна. Без переинвалидации карта остаётся чёрной.
+    const resizeObs = new ResizeObserver(() => {
+      if (mapRef.current === map) map.invalidateSize();
+    });
+    resizeObs.observe(el);
+
     applyFloorRef.current(activeFloorRef.current);
 
     // Пульс-подсветка точек (спавны босса / ПКМ-цикл) — временные маркеры, гаснут через ~2.6с.
@@ -485,6 +493,7 @@ export function MapViewerClient({
 
     return () => {
       cancelledSvg = true;
+      resizeObs.disconnect();
       highlightRef.current = null;
       svgGroupsRef.current = null;
       markersRef.current = [];
