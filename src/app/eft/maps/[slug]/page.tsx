@@ -10,7 +10,10 @@ import { getManualMarkers } from '@/data/map-markers';
 import { classifyLoot15 } from '@/data/map-markers/loot-15';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
+import { getEditorialMarkers } from '@/db/editorial-markers';
+import { EFT_QUESTS } from '@/data/quests';
 import { questsForMap, questTasksForMap } from '@/lib/map-quests';
+import type { EditorialMarkerData } from '@/components/features/maps/EditorialMarkerCard';
 import type { MapView, MapViewMarker } from '@/components/features/maps/map-types';
 import type { MapBossStat, MapQuestZone } from '@/components/features/maps/map-frame-types';
 
@@ -244,6 +247,38 @@ export default async function MapPage({ params, searchParams }: Props) {
       const quests = questsForMap(slug);
       const questTasks = questTasksForMap(slug);
 
+      // Редакторские маркеры (editorial_markers) + разрешение привязки к квесту для карточки.
+      const editorialRows = await getEditorialMarkers(data.asset.mapId);
+      const questById = new Map(EFT_QUESTS.map((t) => [t.id, t]));
+      const editorialMarkers: EditorialMarkerData[] = editorialRows.map((r) => {
+        const q = r.linkKind === 'quest' && r.linkId ? questById.get(r.linkId) : undefined;
+        return {
+          id: r.id,
+          mapId: r.mapId,
+          x: r.x,
+          z: r.z,
+          y: r.y,
+          floor: r.floor,
+          type: r.type,
+          category: r.category,
+          title: r.title,
+          description: r.description,
+          screenshots: r.screenshots ?? [],
+          linkKind: r.linkKind,
+          linkId: r.linkId,
+          linkStep: r.linkStep,
+          linkedQuest: q
+            ? {
+                name: q.name,
+                traderNn: q.trader.normalizedName,
+                minPlayerLevel: q.minPlayerLevel,
+                kappaRequired: q.kappaRequired,
+                lightkeeperRequired: q.lightkeeperRequired,
+              }
+            : null,
+        };
+      });
+
       return (
         <main className="w-full">
           <MapFrame
@@ -253,6 +288,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             questTasks={questTasks}
             bosses={bosses}
             questZones={questZones}
+            editorialMarkers={editorialMarkers}
             focusQuestId={focusQuestId}
           />
         </main>

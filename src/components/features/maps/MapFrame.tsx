@@ -1,5 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
 import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
@@ -13,6 +14,7 @@ import { MapSearchDrawer } from './MapSearchDrawer';
 import { MapBottomBar } from './MapBottomBar';
 import { MapBossDock } from './MapBossDock';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
+import { EditorialMarkerCard, type EditorialMarkerData } from './EditorialMarkerCard';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useMapUiStore } from '@/store/useMapUiStore';
@@ -37,6 +39,8 @@ interface Props {
   questTasks: TaskRaw[];
   bosses: MapBossStat[];
   questZones: MapQuestZone[];
+  /** Редакторские маркеры (editorial_markers) — рендер слоя + карточка по клику. */
+  editorialMarkers?: EditorialMarkerData[];
   focusQuestId?: string;
 }
 
@@ -46,8 +50,10 @@ const mapHref = (slug: string) => `/eft/maps/${slug}`;
  * Оболочка карты. TopBar (десктоп) + адаптивный MapSearchDrawer (десктоп drawer / мобилка
  * bottom-sheet). Прочие мобильные шиты (карты/задания/рейд) — из MobileMapBar/нижнего бара.
  */
-export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, focusQuestId }: Props) {
+export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, focusQuestId }: Props) {
   const router = useRouter();
+  const [selectedEditorialId, setSelectedEditorialId] = useState<string | null>(null);
+  const selectedEditorial = editorialMarkers?.find((m) => m.id === selectedEditorialId) ?? null;
   const { isFullscreen, toggle, exit } = useFullscreen();
   const searchOpen = useMapUiStore((s) => s.searchOpen);
   const setSearchOpen = useMapUiStore((s) => s.setSearchOpen);
@@ -208,6 +214,19 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           Только интерактивные карты (у статик-карт нет слоёв/таксономии добычи). */}
       {!data.config.staticMap && <MapSearchDrawer slug={data.slug} markers={data.markers} quests={quests} questTasks={questTasks} apiRef={apiRef} />}
 
+      {/* Карточка редакторского маркера — правая панель по клику на editorial-маркере. */}
+      {selectedEditorial && (
+        <div className="scrollbar-hidden absolute top-0 right-0 z-[540] flex h-full w-87 flex-col gap-2 overflow-y-auto border-l border-lines-hover bg-(--color-base)/95 p-3 backdrop-blur-md">
+          <div className="flex shrink-0 items-center justify-between">
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">Маркер локации</span>
+            <button type="button" onClick={() => setSelectedEditorialId(null)} aria-label="Закрыть" className="text-text-muted transition-colors hover:text-(--primary)">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <EditorialMarkerCard marker={selectedEditorial} linkedQuest={selectedEditorial.linkedQuest} />
+        </div>
+      )}
+
       {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) / нижнего бара */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
       <MapQuestSheet quests={quests} mapSlug={data.slug} />
@@ -219,6 +238,8 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           onReady={handleReady}
           activeFloor={activeFloor}
           onRequestFloor={setActiveFloor}
+          editorialMarkers={editorialMarkers}
+          onSelectEditorial={setSelectedEditorialId}
         />
         {floors.length > 1 && (
           <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />

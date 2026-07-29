@@ -14,6 +14,7 @@ import { useMapViewStore } from '@/store/useMapViewStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
 import { manualMarkerIcon } from './manual-marker-icon';
+import type { EditorialMarkerData } from './EditorialMarkerCard';
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
@@ -135,11 +136,15 @@ export function MapViewerClient({
   onReady,
   activeFloor = 0,
   onRequestFloor,
+  editorialMarkers,
+  onSelectEditorial,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
+  editorialMarkers?: EditorialMarkerData[];
+  onSelectEditorial?: (id: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -174,6 +179,38 @@ export function MapViewerClient({
   );
   const [mapInst, setMapInst] = useState<L.Map | null>(null);
   const staticLayerRef = useRef<L.LayerGroup | null>(null);
+
+  // Слой редакторских маркеров (editorial_markers) — изолированный эффект (не трогает init).
+  // Всегда виден (кураторские точки, их мало), клик открывает карточку через callback.
+  const editorialLayerRef = useRef<L.LayerGroup | null>(null);
+  const onSelectEditorialRef = useRef(onSelectEditorial);
+  useEffect(() => {
+    onSelectEditorialRef.current = onSelectEditorial;
+  });
+  useEffect(() => {
+    const map = mapInst;
+    if (!map) return;
+    const group = L.layerGroup().addTo(map);
+    editorialLayerRef.current = group;
+    const icon = L.divIcon({
+      className: 'cta-editorial-mk',
+      html: '<span style="display:block;width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--primary,#e68e25);border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.6)"></span>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 16],
+    });
+    for (const m of editorialMarkers ?? []) {
+      if (!m.id) continue;
+      const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
+      if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -12], opacity: 1 });
+      const id = m.id;
+      mk.on('click', () => onSelectEditorialRef.current?.(id));
+      mk.addTo(group);
+    }
+    return () => {
+      group.remove();
+      editorialLayerRef.current = null;
+    };
+  }, [mapInst, editorialMarkers]);
 
   // Число маркеров на под-слой (для drawer'а + скрытия пустых слоёв).
   const counts = useMemo(() => {

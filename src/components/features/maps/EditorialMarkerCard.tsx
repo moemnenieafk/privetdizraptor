@@ -38,6 +38,11 @@ export interface LinkedQuestInfo {
   lightkeeperRequired?: boolean;
 }
 
+/** Маркер + разрешённая привязка — сериализуемая форма для пропсов карты. */
+export interface EditorialMarkerData extends EditorialMarkerView {
+  linkedQuest?: LinkedQuestInfo | null;
+}
+
 interface Props {
   marker: EditorialMarkerView;
   /** Разрешённый связанный квест (linkKind='quest') — для ряда трейдер/уровень/каппа. */
