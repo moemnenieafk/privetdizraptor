@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Crosshair, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
+import { Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -139,6 +139,7 @@ export function MapViewerClient({
   onRequestFloor,
   editorialMarkers,
   canEditMarkers,
+  mapId,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
@@ -146,6 +147,7 @@ export function MapViewerClient({
   onRequestFloor?: (idx: number) => void;
   editorialMarkers?: EditorialMarkerData[];
   canEditMarkers?: boolean;
+  mapId?: string;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -188,6 +190,9 @@ export function MapViewerClient({
   const [openEditorialId, setOpenEditorialId] = useState<string | null>(null);
   const openEditorial = editorialMarkers?.find((m) => m.id === openEditorialId) ?? null;
   const editorialOverlayRef = useRef<HTMLDivElement | null>(null);
+  // Режим постановки маркера (admin/editor): следующий клик по карте создаёт editorial-маркер.
+  const [addMode, setAddMode] = useState(false);
+  const [justCreatedId, setJustCreatedId] = useState<string | null>(null);
 
   useEffect(() => {
     const map = mapInst;
@@ -246,6 +251,37 @@ export function MapViewerClient({
       document.removeEventListener('mousedown', onDown);
     };
   }, [openEditorial]);
+
+  // Постановка: в addMode следующий клик по карте создаёт маркер (x=lng, z=lat) → открыть в правке.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !addMode || !mapId) return;
+    const el = map.getContainer();
+    el.style.cursor = 'crosshair';
+    const onClick = async (e: L.LeafletMouseEvent) => {
+      try {
+        const res = await fetch('/api/admin/editorial-markers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mapId, slug: data.slug, x: e.latlng.lng, z: e.latlng.lat, title: 'Новый маркер', type: 'poi', linkKind: 'none' }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { marker } = await res.json();
+        setJustCreatedId(marker?.id ?? null);
+        setAddMode(false);
+        setOpenEditorialId(marker?.id ?? null);
+        router.refresh();
+      } catch (err) {
+        console.error('[editorial-marker create]', err);
+        alert('Не удалось создать маркер');
+      }
+    };
+    map.on('click', onClick);
+    return () => {
+      map.off('click', onClick);
+      el.style.cursor = '';
+    };
+  }, [mapInst, addMode, mapId, data.slug, router]);
 
   // Число маркеров на под-слой (для drawer'а + скрытия пустых слоёв).
   const counts = useMemo(() => {
@@ -757,6 +793,7 @@ export function MapViewerClient({
             marker={openEditorial}
             linkedQuest={openEditorial.linkedQuest}
             canEdit={canEditMarkers}
+            defaultEditing={openEditorial.id === justCreatedId}
             mapSlug={data.slug}
             onMutated={() => {
               setOpenEditorialId(null);
@@ -801,6 +838,21 @@ export function MapViewerClient({
 
       {/* Зум + атрибуция */}
       <div className="absolute right-3.5 bottom-3.5 z-[500] flex flex-col items-end gap-2">
+        {canEditMarkers && !isStatic && (
+          <button
+            type="button"
+            onClick={() => setAddMode((v) => !v)}
+            aria-pressed={addMode}
+            title={addMode ? 'Отмена постановки — кликните по карте, чтобы поставить маркер' : 'Поставить маркер на карте'}
+            className={`flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
+              addMode
+                ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+                : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
+            }`}
+          >
+            <MapPin className="h-4.5 w-4.5" />
+          </button>
+        )}
         <div className="flex flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
           <button type="button" onClick={zoomIn} aria-label="Приблизить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
             <Plus className="h-5.5 w-5.5" />

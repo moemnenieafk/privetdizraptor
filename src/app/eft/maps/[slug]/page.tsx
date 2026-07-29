@@ -294,6 +294,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             questZones={questZones}
             editorialMarkers={editorialMarkers}
             canEditMarkers={canEditMarkers}
+            mapId={data.asset.mapId}
             focusQuestId={focusQuestId}
           />
         </main>

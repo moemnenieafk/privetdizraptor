@@ -50,6 +50,8 @@ interface Props {
   linkedQuest?: LinkedQuestInfo | null;
   /** Юзер может править (admin/editor) — показывает кнопку-карандаш переключения режима. */
   canEdit?: boolean;
+  /** Открыть сразу в режиме правки (новый маркер, только что поставленный). */
+  defaultEditing?: boolean;
   /** slug карты — для ревалидации кэша страницы при сохранении. */
   mapSlug?: string;
   onChange?: (patch: Partial<EditorialMarkerView>) => void;
@@ -63,6 +65,7 @@ export function EditorialMarkerCard({
   marker,
   linkedQuest,
   canEdit = false,
+  defaultEditing = false,
   mapSlug,
   onChange,
   onAddScreenshot,
@@ -70,7 +73,7 @@ export function EditorialMarkerCard({
   onMutated,
 }: Props) {
   const [sel, setSel] = useState(0);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(defaultEditing);
   // Локальный черновик правок (сохранение в API — следующий шаг). Сброс при смене маркера —
   // через key={marker.id} на компоненте в родителе.
   const [draft, setDraft] = useState({ title: marker.title, description: marker.description ?? '' });
