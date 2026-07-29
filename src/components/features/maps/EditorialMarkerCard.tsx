@@ -5,7 +5,7 @@
 // квеста: «Выполнено?» = useQuestStore.toggleQuest, скрепка = togglePin (по linkId квеста).
 // Данные — editorial_markers (schema-editorial). Решения: docs/decisions/editorial-markers-tool.md.
 import { useState } from 'react';
-import { Plus, X, Paperclip } from 'lucide-react';
+import { Plus, X, Paperclip, Pencil } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
@@ -47,8 +47,8 @@ interface Props {
   marker: EditorialMarkerView;
   /** Разрешённый связанный квест (linkKind='quest') — для ряда трейдер/уровень/каппа. */
   linkedQuest?: LinkedQuestInfo | null;
-  /** Режим модератора: инлайн-правка заголовка/описания + клетка «+» в галерее. */
-  editable?: boolean;
+  /** Юзер может править (admin/editor) — показывает кнопку-карандаш переключения режима. */
+  canEdit?: boolean;
   onChange?: (patch: Partial<EditorialMarkerView>) => void;
   onAddScreenshot?: () => void;
   onRemoveScreenshot?: (index: number) => void;
@@ -57,12 +57,20 @@ interface Props {
 export function EditorialMarkerCard({
   marker,
   linkedQuest,
-  editable = false,
+  canEdit = false,
   onChange,
   onAddScreenshot,
   onRemoveScreenshot,
 }: Props) {
   const [sel, setSel] = useState(0);
+  const [editing, setEditing] = useState(false);
+  // Локальный черновик правок (сохранение в API — следующий шаг). Сброс при смене маркера —
+  // через key={marker.id} на компоненте в родителе.
+  const [draft, setDraft] = useState({ title: marker.title, description: marker.description ?? '' });
+  const editField = (patch: Partial<typeof draft>) => {
+    setDraft((d) => ({ ...d, ...patch }));
+    onChange?.(patch);
+  };
   const completed = useQuestStore((s) => s.completedQuests);
   const pinned = useQuestStore((s) => s.pinnedQuests);
   const toggleQuest = useQuestStore((s) => s.toggleQuest);
@@ -78,6 +86,22 @@ export function EditorialMarkerCard({
 
   return (
     <div className="flex w-full flex-col items-center gap-1">
+      {/* Кнопка режима правки (admin/editor) — 36×36, стиль shell, слева над карточкой. */}
+      {canEdit && (
+        <button
+          type="button"
+          onClick={() => setEditing((v) => !v)}
+          aria-pressed={editing}
+          title={editing ? 'Выйти из режима правки' : 'Редактировать маркер'}
+          className={`mb-1 flex size-9 shrink-0 items-center justify-center self-start rounded-sm border backdrop-blur-md transition-colors ${
+            editing
+              ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+              : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
+          }`}
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+      )}
       <div
         className="flex w-full flex-col items-center gap-2.5 rounded border-[0.5px] p-3.5 backdrop-blur-md"
         style={{
@@ -98,7 +122,7 @@ export function EditorialMarkerCard({
                 }`}
               >
                 <img src={src} alt="" className="size-full object-cover" />
-                {editable && (
+                {editing && (
                   <span
                     role="button"
                     tabIndex={0}
@@ -110,7 +134,7 @@ export function EditorialMarkerCard({
                 )}
               </button>
             ))}
-            {editable && (
+            {editing && (
               <button
                 type="button"
                 onClick={onAddScreenshot}
@@ -148,10 +172,10 @@ export function EditorialMarkerCard({
         )}
 
         {/* ── Заголовок ── */}
-        {editable ? (
+        {editing ? (
           <input
-            value={marker.title}
-            onChange={(e) => onChange?.({ title: e.target.value })}
+            value={draft.title}
+            onChange={(e) => editField({ title: e.target.value })}
             placeholder="Название маркера"
             className="w-full bg-transparent font-blender-medium text-base text-text-primary outline-none placeholder:text-text-muted"
           />
@@ -160,10 +184,10 @@ export function EditorialMarkerCard({
         )}
 
         {/* ── Описание ── */}
-        {editable ? (
+        {editing ? (
           <textarea
-            value={marker.description ?? ''}
-            onChange={(e) => onChange?.({ description: e.target.value })}
+            value={draft.description}
+            onChange={(e) => editField({ description: e.target.value })}
             placeholder="Описание: где искать, как дойти…"
             rows={3}
             className="w-full resize-none bg-transparent font-blender-book text-xs text-text-secondary outline-none placeholder:text-text-muted"

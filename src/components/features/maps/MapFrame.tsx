@@ -40,6 +40,8 @@ interface Props {
   questZones: MapQuestZone[];
   /** Редакторские маркеры (editorial_markers) — рендер слоя + карточка по клику. */
   editorialMarkers?: EditorialMarkerData[];
+  /** Юзер admin/editor — показывать кнопку правки на карточке маркера. */
+  canEditMarkers?: boolean;
   focusQuestId?: string;
 }
 
@@ -49,7 +51,7 @@ const mapHref = (slug: string) => `/eft/maps/${slug}`;
  * Оболочка карты. TopBar (десктоп) + адаптивный MapSearchDrawer (десктоп drawer / мобилка
  * bottom-sheet). Прочие мобильные шиты (карты/задания/рейд) — из MobileMapBar/нижнего бара.
  */
-export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, focusQuestId }: Props) {
+export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, canEditMarkers, focusQuestId }: Props) {
   const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
   const searchOpen = useMapUiStore((s) => s.searchOpen);
@@ -223,6 +225,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           activeFloor={activeFloor}
           onRequestFloor={setActiveFloor}
           editorialMarkers={editorialMarkers}
+          canEditMarkers={canEditMarkers}
         />
         {floors.length > 1 && (
           <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />

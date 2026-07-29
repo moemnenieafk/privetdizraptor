@@ -11,6 +11,7 @@ import { classifyLoot15 } from '@/data/map-markers/loot-15';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
 import { getEditorialMarkers } from '@/db/editorial-markers';
+import { getCmsUser } from '@/lib/auth/admin';
 import { EFT_QUESTS } from '@/data/quests';
 import { questsForMap, questTasksForMap } from '@/lib/map-quests';
 import type { EditorialMarkerData } from '@/components/features/maps/EditorialMarkerCard';
@@ -248,6 +249,9 @@ export default async function MapPage({ params, searchParams }: Props) {
       const questTasks = questTasksForMap(slug);
 
       // Редакторские маркеры (editorial_markers) + разрешение привязки к квесту для карточки.
+      // canEditMarkers — admin/editor (сервер): показывает кнопку правки; запись защищает API.
+      const cms = await getCmsUser();
+      const canEditMarkers = cms !== null;
       const editorialRows = await getEditorialMarkers(data.asset.mapId);
       const questById = new Map(EFT_QUESTS.map((t) => [t.id, t]));
       const editorialMarkers: EditorialMarkerData[] = editorialRows.map((r) => {
@@ -289,6 +293,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             bosses={bosses}
             questZones={questZones}
             editorialMarkers={editorialMarkers}
+            canEditMarkers={canEditMarkers}
             focusQuestId={focusQuestId}
           />
         </main>

@@ -26,12 +26,14 @@ export function MapViewerLoader({
   activeFloor,
   onRequestFloor,
   editorialMarkers,
+  canEditMarkers,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
   editorialMarkers?: EditorialMarkerData[];
+  canEditMarkers?: boolean;
 }) {
   return (
     <MapViewerClient
@@ -40,6 +42,7 @@ export function MapViewerLoader({
       activeFloor={activeFloor}
       onRequestFloor={onRequestFloor}
       editorialMarkers={editorialMarkers}
+      canEditMarkers={canEditMarkers}
     />
   );
 }

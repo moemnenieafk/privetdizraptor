@@ -137,12 +137,14 @@ export function MapViewerClient({
   activeFloor = 0,
   onRequestFloor,
   editorialMarkers,
+  canEditMarkers,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
   editorialMarkers?: EditorialMarkerData[];
+  canEditMarkers?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -748,7 +750,7 @@ export function MapViewerClient({
       {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом). */}
       {openEditorial && (
         <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 22px))' }}>
-          <EditorialMarkerCard marker={openEditorial} linkedQuest={openEditorial.linkedQuest} />
+          <EditorialMarkerCard key={openEditorial.id} marker={openEditorial} linkedQuest={openEditorial.linkedQuest} canEdit={canEditMarkers} />
         </div>
       )}
 
