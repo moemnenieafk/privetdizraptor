@@ -42,6 +42,8 @@ const BSG_TO_LOOT15: Record<string, string> = {
   '57864ee62459775490116fc1': 'energy-elements',
   '57864e4c24597754843f8723': 'flammable-materials',
   '5d650c3e815116009f6201d2': 'flammable-materials',
+  '5448ecbe4bdc2d60728b4568': 'infoitems', // диски/документы/флешки/дискеты (сверено по данным: 817 loose)
+  '5795f317245977243854e041': 'others', // кейсы/контейнеры-хранилища (отдельной кат. в 15 нет)
 };
 
 /**
