@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, X, Paperclip, Pencil, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
 
@@ -54,9 +55,6 @@ interface Props {
   defaultEditing?: boolean;
   /** slug карты — для ревалидации кэша страницы при сохранении. */
   mapSlug?: string;
-  onChange?: (patch: Partial<EditorialMarkerView>) => void;
-  onAddScreenshot?: () => void;
-  onRemoveScreenshot?: (index: number) => void;
   /** После успешного сохранения/удаления — родитель обновляет данные (router.refresh) и закрывает. */
   onMutated?: () => void;
 }
@@ -67,20 +65,15 @@ export function EditorialMarkerCard({
   canEdit = false,
   defaultEditing = false,
   mapSlug,
-  onChange,
-  onAddScreenshot,
-  onRemoveScreenshot,
   onMutated,
 }: Props) {
   const [sel, setSel] = useState(0);
   const [editing, setEditing] = useState(defaultEditing);
   // Локальный черновик правок (сохранение в API — следующий шаг). Сброс при смене маркера —
   // через key={marker.id} на компоненте в родителе.
-  const [draft, setDraft] = useState({ title: marker.title, description: marker.description ?? '' });
-  const editField = (patch: Partial<typeof draft>) => {
-    setDraft((d) => ({ ...d, ...patch }));
-    onChange?.(patch);
-  };
+  const [draft, setDraft] = useState({ title: marker.title, description: marker.description ?? '', screenshots: [...marker.screenshots] });
+  const editField = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
+  const [picking, setPicking] = useState(false);
 
   // Сохранение/удаление через API (запись защищена canEditContent на сервере).
   const [busy, setBusy] = useState(false);
@@ -102,7 +95,7 @@ export function EditorialMarkerCard({
           category: marker.category,
           title: draft.title,
           description: draft.description,
-          screenshots: marker.screenshots,
+          screenshots: draft.screenshots,
           linkKind: marker.linkKind,
           linkId: marker.linkId,
           linkStep: marker.linkStep,
@@ -134,7 +127,7 @@ export function EditorialMarkerCard({
   };
 
   // Лайтбокс: индекс открытого на весь экран скрина (null — закрыт). Пролистывание + Esc/стрелки.
-  const shots = marker.screenshots;
+  const shots = draft.screenshots;
   const [lightbox, setLightbox] = useState<number | null>(null);
   const stepLightbox = (dir: 1 | -1) =>
     setLightbox((i) => (i === null || shots.length === 0 ? i : (i + dir + shots.length) % shots.length));
@@ -160,7 +153,7 @@ export function EditorialMarkerCard({
 
   // Тинт карточки = цвет трейдера связанного квеста (иначе нейтральный).
   const tintVar = linkedQuest ? `var(${traderCssVar(linkedQuest.traderNn)}, var(--color-lines-hover))` : 'var(--color-lines-hover)';
-  const hero = marker.screenshots[sel] ?? marker.screenshots[0];
+  const hero = shots[sel] ?? shots[0];
 
   return (
     <div className="flex w-full flex-col items-center gap-1">
@@ -190,7 +183,7 @@ export function EditorialMarkerCard({
         {/* ── Галерея: миниатюры 49×28 + большой скрин ── */}
         <div className="flex w-full flex-col gap-1">
           <div className="flex items-center gap-1 overflow-hidden">
-            {marker.screenshots.map((src, i) => (
+            {shots.map((src, i) => (
               <button
                 key={i}
                 type="button"
@@ -204,7 +197,11 @@ export function EditorialMarkerCard({
                   <span
                     role="button"
                     tabIndex={0}
-                    onClick={(e) => { e.stopPropagation(); onRemoveScreenshot?.(i); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDraft((d) => ({ ...d, screenshots: d.screenshots.filter((_, j) => j !== i) }));
+                      setSel(0);
+                    }}
                     className="absolute right-0 top-0 flex size-3.5 items-center justify-center bg-black/60 text-text-secondary hover:text-danger"
                   >
                     <X className="h-2.5 w-2.5" />
@@ -215,7 +212,7 @@ export function EditorialMarkerCard({
             {editing && (
               <button
                 type="button"
-                onClick={onAddScreenshot}
+                onClick={() => setPicking(true)}
                 title="Добавить скриншот"
                 className="flex h-7 w-[49px] shrink-0 items-center justify-center rounded-xs border-[0.5px] border-lines-hover text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
               >
@@ -393,6 +390,18 @@ export function EditorialMarkerCard({
           </div>,
           document.body,
         )}
+
+      {/* Пикер скринов из медиатеки. Рендерится ВНУТРИ карточки (DOM-потомок overlay) →
+          outside-close popup'а не срабатывает. onPick добавляет URL в draft.screenshots. */}
+      {picking && (
+        <MediaPicker
+          onPick={(url) => {
+            setDraft((d) => ({ ...d, screenshots: [...d.screenshots, url] }));
+            setPicking(false);
+          }}
+          onClose={() => setPicking(false)}
+        />
+      )}
     </div>
   );
 }
