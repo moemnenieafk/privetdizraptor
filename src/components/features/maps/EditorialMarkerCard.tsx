@@ -4,8 +4,9 @@
 // правятся инлайн (editable). Один вариант карточки, w-87 (348). Переиспользует контролы
 // квеста: «Выполнено?» = useQuestStore.toggleQuest, скрепка = togglePin (по linkId квеста).
 // Данные — editorial_markers (schema-editorial). Решения: docs/decisions/editorial-markers-tool.md.
-import { useState } from 'react';
-import { Plus, X, Paperclip, Pencil } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Plus, X, Paperclip, Pencil, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
@@ -71,6 +72,23 @@ export function EditorialMarkerCard({
     setDraft((d) => ({ ...d, ...patch }));
     onChange?.(patch);
   };
+
+  // Лайтбокс: индекс открытого на весь экран скрина (null — закрыт). Пролистывание + Esc/стрелки.
+  const shots = marker.screenshots;
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  const stepLightbox = (dir: 1 | -1) =>
+    setLightbox((i) => (i === null || shots.length === 0 ? i : (i + dir + shots.length) % shots.length));
+  useEffect(() => {
+    if (lightbox === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null);
+      else if (e.key === 'ArrowRight') stepLightbox(1);
+      else if (e.key === 'ArrowLeft') stepLightbox(-1);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightbox, shots.length]);
   const completed = useQuestStore((s) => s.completedQuests);
   const pinned = useQuestStore((s) => s.pinnedQuests);
   const toggleQuest = useQuestStore((s) => s.toggleQuest);
@@ -145,9 +163,19 @@ export function EditorialMarkerCard({
               </button>
             )}
           </div>
-          <div className="aspect-[348/196] w-full overflow-hidden rounded bg-card-menu">
+          <div className="relative aspect-[348/196] w-full overflow-hidden rounded bg-card-menu">
             {hero ? (
-              <img src={hero} alt="" className="size-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setLightbox(sel)}
+                title="Открыть на весь экран"
+                className="group block size-full cursor-zoom-in"
+              >
+                <img src={hero} alt="" className="size-full object-cover" />
+                <span className="absolute right-1.5 bottom-1.5 flex size-6 items-center justify-center rounded-xs bg-black/50 text-text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                  <ZoomIn className="h-3.5 w-3.5" />
+                </span>
+              </button>
             ) : (
               <div className="flex size-full items-center justify-center font-blender-book text-xs text-text-muted">Нет скриншота</div>
             )}
@@ -228,6 +256,58 @@ export function EditorialMarkerCard({
       <svg width="28" height="14" viewBox="0 0 28 14" className="shrink-0 overflow-visible" aria-hidden="true">
         <path d="M0 0 L14 14 L28 0" fill="var(--color-tactical-amber)" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
       </svg>
+
+      {/* Лайтбокс скринов — полноэкранный оверлей поверх всего (portal в body). stopPropagation
+          на mousedown, чтобы document-listener закрытия popup'а не схлопнул карточку. */}
+      {lightbox !== null &&
+        shots[lightbox] &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => setLightbox(null)}
+          >
+            <img
+              src={shots[lightbox]}
+              alt=""
+              className="max-h-[90vh] max-w-[92vw] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              type="button"
+              onClick={() => setLightbox(null)}
+              aria-label="Закрыть"
+              className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-sm border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:text-(--primary)"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {shots.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); stepLightbox(-1); }}
+                  aria-label="Предыдущий"
+                  className="absolute top-1/2 left-4 flex size-10 -translate-y-1/2 items-center justify-center rounded-sm border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:text-(--primary)"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); stepLightbox(1); }}
+                  aria-label="Следующий"
+                  className="absolute top-1/2 right-4 flex size-10 -translate-y-1/2 items-center justify-center rounded-sm border border-lines-hover bg-card-menu text-text-secondary transition-colors hover:text-(--primary)"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-sm bg-black/60 px-2 py-1 font-blender-medium text-xs text-text-primary tabular-nums">
+                  {lightbox + 1} / {shots.length}
+                </div>
+              </>
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
