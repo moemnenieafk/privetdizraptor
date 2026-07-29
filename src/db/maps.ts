@@ -19,7 +19,7 @@ import {
 import { eftGameId } from "./eft";
 import { pruneStale } from "./landing";
 import { EFT_MAP_CONFIG } from "../data/eft-map-config";
-import { fetchTarkovGraphQL } from "../lib/tarkov-fallback";
+import { fetchTarkovGraphQL, fetchTarkovJson, fetchWithFallback } from "../lib/tarkov-fallback";
 
 // НЕ удаляем стейл-маркеры, если свежий набор для карты меньше этой доли уже лежащего —
 // страховка от частичного/обрезанного ответа источника (HTTP 200, но усечённый список).
@@ -518,7 +518,7 @@ const QUEST_ZONES_QUERY = `
     tasks(lang: ru) {
       id name
       objectives {
-        id
+        id type
         ... on TaskObjectiveBasic     { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
         ... on TaskObjectiveItem      { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
         ... on TaskObjectiveMark      { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
@@ -539,6 +539,7 @@ interface RawZone {
 }
 interface RawObjectiveZones {
   id: string;
+  type?: string | null;
   zones?: RawZone[] | null;
 }
 interface RawTaskZones {
@@ -548,6 +549,17 @@ interface RawTaskZones {
 }
 /** Базовый slug карты: срезаем суффиксы вариантов рейда (день/ночь/21+). */
 const baseSlug = (s: string): string => s.replace(/-(21|day|night)$/i, "");
+
+/* Flat JSON (json.tarkov.dev/regular/{tasks,maps}) — иные формы, чем у GraphQL:
+   у зоны `map` = ID карты (нужен /regular/maps для id→normalizedName), объектив несёт `type`. */
+interface JsonZone { id: string; map?: string | null; position?: RawPos | null; outline?: RawPos[] | null; top?: number | null; bottom?: number | null; }
+interface JsonObjective { id: string; type?: string | null; zones?: JsonZone[] | null; }
+interface JsonTask { id: string; name: string; objectives?: JsonObjective[] | null; }
+interface JsonMapRef { id: string; normalizedName: string; }
+
+/** Тип объектива → вид зоны для легенды: предмет квеста (find/plant/give item) vs цель (visit/mark/shoot). */
+const objectiveKind = (type: string | null | undefined): "item" | "target" =>
+  /item|plant/i.test(type ?? "") ? "item" : "target";
 
 export interface SyncQuestZonesResult {
   zones: number;
@@ -561,7 +573,6 @@ export interface SyncQuestZonesResult {
  * «Посмотреть на карте» (перелёт+подсветка зоны). type — свободный text, db:push НЕ нужен.
  */
 export async function syncEftQuestZones(): Promise<SyncQuestZonesResult> {
-  const data = await fetchTarkovGraphQL<{ tasks?: RawTaskZones[] }>(QUEST_ZONES_QUERY);
   const gameId = await eftGameId();
 
   // base-slug → mapId, только интерактивные карты (imageKey задан); зоны вне их игнорируем.
@@ -572,36 +583,80 @@ export async function syncEftQuestZones(): Promise<SyncQuestZonesResult> {
   const slugToId = new Map<string, string>();
   for (const r of assetRows) if (r.imageKey) slugToId.set(r.slug, r.mapId);
 
-  const dedup = new Map<string, NewMapMarkerRow>();
-  for (const t of data.tasks ?? []) {
-    for (const o of t.objectives ?? []) {
-      for (const z of o.zones ?? []) {
-        if (!z.position || !z.map?.normalizedName) continue;
-        const mapId = slugToId.get(baseSlug(z.map.normalizedName));
-        if (!mapId) continue;
-        const id = `qz_${hash64(`${t.id}|${z.id}|${mapId}`)}`;
-        dedup.set(`${mapId} ${id}`, {
-          mapId,
-          id,
-          gameId,
-          type: "quest_zone",
-          position: { x: z.position.x, y: z.position.y, z: z.position.z },
-          outline: (z.outline ?? []).map((p) => ({ x: p.x, y: p.y, z: p.z })),
-          top: z.top ?? null,
-          bottom: z.bottom ?? null,
-          label: t.name,
-          faction: null,
-          sides: null,
-          categories: null,
-          linkedItemId: null,
-          linkedQuestId: t.id,
-          meta: { zoneId: z.id },
-        });
+  // Единый сборщик: kind (цель/предмет) → meta.objectiveKind (сплит легенды «ЗАДАНИЯ»).
+  const build = (
+    mapId: string,
+    t: { id: string; name: string },
+    z: { id: string; position: RawPos; outline?: RawPos[] | null; top?: number | null; bottom?: number | null },
+    kind: "item" | "target",
+  ): NewMapMarkerRow => ({
+    mapId,
+    id: `qz_${hash64(`${t.id}|${z.id}|${mapId}`)}`,
+    gameId,
+    type: "quest_zone",
+    position: { x: z.position.x, y: z.position.y, z: z.position.z },
+    outline: (z.outline ?? []).map((p) => ({ x: p.x, y: p.y, z: p.z })),
+    top: z.top ?? null,
+    bottom: z.bottom ?? null,
+    label: t.name,
+    faction: null,
+    sides: null,
+    categories: null,
+    linkedItemId: null,
+    linkedQuestId: t.id,
+    meta: { zoneId: z.id, objectiveKind: kind },
+  });
+
+  // PRIMARY: flat JSON. У зоны `map` = ID карты → маппим через /regular/maps (id→normalizedName).
+  // flat JSON отдаёт коллекции ОБЪЕКТОМ (ключ=id), не массивом → нормализуем.
+  const asArr = <T,>(v: T[] | Record<string, T> | undefined | null): T[] =>
+    Array.isArray(v) ? v : Object.values(v ?? {});
+
+  const jsonSource = async (): Promise<NewMapMarkerRow[]> => {
+    const [td, md] = await Promise.all([
+      fetchTarkovJson<{ tasks?: Record<string, JsonTask> | JsonTask[] }>("regular/tasks?lang=ru"),
+      fetchTarkovJson<{ maps?: Record<string, JsonMapRef> | JsonMapRef[] }>("regular/maps?lang=ru"),
+    ]);
+    const idToSlug = new Map<string, string>();
+    for (const m of asArr(md.maps)) if (m.id && m.normalizedName) idToSlug.set(m.id, m.normalizedName);
+    const dedup = new Map<string, NewMapMarkerRow>();
+    for (const t of asArr(td.tasks)) {
+      for (const o of t.objectives ?? []) {
+        const kind = objectiveKind(o.type);
+        for (const z of o.zones ?? []) {
+          if (!z.position || !z.map) continue;
+          const slug = idToSlug.get(z.map);
+          if (!slug) continue;
+          const mapId = slugToId.get(baseSlug(slug));
+          if (!mapId) continue;
+          const row = build(mapId, t, { id: z.id, position: z.position, outline: z.outline, top: z.top, bottom: z.bottom }, kind);
+          dedup.set(`${mapId} ${row.id}`, row);
+        }
       }
     }
-  }
+    return [...dedup.values()];
+  };
 
-  const rows = [...dedup.values()];
+  // FALLBACK: GraphQL (сейчас 503 — tarkov-api#474; форма зоны — {normalizedName}).
+  const graphqlSource = async (): Promise<NewMapMarkerRow[]> => {
+    const data = await fetchTarkovGraphQL<{ tasks?: RawTaskZones[] }>(QUEST_ZONES_QUERY);
+    const dedup = new Map<string, NewMapMarkerRow>();
+    for (const t of data.tasks ?? []) {
+      for (const o of t.objectives ?? []) {
+        const kind = objectiveKind(o.type);
+        for (const z of o.zones ?? []) {
+          if (!z.position || !z.map?.normalizedName) continue;
+          const mapId = slugToId.get(baseSlug(z.map.normalizedName));
+          if (!mapId) continue;
+          const row = build(mapId, t, { id: z.id, position: z.position, outline: z.outline, top: z.top, bottom: z.bottom }, kind);
+          dedup.set(`${mapId} ${row.id}`, row);
+        }
+      }
+    }
+    return [...dedup.values()];
+  };
+
+  const rows = await fetchWithFallback(jsonSource, graphqlSource, "quest-zones");
   // Пусто → НЕ прюним (страховка от обрезанного ответа), старые зоны сохраняем.
   if (rows.length === 0) return { zones: 0, deleted: 0, pruneSkipped: true };
 

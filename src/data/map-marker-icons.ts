@@ -256,6 +256,10 @@ export const STATIONARY_FILE: Record<StationarySubtype, string> = {
   ags30: 'stationary-ags30',
 };
 
+/** Вид зоны квеста по meta.objectiveKind (из синка): предмет квеста vs цель. */
+export const questZoneKind = (m: MarkerIconInput): 'item' | 'target' =>
+  (m.meta as { objectiveKind?: unknown } | null | undefined)?.objectiveKind === 'item' ? 'item' : 'target';
+
 /** Главный резолвер: маркер → иконка (url + режим + размер) или `null` (нет арта → плейсхолдер). */
 export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
   switch (m.type) {
@@ -292,7 +296,8 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
 
     case 'quest_zone':
     case 'quest':
-      return { url: `${SVG}/quest/quest-maker.svg`, mode: 'img', size: 30 };
+      // Цель задания (quest-maker) vs предметы для заданий (quest-item) — по meta.objectiveKind.
+      return { url: `${SVG}/quest/${questZoneKind(m) === 'item' ? 'quest-item' : 'quest-maker'}.svg`, mode: 'img', size: 30 };
 
     case 'container':
     case 'loot_container':

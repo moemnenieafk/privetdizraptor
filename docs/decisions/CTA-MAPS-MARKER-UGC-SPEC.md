@@ -172,7 +172,9 @@ Relentless-грилл по объёму первого среза. Зафикс�
 
 **#4 Мобилка ✅ (2026-07-30, «по образу и подобию» — V4DYA дал добро адаптировать):** `MapSearchDrawer` теперь **адаптивный** — десктоп левый drawer, мобилка bottom-sheet (тот же контент Предметы+Задания, единый `searchOpen`); master-detail квеста тоже адаптивный (десктоп сбоку, мобилка шитом поверх). `MobileMapBar` кнопка Поиск → `toggleSearch`. Старый `MapSearchSheet` удалён.
 
-**Ещё отложено:** **#3** инжест типа объектива → 2 иконки «ЗАДАНИЯ» Цель/Предметы (бэкенд, §4.11 — V4DYA дал добро, делаю через `/cta-backend`) · чип СЮЖЕТ (нужен источник «сюжетных» квестов).
+**#3 ✅ (2026-07-30) — через миграцию на flat-JSON.** `syncEftQuestZones` переведён с мёртвого GraphQL на `json.tarkov.dev/regular/{tasks,maps}` (JSON-primary + GraphQL-fallback, `fetchWithFallback`); у объектива есть `type` → кладём `meta.objectiveKind` (item/target). Синк прогнан: **426 quest_zone (303 цель / 123 предмет)**. Легенда «ЗАДАНИЯ» → два листа **Цель задания** (`quest-maker`) / **Предметы для заданий** (`quest-item`); маркеры на карте — своя иконка по типу; слои `quest-target`/`quest-item`. Пилот миграции GraphQL→JSON (см. `eft-data-autonomy-research.md`).
+
+**Ещё отложено:** чип СЮЖЕТ (нужен источник «сюжетных» квестов) · остальные синки миграции GraphQL→JSON (barters/crafts, hideout, maps-геометрия, landing, icons, price-history) — по образцу пилота.
 
 ---
 ---

@@ -77,6 +77,21 @@ SPT (Single-Player Tarkov) сервер несёт **собственные да
 Следующие куски направления A по той же схеме: flea-config (`minLevelForFlea`), ассорты торговцев,
 крафты убежища. Направление B (живые цены барахолки) без изменений — автономного источника нет.
 
+## Ревизия 2026-07-30 — миграция GraphQL→JSON пошла (пилот: квест-зоны)
+GraphQL (#474) так и лежит (503 с 21.07). Инфра устойчивости (`fetchTarkovJson` + `fetchWithFallback`,
+JSON-primary → GraphQL-fallback) обкатана на первом синке: **`syncEftQuestZones` переведён на
+`json.tarkov.dev/regular/{tasks,maps}`** и прогнан против прод-зеркала (`db:push` НЕ понадобился).
+
+Гочи flat-JSON (для остальных синков):
+1. Коллекции приходят **ОБЪЕКТОМ** (ключ = id), не массивом → `Object.values`.
+2. У зоны `map` = **ID карты**, а не `{normalizedName}` → нужен `/regular/maps` для `id→slug`.
+3. Объектив несёт `type` → `meta.objectiveKind` (item/target) → закрыло сплит легенды **#3**
+   (426 зон: 303 цель / 123 предмет).
+
+**Остаток миграции (тот же паттерн):** `sync-barters-crafts`, `sync-hideout`, `syncEftMapsGeometry`,
+`landing`, `icons`, `price-history-backfill`; рантайм-хелперы (gunsmith/weapons/item-stats) и
+server-actions `tarkov-*` (их — на зеркало). GraphQL остаётся дремлющим fallback'ом.
+
 ## Немедленные шаги
 1. **minLevelForFlea** — закрыт оверрайдом `eft-flea-levels.json` (работает сейчас). Следующий уровень — парсинг из SPT flea-config.
 2. **Спросить мейнтейнеров tarkov.dev** (Discord/GitHub `the-hideout/tarkov-api`): отдаёт ли `minLevelForFlea` реальные значения; есть ли rate-limit/бот-защита и best-practices для крон-зеркала (черновик письма — ниже/в чате).
