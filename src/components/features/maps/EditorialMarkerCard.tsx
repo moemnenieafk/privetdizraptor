@@ -50,18 +50,24 @@ interface Props {
   linkedQuest?: LinkedQuestInfo | null;
   /** Юзер может править (admin/editor) — показывает кнопку-карандаш переключения режима. */
   canEdit?: boolean;
+  /** slug карты — для ревалидации кэша страницы при сохранении. */
+  mapSlug?: string;
   onChange?: (patch: Partial<EditorialMarkerView>) => void;
   onAddScreenshot?: () => void;
   onRemoveScreenshot?: (index: number) => void;
+  /** После успешного сохранения/удаления — родитель обновляет данные (router.refresh) и закрывает. */
+  onMutated?: () => void;
 }
 
 export function EditorialMarkerCard({
   marker,
   linkedQuest,
   canEdit = false,
+  mapSlug,
   onChange,
   onAddScreenshot,
   onRemoveScreenshot,
+  onMutated,
 }: Props) {
   const [sel, setSel] = useState(0);
   const [editing, setEditing] = useState(false);
@@ -71,6 +77,57 @@ export function EditorialMarkerCard({
   const editField = (patch: Partial<typeof draft>) => {
     setDraft((d) => ({ ...d, ...patch }));
     onChange?.(patch);
+  };
+
+  // Сохранение/удаление через API (запись защищена canEditContent на сервере).
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch('/api/admin/editorial-markers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: marker.id,
+          mapId: marker.mapId,
+          slug: mapSlug,
+          x: marker.x,
+          z: marker.z,
+          y: marker.y,
+          floor: marker.floor,
+          type: marker.type,
+          category: marker.category,
+          title: draft.title,
+          description: draft.description,
+          screenshots: marker.screenshots,
+          linkKind: marker.linkKind,
+          linkId: marker.linkId,
+          linkStep: marker.linkStep,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? `HTTP ${res.status}`);
+      setEditing(false);
+      onMutated?.();
+    } catch (e) {
+      console.error('[editorial-marker save]', e);
+      alert('Не удалось сохранить маркер');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const remove = async () => {
+    if (!marker.id || !confirm('Удалить маркер?')) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/editorial-markers?id=${marker.id}&slug=${mapSlug ?? ''}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      onMutated?.();
+    } catch (e) {
+      console.error('[editorial-marker delete]', e);
+      alert('Не удалось удалить маркер');
+    } finally {
+      setBusy(false);
+    }
   };
 
   // Лайтбокс: индекс открытого на весь экран скрина (null — закрыт). Пролистывание + Esc/стрелки.
@@ -248,6 +305,31 @@ export function EditorialMarkerCard({
             >
               <Paperclip className={`h-4 w-4 ${isPinned ? 'text-(--color-darkbase)' : 'text-text-secondary'}`} />
             </button>
+          </div>
+        )}
+
+        {/* ── Ряд правки: Сохранить / Удалить (только в режиме editing) ── */}
+        {editing && (
+          <div className="flex w-full items-center gap-2.5">
+            <button
+              type="button"
+              onClick={save}
+              disabled={busy}
+              className="flex h-7 min-w-px flex-1 items-center justify-center rounded-xs bg-(--primary) px-1 font-blender-medium text-sm uppercase text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              Сохранить
+            </button>
+            {marker.id && (
+              <button
+                type="button"
+                onClick={remove}
+                disabled={busy}
+                title="Удалить маркер"
+                className="flex size-7 shrink-0 items-center justify-center rounded border border-danger text-danger transition-colors hover:bg-danger-dim disabled:opacity-50"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         )}
       </div>

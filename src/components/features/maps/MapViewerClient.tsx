@@ -13,6 +13,7 @@ import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
+import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
 import { EditorialMarkerCard, type EditorialMarkerData } from './EditorialMarkerCard';
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
@@ -182,6 +183,7 @@ export function MapViewerClient({
 
   // Слой редакторских маркеров (editorial_markers) — изолированный эффект (не трогает init).
   // Всегда виден (кураторские точки, их мало); клик открывает карточку-popup НАД каплей.
+  const router = useRouter();
   const editorialLayerRef = useRef<L.LayerGroup | null>(null);
   const [openEditorialId, setOpenEditorialId] = useState<string | null>(null);
   const openEditorial = editorialMarkers?.find((m) => m.id === openEditorialId) ?? null;
@@ -750,7 +752,17 @@ export function MapViewerClient({
       {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом). */}
       {openEditorial && (
         <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 22px))' }}>
-          <EditorialMarkerCard key={openEditorial.id} marker={openEditorial} linkedQuest={openEditorial.linkedQuest} canEdit={canEditMarkers} />
+          <EditorialMarkerCard
+            key={openEditorial.id}
+            marker={openEditorial}
+            linkedQuest={openEditorial.linkedQuest}
+            canEdit={canEditMarkers}
+            mapSlug={data.slug}
+            onMutated={() => {
+              setOpenEditorialId(null);
+              router.refresh();
+            }}
+          />
         </div>
       )}
 
