@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, ChevronRight, X } from 'lucide-react';
+import { Bookmark, ChevronRight, MapPin, X } from 'lucide-react';
 import { HighlightedText } from '@/components/ui/HighlightedText';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
 import { storiesForMap, type StoryOnMap } from '@/lib/story-map-link';
+import type { EditorialMarkerData } from './EditorialMarkerCard';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
@@ -80,10 +81,11 @@ interface Props {
   markers: MapViewMarker[];
   quests: MapQuestLite[];
   questTasks: TaskRaw[];
+  editorialMarkers?: EditorialMarkerData[];
   apiRef: React.RefObject<MapViewerApi | null>;
 }
 
-export function MapSearchDrawer({ slug, markers, quests, questTasks, apiRef }: Props) {
+export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMarkers, apiRef }: Props) {
   const open = useMapUiStore((s) => s.searchOpen);
   const setOpen = useMapUiStore((s) => s.setSearchOpen);
   // Видимость слоёв — общий стор: тогглы фильтруют карту и синхронны с правой легендой (GRILL-2 §3).
@@ -157,6 +159,19 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, apiRef }: P
     const tq = qQuests.trim().toLowerCase();
     return storiesForMap(slug).filter((s) => !tq || s.title.toLowerCase().includes(tq));
   }, [slug, qQuests]);
+
+  // Фаза B: реальные пины сюжетки — editorial-маркеры с linkKind='story' → координаты по slug истории.
+  const storyPins = useMemo(() => {
+    const m = new Map<string, { x: number; z: number }[]>();
+    for (const e of editorialMarkers ?? []) {
+      if (e.linkKind === 'story' && e.linkId) {
+        const arr = m.get(e.linkId) ?? [];
+        arr.push({ x: e.x, z: e.z });
+        m.set(e.linkId, arr);
+      }
+    }
+    return m;
+  }, [editorialMarkers]);
 
   const pickFilter = (key: QuestFilter) => setQf((cur) => (cur === key ? 'all' : key));
 
@@ -336,7 +351,10 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, apiRef }: P
               stories.length === 0 ? (
                 <p className="px-1 py-4 text-center font-blender-book text-xs text-text-muted">Сюжетных историй на этой карте нет</p>
               ) : (
-                stories.map((s) => <StoryRow key={s.slug} s={s} query={qQuests} />)
+                stories.map((s) => {
+                  const pins = storyPins.get(s.slug);
+                  return <StoryRow key={s.slug} s={s} query={qQuests} pins={pins} onFocus={() => focus(pins ?? [])} />;
+                })
               )
             ) : shownQuests.length === 0 ? (
               <p className="px-1 py-4 text-center font-blender-book text-xs text-text-muted">Заданий не найдено</p>
@@ -434,18 +452,17 @@ function QuestRow({ q, query, active, onSelect }: { q: MapQuestLite; query: stri
 // ЧЕРНОВИК строки сюжетной истории (по образцу QuestRow — для итерации в Figma).
 // Тинт = стальной STORY_TINT; слева иконка-маска истории, справа сложность (черепа) +
 // число этапов НА ЭТОЙ карте; клик → walkthrough /eft/quests/<slug>. Пинов пока нет (фаза B).
-function StoryRow({ s, query }: { s: StoryOnMap; query: string }) {
+function StoryRow({ s, query, pins, onFocus }: { s: StoryOnMap; query: string; pins?: { x: number; z: number }[]; onFocus?: () => void }) {
   const skullColor = s.difficulty.skulls >= 5 ? 'var(--color-danger)' : s.difficulty.skulls >= 3 ? 'var(--primary)' : 'var(--color-nvg-green)';
-  return (
-    <Link
-      href={`/eft/quests/${s.slug}`}
-      title={`${s.title} — ${s.difficulty.label}`}
-      className="flex h-9 w-full items-center justify-between rounded border-[0.5px] px-3.5 transition-shadow hover:ring-1 hover:ring-(--primary)"
-      style={{
-        borderColor: `color-mix(in srgb, ${STORY_TINT} 55%, transparent)`,
-        background: `radial-gradient(140% 160% at 0% 50%, color-mix(in srgb, ${STORY_TINT} 30%, transparent), transparent 55%)`,
-      }}
-    >
+  const hasPins = !!pins && pins.length > 0;
+  const cls =
+    'flex h-9 w-full items-center justify-between rounded border-[0.5px] px-3.5 transition-shadow hover:ring-1 hover:ring-(--primary)';
+  const style = {
+    borderColor: `color-mix(in srgb, ${STORY_TINT} 55%, transparent)`,
+    background: `radial-gradient(140% 160% at 0% 50%, color-mix(in srgb, ${STORY_TINT} 30%, transparent), transparent 55%)`,
+  };
+  const inner = (
+    <>
       <span className="flex min-w-0 items-center gap-2">
         <span className={`icon-mask ${s.iconClass} h-4 w-4 shrink-0`} style={{ backgroundColor: STORY_TINT }} />
         <span className="min-w-0 truncate font-blender-medium text-xs text-text-primary">
@@ -453,6 +470,12 @@ function StoryRow({ s, query }: { s: StoryOnMap; query: string }) {
         </span>
       </span>
       <span className="flex shrink-0 items-center gap-2">
+        {hasPins && (
+          <span className="flex items-center gap-0.5 font-blender-medium text-[10px] tabular-nums text-(--primary)">
+            <MapPin className="h-3 w-3" />
+            {pins.length}
+          </span>
+        )}
         <span className="flex items-center gap-0.5 font-blender-medium text-[10px] tabular-nums" style={{ color: skullColor }}>
           <span className="icon-mask icon-eft-difficulty-skull h-3 w-3" style={{ backgroundColor: skullColor }} />
           {s.difficulty.skulls}
@@ -460,6 +483,16 @@ function StoryRow({ s, query }: { s: StoryOnMap; query: string }) {
         <span className="font-blender-medium text-[10px] uppercase text-text-secondary">{s.stepHits} эт.</span>
         <ChevronRight className="h-4 w-4 text-text-muted" />
       </span>
+    </>
+  );
+  // Есть пины на карте → клик подлетает к ним; иначе → walkthrough истории.
+  return hasPins ? (
+    <button type="button" onClick={onFocus} title={`${s.title} — показать на карте (${pins.length})`} className={cls} style={style}>
+      {inner}
+    </button>
+  ) : (
+    <Link href={`/eft/quests/${s.slug}`} title={`${s.title} — ${s.difficulty.label}`} className={cls} style={style}>
+      {inner}
     </Link>
   );
 }
