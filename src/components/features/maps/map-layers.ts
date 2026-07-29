@@ -1,5 +1,6 @@
 import type { MapViewMarker } from './map-types';
 import { spawnSubkind, containerFile, extractSubtype, lockKind, hazardSubtype, type MarkerIconInput } from '@/data/map-marker-icons';
+import { LOOT_15 } from '@/data/map-markers/loot-15';
 
 /**
  * Таксономия СЛОЁВ интерактивной карты — единая точка правды для рендера (группировка
@@ -61,16 +62,8 @@ const CONTAINER_SUBLAYERS: { file: string; label: string; item?: string }[] = [
   { file: 'common-fund-stash', label: 'Схрон' },
 ];
 
-/* ── Случайная добыча: slug категории предмета (item_categories) → ru-подпись + иконка нашей таксономии ── */
-const LOOSE_SUBLAYERS: { slug: string; label: string; iconClass: string }[] = [
-  { slug: 'barter', label: 'Бартер', iconClass: 'icon-eft-barter-others' },
-  { slug: 'provisions', label: 'Провизия', iconClass: 'icon-eft-eq-provisions' },
-  { slug: 'injectors', label: 'Инъекторы', iconClass: 'icon-eft-eq-injectors' },
-  { slug: 'keys', label: 'Ключи', iconClass: 'icon-eft-eq-keys' },
-  { slug: 'poster', label: 'Постеры', iconClass: 'icon-eft-eq-infoitems' },
-  { slug: 'container', label: 'Кейсы', iconClass: 'icon-eft-eq-cases' },
-  { slug: 'other', label: 'Другое', iconClass: 'icon-eft-items-equipment' },
-];
+/* ── Случайная добыча: 15 категорий (общий источник LOOT_15, ключи = слои `loose-<key>`) ── */
+const LOOSE_SUBLAYERS = LOOT_15.map((c) => ({ slug: c.key, label: c.label, iconClass: c.icon }));
 
 /** Ключ под-слоя (листа) для маркера, или null — тип не отображается слоем. */
 export function layerKeyForMarker(m: MapViewMarker): string | null {

@@ -6,6 +6,7 @@ import { Bookmark, ChevronRight, X } from 'lucide-react';
 import { HighlightedText } from '@/components/ui/HighlightedText';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
+import { LOOT_15 } from '@/data/map-markers/loot-15';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
@@ -48,24 +49,6 @@ const CONTAINER_TILES: { file: string; label: string }[] = [
   { file: 'drawer', label: 'Выдвижной ящик' },
   { file: 'dead-pmc', label: 'Труп Дикого' },
   { file: 'bank-safe', label: 'Сейф' },
-];
-
-const LOOT_TILES: { key: string; label: string; icon: string }[] = [
-  { key: 'valuables', label: 'Ценности', icon: 'icon-eft-barter-valuables' },
-  { key: 'electronics', label: 'Электроника', icon: 'icon-eft-barter-electronics' },
-  { key: 'medical-supplies', label: 'Медматериалы', icon: 'icon-eft-barter-medical' },
-  { key: 'infoitems', label: 'Инфо-предметы', icon: 'icon-eft-eq-infoitems' },
-  { key: 'others', label: 'Другое', icon: 'icon-eft-barter-others' },
-  { key: 'provisions', label: 'Провизия', icon: 'icon-eft-eq-provisions' },
-  { key: 'special-equipment', label: 'Спецоборудование', icon: 'icon-eft-eq-special' },
-  { key: 'energy-elements', label: 'Элементы питания', icon: 'icon-eft-barter-energy' },
-  { key: 'flammable-materials', label: 'Г.С.М.', icon: 'icon-eft-barter-flammable' },
-  { key: 'tools', label: 'Инструменты', icon: 'icon-eft-barter-tools' },
-  { key: 'building-materials', label: 'Стройматериалы', icon: 'icon-eft-barter-materials' },
-  { key: 'household-materials', label: 'Хозтовары', icon: 'icon-eft-barter-household' },
-  { key: 'keys', label: 'Ключи', icon: 'icon-eft-eq-keys' },
-  { key: 'injectors', label: 'Инъекторы', icon: 'icon-eft-eq-injectors' },
-  { key: 'medkits', label: 'Аптечки', icon: 'icon-eft-eq-medkits' },
 ];
 
 type QuestFilter = 'all' | 'story' | 'lightkeeper' | 'kappa';
@@ -252,13 +235,13 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
               <div className="flex flex-col gap-2">
                 <p className={SECTION}>Случайная добыча</p>
                 <div className="flex flex-wrap gap-2">
-                  {LOOT_TILES.map((l) => {
-                    const on = !!activeFilters[`loot-${l.key}`];
+                  {LOOT_15.map((l) => {
+                    const on = !!activeFilters[`loose-${l.key}`];
                     return (
                       <button
                         key={l.key}
                         type="button"
-                        onClick={() => useMapViewStore.getState().toggleFilter(`loot-${l.key}`)}
+                        onClick={() => useMapViewStore.getState().toggleFilter(`loose-${l.key}`)}
                         title={l.label}
                         aria-pressed={on}
                         className={`flex size-9 items-center justify-center rounded border bg-card-menu transition-colors ${

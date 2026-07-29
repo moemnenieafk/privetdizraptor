@@ -7,6 +7,7 @@ import { getEftCatalog } from '@/lib/eft-catalog';
 import { bossIconUrl, bossPortraitKey, GOONS_FILES } from '@/data/map-marker-icons';
 import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
 import { getManualMarkers } from '@/data/map-markers';
+import { classifyLoot15 } from '@/data/map-markers/loot-15';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
 import { questsForMap, questTasksForMap } from '@/lib/map-quests';
@@ -176,7 +177,10 @@ export default async function MapPage({ params, searchParams }: Props) {
           category: goonsKeys.has(bossPortraitOf.get(m.id) ?? '') ? 'goons' : null,
           itemBg: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.backgroundColor ?? null) : null,
           itemSlug: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.normalizedName ?? null) : null,
-          lootCat: m.type === 'loot_loose' && m.linkedItemId ? (lootCatById.get(m.linkedItemId) ?? 'other') : null,
+          lootCat:
+            m.type === 'loot_loose' && m.linkedItemId
+              ? classifyLoot15(lootCatById.get(m.linkedItemId), priceIndex.get(m.linkedItemId)?.bsgCategoryId)
+              : null,
           transferItemName:
             m.type === 'extract'
               ? ((m.meta as { transferItem?: { name?: string } } | null)?.transferItem?.name ?? null)
