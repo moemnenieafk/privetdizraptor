@@ -1,8 +1,12 @@
 // Живой срез квестов из sp-tarkov/server (templates/quests.json) — награды, цели,
-// требования. RU-имена квестов тянем из tarkov.dev (tasks lang: ru) по BSG-id.
-// Импорт относительный (tsx-safe).
+// требования. RU-имена квестов берём из НАШЕГО зеркала EFT_QUESTS по BSG-id (§4.11):
+// json.tarkov.dev имён не отдаёт (плейсхолдеры), а держать ради имён живой GraphQL —
+// лишний сетевой вызов + точка отказа. Импорт относительный (tsx-safe).
 
-import { fetchTarkovGraphQL } from "./tarkov-fallback";
+import { EFT_QUESTS } from "../data/quests";
+
+// taskId → ru-имя (520 задач, локально). Полнее и надёжнее сетевого tasks(lang:ru).
+const QUEST_NAME_BY_ID = new Map(EFT_QUESTS.map((q) => [q.id, q.name] as const));
 
 const SPT_URL =
   "https://raw.githubusercontent.com/sp-tarkov/server/master/project/assets/database/templates/quests.json";
@@ -60,27 +64,10 @@ function hash(s: string): string {
   return h.toString(36);
 }
 
-// Только ru-ИМЕНА квестов (структура — из SPT GitHub выше). ВАЖНО: JSON-плоскость сюда
-// НЕ фолбэчим — она отдаёт плейсхолдеры имён, а не ru; это было бы ХУЖЕ, чем EN QuestName
-// из SPT (см. фолбэк в getQuestSnapshots). Поэтому GraphQL-only: лёг → пустая карта → EN.
-async function fetchQuestNamesRu(): Promise<Map<string, string>> {
-  try {
-    const data = await fetchTarkovGraphQL<{ tasks?: Array<{ id: string; name: string }> }>(
-      `query { tasks(lang: ru) { id name } }`,
-    );
-    return new Map((data.tasks ?? []).map((t) => [t.id, t.name]));
-  } catch {
-    return new Map();
-  }
-}
-
 /** Срезы квестов. Никогда не бросает: при ошибке источника → []. */
 export async function getQuestSnapshots(): Promise<QuestSnapshot[]> {
   try {
-    const [sptRes, namesRu] = await Promise.all([
-      fetch(SPT_URL, { cache: "no-store" }),
-      fetchQuestNamesRu(),
-    ]);
+    const sptRes = await fetch(SPT_URL, { cache: "no-store" });
     if (!sptRes.ok) return [];
     const quests = (await sptRes.json()) as Record<string, RawQuest>;
 
@@ -109,7 +96,7 @@ export async function getQuestSnapshots(): Promise<QuestSnapshot[]> {
 
       out.push({
         questId: q._id,
-        name: namesRu.get(q._id) ?? q.QuestName ?? q._id,
+        name: QUEST_NAME_BY_ID.get(q._id) ?? q.QuestName ?? q._id,
         traderId: q.trader ?? q.traderId ?? "",
         xp,
         items,

@@ -1,7 +1,8 @@
-// Self-mirror ГЕОМЕТРИИ интерактивных карт EFT из tarkov.dev GraphQL (Map.{spawns,
-// extracts,transits,locks,switches,hazards,lootContainers,lootLoose,stationaryWeapons,
-// bosses}). Координаты — факты (лицензионно чистые, как prices). Картинки-подложки и
-// параметры проекции живут отдельно (Storage + src/data/eft-map-config.ts).
+// Self-mirror ГЕОМЕТРИИ интерактивных карт EFT (Map.{spawns,extracts,transits,locks,
+// switches,hazards,lootContainers,lootLoose,stationaryWeapons,bosses}). Источник:
+// JSON-плоскость json.tarkov.dev/regular/maps (primary) → GraphQL (fallback), имена —
+// из нашего зеркала (§4.11, см. mapsFromJson). Координаты — факты (лицензионно чистые,
+// как prices). Подложки и параметры проекции — отдельно (Storage + eft-map-config.ts).
 //
 // Источник трогает только syncEftMapsGeometry() — крон /api/cron/sync-prices и CLI
 // `npm run db:sync-maps-geometry`. Импорты относительные (tsx-safe).
@@ -11,6 +12,7 @@ import {
   maps,
   mapAssets,
   mapMarkers,
+  items,
   type NewMapMarkerRow,
   type MapAssetRow,
   type MapMarkerRow,
@@ -20,6 +22,7 @@ import { eftGameId } from "./eft";
 import { pruneStale } from "./landing";
 import { EFT_MAP_CONFIG } from "../data/eft-map-config";
 import { EFT_QUESTS } from "../data/quests";
+import { MAP_RU } from "../lib/tarkov-labels";
 import { fetchTarkovGraphQL, fetchTarkovJson, fetchWithFallback } from "../lib/tarkov-fallback";
 
 // json.tarkov.dev — чистое зеркало ID/структуры/координат/энамов: отображаемые ИМЕНА в нём
@@ -344,6 +347,226 @@ function markersForMap(m: RawMap, gameId: string): NewMapMarkerRow[] {
   return rows;
 }
 
+/* ─────────────── flat JSON адаптер (json.tarkov.dev/regular/maps) ───────────────
+   json.tarkov.dev — зеркало ID/координат/энамов БЕЗ отображаемых имён (плейсхолдеры
+   «<id> Name», ?lang не влияет). Имена резолвим из НАШЕГО зеркала (§4.11):
+     • имя карты            → MAP_RU (курируемый, покрывает все 17)
+     • ключ замка, loose-лут → items.name (покрытие 100%, проверено)
+     • контейнер/стационарка (в items их НЕТ) → само-лечение: ru-label по linkedItemId
+       из уже лежащих маркеров; для реально новых — flat normalizedName из каталога
+     • боссы                → mobs-каталог (маркеры боссов без координат, не рендерятся)
+   Формы ссылочные: lootContainer/stationaryWeapon/key/mob = строки-id, коллекции —
+   объекты (ключ=id). Адаптер отдаёт RawMap[] → markersForMap() переиспользуется 1:1. */
+interface JCatEntry {
+  id: string;
+  name?: string;
+  normalizedName?: string;
+}
+interface JBossEscortJ {
+  amount?: RawBossEscortAmount[];
+  mob?: string;
+}
+interface JBossJ {
+  mob?: string;
+  spawnChance?: number | null;
+  spawnTime?: number | null;
+  spawnTrigger?: string | null;
+  spawnLocations?: RawBossSpawnLocation[];
+  escorts?: JBossEscortJ[];
+}
+interface JExtractJ {
+  id: string;
+  name?: string | null;
+  faction?: string | null;
+  switches?: (string | { id?: string; name?: string })[];
+  transferItem?: { item?: string; count?: number } | null;
+  position?: RawPos | null;
+  outline?: RawPos[] | null;
+  top?: number | null;
+  bottom?: number | null;
+}
+interface JLockJ {
+  lockType?: string | null;
+  key?: string | null;
+  needsPower?: boolean | null;
+  position?: RawPos | null;
+  outline?: RawPos[] | null;
+  top?: number | null;
+  bottom?: number | null;
+}
+interface JSwitchActJ {
+  operation?: string | null;
+  extract?: string | null;
+  switch?: string | null;
+}
+interface JSwitchJ {
+  id: string;
+  name?: string | null;
+  switchType?: string | null;
+  activatedBy?: string | boolean | null;
+  activates?: JSwitchActJ[];
+  position?: RawPos | null;
+}
+interface JMapJ {
+  id: string;
+  name?: string | null;
+  normalizedName: string;
+  raidDuration?: number | null;
+  players?: string | null;
+  minPlayerLevel?: number | null;
+  maxPlayerLevel?: number | null;
+  bosses?: JBossJ[];
+  spawns?: RawSpawn[];
+  extracts?: JExtractJ[];
+  transits?: RawTransit[];
+  locks?: JLockJ[];
+  switches?: JSwitchJ[];
+  hazards?: RawHazard[];
+  lootContainers?: { lootContainer?: string; position?: RawPos | null }[];
+  lootLoose?: { items?: string[]; position?: RawPos | null }[];
+  stationaryWeapons?: { stationaryWeapon?: string; position?: RawPos | null }[];
+}
+interface JMapsRoot {
+  maps?: Record<string, JMapJ> | JMapJ[];
+  lootContainers?: Record<string, JCatEntry> | JCatEntry[];
+  stationaryWeapons?: Record<string, JCatEntry> | JCatEntry[];
+  mobs?: Record<string, JCatEntry> | JCatEntry[];
+}
+const toArr = <T,>(v: T[] | Record<string, T> | undefined | null): T[] =>
+  Array.isArray(v) ? v : Object.values(v ?? {});
+
+/** Адаптер flat JSON → RawMap[] с резолвом имён из нашего зеркала (§4.11). */
+async function mapsFromJson(gameId: string): Promise<RawMap[]> {
+  const root = await fetchTarkovJson<JMapsRoot>("regular/maps?lang=ru");
+  const jmaps = toArr(root.maps).filter((m) => m.id && m.normalizedName);
+  if (jmaps.length === 0) return [];
+
+  const contCat = new Map(toArr(root.lootContainers).map((c) => [c.id, c] as const));
+  const statCat = new Map(toArr(root.stationaryWeapons).map((c) => [c.id, c] as const));
+  const mobCat = new Map(toArr(root.mobs).map((c) => [c.id, c] as const));
+
+  // ru-имена предметов (ключи замков, loose-лут) — из нашего каталога.
+  const itemRows = await db
+    .select({ inGameId: items.inGameId, name: items.name })
+    .from(items)
+    .where(eq(items.gameId, gameId));
+  const itemName = new Map(itemRows.map((r) => [r.inGameId, r.name] as const));
+
+  // само-лечение ru-label контейнеров/стационарок/боссов из уже лежащих маркеров
+  // (их предметов нет в items → берём хорошее ru-имя из нашей же БД, а не плейсхолдер).
+  const prev = await db
+    .select({ id: mapMarkers.id, type: mapMarkers.type, linkedItemId: mapMarkers.linkedItemId, label: mapMarkers.label })
+    .from(mapMarkers)
+    .where(eq(mapMarkers.gameId, gameId));
+  const prevByRef = new Map<string, string>(); // `${type}:${linkedItemId}` → ru label
+  const prevById = new Map<string, string>(); // markerId → ru label (боссы)
+  for (const r of prev) {
+    if (r.label && r.linkedItemId) prevByRef.set(`${r.type}:${r.linkedItemId}`, r.label);
+    if (r.label) prevById.set(r.id, r.label);
+  }
+  const contName = (id: string): string =>
+    prevByRef.get(`loot_container:${id}`) ?? contCat.get(id)?.normalizedName ?? id;
+  const statName = (id: string): string =>
+    prevByRef.get(`stationary_weapon:${id}`) ?? statCat.get(id)?.normalizedName ?? id;
+  const bossName = (mob: string): string =>
+    prevById.get(`boss_${mob}`) ?? mobCat.get(mob)?.normalizedName ?? mob;
+
+  return jmaps.map(
+    (m): RawMap => ({
+      id: m.id,
+      name: MAP_RU[m.normalizedName] ?? m.normalizedName,
+      normalizedName: m.normalizedName,
+      raidDuration: m.raidDuration ?? null,
+      players: m.players ?? null,
+      minPlayerLevel: m.minPlayerLevel ?? null,
+      maxPlayerLevel: m.maxPlayerLevel ?? null,
+      spawns: (m.spawns ?? []).map((s) => ({
+        zoneName: s.zoneName ?? null,
+        position: s.position,
+        sides: s.sides ?? null,
+        categories: s.categories ?? null,
+      })),
+      extracts: (m.extracts ?? []).map((e) => ({
+        id: e.id,
+        name: e.name ?? null,
+        faction: e.faction ?? null,
+        switches: (e.switches ?? []).map((sw) => (typeof sw === "string" ? { id: sw } : { id: sw.id ?? "", name: sw.name ?? null })),
+        transferItem: e.transferItem?.item
+          ? { item: { id: e.transferItem.item, name: itemName.get(e.transferItem.item) ?? "" }, count: e.transferItem.count ?? 1 }
+          : null,
+        position: e.position ?? null,
+        outline: e.outline ?? null,
+        top: e.top ?? null,
+        bottom: e.bottom ?? null,
+      })),
+      transits: (m.transits ?? []).map((t) => ({
+        id: t.id,
+        description: t.description ?? null,
+        conditions: t.conditions ?? null,
+        position: t.position ?? null,
+        outline: t.outline ?? null,
+        top: t.top ?? null,
+        bottom: t.bottom ?? null,
+      })),
+      locks: (m.locks ?? []).map((l) => ({
+        lockType: l.lockType ?? null,
+        needsPower: l.needsPower ?? null,
+        key: l.key ? { id: l.key, name: itemName.get(l.key) ?? l.key, normalizedName: l.key } : null,
+        position: l.position ?? null,
+        outline: l.outline ?? null,
+        top: l.top ?? null,
+        bottom: l.bottom ?? null,
+      })),
+      switches: (m.switches ?? []).map((sw) => ({
+        id: sw.id,
+        name: sw.name ?? null,
+        switchType: sw.switchType ?? null,
+        activatedBy: typeof sw.activatedBy === "string" ? { id: sw.activatedBy } : null,
+        activates: (sw.activates ?? []).map((a) => ({
+          operation: a.operation ?? null,
+          target: a.extract
+            ? { __typename: "MapExtract", id: a.extract, name: null }
+            : a.switch
+              ? { __typename: "MapSwitch", id: a.switch, name: null }
+              : null,
+        })),
+        position: sw.position ?? null,
+      })),
+      hazards: (m.hazards ?? []).map((h) => ({
+        hazardType: h.hazardType ?? null,
+        name: h.name ?? null,
+        position: h.position ?? null,
+        outline: h.outline ?? null,
+        top: h.top ?? null,
+        bottom: h.bottom ?? null,
+      })),
+      lootContainers: (m.lootContainers ?? []).map((lc) => ({
+        lootContainer: lc.lootContainer
+          ? { id: lc.lootContainer, name: contName(lc.lootContainer), normalizedName: contCat.get(lc.lootContainer)?.normalizedName ?? lc.lootContainer }
+          : null,
+        position: lc.position ?? null,
+      })),
+      lootLoose: (m.lootLoose ?? []).map((ll) => ({
+        items: (ll.items ?? []).map((id) => ({ id, name: itemName.get(id) ?? id })),
+        position: ll.position ?? null,
+      })),
+      stationaryWeapons: (m.stationaryWeapons ?? []).map((st) => ({
+        stationaryWeapon: st.stationaryWeapon ? { id: st.stationaryWeapon, name: statName(st.stationaryWeapon) } : null,
+        position: st.position ?? null,
+      })),
+      bosses: (m.bosses ?? []).map((b) => ({
+        boss: b.mob ? { id: b.mob, name: bossName(b.mob), normalizedName: mobCat.get(b.mob)?.normalizedName ?? b.mob } : null,
+        spawnChance: b.spawnChance ?? null,
+        spawnTime: b.spawnTime ?? null,
+        spawnTrigger: b.spawnTrigger ?? null,
+        spawnLocations: b.spawnLocations ?? [],
+        escorts: (b.escorts ?? []).map((es) => ({ boss: es.mob ? { id: es.mob, name: bossName(es.mob) } : null, amount: es.amount ?? [] })),
+        switch: null,
+      })),
+    }),
+  );
+}
+
 export interface SyncMapsResult {
   maps: number;
   assets: number;
@@ -356,15 +579,20 @@ export interface SyncMapsResult {
 
 /** Тянет геометрию всех карт из tarkov.dev и зеркалит в maps/map_assets/map_markers. */
 export async function syncEftMapsGeometry(): Promise<SyncMapsResult> {
-  // GraphQL-primary. JSON-плоскость (/maps) сюда НЕ адаптируем: её структура геометрии
-  // (mobs/goonReports/lootContainers) сильно расходится с Map.{spawns,extracts,…}, а
-  // адаптер всей геометрии — непропорциональный риск на координатных данных. Геометрия
-  // меняется раз в вайп и защищена «не затираем при пустоте» — даун GraphQL просто не обновляет.
-  const data = await fetchTarkovGraphQL<{ maps?: RawMap[] }>(QUERY);
-  const all = (data.maps ?? []).filter((m) => m.id && m.normalizedName);
-  if (all.length === 0) throw new Error("maps пусто — синк отменён (старые данные сохранены)");
-
   const gameId = await eftGameId();
+
+  // PRIMARY: flat JSON (json.tarkov.dev/regular/maps) → адаптер mapsFromJson в RawMap[],
+  // имена из нашего зеркала (§4.11). FALLBACK: GraphQL (сейчас 503 — tarkov-api#474).
+  // Координаты в обоих источниках идентичны; защита «не затираем при пустоте» сохранена.
+  const all = await fetchWithFallback<RawMap>(
+    () => mapsFromJson(gameId),
+    async () => {
+      const data = await fetchTarkovGraphQL<{ maps?: RawMap[] }>(QUERY);
+      return (data.maps ?? []).filter((m) => m.id && m.normalizedName);
+    },
+    "maps-geometry",
+  );
+  if (all.length === 0) throw new Error("maps пусто — синк отменён (старые данные сохранены)");
 
   // 1) maps — самодостаточный upsert (гарантирует FK для map_assets/map_markers независимо от порядка синков).
   await db
