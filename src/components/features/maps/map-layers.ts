@@ -14,10 +14,9 @@ export interface LayerItem {
   key: string;
   label: string;
   sample: MarkerIconInput;
-  defaultOff?: boolean;
   /** CSS-маска класс (icon-eft-*) из нашей таксономии — приоритет над резолвером (loose-категории). */
   iconClass?: string;
-  /** Прямой путь к цветному svg/webp — рендер полноцветным `<img>` (как «Случайная добыча»),
+  /** Прямой путь к цветному svg/webp — рендер полноцветным `<img>` (как контейнеры/опасности),
    * приоритет над iconClass и резолвером. Для детальных маркеров, которые нельзя схлопывать в маску. */
   iconImg?: string;
   /** раскрываемый узел: дети-листья (сам узел слоем не является — тумблер всех детей). */
@@ -166,13 +165,11 @@ export const LAYER_GROUPS: LayerGroup[] = [
         key: 'loose',
         label: 'Случайная добыча',
         sample: { type: 'loot_loose' },
-        defaultOff: true,
         children: LOOSE_SUBLAYERS.map((c) => ({
           key: `loose-${c.slug}`,
           label: c.label,
           sample: { type: 'loot_loose' } as MarkerIconInput,
           iconClass: c.iconClass,
-          defaultOff: true,
         })),
       },
     ],
