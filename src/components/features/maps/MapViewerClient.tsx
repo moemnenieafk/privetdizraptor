@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Crosshair, LocateFixed, Minus, Navigation, Pencil, Plus, X } from 'lucide-react';
+import { Crosshair, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -223,14 +223,25 @@ export function MapViewerClient({
       el.style.top = `${pt.y}px`;
     };
     place();
-    const close = () => setOpenEditorialId(null);
     map.on('move zoom', place);
-    map.on('click', close);
     return () => {
       map.off('move zoom', place);
-      map.off('click', close);
     };
   }, [mapInst, openEditorial]);
+
+  // Закрытие по нажатию в ЛЮБОМ месте вне карточки (карта, drawer, страница). setTimeout —
+  // чтобы клик-открытие капли не закрыл окно сразу же тем же событием.
+  useEffect(() => {
+    if (!openEditorial) return;
+    const onDown = (e: MouseEvent) => {
+      if (!editorialOverlayRef.current?.contains(e.target as Node)) setOpenEditorialId(null);
+    };
+    const t = setTimeout(() => document.addEventListener('mousedown', onDown), 0);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener('mousedown', onDown);
+    };
+  }, [openEditorial]);
 
   // Число маркеров на под-слой (для drawer'а + скрытия пустых слоёв).
   const counts = useMemo(() => {
@@ -736,18 +747,8 @@ export function MapViewerClient({
 
       {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом). */}
       {openEditorial && (
-        <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 14px))' }}>
-          <div className="relative rounded-lg border border-lines-hover bg-(--color-base)/95 p-2 shadow-xl backdrop-blur-md">
-            <button
-              type="button"
-              onClick={() => setOpenEditorialId(null)}
-              aria-label="Закрыть"
-              className="absolute top-1.5 right-1.5 z-10 text-text-muted transition-colors hover:text-(--primary)"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <EditorialMarkerCard marker={openEditorial} linkedQuest={openEditorial.linkedQuest} />
-          </div>
+        <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 4px))' }}>
+          <EditorialMarkerCard marker={openEditorial} linkedQuest={openEditorial.linkedQuest} />
         </div>
       )}
 

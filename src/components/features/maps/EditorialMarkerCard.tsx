@@ -5,7 +5,7 @@
 // квеста: «Выполнено?» = useQuestStore.toggleQuest, скрепка = togglePin (по linkId квеста).
 // Данные — editorial_markers (schema-editorial). Решения: docs/decisions/editorial-markers-tool.md.
 import { useState } from 'react';
-import { Plus, X, ChevronDown, Paperclip } from 'lucide-react';
+import { Plus, X, Paperclip } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
@@ -52,7 +52,6 @@ interface Props {
   onChange?: (patch: Partial<EditorialMarkerView>) => void;
   onAddScreenshot?: () => void;
   onRemoveScreenshot?: (index: number) => void;
-  onNext?: () => void;
 }
 
 export function EditorialMarkerCard({
@@ -62,7 +61,6 @@ export function EditorialMarkerCard({
   onChange,
   onAddScreenshot,
   onRemoveScreenshot,
-  onNext,
 }: Props) {
   const [sel, setSel] = useState(0);
   const completed = useQuestStore((s) => s.completedQuests);
@@ -202,12 +200,8 @@ export function EditorialMarkerCard({
         )}
       </div>
 
-      {/* Шеврон вниз — следующий маркер */}
-      {onNext && (
-        <button type="button" onClick={onNext} aria-label="Следующий маркер" className="text-(--color-tactical-amber) transition-opacity hover:opacity-70">
-          <ChevronDown className="h-3.5 w-7" />
-        </button>
-      )}
+      {/* Уголок-хвостик popup'а — указывает вниз на каплю (как в Figma). */}
+      <div className="h-3.5 w-7 shrink-0" style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)', backgroundColor: 'var(--color-tactical-amber)' }} />
     </div>
   );
 }
