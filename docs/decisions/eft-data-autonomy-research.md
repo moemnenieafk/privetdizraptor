@@ -1,5 +1,5 @@
 ---
-status: 🔬 research — направление A пошло в дело (27.07), живые цены открыты
+status: 🔬 research — структурная миграция GraphQL→flat-JSON завершена; открыто только направление B (живые цены)
 affects: prices, sync, cron, eft-prices, eft-catalog, backend-autonomy, release-readiness
 date: 2026-07-22
 ---
@@ -87,10 +87,27 @@ JSON-primary → GraphQL-fallback) обкатана на первом синке
 2. У зоны `map` = **ID карты**, а не `{normalizedName}` → нужен `/regular/maps` для `id→slug`.
 3. Объектив несёт `type` → `meta.objectiveKind` (item/target) → закрыло сплит легенды **#3**
    (426 зон: 303 цель / 123 предмет).
+4. **☠️ КЛЮЧЕВОЕ: json.tarkov.dev НЕ отдаёт отображаемых имён.** `name` у tasks/items/
+   контейнеров/боссов — плейсхолдеры `«<id> Name»`, `?lang` не влияет (проверено ru+en). Это
+   зеркало **ID + структуры + координат + энамов**. Пилот квест-зон из-за этого записал в прод
+   `label = "<taskId> name"` → пофикшено (имя из `EFT_QUESTS` по id, пере-синк 426 зон). **Вывод:
+   на каждом синке имена резолвятся из НАШЕГО зеркала по id** — что и есть §4.11.
 
-**Остаток миграции (тот же паттерн):** `sync-barters-crafts`, `sync-hideout`, `syncEftMapsGeometry`,
-`landing`, `icons`, `price-history-backfill`; рантайм-хелперы (gunsmith/weapons/item-stats) и
-server-actions `tarkov-*` (их — на зеркало). GraphQL остаётся дремлющим fallback'ом.
+## Ревизия — миграция GraphQL→JSON завершена (аудит + последние синки)
+Аудит `fetchTarkovGraphQL` vs `fetchWithFallback` по всему `src/` показал: барыги/крафты, hideout,
+icons, landing, item-stats, gunsmith, weapons **уже были на JSON-primary** (GraphQL — fallback).
+Реально на GraphQL-primary оставались двое, добиты:
+- **`syncEftMapsGeometry`** → `mapsFromJson` (адаптер flat→`RawMap[]`, `markersForMap` 1:1). Имена:
+  карта→`MAP_RU` (17/17), ключи замков + loose-лут→`items` (покрытие 100%), контейнеры/стационарки/
+  боссы (их предметов нет в `items`)→**само-лечение**: ru-label по `linkedItemId` из уже лежащих
+  маркеров. Прогон: 17 карт, 17031 маркеров, **0 плейсхолдеров**, координаты целы (объём ≈ прежний,
+  prune-гард не сработал). Разовый ре-кей synth-id (flat даёт больше знаков в координатах).
+- **`spt-quests`** → RU-имена из `EFT_QUESTS` вместо сетевого `tasks(lang:ru)`.
+
+**Осознанные исключения (остаются GraphQL/особый источник):** `price-history-backfill` (historicalPrices —
+time-series, в JSON-плоскости НЕТ) и `eft-prices` (живые цены барахолки — направление B, автономного
+источника нет). Рантайм server-actions `tarkov-*` читают нашу Supabase (§4.11-чисто, не мигрируются).
+Итог: весь структурный сток данных EFT на flat-JSON, GraphQL — дремлющий fallback.
 
 ## Немедленные шаги
 1. **minLevelForFlea** — закрыт оверрайдом `eft-flea-levels.json` (работает сейчас). Следующий уровень — парсинг из SPT flea-config.
