@@ -79,10 +79,10 @@ export function EditorialMarkerCard({
   return (
     <div className="flex w-full flex-col items-center gap-1">
       <div
-        className="flex w-full flex-col items-center gap-2.5 rounded border-[0.5px] p-3.5"
+        className="flex w-full flex-col items-center gap-2.5 rounded border-[0.5px] p-3.5 backdrop-blur-md"
         style={{
           borderColor: `color-mix(in srgb, ${tintVar} 60%, transparent)`,
-          background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${tintVar} 15%, transparent), rgba(0,0,0,0.92))`,
+          background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${tintVar} 15%, transparent), rgba(0,0,0,0.72))`,
         }}
       >
         {/* ── Галерея: миниатюры 49×28 + большой скрин ── */}
