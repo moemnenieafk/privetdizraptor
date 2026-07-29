@@ -170,6 +170,32 @@ export const LAYER_GROUPS: LayerGroup[] = [
   },
 ];
 
+/* ─────────────── LOD: тир видимости по зуму (§4 споки E11) ───────────────
+ * Тир маркера считаем по ключу слоя. Порог — ДОЛЯ зум-спана карты [minZoom,maxZoom]
+ * (абсолютные z-уровни непереносимы: у карт разный диапазон, от −5…2 до 2…6).
+ * §4-таблица с поправкой GRILL-1 (спавны = z4-тир целей; якоря = только выходы/переходы):
+ *   тир 0 (якорь) — всегда: выходы, переходы
+ *   тир 1 (≈z3)   — цели/опасности: зоны квестов, боссы, hazard
+ *   тир 2 (≈z4)   — спавны, замки, рычаги, стационарки
+ *   тир 3 (≈z5+)  — фон: контейнеры, случайная добыча
+ * Пороги эмпирические — тюнятся визуально. */
+export type LodTier = 0 | 1 | 2 | 3;
+
+export function lodTierForKey(key: string): LodTier {
+  if (key.startsWith('extract-') || key === 'transit') return 0;
+  if (key === 'quest_zone' || key === 'hazard' || key === 'spawn-boss') return 1;
+  if (key.startsWith('container-') || key.startsWith('loose-')) return 3;
+  if (key.startsWith('spawn-') || key === 'lock' || key === 'switch' || key === 'stationary') return 2;
+  return 2;
+}
+
+/** Доля зум-спана, с которой тир начинает показываться. Тир 0 — всегда. */
+const LOD_TIER_MIN_FRAC: Record<LodTier, number> = { 0: 0, 1: 0.34, 2: 0.56, 3: 0.78 };
+
+/** Виден ли слой на данной доле зум-спана (0..1). */
+export const lodVisibleAt = (key: string, zoomFrac: number): boolean =>
+  zoomFrac >= LOD_TIER_MIN_FRAC[lodTierForKey(key)];
+
 /** Плоский список листьев (реальные слои). */
 export const ALL_LAYER_ITEMS: LayerItem[] = LAYER_GROUPS.flatMap((g) =>
   g.items.flatMap((i) => i.children ?? [i]),

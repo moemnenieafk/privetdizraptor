@@ -13,7 +13,7 @@ import { useMapUiStore } from '@/store/useMapUiStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
 import { manualMarkerIcon } from './manual-marker-icon';
-import { ALL_LAYER_ITEMS, defaultLayerVisibility, layerKeyForMarker } from './map-layers';
+import { ALL_LAYER_ITEMS, defaultLayerVisibility, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
 import type { MapViewerApi } from './map-frame-types';
@@ -152,7 +152,8 @@ export function MapViewerClient({
   const layerGroupsRef = useRef<Record<string, L.LayerGroup>>({});
   const looseGroupsRef = useRef<Record<string, L.LayerGroup>>({});
   const looseMarkersRef = useRef<Record<string, MapViewMarker[]>>({});
-  const rebuildLooseRef = useRef<(key?: string) => void>(() => {});
+  // LOD: применить эффективную видимость слоёв (фильтр × зум-тир). Ставится в init-эффекте.
+  const applyLayerVisRef = useRef<() => void>(() => {});
   // Позиции маркеров по под-слою (для ПКМ-цикла в drawer) + курсор цикла + слой пульс-подсветки.
   const positionsByLayerRef = useRef<Record<string, { x: number; z: number }[]>>({});
   const cycleCursorRef = useRef<Record<string, number>>({});
@@ -428,31 +429,53 @@ export function MapViewerClient({
           }
         }
       };
-      rebuildLooseRef.current = rebuildLoose;
-      map.on('zoomend', () => {
+      // LOD-гейт (§4): слой на карте только если включён фильтром И зум дорос до его тира.
+      // Долю зум-спана нормируем на [minZoom,maxZoom] карты (как --marker-scale) — абсолютные
+      // z-уровни непереносимы меж карт. Пересчёт на zoomend и при смене фильтра (vis-эффект).
+      const zoomFrac = () => {
+        const span = Math.max(0.001, cfg.maxZoom - cfg.minZoom);
+        return Math.max(0, Math.min(1, (map.getZoom() - cfg.minZoom) / span));
+      };
+      const applyLayerVis = () => {
         const v = visRef.current;
-        for (const key of Object.keys(looseGroups)) if (v[key]) rebuildLoose(key);
-      });
-
-      // Начальная видимость слоёв.
-      const v0 = visRef.current;
-      for (const [key, grp] of Object.entries(groups)) if (v0[key]) grp.addTo(map);
-      for (const [key, grp] of Object.entries(looseGroups))
-        if (v0[key]) {
-          grp.addTo(map);
-          rebuildLoose(key);
+        const frac = zoomFrac();
+        for (const [key, grp] of Object.entries(groups)) {
+          const on = v[key] && lodVisibleAt(key, frac);
+          if (on) {
+            if (!map.hasLayer(grp)) grp.addTo(map);
+          } else if (map.hasLayer(grp)) {
+            map.removeLayer(grp);
+          }
         }
+        for (const [key, grp] of Object.entries(looseGroups)) {
+          const on = v[key] && lodVisibleAt(key, frac);
+          if (on) {
+            if (!map.hasLayer(grp)) grp.addTo(map);
+            rebuildLoose(key); // кластер зависит от зума — пересобираем, пока слой виден
+          } else if (map.hasLayer(grp)) {
+            map.removeLayer(grp);
+          }
+        }
+      };
+      applyLayerVisRef.current = applyLayerVis;
+      map.on('zoomend', applyLayerVis);
+      applyLayerVis();
     }
 
     // Гард от StrictMode-гонки: rAF мог сработать уже после размонтирования (map.remove()).
+    // invalidateSize уточняет зум после осадки флекса → переоценить LOD на итоговом зуме.
     requestAnimationFrame(() => {
-      if (mapRef.current === map) map.invalidateSize();
+      if (mapRef.current !== map) return;
+      map.invalidateSize();
+      applyLayerVisRef.current();
     });
 
     // Контейнер на flex-1 получает высоту ПОСЛЕ init Leaflet (осадка флекса), плюс
     // фуллскрин / ресайз окна. Без переинвалидации карта остаётся чёрной.
     const resizeObs = new ResizeObserver(() => {
-      if (mapRef.current === map) map.invalidateSize();
+      if (mapRef.current !== map) return;
+      map.invalidateSize();
+      applyLayerVisRef.current();
     });
     resizeObs.observe(el);
 
@@ -588,25 +611,12 @@ export function MapViewerClient({
     }
   }, [editing, isStatic, mapInst]);
 
-  // Видимость под-слоёв (интерактивная карта): add/remove L.LayerGroup + пересбор кластера.
+  // Видимость под-слоёв (интерактивная карта): фильтр × LOD-тир → add/remove L.LayerGroup.
+  // Единая точка — applyLayerVis из init-эффекта (читает свежий visRef + текущий зум).
   useEffect(() => {
     const map = mapRef.current;
     if (!map || isStatic) return;
-    for (const [key, grp] of Object.entries(layerGroupsRef.current)) {
-      if (vis[key]) {
-        if (!map.hasLayer(grp)) grp.addTo(map);
-      } else if (map.hasLayer(grp)) {
-        map.removeLayer(grp);
-      }
-    }
-    for (const [key, grp] of Object.entries(looseGroupsRef.current)) {
-      if (vis[key]) {
-        if (!map.hasLayer(grp)) grp.addTo(map);
-        rebuildLooseRef.current(key);
-      } else if (map.hasLayer(grp)) {
-        map.removeLayer(grp);
-      }
-    }
+    applyLayerVisRef.current();
     applyFloorRef.current(activeFloorRef.current);
   }, [vis, isStatic, mapInst]);
 
