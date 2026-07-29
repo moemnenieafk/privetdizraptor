@@ -205,9 +205,11 @@ export const LAYER_GROUPS: LayerGroup[] = [
 export type LodTier = 0 | 1 | 2 | 3;
 
 export function lodTierForKey(key: string): LodTier {
+  // Контейнеры/добыча по дефолту выключены и включаются точечно из drawer'а → показываем СРАЗУ
+  // (тир 0, без зум-порога), иначе тоггл на общем зуме «не срабатывает» до приближения (V4DYA).
+  if (key.startsWith('container-') || key.startsWith('loose-')) return 0;
   if (key.startsWith('extract-') || key === 'transit') return 0;
   if (key === 'quest_zone' || key.startsWith('hazard') || key === 'spawn-boss') return 1;
-  if (key.startsWith('container-') || key.startsWith('loose-')) return 3;
   if (key.startsWith('spawn-') || key.startsWith('lock') || key === 'switch' || key.startsWith('stationary')) return 2;
   return 2;
 }
@@ -224,6 +226,11 @@ export const ALL_LAYER_ITEMS: LayerItem[] = LAYER_GROUPS.flatMap((g) =>
   g.items.flatMap((i) => i.children ?? [i]),
 );
 
-/** Начальная видимость: все листья вкл, кроме defaultOff. */
+/**
+ * Начальная видимость слоёв (V4DYA): МИНИМУМ на входе, чтобы не грузить лишние маркеры —
+ * выходы ЧВК + Платный, спавны ЧВК, все опасности. Остальное выключено (юзер включает точечно
+ * из легенды/drawer'а). Так снимаем нагрузку и лишнюю подгрузку.
+ */
+const DEFAULT_ON = new Set(['extract-pmc', 'extract-paidcar', 'spawn-pmc']);
 export const defaultLayerVisibility = (): Record<string, boolean> =>
-  Object.fromEntries(ALL_LAYER_ITEMS.map((i) => [i.key, !i.defaultOff]));
+  Object.fromEntries(ALL_LAYER_ITEMS.map((i) => [i.key, DEFAULT_ON.has(i.key) || i.key.startsWith('hazard')]));
