@@ -10,6 +10,7 @@ import { LOOT_15 } from '@/data/map-markers/loot-15';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
+import { useQuestStore } from '@/store/useQuestStore';
 import type { MapViewMarker } from './map-types';
 import type { MapViewerApi, MapQuestLite } from './map-frame-types';
 import type { TaskRaw } from '@/types/quest';
@@ -122,11 +123,18 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
     if (positions.length) apiRef.current?.focusPoints(positions);
   };
 
-  // Задания: лента торговцев (уникальные), проценты коллекций, отфильтрованный список.
+  // Задания: лента торговцев (уникальные), отфильтрованный список.
   const traders = useMemo(() => [...new Set(quests.map((q) => q.trader))], [quests]);
-  const total = quests.length || 1;
-  const lkPct = Math.round((quests.filter((q) => q.lightkeeperRequired).length / total) * 100);
-  const kappaPct = Math.round((quests.filter((q) => q.kappaRequired).length / total) * 100);
+  // Проценты чипов = РЕАЛЬНЫЙ прогресс: сколько квестов Каппы/Смотрителя ЭТОЙ карты закрыто
+  // (из useQuestStore, как в PlayerTelemetry). Нет таких квестов на карте → 0%.
+  const completed = useQuestStore((s) => s.completedQuests);
+  const doneSet = new Set(completed);
+  const pctDone = (pred: (q: MapQuestLite) => boolean): number => {
+    const list = quests.filter(pred);
+    return list.length ? Math.round((list.filter((q) => doneSet.has(q.id)).length / list.length) * 100) : 0;
+  };
+  const lkPct = pctDone((q) => q.lightkeeperRequired);
+  const kappaPct = pctDone((q) => q.kappaRequired);
 
   const shownQuests = useMemo(() => {
     const tq = qQuests.trim().toLowerCase();
