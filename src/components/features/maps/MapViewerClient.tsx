@@ -234,7 +234,8 @@ export function MapViewerClient({
         else if (top == null && bottom == null) visible = isGround;
         else if (!range) visible = true;
         else visible = (top ?? bottom ?? 0) >= range[0] && (bottom ?? top ?? 0) <= range[1];
-        el.style.display = visible ? '' : 'none';
+        // §8: чужой этаж не исчезает, а гаснет до контекста (класс). soloFloors прячет через CSS.
+        el.classList.toggle('cta-mk-offfloor', !visible);
       }
     },
     [floors],
@@ -456,6 +457,8 @@ export function MapViewerClient({
             map.removeLayer(grp);
           }
         }
+        // re-add пересоздаёт DOM маркеров → переприменить затемнение чужих этажей (§8).
+        applyFloorRef.current(activeFloorRef.current);
       };
       applyLayerVisRef.current = applyLayerVis;
       map.on('zoomend', applyLayerVis);
@@ -612,12 +615,11 @@ export function MapViewerClient({
   }, [editing, isStatic, mapInst]);
 
   // Видимость под-слоёв (интерактивная карта): фильтр × LOD-тир → add/remove L.LayerGroup.
-  // Единая точка — applyLayerVis из init-эффекта (читает свежий visRef + текущий зум).
+  // Единая точка — applyLayerVis из init-эффекта (читает свежий visRef + зум; сам переприменяет этаж).
   useEffect(() => {
     const map = mapRef.current;
     if (!map || isStatic) return;
     applyLayerVisRef.current();
-    applyFloorRef.current(activeFloorRef.current);
   }, [vis, isStatic, mapInst]);
 
   const rootCls = [

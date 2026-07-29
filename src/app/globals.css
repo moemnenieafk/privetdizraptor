@@ -746,6 +746,11 @@ html {
 .cta-map-svg [data-floor].is-dimmed { opacity: 0.28; filter: blur(2px) saturate(0.6); }
 .solo-floors .cta-map-svg [data-floor].is-dimmed { display: none; }
 
+/* §8: маркер чужого этажа — гаснет до пространственного контекста, некликабелен (не исчезает).
+   soloFloors (Ледокол) — этажи изолированы, чужие маркеры прячем совсем, как и подложку. */
+.cta-mk-offfloor { opacity: 0.2; pointer-events: none; transition: opacity 0.2s ease; }
+.solo-floors .cta-mk-offfloor { display: none; }
+
 /* цвет маркера по фракции/типу */
 .ef-pmc, .ss-pmc, .lg-spawn { --mk: #5FB85B; }
 .ef-scav, .ss-scav { --mk: #E6A23C; }
