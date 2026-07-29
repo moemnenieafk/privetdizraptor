@@ -174,7 +174,9 @@ Relentless-грилл по объёму первого среза. Зафикс�
 
 **#3 ✅ (2026-07-30) — через миграцию на flat-JSON.** `syncEftQuestZones` переведён с мёртвого GraphQL на `json.tarkov.dev/regular/{tasks,maps}` (JSON-primary + GraphQL-fallback, `fetchWithFallback`); у объектива есть `type` → кладём `meta.objectiveKind` (item/target). Синк прогнан: **426 quest_zone (303 цель / 123 предмет)**. Легенда «ЗАДАНИЯ» → два листа **Цель задания** (`quest-maker`) / **Предметы для заданий** (`quest-item`); маркеры на карте — своя иконка по типу; слои `quest-target`/`quest-item`. Пилот миграции GraphQL→JSON (см. `eft-data-autonomy-research.md`).
 
-**Ещё отложено:** чип СЮЖЕТ (нужен источник «сюжетных» квестов) · остальные синки миграции GraphQL→JSON (barters/crafts, hideout, maps-геометрия, landing, icons, price-history) — по образцу пилота.
+**Миграция GraphQL→JSON ✅ (2026-07-30) — завершена.** Аудит показал: barters/crafts, hideout, icons, landing, item-stats, gunsmith, weapons **уже были на JSON-primary**. Добиты последние два GraphQL-primary: `syncEftMapsGeometry` (адаптер `mapsFromJson` flat→`RawMap[]`, имена из нашего зеркала — `MAP_RU`/`items`/само-лечение контейнеров-стационарок-боссов; прогон: 17 карт, 17031 маркеров, 0 плейсхолдеров, координаты целы) и `spt-quests` (RU-имена из `EFT_QUESTS`). Осознанные исключения — `price-history-backfill` (time-series нет в JSON) и `eft-prices` (живые цены, направление B). Детали: `eft-data-autonomy-research.md`.
+
+**Ещё отложено — чип СЮЖЕТ (диагноз 2026-07-30):** источник НАЙДЕН — это трейдер **«Истории»/`stories`** (10 квестов: Лабиринт, Батя, Билет…). НО в статик-дампе `src/data/quests/eft-quests.json` у них **`objectives: []`** → `taskMapSlugs(t)` пуст → `questTasksForMap` их не отдаёт → **чип был бы пуст на любой карте**. Блокер = данные, не семантика. Разблок: перегенерить дамп квестов с objectives сюжетной ветки (нужен desktop/npm — как gunsmith-спеки) ИЛИ строить принадлежность сюжетных квестов карте из уже засинканных `quest_zone`-маркеров (у них зоны есть — flat tasks их несут), а не из статик-objectives. Решение — за V4DYA.
 
 ---
 ---
