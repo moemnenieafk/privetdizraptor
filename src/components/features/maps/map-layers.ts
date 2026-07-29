@@ -1,5 +1,5 @@
 import type { MapViewMarker } from './map-types';
-import { spawnSubkind, containerFile, extractSubtype, lockKind, hazardSubtype, type MarkerIconInput } from '@/data/map-marker-icons';
+import { spawnSubkind, containerFile, extractSubtype, lockKind, hazardSubtype, stationarySubtype, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
 
 /**
@@ -85,7 +85,7 @@ export function layerKeyForMarker(m: MapViewMarker): string | null {
     case 'loot_loose':
       return `loose-${m.lootCat ?? 'other'}`;
     case 'stationary_weapon':
-      return 'stationary';
+      return `stationary-${stationarySubtype(m)}`;
     case 'quest_zone':
       return 'quest_zone';
     default:
@@ -136,7 +136,16 @@ export const LAYER_GROUPS: LayerGroup[] = [
         iconImg: '/icons/eft/01-maps/markers/interactive/lock/lock-mechanical-marked.svg',
       },
       { key: 'switch', label: 'Рычаги', sample: { type: 'switch' } },
-      { key: 'stationary', label: 'Стационарное оружие', sample: { type: 'stationary_weapon' }, iconImg: '/icons/eft/01-maps/markers/interactive/mounted-armaments.svg' },
+      {
+        key: 'stationary',
+        label: 'Стационарное оружие',
+        sample: { type: 'stationary_weapon' },
+        iconImg: '/icons/eft/01-maps/markers/interactive/mounted-armaments.svg',
+        children: [
+          { key: 'stationary-ags30', label: 'АГС-30', sample: { type: 'stationary_weapon' }, iconImg: '/images/maps/eft/markers/stationary/stationary-ags30.webp' },
+          { key: 'stationary-nvs', label: 'НСВ «Утёс»', sample: { type: 'stationary_weapon' }, iconImg: '/images/maps/eft/markers/stationary/stationary-nvs-utes.webp' },
+        ],
+      },
     ],
   },
   {
@@ -199,7 +208,7 @@ export function lodTierForKey(key: string): LodTier {
   if (key.startsWith('extract-') || key === 'transit') return 0;
   if (key === 'quest_zone' || key.startsWith('hazard') || key === 'spawn-boss') return 1;
   if (key.startsWith('container-') || key.startsWith('loose-')) return 3;
-  if (key.startsWith('spawn-') || key.startsWith('lock') || key === 'switch' || key === 'stationary') return 2;
+  if (key.startsWith('spawn-') || key.startsWith('lock') || key === 'switch' || key.startsWith('stationary')) return 2;
   return 2;
 }
 

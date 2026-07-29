@@ -245,6 +245,17 @@ const HAZARD_FILE: Record<HazardSubtype, string> = {
   other: 'danger',
 };
 
+/** Тип стационарного оружия по названию (АГС-30 по умолчанию / НСВ «Утёс»). */
+export type StationarySubtype = 'nvs' | 'ags30';
+export const stationarySubtype = (m: MarkerIconInput): StationarySubtype => {
+  const l = (m.label ?? '').toLowerCase();
+  return l.includes('утёс') || l.includes('утес') || l.includes('нсв') ? 'nvs' : 'ags30';
+};
+export const STATIONARY_FILE: Record<StationarySubtype, string> = {
+  nvs: 'stationary-nvs-utes',
+  ags30: 'stationary-ags30',
+};
+
 /** Главный резолвер: маркер → иконка (url + режим + размер) или `null` (нет арта → плейсхолдер). */
 export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
   switch (m.type) {
@@ -289,11 +300,9 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       return { url: `${WEBP}/loot-containers/loot-container-${containerFile(m)}.webp`, mode: 'img', size: 56 };
 
     case 'stationary':
-    case 'stationary_weapon': {
-      const l = (m.label ?? '').toLowerCase();
-      const nvs = l.includes('утёс') || l.includes('утес') || l.includes('нсв');
-      return { url: `${WEBP}/stationary/${nvs ? 'stationary-nvs-utes' : 'stationary-ags30'}.webp`, mode: 'img', size: 34 };
-    }
+    case 'stationary_weapon':
+      // На карте — конкретная стационарка (webp по типу); mounted-armaments в легенде = категория.
+      return { url: `${WEBP}/stationary/${STATIONARY_FILE[stationarySubtype(m)]}.webp`, mode: 'img', size: 34 };
 
     case 'hazard':
       // Цветной глиф по типу опасности (meta.hazardType): красный треугольник + чёрный
