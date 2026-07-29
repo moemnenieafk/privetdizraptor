@@ -32,29 +32,31 @@ interface LiveChannel {
   isLive: boolean;
 }
 
-// Скрываем доки в фуллскрин-режимах (квест-карта/приложение), как и StreamStatus.
-function useAppFullscreen() {
-  const [fullscreen, setFullscreen] = useState(false);
+// Скрываем доки в фуллскрин-режимах (квест-карта/приложение) и когда открыт боковой drawer
+// карты (data-app-drawer) — иначе корневой fixed-док лезет поверх drawer'а. Как и StreamStatus.
+function useAppHidden() {
+  const [hidden, setHidden] = useState(false);
   useEffect(() => {
     const check = () =>
-      setFullscreen(
+      setHidden(
         document.body.hasAttribute('data-quest-fullscreen') ||
-          document.body.hasAttribute('data-app-fullscreen'),
+          document.body.hasAttribute('data-app-fullscreen') ||
+          document.body.hasAttribute('data-app-drawer'),
       );
     const observer = new MutationObserver(check);
     observer.observe(document.body, {
       attributes: true,
-      attributeFilter: ['data-quest-fullscreen', 'data-app-fullscreen'],
+      attributeFilter: ['data-quest-fullscreen', 'data-app-fullscreen', 'data-app-drawer'],
     });
     check();
     return () => observer.disconnect();
   }, []);
-  return fullscreen;
+  return hidden;
 }
 
 export function StreamDockLayer() {
   const [channels, setChannels] = useState<LiveChannel[]>([]);
-  const fullscreen = useAppFullscreen();
+  const hidden = useAppHidden();
 
   // Живой статус из НАШЕГО прокси (30с-кэш на бэке), лёгкий поллинг раз в минуту.
   useEffect(() => {
@@ -82,7 +84,7 @@ export function StreamDockLayer() {
     // продолжает считаться, просто виджет не показываем.
     <div
       className={`fixed inset-x-0 bottom-0 z-40 pointer-events-none ${
-        fullscreen ? 'invisible' : ''
+        hidden ? 'invisible' : ''
       }`}
     >
       {liveDocks.map((c) => (

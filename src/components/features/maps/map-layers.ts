@@ -1,5 +1,5 @@
 import type { MapViewMarker } from './map-types';
-import { spawnSubkind, containerFile, extractSubtype, type MarkerIconInput } from '@/data/map-marker-icons';
+import { spawnSubkind, containerFile, extractSubtype, lockKind, hazardSubtype, type MarkerIconInput } from '@/data/map-marker-icons';
 
 /**
  * Таксономия СЛОЁВ интерактивной карты — единая точка правды для рендера (группировка
@@ -16,6 +16,9 @@ export interface LayerItem {
   defaultOff?: boolean;
   /** CSS-маска класс (icon-eft-*) из нашей таксономии — приоритет над резолвером (loose-категории). */
   iconClass?: string;
+  /** Прямой путь к цветному svg/webp — рендер полноцветным `<img>` (как «Случайная добыча»),
+   * приоритет над iconClass и резолвером. Для детальных маркеров, которые нельзя схлопывать в маску. */
+  iconImg?: string;
   /** раскрываемый узел: дети-листья (сам узел слоем не является — тумблер всех детей). */
   children?: LayerItem[];
 }
@@ -79,9 +82,9 @@ export function layerKeyForMarker(m: MapViewMarker): string | null {
     case 'transit':
       return 'transit';
     case 'hazard':
-      return 'hazard';
+      return `hazard-${hazardSubtype(m)}`;
     case 'lock':
-      return 'lock';
+      return lockKind(m) === 'marked' ? 'lock-marked' : 'lock-standard';
     case 'switch':
       return 'switch';
     case 'loot_container':
@@ -127,9 +130,20 @@ export const LAYER_GROUPS: LayerGroup[] = [
   {
     group: 'Интерактив',
     items: [
-      { key: 'lock', label: 'Замки', sample: { type: 'lock' } },
+      {
+        key: 'lock-standard',
+        label: 'Закрытые комнаты',
+        sample: { type: 'lock' },
+        iconImg: '/icons/eft/01-maps/markers/interactive/lock/lock-mechanical.svg',
+      },
+      {
+        key: 'lock-marked',
+        label: 'Меченые комнаты',
+        sample: { type: 'lock' },
+        iconImg: '/icons/eft/01-maps/markers/interactive/lock/lock-mechanical-marked.svg',
+      },
       { key: 'switch', label: 'Рычаги', sample: { type: 'switch' } },
-      { key: 'stationary', label: 'Стационарное оружие', sample: { type: 'stationary_weapon' } },
+      { key: 'stationary', label: 'Стационарное оружие', sample: { type: 'stationary_weapon' }, iconImg: '/icons/eft/01-maps/markers/interactive/mounted-armaments.svg' },
     ],
   },
   {
@@ -139,6 +153,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
         key: 'containers',
         label: 'Контейнеры',
         sample: { type: 'loot_container', category: 'weapon-box' },
+        iconImg: '/icons/eft/01-maps/markers/loot/loot-containers-marker.svg',
         children: CONTAINER_SUBLAYERS.map((c) => ({
           key: `container-${c.file}`,
           label: c.label,
@@ -166,7 +181,13 @@ export const LAYER_GROUPS: LayerGroup[] = [
   },
   {
     group: 'Опасности',
-    items: [{ key: 'hazard', label: 'Опасности', sample: { type: 'hazard' } }],
+    items: [
+      { key: 'hazard-sniper', label: 'Снайпер', sample: { type: 'hazard' }, iconImg: '/icons/eft/01-maps/markers/danger/danger-sniper-death.svg' },
+      { key: 'hazard-mine', label: 'Противопехотная мина', sample: { type: 'hazard' }, iconImg: '/icons/eft/01-maps/markers/danger/danger-mines-death.svg' },
+      { key: 'hazard-mortar', label: 'Угроза миномётного обстрела', sample: { type: 'hazard' }, iconImg: '/icons/eft/01-maps/markers/danger/danger-mortar-death.svg' },
+      { key: 'hazard-tripwire', label: 'Гранаты-растяжки', sample: { type: 'hazard' }, iconImg: '/icons/eft/01-maps/markers/danger/danger-tripwire-grenades.svg' },
+      { key: 'hazard-other', label: 'Опасная зона', sample: { type: 'hazard' }, iconImg: '/icons/eft/01-maps/markers/danger/danger.svg' },
+    ],
   },
 ];
 
@@ -183,9 +204,9 @@ export type LodTier = 0 | 1 | 2 | 3;
 
 export function lodTierForKey(key: string): LodTier {
   if (key.startsWith('extract-') || key === 'transit') return 0;
-  if (key === 'quest_zone' || key === 'hazard' || key === 'spawn-boss') return 1;
+  if (key === 'quest_zone' || key.startsWith('hazard') || key === 'spawn-boss') return 1;
   if (key.startsWith('container-') || key.startsWith('loose-')) return 3;
-  if (key.startsWith('spawn-') || key === 'lock' || key === 'switch' || key === 'stationary') return 2;
+  if (key.startsWith('spawn-') || key.startsWith('lock') || key === 'switch' || key === 'stationary') return 2;
   return 2;
 }
 

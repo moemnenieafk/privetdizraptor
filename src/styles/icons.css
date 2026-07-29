@@ -67,6 +67,7 @@
   .icon-eft-danger-mines-death { mask-image: url('/icons/eft/01-maps/markers/danger/danger-mines-death.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-mines-death.svg'); }
   .icon-eft-danger-mortar-death { mask-image: url('/icons/eft/01-maps/markers/danger/danger-mortar-death.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-mortar-death.svg'); }
   .icon-eft-danger-sniper-death { mask-image: url('/icons/eft/01-maps/markers/danger/danger-sniper-death.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-sniper-death.svg'); }
+  .icon-eft-danger-tripwire-grenades { mask-image: url('/icons/eft/01-maps/markers/danger/danger-tripwire-grenades.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-tripwire-grenades.svg'); }
   /* — spawn — точки спавна — */
   .icon-eft-spawn-rogue { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-rogue.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-rogue.svg'); }
   .icon-eft-spawn-boss-add { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg'); }

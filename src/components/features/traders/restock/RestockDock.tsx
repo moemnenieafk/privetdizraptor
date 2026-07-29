@@ -45,7 +45,9 @@ function RestockDockActive() {
   const [fullscreen, setFullscreen] = useState(false);
   useEffect(() => {
     const check = () => {
-      setQuestDrawerOpen(document.body.hasAttribute('data-quest-drawer'));
+      setQuestDrawerOpen(
+        document.body.hasAttribute('data-quest-drawer') || document.body.hasAttribute('data-app-drawer'),
+      );
       setFullscreen(
         document.body.hasAttribute('data-app-fullscreen') ||
           document.body.hasAttribute('data-quest-fullscreen'),
@@ -54,7 +56,7 @@ function RestockDockActive() {
     const observer = new MutationObserver(check);
     observer.observe(document.body, {
       attributes: true,
-      attributeFilter: ['data-quest-drawer', 'data-app-fullscreen', 'data-quest-fullscreen'],
+      attributeFilter: ['data-quest-drawer', 'data-app-drawer', 'data-app-fullscreen', 'data-quest-fullscreen'],
     });
     check();
     return () => observer.disconnect();

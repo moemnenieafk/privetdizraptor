@@ -15,12 +15,14 @@ export default function StreamStatus() {
   useEffect(() => {
     const check = () =>
       setIsQuestFullscreen(
-        document.body.hasAttribute('data-quest-fullscreen') || document.body.hasAttribute('data-app-fullscreen'),
+        document.body.hasAttribute('data-quest-fullscreen') ||
+          document.body.hasAttribute('data-app-fullscreen') ||
+          document.body.hasAttribute('data-app-drawer'),
       );
     const observer = new MutationObserver(check);
     observer.observe(document.body, {
       attributes: true,
-      attributeFilter: ['data-quest-fullscreen', 'data-app-fullscreen'],
+      attributeFilter: ['data-quest-fullscreen', 'data-app-fullscreen', 'data-app-drawer'],
     });
     check();
     return () => observer.disconnect();

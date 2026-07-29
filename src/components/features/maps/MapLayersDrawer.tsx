@@ -19,6 +19,8 @@ const leafKeys = (i: LayerItem): string[] => (i.children ? i.children.map((c) =>
 
 function LayerGlyph({ item }: { item: LayerItem }): React.ReactElement {
   const color = markerColor(item.sample.type);
+  // Полноцветный маркер-svg (как «Случайная добыча») — приоритет: детальный арт нельзя в маску.
+  if (item.iconImg) return <img src={item.iconImg} alt="" className="h-8 w-8 shrink-0 object-contain" />;
   // Иконка нашей таксономии (loose-категории) — CSS-маска, приоритет над резолвером.
   if (item.iconClass)
     return <span className={`icon-mask ${item.iconClass} h-6 w-6 shrink-0`} style={{ color }} />;
@@ -182,11 +184,8 @@ export function MapLayersDrawer({
           </button>
         </div>
 
-        {/* Мульти-фильтр по маркерам (термины через запятую) */}
-        <div className="px-3 py-2.5">
-          <p className="mb-2 font-blender-book text-[10px] leading-snug text-text-muted">
-            Доступна мульти-фильтрация, например: Платный, Босс, Опасности
-          </p>
+        {/* Мульти-фильтр по маркерам (термины через запятую): инпут сверху, подпись снизу — как в «Поиске». */}
+        <div className="flex flex-col gap-2 px-3 py-2.5">
           <div className="flex h-8 items-center gap-2 rounded-xs border border-lines-hover bg-(--color-base)/60 px-2.5">
             <Layers className="h-3.5 w-3.5 shrink-0 text-text-muted" />
             <input
@@ -201,9 +200,12 @@ export function MapLayersDrawer({
               </button>
             )}
           </div>
+          <p className="font-blender-medium text-[10px] text-text-secondary">
+            Доступна мульти-фильтрация, например: Платный, Босс, Опасности
+          </p>
         </div>
 
-        <div className="scrollbar-compact flex flex-1 flex-col gap-1 overflow-y-auto p-2">
+        <div className="scrollbar-hidden flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">
           {groups.length === 0 && (
             <p className="px-3 py-6 text-center font-blender-book text-xs text-text-muted">Ничего не найдено</p>
           )}

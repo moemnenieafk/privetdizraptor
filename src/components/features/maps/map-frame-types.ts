@@ -23,11 +23,15 @@ export interface MapBossStat {
   spawns: { x: number; z: number }[];
 }
 
-/** Квест с объективом на карте (для поиска и прогресса). */
+/** Квест с объективом на карте (для поиска, фильтров и прогресса). */
 export interface MapQuestLite {
   id: string;
   name: string;
+  /** normalizedName трейдера — аватар (traderImg) + цвет-тинт строки (--trader-*). */
   trader: string;
+  minPlayerLevel: number;
+  kappaRequired: boolean;
+  lightkeeperRequired: boolean;
 }
 
 /** Зона объектива квеста на карте (для перелёта/подсветки по ?quest=id). */

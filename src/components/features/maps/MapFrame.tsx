@@ -10,15 +10,18 @@ import { MapRaidSheet } from '@/components/features/maps/MapRaidSheet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapViewerLoader } from './MapViewerLoader';
 import { MapTopBar } from './MapTopBar';
+import { MapSearchDrawer } from './MapSearchDrawer';
 import { MapBottomBar } from './MapBottomBar';
 import { MapBossDock } from './MapBossDock';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useMapViewStore } from '@/store/useMapViewStore';
+import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewUrlSync } from './useMapViewUrlSync';
 import { buildMapFloors, orderFloorsByLevel } from '@/data/eft-map-config';
 import type { MapView } from './map-types';
 import type { MapViewerApi, MapBossStat, MapQuestLite, MapQuestZone } from './map-frame-types';
+import type { TaskRaw } from '@/types/quest';
 
 interface NavMap {
   slug: string;
@@ -31,6 +34,8 @@ interface Props {
   data: MapView;
   navMaps: NavMap[];
   quests: MapQuestLite[];
+  /** Полные таски квестов карты — для master-detail панели QuestDetail в drawer'е поиска. */
+  questTasks: TaskRaw[];
   bosses: MapBossStat[];
   questZones: MapQuestZone[];
   focusQuestId?: string;
@@ -45,10 +50,13 @@ const searchKind = (t: string): MapSearchResult['kind'] =>
  * Оболочка карты. Десктоп: TopBar (поиск + навигация). Мобилка: панель 4 иконок живёт
  * в самом вьюере (MobileMapBar), здесь — только шиты (карты + поиск), которые она открывает.
  */
-export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuestId }: Props) {
+export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, focusQuestId }: Props) {
   const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
-  const [searchOpen, setSearchOpen] = useState(false);
+  const searchOpen = useMapUiStore((s) => s.searchOpen);
+  const setSearchOpen = useMapUiStore((s) => s.setSearchOpen);
+  const toggleSearch = useMapUiStore((s) => s.toggleSearch);
+  const layersOpen = useMapUiStore((s) => s.layersOpen);
   const [searchQuery, setSearchQuery] = useState('');
   // Этаж живёт в useMapViewStore (§18.1) — эфемерный вид + синк с URL (permalink).
   const activeFloor = useMapViewStore((s) => s.floor);
@@ -75,6 +83,16 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
     apiRef.current = api;
     setReady(true);
   }, []);
+
+  // Плавающие body-level доки (StreamDock/StreamStatus/Завоз, fixed z-40/z-70) иначе оказываются
+  // ПОВЕРХ наших drawer'ов: page-level drawer заперт в стекинг-контексте фрейма и проваливается
+  // под корневые fixed-доки (тот же кейс, что у квест-drawer — см. RestockDock). Решение как там:
+  // открыт любой drawer карты → метка data-app-drawer на body → доки её слушают и прячутся.
+  useEffect(() => {
+    const open = searchOpen || layersOpen;
+    document.body.toggleAttribute('data-app-drawer', open);
+    return () => document.body.removeAttribute('data-app-drawer');
+  }, [searchOpen, layersOpen]);
 
   const focusBoss = useCallback((boss: MapBossStat) => {
     apiRef.current?.focusPoints(boss.spawns);
@@ -155,12 +173,12 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         e.preventDefault();
-        setSearchOpen((v) => !v);
+        toggleSearch();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isFullscreen, searchOpen, exit]);
+  }, [isFullscreen, searchOpen, exit, setSearchOpen, toggleSearch]);
 
   // Хоткеи этажей (только мульти-этаж): ↑/↓ и +/− (осн. клавиатура + NumPad).
   useEffect(() => {
@@ -212,18 +230,12 @@ export function MapFrame({ data, navMaps, quests, bosses, questZones, focusQuest
       {/* Десктопный тулбар — плавающий оверлей поверх карты (край-в-край): бар прозрачный,
           сквозь него видно карту. Прячем на мобилке (там своя лента в MobileMapBar). */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 hidden lg:block">
-        <MapTopBar
-          data={data}
-          navMaps={navMaps}
-          quests={quests}
-          searchOpen={searchOpen}
-          onSearchToggle={() => setSearchOpen((v) => !v)}
-          onSearchClose={() => setSearchOpen(false)}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={toggle}
-          apiRef={apiRef}
-        />
+        <MapTopBar data={data} navMaps={navMaps} isFullscreen={isFullscreen} onToggleFullscreen={toggle} />
       </div>
+
+      {/* Левый drawer «ПОИСК НА ЛОКАЦИИ» (десктоп) — оверлей поверх карты, карту не двигает.
+          Только интерактивные карты (у статик-карт нет слоёв/таксономии добычи). */}
+      {!data.config.staticMap && <MapSearchDrawer markers={data.markers} quests={quests} questTasks={questTasks} apiRef={apiRef} />}
 
       {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) / нижнего бара */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />

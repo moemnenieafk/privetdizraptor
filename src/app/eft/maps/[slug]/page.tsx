@@ -9,7 +9,7 @@ import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
 import { getManualMarkers } from '@/data/map-markers';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
-import { questsForMap } from '@/lib/map-quests';
+import { questsForMap, questTasksForMap } from '@/lib/map-quests';
 import type { MapView, MapViewMarker } from '@/components/features/maps/map-types';
 import type { MapBossStat, MapQuestZone } from '@/components/features/maps/map-frame-types';
 
@@ -94,7 +94,7 @@ export default async function MapPage({ params, searchParams }: Props) {
     const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
     return (
       <main className="w-full">
-        <MapFrame data={view} navMaps={navMaps} quests={[]} bosses={[]} questZones={questZones} focusQuestId={focusQuestId} />
+        <MapFrame data={view} navMaps={navMaps} quests={[]} questTasks={[]} bosses={[]} questZones={questZones} focusQuestId={focusQuestId} />
       </main>
     );
   }
@@ -238,6 +238,7 @@ export default async function MapPage({ params, searchParams }: Props) {
 
       const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
       const quests = questsForMap(slug);
+      const questTasks = questTasksForMap(slug);
 
       return (
         <main className="w-full">
@@ -245,6 +246,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             data={view}
             navMaps={navMaps}
             quests={quests}
+            questTasks={questTasks}
             bosses={bosses}
             questZones={questZones}
             focusQuestId={focusQuestId}

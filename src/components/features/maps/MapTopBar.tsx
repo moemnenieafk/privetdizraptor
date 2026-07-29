@@ -1,23 +1,15 @@
 'use client';
 
-import { useRef } from 'react';
 import { Layers, Maximize, Minimize, Ruler } from 'lucide-react';
 import { MapNavDropdown, type NavMapItem } from './MapNavDropdown';
-import { MapSearch } from './MapSearch';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import type { MapView } from './map-types';
-import type { MapViewerApi, MapQuestLite } from './map-frame-types';
 
 interface Props {
   data: MapView;
   navMaps: NavMapItem[];
-  quests: MapQuestLite[];
-  searchOpen: boolean;
-  onSearchToggle: () => void;
-  onSearchClose: () => void;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
-  apiRef: React.RefObject<MapViewerApi | null>;
 }
 
 /** Кнопка-тоггл бара — 36×36 (h-9 w-9), иконка 22px, фон #242426 (card-menu), обводка #313135. */
@@ -33,10 +25,11 @@ const toggleCls = (active: boolean): string =>
  * [линейка · плашка-выпадашка 536×56 · фуллскрин] с гэпами 14px · слои (право, 36×36).
  * flex-1 по краям центрируют группу; поиск липнет к левому краю, слои — к правому.
  */
-export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, onSearchClose, isFullscreen, onToggleFullscreen, apiRef }: Props) {
-  const anchorRef = useRef<HTMLDivElement>(null);
+export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen }: Props) {
   const layersOpen = useMapUiStore((s) => s.layersOpen);
   const toggleLayers = useMapUiStore((s) => s.toggleLayers);
+  const searchOpen = useMapUiStore((s) => s.searchOpen);
+  const toggleSearch = useMapUiStore((s) => s.toggleSearch);
   const rulerActive = useMapUiStore((s) => s.rulerActive);
   const toggleRuler = useMapUiStore((s) => s.toggleRuler);
 
@@ -44,17 +37,12 @@ export function MapTopBar({ data, navMaps, quests, searchOpen, onSearchToggle, o
 
   return (
     <div className="relative flex h-14 items-center px-3.5 border-t border-lines-hover shrink-0 overflow-x-auto scrollbar-hidden">
-      {/* Слева — поиск 36×36 (top-left освобождён под выпадашку результатов) */}
-      <div ref={anchorRef} className="relative flex flex-1 items-center">
+      {/* Слева — поиск 36×36 (открывает левый drawer «ПОИСК НА ЛОКАЦИИ») */}
+      <div className="flex flex-1 items-center">
         {!data.config.staticMap && (
-          <>
-            <button type="button" onClick={onSearchToggle} title="Поиск (Ctrl+F)" aria-label="Поиск" className={toggleCls(searchOpen)}>
-              <span className="icon-mask icon-eft-search-icon h-5.5 w-5.5" />
-            </button>
-            {searchOpen && (
-              <MapSearch markers={data.markers} quests={quests} apiRef={apiRef} anchorRef={anchorRef} onClose={onSearchClose} />
-            )}
-          </>
+          <button type="button" onClick={toggleSearch} title="Поиск (Ctrl+F)" aria-label="Поиск" className={toggleCls(searchOpen)}>
+            <span className="icon-mask icon-eft-search-icon h-5.5 w-5.5" />
+          </button>
         )}
       </div>
 

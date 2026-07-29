@@ -40,6 +40,8 @@ export interface MarkerIconInput {
   transferItemName?: string | null;
   /** контейнер/лут: id мира из tarkov.dev (== SPT terraWBox/jacket tpl) — дизамбигуация под-вида. */
   linkedItemId?: string | null;
+  /** тип-специфичная нагрузка маркера (hazard: `{ hazardType }` — snайпер/мина/миномёт/…). */
+  meta?: Record<string, unknown> | null;
 }
 
 /* ── КОНТЕЙНЕРЫ ── synced-маркеры приходят с ru-`label`, ручные (редактор) — с `category`-ключом. */
@@ -217,12 +219,30 @@ const exfilFile = (m: MarkerIconInput): string => EXTRACT_FILE[extractSubtype(m)
 
 /* Механизм замка по имени ключа (lockType в данных = что заперто: door/container/trunk/switch,
    а НЕ механизм). keycard/intercom и marked различаем по имени ключа; прочее — стандартный keypad. */
-type LockKind = 'keycard' | 'marked' | 'keypad';
-const lockKind = (m: MarkerIconInput): LockKind => {
+export type LockKind = 'keycard' | 'marked' | 'keypad';
+export const lockKind = (m: MarkerIconInput): LockKind => {
   const h = (m.category || m.label || '').toLowerCase();
   if (h.includes('карт') || h.includes('keycard') || h.includes('пропуск') || h.includes('интерком')) return 'keycard';
   if (h.includes('мечен') || h.includes('marked')) return 'marked';
   return 'keypad';
+};
+
+/** Под-вид опасности по meta.hazardType (minefield/sniper/mortar/tripwire) → файл danger-*. */
+export type HazardSubtype = 'sniper' | 'mine' | 'mortar' | 'tripwire' | 'other';
+export const hazardSubtype = (m: MarkerIconInput): HazardSubtype => {
+  const ht = String((m.meta as { hazardType?: unknown } | null | undefined)?.hazardType ?? '').toLowerCase();
+  if (ht.includes('sniper')) return 'sniper';
+  if (ht.includes('mine')) return 'mine'; // minefield
+  if (ht.includes('mortar')) return 'mortar';
+  if (ht.includes('tripwire') || ht.includes('grenade')) return 'tripwire';
+  return 'other';
+};
+const HAZARD_FILE: Record<HazardSubtype, string> = {
+  sniper: 'danger-sniper-death',
+  mine: 'danger-mines-death',
+  mortar: 'danger-mortar-death',
+  tripwire: 'danger-tripwire-grenades',
+  other: 'danger',
 };
 
 /** Главный резолвер: маркер → иконка (url + режим + размер) или `null` (нет арта → плейсхолдер). */
@@ -241,11 +261,11 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       return { url: `${SVG}/spawn/spawn-boss-add.svg`, mode: 'img', size: 30 };
 
     case 'lock': {
+      // Все замки — svg из interactive/lock: меченый / ключ-карта(интерком) / механический (по умолч.).
       const lk = lockKind(m);
-      // Ключ-карта/интерком и стандартная кодовая панель — цветной webp-арт V4DYA; меченый — svg.
-      if (lk === 'marked') return { url: `${SVG}/interactive/lock/lock-mechanical-marked.svg`, mode: 'img', size: 26 };
-      const file = lk === 'keycard' ? 'lock-keycard-pannel' : 'lock-standard-security-keypad';
-      return { url: `${WEBP}/lock/${file}.webp`, mode: 'img', size: 30 };
+      const file =
+        lk === 'marked' ? 'lock-mechanical-marked' : lk === 'keycard' ? 'lock-keycard-pannel' : 'lock-mechanical';
+      return { url: `${SVG}/interactive/lock/${file}.svg`, mode: 'img', size: 28 };
     }
 
     case 'switch':
@@ -275,7 +295,11 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       return { url: `${WEBP}/stationary/${nvs ? 'stationary-nvs-utes' : 'stationary-ags30'}.webp`, mode: 'img', size: 34 };
     }
 
-    // hazard — своего арта нет → плейсхолдер (generic).
+    case 'hazard':
+      // Цветной глиф по типу опасности (meta.hazardType): красный треугольник + чёрный
+      // внутренний символ зашиты в svg → img (маска схлопнула бы в одинаковый силуэт).
+      return { url: `${SVG}/danger/${HAZARD_FILE[hazardSubtype(m)]}.svg`, mode: 'img', size: 26 };
+
     default:
       return null;
   }
