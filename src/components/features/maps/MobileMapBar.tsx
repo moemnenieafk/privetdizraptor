@@ -28,6 +28,8 @@ export function MobileMapBar({
 }: MobileMapBarProps) {
   const openSheet = useMapUiStore((s) => s.openSheet);
   const activeSheet = useMapUiStore((s) => s.activeSheet);
+  const searchOpen = useMapUiStore((s) => s.searchOpen);
+  const toggleSearch = useMapUiStore((s) => s.toggleSearch);
 
   const cell = (active: boolean) =>
     `flex size-7 shrink-0 items-center justify-center rounded border transition-colors ${
@@ -43,7 +45,7 @@ export function MobileMapBar({
         <button aria-label="Условия рейда" onClick={() => openSheet('raid')} className={cell(activeSheet === 'raid')}>
           <span className="icon-mask icon-eft-lore-docs h-4 w-4" />
         </button>
-        <button aria-label="Поиск" onClick={() => openSheet('search')} className={cell(activeSheet === 'search')}>
+        <button aria-label="Поиск" onClick={toggleSearch} className={cell(searchOpen)}>
           <Search className="size-4" strokeWidth={2} />
         </button>
       </div>

@@ -151,12 +151,15 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
 
   return (
     <>
+    {/* Адаптив (по образу десктопа): десктоп — левый drawer, мобилка — bottom-sheet (тот же контент). */}
     <div
-      className={`absolute top-0 left-0 z-[540] hidden h-full w-87 flex-col border-r border-lines-hover bg-(--color-base)/95 backdrop-blur-md transition-transform duration-200 lg:flex ${
-        open ? 'translate-x-0' : '-translate-x-full'
+      className={`absolute inset-x-0 bottom-0 z-[540] flex max-h-[85svh] flex-col rounded-t-xl border-t border-lines-hover bg-(--color-base)/95 backdrop-blur-md transition-transform duration-200 lg:inset-x-auto lg:top-0 lg:left-0 lg:bottom-auto lg:h-full lg:max-h-none lg:w-87 lg:rounded-t-none lg:border-t-0 lg:border-r ${
+        open ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-y-0 lg:-translate-x-full'
       }`}
     >
-      {/* Шапка 56px: кнопка-закрыть = амбер-лупа (та же, что открывает в баре) слева + заголовок. */}
+      {/* Мобильный хват боттом-шита */}
+      <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-lines-hover lg:hidden" />
+      {/* Шапка: кнопка-закрыть = амбер-лупа (та же, что открывает в баре) слева + заголовок. */}
       <div className="flex h-14 shrink-0 items-center gap-3 px-3.5">
         <button
           type="button"
@@ -330,10 +333,10 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
       </div>
     </div>
 
-      {/* Третий drawer «Подробности задания» — рядом с поиском (left+348), master-detail. */}
+      {/* «Подробности задания» — master-detail: десктоп рядом (left+348), мобилка боттом-шитом поверх. */}
       {open && selectedTask && (
         <div
-          className="absolute top-0 left-87 z-[539] hidden h-full w-87 flex-col border-l border-lines-hover backdrop-blur-md lg:flex"
+          className="absolute inset-x-0 bottom-0 z-[545] flex max-h-[92svh] flex-col rounded-t-xl border-t border-lines-hover backdrop-blur-md lg:inset-x-auto lg:top-0 lg:left-87 lg:bottom-auto lg:h-full lg:max-h-none lg:w-87 lg:rounded-t-none lg:border-t-0 lg:border-l"
           style={{
             background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, var(${traderCssVar(selectedTask.trader.normalizedName)}, transparent) 15%, transparent), rgba(0,0,0,0.92))`,
           }}

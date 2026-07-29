@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation';
 import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
-import { MapSearchSheet, type MapSearchResult } from '@/components/features/maps/MapSearchSheet';
 import { MapQuestSheet } from '@/components/features/maps/MapQuestSheet';
 import { MapRaidSheet } from '@/components/features/maps/MapRaidSheet';
 
@@ -43,12 +42,9 @@ interface Props {
 
 const mapHref = (slug: string) => `/eft/maps/${slug}`;
 
-const searchKind = (t: string): MapSearchResult['kind'] =>
-  t === 'extract' ? 'extract' : t === 'quest_zone' ? 'quest' : 'marker';
-
 /**
- * Оболочка карты. Десктоп: TopBar (поиск + навигация). Мобилка: панель 4 иконок живёт
- * в самом вьюере (MobileMapBar), здесь — только шиты (карты + поиск), которые она открывает.
+ * Оболочка карты. TopBar (десктоп) + адаптивный MapSearchDrawer (десктоп drawer / мобилка
+ * bottom-sheet). Прочие мобильные шиты (карты/задания/рейд) — из MobileMapBar/нижнего бара.
  */
 export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, focusQuestId }: Props) {
   const router = useRouter();
@@ -57,7 +53,6 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
   const setSearchOpen = useMapUiStore((s) => s.setSearchOpen);
   const toggleSearch = useMapUiStore((s) => s.toggleSearch);
   const layersOpen = useMapUiStore((s) => s.layersOpen);
-  const [searchQuery, setSearchQuery] = useState('');
   // Этаж живёт в useMapViewStore (§18.1) — эфемерный вид + синк с URL (permalink).
   const activeFloor = useMapViewStore((s) => s.floor);
   const setActiveFloor = useMapViewStore((s) => s.setFloor);
@@ -108,30 +103,6 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
         .sort((a, b) => mapOrderIndex(a.slug) - mapOrderIndex(b.slug))
         .map((m) => ({ id: m.slug, name: m.name, iconClass: mapIconClass(m.slug) })),
     [navMaps],
-  );
-
-  // Поиск по маркерам локации (мобильный шит). Клик — перелёт к маркеру.
-  const searchResults = useMemo<MapSearchResult[]>(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return [];
-    const out: MapSearchResult[] = [];
-    for (let i = 0; i < data.markers.length; i++) {
-      const m = data.markers[i];
-      if (!m.position) continue;
-      const label = m.label ?? '';
-      if (!label || !label.toLowerCase().includes(query)) continue;
-      out.push({ id: String(i), label, kind: searchKind(m.type) });
-      if (out.length >= 40) break;
-    }
-    return out;
-  }, [searchQuery, data.markers]);
-
-  const goToResult = useCallback(
-    (r: MapSearchResult) => {
-      const m = data.markers[Number(r.id)];
-      if (m?.position) apiRef.current?.flyTo(m.position, 5);
-    },
-    [data.markers],
   );
 
   // Шаг по визуальному стеку этажей: dir −1 = вверх (выше уровень), +1 = вниз. Без зацикливания.
@@ -239,7 +210,6 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
 
       {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) / нижнего бара */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
-      <MapSearchSheet results={searchResults} onQueryChange={setSearchQuery} onResultClick={goToResult} />
       <MapQuestSheet quests={quests} mapSlug={data.slug} />
       <MapRaidSheet data={data} />
 
