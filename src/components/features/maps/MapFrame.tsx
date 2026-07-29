@@ -13,7 +13,7 @@ import { MapSearchDrawer } from './MapSearchDrawer';
 import { MapBottomBar } from './MapBottomBar';
 import { MapBossDock } from './MapBossDock';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
-import type { EditorialMarkerData } from './EditorialMarkerCard';
+import type { EditorialMarkerData, QuestIndexItem } from './EditorialMarkerCard';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useMapUiStore } from '@/store/useMapUiStore';
@@ -44,6 +44,8 @@ interface Props {
   canEditMarkers?: boolean;
   /** id карты — для постановки нового editorial-маркера (POST на пустой карте). */
   mapId?: string;
+  /** Индекс квестов для автокомплита привязки (редакторам). */
+  questIndex?: QuestIndexItem[];
   focusQuestId?: string;
 }
 
@@ -53,7 +55,7 @@ const mapHref = (slug: string) => `/eft/maps/${slug}`;
  * Оболочка карты. TopBar (десктоп) + адаптивный MapSearchDrawer (десктоп drawer / мобилка
  * bottom-sheet). Прочие мобильные шиты (карты/задания/рейд) — из MobileMapBar/нижнего бара.
  */
-export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, canEditMarkers, mapId, focusQuestId }: Props) {
+export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, canEditMarkers, mapId, questIndex, focusQuestId }: Props) {
   const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
   const searchOpen = useMapUiStore((s) => s.searchOpen);
@@ -229,6 +231,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           editorialMarkers={editorialMarkers}
           canEditMarkers={canEditMarkers}
           mapId={mapId}
+          questIndex={questIndex}
         />
         {floors.length > 1 && (
           <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />

@@ -45,6 +45,13 @@ export interface EditorialMarkerData extends EditorialMarkerView {
   linkedQuest?: LinkedQuestInfo | null;
 }
 
+/** Лёгкий элемент индекса квестов для автокомплита привязки (только редакторам). */
+export interface QuestIndexItem {
+  id: string;
+  name: string;
+  trader: string;
+}
+
 interface Props {
   marker: EditorialMarkerView;
   /** Разрешённый связанный квест (linkKind='quest') — для ряда трейдер/уровень/каппа. */
@@ -53,6 +60,8 @@ interface Props {
   canEdit?: boolean;
   /** Открыть сразу в режиме правки (новый маркер, только что поставленный). */
   defaultEditing?: boolean;
+  /** Индекс квестов для автокомплита привязки (редакторам). */
+  questIndex?: QuestIndexItem[];
   /** slug карты — для ревалидации кэша страницы при сохранении. */
   mapSlug?: string;
   /** После успешного сохранения/удаления — родитель обновляет данные (router.refresh) и закрывает. */
@@ -64,6 +73,7 @@ export function EditorialMarkerCard({
   linkedQuest,
   canEdit = false,
   defaultEditing = false,
+  questIndex,
   mapSlug,
   onMutated,
 }: Props) {
@@ -71,9 +81,26 @@ export function EditorialMarkerCard({
   const [editing, setEditing] = useState(defaultEditing);
   // Локальный черновик правок (сохранение в API — следующий шаг). Сброс при смене маркера —
   // через key={marker.id} на компоненте в родителе.
-  const [draft, setDraft] = useState({ title: marker.title, description: marker.description ?? '', screenshots: [...marker.screenshots] });
+  const [draft, setDraft] = useState({
+    title: marker.title,
+    description: marker.description ?? '',
+    screenshots: [...marker.screenshots],
+    linkKind: marker.linkKind,
+    linkId: marker.linkId ?? null,
+    linkStep: marker.linkStep ?? null,
+  });
   const editField = (patch: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...patch }));
   const [picking, setPicking] = useState(false);
+  // Автокомплит привязки к квесту (редакторам).
+  const [linkQ, setLinkQ] = useState('');
+  const linkHits =
+    linkQ.trim().length >= 2 && questIndex
+      ? questIndex.filter((q) => q.name.toLowerCase().includes(linkQ.trim().toLowerCase())).slice(0, 8)
+      : [];
+  const selName =
+    draft.linkKind === 'quest' && draft.linkId
+      ? (questIndex?.find((q) => q.id === draft.linkId)?.name ?? linkedQuest?.name ?? draft.linkId)
+      : null;
 
   // Сохранение/удаление через API (запись защищена canEditContent на сервере).
   const [busy, setBusy] = useState(false);
@@ -96,9 +123,9 @@ export function EditorialMarkerCard({
           title: draft.title,
           description: draft.description,
           screenshots: draft.screenshots,
-          linkKind: marker.linkKind,
-          linkId: marker.linkId,
-          linkStep: marker.linkStep,
+          linkKind: draft.linkKind,
+          linkId: draft.linkId,
+          linkStep: draft.linkStep,
         }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? `HTTP ${res.status}`);
@@ -305,6 +332,50 @@ export function EditorialMarkerCard({
             >
               <Paperclip className={`h-4 w-4 ${isPinned ? 'text-(--color-darkbase)' : 'text-text-secondary'}`} />
             </button>
+          </div>
+        )}
+
+        {/* ── Привязка к квесту (автокомплит, режим правки) ── */}
+        {editing && questIndex && (
+          <div className="flex w-full flex-col gap-1">
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">Привязка к квесту</span>
+            {selName ? (
+              <div className="flex items-center gap-2 rounded-xs border border-lines-hover px-2 py-1.5">
+                <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{selName}</span>
+                <button
+                  type="button"
+                  onClick={() => setDraft((d) => ({ ...d, linkKind: 'none', linkId: null, linkStep: null }))}
+                  title="Убрать привязку"
+                  className="shrink-0 text-text-muted transition-colors hover:text-danger"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <input
+                  value={linkQ}
+                  onChange={(e) => setLinkQ(e.target.value)}
+                  placeholder="Найти квест по названию…"
+                  className="h-8 w-full rounded-xs border border-lines-hover bg-(--color-base) px-2 font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
+                />
+                {linkHits.length > 0 && (
+                  <div className="absolute top-9 right-0 left-0 z-20 max-h-48 overflow-y-auto rounded-xs border border-lines-hover bg-(--color-base) shadow-xl">
+                    {linkHits.map((q) => (
+                      <button
+                        key={q.id}
+                        type="button"
+                        onClick={() => { setDraft((d) => ({ ...d, linkKind: 'quest', linkId: q.id })); setLinkQ(''); }}
+                        className="flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-card-menu"
+                      >
+                        <img src={traderImg(q.trader)} alt="" className="size-4 shrink-0 rounded-[1px] object-cover" />
+                        <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{q.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

@@ -252,6 +252,10 @@ export default async function MapPage({ params, searchParams }: Props) {
       // canEditMarkers — admin/editor (сервер): показывает кнопку правки; запись защищает API.
       const cms = await getCmsUser();
       const canEditMarkers = cms !== null;
+      // Лёгкий индекс квестов для автокомплита привязки — ТОЛЬКО редакторам (не грузим всем).
+      const questIndex = canEditMarkers
+        ? EFT_QUESTS.map((t) => ({ id: t.id, name: t.name, trader: t.trader.normalizedName }))
+        : undefined;
       const editorialRows = await getEditorialMarkers(data.asset.mapId);
       const questById = new Map(EFT_QUESTS.map((t) => [t.id, t]));
       const editorialMarkers: EditorialMarkerData[] = editorialRows.map((r) => {
@@ -295,6 +299,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             editorialMarkers={editorialMarkers}
             canEditMarkers={canEditMarkers}
             mapId={data.asset.mapId}
+            questIndex={questIndex}
             focusQuestId={focusQuestId}
           />
         </main>

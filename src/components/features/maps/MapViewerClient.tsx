@@ -15,7 +15,7 @@ import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
-import { EditorialMarkerCard, type EditorialMarkerData } from './EditorialMarkerCard';
+import { EditorialMarkerCard, type EditorialMarkerData, type QuestIndexItem } from './EditorialMarkerCard';
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
@@ -140,6 +140,7 @@ export function MapViewerClient({
   editorialMarkers,
   canEditMarkers,
   mapId,
+  questIndex,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
@@ -148,6 +149,7 @@ export function MapViewerClient({
   editorialMarkers?: EditorialMarkerData[];
   canEditMarkers?: boolean;
   mapId?: string;
+  questIndex?: QuestIndexItem[];
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -794,6 +796,7 @@ export function MapViewerClient({
             linkedQuest={openEditorial.linkedQuest}
             canEdit={canEditMarkers}
             defaultEditing={openEditorial.id === justCreatedId}
+            questIndex={questIndex}
             mapSlug={data.slug}
             onMutated={() => {
               setOpenEditorialId(null);
