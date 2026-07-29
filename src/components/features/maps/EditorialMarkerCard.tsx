@@ -385,7 +385,8 @@ export function EditorialMarkerCard({
             <button
               type="button"
               onClick={save}
-              disabled={busy}
+              disabled={busy || !draft.title.trim()}
+              title={!draft.title.trim() ? 'Введите название' : undefined}
               className="flex h-7 min-w-px flex-1 items-center justify-center rounded-xs bg-(--primary) px-1 font-blender-medium text-sm uppercase text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               Сохранить

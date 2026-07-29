@@ -192,9 +192,15 @@ export function MapViewerClient({
   const [openEditorialId, setOpenEditorialId] = useState<string | null>(null);
   const openEditorial = editorialMarkers?.find((m) => m.id === openEditorialId) ?? null;
   const editorialOverlayRef = useRef<HTMLDivElement | null>(null);
-  // Режим постановки маркера (admin/editor): следующий клик по карте создаёт editorial-маркер.
+  // Режим постановки маркера (admin/editor): следующий клик по карте открывает ЧЕРНОВИК.
   const [addMode, setAddMode] = useState(false);
-  const [justCreatedId, setJustCreatedId] = useState<string | null>(null);
+  // Черновик нового маркера (в памяти) — INSERT только на «Сохранить», не на клик по карте.
+  const [pendingMarker, setPendingMarker] = useState<EditorialMarkerData | null>(null);
+  const activeMarker = pendingMarker ?? openEditorial;
+  const closeCard = () => {
+    setOpenEditorialId(null);
+    setPendingMarker(null);
+  };
 
   useEffect(() => {
     const map = mapInst;
@@ -224,8 +230,8 @@ export function MapViewerClient({
   // Карточка-popup держится НАД каплей: пересчёт экранной точки при пане/зуме; клик по карте — закрыть.
   useEffect(() => {
     const map = mapInst;
-    if (!map || !openEditorial) return;
-    const latlng = ll({ x: openEditorial.x, z: openEditorial.z });
+    if (!map || !activeMarker) return;
+    const latlng = ll({ x: activeMarker.x, z: activeMarker.z });
     const place = () => {
       const el = editorialOverlayRef.current;
       if (!el) return;
@@ -238,52 +244,71 @@ export function MapViewerClient({
     return () => {
       map.off('move zoom', place);
     };
-  }, [mapInst, openEditorial]);
+  }, [mapInst, activeMarker]);
 
   // Закрытие по нажатию в ЛЮБОМ месте вне карточки (карта, drawer, страница). setTimeout —
   // чтобы клик-открытие капли не закрыл окно сразу же тем же событием.
   useEffect(() => {
-    if (!openEditorial) return;
+    if (!activeMarker) return;
     const onDown = (e: MouseEvent) => {
-      if (!editorialOverlayRef.current?.contains(e.target as Node)) setOpenEditorialId(null);
+      if (!editorialOverlayRef.current?.contains(e.target as Node)) closeCard();
     };
     const t = setTimeout(() => document.addEventListener('mousedown', onDown), 0);
     return () => {
       clearTimeout(t);
       document.removeEventListener('mousedown', onDown);
     };
-  }, [openEditorial]);
+  }, [activeMarker]);
 
-  // Постановка: в addMode следующий клик по карте создаёт маркер (x=lng, z=lat) → открыть в правке.
+  // Постановка: в addMode следующий клик по карте открывает ЧЕРНОВИК (x=lng, z=lat) в памяти —
+  // без записи в БД. INSERT произойдёт только при «Сохранить» в карточке.
   useEffect(() => {
     const map = mapInst;
     if (!map || !addMode || !mapId) return;
     const el = map.getContainer();
     el.style.cursor = 'crosshair';
-    const onClick = async (e: L.LeafletMouseEvent) => {
-      try {
-        const res = await fetch('/api/admin/editorial-markers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mapId, slug: data.slug, x: e.latlng.lng, z: e.latlng.lat, title: 'Новый маркер', type: 'poi', linkKind: 'none' }),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const { marker } = await res.json();
-        setJustCreatedId(marker?.id ?? null);
-        setAddMode(false);
-        setOpenEditorialId(marker?.id ?? null);
-        router.refresh();
-      } catch (err) {
-        console.error('[editorial-marker create]', err);
-        alert('Не удалось создать маркер');
-      }
+    const onClick = (e: L.LeafletMouseEvent) => {
+      setPendingMarker({
+        mapId,
+        x: e.latlng.lng,
+        z: e.latlng.lat,
+        y: null,
+        floor: null,
+        type: 'poi',
+        category: null,
+        title: '',
+        description: null,
+        screenshots: [],
+        linkKind: 'none',
+        linkId: null,
+        linkStep: null,
+        linkedQuest: null,
+      });
+      setOpenEditorialId(null);
+      setAddMode(false);
     };
     map.on('click', onClick);
     return () => {
       map.off('click', onClick);
       el.style.cursor = '';
     };
-  }, [mapInst, addMode, mapId, data.slug, router]);
+  }, [mapInst, addMode, mapId]);
+
+  // Пин черновика (полый амбер = несохранённый) — отдельный слой, пока pendingMarker жив.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !pendingMarker) return;
+    const icon = L.divIcon({
+      className: 'cta-editorial-mk',
+      html: '<span style="display:block;width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:transparent;border:2px solid var(--primary,#e68e25);box-shadow:0 0 4px rgba(0,0,0,.6)"></span>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 16],
+    });
+    const mk = L.marker(ll({ x: pendingMarker.x, z: pendingMarker.z }), { icon, interactive: false }).addTo(map);
+    return () => {
+      mk.remove();
+    };
+  }, [mapInst, pendingMarker]);
 
   // Число маркеров на под-слой (для drawer'а + скрытия пустых слоёв).
   const counts = useMemo(() => {
@@ -787,19 +812,20 @@ export function MapViewerClient({
     <div className={rootCls}>
       <div ref={containerRef} className="absolute inset-0 z-0" />
 
-      {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом). */}
-      {openEditorial && (
+      {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом).
+          activeMarker = черновик (pending, без id) ЛИБО открытый сохранённый маркер. */}
+      {activeMarker && (
         <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 22px))' }}>
           <EditorialMarkerCard
-            key={openEditorial.id}
-            marker={openEditorial}
-            linkedQuest={openEditorial.linkedQuest}
+            key={activeMarker.id ?? 'new'}
+            marker={activeMarker}
+            linkedQuest={activeMarker.linkedQuest}
             canEdit={canEditMarkers}
-            defaultEditing={openEditorial.id === justCreatedId}
+            defaultEditing={!activeMarker.id}
             questIndex={questIndex}
             mapSlug={data.slug}
             onMutated={() => {
-              setOpenEditorialId(null);
+              closeCard();
               router.refresh();
             }}
           />
