@@ -8,6 +8,7 @@ import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useMapUiStore } from '@/store/useMapUiStore';
+import { useMapViewStore } from '@/store/useMapViewStore';
 import type { MapViewMarker } from './map-types';
 import type { MapViewerApi, MapQuestLite } from './map-frame-types';
 import type { TaskRaw } from '@/types/quest';
@@ -97,9 +98,10 @@ interface Props {
 export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) {
   const open = useMapUiStore((s) => s.searchOpen);
   const setOpen = useMapUiStore((s) => s.setSearchOpen);
+  // Видимость слоёв — общий стор: тогглы фильтруют карту и синхронны с правой легендой (GRILL-2 §3).
+  const activeFilters = useMapViewStore((s) => s.activeFilters);
   const [qItems, setQItems] = useState('');
   const [qQuests, setQQuests] = useState('');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [qf, setQf] = useState<QuestFilter>('all');
   const [traderFilter, setTraderFilter] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -109,14 +111,6 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
   // в текущей карте (смена карты) — отдельный сброс не нужен.
   const taskById = useMemo(() => new Map(questTasks.map((t) => [t.id, t])), [questTasks]);
   const selectedTask = selectedId ? (taskById.get(selectedId) ?? null) : null;
-
-  const toggleSel = (key: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
 
   // Группировка маркеров по label (поиск по предмету): дедуп + позиции для подлёта.
   const groups = useMemo(() => {
@@ -236,12 +230,12 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
                 <p className={SECTION}>Контейнеры</p>
                 <div className="flex flex-wrap gap-[9px]">
                   {CONTAINER_TILES.map((c) => {
-                    const on = selected.has(`container-${c.file}`);
+                    const on = !!activeFilters[`container-${c.file}`];
                     return (
                       <button
                         key={c.file}
                         type="button"
-                        onClick={() => toggleSel(`container-${c.file}`)}
+                        onClick={() => useMapViewStore.getState().toggleFilter(`container-${c.file}`)}
                         title={c.label}
                         aria-pressed={on}
                         className={`flex size-9 items-center justify-center rounded border transition-colors ${
@@ -259,12 +253,12 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
                 <p className={SECTION}>Случайная добыча</p>
                 <div className="flex flex-wrap gap-2">
                   {LOOT_TILES.map((l) => {
-                    const on = selected.has(`loot-${l.key}`);
+                    const on = !!activeFilters[`loot-${l.key}`];
                     return (
                       <button
                         key={l.key}
                         type="button"
-                        onClick={() => toggleSel(`loot-${l.key}`)}
+                        onClick={() => useMapViewStore.getState().toggleFilter(`loot-${l.key}`)}
                         title={l.label}
                         aria-pressed={on}
                         className={`flex size-9 items-center justify-center rounded border bg-card-menu transition-colors ${

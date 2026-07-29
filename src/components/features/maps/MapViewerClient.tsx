@@ -10,10 +10,11 @@ import { MapLayersDrawer } from './MapLayersDrawer';
 import { useEftTracker } from './PlayerTracker';
 import { MobileMapBar } from './MobileMapBar';
 import { useMapUiStore } from '@/store/useMapUiStore';
+import { useMapViewStore } from '@/store/useMapViewStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
 import { manualMarkerIcon } from './manual-marker-icon';
-import { ALL_LAYER_ITEMS, defaultLayerVisibility, layerKeyForMarker, lodVisibleAt } from './map-layers';
+import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
 import type { MapViewerApi } from './map-frame-types';
@@ -161,7 +162,8 @@ export function MapViewerClient({
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flashPointsRef = useRef<(pts: { x: number; z: number }[]) => void>(() => {});
 
-  const [vis, setVis] = useState<Record<string, boolean>>(() => defaultLayerVisibility());
+  // Видимость слоёв — единый стор (GRILL-2 §3): синхронно с легендой и левым drawer'ом.
+  const vis = useMapViewStore((s) => s.activeFilters);
   const visRef = useRef(vis);
   useEffect(() => {
     visRef.current = vis;
@@ -567,7 +569,7 @@ export function MapViewerClient({
       fitView: () => {
         if (cfg.bounds) map.fitBounds(bb(cfg.bounds));
       },
-      toggleLayer: (key) => setVis((p) => (key in p ? { ...p, [key]: !p[key] } : p)),
+      toggleLayer: (key) => useMapViewStore.getState().toggleFilter(key),
     };
     onReady?.(api);
 
@@ -637,7 +639,7 @@ export function MapViewerClient({
   };
 
   const setGroup = (keys: string[], value: boolean) =>
-    setVis((p) => ({ ...p, ...Object.fromEntries(keys.map((k) => [k, value])) }));
+    useMapViewStore.getState().setGroupFilters(keys, value);
 
   // ПКМ по слою в drawer: подлёт к ближайшему объекту слоя; повтор — к следующему по циклу.
   const cycleToLayer = useCallback(
@@ -691,7 +693,7 @@ export function MapViewerClient({
         <MapLayersDrawer
           vis={vis}
           counts={counts}
-          onToggle={(k) => setVis((p) => ({ ...p, [k]: !p[k] }))}
+          onToggle={(k) => useMapViewStore.getState().toggleFilter(k)}
           onSetGroup={setGroup}
           onCycle={cycleToLayer}
           open={layersOpen}
