@@ -19,7 +19,13 @@ import {
 import { eftGameId } from "./eft";
 import { pruneStale } from "./landing";
 import { EFT_MAP_CONFIG } from "../data/eft-map-config";
+import { EFT_QUESTS } from "../data/quests";
 import { fetchTarkovGraphQL, fetchTarkovJson, fetchWithFallback } from "../lib/tarkov-fallback";
+
+// json.tarkov.dev — чистое зеркало ID/структуры/координат/энамов: отображаемые ИМЕНА в нём
+// плейсхолдеры («<id> name», независимо от ?lang). Поэтому имена резолвим из нашего зеркала по
+// id (§4.11). Карта taskId→имя из локального EFT_QUESTS (520 задач, ru).
+const QUEST_NAME_BY_ID = new Map(EFT_QUESTS.map((q) => [q.id, q.name] as const));
 
 // НЕ удаляем стейл-маркеры, если свежий набор для карты меньше этой доли уже лежащего —
 // страховка от частичного/обрезанного ответа источника (HTTP 200, но усечённый список).
@@ -598,7 +604,8 @@ export async function syncEftQuestZones(): Promise<SyncQuestZonesResult> {
     outline: (z.outline ?? []).map((p) => ({ x: p.x, y: p.y, z: p.z })),
     top: z.top ?? null,
     bottom: z.bottom ?? null,
-    label: t.name,
+    // flat JSON t.name = плейсхолдер → имя из нашего зеркала по id; GraphQL-путь даёт real t.name.
+    label: QUEST_NAME_BY_ID.get(t.id) ?? t.name,
     faction: null,
     sides: null,
     categories: null,
