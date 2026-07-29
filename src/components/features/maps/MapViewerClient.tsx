@@ -747,7 +747,7 @@ export function MapViewerClient({
 
       {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом). */}
       {openEditorial && (
-        <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 4px))' }}>
+        <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 22px))' }}>
           <EditorialMarkerCard marker={openEditorial} linkedQuest={openEditorial.linkedQuest} />
         </div>
       )}
