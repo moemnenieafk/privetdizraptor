@@ -13,7 +13,7 @@ import { MapSearchDrawer } from './MapSearchDrawer';
 import { MapBottomBar } from './MapBottomBar';
 import { MapBossDock } from './MapBossDock';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
-import type { EditorialMarkerData, QuestIndexItem } from './EditorialMarkerCard';
+import type { EditorialMarkerData, QuestIndexItem, StoryIndexItem } from './EditorialMarkerCard';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useMapUiStore } from '@/store/useMapUiStore';
@@ -46,6 +46,8 @@ interface Props {
   mapId?: string;
   /** Индекс квестов для автокомплита привязки (редакторам). */
   questIndex?: QuestIndexItem[];
+  /** Индекс сюжетных историй для привязки (редакторам). */
+  storyIndex?: StoryIndexItem[];
   focusQuestId?: string;
 }
 
@@ -55,7 +57,7 @@ const mapHref = (slug: string) => `/eft/maps/${slug}`;
  * Оболочка карты. TopBar (десктоп) + адаптивный MapSearchDrawer (десктоп drawer / мобилка
  * bottom-sheet). Прочие мобильные шиты (карты/задания/рейд) — из MobileMapBar/нижнего бара.
  */
-export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, canEditMarkers, mapId, questIndex, focusQuestId }: Props) {
+export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, canEditMarkers, mapId, questIndex, storyIndex, focusQuestId }: Props) {
   const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
   const searchOpen = useMapUiStore((s) => s.searchOpen);
@@ -232,6 +234,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           canEditMarkers={canEditMarkers}
           mapId={mapId}
           questIndex={questIndex}
+          storyIndex={storyIndex}
         />
         {floors.length > 1 && (
           <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />

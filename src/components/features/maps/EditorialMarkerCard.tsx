@@ -52,6 +52,12 @@ export interface QuestIndexItem {
   trader: string;
 }
 
+/** Лёгкий элемент индекса сюжетных историй (slug+title) для привязки (только редакторам). */
+export interface StoryIndexItem {
+  slug: string;
+  title: string;
+}
+
 interface Props {
   marker: EditorialMarkerView;
   /** Разрешённый связанный квест (linkKind='quest') — для ряда трейдер/уровень/каппа. */
@@ -62,6 +68,8 @@ interface Props {
   defaultEditing?: boolean;
   /** Индекс квестов для автокомплита привязки (редакторам). */
   questIndex?: QuestIndexItem[];
+  /** Индекс сюжетных историй для привязки (редакторам). */
+  storyIndex?: StoryIndexItem[];
   /** slug карты — для ревалидации кэша страницы при сохранении. */
   mapSlug?: string;
   /** После успешного сохранения/удаления — родитель обновляет данные (router.refresh) и закрывает. */
@@ -74,6 +82,7 @@ export function EditorialMarkerCard({
   canEdit = false,
   defaultEditing = false,
   questIndex,
+  storyIndex,
   mapSlug,
   onMutated,
 }: Props) {
@@ -335,45 +344,91 @@ export function EditorialMarkerCard({
           </div>
         )}
 
-        {/* ── Привязка к квесту (автокомплит, режим правки) ── */}
-        {editing && questIndex && (
-          <div className="flex w-full flex-col gap-1">
-            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">Привязка к квесту</span>
-            {selName ? (
-              <div className="flex items-center gap-2 rounded-xs border border-lines-hover px-2 py-1.5">
-                <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{selName}</span>
+        {/* ── Привязка: Без / Квест / Сюжет (режим правки) ── */}
+        {editing && (questIndex || storyIndex) && (
+          <div className="flex w-full flex-col gap-1.5">
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">Привязка</span>
+            {/* Тип привязки */}
+            <div className="flex gap-1">
+              {(['none', 'quest', 'story'] as const).map((k) => (
                 <button
+                  key={k}
                   type="button"
-                  onClick={() => setDraft((d) => ({ ...d, linkKind: 'none', linkId: null, linkStep: null }))}
-                  title="Убрать привязку"
-                  className="shrink-0 text-text-muted transition-colors hover:text-danger"
+                  onClick={() => { setDraft((d) => ({ ...d, linkKind: k, linkId: null, linkStep: null })); setLinkQ(''); }}
+                  className={`flex h-6 flex-1 items-center justify-center rounded-xs border-[0.5px] font-blender-medium text-[10px] uppercase transition-colors ${
+                    draft.linkKind === k
+                      ? 'border-(--primary) bg-(--primary)/15 text-(--primary)'
+                      : 'border-lines-hover text-text-secondary hover:text-(--primary)'
+                  }`}
                 >
-                  <X className="h-3.5 w-3.5" />
+                  {k === 'none' ? 'Без' : k === 'quest' ? 'Квест' : 'Сюжет'}
                 </button>
-              </div>
-            ) : (
-              <div className="relative">
+              ))}
+            </div>
+
+            {/* Квест — автокомплит */}
+            {draft.linkKind === 'quest' && questIndex && (
+              selName ? (
+                <div className="flex items-center gap-2 rounded-xs border border-lines-hover px-2 py-1.5">
+                  <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{selName}</span>
+                  <button
+                    type="button"
+                    onClick={() => setDraft((d) => ({ ...d, linkId: null }))}
+                    title="Сменить квест"
+                    className="shrink-0 text-text-muted transition-colors hover:text-danger"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    value={linkQ}
+                    onChange={(e) => setLinkQ(e.target.value)}
+                    placeholder="Найти квест по названию…"
+                    className="h-8 w-full rounded-xs border border-lines-hover bg-(--color-base) px-2 font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
+                  />
+                  {linkHits.length > 0 && (
+                    <div className="absolute top-9 right-0 left-0 z-20 max-h-48 overflow-y-auto rounded-xs border border-lines-hover bg-(--color-base) shadow-xl">
+                      {linkHits.map((q) => (
+                        <button
+                          key={q.id}
+                          type="button"
+                          onClick={() => { setDraft((d) => ({ ...d, linkId: q.id })); setLinkQ(''); }}
+                          className="flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-card-menu"
+                        >
+                          <img src={traderImg(q.trader)} alt="" className="size-4 shrink-0 rounded-[1px] object-cover" />
+                          <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{q.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+
+            {/* Сюжет — выбор истории + необязательный шаг */}
+            {draft.linkKind === 'story' && storyIndex && (
+              <div className="flex gap-1.5">
+                <select
+                  value={draft.linkId ?? ''}
+                  onChange={(e) => setDraft((d) => ({ ...d, linkId: e.target.value || null }))}
+                  className="h-8 min-w-0 flex-1 rounded-xs border border-lines-hover bg-(--color-base) px-2 font-blender-book text-xs text-text-primary outline-none"
+                >
+                  <option value="">— выберите историю —</option>
+                  {storyIndex.map((s) => (
+                    <option key={s.slug} value={s.slug}>{s.title}</option>
+                  ))}
+                </select>
                 <input
-                  value={linkQ}
-                  onChange={(e) => setLinkQ(e.target.value)}
-                  placeholder="Найти квест по названию…"
-                  className="h-8 w-full rounded-xs border border-lines-hover bg-(--color-base) px-2 font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
+                  type="number"
+                  min={1}
+                  value={draft.linkStep ?? ''}
+                  onChange={(e) => setDraft((d) => ({ ...d, linkStep: e.target.value ? Number(e.target.value) : null }))}
+                  placeholder="шаг"
+                  title="Шаг сюжета (необязательно)"
+                  className="h-8 w-14 shrink-0 rounded-xs border border-lines-hover bg-(--color-base) px-2 font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
                 />
-                {linkHits.length > 0 && (
-                  <div className="absolute top-9 right-0 left-0 z-20 max-h-48 overflow-y-auto rounded-xs border border-lines-hover bg-(--color-base) shadow-xl">
-                    {linkHits.map((q) => (
-                      <button
-                        key={q.id}
-                        type="button"
-                        onClick={() => { setDraft((d) => ({ ...d, linkKind: 'quest', linkId: q.id })); setLinkQ(''); }}
-                        className="flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-card-menu"
-                      >
-                        <img src={traderImg(q.trader)} alt="" className="size-4 shrink-0 rounded-[1px] object-cover" />
-                        <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{q.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
           </div>

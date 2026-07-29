@@ -13,6 +13,7 @@ import { MapFrame } from '@/components/features/maps/MapFrame';
 import { getEditorialMarkers } from '@/db/editorial-markers';
 import { getCmsUser } from '@/lib/auth/admin';
 import { EFT_QUESTS } from '@/data/quests';
+import { STORY_WALKTHROUGHS } from '@/data/story-walkthroughs';
 import { questsForMap, questTasksForMap } from '@/lib/map-quests';
 import type { EditorialMarkerData } from '@/components/features/maps/EditorialMarkerCard';
 import type { MapView, MapViewMarker } from '@/components/features/maps/map-types';
@@ -256,6 +257,9 @@ export default async function MapPage({ params, searchParams }: Props) {
       const questIndex = canEditMarkers
         ? EFT_QUESTS.map((t) => ({ id: t.id, name: t.name, trader: t.trader.normalizedName }))
         : undefined;
+      const storyIndex = canEditMarkers
+        ? Object.values(STORY_WALKTHROUGHS).map((s) => ({ slug: s.slug, title: s.title }))
+        : undefined;
       const editorialRows = await getEditorialMarkers(data.asset.mapId);
       const questById = new Map(EFT_QUESTS.map((t) => [t.id, t]));
       const editorialMarkers: EditorialMarkerData[] = editorialRows.map((r) => {
@@ -300,6 +304,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             canEditMarkers={canEditMarkers}
             mapId={data.asset.mapId}
             questIndex={questIndex}
+            storyIndex={storyIndex}
             focusQuestId={focusQuestId}
           />
         </main>

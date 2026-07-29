@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import type { MapView } from './map-types';
 import type { MapViewerApi } from './map-frame-types';
-import type { EditorialMarkerData, QuestIndexItem } from './EditorialMarkerCard';
+import type { EditorialMarkerData, QuestIndexItem, StoryIndexItem } from './EditorialMarkerCard';
 
 // Leaflet работает только в браузере (нужен window) → грузим клиент без SSR (правило 6).
 const MapViewerClient = dynamic(
@@ -29,6 +29,7 @@ export function MapViewerLoader({
   canEditMarkers,
   mapId,
   questIndex,
+  storyIndex,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
@@ -38,6 +39,7 @@ export function MapViewerLoader({
   canEditMarkers?: boolean;
   mapId?: string;
   questIndex?: QuestIndexItem[];
+  storyIndex?: StoryIndexItem[];
 }) {
   return (
     <MapViewerClient
@@ -49,6 +51,7 @@ export function MapViewerLoader({
       canEditMarkers={canEditMarkers}
       mapId={mapId}
       questIndex={questIndex}
+      storyIndex={storyIndex}
     />
   );
 }
