@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Crosshair, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
+import { Crosshair, LocateFixed, Minus, Navigation, Pencil, Plus, X } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -14,7 +14,7 @@ import { useMapViewStore } from '@/store/useMapViewStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
 import { manualMarkerIcon } from './manual-marker-icon';
-import type { EditorialMarkerData } from './EditorialMarkerCard';
+import { EditorialMarkerCard, type EditorialMarkerData } from './EditorialMarkerCard';
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
@@ -137,14 +137,12 @@ export function MapViewerClient({
   activeFloor = 0,
   onRequestFloor,
   editorialMarkers,
-  onSelectEditorial,
 }: {
   data: MapView;
   onReady?: (api: MapViewerApi) => void;
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
   editorialMarkers?: EditorialMarkerData[];
-  onSelectEditorial?: (id: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -181,12 +179,12 @@ export function MapViewerClient({
   const staticLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Слой редакторских маркеров (editorial_markers) — изолированный эффект (не трогает init).
-  // Всегда виден (кураторские точки, их мало), клик открывает карточку через callback.
+  // Всегда виден (кураторские точки, их мало); клик открывает карточку-popup НАД каплей.
   const editorialLayerRef = useRef<L.LayerGroup | null>(null);
-  const onSelectEditorialRef = useRef(onSelectEditorial);
-  useEffect(() => {
-    onSelectEditorialRef.current = onSelectEditorial;
-  });
+  const [openEditorialId, setOpenEditorialId] = useState<string | null>(null);
+  const openEditorial = editorialMarkers?.find((m) => m.id === openEditorialId) ?? null;
+  const editorialOverlayRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const map = mapInst;
     if (!map) return;
@@ -201,9 +199,9 @@ export function MapViewerClient({
     for (const m of editorialMarkers ?? []) {
       if (!m.id) continue;
       const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
-      if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -12], opacity: 1 });
+      if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });
       const id = m.id;
-      mk.on('click', () => onSelectEditorialRef.current?.(id));
+      mk.on('click', () => setOpenEditorialId(id));
       mk.addTo(group);
     }
     return () => {
@@ -211,6 +209,28 @@ export function MapViewerClient({
       editorialLayerRef.current = null;
     };
   }, [mapInst, editorialMarkers]);
+
+  // Карточка-popup держится НАД каплей: пересчёт экранной точки при пане/зуме; клик по карте — закрыть.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !openEditorial) return;
+    const latlng = ll({ x: openEditorial.x, z: openEditorial.z });
+    const place = () => {
+      const el = editorialOverlayRef.current;
+      if (!el) return;
+      const pt = map.latLngToContainerPoint(latlng);
+      el.style.left = `${pt.x}px`;
+      el.style.top = `${pt.y}px`;
+    };
+    place();
+    const close = () => setOpenEditorialId(null);
+    map.on('move zoom', place);
+    map.on('click', close);
+    return () => {
+      map.off('move zoom', place);
+      map.off('click', close);
+    };
+  }, [mapInst, openEditorial]);
 
   // Число маркеров на под-слой (для drawer'а + скрытия пустых слоёв).
   const counts = useMemo(() => {
@@ -713,6 +733,23 @@ export function MapViewerClient({
   return (
     <div className={rootCls}>
       <div ref={containerRef} className="absolute inset-0 z-0" />
+
+      {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом). */}
+      {openEditorial && (
+        <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 14px))' }}>
+          <div className="relative rounded-lg border border-lines-hover bg-(--color-base)/95 p-2 shadow-xl backdrop-blur-md">
+            <button
+              type="button"
+              onClick={() => setOpenEditorialId(null)}
+              aria-label="Закрыть"
+              className="absolute top-1.5 right-1.5 z-10 text-text-muted transition-colors hover:text-(--primary)"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <EditorialMarkerCard marker={openEditorial} linkedQuest={openEditorial.linkedQuest} />
+          </div>
+        </div>
+      )}
 
       {isStatic ? (
         <button
