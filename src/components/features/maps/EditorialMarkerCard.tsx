@@ -200,8 +200,10 @@ export function EditorialMarkerCard({
         )}
       </div>
 
-      {/* Уголок-хвостик popup'а — указывает вниз на каплю (как в Figma). */}
-      <div className="h-3.5 w-7 shrink-0" style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)', backgroundColor: 'var(--color-tactical-amber)' }} />
+      {/* Уголок-хвостик popup'а (28×14) — указывает вниз на каплю; чёрная обводка 1.5px. */}
+      <svg width="28" height="14" viewBox="0 0 28 14" className="shrink-0 overflow-visible" aria-hidden="true">
+        <path d="M0 0 L14 14 L28 0" fill="var(--color-tactical-amber)" stroke="#000" strokeWidth="1.5" strokeLinejoin="round" />
+      </svg>
     </div>
   );
 }
