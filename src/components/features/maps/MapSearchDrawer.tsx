@@ -7,6 +7,7 @@ import { HighlightedText } from '@/components/ui/HighlightedText';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
+import { storiesForMap, type StoryOnMap } from '@/lib/story-map-link';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
@@ -22,13 +23,15 @@ import type { TaskRaw } from '@/types/quest';
  *   Предметы: инпут «ПОИСК ПРЕДМЕТА ИЛИ КОНТЕЙНЕРА» + гриды 36×36 toggle-кнопок (мультивыбор).
  *   Задания: инпут «ВВЕДИТЕ НАЗВАНИЕ ЗАДАНИЯ» + чипы (ВСЕ/СЮЖЕТ/Смотритель%/Каппа%) + лента
  *     торговцев + строки с трейдер-тинтом (уровень, бейджи Каппы/Смотрителя).
- * NB (следующий срез): тогглы Предметов и чипы/трейдеры Заданий — визуальный выбор; привязка к
- * фильтру слоёв карты (vis↔activeFilters), master-detail квеста из QuestMap, 15-кат разметка
- * loose-лута и флаг «сюжет» — отложены.
+ * Тогглы/чипы/трейдеры фильтруют карту (vis↔activeFilters), master-detail квеста и loot-15 —
+ * сделаны. Чип СЮЖЕТ — ЧЕРНОВИК фазы A (storiesForMap по mapIcon → строки историй, линк на
+ * walkthrough; точные пины чекпоинтов = фаза B). Визуал строки истории — под Figma-итерацию.
  */
 
 const SECTION = 'font-blender-medium text-type-caption uppercase tracking-widest text-text-muted';
 const CONTAINER_WEBP = '/images/maps/eft/markers/loot-containers/loot-container-';
+// ЧЕРНОВОЙ цвет сюжетной истории — как у чипа СЮЖЕТ (сталь). В Figma закрепить токен.
+const STORY_TINT = '#6096a6';
 
 // Порядок и состав 1:1 с Figma (node 2242:2662).
 const CONTAINER_TILES: { file: string; label: string }[] = [
@@ -73,13 +76,14 @@ interface LabelGroup {
 }
 
 interface Props {
+  slug: string;
   markers: MapViewMarker[];
   quests: MapQuestLite[];
   questTasks: TaskRaw[];
   apiRef: React.RefObject<MapViewerApi | null>;
 }
 
-export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) {
+export function MapSearchDrawer({ slug, markers, quests, questTasks, apiRef }: Props) {
   const open = useMapUiStore((s) => s.searchOpen);
   const setOpen = useMapUiStore((s) => s.setSearchOpen);
   // Видимость слоёв — общий стор: тогглы фильтруют карту и синхронны с правой легендой (GRILL-2 §3).
@@ -146,6 +150,13 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
       return true;
     });
   }, [quests, qf, traderFilter, qQuests]);
+
+  // ЧЕРНОВИК чипа СЮЖЕТ (фаза A гибрида): истории, у которых чекпоинт на этой карте
+  // (storiesForMap по condition.mapIcon). Текстовый фильтр — по названию истории.
+  const stories = useMemo(() => {
+    const tq = qQuests.trim().toLowerCase();
+    return storiesForMap(slug).filter((s) => !tq || s.title.toLowerCase().includes(tq));
+  }, [slug, qQuests]);
 
   const pickFilter = (key: QuestFilter) => setQf((cur) => (cur === key ? 'all' : key));
 
@@ -299,8 +310,8 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
             <FilterChip active={qf === 'kappa'} color="var(--color-kappa)" onClick={() => pickFilter('kappa')} maskIcon="icon-eft-profile-kappa" label={`${kappaPct}%`} />
           </div>
 
-          {/* Лента торговцев */}
-          {traders.length > 0 && (
+          {/* Лента торговцев (сюжетные истории — без торговцев, лента скрыта) */}
+          {qf !== 'story' && traders.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {traders.map((t) => {
                 const on = traderFilter === t;
@@ -319,9 +330,15 @@ export function MapSearchDrawer({ markers, quests, questTasks, apiRef }: Props) 
             </div>
           )}
 
-          {/* Список квестов */}
+          {/* Список: сюжетные истории (чип СЮЖЕТ) ИЛИ квесты */}
           <div className="flex flex-col gap-1">
-            {shownQuests.length === 0 ? (
+            {qf === 'story' ? (
+              stories.length === 0 ? (
+                <p className="px-1 py-4 text-center font-blender-book text-xs text-text-muted">Сюжетных историй на этой карте нет</p>
+              ) : (
+                stories.map((s) => <StoryRow key={s.slug} s={s} query={qQuests} />)
+              )
+            ) : shownQuests.length === 0 ? (
               <p className="px-1 py-4 text-center font-blender-book text-xs text-text-muted">Заданий не найдено</p>
             ) : (
               shownQuests.map((q) => (
@@ -411,5 +428,38 @@ function QuestRow({ q, query, active, onSelect }: { q: MapQuestLite; query: stri
         {q.kappaRequired && <span className="icon-mask icon-eft-profile-kappa h-4 w-4" />}
       </span>
     </button>
+  );
+}
+
+// ЧЕРНОВИК строки сюжетной истории (по образцу QuestRow — для итерации в Figma).
+// Тинт = стальной STORY_TINT; слева иконка-маска истории, справа сложность (черепа) +
+// число этапов НА ЭТОЙ карте; клик → walkthrough /eft/quests/<slug>. Пинов пока нет (фаза B).
+function StoryRow({ s, query }: { s: StoryOnMap; query: string }) {
+  const skullColor = s.difficulty.skulls >= 5 ? 'var(--color-danger)' : s.difficulty.skulls >= 3 ? 'var(--primary)' : 'var(--color-nvg-green)';
+  return (
+    <Link
+      href={`/eft/quests/${s.slug}`}
+      title={`${s.title} — ${s.difficulty.label}`}
+      className="flex h-9 w-full items-center justify-between rounded border-[0.5px] px-3.5 transition-shadow hover:ring-1 hover:ring-(--primary)"
+      style={{
+        borderColor: `color-mix(in srgb, ${STORY_TINT} 55%, transparent)`,
+        background: `radial-gradient(140% 160% at 0% 50%, color-mix(in srgb, ${STORY_TINT} 30%, transparent), transparent 55%)`,
+      }}
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        <span className={`icon-mask ${s.iconClass} h-4 w-4 shrink-0`} style={{ backgroundColor: STORY_TINT }} />
+        <span className="min-w-0 truncate font-blender-medium text-xs text-text-primary">
+          {query ? <HighlightedText text={s.title} query={query} /> : s.title}
+        </span>
+      </span>
+      <span className="flex shrink-0 items-center gap-2">
+        <span className="flex items-center gap-0.5 font-blender-medium text-[10px] tabular-nums" style={{ color: skullColor }}>
+          <span className="icon-mask icon-eft-difficulty-skull h-3 w-3" style={{ backgroundColor: skullColor }} />
+          {s.difficulty.skulls}
+        </span>
+        <span className="font-blender-medium text-[10px] uppercase text-text-secondary">{s.stepHits} эт.</span>
+        <ChevronRight className="h-4 w-4 text-text-muted" />
+      </span>
+    </Link>
   );
 }
