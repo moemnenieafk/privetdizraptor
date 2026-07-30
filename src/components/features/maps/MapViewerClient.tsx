@@ -209,15 +209,18 @@ export function MapViewerClient({
     if (!map) return;
     const group = L.layerGroup().addTo(map);
     editorialLayerRef.current = group;
-    const icon = L.divIcon({
-      className: 'cta-editorial-mk',
-      html: '<span style="display:block;width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--primary,#e68e25);border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.6)"></span>',
-      iconSize: [16, 16],
-      iconAnchor: [8, 16],
-    });
+    // Цвет капли по типу привязки: сюжет=стальной, квест=амбер, POI/без=серый.
+    const kindColor = (k: string) => (k === 'story' ? '#6096a6' : k === 'quest' ? '#e68e25' : '#8a8a95');
+    const pinIcon = (color: string) =>
+      L.divIcon({
+        className: 'cta-editorial-mk',
+        html: `<span style="display:block;width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.6)"></span>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 16],
+      });
     for (const m of editorialMarkers ?? []) {
       if (!m.id) continue;
-      const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
+      const mk = L.marker(ll({ x: m.x, z: m.z }), { icon: pinIcon(kindColor(m.linkKind)), riseOnHover: true });
       if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });
       const id = m.id;
       mk.on('click', () => setOpenEditorialId(id));
