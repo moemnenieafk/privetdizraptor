@@ -250,17 +250,30 @@ export function MapViewerClient({
     const map = mapInst;
     if (!map || !activeMarker) return;
     const latlng = ll({ x: activeMarker.x, z: activeMarker.z });
+    const GAP = 22;
+    const M = 8;
+    // Позиция НАД пином, но с клэмпом в границы карты — карточка всегда целиком видна.
     const place = () => {
       const el = editorialOverlayRef.current;
       if (!el) return;
       const pt = map.latLngToContainerPoint(latlng);
-      el.style.left = `${pt.x}px`;
-      el.style.top = `${pt.y}px`;
+      const size = map.getSize();
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      const left = Math.min(Math.max(pt.x, w / 2 + M), size.x - w / 2 - M);
+      let top = pt.y - GAP - h;
+      top = Math.max(M, Math.min(top, size.y - h - M));
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
     };
     place();
     map.on('move zoom', place);
+    // Пересчёт при изменении высоты карточки (раскрытие пикера, галерея).
+    const ro = new ResizeObserver(place);
+    if (editorialOverlayRef.current) ro.observe(editorialOverlayRef.current);
     return () => {
       map.off('move zoom', place);
+      ro.disconnect();
     };
   }, [mapInst, activeMarker]);
 
@@ -833,7 +846,7 @@ export function MapViewerClient({
       {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом).
           activeMarker = черновик (pending, без id) ЛИБО открытый сохранённый маркер. */}
       {activeMarker && (
-        <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translate(-50%, calc(-100% - 22px))' }}>
+        <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translateX(-50%)' }}>
           <EditorialMarkerCard
             key={activeMarker.id ?? 'new'}
             marker={activeMarker}

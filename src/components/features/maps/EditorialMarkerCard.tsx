@@ -8,7 +8,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, X, Paperclip, Pencil, ChevronLeft, ChevronRight, ZoomIn, Bookmark } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
-import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES } from '@/data/map-markers/categories';
+import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES, defaultCategory } from '@/data/map-markers/categories';
+import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
@@ -253,10 +254,10 @@ export function EditorialMarkerCard({
         </button>
       )}
       <div
-        className="flex w-full flex-col items-center gap-2.5 rounded border-[0.5px] p-3.5 backdrop-blur-md"
+        className="scrollbar-hidden flex max-h-[82vh] w-full flex-col items-center gap-2.5 overflow-y-auto rounded border-[0.5px] p-3.5 backdrop-blur-xl"
         style={{
           borderColor: `color-mix(in srgb, ${tintVar} 60%, transparent)`,
-          background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${tintVar} 15%, transparent), rgba(0,0,0,0.84))`,
+          background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${tintVar} 12%, transparent), rgba(0,0,0,0.10))`,
         }}
       >
         {/* ── Галерея: миниатюры 49×28 + большой скрин ── */}
@@ -338,39 +339,53 @@ export function EditorialMarkerCard({
                         faction: t.key === 'extract' ? (d.faction ?? 'all') : null,
                       }))
                     }
-                    className={`flex h-6 items-center rounded-xs border-[0.5px] px-1.5 font-blender-medium text-[10px] uppercase transition-colors ${
+                    className={`flex h-7 items-center gap-1 rounded-xs border-[0.5px] px-1.5 font-blender-medium text-[10px] uppercase transition-colors ${
                       on ? 'border-(--primary) bg-(--primary)/15 text-(--primary)' : 'border-lines-hover text-text-secondary hover:text-(--primary)'
                     }`}
                   >
+                    <MarkerGlyph input={{ type: t.key, faction: 'all', category: defaultCategory(t.key) || undefined }} size={16} />
                     {t.label}
                   </button>
                 );
               })}
             </div>
-            {/* Подкатегория: выход→фракция, спавн→фракция-категория, лут/контейнер→группы */}
+            {/* Подкатегория — сетка иконок 36×36 (глиф = реальная иконка маркера) + тултип */}
             {draft.type === 'extract' && (
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 {EXTRACT_FACTIONS.map((f) => (
-                  <CatChip key={f.key} on={(draft.faction ?? 'all') === f.key} onClick={() => setDraft((d) => ({ ...d, faction: f.key }))} label={f.label} />
+                  <SubCell key={f.key} on={(draft.faction ?? 'all') === f.key} onClick={() => setDraft((d) => ({ ...d, faction: f.key }))} label={f.label}>
+                    <MarkerGlyph input={{ type: 'extract', faction: f.key }} size={24} />
+                  </SubCell>
                 ))}
               </div>
             )}
             {draft.type === 'spawn' && (
               <div className="flex flex-wrap gap-1">
                 {SPAWN_CATEGORIES.map((c) => (
-                  <CatChip key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label} />
+                  <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
+                    <MarkerGlyph input={{ type: 'spawn', category: c.key }} size={22} />
+                  </SubCell>
                 ))}
               </div>
             )}
             {(draft.type === 'loot' || draft.type === 'container') && (
-              <div className="scrollbar-hidden flex max-h-40 flex-col gap-1.5 overflow-y-auto">
+              <div className="scrollbar-hidden flex max-h-48 flex-col gap-1.5 overflow-y-auto">
                 {(draft.type === 'loot' ? LOOT_CATEGORIES : CONTAINER_CATEGORIES).map((g) => (
                   <div key={g.group} className="flex flex-col gap-1">
                     <span className="font-blender-medium text-[9px] uppercase tracking-wide text-text-muted">{g.group}</span>
                     <div className="flex flex-wrap gap-1">
-                      {g.items.map((it) => (
-                        <CatChip key={it.key} on={draft.category === it.key} onClick={() => setDraft((d) => ({ ...d, category: it.key }))} label={it.label} icon={it.icon} />
-                      ))}
+                      {g.items.map((it) => {
+                        const on = draft.category === it.key;
+                        return (
+                          <SubCell key={it.key} on={on} onClick={() => setDraft((d) => ({ ...d, category: it.key }))} label={it.label}>
+                            {draft.type === 'loot' && it.icon ? (
+                              <span className={`icon-mask ${it.icon} size-6`} style={{ backgroundColor: on ? 'var(--primary)' : 'var(--color-text-secondary)' }} />
+                            ) : (
+                              <MarkerGlyph input={{ type: 'container', category: it.key }} size={30} />
+                            )}
+                          </SubCell>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -379,14 +394,18 @@ export function EditorialMarkerCard({
             {draft.type === 'hazard' && (
               <div className="flex flex-wrap gap-1">
                 {HAZARD_SUBTYPES.map((c) => (
-                  <CatChip key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label} />
+                  <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
+                    <MarkerGlyph input={{ type: 'hazard', meta: { hazardType: c.key } }} size={22} />
+                  </SubCell>
                 ))}
               </div>
             )}
             {draft.type === 'quest_zone' && (
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 {QUESTZONE_KINDS.map((c) => (
-                  <CatChip key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label} />
+                  <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
+                    <MarkerGlyph input={{ type: 'quest_zone', meta: { objectiveKind: c.key } }} size={24} />
+                  </SubCell>
                 ))}
               </div>
             )}
@@ -664,19 +683,44 @@ export function EditorialMarkerCard({
   );
 }
 
-// Чип подкатегории (опц. иконка-маска).
-function CatChip({ on, onClick, label, icon }: { on: boolean; onClick: () => void; label: string; icon?: string }) {
+// Глиф маркера по резолверу (тот же, что рисует на карте) — img или перекрашенная маска.
+function MarkerGlyph({ input, size = 22 }: { input: MarkerIconInput; size?: number }) {
+  const icon = markerIconUrl(input);
+  if (!icon) return <span className="rounded-full bg-text-muted" style={{ width: size * 0.5, height: size * 0.5 }} />;
+  if (icon.mode === 'img') return <img src={icon.url} alt="" className="object-contain" style={{ width: size, height: size }} />;
+  return (
+    <span
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: markerColor(input.type),
+        maskImage: `url(${icon.url})`,
+        WebkitMaskImage: `url(${icon.url})`,
+        maskSize: 'contain',
+        WebkitMaskSize: 'contain',
+        maskRepeat: 'no-repeat',
+        WebkitMaskRepeat: 'no-repeat',
+        maskPosition: 'center',
+        WebkitMaskPosition: 'center',
+      }}
+    />
+  );
+}
+
+// Ячейка сетки подкатегорий 36×36 (иконка + тултип).
+function SubCell({ on, onClick, label, children }: { on: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       title={label}
-      className={`flex h-6 max-w-full items-center gap-1 rounded-xs border-[0.5px] px-1.5 font-blender-book text-[10px] transition-colors ${
-        on ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-secondary hover:text-(--primary)'
+      aria-pressed={on}
+      className={`flex size-9 shrink-0 items-center justify-center rounded-xs border transition-colors ${
+        on ? 'border-(--primary) bg-(--primary)/15' : 'border-lines-hover hover:border-(--primary)/50'
       }`}
     >
-      {icon && <span className={`icon-mask ${icon} h-3.5 w-3.5 shrink-0`} style={{ backgroundColor: on ? 'var(--primary)' : 'var(--color-text-secondary)' }} />}
-      <span className="truncate">{label}</span>
+      {children}
     </button>
   );
 }
+
