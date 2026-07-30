@@ -254,10 +254,10 @@ export function EditorialMarkerCard({
         </button>
       )}
       <div
-        className="scrollbar-hidden flex max-h-[82vh] w-full flex-col items-center gap-2.5 overflow-y-auto rounded border-[0.5px] p-3.5 backdrop-blur-xl"
+        className="scrollbar-hidden flex max-h-[82vh] w-full flex-col items-center gap-2.5 overflow-y-auto rounded border-[0.5px] p-3.5"
         style={{
           borderColor: `color-mix(in srgb, ${tintVar} 60%, transparent)`,
-          background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${tintVar} 12%, transparent), rgba(0,0,0,0.10))`,
+          background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${tintVar} 18%, var(--color-base)), var(--color-base))`,
         }}
       >
         {/* ── Галерея: миниатюры 49×28 + большой скрин ── */}
@@ -340,7 +340,7 @@ export function EditorialMarkerCard({
                       }))
                     }
                     className={`flex h-7 items-center gap-1 rounded-xs border-[0.5px] px-1.5 font-blender-medium text-[10px] uppercase transition-colors ${
-                      on ? 'border-(--primary) bg-(--primary)/15 text-(--primary)' : 'border-lines-hover text-text-secondary hover:text-(--primary)'
+                      on ? 'border-(--primary) bg-(--primary) text-(--color-base)' : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
                     }`}
                   >
                     <MarkerGlyph input={{ type: t.key, faction: 'all', category: defaultCategory(t.key) || undefined }} size={16} />
@@ -507,8 +507,8 @@ export function EditorialMarkerCard({
                   onClick={() => { setDraft((d) => ({ ...d, linkKind: k, linkId: null, linkStep: null })); setLinkQ(''); }}
                   className={`flex h-6 flex-1 items-center justify-center rounded-xs border-[0.5px] font-blender-medium text-[10px] uppercase transition-colors ${
                     draft.linkKind === k
-                      ? 'border-(--primary) bg-(--primary)/15 text-(--primary)'
-                      : 'border-lines-hover text-text-secondary hover:text-(--primary)'
+                      ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+                      : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
                   }`}
                 >
                   {k === 'none' ? 'Без' : k === 'quest' ? 'Квест' : 'Сюжет'}
@@ -715,8 +715,8 @@ function SubCell({ on, onClick, label, children }: { on: boolean; onClick: () =>
       onClick={onClick}
       title={label}
       aria-pressed={on}
-      className={`flex size-9 shrink-0 items-center justify-center rounded-xs border transition-colors ${
-        on ? 'border-(--primary) bg-(--primary)/15' : 'border-lines-hover hover:border-(--primary)/50'
+      className={`flex size-9 shrink-0 items-center justify-center rounded-xs border bg-card-menu transition-colors ${
+        on ? 'border-(--primary)' : 'border-lines-hover hover:border-(--primary)/50'
       }`}
     >
       {children}
