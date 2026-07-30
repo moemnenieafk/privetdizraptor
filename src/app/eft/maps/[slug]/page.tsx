@@ -275,6 +275,7 @@ export default async function MapPage({ params, searchParams }: Props) {
           floor: r.floor,
           type: r.type,
           category: r.category,
+          faction: r.faction,
           title: r.title,
           description: r.description,
           screenshots: r.screenshots ?? [],

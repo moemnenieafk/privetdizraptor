@@ -220,7 +220,13 @@ export function MapViewerClient({
       });
     for (const m of editorialMarkers ?? []) {
       if (!m.id) continue;
-      const mk = L.marker(ll({ x: m.x, z: m.z }), { icon: pinIcon(kindColor(m.linkKind)), riseOnHover: true });
+      // Категоризованный маркер → тот же резолвер иконок, что у ручных (реальная иконка вместо «?»);
+      // без категории (poi) → амбер-teardrop, крашенный по типу привязки.
+      const icon =
+        m.type && m.type !== 'poi'
+          ? manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title })
+          : pinIcon(kindColor(m.linkKind));
+      const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
       if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });
       const id = m.id;
       mk.on('click', () => setOpenEditorialId(id));

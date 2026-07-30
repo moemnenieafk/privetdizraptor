@@ -80,6 +80,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     z,
     type: str(body.type, 40) || "poi",
     category: str(body.category, 60) || null,
+    faction: str(body.faction, 40) || null,
     title,
     description: str(body.description, MAX_DESC) || null,
     screenshots: shots(body.screenshots),

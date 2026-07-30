@@ -8,9 +8,29 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, X, Paperclip, Pencil, ChevronLeft, ChevronRight, ZoomIn, Bookmark } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES } from '@/data/map-markers/categories';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
+
+// Типы маркера (как в редакторе Ледокола) + POI без категории. Иконка резолвится manualMarkerIcon.
+const MARKER_TYPES: { key: string; label: string }[] = [
+  { key: 'poi', label: 'POI' },
+  { key: 'extract', label: 'Выход' },
+  { key: 'spawn', label: 'Спавн' },
+  { key: 'loot', label: 'Лут' },
+  { key: 'container', label: 'Контейнер' },
+  { key: 'transit', label: 'Переход' },
+  { key: 'hazard', label: 'Опасн.' },
+  { key: 'lock', label: 'Замок' },
+  { key: 'switch', label: 'Рычаг' },
+  { key: 'stationary', label: 'Стац.' },
+];
+const EXTRACT_FACTIONS: { key: string; label: string }[] = [
+  { key: 'all', label: 'Общий' },
+  { key: 'pmc', label: 'ЧВК' },
+  { key: 'scav', label: 'Дикий' },
+];
 
 /** Данные карточки (клиентская форма editorial-маркера + разрешённые URL скринов). */
 export interface EditorialMarkerView {
@@ -22,6 +42,7 @@ export interface EditorialMarkerView {
   floor?: number | null;
   type: string;
   category?: string | null;
+  faction?: string | null;
   title: string;
   description?: string | null;
   /** Готовые URL скриншотов (родитель резолвит media-ключи → URL). */
@@ -99,6 +120,9 @@ export function EditorialMarkerCard({
     title: marker.title,
     description: marker.description ?? '',
     screenshots: [...marker.screenshots],
+    type: marker.type,
+    category: marker.category ?? (null as string | null),
+    faction: marker.faction ?? (null as string | null),
     linkKind: marker.linkKind,
     linkId: marker.linkId ?? null,
     linkStep: marker.linkStep ?? null,
@@ -132,8 +156,9 @@ export function EditorialMarkerCard({
           z: marker.z,
           y: marker.y,
           floor: marker.floor,
-          type: marker.type,
-          category: marker.category,
+          type: draft.type,
+          category: draft.category,
+          faction: draft.faction,
           title: draft.title,
           description: draft.description,
           screenshots: draft.screenshots,
@@ -279,6 +304,67 @@ export function EditorialMarkerCard({
             )}
           </div>
         </div>
+
+        {/* ── Категория маркера (режим правки): тип + подкатегория, как в редакторе Ледокола ── */}
+        {editing && (
+          <div className="flex w-full flex-col gap-1.5">
+            <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">Категория</span>
+            {/* Тип */}
+            <div className="flex flex-wrap gap-1">
+              {MARKER_TYPES.map((t) => {
+                const on = draft.type === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() =>
+                      setDraft((d) => ({
+                        ...d,
+                        type: t.key,
+                        category: t.key === d.type ? d.category : null,
+                        faction: t.key === 'extract' ? (d.faction ?? 'all') : null,
+                      }))
+                    }
+                    className={`flex h-6 items-center rounded-xs border-[0.5px] px-1.5 font-blender-medium text-[10px] uppercase transition-colors ${
+                      on ? 'border-(--primary) bg-(--primary)/15 text-(--primary)' : 'border-lines-hover text-text-secondary hover:text-(--primary)'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Подкатегория: выход→фракция, спавн→фракция-категория, лут/контейнер→группы */}
+            {draft.type === 'extract' && (
+              <div className="flex gap-1">
+                {EXTRACT_FACTIONS.map((f) => (
+                  <CatChip key={f.key} on={(draft.faction ?? 'all') === f.key} onClick={() => setDraft((d) => ({ ...d, faction: f.key }))} label={f.label} />
+                ))}
+              </div>
+            )}
+            {draft.type === 'spawn' && (
+              <div className="flex flex-wrap gap-1">
+                {SPAWN_CATEGORIES.map((c) => (
+                  <CatChip key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label} />
+                ))}
+              </div>
+            )}
+            {(draft.type === 'loot' || draft.type === 'container') && (
+              <div className="scrollbar-hidden flex max-h-40 flex-col gap-1.5 overflow-y-auto">
+                {(draft.type === 'loot' ? LOOT_CATEGORIES : CONTAINER_CATEGORIES).map((g) => (
+                  <div key={g.group} className="flex flex-col gap-1">
+                    <span className="font-blender-medium text-[9px] uppercase tracking-wide text-text-muted">{g.group}</span>
+                    <div className="flex flex-wrap gap-1">
+                      {g.items.map((it) => (
+                        <CatChip key={it.key} on={draft.category === it.key} onClick={() => setDraft((d) => ({ ...d, category: it.key }))} label={it.label} icon={it.icon} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Ряд привязки: трейдер/имя (слева) · уровень+каппа (справа) ── */}
         {linkedQuest && (
@@ -548,5 +634,22 @@ export function EditorialMarkerCard({
         />
       )}
     </div>
+  );
+}
+
+// Чип подкатегории (опц. иконка-маска).
+function CatChip({ on, onClick, label, icon }: { on: boolean; onClick: () => void; label: string; icon?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      className={`flex h-6 max-w-full items-center gap-1 rounded-xs border-[0.5px] px-1.5 font-blender-book text-[10px] transition-colors ${
+        on ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-secondary hover:text-(--primary)'
+      }`}
+    >
+      {icon && <span className={`icon-mask ${icon} h-3.5 w-3.5 shrink-0`} style={{ backgroundColor: on ? 'var(--primary)' : 'var(--color-text-secondary)' }} />}
+      <span className="truncate">{label}</span>
+    </button>
   );
 }

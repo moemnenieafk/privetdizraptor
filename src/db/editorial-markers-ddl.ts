@@ -19,6 +19,7 @@ export const EDITORIAL_MARKERS_DDL: string[] = [
     z           real not null,
     type        text not null default 'poi',
     category    text,
+    faction     text,
     title       text not null,
     description text,
     screenshots jsonb not null default '[]'::jsonb,
@@ -29,6 +30,9 @@ export const EDITORIAL_MARKERS_DDL: string[] = [
     created_at  timestamptz not null default now(),
     updated_at  timestamptz not null default now()
   )`,
+
+  // Аддитивно для уже созданной таблицы (create if not exists её бы пропустил).
+  `alter table public.editorial_markers add column if not exists faction text`,
 
   `create index if not exists editorial_markers_map_idx
      on public.editorial_markers (game_id, map_id)`,

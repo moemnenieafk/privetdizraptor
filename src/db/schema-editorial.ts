@@ -28,6 +28,8 @@ export const editorialMarkers = pgTable(
     /** Вид маркера (иконка) — reuse категорий manual-marker-icon. */
     type: text("type").notNull().default("poi"),
     category: text("category"),
+    /** Фракция выхода/спавна (all|pmc|scav) — для резолва иконки, как у ручных маркеров. */
+    faction: text("faction"),
     title: text("title").notNull(),
     description: text("description"),
     /** Массив media-ключей Supabase Storage (скриншоты). */
