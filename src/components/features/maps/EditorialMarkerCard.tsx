@@ -6,7 +6,7 @@
 // Данные — editorial_markers (schema-editorial). Решения: docs/decisions/editorial-markers-tool.md.
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, X, Paperclip, Pencil, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { Plus, X, Paperclip, Pencil, ChevronLeft, ChevronRight, ZoomIn, Bookmark } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
@@ -43,6 +43,8 @@ export interface LinkedQuestInfo {
 /** Маркер + разрешённая привязка — сериализуемая форма для пропсов карты. */
 export interface EditorialMarkerData extends EditorialMarkerView {
   linkedQuest?: LinkedQuestInfo | null;
+  /** Название привязанной сюжетной истории (linkKind='story') — резолвится на сервере всем. */
+  linkedStory?: { title: string } | null;
 }
 
 /** Лёгкий элемент индекса квестов для автокомплита привязки (только редакторам). */
@@ -62,6 +64,8 @@ interface Props {
   marker: EditorialMarkerView;
   /** Разрешённый связанный квест (linkKind='quest') — для ряда трейдер/уровень/каппа. */
   linkedQuest?: LinkedQuestInfo | null;
+  /** Название привязанной истории (linkKind='story') — для индикатора в показе. */
+  linkedStory?: { title: string } | null;
   /** Юзер может править (admin/editor) — показывает кнопку-карандаш переключения режима. */
   canEdit?: boolean;
   /** Открыть сразу в режиме правки (новый маркер, только что поставленный). */
@@ -79,6 +83,7 @@ interface Props {
 export function EditorialMarkerCard({
   marker,
   linkedQuest,
+  linkedStory,
   canEdit = false,
   defaultEditing = false,
   questIndex,
@@ -289,6 +294,19 @@ export function EditorialMarkerCard({
               {linkedQuest.lightkeeperRequired && <span className="icon-mask icon-eft-profile-lightkeeper size-4 text-(--color-lightkeeper)" />}
               {linkedQuest.kappaRequired && <span className="icon-mask icon-eft-profile-kappa size-4 text-(--color-kappa)" />}
             </div>
+          </div>
+        )}
+
+        {/* ── Индикатор привязки к сюжету (показ) ── */}
+        {!editing && marker.linkKind === 'story' && (
+          <div className="flex w-full items-center gap-2">
+            <Bookmark className="h-3.5 w-3.5 shrink-0" style={{ color: '#6096a6' }} />
+            <span className="min-w-0 flex-1 truncate font-blender-medium text-xs" style={{ color: '#6096a6' }}>
+              {linkedStory?.title ?? marker.linkId}
+            </span>
+            {marker.linkStep != null && (
+              <span className="shrink-0 font-blender-medium text-[10px] uppercase text-text-secondary">шаг {marker.linkStep}</span>
+            )}
           </div>
         )}
 

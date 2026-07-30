@@ -825,6 +825,7 @@ export function MapViewerClient({
             key={activeMarker.id ?? 'new'}
             marker={activeMarker}
             linkedQuest={activeMarker.linkedQuest}
+            linkedStory={activeMarker.linkedStory}
             canEdit={canEditMarkers}
             defaultEditing={!activeMarker.id}
             questIndex={questIndex}

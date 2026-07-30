@@ -262,6 +262,8 @@ export default async function MapPage({ params, searchParams }: Props) {
         : undefined;
       const editorialRows = await getEditorialMarkers(data.asset.mapId);
       const questById = new Map(EFT_QUESTS.map((t) => [t.id, t]));
+      // Название истории — для индикатора привязки в карточке (всем, не только редакторам).
+      const storyTitle = new Map(Object.values(STORY_WALKTHROUGHS).map((s) => [s.slug, s.title]));
       const editorialMarkers: EditorialMarkerData[] = editorialRows.map((r) => {
         const q = r.linkKind === 'quest' && r.linkId ? questById.get(r.linkId) : undefined;
         return {
@@ -288,6 +290,7 @@ export default async function MapPage({ params, searchParams }: Props) {
                 lightkeeperRequired: q.lightkeeperRequired,
               }
             : null,
+          linkedStory: r.linkKind === 'story' && r.linkId ? { title: storyTitle.get(r.linkId) ?? r.linkId } : null,
         };
       });
 
