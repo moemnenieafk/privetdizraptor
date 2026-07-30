@@ -222,9 +222,16 @@ export function MapViewerClient({
       if (!m.id) continue;
       // Категоризованный маркер → тот же резолвер иконок, что у ручных (реальная иконка вместо «?»);
       // без категории (poi) → амбер-teardrop, крашенный по типу привязки.
+      // Опасности/зоны-заданий резолвятся по meta → кладём под-тип из категории.
+      const meta =
+        m.type === 'hazard' && m.category
+          ? { hazardType: m.category }
+          : m.type === 'quest_zone' && m.category
+            ? { objectiveKind: m.category }
+            : undefined;
       const icon =
         m.type && m.type !== 'poi'
-          ? manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title })
+          ? manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title, meta })
           : pinIcon(kindColor(m.linkKind));
       const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
       if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });

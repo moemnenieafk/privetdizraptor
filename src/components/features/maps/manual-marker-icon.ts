@@ -34,6 +34,8 @@ export interface ManualMarkerLike {
   itemBg?: string | null;
   /** выход: имя нужного предмета (transferItem) — для codeword-иконки. */
   transferItemName?: string | null;
+  /** тип-специфичная нагрузка (hazard: {hazardType}, quest_zone: {objectiveKind}) для резолвера. */
+  meta?: Record<string, unknown> | null;
 }
 
 export function manualMarkerIcon(m: ManualMarkerLike, del = false, showLabel = false): L.DivIcon {

@@ -25,11 +25,24 @@ const MARKER_TYPES: { key: string; label: string }[] = [
   { key: 'lock', label: 'Замок' },
   { key: 'switch', label: 'Рычаг' },
   { key: 'stationary', label: 'Стац.' },
+  { key: 'quest_zone', label: 'Зона задания' },
 ];
 const EXTRACT_FACTIONS: { key: string; label: string }[] = [
   { key: 'all', label: 'Общий' },
   { key: 'pmc', label: 'ЧВК' },
   { key: 'scav', label: 'Дикий' },
+];
+// Под-типы опасностей (meta.hazardType) и вид зоны задания (meta.objectiveKind) — из легенды.
+const HAZARD_SUBTYPES: { key: string; label: string }[] = [
+  { key: 'sniper', label: 'Снайпер' },
+  { key: 'mine', label: 'Мина' },
+  { key: 'mortar', label: 'Миномёт' },
+  { key: 'tripwire', label: 'Растяжки' },
+  { key: 'other', label: 'Зона' },
+];
+const QUESTZONE_KINDS: { key: string; label: string }[] = [
+  { key: 'target', label: 'Цель' },
+  { key: 'item', label: 'Предмет' },
 ];
 
 /** Данные карточки (клиентская форма editorial-маркера + разрешённые URL скринов). */
@@ -360,6 +373,20 @@ export function EditorialMarkerCard({
                       ))}
                     </div>
                   </div>
+                ))}
+              </div>
+            )}
+            {draft.type === 'hazard' && (
+              <div className="flex flex-wrap gap-1">
+                {HAZARD_SUBTYPES.map((c) => (
+                  <CatChip key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label} />
+                ))}
+              </div>
+            )}
+            {draft.type === 'quest_zone' && (
+              <div className="flex gap-1">
+                {QUESTZONE_KINDS.map((c) => (
+                  <CatChip key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label} />
                 ))}
               </div>
             )}
