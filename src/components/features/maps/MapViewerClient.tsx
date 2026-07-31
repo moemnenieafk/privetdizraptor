@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus, SquarePen, Trash2, Users } from 'lucide-react';
+import { Check, Crosshair, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -269,7 +269,8 @@ export function MapViewerClient({
   const openEditorial = editorialMarkers?.find((m) => m.id === openEditorialId) ?? null;
   const editorialOverlayRef = useRef<HTMLDivElement | null>(null);
   // Режим постановки маркера (admin/editor): следующий клик по карте открывает ЧЕРНОВИК.
-  const [addMode, setAddMode] = useState(false);
+  const addMode = useMapUiStore((s) => s.addMode);
+  const setAddMode = useMapUiStore((s) => s.setAddMode);
   // Черновик нового маркера (в памяти) — INSERT только на «Сохранить», не на клик по карте.
   const [pendingMarker, setPendingMarker] = useState<EditorialMarkerData | null>(null);
   const activeMarker = pendingMarker ?? openEditorial;
@@ -283,7 +284,6 @@ export function MapViewerClient({
   const deleteMarks = useMapUiStore((s) => s.deleteMarks);
   const deleteOpen = useMapUiStore((s) => s.deleteOpen);
   const setDeleteOpen = useMapUiStore((s) => s.setDeleteOpen);
-  const toggleDelete = useMapUiStore((s) => s.toggleDelete);
   const toggleDeleteMark = useMapUiStore((s) => s.toggleDeleteMark);
   const clearDeleteMarks = useMapUiStore((s) => s.clearDeleteMarks);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -467,7 +467,7 @@ export function MapViewerClient({
 
   // Режим оверрайда синканных маркеров (admin): клик по чужому tarkov.dev-маркеру → карточка-оверрайд
   // (source_marker_id). Ref — чтобы клик-хендлеры в рендер-эффекте не пересоздавались при смене режима.
-  const [overrideMode, setOverrideMode] = useState(false);
+  const overrideMode = useMapUiStore((s) => s.overrideMode);
   const overrideModeRef = useRef(false);
   const openOverrideRef = useRef<(m: MapViewMarker) => void>(() => {});
   useEffect(() => {
@@ -648,7 +648,7 @@ export function MapViewerClient({
       map.off('click', onClick);
       el.style.cursor = '';
     };
-  }, [mapInst, addMode, mapId]);
+  }, [mapInst, addMode, mapId, setAddMode]);
 
   // Пин черновика (полый амбер = несохранённый) — отдельный слой, пока pendingMarker жив.
   useEffect(() => {
@@ -794,8 +794,6 @@ export function MapViewerClient({
   // ── Сквад: шаринг позиции (Realtime, эфемерно). Своя поза → broadcast; тиммейты → presence+broadcast. ──
   const squadOpen = useMapUiStore((s) => s.squadOpen);
   const setSquadOpen = useMapUiStore((s) => s.setSquadOpen);
-  const toggleSquad = useMapUiStore((s) => s.toggleSquad);
-  const squadRoom = useSquadStore((s) => s.roomCode);
   const squadMembers = useSquadStore((s) => s.members);
   const squadPoses = useSquadStore((s) => s.poses);
   const squadSelfId = useSquadStore((s) => s.memberId);
@@ -1474,60 +1472,6 @@ export function MapViewerClient({
 
       {/* Зум + атрибуция */}
       <div className="absolute right-3.5 bottom-3.5 z-[500] flex flex-col items-end gap-2">
-        {canEditMarkers && !isStatic && (
-          <button
-            type="button"
-            onClick={() => {
-              setAddMode((v) => !v);
-              setOverrideMode(false);
-            }}
-            aria-pressed={addMode}
-            title={addMode ? 'Отмена постановки — кликните по карте, чтобы поставить маркер' : 'Поставить маркер на карте'}
-            className={`flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
-              addMode
-                ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-                : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
-            }`}
-          >
-            <MapPin className="h-4.5 w-4.5" />
-          </button>
-        )}
-        {canEditMarkers && !isStatic && (
-          <button
-            type="button"
-            onClick={() => {
-              setOverrideMode((v) => !v);
-              setAddMode(false);
-            }}
-            aria-pressed={overrideMode}
-            title={overrideMode ? 'Выключить правку синканных (клик по маркеру = ссылка)' : 'Править синканные маркеры: клик по маркеру → карточка-оверрайд'}
-            className={`flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
-              overrideMode
-                ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-                : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
-            }`}
-          >
-            <SquarePen className="h-4.5 w-4.5" />
-          </button>
-        )}
-        {canEditMarkers && !isStatic && (
-          <button
-            type="button"
-            onClick={toggleDelete}
-            aria-pressed={deleteOpen}
-            title="Удаление маркеров (помеченные на удаление)"
-            className={`relative flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
-              deleteOpen ? 'border-danger bg-danger text-(--color-base)' : 'border-lines-hover bg-card-menu text-text-secondary hover:text-danger'
-            }`}
-          >
-            <Trash2 className="h-4.5 w-4.5" />
-            {markedForDelete.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
-                {markedForDelete.length}
-              </span>
-            )}
-          </button>
-        )}
         <div className="flex flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
           <button type="button" onClick={zoomIn} aria-label="Приблизить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
             <Plus className="h-5.5 w-5.5" />
@@ -1549,24 +1493,6 @@ export function MapViewerClient({
               </span>
             )}
             <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={toggleSquad}
-                aria-pressed={squadOpen}
-                title="Сквад — позиции тиммейтов"
-                className={`relative flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
-                  squadOpen || squadRoom
-                    ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-                    : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
-                }`}
-              >
-                <Users className="h-5.5 w-5.5" />
-                {squadRoom && squadMembers.length > 1 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-nvg-green px-1 font-blender-medium text-[10px] text-(--color-base)">
-                    {squadMembers.length}
-                  </span>
-                )}
-              </button>
               {tracker.active && (
                 <button
                   type="button"

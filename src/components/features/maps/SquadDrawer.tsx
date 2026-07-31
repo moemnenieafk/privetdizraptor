@@ -50,11 +50,11 @@ export function SquadDrawer({ open, onOpenChange, currentMapId, initialCode }: P
     >
       {/* Шапка 56px */}
       <div className="flex h-14 shrink-0 items-center justify-end gap-3 px-3.5">
-        <span className="font-blender-medium text-base uppercase tracking-widest text-text-primary">Сквад</span>
+        <span className="font-blender-medium text-base uppercase tracking-widest text-text-primary">Отряд</span>
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          aria-label="Закрыть сквад"
+          aria-label="Закрыть отряд"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-(--primary) bg-(--primary) text-(--color-base)"
         >
           <Users className="h-5 w-5" />
@@ -82,7 +82,7 @@ export function SquadDrawer({ open, onOpenChange, currentMapId, initialCode }: P
               disabled={!nickname.trim()}
               className="flex h-10 w-full items-center justify-center gap-2 rounded-xs bg-(--primary) font-blender-medium text-sm uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-40"
             >
-              <Users className="h-4 w-4" /> Создать сквад
+              <Users className="h-4 w-4" /> Создать отряд
             </button>
             <div className="flex items-center gap-2">
               <span className="h-px flex-1 bg-lines-hover" />
@@ -107,7 +107,7 @@ export function SquadDrawer({ open, onOpenChange, currentMapId, initialCode }: P
               </button>
             </div>
             <p className="text-center font-blender-book text-xs leading-relaxed text-text-muted">
-              Введи ник, создай сквад и скинь код тиммейтам — или войди в готовый по коду.
+              Введи ник, создай отряд и скинь код тиммейтам — или войди в готовый по коду.
             </p>
           </>
         ) : (
@@ -149,7 +149,7 @@ export function SquadDrawer({ open, onOpenChange, currentMapId, initialCode }: P
 
             {/* Ростер */}
             <div className="flex flex-col gap-1">
-              <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">В скваде · {members.length}</span>
+              <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">В отряде · {members.length}</span>
               {members.length === 0 ? (
                 <p className="px-2 py-4 text-center font-blender-book text-xs text-text-muted">Подключаемся…</p>
               ) : (
@@ -185,7 +185,7 @@ export function SquadDrawer({ open, onOpenChange, currentMapId, initialCode }: P
             onClick={leaveRoom}
             className="flex h-10 w-full items-center justify-center gap-2 rounded-xs border-[0.5px] border-danger/50 font-blender-medium text-sm uppercase tracking-widest text-danger transition-colors hover:border-danger hover:bg-danger-dim"
           >
-            <LogOut className="h-4 w-4" /> Покинуть сквад
+            <LogOut className="h-4 w-4" /> Покинуть отряд
           </button>
         </div>
       )}

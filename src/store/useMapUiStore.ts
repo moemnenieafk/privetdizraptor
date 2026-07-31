@@ -33,6 +33,14 @@ interface MapUiState {
   toggleDelete: () => void;
   setSquadOpen: (v: boolean) => void;
   toggleSquad: () => void;
+  /** Режим постановки маркера (admin): следующий клик по карте → черновик. */
+  addMode: boolean;
+  /** Режим правки синканных маркеров (admin): клик по маркеру → карточка-оверрайд. */
+  overrideMode: boolean;
+  setAddMode: (v: boolean) => void;
+  setOverrideMode: (v: boolean) => void;
+  toggleAddMode: () => void;
+  toggleOverrideMode: () => void;
 }
 
 // На узких экранах (<1440) два drawer'а налезают друг на друга → открытие одного
@@ -85,5 +93,20 @@ export const useMapUiStore = create<MapUiState>((set) => ({
     set((s) => {
       const squadOpen = !s.squadOpen;
       return { squadOpen, layersOpen: squadOpen ? false : s.layersOpen, deleteOpen: squadOpen ? false : s.deleteOpen, searchOpen: squadOpen && narrow() ? false : s.searchOpen };
+    }),
+  // addMode/overrideMode — взаимоисключающие режимы клика по карте (постановка ↔ правка синканных).
+  addMode: false,
+  overrideMode: false,
+  setAddMode: (addMode) => set((s) => ({ addMode, overrideMode: addMode ? false : s.overrideMode })),
+  setOverrideMode: (overrideMode) => set((s) => ({ overrideMode, addMode: overrideMode ? false : s.addMode })),
+  toggleAddMode: () =>
+    set((s) => {
+      const addMode = !s.addMode;
+      return { addMode, overrideMode: addMode ? false : s.overrideMode };
+    }),
+  toggleOverrideMode: () =>
+    set((s) => {
+      const overrideMode = !s.overrideMode;
+      return { overrideMode, addMode: overrideMode ? false : s.addMode };
     }),
 }));
