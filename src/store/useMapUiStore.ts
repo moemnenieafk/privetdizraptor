@@ -15,6 +15,8 @@ interface MapUiState {
   deleteMarks: string[];
   /** Открыт ли правый drawer «Удаление маркеров» (admin). */
   deleteOpen: boolean;
+  /** Открыт ли правый drawer «Сквад» (шаринг позиции). */
+  squadOpen: boolean;
   openSheet: (sheet: MapSheet) => void;
   closeSheet: () => void;
   toggleSheet: (sheet: MapSheet) => void;
@@ -29,6 +31,8 @@ interface MapUiState {
   clearDeleteMarks: () => void;
   setDeleteOpen: (v: boolean) => void;
   toggleDelete: () => void;
+  setSquadOpen: (v: boolean) => void;
+  toggleSquad: () => void;
 }
 
 // На узких экранах (<1440) два drawer'а налезают друг на друга → открытие одного
@@ -47,11 +51,11 @@ export const useMapUiStore = create<MapUiState>((set) => ({
     set((s) => ({ activeSheet: s.activeSheet === sheet ? null : sheet })),
   toggleChrome: () => set((s) => ({ chromeCollapsed: !s.chromeCollapsed })),
   setLayersOpen: (layersOpen) =>
-    set((s) => ({ layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen })),
+    set((s) => ({ layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, squadOpen: layersOpen ? false : s.squadOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen })),
   toggleLayers: () =>
     set((s) => {
       const layersOpen = !s.layersOpen;
-      return { layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen };
+      return { layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, squadOpen: layersOpen ? false : s.squadOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen };
     }),
   setSearchOpen: (searchOpen) =>
     set((s) => ({ searchOpen, layersOpen: searchOpen && narrow() ? false : s.layersOpen })),
@@ -64,14 +68,22 @@ export const useMapUiStore = create<MapUiState>((set) => ({
   toggleRuler: () => set((s) => ({ rulerActive: !s.rulerActive })),
   deleteMarks: [],
   deleteOpen: false,
+  squadOpen: false,
   toggleDeleteMark: (id) =>
     set((s) => ({ deleteMarks: s.deleteMarks.includes(id) ? s.deleteMarks.filter((x) => x !== id) : [...s.deleteMarks, id] })),
   clearDeleteMarks: () => set({ deleteMarks: [] }),
   setDeleteOpen: (deleteOpen) =>
-    set((s) => ({ deleteOpen, layersOpen: deleteOpen ? false : s.layersOpen, searchOpen: deleteOpen && narrow() ? false : s.searchOpen })),
+    set((s) => ({ deleteOpen, layersOpen: deleteOpen ? false : s.layersOpen, squadOpen: deleteOpen ? false : s.squadOpen, searchOpen: deleteOpen && narrow() ? false : s.searchOpen })),
   toggleDelete: () =>
     set((s) => {
       const deleteOpen = !s.deleteOpen;
-      return { deleteOpen, layersOpen: deleteOpen ? false : s.layersOpen, searchOpen: deleteOpen && narrow() ? false : s.searchOpen };
+      return { deleteOpen, layersOpen: deleteOpen ? false : s.layersOpen, squadOpen: deleteOpen ? false : s.squadOpen, searchOpen: deleteOpen && narrow() ? false : s.searchOpen };
+    }),
+  setSquadOpen: (squadOpen) =>
+    set((s) => ({ squadOpen, layersOpen: squadOpen ? false : s.layersOpen, deleteOpen: squadOpen ? false : s.deleteOpen, searchOpen: squadOpen && narrow() ? false : s.searchOpen })),
+  toggleSquad: () =>
+    set((s) => {
+      const squadOpen = !s.squadOpen;
+      return { squadOpen, layersOpen: squadOpen ? false : s.layersOpen, deleteOpen: squadOpen ? false : s.deleteOpen, searchOpen: squadOpen && narrow() ? false : s.searchOpen };
     }),
 }));

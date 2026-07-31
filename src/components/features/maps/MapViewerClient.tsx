@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus, SquarePen, Trash2 } from 'lucide-react';
+import { Check, Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus, SquarePen, Trash2, Users } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -13,6 +13,10 @@ import { MobileMapBar } from './MobileMapBar';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
+import { useSquadStore, type SquadPose } from '@/store/useSquadStore';
+import { useSquad } from './useSquad';
+import { SquadDrawer } from './SquadDrawer';
+import { floorIndexForHeight } from '@/lib/eft-screenshot';
 import { mapIconClass } from '@/data/map-icons';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
@@ -91,6 +95,22 @@ function editorialIcon(m: EditorialMarkerData): L.DivIcon {
     meta,
     linkKind: m.linkKind,
     linkedItemId: m.type === 'loot' && isItemId(m.category) ? m.category ?? undefined : undefined,
+  });
+}
+
+/** Иконка тиммейта (сквад): стрелка в его цвете + ник под ней. nick эскейпится (user input в HTML). */
+function teammateIcon(color: string, rotationDeg: number, nick: string): L.DivIcon {
+  return L.divIcon({
+    className: 'cta-squad-marker',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    html:
+      `<div style="position:relative;width:28px;height:28px">` +
+      `<div style="width:28px;height:28px;transform:rotate(${rotationDeg}deg);filter:drop-shadow(0 0 4px rgba(0,0,0,.6))">` +
+      `<svg viewBox="0 0 24 24" width="28" height="28" fill="${color}"><path d="M12 2 L20 21 L12 16 L4 21 Z"/></svg></div>` +
+      `<span style="position:absolute;top:28px;left:50%;transform:translateX(-50%);white-space:nowrap;` +
+      `font-size:10px;font-weight:600;color:${color};text-shadow:0 0 3px #000,0 0 2px #000">${esc(nick)}</span>` +
+      `</div>`,
   });
 }
 
@@ -771,6 +791,46 @@ export function MapViewerClient({
   // Координаты игрока для readout низ-право (pose обновляется трекером ~1/сек — дёшево).
   const pose = useTrackingStore((s) => s.pose);
 
+  // ── Сквад: шаринг позиции (Realtime, эфемерно). Своя поза → broadcast; тиммейты → presence+broadcast. ──
+  const squadOpen = useMapUiStore((s) => s.squadOpen);
+  const setSquadOpen = useMapUiStore((s) => s.setSquadOpen);
+  const toggleSquad = useMapUiStore((s) => s.toggleSquad);
+  const squadRoom = useSquadStore((s) => s.roomCode);
+  const squadMembers = useSquadStore((s) => s.members);
+  const squadPoses = useSquadStore((s) => s.poses);
+  const squadSelfId = useSquadStore((s) => s.memberId);
+  const squadMapId = mapId ?? data.slug;
+  // Геометрия позы без ts — метку времени ставит useSquad при отправке (Date.now в рендере — импурно).
+  const selfSquadPose = useMemo<Omit<SquadPose, 'ts'> | null>(
+    () => (pose ? { x: pose.x, z: pose.z, y: pose.y, yaw: pose.yaw, floor: floorIndexForHeight(floors, pose.y) } : null),
+    [pose, floors],
+  );
+  useSquad({ mapId: squadMapId, mapName: data.name, selfPose: selfSquadPose, broadcasting: tracker.active });
+  // ?squad=CODE в URL → открыть drawer (авто-джойн не делаем — нужен ник + согласие).
+  const [squadParam] = useState<string | null>(() =>
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('squad') : null,
+  );
+  useEffect(() => {
+    if (squadParam && !useSquadStore.getState().roomCode) setSquadOpen(true);
+  }, [squadParam, setSquadOpen]);
+
+  // Слой меток тиммейтов: точки участников на ТОЙ ЖЕ карте (broadcast-позы). Частота низкая → простая пересборка.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map) return;
+    const group = L.layerGroup().addTo(map);
+    const rot = data.config.coordinateRotation || 0;
+    for (const m of squadMembers) {
+      if (m.id === squadSelfId || m.mapId !== squadMapId) continue;
+      const p = squadPoses[m.id];
+      if (!p) continue;
+      L.marker(ll({ x: p.x, z: p.z }), { icon: teammateIcon(m.color, p.yaw + rot, m.nick), interactive: false, zIndexOffset: 9000 }).addTo(group);
+    }
+    return () => {
+      group.remove();
+    };
+  }, [mapInst, squadMembers, squadPoses, squadMapId, squadSelfId, data.config.coordinateRotation]);
+
   // Линейка (measure): флаг из стора, точки/слой замера. Хендлеры клика — в init-эффекте карты
   // (через ref, чтобы не пересоздавать карту). Выключение линейки очищает замер.
   const rulerActive = useMapUiStore((s) => s.rulerActive);
@@ -1393,6 +1453,16 @@ export function MapViewerClient({
         />
       )}
 
+      {/* Сквад — шаринг позиции (только карты с проекцией координат). */}
+      {data.config.transform && (
+        <SquadDrawer
+          open={squadOpen}
+          onOpenChange={setSquadOpen}
+          currentMapId={squadMapId}
+          initialCode={squadParam ?? undefined}
+        />
+      )}
+
       <MobileMapBar
         activeMapIconClass={mapIconClass(data.slug)}
         activeMapName={data.name}
@@ -1479,6 +1549,24 @@ export function MapViewerClient({
               </span>
             )}
             <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={toggleSquad}
+                aria-pressed={squadOpen}
+                title="Сквад — позиции тиммейтов"
+                className={`relative flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
+                  squadOpen || squadRoom
+                    ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+                    : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
+                }`}
+              >
+                <Users className="h-5.5 w-5.5" />
+                {squadRoom && squadMembers.length > 1 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-nvg-green px-1 font-blender-medium text-[10px] text-(--color-base)">
+                    {squadMembers.length}
+                  </span>
+                )}
+              </button>
               {tracker.active && (
                 <button
                   type="button"
