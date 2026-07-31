@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Plus, X, Paperclip, ChevronLeft, ChevronRight, ZoomIn, Bookmark, Move3d, MapPinPen,
-  ArrowLeft, ArrowRight, Save, Trash2,
+  ArrowLeft, ArrowRight, Save, Trash2, EyeOff,
 } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { SPAWN_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
@@ -292,6 +292,8 @@ interface Props {
   lootIndex?: { id: string; label: string }[];
   /** Показ, admin: «Переместить» — parent включает move-режим (курсор-пин → новая точка). */
   onMove?: () => void;
+  /** Показ, admin (оверрайд синканного): «Скрыть» — parent прячет синканный маркер (hidden=true). */
+  onHide?: () => void;
 }
 
 export function EditorialMarkerCard({
@@ -308,6 +310,7 @@ export function EditorialMarkerCard({
   onDrawArea,
   lootIndex,
   onMove,
+  onHide,
 }: Props) {
   const [sel, setSel] = useState(0);
   const [editing, setEditing] = useState(defaultEditing);
@@ -341,7 +344,7 @@ export function EditorialMarkerCard({
   };
   // Возврат к показу существующего маркера: откат черновика к сохранённым данным. Новый — закрыть.
   const backToDisplay = () => {
-    if (marker.id) {
+    if (marker.id || marker.sourceMarkerId) {
       setDraft(makeDraft(marker));
       setCatKey(deriveCatKey(marker.type, marker.category));
       setSel(0);
@@ -962,6 +965,16 @@ export function EditorialMarkerCard({
                 >
                   <MapPinPen className="h-3 w-3" /> Редактировать
                 </button>
+                {marker.sourceMarkerId && onHide && (
+                  <button
+                    type="button"
+                    onClick={onHide}
+                    title="Скрыть этот синканный маркер"
+                    className="flex h-7 min-w-px flex-1 items-center justify-center gap-1.5 rounded-xs border-[0.5px] border-lines-hover bg-card-menu font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary transition-colors hover:border-danger/50 hover:text-danger"
+                  >
+                    <EyeOff className="h-3 w-3" /> Скрыть
+                  </button>
+                )}
               </div>
             )}
           </>

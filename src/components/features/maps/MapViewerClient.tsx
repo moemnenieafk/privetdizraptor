@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus } from 'lucide-react';
+import { Check, Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus, SquarePen } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -91,6 +91,34 @@ function editorialIcon(m: EditorialMarkerData): L.DivIcon {
     linkKind: m.linkKind,
     linkedItemId: m.type === 'loot' && isItemId(m.category) ? m.category ?? undefined : undefined,
   });
+}
+
+/** Синканный маркер tarkov.dev → форма editorial-оверрайда (предзаполнение карточки, source_marker_id). */
+function syncedToEditorial(m: MapViewMarker, mapId: string): EditorialMarkerData {
+  const type =
+    m.type === 'loot_loose' ? 'loot' : m.type === 'loot_container' ? 'container' : m.type === 'quest' ? 'quest_zone' : m.type;
+  const category = m.type === 'loot_loose' && m.linkedItemId ? m.linkedItemId : m.category ?? null;
+  return {
+    mapId,
+    x: m.position?.x ?? 0,
+    z: m.position?.z ?? 0,
+    y: m.position?.y ?? null,
+    floor: m.floor ?? null,
+    type,
+    category,
+    faction: m.faction ?? null,
+    title: m.label ?? '',
+    description: null,
+    screenshots: [],
+    linkKind: 'none',
+    linkId: null,
+    linkStep: null,
+    polygon: null,
+    sourceMarkerId: m.id,
+    hidden: false,
+    linkedQuest: null,
+    linkedStory: null,
+  };
 }
 
 function tooltipFor(m: MapViewMarker): string {
@@ -265,7 +293,7 @@ export function MapViewerClient({
   const [moveBusy, setMoveBusy] = useState(false);
   const moveCursorRef = useRef<HTMLDivElement | null>(null);
   const startMove = () => {
-    if (activeMarker?.id) {
+    if (activeMarker?.id || activeMarker?.sourceMarkerId) {
       setMoveMarker(activeMarker);
       setMovePos(null);
     }
@@ -315,6 +343,57 @@ export function MapViewerClient({
     }
   };
   const moveIconHtml = moveMarker ? String(editorialIcon(moveMarker).options.html ?? '') : '';
+
+  // Режим оверрайда синканных маркеров (admin): клик по чужому tarkov.dev-маркеру → карточка-оверрайд
+  // (source_marker_id). Ref — чтобы клик-хендлеры в рендер-эффекте не пересоздавались при смене режима.
+  const [overrideMode, setOverrideMode] = useState(false);
+  const overrideModeRef = useRef(false);
+  const openOverrideRef = useRef<(m: MapViewMarker) => void>(() => {});
+  useEffect(() => {
+    overrideModeRef.current = overrideMode;
+  }, [overrideMode]);
+  useEffect(() => {
+    openOverrideRef.current = (m: MapViewMarker) => {
+      if (mapId) setPendingMarker(syncedToEditorial(m, mapId));
+    };
+  }, [mapId]);
+  // «Скрыть» синканный маркер: оверрайд с hidden=true (страница подавит оригинал на рендере).
+  const hideMarker = async () => {
+    if (!activeMarker?.sourceMarkerId || !confirm('Скрыть этот синканный маркер?')) return;
+    try {
+      const res = await fetch('/api/admin/editorial-markers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: activeMarker.id,
+          mapId: activeMarker.mapId,
+          slug: data.slug,
+          x: activeMarker.x,
+          z: activeMarker.z,
+          y: activeMarker.y,
+          floor: activeMarker.floor,
+          type: activeMarker.type,
+          category: activeMarker.category,
+          faction: activeMarker.faction,
+          title: activeMarker.title || 'скрыто',
+          description: activeMarker.description,
+          screenshots: activeMarker.screenshots,
+          linkKind: activeMarker.linkKind,
+          linkId: activeMarker.linkId,
+          linkStep: activeMarker.linkStep,
+          polygon: activeMarker.polygon,
+          sourceMarkerId: activeMarker.sourceMarkerId,
+          hidden: true,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      closeCard();
+      router.refresh();
+    } catch (e) {
+      console.error('[editorial-marker hide]', e);
+      alert('Не удалось скрыть маркер');
+    }
+  };
 
   useEffect(() => {
     const map = mapInst;
@@ -740,12 +819,12 @@ export function MapViewerClient({
         if (!grp) continue;
         const marker = L.marker(ll(m.position), { icon: markerDivIcon(m), riseOnHover: true });
         marker.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
-        // Кросс-линк: квест-зона → задача, контейнер/лут с привязкой → предмет (как на статик-картах).
-        if (m.type === 'quest' && m.questId) {
-          marker.on('click', () => window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener'));
-        } else if (m.itemSlug) {
-          marker.on('click', () => window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener'));
-        }
+        // Клик: в override-режиме (admin) → карточка-оверрайд; иначе кросс-линк (квест-зона→задача, лут→предмет).
+        marker.on('click', () => {
+          if (overrideModeRef.current) return openOverrideRef.current(m);
+          if (m.type === 'quest' && m.questId) window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener');
+          else if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
+        });
         // Полигон зоны выхода — на ховер.
         if (m.type === 'extract' && m.outline && m.outline.length > 2) {
           const poly = L.polygon(m.outline.map(ll), {
@@ -782,8 +861,10 @@ export function MapViewerClient({
               const m = arr[0];
               const mk = L.marker(ll(m.position!), { icon: markerDivIcon(m), riseOnHover: true });
               mk.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
-              // Кросс-линк на страницу предмета (случайная добыча связана с каталогом по id).
-              if (m.itemSlug) mk.on('click', () => window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener'));
+              mk.on('click', () => {
+                if (overrideModeRef.current) return openOverrideRef.current(m);
+                if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
+              });
               mk.addTo(grp);
             } else {
               let sx = 0;
@@ -1059,7 +1140,7 @@ export function MapViewerClient({
             linkedQuest={activeMarker.linkedQuest}
             linkedStory={activeMarker.linkedStory}
             canEdit={canEditMarkers}
-            defaultEditing={!activeMarker.id}
+            defaultEditing={!activeMarker.id && !activeMarker.sourceMarkerId}
             questIndex={questIndex}
             storyIndex={storyIndex}
             mapSlug={data.slug}
@@ -1067,6 +1148,7 @@ export function MapViewerClient({
             onDrawArea={startAreaDraw}
             lootIndex={lootIndex}
             onMove={startMove}
+            onHide={hideMarker}
             onMutated={() => {
               closeCard();
               router.refresh();
@@ -1197,6 +1279,21 @@ export function MapViewerClient({
             }`}
           >
             <MapPin className="h-4.5 w-4.5" />
+          </button>
+        )}
+        {canEditMarkers && !isStatic && (
+          <button
+            type="button"
+            onClick={() => setOverrideMode((v) => !v)}
+            aria-pressed={overrideMode}
+            title={overrideMode ? 'Выключить правку синканных (клик по маркеру = ссылка)' : 'Править синканные маркеры: клик по маркеру → карточка-оверрайд'}
+            className={`flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
+              overrideMode
+                ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+                : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
+            }`}
+          >
+            <SquarePen className="h-4.5 w-4.5" />
           </button>
         )}
         <div className="flex flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
