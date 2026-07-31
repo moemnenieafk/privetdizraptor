@@ -57,11 +57,11 @@ export async function addMedia(input: {
   };
 }
 
-/** Возвращает путь удалённого объекта — его нужно снести и из бакета. */
-export async function removeMedia(id: string): Promise<string | null> {
+/** Возвращает путь+url удалённого объекта — его нужно снести из бакета (R2 или legacy Supabase). */
+export async function removeMedia(id: string): Promise<{ path: string; url: string } | null> {
   const [row] = await db
     .delete(mediaAssets)
     .where(eq(mediaAssets.id, id))
-    .returning({ path: mediaAssets.path });
-  return row?.path ?? null;
+    .returning({ path: mediaAssets.path, url: mediaAssets.url });
+  return row ?? null;
 }

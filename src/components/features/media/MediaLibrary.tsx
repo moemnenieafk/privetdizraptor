@@ -25,6 +25,32 @@ interface Props {
 const fmtSize = (b: number): string =>
   b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} МБ` : `${Math.round(b / 1024)} КБ`;
 
+// Клиентская конвертация в webp (Canvas) ДО загрузки: держит тело запроса под лимитом Vercel
+// (~4.5 МБ) и выполняет «конвертацию при загрузке». Анимированный gif НЕ трогаем — его в
+// анимированный webp сконвертит сервер (sharp), Canvas же взял бы один кадр. Любая
+// ошибка/неподдержка → отдаём исходник, сервер докрутит webp сам.
+const MAX_DIM = 2560;
+async function toWebp(file: File): Promise<Blob> {
+  if (file.type === 'image/gif' || !file.type.startsWith('image/')) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height));
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.9));
+    return blob ?? file;
+  } catch {
+    return file;
+  }
+}
+
 export function MediaLibrary({ onPick }: Props) {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,9 +84,11 @@ export function MediaLibrary({ onPick }: Props) {
     setError(null);
     try {
       for (const file of Array.from(files)) {
+        const base = file.name.replace(/\.[^.]+$/, '');
+        const blob = await toWebp(file);
         const form = new FormData();
-        form.append('file', file);
-        form.append('alt', file.name.replace(/\.[^.]+$/, ''));
+        form.append('file', blob, blob.type === 'image/webp' ? `${base}.webp` : file.name);
+        form.append('alt', base);
 
         const res = await fetch('/api/admin/media', { method: 'POST', body: form });
         if (!res.ok) {
@@ -106,7 +134,7 @@ export function MediaLibrary({ onPick }: Props) {
           Загрузить
         </button>
         <span className="font-blender-book text-xs text-text-muted">
-          webp, png, jpg, gif · до 3 МБ · можно выбрать несколько
+          png · jpg · webp · gif — конвертируется в webp (R2) · можно выбрать несколько
         </span>
         <input
           ref={inputRef}
