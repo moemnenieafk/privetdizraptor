@@ -299,6 +299,8 @@ export function MapViewerClient({
           linkId: moveMarker.linkId,
           linkStep: moveMarker.linkStep,
           polygon: moveMarker.polygon,
+          sourceMarkerId: moveMarker.sourceMarkerId,
+          hidden: moveMarker.hidden,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

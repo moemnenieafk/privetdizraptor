@@ -97,6 +97,8 @@ export async function POST(req: Request): Promise<NextResponse> {
     linkId: kind === "none" ? null : str(body.linkId, 80) || null,
     linkStep: intOrNull(body.linkStep),
     polygon: polygon(body.polygon),
+    sourceMarkerId: str(body.sourceMarkerId, 80) || null,
+    hidden: body.hidden === true,
     authorId: me.id,
   };
 

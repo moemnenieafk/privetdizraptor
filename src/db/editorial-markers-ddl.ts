@@ -27,6 +27,8 @@ export const EDITORIAL_MARKERS_DDL: string[] = [
     link_id     text,
     link_step   integer,
     polygon     jsonb,
+    source_marker_id text,
+    hidden      boolean not null default false,
     author_id   uuid references public.profiles(id) on delete set null,
     created_at  timestamptz not null default now(),
     updated_at  timestamptz not null default now()
@@ -35,6 +37,12 @@ export const EDITORIAL_MARKERS_DDL: string[] = [
   // Аддитивно для уже созданной таблицы (create if not exists её бы пропустил).
   `alter table public.editorial_markers add column if not exists faction text`,
   `alter table public.editorial_markers add column if not exists polygon jsonb`,
+  `alter table public.editorial_markers add column if not exists source_marker_id text`,
+  `alter table public.editorial_markers add column if not exists hidden boolean not null default false`,
+
+  // Оверрайды синканных маркеров ищутся по source_marker_id (мерж на рендере).
+  `create index if not exists editorial_markers_source_idx
+     on public.editorial_markers (source_marker_id)`,
 
   `create index if not exists editorial_markers_map_idx
      on public.editorial_markers (game_id, map_id)`,

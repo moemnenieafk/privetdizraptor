@@ -110,7 +110,9 @@ export default async function MapPage({ params, searchParams }: Props) {
     if (data?.asset.imageKey) {
       // Прайс-индекс — тарковский цвет фона слота предмета (для плиток loose loot);
       // каталог — slug категории предмета (для под-слоёв «Случайной добычи»).
-      const [priceIndex, catalog] = await Promise.all([getEftPriceIndex(), getEftCatalog()]);
+      const [priceIndex, catalog, editorialRows] = await Promise.all([getEftPriceIndex(), getEftCatalog(), getEditorialMarkers(data.asset.mapId)]);
+      // Оверрайды синканных маркеров (source_marker_id) — оригинал подавляем на рендере, правки живут в editorial.
+      const overrideIds = new Set(editorialRows.map((r) => r.sourceMarkerId).filter((v): v is string => !!v));
       const lootCatById = new Map(catalog.map((i) => [i.id, i.category]));
 
       // Зона спавна (zoneName == spawn.label) → фракция по владельцу-боссу: rogue (Маяк),
@@ -164,7 +166,7 @@ export default async function MapPage({ params, searchParams }: Props) {
 
       const goonsKeys = new Set<string>(GOONS_FILES);
       const markers: MapViewMarker[] = data.markers
-        .filter((m) => RENDER_TYPES.has(m.type) && m.position && !dropSpawn.has(m.id))
+        .filter((m) => RENDER_TYPES.has(m.type) && m.position && !dropSpawn.has(m.id) && !overrideIds.has(m.id))
         .map((m) => ({
           id: m.id,
           type: m.type,
@@ -260,11 +262,10 @@ export default async function MapPage({ params, searchParams }: Props) {
       const storyIndex = canEditMarkers
         ? Object.values(STORY_WALKTHROUGHS).map((s) => ({ slug: s.slug, title: s.title }))
         : undefined;
-      const editorialRows = await getEditorialMarkers(data.asset.mapId);
       const questById = new Map(EFT_QUESTS.map((t) => [t.id, t]));
       // Название истории — для индикатора привязки в карточке (всем, не только редакторам).
       const storyTitle = new Map(Object.values(STORY_WALKTHROUGHS).map((s) => [s.slug, s.title]));
-      const editorialMarkers: EditorialMarkerData[] = editorialRows.map((r) => {
+      const editorialMarkers: EditorialMarkerData[] = editorialRows.filter((r) => !r.hidden).map((r) => {
         const q = r.linkKind === 'quest' && r.linkId ? questById.get(r.linkId) : undefined;
         return {
           id: r.id,
@@ -283,6 +284,8 @@ export default async function MapPage({ params, searchParams }: Props) {
           linkId: r.linkId,
           linkStep: r.linkStep,
           polygon: r.polygon ?? null,
+          sourceMarkerId: r.sourceMarkerId,
+          hidden: r.hidden,
           linkedQuest: q
             ? {
                 name: q.name,

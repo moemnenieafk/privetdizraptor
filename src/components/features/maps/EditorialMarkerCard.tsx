@@ -174,6 +174,10 @@ export interface EditorialMarkerView {
   linkStep?: number | null;
   /** Полигон-область (лассо): игровые точки {x,z}; null/пусто — обычная точка-маркер. */
   polygon?: { x: number; z: number }[] | null;
+  /** Оверрайд синканного маркера tarkov.dev (его id); null — самостоятельный editorial-маркер. */
+  sourceMarkerId?: string | null;
+  /** Оверрайд «скрыть» — подавляет синканный маркер (сам не рендерится). */
+  hidden?: boolean;
 }
 
 /** Разрешённая привязка к квесту — для верхнего ряда (трейдер/уровень/каппа). */
@@ -402,6 +406,8 @@ export function EditorialMarkerCard({
           linkId: draft.linkId,
           linkStep: draft.linkStep,
           polygon: draft.polygon,
+          sourceMarkerId: marker.sourceMarkerId,
+          hidden: marker.hidden,
         }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? `HTTP ${res.status}`);

@@ -4,7 +4,7 @@
 // МОДЕЛЬ: скаляры, по которым фильтруем/рендерим (map_id, link_*), — колонками; медиа —
 // массивом ключей Storage в jsonb. Ручной маркер карты: координаты + скрины + описание +
 // опц. привязка к квесту/истории. Решения: docs/decisions/editorial-markers-tool.md.
-import { pgTable, uuid, text, integer, real, jsonb, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, real, jsonb, timestamp, index, boolean } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { games, maps, profiles } from "./schema";
 
@@ -41,6 +41,10 @@ export const editorialMarkers = pgTable(
     linkStep: integer("link_step"),
     /** Полигон-область (лассо): массив игровых точек {x,z}; null — обычная точка-маркер. */
     polygon: jsonb("polygon").$type<{ x: number; z: number }[]>(),
+    /** Оверрайд синканного маркера tarkov.dev (его id); null — самостоятельный editorial-маркер. */
+    sourceMarkerId: text("source_marker_id"),
+    /** Скрыть синканный маркер (кривой/устаревший) — оверрайд подавляет его на рендере. */
+    hidden: boolean("hidden").notNull().default(false),
     authorId: uuid("author_id").references(() => profiles.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
