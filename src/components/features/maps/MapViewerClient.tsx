@@ -1470,19 +1470,21 @@ export function MapViewerClient({
         onLayersToggle={toggleLayers}
       />
 
-      {/* Зум + атрибуция */}
+      {/* Зум — левый край по центру (классическая зумовая зона; угол низ-право освобождён под Позицию) */}
+      <div className="absolute left-3.5 top-1/2 z-[500] flex -translate-y-1/2 flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
+        <button type="button" onClick={zoomIn} aria-label="Приблизить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
+          <Plus className="h-5.5 w-5.5" />
+        </button>
+        <button type="button" onClick={zoomOut} aria-label="Отдалить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
+          <Minus className="h-5.5 w-5.5" />
+        </button>
+        <button type="button" onClick={resetView} aria-label="Сбросить вид" className="flex h-9 w-9 items-center justify-center text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
+          <LocateFixed className="h-5.5 w-5.5" />
+        </button>
+      </div>
+
+      {/* Позиция + атрибуция (низ-право) */}
       <div className="absolute right-3.5 bottom-3.5 z-[500] flex flex-col items-end gap-2">
-        <div className="flex flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
-          <button type="button" onClick={zoomIn} aria-label="Приблизить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
-            <Plus className="h-5.5 w-5.5" />
-          </button>
-          <button type="button" onClick={zoomOut} aria-label="Отдалить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
-            <Minus className="h-5.5 w-5.5" />
-          </button>
-          <button type="button" onClick={resetView} aria-label="Сбросить вид" className="flex h-9 w-9 items-center justify-center text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
-            <LocateFixed className="h-5.5 w-5.5" />
-          </button>
-        </div>
 
         {/* Трекер позиции игрока + координаты (низ-право, GRILL-2). Только карты с проекцией. */}
         {data.config.transform && (
