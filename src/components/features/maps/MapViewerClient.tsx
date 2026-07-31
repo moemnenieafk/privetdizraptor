@@ -1533,11 +1533,6 @@ export function MapViewerClient({
             </div>
           </div>
         )}
-        {data.author ? (
-          <span className="rounded-xs bg-(--color-base)/70 px-2 py-0.5 font-blender-book text-[10px] tracking-wide text-text-muted/70 backdrop-blur-md">
-            Карта: {data.author}
-          </span>
-        ) : null}
       </div>
 
       {isStatic && mapInst ? (
