@@ -943,7 +943,7 @@ export function MapViewerClient({
 
       {/* Панель рисования области-лассо (карточка на это время спрятана, но смонтирована → черновик жив). */}
       {areaDraw && (
-        <div className="absolute top-3 left-1/2 z-[560] flex -translate-x-1/2 items-center gap-3 rounded-sm border border-lines-hover bg-card-menu px-4 py-2 backdrop-blur-md">
+        <div className="absolute bottom-16 left-1/2 z-[560] flex -translate-x-1/2 items-center gap-3 rounded-sm border border-lines-hover bg-card-menu px-4 py-2 backdrop-blur-md">
           <span className="font-blender-medium text-xs text-text-secondary">
             Область: <span className="text-text-primary">ЛКМ</span> — точка · <span className="text-text-primary">ПКМ</span> — убрать · <span className="tabular-nums text-(--primary)">{areaCount}</span> точ.
           </span>
