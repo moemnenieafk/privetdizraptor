@@ -3,10 +3,11 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus, SquarePen } from 'lucide-react';
+import { Check, Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus, SquarePen, Trash2 } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
+import { MarkerDeletionDrawer } from './MarkerDeletionDrawer';
 import { useEftTracker } from './PlayerTracker';
 import { MobileMapBar } from './MobileMapBar';
 import { useMapUiStore } from '@/store/useMapUiStore';
@@ -643,6 +644,38 @@ export function MapViewerClient({
   const layersOpen = useMapUiStore((s) => s.layersOpen);
   const setLayersOpen = useMapUiStore((s) => s.setLayersOpen);
   const toggleLayers = useMapUiStore((s) => s.toggleLayers);
+  // Drawer «Удаление маркеров» + список помеченных.
+  const deleteMarks = useMapUiStore((s) => s.deleteMarks);
+  const deleteOpen = useMapUiStore((s) => s.deleteOpen);
+  const setDeleteOpen = useMapUiStore((s) => s.setDeleteOpen);
+  const toggleDelete = useMapUiStore((s) => s.toggleDelete);
+  const toggleDeleteMark = useMapUiStore((s) => s.toggleDeleteMark);
+  const clearDeleteMarks = useMapUiStore((s) => s.clearDeleteMarks);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const markedForDelete = useMemo(
+    () => (editorialMarkers ?? []).filter((m) => m.id && deleteMarks.includes(m.id)),
+    [editorialMarkers, deleteMarks],
+  );
+  const confirmDeleteMarks = async () => {
+    if (markedForDelete.length === 0) return;
+    setDeleteBusy(true);
+    try {
+      for (const m of markedForDelete) {
+        if (!m.id) continue;
+        const res = await fetch(`/api/admin/editorial-markers?id=${m.id}&slug=${data.slug}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }
+      clearDeleteMarks();
+      setDeleteOpen(false);
+      closeCard();
+      router.refresh();
+    } catch (e) {
+      console.error('[editorial-marker batch delete]', e);
+      alert('Не удалось удалить помеченные маркеры');
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
 
   // Инстанс трекера один (нужен mapRef здесь). Кнопка+координаты живут в низ-право (GRILL-2),
   // рендерятся ниже прямо из этого хука — публикация наверх больше не нужна.
@@ -1257,6 +1290,17 @@ export function MapViewerClient({
         />
       )}
 
+      {!isStatic && canEditMarkers && (
+        <MarkerDeletionDrawer
+          marked={markedForDelete}
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          onUnmark={toggleDeleteMark}
+          onConfirm={confirmDeleteMarks}
+          busy={deleteBusy}
+        />
+      )}
+
       <MobileMapBar
         activeMapIconClass={mapIconClass(data.slug)}
         activeMapName={data.name}
@@ -1302,6 +1346,24 @@ export function MapViewerClient({
             }`}
           >
             <SquarePen className="h-4.5 w-4.5" />
+          </button>
+        )}
+        {canEditMarkers && !isStatic && (
+          <button
+            type="button"
+            onClick={toggleDelete}
+            aria-pressed={deleteOpen}
+            title="Удаление маркеров (помеченные на удаление)"
+            className={`relative flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
+              deleteOpen ? 'border-danger bg-danger text-(--color-base)' : 'border-lines-hover bg-card-menu text-text-secondary hover:text-danger'
+            }`}
+          >
+            <Trash2 className="h-4.5 w-4.5" />
+            {deleteMarks.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
+                {deleteMarks.length}
+              </span>
+            )}
           </button>
         )}
         <div className="flex flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
