@@ -192,6 +192,10 @@ export default async function MapPage({ params, searchParams }: Props) {
             m.type === 'extract'
               ? ((m.meta as { transferItem?: { name?: string } } | null)?.transferItem?.name ?? null)
               : null,
+          keyPrice:
+            m.type === 'lock' && m.linkedItemId
+              ? (priceIndex.get(m.linkedItemId)?.avg24hPrice ?? priceIndex.get(m.linkedItemId)?.lastLowPrice ?? null)
+              : null,
           meta: m.meta ?? null,
         }));
 

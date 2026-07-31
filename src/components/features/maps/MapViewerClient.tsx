@@ -16,6 +16,7 @@ import { useTrackingStore } from '@/store/useTrackingStore';
 import { useSquadStore, type SquadPose } from '@/store/useSquadStore';
 import { useSquad } from './useSquad';
 import { SquadDrawer } from './SquadDrawer';
+import { LockKeyCard } from './LockKeyCard';
 import { floorIndexForHeight } from '@/lib/eft-screenshot';
 import { mapIconClass } from '@/data/map-icons';
 import { useRouter } from 'next/navigation';
@@ -829,6 +830,76 @@ export function MapViewerClient({
     };
   }, [mapInst, squadMembers, squadPoses, squadMapId, squadSelfId, data.config.coordinateRotation]);
 
+  // ── Замок→Ключ: клик по замку → read-only карточка ключа (позиционируется НАД меткой). ──
+  const [lockMarker, setLockMarker] = useState<MapViewMarker | null>(null);
+  const lockCardRef = useRef<HTMLDivElement | null>(null);
+  const openLockCardRef = useRef<(m: MapViewMarker) => void>(() => {});
+  useEffect(() => {
+    openLockCardRef.current = (m: MapViewMarker) => setLockMarker(m);
+  }, []);
+  // Индекс замков по ключу (linkedItemId) — счётчик «ещё N дверей» + подсветка соседей.
+  const locksByKey = useMemo(() => {
+    const idx = new Map<string, MapViewMarker[]>();
+    for (const m of data.markers) {
+      if (m.type !== 'lock' || !m.linkedItemId || !m.position) continue;
+      const arr = idx.get(m.linkedItemId);
+      if (arr) arr.push(m);
+      else idx.set(m.linkedItemId, [m]);
+    }
+    return idx;
+  }, [data.markers]);
+  const lockSiblings = useMemo(
+    () => (lockMarker?.linkedItemId ? (locksByKey.get(lockMarker.linkedItemId) ?? []).filter((m) => m.id !== lockMarker.id) : []),
+    [lockMarker, locksByKey],
+  );
+  // Карточка держится НАД меткой замка (как editorial-card): пересчёт при пане/зуме.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !lockMarker?.position) return;
+    const latlng = ll({ x: lockMarker.position.x, z: lockMarker.position.z });
+    const place = () => {
+      const el = lockCardRef.current;
+      if (!el) return;
+      const pt = map.latLngToContainerPoint(latlng);
+      const size = map.getSize();
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      const M = 8;
+      const left = Math.min(Math.max(pt.x, w / 2 + M), size.x - w / 2 - M);
+      let top = pt.y - 22 - h;
+      top = Math.max(M, Math.min(top, size.y - h - M));
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    };
+    place();
+    map.on('move zoom', place);
+    const ro = new ResizeObserver(place);
+    if (lockCardRef.current) ro.observe(lockCardRef.current);
+    return () => {
+      map.off('move zoom', place);
+      ro.disconnect();
+    };
+  }, [mapInst, lockMarker]);
+  // Закрытие карточки замка: клик вне / Esc.
+  useEffect(() => {
+    if (!lockMarker) return;
+    const onDown = (e: MouseEvent) => {
+      if (!lockCardRef.current?.contains(e.target as Node)) setLockMarker(null);
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLockMarker(null);
+    };
+    const t = setTimeout(() => {
+      document.addEventListener('mousedown', onDown);
+      document.addEventListener('keydown', onEsc);
+    }, 0);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [lockMarker]);
+
   // Линейка (measure): флаг из стора, точки/слой замера. Хендлеры клика — в init-эффекте карты
   // (через ref, чтобы не пересоздавать карту). Выключение линейки очищает замер.
   const rulerActive = useMapUiStore((s) => s.rulerActive);
@@ -1004,6 +1075,7 @@ export function MapViewerClient({
         // иначе кросс-линк (квест-зона→задача, лут→предмет).
         marker.on('click', () => {
           if (overrideModeRef.current || deleteOpenRef.current) return openOverrideRef.current(m);
+          if (m.type === 'lock') return openLockCardRef.current(m); // Замок→Ключ: карточка ключа
           if (m.type === 'quest' && m.questId) window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener');
           else if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
         });
@@ -1338,6 +1410,18 @@ export function MapViewerClient({
               closeCard();
               router.refresh();
             }}
+          />
+        </div>
+      )}
+
+      {/* Карточка «Замок→Ключ» — popup НАД меткой замка (позиция ставится эффектом). */}
+      {lockMarker && (
+        <div ref={lockCardRef} className="absolute z-[520] w-72" style={{ transform: 'translateX(-50%)' }}>
+          <LockKeyCard
+            marker={lockMarker}
+            sameKeyCount={lockSiblings.length}
+            onHighlightSiblings={() => flashPointsRef.current(lockSiblings.map((m) => ({ x: m.position!.x, z: m.position!.z })))}
+            onClose={() => setLockMarker(null)}
           />
         </div>
       )}

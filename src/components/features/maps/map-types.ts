@@ -25,6 +25,8 @@ export interface MapViewMarker {
   itemSlug?: string | null;
   /** Выход: имя нужного предмета (transferItem) — для выбора иконки (кодовое слово). */
   transferItemName?: string | null;
+  /** Замок: цена ключа (avg24h/lastLow из зеркала) — для карточки «Замок→Ключ». */
+  keyPrice?: number | null;
   /** loose loot: slug категории предмета (barter/provisions/injectors/keys/poster/container/other) — для под-слоя. */
   lootCat?: string | null;
   meta: Record<string, unknown> | null;
