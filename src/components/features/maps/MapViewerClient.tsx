@@ -259,6 +259,7 @@ export function MapViewerClient({
   const areaLayerRef = useRef<L.LayerGroup | null>(null);
   const [areaCount, setAreaCount] = useState(0);
   const startAreaDraw = (req: { current: { x: number; z: number }[] | null; color: string; onDone: (p: { x: number; z: number }[] | null) => void }) => {
+    setAddMode(false); // клик-хендлер лассо не должен конкурировать с постановкой маркера
     areaPtsRef.current = req.current ? req.current.map((p) => ({ x: p.x, z: p.z })) : [];
     setAreaCount(areaPtsRef.current.length);
     setAreaDraw({ color: req.color, onDone: req.onDone });
@@ -294,6 +295,7 @@ export function MapViewerClient({
   const moveCursorRef = useRef<HTMLDivElement | null>(null);
   const startMove = () => {
     if (activeMarker?.id || activeMarker?.sourceMarkerId) {
+      setAddMode(false); // не смешивать с постановкой (её клик-хендлер конфликтует с move)
       setMoveMarker(activeMarker);
       setMovePos(null);
     }
@@ -1135,7 +1137,7 @@ export function MapViewerClient({
           style={{ transform: 'translateX(-50%)' }}
         >
           <EditorialMarkerCard
-            key={activeMarker.id ?? 'new'}
+            key={activeMarker.id ?? activeMarker.sourceMarkerId ?? 'new'}
             marker={activeMarker}
             linkedQuest={activeMarker.linkedQuest}
             linkedStory={activeMarker.linkedStory}
@@ -1269,7 +1271,10 @@ export function MapViewerClient({
         {canEditMarkers && !isStatic && (
           <button
             type="button"
-            onClick={() => setAddMode((v) => !v)}
+            onClick={() => {
+              setAddMode((v) => !v);
+              setOverrideMode(false);
+            }}
             aria-pressed={addMode}
             title={addMode ? 'Отмена постановки — кликните по карте, чтобы поставить маркер' : 'Поставить маркер на карте'}
             className={`flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
@@ -1284,7 +1289,10 @@ export function MapViewerClient({
         {canEditMarkers && !isStatic && (
           <button
             type="button"
-            onClick={() => setOverrideMode((v) => !v)}
+            onClick={() => {
+              setOverrideMode((v) => !v);
+              setAddMode(false);
+            }}
             aria-pressed={overrideMode}
             title={overrideMode ? 'Выключить правку синканных (клик по маркеру = ссылка)' : 'Править синканные маркеры: клик по маркеру → карточка-оверрайд'}
             className={`flex h-9 w-9 items-center justify-center rounded-sm border backdrop-blur-md transition-colors ${
