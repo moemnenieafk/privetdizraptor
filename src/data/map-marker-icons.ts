@@ -230,20 +230,40 @@ export const lockKind = (m: MarkerIconInput): LockKind => {
 };
 
 /** Под-вид опасности по meta.hazardType (minefield/sniper/mortar/tripwire) → файл danger-*. */
-export type HazardSubtype = 'sniper' | 'mine' | 'mortar' | 'tripwire' | 'other';
+export type HazardSubtype =
+  | 'sniper'
+  | 'mine'
+  | 'mortar'
+  | 'mon50'
+  | 'tripwire'
+  | 'flamable'
+  | 'biohazard'
+  | 'electro'
+  | 'radioactive'
+  | 'other';
 export const hazardSubtype = (m: MarkerIconInput): HazardSubtype => {
   const ht = String((m.meta as { hazardType?: unknown } | null | undefined)?.hazardType ?? '').toLowerCase();
   if (ht.includes('sniper')) return 'sniper';
+  if (ht.includes('mon')) return 'mon50'; // МОН-50 (направленная мина) — до 'mine'
   if (ht.includes('mine')) return 'mine'; // minefield
   if (ht.includes('mortar')) return 'mortar';
   if (ht.includes('tripwire') || ht.includes('grenade')) return 'tripwire';
+  if (ht.includes('flam') || ht.includes('fire')) return 'flamable';
+  if (ht.includes('bio') || ht.includes('toxic')) return 'biohazard';
+  if (ht.includes('electr')) return 'electro';
+  if (ht.includes('radio')) return 'radioactive';
   return 'other';
 };
 const HAZARD_FILE: Record<HazardSubtype, string> = {
   sniper: 'danger-sniper-death',
   mine: 'danger-mines-death',
   mortar: 'danger-mortar-death',
+  mon50: 'danger-mon50',
   tripwire: 'danger-tripwire-grenades',
+  flamable: 'danger-flamable',
+  biohazard: 'danger-biohazard',
+  electro: 'danger-electro',
+  radioactive: 'danger-radioactive',
   other: 'danger',
 };
 

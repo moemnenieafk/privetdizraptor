@@ -15,7 +15,7 @@ import {
   ArrowLeft, ArrowRight, Save, Trash2,
 } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
-import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES, defaultCategory, categoryLabel } from '@/data/map-markers/categories';
+import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
 import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
@@ -40,13 +40,18 @@ const EXTRACT_FACTIONS: { key: string; label: string }[] = [
   { key: 'pmc', label: 'ЧВК' },
   { key: 'scav', label: 'Дикий' },
 ];
-// Под-типы опасностей (meta.hazardType) и вид зоны задания (meta.objectiveKind) — из легенды.
+// Под-типы опасностей (meta.hazardType) — порядок и состав 1:1 с Figma «08 Step 02 Danger» (10).
 const HAZARD_SUBTYPES: { key: string; label: string }[] = [
+  { key: 'other', label: 'Общая' },
   { key: 'sniper', label: 'Снайпер' },
-  { key: 'mine', label: 'Мина' },
+  { key: 'mine', label: 'Мины' },
   { key: 'mortar', label: 'Миномёт' },
+  { key: 'mon50', label: 'МОН-50' },
   { key: 'tripwire', label: 'Растяжки' },
-  { key: 'other', label: 'Зона' },
+  { key: 'flamable', label: 'Огонь' },
+  { key: 'biohazard', label: 'Токсин' },
+  { key: 'electro', label: 'Электро' },
+  { key: 'radioactive', label: 'Радиация' },
 ];
 const QUESTZONE_KINDS: { key: string; label: string }[] = [
   { key: 'target', label: 'Цель' },
@@ -58,10 +63,48 @@ const LINK_KIND_COLOR: Record<EditorialLinkKind, string> = { story: '#6096a6', q
 
 // ─── Визард ─────────────────────────────────────────────────────────────────
 type WizardStep = 'category' | 'object' | 'details' | 'link';
-// Типы, у которых есть шаг «выбор объекта» (под-категория). Прочие (poi/transit/lock/switch/
-// stationary) идут сразу к названию; их пикеры шага 2 доедут в Ф3.
-const OBJECT_STEP_TYPES = new Set(['extract', 'spawn', 'loot', 'container', 'hazard', 'quest_zone']);
-// Короткая подпись категории для визарда (сетка шага 1 + заголовок шага).
+const SVGM = '/icons/eft/01-maps/markers';
+// Категории шага 1 (9, порядок и иконки 1:1 с Figma «01 Step 01»). Ключ категории → тип маркера.
+// Враг/Спавн оба type='spawn' (различаются лишь визуально, под-данные — позже); Интерактив
+// объединяет lock/switch/stationary (реальный тип выбирается в шаге 2). Иконка: img (свои цвета)
+// либо mask (монохром, перекраска под выбор). Перехода в макете нет — он приходит из синка.
+type WizardCatKey = 'poi' | 'enemy' | 'quest' | 'loot' | 'container' | 'interactive' | 'hazard' | 'extract' | 'spawn';
+interface WizardCategory {
+  key: WizardCatKey;
+  label: string;
+  type: string;
+  src: string;
+  mode: 'img' | 'mask';
+}
+const WIZARD_CATEGORIES: WizardCategory[] = [
+  { key: 'poi', label: 'Метка', type: 'poi', src: `${SVGM}/point-of-interest.svg`, mode: 'img' },
+  { key: 'enemy', label: 'Враг', type: 'spawn', src: `${SVGM}/spawn/spawn-boss-add.svg`, mode: 'img' },
+  { key: 'quest', label: 'Квест', type: 'quest_zone', src: `${SVGM}/quest/quest-maker.svg`, mode: 'mask' },
+  { key: 'loot', label: 'Лут', type: 'loot', src: `${SVGM}/loot/loot-random-luck.svg`, mode: 'mask' },
+  { key: 'container', label: 'Контейнер', type: 'container', src: '/icons/eft/03-items/equipment/containers/loot-containers.svg', mode: 'mask' },
+  { key: 'interactive', label: 'Интерактив', type: 'lock', src: `${SVGM}/interactive/interact.svg`, mode: 'mask' },
+  { key: 'hazard', label: 'Опасность', type: 'hazard', src: `${SVGM}/danger/danger.svg`, mode: 'img' },
+  { key: 'extract', label: 'Выход', type: 'extract', src: `${SVGM}/exfil/exfil-point-pmc.svg`, mode: 'img' },
+  { key: 'spawn', label: 'Спавн', type: 'spawn', src: `${SVGM}/spawn/spawn.svg`, mode: 'mask' },
+];
+// Под-типы «Интерактива» (шаг 2) — выставляют реальный type маркера.
+const INTERACTIVE_KINDS: { key: string; label: string }[] = [
+  { key: 'lock', label: 'Замок' },
+  { key: 'switch', label: 'Рычаг' },
+  { key: 'stationary', label: 'Стационарка' },
+];
+// Тип editorial-маркера → ключ категории визарда (для входа в правку существующего).
+function deriveCatKey(type: string): WizardCatKey {
+  if (type === 'lock' || type === 'switch' || type === 'stationary') return 'interactive';
+  if (type === 'quest_zone') return 'quest';
+  if (type === 'extract') return 'extract';
+  if (type === 'loot') return 'loot';
+  if (type === 'container') return 'container';
+  if (type === 'hazard') return 'hazard';
+  if (type === 'spawn') return 'enemy'; // spawn по умолчанию → Враг (Спавн-игрок различим лишь визуально)
+  return 'poi';
+}
+// Короткая подпись типа для fallback подписи категории (markerCategoryLabel).
 const WIZARD_TYPE_LABEL: Record<string, string> = {
   poi: 'Метка',
   extract: 'Выход',
@@ -217,17 +260,26 @@ export function EditorialMarkerCard({
   // Локальный черновик правок. Сброс при смене маркера — через key={marker.id} на компоненте в родителе.
   const [draft, setDraft] = useState<Draft>(() => makeDraft(marker));
   const editField = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
-  const selectType = (key: string) =>
-    setDraft((d) => ({ ...d, type: key, category: key === d.type ? d.category : null, faction: key === 'extract' ? (d.faction ?? 'all') : null }));
+  // Выбранная категория визарда (шаг 1). Отдельно от draft.type: Враг/Спавн оба spawn.
+  const [catKey, setCatKey] = useState<WizardCatKey>(() => deriveCatKey(marker.type));
+  const selectCat = (cat: WizardCategory) => {
+    setCatKey(cat.key);
+    setDraft((d) => ({
+      ...d,
+      type: cat.type,
+      category: cat.type === d.type ? d.category : null,
+      faction: cat.type === 'extract' ? (d.faction ?? 'all') : null,
+    }));
+  };
 
-  // ── Шаги визарда: набор зависит от типа (poi и пр. без шага «объект»). ──
+  // ── Шаги визарда: у «Метки» (poi) нет шага «объект» → сразу к названию. ──
   const [stepIdx, setStepIdx] = useState(0);
   const steps = useMemo<WizardStep[]>(() => {
     const s: WizardStep[] = ['category'];
-    if (OBJECT_STEP_TYPES.has(draft.type)) s.push('object');
+    if (catKey !== 'poi') s.push('object');
     s.push('details', 'link');
     return s;
-  }, [draft.type]);
+  }, [catKey]);
   const si = Math.min(stepIdx, steps.length - 1);
   const curStep = steps[si];
   const isLast = si === steps.length - 1;
@@ -241,6 +293,7 @@ export function EditorialMarkerCard({
   const backToDisplay = () => {
     if (marker.id) {
       setDraft(makeDraft(marker));
+      setCatKey(deriveCatKey(marker.type));
       setSel(0);
       setStepIdx(0);
       setEditing(false);
@@ -434,7 +487,7 @@ export function EditorialMarkerCard({
               <span className="flex min-w-0 items-center gap-2">
                 <span className="font-blender-medium text-type-micro tabular-nums text-tactical-amber">{String(si + 1).padStart(2, '0')}</span>
                 <span className="min-w-0 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
-                  {si === 0 ? 'Категория маркера' : WIZARD_TYPE_LABEL[draft.type] ?? 'Маркер'}
+                  {si === 0 ? 'Категория маркера' : (WIZARD_CATEGORIES.find((c) => c.key === catKey)?.label ?? 'Маркер')}
                 </span>
               </span>
               <StepProgress total={steps.length} current={si + 1} />
@@ -448,23 +501,23 @@ export function EditorialMarkerCard({
               </div>
             )}
 
-            {/* ── Шаг 1: сетка категорий (3 колонки) ── */}
+            {/* ── Шаг 1: сетка категорий (9, 3 колонки, иконки/порядок 1:1 с Figma) ── */}
             {curStep === 'category' && (
               <div className="grid w-full grid-cols-3 gap-1.5">
-                {MARKER_TYPES.map((t) => {
-                  const on = draft.type === t.key;
+                {WIZARD_CATEGORIES.map((c) => {
+                  const on = catKey === c.key;
                   return (
                     <button
-                      key={t.key}
+                      key={c.key}
                       type="button"
-                      onClick={() => selectType(t.key)}
+                      onClick={() => selectCat(c)}
                       className={`flex h-11 items-center justify-center gap-1.5 rounded-xs border-[0.5px] px-1 transition-colors ${
                         on ? 'border-(--primary) bg-(--primary)/10' : 'border-lines-hover bg-card-menu hover:border-(--primary)/50'
                       }`}
                     >
-                      <TypeGlyph input={{ type: t.key, faction: 'all', category: defaultCategory(t.key) || undefined }} size={18} />
+                      <CatIcon cat={c} on={on} size={18} />
                       <span className={`truncate font-blender-medium text-[10px] uppercase tracking-tight ${on ? 'text-(--primary)' : 'text-text-secondary'}`}>
-                        {WIZARD_TYPE_LABEL[t.key] ?? t.label}
+                        {c.label}
                       </span>
                     </button>
                   );
@@ -530,6 +583,15 @@ export function EditorialMarkerCard({
                     {QUESTZONE_KINDS.map((c) => (
                       <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
                         <MarkerGlyph input={{ type: 'quest_zone', meta: { objectiveKind: c.key } }} size={24} />
+                      </SubCell>
+                    ))}
+                  </div>
+                )}
+                {catKey === 'interactive' && (
+                  <div className="flex flex-wrap gap-1">
+                    {INTERACTIVE_KINDS.map((k) => (
+                      <SubCell key={k.key} on={draft.type === k.key} onClick={() => setDraft((d) => ({ ...d, type: k.key, category: null }))} label={k.label}>
+                        <MarkerGlyph input={{ type: k.key }} size={22} />
                       </SubCell>
                     ))}
                   </div>
@@ -938,9 +1000,34 @@ function MarkerGlyph({ input, size = 22 }: { input: MarkerIconInput; size?: numb
 // Глиф категории с фолбэком для POI (у него нет img-арта в резолвере → маска point-of-interest).
 function TypeGlyph({ input, size }: { input: MarkerIconInput; size: number }) {
   const icon = markerIconUrl(input);
+  // POI: у point-of-interest.svg своя заливка+обводка → цветной img, не перекрашенная маска.
   if (!icon && input.type === 'poi')
-    return <span className="icon-mask icon-eft-point-of-interest shrink-0" style={{ width: size, height: size, backgroundColor: 'var(--color-text-secondary)' }} />;
+    return <img src="/icons/eft/01-maps/markers/point-of-interest.svg" alt="" className="shrink-0 object-contain" style={{ width: size, height: size }} />;
   return <MarkerGlyph input={input} size={size} />;
+}
+
+// Иконка категории шага 1: цветной img (свои цвета: Метка/Враг/Опасность/Выход) либо
+// перекрашенная маска (монохром: Квест/Лут/Контейнер/Интерактив/Спавн) под состояние выбора.
+function CatIcon({ cat, on, size }: { cat: WizardCategory; on: boolean; size: number }) {
+  if (cat.mode === 'img') return <img src={cat.src} alt="" className="shrink-0 object-contain" style={{ width: size, height: size }} />;
+  return (
+    <span
+      className="shrink-0"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: on ? 'var(--primary)' : 'var(--color-text-secondary)',
+        maskImage: `url(${cat.src})`,
+        WebkitMaskImage: `url(${cat.src})`,
+        maskSize: 'contain',
+        WebkitMaskSize: 'contain',
+        maskRepeat: 'no-repeat',
+        WebkitMaskRepeat: 'no-repeat',
+        maskPosition: 'center',
+        WebkitMaskPosition: 'center',
+      }}
+    />
+  );
 }
 
 // Ячейка сетки подкатегорий 36×36 (иконка + тултип).
