@@ -82,6 +82,23 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
             <MapPin className="h-5.5 w-5.5" />
           </button>
         )}
+        {hasSquad && (
+          <button
+            type="button"
+            onClick={toggleSquad}
+            aria-pressed={squadOpen}
+            title="Отряд — позиции тиммейтов"
+            aria-label="Отряд"
+            className={`${toggleCls(squadOpen || !!squadRoom)} relative`}
+          >
+            <Users className="h-5.5 w-5.5" />
+            {squadRoom && squadCount > 1 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-nvg-green px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
+                {squadCount}
+              </span>
+            )}
+          </button>
+        )}
 
         <MapNavDropdown
           maps={navMaps}
@@ -122,24 +139,6 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
             )}
           </button>
         )}
-        {hasSquad && (
-          <button
-            type="button"
-            onClick={toggleSquad}
-            aria-pressed={squadOpen}
-            title="Отряд — позиции тиммейтов"
-            aria-label="Отряд"
-            className={`${toggleCls(squadOpen || !!squadRoom)} relative`}
-          >
-            <Users className="h-5.5 w-5.5" />
-            {squadRoom && squadCount > 1 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-nvg-green px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
-                {squadCount}
-              </span>
-            )}
-          </button>
-        )}
-
         <button
           type="button"
           onClick={onToggleFullscreen}
