@@ -1359,9 +1359,9 @@ export function MapViewerClient({
             }`}
           >
             <Trash2 className="h-4.5 w-4.5" />
-            {deleteMarks.length > 0 && (
+            {markedForDelete.length > 0 && (
               <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
-                {deleteMarks.length}
+                {markedForDelete.length}
               </span>
             )}
           </button>
