@@ -294,9 +294,10 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       return { url: `${SVG}/exfil/${exfilFile(m)}.svg`, mode: 'img', size: 30 };
 
     case 'spawn':
-      // БТР-80 (техника) — webp-арт; ручной спавн-босс — портрет; иначе иконка спавна по подвиду.
+      // БТР-80 — webp; конкретный босс (bossKey ИЛИ category-хак = имя-файл) — портрет; иначе иконка.
       if (m.category === 'btr80') return { url: `${WEBP}/spawn/spawn-btr80.webp`, mode: 'img', size: 34 };
       if (m.bossKey) return { url: `/images/bosses/eft/${m.bossKey}.webp`, mode: 'img', size: 42 };
+      if (m.category && BOSS_KEYS.has(m.category)) return { url: `/images/bosses/eft/${m.category}.webp`, mode: 'img', size: 42 };
       return { url: `${SVG}/spawn/${SPAWN_FILE[spawnSubkind(m)]}.svg`, mode: 'img', size: 28 };
 
     // явные под-виды (для драйвера слоёв: boss/boss-sniper/black-division)
@@ -433,6 +434,9 @@ export const BOSS_ROSTER: { key: string; label: string }[] = [
   { key: 'vengefulkilla', label: 'Мстительный Килла' },
   { key: 'thewedge', label: 'Клин' },
 ];
+
+/** Множество ключей боссов (category-хак: category = имя-файл портрета в /images/bosses/eft). */
+export const BOSS_KEYS = new Set(BOSS_ROSTER.map((b) => b.key));
 
 /** Goons — трио боссов (общий спавн): 3 портрета для спец-рендера маркера. */
 export const GOONS_FILES = ['bigpipe', 'birdeye', 'knight'] as const;

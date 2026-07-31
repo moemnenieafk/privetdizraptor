@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
-import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
+import { markerIconUrl, markerColor, BOSS_ROSTER, type MarkerIconInput } from '@/data/map-marker-icons';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
@@ -236,6 +236,10 @@ function markerCategoryLabel(m: CatShape): string {
   if (m.type === 'hazard' && m.category) return HAZARD_SUBTYPES.find((x) => x.key === m.category)?.label ?? 'Опасность';
   if (m.type === 'quest_zone') return m.category ? (QUESTZONE_KINDS.find((x) => x.key === m.category)?.label ?? 'Зона задания') : 'Зона задания';
   if (m.type === 'spawn' && m.category === 'btr80') return 'БТР-80';
+  if (m.type === 'spawn' && m.category) {
+    const boss = BOSS_ROSTER.find((b) => b.key === m.category);
+    if (boss) return boss.label;
+  }
   if (m.category) return categoryLabel(m.category) ?? m.category;
   return WIZARD_TYPE_LABEL[m.type] ?? MARKER_TYPES.find((t) => t.key === m.type)?.label ?? 'Маркер';
 }
@@ -580,12 +584,22 @@ export function EditorialMarkerCard({
                   </div>
                 )}
                 {draft.type === 'spawn' && catKey === 'enemy' && (
-                  <div className="flex flex-wrap gap-1">
-                    {SPAWN_CATEGORIES.map((c) => (
-                      <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
-                        <MarkerGlyph input={{ type: 'spawn', category: c.key }} size={22} />
-                      </SubCell>
-                    ))}
+                  <div className="flex w-full flex-col gap-1.5">
+                    <div className="flex flex-wrap gap-1">
+                      {SPAWN_CATEGORIES.filter((c) => c.key !== 'pmc').map((c) => (
+                        <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
+                          <MarkerGlyph input={{ type: 'spawn', category: c.key }} size={22} />
+                        </SubCell>
+                      ))}
+                    </div>
+                    <span className="font-blender-medium text-[9px] uppercase tracking-wide text-text-muted">Боссы</span>
+                    <div className="scrollbar-hidden flex max-h-48 flex-wrap gap-1 overflow-y-auto">
+                      {BOSS_ROSTER.map((b) => (
+                        <SubCell key={b.key} on={draft.category === b.key} onClick={() => setDraft((d) => ({ ...d, category: b.key }))} label={b.label}>
+                          <MarkerGlyph input={{ type: 'spawn', category: b.key }} size={26} />
+                        </SubCell>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {draft.type === 'spawn' && catKey === 'spawn' && (
