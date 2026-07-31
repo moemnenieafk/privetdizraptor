@@ -172,6 +172,7 @@ export type ExtractSubtype =
   | 'greenflare'
   | 'codeword'
   | 'paidcar'
+  | 'paidhely'
   | 'redrebel'
   | 'nobackpack'
   | 'pmc'
@@ -191,6 +192,9 @@ const EXTRACT_NAME_SUBTYPE: Record<string, ExtractSubtype> = {
 
 /** Классификатор выхода → под-вид (приоритет спец-условий над фракцией). */
 export function extractSubtype(m: MarkerIconInput): ExtractSubtype {
+  // Editorial: явный подвид хранится в category (приоритет над деривацией по label синканных).
+  const cat = (m.category ?? '') as ExtractSubtype;
+  if (cat && cat in EXTRACT_FILE) return cat;
   const label = (m.label ?? '').trim();
   // «(Сигнал)» — активация зелёным сигнальным патроном (РСП-30 / 26x75).
   if (/\(сигнал\)/i.test(label)) return 'greenflare';
@@ -210,6 +214,7 @@ const EXTRACT_FILE: Record<ExtractSubtype, string> = {
   greenflare: 'exfil-point-pmc-greenflare',
   codeword: 'exfil-point-codeword',
   paidcar: 'exfil-point-paidcar',
+  paidhely: 'exfil-point-paidhely',
   redrebel: 'exfil-point-pmc-redrebel',
   nobackpack: 'exfil-point-nobackpack',
   pmc: 'exfil-point-pmc',
@@ -342,6 +347,10 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       // Цветной глиф по типу опасности (meta.hazardType): красный треугольник + чёрный
       // внутренний символ зашиты в svg → img (маска схлопнула бы в одинаковый силуэт).
       return { url: `${SVG}/danger/${HAZARD_FILE[hazardSubtype(m)]}.svg`, mode: 'img', size: 26 };
+
+    case 'poi':
+      // Простой маркер-метка — свой градиент+обводка в svg (рендерим цветным img).
+      return { url: `${SVG}/default-marker.svg`, mode: 'img', size: 28 };
 
     default:
       return null;

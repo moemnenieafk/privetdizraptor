@@ -209,19 +209,9 @@ export function MapViewerClient({
     if (!map) return;
     const group = L.layerGroup().addTo(map);
     editorialLayerRef.current = group;
-    // Цвет капли по типу привязки: сюжет=стальной, квест=амбер, POI/без=серый.
-    const kindColor = (k: string) => (k === 'story' ? '#6096a6' : k === 'quest' ? '#e68e25' : k === 'event' ? '#c26be0' : '#8a8a95');
-    const pinIcon = (color: string) =>
-      L.divIcon({
-        className: 'cta-editorial-mk',
-        html: `<span style="display:block;width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.6)"></span>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 16],
-      });
     for (const m of editorialMarkers ?? []) {
       if (!m.id) continue;
-      // Категоризованный маркер → тот же резолвер иконок, что у ручных (реальная иконка вместо «?»);
-      // без категории (poi) → амбер-teardrop, крашенный по типу привязки.
+      // Иконка — единый резолвер (реальный img со своим градиентом/обводкой); POI → default-marker.
       // Опасности/зоны-заданий резолвятся по meta → кладём под-тип из категории.
       const meta =
         m.type === 'hazard' && m.category
@@ -229,10 +219,7 @@ export function MapViewerClient({
           : m.type === 'quest_zone' && m.category
             ? { objectiveKind: m.category }
             : undefined;
-      const icon =
-        m.type && m.type !== 'poi'
-          ? manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title, meta, linkKind: m.linkKind })
-          : pinIcon(kindColor(m.linkKind));
+      const icon = manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title, meta, linkKind: m.linkKind });
       const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
       if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });
       const id = m.id;
