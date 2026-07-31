@@ -108,6 +108,12 @@ const PLAYER_SPAWN: { key: string; label: string }[] = [
   { key: 'scav', label: 'Дикий' },
   { key: 'btr80', label: 'БТР-80' },
 ];
+// Подвиды «Метки» (шаг 2) — 3 плитки 1:1 с Figma 02: Простое/Интерес/Совет (иконка по category).
+const POI_KINDS: { key: string; label: string }[] = [
+  { key: 'simple', label: 'Простое' },
+  { key: 'interest', label: 'Интерес' },
+  { key: 'advice', label: 'Совет' },
+];
 // Тип+категория editorial-маркера → ключ категории визарда (для входа в правку существующего).
 function deriveCatKey(type: string, category?: string | null): WizardCatKey {
   if (type === 'lock' || type === 'switch' || type === 'stationary') return 'interactive';
@@ -215,7 +221,7 @@ function makeDraft(m: EditorialMarkerView): Draft {
 
 // Подпись категории маркера для строки показа/объекта (перекрывает локальные наборы + categoryLabel).
 function markerCategoryLabel(m: CatShape): string {
-  if (m.type === 'poi') return 'Метка';
+  if (m.type === 'poi') return POI_KINDS.find((k) => k.key === (m.category ?? 'simple'))?.label ?? 'Метка';
   if (m.type === 'transit') return 'Переход';
   if (m.type === 'extract') {
     return EXTRACT_SUBTYPES.find((x) => x.type === 'extract' && x.category === m.category)?.label ?? 'Выход';
@@ -289,14 +295,9 @@ export function EditorialMarkerCard({
     }));
   };
 
-  // ── Шаги визарда: у «Метки» (poi) нет шага «объект» → сразу к названию. ──
+  // ── Шаги визарда (4): категория → объект → название → связь. У всех категорий есть шаг «объект». ──
   const [stepIdx, setStepIdx] = useState(0);
-  const steps = useMemo<WizardStep[]>(() => {
-    const s: WizardStep[] = ['category'];
-    if (catKey !== 'poi') s.push('object');
-    s.push('details', 'link');
-    return s;
-  }, [catKey]);
+  const steps = useMemo<WizardStep[]>(() => ['category', 'object', 'details', 'link'], []);
   const si = Math.min(stepIdx, steps.length - 1);
   const curStep = steps[si];
   const isLast = si === steps.length - 1;
@@ -545,6 +546,15 @@ export function EditorialMarkerCard({
             {/* ── Шаг 2: выбор объекта (под-категория). Пикеры уточняются в Ф3. ── */}
             {curStep === 'object' && (
               <div className="flex w-full flex-col gap-1.5">
+                {catKey === 'poi' && (
+                  <div className="flex flex-wrap gap-1">
+                    {POI_KINDS.map((k) => (
+                      <SubCell key={k.key} on={(draft.category ?? 'simple') === k.key} onClick={() => setDraft((d) => ({ ...d, category: k.key }))} label={k.label}>
+                        <MarkerGlyph input={{ type: 'poi', category: k.key }} size={24} />
+                      </SubCell>
+                    ))}
+                  </div>
+                )}
                 {catKey === 'extract' && (
                   <div className="flex flex-wrap gap-1">
                     {EXTRACT_SUBTYPES.map((s) => {

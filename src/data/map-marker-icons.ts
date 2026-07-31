@@ -348,9 +348,11 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       // внутренний символ зашиты в svg → img (маска схлопнула бы в одинаковый силуэт).
       return { url: `${SVG}/danger/${HAZARD_FILE[hazardSubtype(m)]}.svg`, mode: 'img', size: 26 };
 
-    case 'poi':
-      // Простой маркер-метка — свой градиент+обводка в svg (рендерим цветным img).
-      return { url: `${SVG}/default-marker.svg`, mode: 'img', size: 28 };
+    case 'poi': {
+      // Подвид метки: interest→point-of-interest, advice→advice, иначе (simple)→default-marker.
+      const poiFile = m.category === 'interest' ? 'point-of-interest' : m.category === 'advice' ? 'advice' : 'default-marker';
+      return { url: `${SVG}/${poiFile}.svg`, mode: 'img', size: 28 };
+    }
 
     default:
       return null;
