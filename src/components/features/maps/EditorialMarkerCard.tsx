@@ -847,14 +847,15 @@ export function EditorialMarkerCard({
                 {isLast ? <><Save className="h-3.5 w-3.5" /> Сохранить</> : <>Далее <ArrowRight className="h-3.5 w-3.5" /></>}
               </button>
             </div>
-            {isLast && marker.id && (
+            {marker.id && (
               <button
                 type="button"
                 onClick={remove}
                 disabled={busy}
-                className="flex items-center gap-1.5 font-blender-medium text-[10px] uppercase tracking-wide text-text-muted transition-colors hover:text-danger disabled:opacity-50"
+                title="Удалить маркер"
+                className="flex h-8 w-full items-center justify-center gap-1.5 rounded-xs border-[0.5px] border-danger/50 font-blender-medium text-type-micro uppercase tracking-widest text-danger transition-colors hover:border-danger hover:bg-danger-dim disabled:opacity-50"
               >
-                <Trash2 className="h-3 w-3" /> Удалить маркер
+                <Trash2 className="h-3.5 w-3.5" /> Удалить маркер
               </button>
             )}
           </>
