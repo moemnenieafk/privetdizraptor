@@ -289,7 +289,8 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       return { url: `${SVG}/exfil/${exfilFile(m)}.svg`, mode: 'img', size: 30 };
 
     case 'spawn':
-      // Ручной спавн-босс (редактор): конкретный webp-портрет вместо иконки спавна.
+      // БТР-80 (техника) — webp-арт; ручной спавн-босс — портрет; иначе иконка спавна по подвиду.
+      if (m.category === 'btr80') return { url: `${WEBP}/spawn/spawn-btr80.webp`, mode: 'img', size: 34 };
       if (m.bossKey) return { url: `/images/bosses/eft/${m.bossKey}.webp`, mode: 'img', size: 42 };
       return { url: `${SVG}/spawn/${SPAWN_FILE[spawnSubkind(m)]}.svg`, mode: 'img', size: 28 };
 

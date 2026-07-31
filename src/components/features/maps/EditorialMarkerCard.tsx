@@ -93,15 +93,23 @@ const INTERACTIVE_KINDS: { key: string; label: string }[] = [
   { key: 'switch', label: 'Рычаг' },
   { key: 'stationary', label: 'Стационарка' },
 ];
-// Тип editorial-маркера → ключ категории визарда (для входа в правку существующего).
-function deriveCatKey(type: string): WizardCatKey {
+// Спавн игрока/техники (шаг 2 для «Спавн») — 3 плитки 1:1 с Figma 10-1 (ЧВК/Дикий/БТР-80).
+// Отличается от «Врага» (боты/боссы) наличием БТР-80; пересечение по ЧВК/Дикий — норм (одна точка).
+const PLAYER_SPAWN: { key: string; label: string }[] = [
+  { key: 'pmc', label: 'ЧВК' },
+  { key: 'scav', label: 'Дикий' },
+  { key: 'btr80', label: 'БТР-80' },
+];
+// Тип+категория editorial-маркера → ключ категории визарда (для входа в правку существующего).
+function deriveCatKey(type: string, category?: string | null): WizardCatKey {
   if (type === 'lock' || type === 'switch' || type === 'stationary') return 'interactive';
   if (type === 'quest_zone') return 'quest';
   if (type === 'extract') return 'extract';
   if (type === 'loot') return 'loot';
   if (type === 'container') return 'container';
   if (type === 'hazard') return 'hazard';
-  if (type === 'spawn') return 'enemy'; // spawn по умолчанию → Враг (Спавн-игрок различим лишь визуально)
+  // БТР-80 однозначно «Спавн»; прочий spawn (ЧВК/Дикий/боссы) по умолчанию → Враг.
+  if (type === 'spawn') return category === 'btr80' ? 'spawn' : 'enemy';
   return 'poi';
 }
 // Короткая подпись типа для fallback подписи категории (markerCategoryLabel).
@@ -206,6 +214,7 @@ function markerCategoryLabel(m: CatShape): string {
   }
   if (m.type === 'hazard' && m.category) return HAZARD_SUBTYPES.find((x) => x.key === m.category)?.label ?? 'Опасность';
   if (m.type === 'quest_zone') return m.category ? (QUESTZONE_KINDS.find((x) => x.key === m.category)?.label ?? 'Зона задания') : 'Зона задания';
+  if (m.type === 'spawn' && m.category === 'btr80') return 'БТР-80';
   if (m.category) return categoryLabel(m.category) ?? m.category;
   return WIZARD_TYPE_LABEL[m.type] ?? MARKER_TYPES.find((t) => t.key === m.type)?.label ?? 'Маркер';
 }
@@ -261,7 +270,7 @@ export function EditorialMarkerCard({
   const [draft, setDraft] = useState<Draft>(() => makeDraft(marker));
   const editField = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
   // Выбранная категория визарда (шаг 1). Отдельно от draft.type: Враг/Спавн оба spawn.
-  const [catKey, setCatKey] = useState<WizardCatKey>(() => deriveCatKey(marker.type));
+  const [catKey, setCatKey] = useState<WizardCatKey>(() => deriveCatKey(marker.type, marker.category));
   const selectCat = (cat: WizardCategory) => {
     setCatKey(cat.key);
     setDraft((d) => ({
@@ -293,7 +302,7 @@ export function EditorialMarkerCard({
   const backToDisplay = () => {
     if (marker.id) {
       setDraft(makeDraft(marker));
-      setCatKey(deriveCatKey(marker.type));
+      setCatKey(deriveCatKey(marker.type, marker.category));
       setSel(0);
       setStepIdx(0);
       setEditing(false);
@@ -537,11 +546,20 @@ export function EditorialMarkerCard({
                     ))}
                   </div>
                 )}
-                {draft.type === 'spawn' && (
+                {draft.type === 'spawn' && catKey === 'enemy' && (
                   <div className="flex flex-wrap gap-1">
                     {SPAWN_CATEGORIES.map((c) => (
                       <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
                         <MarkerGlyph input={{ type: 'spawn', category: c.key }} size={22} />
+                      </SubCell>
+                    ))}
+                  </div>
+                )}
+                {draft.type === 'spawn' && catKey === 'spawn' && (
+                  <div className="flex flex-wrap gap-1">
+                    {PLAYER_SPAWN.map((c) => (
+                      <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
+                        <MarkerGlyph input={{ type: 'spawn', category: c.key }} size={c.key === 'btr80' ? 26 : 22} />
                       </SubCell>
                     ))}
                   </div>
