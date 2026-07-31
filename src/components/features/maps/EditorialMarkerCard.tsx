@@ -117,6 +117,12 @@ const POI_KINDS: { key: string; label: string }[] = [
   { key: 'interest', label: 'Интерес' },
   { key: 'advice', label: 'Совет' },
 ];
+// «Враг» (шаг 2) — ОДИН плоский список: generic-враги (без ЧВК и без дубль-обобщений Босс/Goons/
+// Сектанты — их заменяют именные боссы) + полный ростер боссов-портретов.
+const ENEMY_OPTIONS: { key: string; label: string }[] = [
+  ...SPAWN_CATEGORIES.filter((c) => !['pmc', 'boss', 'goons', 'cultist'].includes(c.key)),
+  ...BOSS_ROSTER,
+];
 // Тип+категория editorial-маркера → ключ категории визарда (для входа в правку существующего).
 function deriveCatKey(type: string, category?: string | null): WizardCatKey {
   if (type === 'lock' || type === 'switch' || type === 'stationary') return 'interactive';
@@ -584,22 +590,12 @@ export function EditorialMarkerCard({
                   </div>
                 )}
                 {draft.type === 'spawn' && catKey === 'enemy' && (
-                  <div className="flex w-full flex-col gap-1.5">
-                    <div className="flex flex-wrap gap-1">
-                      {SPAWN_CATEGORIES.filter((c) => c.key !== 'pmc').map((c) => (
-                        <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
-                          <MarkerGlyph input={{ type: 'spawn', category: c.key }} size={22} />
-                        </SubCell>
-                      ))}
-                    </div>
-                    <span className="font-blender-medium text-[9px] uppercase tracking-wide text-text-muted">Боссы</span>
-                    <div className="scrollbar-hidden flex max-h-48 flex-wrap gap-1 overflow-y-auto">
-                      {BOSS_ROSTER.map((b) => (
-                        <SubCell key={b.key} on={draft.category === b.key} onClick={() => setDraft((d) => ({ ...d, category: b.key }))} label={b.label}>
-                          <MarkerGlyph input={{ type: 'spawn', category: b.key }} size={26} />
-                        </SubCell>
-                      ))}
-                    </div>
+                  <div className="scrollbar-hidden flex max-h-56 w-full flex-wrap gap-1 overflow-y-auto">
+                    {ENEMY_OPTIONS.map((c) => (
+                      <SubCell key={c.key} on={draft.category === c.key} onClick={() => setDraft((d) => ({ ...d, category: c.key }))} label={c.label}>
+                        <MarkerGlyph input={{ type: 'spawn', category: c.key }} size={24} />
+                      </SubCell>
+                    ))}
                   </div>
                 )}
                 {draft.type === 'spawn' && catKey === 'spawn' && (
