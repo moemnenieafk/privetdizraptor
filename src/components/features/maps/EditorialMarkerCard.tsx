@@ -286,6 +286,8 @@ interface Props {
   onDrawArea?: (req: { current: { x: number; z: number }[] | null; color: string; onDone: (poly: { x: number; z: number }[] | null) => void }) => void;
   /** Индекс лута карты (loose loot, без контейнеров) — для поиска предмета в Лут-шаге 2. */
   lootIndex?: { id: string; label: string }[];
+  /** Показ, admin: «Переместить» — parent включает move-режим (курсор-пин → новая точка). */
+  onMove?: () => void;
 }
 
 export function EditorialMarkerCard({
@@ -301,6 +303,7 @@ export function EditorialMarkerCard({
   onCancel,
   onDrawArea,
   lootIndex,
+  onMove,
 }: Props) {
   const [sel, setSel] = useState(0);
   const [editing, setEditing] = useState(defaultEditing);
@@ -354,12 +357,6 @@ export function EditorialMarkerCard({
   };
 
   const [picking, setPicking] = useState(false);
-  // Подсказка «скоро» для кнопки «Переместить» (полноценный move-режим — следующий шаг визарда).
-  const [moveHint, setMoveHint] = useState(false);
-  const showMoveHint = () => {
-    setMoveHint(true);
-    setTimeout(() => setMoveHint(false), 2600);
-  };
   // Автокомплит привязки к квесту (редакторам).
   const [linkQ, setLinkQ] = useState('');
   const linkHits =
@@ -942,31 +939,24 @@ export function EditorialMarkerCard({
 
             {/* Ряд admin: ⇄ Переместить · ✎ Редактировать (заменил карандаш-тоггл) */}
             {canEdit && (
-              <>
-                <div className="flex w-full items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={showMoveHint}
-                    title="Режим перемещения — в следующем обновлении"
-                    className="flex h-7 min-w-px flex-1 items-center justify-center gap-1.5 rounded-xs border-[0.5px] border-lines-hover bg-card-menu font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary transition-colors hover:border-(--primary)/50 hover:text-(--primary)"
-                  >
-                    <Move3d className="h-3 w-3" /> Переместить
-                  </button>
-                  <button
-                    type="button"
-                    onClick={enterEdit}
-                    title="Редактировать маркер"
-                    className="flex h-7 min-w-px flex-1 items-center justify-center gap-1.5 rounded-xs border-[0.5px] border-lines-hover bg-card-menu font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary transition-colors hover:border-(--primary)/50 hover:text-(--primary)"
-                  >
-                    <MapPinPen className="h-3 w-3" /> Редактировать
-                  </button>
-                </div>
-                {moveHint && (
-                  <p className="w-full text-center font-blender-book text-[10px] leading-tight text-text-muted">
-                    Режим перемещения появится в следующем обновлении.
-                  </p>
-                )}
-              </>
+              <div className="flex w-full items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => onMove?.()}
+                  title="Переместить маркер на карте"
+                  className="flex h-7 min-w-px flex-1 items-center justify-center gap-1.5 rounded-xs border-[0.5px] border-lines-hover bg-card-menu font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary transition-colors hover:border-(--primary)/50 hover:text-(--primary)"
+                >
+                  <Move3d className="h-3 w-3" /> Переместить
+                </button>
+                <button
+                  type="button"
+                  onClick={enterEdit}
+                  title="Редактировать маркер"
+                  className="flex h-7 min-w-px flex-1 items-center justify-center gap-1.5 rounded-xs border-[0.5px] border-lines-hover bg-card-menu font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary transition-colors hover:border-(--primary)/50 hover:text-(--primary)"
+                >
+                  <MapPinPen className="h-3 w-3" /> Редактировать
+                </button>
+              </div>
             )}
           </>
         )}

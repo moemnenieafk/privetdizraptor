@@ -74,6 +74,25 @@ const spawnKind = (m: MapViewMarker): string => {
 /** Иконка маркера вьюера — через общий резолвер (webp/svg/плейсхолдер), без подписи (она в тултипе). */
 const markerDivIcon = (m: MapViewMarker): L.DivIcon => manualMarkerIcon(m, false, false);
 
+/** Иконка editorial-маркера — единая для слоя карты и курсора move-режима. */
+function editorialIcon(m: EditorialMarkerData): L.DivIcon {
+  const meta =
+    m.type === 'hazard' && m.category
+      ? { hazardType: m.category }
+      : m.type === 'quest_zone' && m.category
+        ? { objectiveKind: m.category }
+        : undefined;
+  return manualMarkerIcon({
+    type: m.type,
+    category: m.category ?? undefined,
+    faction: m.faction ?? undefined,
+    label: m.title,
+    meta,
+    linkKind: m.linkKind,
+    linkedItemId: m.type === 'loot' && isItemId(m.category) ? m.category ?? undefined : undefined,
+  });
+}
+
 function tooltipFor(m: MapViewMarker): string {
   const head = (cls: string, t: string) => `<div class="cta-tip-h ${cls}">${esc(t)}</div>`;
   const sub = (t: string) => `<div class="cta-tip-sub">${esc(t)}</div>`;
@@ -239,6 +258,62 @@ export function MapViewerClient({
     return [...byLabel.values()].sort((a, b) => a.label.localeCompare(b.label));
   }, [data.markers]);
 
+  // Move-режим (перемещение editorial-маркера). Курсор = иконка маркера (следит за мышью);
+  // ЛКМ ставит новую точку → подтверждение → апдейт x/z. Pan на СКМ (ЛКМ занят установкой).
+  const [moveMarker, setMoveMarker] = useState<EditorialMarkerData | null>(null);
+  const [movePos, setMovePos] = useState<{ x: number; z: number } | null>(null);
+  const [moveBusy, setMoveBusy] = useState(false);
+  const moveCursorRef = useRef<HTMLDivElement | null>(null);
+  const startMove = () => {
+    if (activeMarker?.id) {
+      setMoveMarker(activeMarker);
+      setMovePos(null);
+    }
+  };
+  const cancelMove = () => {
+    setMoveMarker(null);
+    setMovePos(null);
+  };
+  const confirmMove = async () => {
+    if (!moveMarker || !movePos) return;
+    setMoveBusy(true);
+    try {
+      const res = await fetch('/api/admin/editorial-markers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: moveMarker.id,
+          mapId: moveMarker.mapId,
+          slug: data.slug,
+          x: movePos.x,
+          z: movePos.z,
+          y: moveMarker.y,
+          floor: moveMarker.floor,
+          type: moveMarker.type,
+          category: moveMarker.category,
+          faction: moveMarker.faction,
+          title: moveMarker.title,
+          description: moveMarker.description,
+          screenshots: moveMarker.screenshots,
+          linkKind: moveMarker.linkKind,
+          linkId: moveMarker.linkId,
+          linkStep: moveMarker.linkStep,
+          polygon: moveMarker.polygon,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      cancelMove();
+      closeCard();
+      router.refresh();
+    } catch (e) {
+      console.error('[editorial-marker move]', e);
+      alert('Не удалось переместить маркер');
+    } finally {
+      setMoveBusy(false);
+    }
+  };
+  const moveIconHtml = moveMarker ? String(editorialIcon(moveMarker).options.html ?? '') : '';
+
   useEffect(() => {
     const map = mapInst;
     if (!map) return;
@@ -247,23 +322,7 @@ export function MapViewerClient({
     for (const m of editorialMarkers ?? []) {
       if (!m.id) continue;
       const id = m.id;
-      // Иконка — единый резолвер (реальный img со своим градиентом/обводкой); POI → default-marker.
-      // Опасности/зоны-заданий резолвятся по meta → кладём под-тип из категории.
-      const meta =
-        m.type === 'hazard' && m.category
-          ? { hazardType: m.category }
-          : m.type === 'quest_zone' && m.category
-            ? { objectiveKind: m.category }
-            : undefined;
-      const icon = manualMarkerIcon({
-        type: m.type,
-        category: m.category ?? undefined,
-        faction: m.faction ?? undefined,
-        label: m.title,
-        meta,
-        linkKind: m.linkKind,
-        linkedItemId: m.type === 'loot' && isItemId(m.category) ? m.category ?? undefined : undefined,
-      });
+      const icon = editorialIcon(m);
       // Область-лассо → пунктирный полигон с заливкой цветом категории + иконка в центроиде.
       if (m.polygon && m.polygon.length >= 3) {
         const color = markerColor(m.type);
@@ -322,7 +381,7 @@ export function MapViewerClient({
   // Закрытие по нажатию в ЛЮБОМ месте вне карточки (карта, drawer, страница). setTimeout —
   // чтобы клик-открытие капли не закрыл окно сразу же тем же событием.
   useEffect(() => {
-    if (!activeMarker || areaDraw) return; // в режиме лассо клики по карте — это вершины, не закрытие
+    if (!activeMarker || areaDraw || moveMarker) return; // лассо/move: клики по карте — не закрытие
     const onDown = (e: MouseEvent) => {
       if (!editorialOverlayRef.current?.contains(e.target as Node)) closeCard();
     };
@@ -331,7 +390,7 @@ export function MapViewerClient({
       clearTimeout(t);
       document.removeEventListener('mousedown', onDown);
     };
-  }, [activeMarker, areaDraw]);
+  }, [activeMarker, areaDraw, moveMarker]);
 
   // Постановка: в addMode следующий клик по карте открывает ЧЕРНОВИК (x=lng, z=lat) в памяти —
   // без записи в БД. INSERT произойдёт только при «Сохранить» в карточке.
@@ -428,6 +487,59 @@ export function MapViewerClient({
       areaLayerRef.current = null;
     };
   }, [mapInst, areaDraw]);
+
+  // Move-режим, фаза 1 (точка не выбрана): курсор-пин следит за мышью, ЛКМ ставит точку,
+  // СКМ панорамирует (ЛКМ-drag отключён), Esc отменяет. Точка выбрана → фаза 2 (подтверждение).
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !moveMarker || movePos) return;
+    const el = map.getContainer();
+    el.style.cursor = 'none';
+    map.dragging.disable();
+    let panning = false;
+    let last: { x: number; y: number } | null = null;
+    const onMouseMove = (e: MouseEvent) => {
+      if (moveCursorRef.current) {
+        moveCursorRef.current.style.left = `${e.clientX}px`;
+        moveCursorRef.current.style.top = `${e.clientY}px`;
+      }
+      if (panning && last) {
+        map.panBy([last.x - e.clientX, last.y - e.clientY], { animate: false });
+        last = { x: e.clientX, y: e.clientY };
+      }
+    };
+    const onDown = (e: MouseEvent) => {
+      if (e.button === 1) {
+        e.preventDefault();
+        panning = true;
+        last = { x: e.clientX, y: e.clientY };
+      }
+    };
+    const onUp = (e: MouseEvent) => {
+      if (e.button === 1) panning = false;
+    };
+    const onClick = (e: L.LeafletMouseEvent) => setMovePos({ x: e.latlng.lng, z: e.latlng.lat });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMoveMarker(null);
+        setMovePos(null);
+      }
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    el.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('keydown', onKey);
+    map.on('click', onClick);
+    return () => {
+      el.style.cursor = '';
+      map.dragging.enable();
+      window.removeEventListener('mousemove', onMouseMove);
+      el.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('keydown', onKey);
+      map.off('click', onClick);
+    };
+  }, [mapInst, moveMarker, movePos]);
 
   // Число маркеров на под-слой (для drawer'а + скрытия пустых слоёв).
   const counts = useMemo(() => {
@@ -936,7 +1048,7 @@ export function MapViewerClient({
       {activeMarker && (
         <div
           ref={editorialOverlayRef}
-          className={`absolute z-[520] w-87 ${areaDraw ? 'pointer-events-none opacity-0' : ''}`}
+          className={`absolute z-[520] w-87 ${areaDraw || moveMarker ? 'pointer-events-none opacity-0' : ''}`}
           style={{ transform: 'translateX(-50%)' }}
         >
           <EditorialMarkerCard
@@ -952,6 +1064,7 @@ export function MapViewerClient({
             onCancel={closeCard}
             onDrawArea={startAreaDraw}
             lootIndex={lootIndex}
+            onMove={startMove}
             onMutated={() => {
               closeCard();
               router.refresh();
@@ -981,6 +1094,56 @@ export function MapViewerClient({
           >
             Отмена
           </button>
+        </div>
+      )}
+
+      {/* Move-режим: курсор-пин (иконка маркера следит за мышью), панель-подсказка, подтверждение. */}
+      {moveMarker && (
+        <div
+          ref={moveCursorRef}
+          className="pointer-events-none fixed z-[600]"
+          style={{ transform: 'translate(-50%, -100%)' }}
+          dangerouslySetInnerHTML={{ __html: moveIconHtml }}
+        />
+      )}
+      {moveMarker && !movePos && (
+        <div className="absolute bottom-16 left-1/2 z-[560] flex -translate-x-1/2 items-center gap-2 rounded-sm border border-lines-hover bg-card-menu px-4 py-2 backdrop-blur-md">
+          <span className="font-blender-medium text-xs text-text-secondary">
+            Перемещение: <span className="text-text-primary">ЛКМ</span> — новая точка · <span className="text-text-primary">СКМ</span> — двигать карту · <span className="text-text-primary">Esc</span> — отмена
+          </span>
+        </div>
+      )}
+      {moveMarker && movePos && (
+        <div className="absolute inset-0 z-[600] flex items-center justify-center bg-black/40">
+          <div className="flex flex-col items-center gap-3 rounded-sm border border-lines-hover bg-card-menu px-6 py-4 backdrop-blur-md">
+            <span className="font-blender-medium text-sm text-text-primary">Переместить маркер сюда?</span>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={confirmMove}
+                disabled={moveBusy}
+                className="flex h-8 items-center gap-1.5 rounded-xs bg-(--primary) px-4 font-blender-medium text-type-micro uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                <Check className="h-3.5 w-3.5" /> Да
+              </button>
+              <button
+                type="button"
+                onClick={() => setMovePos(null)}
+                disabled={moveBusy}
+                className="flex h-8 items-center rounded-xs border border-lines-hover px-4 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:text-(--primary) disabled:opacity-50"
+              >
+                Заново
+              </button>
+              <button
+                type="button"
+                onClick={cancelMove}
+                disabled={moveBusy}
+                className="flex h-8 items-center rounded-xs border border-lines-hover px-4 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:text-danger disabled:opacity-50"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
