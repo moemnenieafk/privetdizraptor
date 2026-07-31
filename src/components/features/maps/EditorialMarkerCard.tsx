@@ -95,6 +95,9 @@ const WIZARD_CATEGORIES: WizardCategory[] = [
   { key: 'extract', label: 'Выход', type: 'extract', src: `${SVGM}/exfil/exfil-point-pmc.svg` },
   { key: 'spawn', label: 'Спавн', type: 'spawn', src: `${SVGM}/spawn/spawn.svg` },
 ];
+// Категориям с зоной доступна ОБЛАСТЬ (полигон-лассо). Остальные (Враг/Лут/Контейнер/Интерактив) —
+// строго точечные, кнопки «Область» у них нет.
+const AREA_CATEGORIES = new Set<WizardCatKey>(['poi', 'quest', 'hazard', 'extract', 'spawn']);
 // Под-типы «Интерактива» (шаг 2) — выставляют реальный type маркера.
 const INTERACTIVE_KINDS: { key: string; label: string }[] = [
   { key: 'lock', label: 'Замок' },
@@ -299,6 +302,7 @@ export function EditorialMarkerCard({
       type: cat.type,
       category: cat.type === d.type ? d.category : null,
       faction: null,
+      polygon: AREA_CATEGORIES.has(cat.key) ? d.polygon : null, // точечная категория не хранит область
     }));
   };
 
@@ -753,7 +757,7 @@ export function EditorialMarkerCard({
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Назад
               </button>
-              {onDrawArea && (
+              {onDrawArea && AREA_CATEGORIES.has(catKey) && (
                 <button
                   type="button"
                   onClick={() => onDrawArea({ current: draft.polygon, color: markerColor(draft.type), onDone: (poly) => editField({ polygon: poly }) })}
