@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useStreamDockStore } from '@/store/useStreamDockStore';
 
-// Плавающая кнопка-индикатор статуса стрима (правый-нижний угол).
+// Плавающая кнопка-индикатор статуса стрима.
 // Сам плеер живёт в StreamDock (features/streams). Здесь — ТОЛЬКО индикатор LIVE/OFFLINE
 // и триггер: клик по LIVE разворачивает fullkamen-док (если юзер его свернул в 1×1).
-export default function StreamStatus() {
+// mapVariant — на Картах: левый гуттер, высота хедера (низ-право там занят контролами карты).
+export default function StreamStatus({ mapVariant = false }: { mapVariant?: boolean }) {
   const [isLive, setIsLive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isQuestFullscreen, setIsQuestFullscreen] = useState(false);
@@ -84,12 +85,18 @@ export default function StreamStatus() {
   const s = isLive ? liveS : offlineS;
 
   return (
-    // Плавающий оверлей: левый край блока встаёт на кромку 1100px-контента, сам блок — ЗА неё,
-    // в правый гуттер (сдвиг от кромки на ширину блока = w-40 = 10rem). Так не налезает ни на
-    // контент, ни на контролы карты у края. На узких — фолбэк к 1rem. Обёртка кликопрозрачна.
+    // Плавающий оверлей: блок сидит в боковом гуттере ЗА кромкой 1100px-контента (сдвиг на
+    // ширину блока = w-40 = 10rem), на узких — фолбэк к 1rem. Обёртка кликопрозрачна.
+    // mapVariant: левый гуттер + высота хедера (top-6, зеркало «Завоза»); иначе правый низ.
     <div
-      className="fixed bottom-4 z-70 flex flex-col items-end gap-2 pointer-events-none"
-      style={{ right: 'max(1rem, calc((100vw - 1100px) / 2 - 10rem - 56px))' }}
+      className={`fixed flex flex-col gap-2 pointer-events-none ${
+        mapVariant ? 'top-6 items-start z-40' : 'bottom-4 items-end z-70'
+      }`}
+      style={
+        mapVariant
+          ? { left: 'max(1rem, calc((100vw - 1100px) / 2 - 10rem - 56px))' }
+          : { right: 'max(1rem, calc((100vw - 1100px) / 2 - 10rem - 56px))' }
+      }
     >
       {/* ═══ Кнопка-индикатор стрима ═══ */}
       <a
