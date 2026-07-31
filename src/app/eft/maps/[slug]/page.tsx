@@ -182,7 +182,7 @@ export default async function MapPage({ params, searchParams }: Props) {
           spawnFaction: m.type === 'spawn' && m.label ? (zoneFaction.get(m.label) ?? null) : null,
           bossKey: bossPortraitOf.get(m.id) ?? null,
           category: goonsKeys.has(bossPortraitOf.get(m.id) ?? '') ? 'goons' : null,
-          itemBg: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.backgroundColor ?? null) : null,
+          itemBg: (m.type === 'loot_loose' || m.type === 'lock') && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.backgroundColor ?? null) : null,
           itemSlug: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.normalizedName ?? null) : null,
           lootCat:
             m.type === 'loot_loose' && m.linkedItemId

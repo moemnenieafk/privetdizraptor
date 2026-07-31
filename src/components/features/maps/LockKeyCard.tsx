@@ -4,6 +4,7 @@
 // Данные целиком из маркера (meta.key/lockType/needsPower, linkedItemId, keyPrice) — см. решение lock-key-mapping.
 import { X, Zap, ExternalLink, DoorOpen, Lock } from 'lucide-react';
 import { itemIconUrl } from '@/lib/item-icon';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { formatCurrencyDisplay } from '@/lib/formatters';
 import type { MapViewMarker } from './map-types';
 
@@ -53,13 +54,14 @@ export function LockKeyCard({ marker, sameKeyCount, onHighlightSiblings, onClose
       {/* Шапка: иконка ключа + имя + закрыть */}
       <div className="flex items-start gap-2.5">
         {hasKey && keyId ? (
-          <img
-            src={itemIconUrl(keyId)}
-            alt={keyName ?? ''}
-            className="h-11 w-11 shrink-0 rounded-xs border-[0.5px] border-lines-hover bg-(--color-base) object-contain"
-          />
+          // Игровая ячейка инвентаря: рарностный tint + внутренняя тень + иконка сверху (как EftItemTile).
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xs border border-lines-hover">
+            <div className="absolute inset-0" style={{ backgroundColor: getTarkovBackgroundColor(marker.itemBg ?? undefined) }} />
+            <div className="absolute inset-0 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]" />
+            <img src={itemIconUrl(keyId)} alt={keyName ?? ''} className="absolute inset-0 z-10 h-full w-full object-contain p-1 drop-shadow-lg" />
+          </div>
         ) : (
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xs border-[0.5px] border-lines-hover bg-(--color-base) text-text-muted">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xs border border-lines-hover bg-(--color-base) text-text-muted">
             <Lock className="h-5 w-5" />
           </div>
         )}
