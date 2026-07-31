@@ -208,6 +208,9 @@ export function MapViewerClient({
   const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null }[]>([]);
   // Синканые маркеры по их source-id → для класса .cta-mk-del без пересборки слоя (режим удаления).
   const sourceMarkerElsRef = useRef<Map<string, L.Marker>>(new Map());
+  // Editorial-маркеры по id → тоже императивная пометка (капля/центроид + приглушение полигона),
+  // БЕЗ пересборки слоя: rebuild на каждую пометку ронял Leaflet (_initIcon→appendChild) при гонке с refresh.
+  const editorialElsRef = useRef<Map<string, { mk: L.Marker; poly?: L.Polygon }>>(new Map());
   const svgGroupsRef = useRef<Map<string, SVGGElement> | null>(null);
   const activeFloorRef = useRef(activeFloor);
   const loadImageRef = useRef<((url: string) => void) | null>(null);
@@ -479,11 +482,12 @@ export function MapViewerClient({
     if (!map) return;
     const group = L.layerGroup().addTo(map);
     editorialLayerRef.current = group;
+    const els = new Map<string, { mk: L.Marker; poly?: L.Polygon }>();
     for (const m of editorialMarkers ?? []) {
       if (!m.id) continue;
       const id = m.id;
       const icon = editorialIcon(m);
-      const marked = deleteMarks.includes(id); // помечен на удаление → приглушить + крест-бейдж
+      const marked = deleteMarksRef.current.includes(id); // стартовая пометка (живые смены — в toggle-эффекте)
       // Область-лассо → пунктирный полигон с заливкой цветом категории + иконка в центроиде.
       if (m.polygon && m.polygon.length >= 3) {
         const color = markerColor(m.type);
@@ -496,6 +500,7 @@ export function MapViewerClient({
         const cm = L.marker(ll({ x: cx, z: cz }), { icon, interactive: false });
         cm.addTo(group);
         if (marked) cm.getElement()?.classList.add('cta-mk-del');
+        els.set(id, { mk: cm, poly });
         continue;
       }
       const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
@@ -503,19 +508,28 @@ export function MapViewerClient({
       mk.on('click', () => setOpenEditorialId(id));
       mk.addTo(group);
       if (marked) mk.getElement()?.classList.add('cta-mk-del');
+      els.set(id, { mk });
     }
+    editorialElsRef.current = els;
     return () => {
       group.remove();
       editorialLayerRef.current = null;
+      editorialElsRef.current = new Map();
     };
-  }, [mapInst, editorialMarkers, deleteMarks]);
+  }, [mapInst, editorialMarkers]);
 
-  // Класс .cta-mk-del на синканых маркерах при смене пометок (без пересборки тяжёлого слоя).
+  // Пометка на удаление — ИМПЕРАТИВНО (класс + приглушение полигона), без пересборки слоёв.
+  // editorial по id, синканые по `src:<id>`. Так пометка не роняет Leaflet при гонке с refresh.
   useEffect(() => {
+    for (const [id, { mk, poly }] of editorialElsRef.current) {
+      const marked = deleteMarks.includes(id);
+      mk.getElement()?.classList.toggle('cta-mk-del', marked);
+      poly?.setStyle({ fillOpacity: marked ? 0.05 : 0.18, opacity: marked ? 0.35 : 1 });
+    }
     for (const [sid, mk] of sourceMarkerElsRef.current) {
       mk.getElement()?.classList.toggle('cta-mk-del', deleteMarks.includes(`src:${sid}`));
     }
-  }, [deleteMarks, mapInst]);
+  }, [deleteMarks, mapInst, editorialMarkers]);
 
   // Карточка-popup держится НАД каплей: пересчёт экранной точки при пане/зуме; клик по карте — закрыть.
   useEffect(() => {
