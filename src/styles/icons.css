@@ -99,6 +99,7 @@
   .icon-eft-advice { mask-image: url('/icons/eft/01-maps/markers/advice.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/advice.svg'); }
   .icon-eft-interact { mask-image: url('/icons/eft/01-maps/markers/interactive/interact.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/interactive/interact.svg'); }
   .icon-eft-make-region { mask-image: url('/icons/eft/01-maps/markers/make-region.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/make-region.svg'); }
+  .icon-eft-delete-icon { mask-image: url('/icons/eft/01-maps/markers/delete-icon.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/delete-icon.svg'); }
   .icon-eft-loot-containers-marker { mask-image: url('/icons/eft/01-maps/markers/loot/loot-containers-marker.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/loot/loot-containers-marker.svg'); }
   .icon-eft-lock-standard-security-keypad { mask-image: url('/icons/eft/01-maps/markers/interactive/lock/lock-standard-security-keypad.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/interactive/lock/lock-standard-security-keypad.svg'); }
 

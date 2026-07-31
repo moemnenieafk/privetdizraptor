@@ -253,6 +253,39 @@ export function MapViewerClient({
     setPendingMarker(null);
   };
 
+  // Drawer «Удаление маркеров» + список помеченных (объявлено до editorial-эффекта — он читает deleteMarks).
+  const deleteMarks = useMapUiStore((s) => s.deleteMarks);
+  const deleteOpen = useMapUiStore((s) => s.deleteOpen);
+  const setDeleteOpen = useMapUiStore((s) => s.setDeleteOpen);
+  const toggleDelete = useMapUiStore((s) => s.toggleDelete);
+  const toggleDeleteMark = useMapUiStore((s) => s.toggleDeleteMark);
+  const clearDeleteMarks = useMapUiStore((s) => s.clearDeleteMarks);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const markedForDelete = useMemo(
+    () => (editorialMarkers ?? []).filter((m) => m.id && deleteMarks.includes(m.id)),
+    [editorialMarkers, deleteMarks],
+  );
+  const confirmDeleteMarks = async () => {
+    if (markedForDelete.length === 0) return;
+    setDeleteBusy(true);
+    try {
+      for (const m of markedForDelete) {
+        if (!m.id) continue;
+        const res = await fetch(`/api/admin/editorial-markers?id=${m.id}&slug=${data.slug}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }
+      clearDeleteMarks();
+      setDeleteOpen(false);
+      closeCard();
+      router.refresh();
+    } catch (e) {
+      console.error('[editorial-marker batch delete]', e);
+      alert('Не удалось удалить помеченные маркеры');
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+
   // Рисование области-лассо (по запросу из карточки). Точки в ref (перф) + счётчик для UI.
   // Пока активно — карточка спрятана (но смонтирована → черновик жив), onDone пишет polygon в её draft.
   const [areaDraw, setAreaDraw] = useState<{ color: string; onDone: (p: { x: number; z: number }[] | null) => void } | null>(null);
@@ -407,28 +440,32 @@ export function MapViewerClient({
       if (!m.id) continue;
       const id = m.id;
       const icon = editorialIcon(m);
+      const marked = deleteMarks.includes(id); // помечен на удаление → приглушить + крест-бейдж
       // Область-лассо → пунктирный полигон с заливкой цветом категории + иконка в центроиде.
       if (m.polygon && m.polygon.length >= 3) {
         const color = markerColor(m.type);
-        const poly = L.polygon(m.polygon.map(ll), { color, weight: 2, dashArray: '6 5', fillColor: color, fillOpacity: 0.18 });
+        const poly = L.polygon(m.polygon.map(ll), { color, weight: 2, dashArray: '6 5', fillColor: color, fillOpacity: marked ? 0.05 : 0.18, opacity: marked ? 0.35 : 1 });
         if (m.title) poly.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', opacity: 1 });
         poly.on('click', () => setOpenEditorialId(id));
         poly.addTo(group);
         const cx = m.polygon.reduce((s, p) => s + p.x, 0) / m.polygon.length;
         const cz = m.polygon.reduce((s, p) => s + p.z, 0) / m.polygon.length;
-        L.marker(ll({ x: cx, z: cz }), { icon, interactive: false }).addTo(group);
+        const cm = L.marker(ll({ x: cx, z: cz }), { icon, interactive: false });
+        cm.addTo(group);
+        if (marked) cm.getElement()?.classList.add('cta-mk-del');
         continue;
       }
       const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
       if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });
       mk.on('click', () => setOpenEditorialId(id));
       mk.addTo(group);
+      if (marked) mk.getElement()?.classList.add('cta-mk-del');
     }
     return () => {
       group.remove();
       editorialLayerRef.current = null;
     };
-  }, [mapInst, editorialMarkers]);
+  }, [mapInst, editorialMarkers, deleteMarks]);
 
   // Карточка-popup держится НАД каплей: пересчёт экранной точки при пане/зуме; клик по карте — закрыть.
   useEffect(() => {
@@ -644,38 +681,6 @@ export function MapViewerClient({
   const layersOpen = useMapUiStore((s) => s.layersOpen);
   const setLayersOpen = useMapUiStore((s) => s.setLayersOpen);
   const toggleLayers = useMapUiStore((s) => s.toggleLayers);
-  // Drawer «Удаление маркеров» + список помеченных.
-  const deleteMarks = useMapUiStore((s) => s.deleteMarks);
-  const deleteOpen = useMapUiStore((s) => s.deleteOpen);
-  const setDeleteOpen = useMapUiStore((s) => s.setDeleteOpen);
-  const toggleDelete = useMapUiStore((s) => s.toggleDelete);
-  const toggleDeleteMark = useMapUiStore((s) => s.toggleDeleteMark);
-  const clearDeleteMarks = useMapUiStore((s) => s.clearDeleteMarks);
-  const [deleteBusy, setDeleteBusy] = useState(false);
-  const markedForDelete = useMemo(
-    () => (editorialMarkers ?? []).filter((m) => m.id && deleteMarks.includes(m.id)),
-    [editorialMarkers, deleteMarks],
-  );
-  const confirmDeleteMarks = async () => {
-    if (markedForDelete.length === 0) return;
-    setDeleteBusy(true);
-    try {
-      for (const m of markedForDelete) {
-        if (!m.id) continue;
-        const res = await fetch(`/api/admin/editorial-markers?id=${m.id}&slug=${data.slug}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      }
-      clearDeleteMarks();
-      setDeleteOpen(false);
-      closeCard();
-      router.refresh();
-    } catch (e) {
-      console.error('[editorial-marker batch delete]', e);
-      alert('Не удалось удалить помеченные маркеры');
-    } finally {
-      setDeleteBusy(false);
-    }
-  };
 
   // Инстанс трекера один (нужен mapRef здесь). Кнопка+координаты живут в низ-право (GRILL-2),
   // рендерятся ниже прямо из этого хука — публикация наверх больше не нужна.

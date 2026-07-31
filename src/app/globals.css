@@ -823,6 +823,21 @@ html {
 /* пропорциональный зум маркеров: масштаб от --marker-scale (задаётся по zoom карты) */
 .cta-mk-scale { transform: scale(var(--marker-scale, 1)); transform-origin: center center; }
 
+/* Маркер, помеченный на удаление (режим «Удаление маркеров»): иконка приглушена + красный
+   крест-бейдж (delete-icon.svg) снизу-сбоку поверх фрейма. Бейдж не приглушаем (opacity на самой иконке). */
+.cta-mk-del .cta-mk-scale { opacity: 0.4; }
+.cta-mk-del::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 14px;
+  height: 14px;
+  background: url('/icons/eft/01-maps/markers/delete-icon.svg') center / contain no-repeat;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* пульс-подсветка точки (спавны босса / ПКМ-цикл по слою) */
 .cta-flash {
   width: 26px; height: 26px; border-radius: 9999px;

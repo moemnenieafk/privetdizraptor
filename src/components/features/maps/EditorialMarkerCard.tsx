@@ -461,8 +461,8 @@ export function EditorialMarkerCard({
   const togglePin = useQuestStore((s) => s.togglePin);
   // Пометка на удаление (батч-подтверждение в drawer «Удаление маркеров»).
   const deleteMarks = useMapUiStore((s) => s.deleteMarks);
+  const deleteOpen = useMapUiStore((s) => s.deleteOpen);
   const toggleDeleteMark = useMapUiStore((s) => s.toggleDeleteMark);
-  const setDeleteOpen = useMapUiStore((s) => s.setDeleteOpen);
   const isMarkedForDelete = !!marker.id && deleteMarks.includes(marker.id);
 
   const questId = marker.linkKind === 'quest' ? marker.linkId ?? null : null;
@@ -985,14 +985,12 @@ export function EditorialMarkerCard({
               </div>
             )}
 
-            {/* Пометить на удаление → маркер уходит в drawer «Удаление маркеров» на батч-подтверждение. */}
-            {canEdit && marker.id && (
+            {/* Кнопка «Удалить» — только в РЕЖИМЕ УДАЛЕНИЯ (drawer открыт): помечает маркер (→ прозрачный
+                + красный крест), уходит в drawer на батч-подтверждение. */}
+            {canEdit && marker.id && deleteOpen && (
               <button
                 type="button"
-                onClick={() => {
-                  toggleDeleteMark(marker.id!);
-                  setDeleteOpen(true);
-                }}
+                onClick={() => toggleDeleteMark(marker.id!)}
                 title={isMarkedForDelete ? 'Убрать из списка удаления' : 'Пометить на удаление'}
                 className={`flex h-8 w-full items-center justify-center gap-1.5 rounded-xs border-[0.5px] font-blender-medium text-type-micro uppercase tracking-widest transition-colors ${
                   isMarkedForDelete ? 'border-danger bg-danger-dim text-danger' : 'border-danger/50 text-danger hover:border-danger hover:bg-danger-dim'

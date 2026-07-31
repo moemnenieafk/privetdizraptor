@@ -386,6 +386,9 @@ export const markerColor = (type: string): string => MARKER_TYPE_COLOR[type] ?? 
 /** Иконка инструмента «Область» (полигональное лассо) — моно svg, красится currentColor (маска). */
 export const MAKE_REGION_ICON = `${SVG}/make-region.svg`;
 
+/** Иконка-бейдж «помечен на удаление» (красный крест) — оверлей на маркере в режиме удаления. */
+export const DELETE_ICON = `${SVG}/delete-icon.svg`;
+
 /** BSG item id (24-hex) — отличает лут-ПРЕДМЕТ (editorial: category=id) от лут-категории (ключ). */
 export const isItemId = (s?: string | null): boolean => !!s && /^[0-9a-f]{24}$/i.test(s);
 
