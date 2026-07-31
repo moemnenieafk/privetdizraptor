@@ -206,6 +206,8 @@ export function MapViewerClient({
   const mapRef = useRef<L.Map | null>(null);
   const highlightRef = useRef<L.Polygon | null>(null);
   const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null }[]>([]);
+  // Синканые маркеры по их source-id → для класса .cta-mk-del без пересборки слоя (режим удаления).
+  const sourceMarkerElsRef = useRef<Map<string, L.Marker>>(new Map());
   const svgGroupsRef = useRef<Map<string, SVGGElement> | null>(null);
   const activeFloorRef = useRef(activeFloor);
   const loadImageRef = useRef<((url: string) => void) | null>(null);
@@ -254,6 +256,7 @@ export function MapViewerClient({
   };
 
   // Drawer «Удаление маркеров» + список помеченных (объявлено до editorial-эффекта — он читает deleteMarks).
+  // Ключ пометки: editorial → его id; синканый tarkov.dev → `src:<sourceMarkerId>` (см. карточку).
   const deleteMarks = useMapUiStore((s) => s.deleteMarks);
   const deleteOpen = useMapUiStore((s) => s.deleteOpen);
   const setDeleteOpen = useMapUiStore((s) => s.setDeleteOpen);
@@ -261,26 +264,66 @@ export function MapViewerClient({
   const toggleDeleteMark = useMapUiStore((s) => s.toggleDeleteMark);
   const clearDeleteMarks = useMapUiStore((s) => s.clearDeleteMarks);
   const [deleteBusy, setDeleteBusy] = useState(false);
-  const markedForDelete = useMemo(
-    () => (editorialMarkers ?? []).filter((m) => m.id && deleteMarks.includes(m.id)),
-    [editorialMarkers, deleteMarks],
-  );
+  // Refs, чтобы клик-хендлеры/рендер-луп синканого слоя читали актуальные значения без пересоздания.
+  const deleteOpenRef = useRef(false);
+  const deleteMarksRef = useRef<string[]>(deleteMarks);
+  useEffect(() => {
+    deleteOpenRef.current = deleteOpen;
+    deleteMarksRef.current = deleteMarks;
+  });
+  // Помеченные = editorial (по id) + синканые (по `src:<id>`, маппятся в EditorialMarkerData для дровера).
+  const markedForDelete = useMemo(() => {
+    const ed = (editorialMarkers ?? []).filter((m) => m.id && deleteMarks.includes(m.id));
+    const syn = mapId
+      ? data.markers.filter((m) => deleteMarks.includes(`src:${m.id}`)).map((m) => syncedToEditorial(m, mapId))
+      : [];
+    return [...ed, ...syn];
+  }, [editorialMarkers, deleteMarks, data.markers, mapId]);
   const confirmDeleteMarks = async () => {
     if (markedForDelete.length === 0) return;
     setDeleteBusy(true);
     try {
       for (const m of markedForDelete) {
-        if (!m.id) continue;
-        const res = await fetch(`/api/admin/editorial-markers?id=${m.id}&slug=${data.slug}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (m.id) {
+          // editorial — реальное удаление строки.
+          const res = await fetch(`/api/admin/editorial-markers?id=${m.id}&slug=${data.slug}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        } else if (m.sourceMarkerId) {
+          // синканый — override hidden=true (страница подавит оригинал на рендере).
+          const res = await fetch('/api/admin/editorial-markers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mapId: m.mapId,
+              slug: data.slug,
+              x: m.x,
+              z: m.z,
+              y: m.y,
+              floor: m.floor,
+              type: m.type,
+              category: m.category,
+              faction: m.faction,
+              title: m.title || 'скрыто',
+              description: m.description,
+              screenshots: m.screenshots,
+              linkKind: m.linkKind,
+              linkId: m.linkId,
+              linkStep: m.linkStep,
+              polygon: m.polygon,
+              sourceMarkerId: m.sourceMarkerId,
+              hidden: true,
+            }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        }
       }
       clearDeleteMarks();
       setDeleteOpen(false);
       closeCard();
       router.refresh();
     } catch (e) {
-      console.error('[editorial-marker batch delete]', e);
-      alert('Не удалось удалить помеченные маркеры');
+      console.error('[marker batch delete/hide]', e);
+      alert('Не удалось удалить/скрыть помеченные маркеры');
     } finally {
       setDeleteBusy(false);
     }
@@ -466,6 +509,13 @@ export function MapViewerClient({
       editorialLayerRef.current = null;
     };
   }, [mapInst, editorialMarkers, deleteMarks]);
+
+  // Класс .cta-mk-del на синканых маркерах при смене пометок (без пересборки тяжёлого слоя).
+  useEffect(() => {
+    for (const [sid, mk] of sourceMarkerElsRef.current) {
+      mk.getElement()?.classList.toggle('cta-mk-del', deleteMarks.includes(`src:${sid}`));
+    }
+  }, [deleteMarks, mapInst]);
 
   // Карточка-popup держится НАД каплей: пересчёт экранной точки при пане/зуме; клик по карте — закрыть.
   useEffect(() => {
@@ -859,12 +909,16 @@ export function MapViewerClient({
         if (!grp) continue;
         const marker = L.marker(ll(m.position), { icon: markerDivIcon(m), riseOnHover: true });
         marker.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
-        // Клик: в override-режиме (admin) → карточка-оверрайд; иначе кросс-линк (квест-зона→задача, лут→предмет).
+        // Клик: в override- ИЛИ delete-режиме (admin) → карточка-оверрайд (там кнопка Скрыть/пометка);
+        // иначе кросс-линк (квест-зона→задача, лут→предмет).
         marker.on('click', () => {
-          if (overrideModeRef.current) return openOverrideRef.current(m);
+          if (overrideModeRef.current || deleteOpenRef.current) return openOverrideRef.current(m);
           if (m.type === 'quest' && m.questId) window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener');
           else if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
         });
+        // Регистрируем для класса пометки + применяем стартовое состояние.
+        sourceMarkerElsRef.current.set(m.id, marker);
+        if (deleteMarksRef.current.includes(`src:${m.id}`)) marker.getElement()?.classList.add('cta-mk-del');
         // Полигон зоны выхода — на ховер.
         if (m.type === 'extract' && m.outline && m.outline.length > 2) {
           const poly = L.polygon(m.outline.map(ll), {
@@ -902,7 +956,7 @@ export function MapViewerClient({
               const mk = L.marker(ll(m.position!), { icon: markerDivIcon(m), riseOnHover: true });
               mk.bindTooltip(tooltipFor(m), { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
               mk.on('click', () => {
-                if (overrideModeRef.current) return openOverrideRef.current(m);
+                if (overrideModeRef.current || deleteOpenRef.current) return openOverrideRef.current(m);
                 if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
               });
               mk.addTo(grp);

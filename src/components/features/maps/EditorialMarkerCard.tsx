@@ -460,10 +460,13 @@ export function EditorialMarkerCard({
   const toggleQuest = useQuestStore((s) => s.toggleQuest);
   const togglePin = useQuestStore((s) => s.togglePin);
   // Пометка на удаление (батч-подтверждение в drawer «Удаление маркеров»).
+  // Ключ: editorial → его id (батч-DELETE); синканый tarkov.dev → `src:<sourceMarkerId>`
+  // (батч-hide-override, т.к. DELETE такому маркеру бессмыслен — вернётся при синке).
   const deleteMarks = useMapUiStore((s) => s.deleteMarks);
   const deleteOpen = useMapUiStore((s) => s.deleteOpen);
   const toggleDeleteMark = useMapUiStore((s) => s.toggleDeleteMark);
-  const isMarkedForDelete = !!marker.id && deleteMarks.includes(marker.id);
+  const deleteKey = marker.id ?? (marker.sourceMarkerId ? `src:${marker.sourceMarkerId}` : null);
+  const isMarkedForDelete = !!deleteKey && deleteMarks.includes(deleteKey);
 
   const questId = marker.linkKind === 'quest' ? marker.linkId ?? null : null;
   const isDone = questId ? completed.includes(questId) : false;
@@ -972,7 +975,7 @@ export function EditorialMarkerCard({
                 >
                   <MapPinPen className="h-3 w-3" /> Редактировать
                 </button>
-                {marker.sourceMarkerId && onHide && (
+                {marker.sourceMarkerId && onHide && !deleteOpen && (
                   <button
                     type="button"
                     onClick={onHide}
@@ -985,18 +988,20 @@ export function EditorialMarkerCard({
               </div>
             )}
 
-            {/* Кнопка «Удалить» — только в РЕЖИМЕ УДАЛЕНИЯ (drawer открыт): помечает маркер (→ прозрачный
-                + красный крест), уходит в drawer на батч-подтверждение. */}
-            {canEdit && marker.id && deleteOpen && (
+            {/* Кнопка-пометка — только в РЕЖИМЕ УДАЛЕНИЯ (drawer открыт): помечает маркер (→ прозрачный
+                + красный крест), уходит в drawer на батч-подтверждение. editorial → «Удалить»,
+                синканый tarkov.dev → «Скрыть» (hide-override, удалить его нельзя). */}
+            {canEdit && deleteKey && deleteOpen && (
               <button
                 type="button"
-                onClick={() => toggleDeleteMark(marker.id!)}
+                onClick={() => toggleDeleteMark(deleteKey)}
                 title={isMarkedForDelete ? 'Убрать из списка удаления' : 'Пометить на удаление'}
                 className={`flex h-8 w-full items-center justify-center gap-1.5 rounded-xs border-[0.5px] font-blender-medium text-type-micro uppercase tracking-widest transition-colors ${
                   isMarkedForDelete ? 'border-danger bg-danger-dim text-danger' : 'border-danger/50 text-danger hover:border-danger hover:bg-danger-dim'
                 }`}
               >
-                <Trash2 className="h-3.5 w-3.5" /> {isMarkedForDelete ? 'В списке удаления ✓' : 'Удалить'}
+                <Trash2 className="h-3.5 w-3.5" />{' '}
+                {isMarkedForDelete ? 'В списке удаления ✓' : marker.id ? 'Удалить' : 'Скрыть'}
               </button>
             )}
           </>

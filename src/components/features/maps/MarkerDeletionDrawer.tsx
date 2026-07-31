@@ -47,19 +47,24 @@ export function MarkerDeletionDrawer({ marked, open, onOpenChange, onUnmark, onC
             Откройте маркер и нажмите «Удалить» — он попадёт сюда на подтверждение.
           </p>
         ) : (
-          marked.map((m) => (
-            <div key={m.id} className="flex items-center gap-2 rounded-xs border-[0.5px] border-lines-hover px-2.5 py-2">
-              <span className="min-w-0 flex-1 truncate font-blender-book text-sm text-text-primary">{m.title || 'Без названия'}</span>
-              <button
-                type="button"
-                onClick={() => m.id && onUnmark(m.id)}
-                title="Убрать из списка (не удалять)"
-                className="shrink-0 text-text-muted transition-colors hover:text-(--primary)"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))
+          marked.map((m) => {
+            // Ключ пометки: editorial → id; синканый → `src:<sourceMarkerId>` (тот же, что ставит карточка).
+            const key = m.id ?? (m.sourceMarkerId ? `src:${m.sourceMarkerId}` : '');
+            return (
+              <div key={key} className="flex items-center gap-2 rounded-xs border-[0.5px] border-lines-hover px-2.5 py-2">
+                <span className="min-w-0 flex-1 truncate font-blender-book text-sm text-text-primary">{m.title || 'Без названия'}</span>
+                {!m.id && <span className="shrink-0 font-blender-medium text-type-micro uppercase tracking-wide text-text-muted">скрыть</span>}
+                <button
+                  type="button"
+                  onClick={() => key && onUnmark(key)}
+                  title="Убрать из списка (не удалять)"
+                  className="shrink-0 text-text-muted transition-colors hover:text-(--primary)"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
 
