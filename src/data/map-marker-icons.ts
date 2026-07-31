@@ -292,7 +292,7 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       return { url: `${SVG}/loot/loot-random-luck.svg`, mode: 'img', size: 24 };
 
     case 'transit':
-      return { url: `${SVG}/transition-point.svg`, mode: 'img', size: 30 };
+      return { url: `${SVG}/exfil/transition-point.svg`, mode: 'img', size: 30 };
 
     case 'quest_zone':
     case 'quest':
