@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Plus, X, Paperclip, ChevronLeft, ChevronRight, ZoomIn, Bookmark, Move3d, MapPinPen,
-  ArrowLeft, ArrowRight, Save, Trash2, Lasso,
+  ArrowLeft, ArrowRight, Save, Trash2,
 } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
@@ -89,7 +89,7 @@ const WIZARD_CATEGORIES: WizardCategory[] = [
   { key: 'enemy', label: 'Враг', type: 'spawn', src: `${SVGM}/spawn/spawn-boss-add.svg` },
   { key: 'quest', label: 'Квест', type: 'quest_zone', src: `${SVGM}/quest/quest-maker.svg` },
   { key: 'loot', label: 'Лут', type: 'loot', src: `${SVGM}/loot/loot-random-luck.svg` },
-  { key: 'container', label: 'Контейнер', type: 'container', src: '/icons/eft/03-items/equipment/containers/loot-containers.svg' },
+  { key: 'container', label: 'Контейнер', type: 'container', src: `${SVGM}/loot/loot-containers-marker.svg` },
   { key: 'interactive', label: 'Интерактив', type: 'lock', src: `${SVGM}/interactive/interact.svg` },
   { key: 'hazard', label: 'Опасность', type: 'hazard', src: `${SVGM}/danger/danger.svg` },
   { key: 'extract', label: 'Выход', type: 'extract', src: `${SVGM}/exfil/exfil-point-pmc.svg` },
@@ -762,7 +762,7 @@ export function EditorialMarkerCard({
                     draft.polygon ? 'border-(--primary) text-(--primary)' : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
                   }`}
                 >
-                  <Lasso className="h-3.5 w-3.5" /> Область{draft.polygon ? ' ✓' : ''}
+                  <span className="icon-mask icon-eft-make-region h-3.5 w-3.5 shrink-0" /> Область{draft.polygon ? ' ✓' : ''}
                 </button>
               )}
               <button

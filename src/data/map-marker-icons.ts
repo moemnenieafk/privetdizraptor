@@ -382,6 +382,9 @@ export const MARKER_TYPE_COLOR: Record<string, string> = {
 
 export const markerColor = (type: string): string => MARKER_TYPE_COLOR[type] ?? '#9696A1';
 
+/** Иконка инструмента «Область» (полигональное лассо) — моно svg, красится currentColor (маска). */
+export const MAKE_REGION_ICON = `${SVG}/make-region.svg`;
+
 /* ─────────────────── Иконки боссов (нижняя панель карты) ─────────────────── */
 // boss.meta.bossNormalizedName → файл в /public/images/bosses/eft. Нет ассета → null.
 const BOSS_ICON: Record<string, string> = {
