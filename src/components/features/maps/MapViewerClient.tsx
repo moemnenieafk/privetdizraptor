@@ -857,6 +857,7 @@ export function MapViewerClient({
             questIndex={questIndex}
             storyIndex={storyIndex}
             mapSlug={data.slug}
+            onCancel={closeCard}
             onMutated={() => {
               closeCard();
               router.refresh();
