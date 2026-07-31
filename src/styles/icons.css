@@ -68,6 +68,11 @@
   .icon-eft-danger-mortar-death { mask-image: url('/icons/eft/01-maps/markers/danger/danger-mortar-death.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-mortar-death.svg'); }
   .icon-eft-danger-sniper-death { mask-image: url('/icons/eft/01-maps/markers/danger/danger-sniper-death.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-sniper-death.svg'); }
   .icon-eft-danger-tripwire-grenades { mask-image: url('/icons/eft/01-maps/markers/danger/danger-tripwire-grenades.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-tripwire-grenades.svg'); }
+  .icon-eft-danger-biohazard { mask-image: url('/icons/eft/01-maps/markers/danger/danger-biohazard.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-biohazard.svg'); }
+  .icon-eft-danger-electro { mask-image: url('/icons/eft/01-maps/markers/danger/danger-electro.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-electro.svg'); }
+  .icon-eft-danger-flamable { mask-image: url('/icons/eft/01-maps/markers/danger/danger-flamable.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-flamable.svg'); }
+  .icon-eft-danger-mon50 { mask-image: url('/icons/eft/01-maps/markers/danger/danger-mon50.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-mon50.svg'); }
+  .icon-eft-danger-radioactive { mask-image: url('/icons/eft/01-maps/markers/danger/danger-radioactive.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/danger/danger-radioactive.svg'); }
   /* — spawn — точки спавна — */
   .icon-eft-spawn-rogue { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-rogue.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-rogue.svg'); }
   .icon-eft-spawn-boss-add { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-add.svg'); }
@@ -76,13 +81,24 @@
   .icon-eft-spawn-black-division { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-black-division.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-black-division.svg'); }
   .icon-eft-spawn-boss-sniper { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-sniper.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-boss-sniper.svg'); }
   .icon-eft-spawn-scav-sniper { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-scav-sniper.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn-scav-sniper.svg'); }
+  .icon-eft-spawn { mask-image: url('/icons/eft/01-maps/markers/spawn/spawn.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/spawn/spawn.svg'); }
   /* — loot — лут (иконка «удачного лута») — */
   .icon-eft-loot-random-luck { mask-image: url('/icons/eft/01-maps/markers/loot/loot-random-luck.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/loot/loot-random-luck.svg'); }
   /* — quest — квест — */
   .icon-eft-quest-maker { mask-image: url('/icons/eft/01-maps/markers/quest/quest-maker.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/quest/quest-maker.svg'); }
   .icon-eft-quest-item { mask-image: url('/icons/eft/01-maps/markers/quest/quest-item.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/quest/quest-item.svg'); }
-  /* — transit — переходы — */
-  .icon-eft-transition-point { mask-image: url('/icons/eft/01-maps/markers/transition-point.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/transition-point.svg'); }
+  /* — quest-item по типу связи (Step 04 — облик маркера): побочный / сюжет / событие — */
+  .icon-eft-quest-item-side { mask-image: url('/icons/eft/01-maps/markers/quest/quest-item-side.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/quest/quest-item-side.svg'); }
+  .icon-eft-quest-item-story { mask-image: url('/icons/eft/01-maps/markers/quest/quest-item-story.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/quest/quest-item-story.svg'); }
+  .icon-eft-quest-item-event { mask-image: url('/icons/eft/01-maps/markers/quest/quest-item-event.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/quest/quest-item-event.svg'); }
+  /* — transit — переходы (переехал в exfil/) — */
+  .icon-eft-transition-point { mask-image: url('/icons/eft/01-maps/markers/exfil/transition-point.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/exfil/transition-point.svg'); }
+  /* — общие маркеры визарда (Step Marker Creation) — */
+  .icon-eft-default-marker { mask-image: url('/icons/eft/01-maps/markers/default-marker.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/default-marker.svg'); }
+  .icon-eft-point-of-interest { mask-image: url('/icons/eft/01-maps/markers/point-of-interest.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/point-of-interest.svg'); }
+  .icon-eft-advice { mask-image: url('/icons/eft/01-maps/markers/advice.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/advice.svg'); }
+  .icon-eft-interact { mask-image: url('/icons/eft/01-maps/markers/interactive/interact.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/interactive/interact.svg'); }
+  .icon-eft-lock-standard-security-keypad { mask-image: url('/icons/eft/01-maps/markers/interactive/lock/lock-standard-security-keypad.svg'); -webkit-mask-image: url('/icons/eft/01-maps/markers/interactive/lock/lock-standard-security-keypad.svg'); }
 
   /* ═══ EFT Квесты и Торговцы (02-quests) ═══ */
   .icon-eft-difficulty-skull { mask-image: url('/icons/eft/02-quests/difficulty-skull.svg'); -webkit-mask-image: url('/icons/eft/02-quests/difficulty-skull.svg'); }
