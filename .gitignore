@@ -84,6 +84,10 @@ graphify-out/
 map-exports/
 \!for-deep-research/
 
+# Кэш тайлов карт (scripts/fetch-tiles.mjs) — сырые PNG с assets.tarkov.dev.
+# Растёт быстро: Лаборатория на z=6 это ~218 МБ. Артефакт, не исходник.
+/.tile-cache/
+
 # Логи локального dev-сервера (next dev) — артефакт, не исходник.
 .devlog.*
 
