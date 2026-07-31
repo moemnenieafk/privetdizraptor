@@ -183,7 +183,7 @@ export default async function MapPage({ params, searchParams }: Props) {
           bossKey: bossPortraitOf.get(m.id) ?? null,
           category: goonsKeys.has(bossPortraitOf.get(m.id) ?? '') ? 'goons' : null,
           itemBg: (m.type === 'loot_loose' || m.type === 'lock') && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.backgroundColor ?? null) : null,
-          itemSlug: m.type === 'loot_loose' && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.normalizedName ?? null) : null,
+          itemSlug: (m.type === 'loot_loose' || m.type === 'lock') && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.normalizedName ?? null) : null,
           lootCat:
             m.type === 'loot_loose' && m.linkedItemId
               ? classifyLoot15(lootCatById.get(m.linkedItemId), priceIndex.get(m.linkedItemId)?.bsgCategoryId)

@@ -43,25 +43,27 @@ export function LockKeyCard({ marker, sameKeyCount, onHighlightSiblings, onClose
   const key = meta?.key ?? null;
   const keyId = marker.linkedItemId ?? key?.id ?? null;
   const keyName = key?.name ?? marker.label ?? null;
-  const keySlug = key?.normalizedName ?? null;
+  // slug из НАШЕГО зеркала (itemSlug, page.tsx) — meta.key.normalizedName из json.tarkov.dev плейсхолдер.
+  const keySlug = marker.itemSlug ?? null;
   const lockRu = meta?.lockType ? (LOCK_TYPE_RU[meta.lockType] ?? meta.lockType) : null;
   const needsPower = meta?.needsPower === true;
   const price = marker.keyPrice ?? null;
   const hasKey = !!keyId && !!keyName;
 
   return (
-    <div className="flex w-72 flex-col gap-2.5 rounded-sm border border-lines-hover bg-card-menu p-3 shadow-lg backdrop-blur-md">
+    <div className="flex w-72 flex-col gap-2.5 rounded-lg border border-lines-hover bg-card-menu p-3 shadow-lg backdrop-blur-md">
       {/* Шапка: иконка ключа + имя + закрыть */}
       <div className="flex items-start gap-2.5">
         {hasKey && keyId ? (
-          // Игровая ячейка инвентаря: рарностный tint + внутренняя тень + иконка сверху (как EftItemTile).
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xs border border-lines-hover">
+          // Ячейка как в нодах Карты Заданий: тёмная база + рарностный tint + внутр. тень + иконка.
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded border border-lines-hover">
+            <div className="absolute inset-0 bg-(--color-darkbase)" />
             <div className="absolute inset-0" style={{ backgroundColor: getTarkovBackgroundColor(marker.itemBg ?? undefined) }} />
-            <div className="absolute inset-0 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]" />
+            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
             <img src={itemIconUrl(keyId)} alt={keyName ?? ''} className="absolute inset-0 z-10 h-full w-full object-contain p-1 drop-shadow-lg" />
           </div>
         ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xs border border-lines-hover bg-(--color-base) text-text-muted">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded border border-lines-hover bg-(--color-darkbase) text-text-muted">
             <Lock className="h-5 w-5" />
           </div>
         )}
