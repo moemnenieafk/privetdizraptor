@@ -274,14 +274,33 @@ export function MapViewerClient({
     deleteOpenRef.current = deleteOpen;
     deleteMarksRef.current = deleteMarks;
   });
-  // Помеченные = editorial (по id) + синканые (по `src:<id>`, маппятся в EditorialMarkerData для дровера).
+  // Индексы id→маркер: строятся раз на смену данных, чтобы пометка была O(помеченных), а НЕ
+  // O(всех маркеров карты). Лут — тысячи точек, скан на каждый клик пометки подвешивал UI.
+  const syncedById = useMemo(() => {
+    const idx = new Map<string, MapViewMarker>();
+    for (const m of data.markers) idx.set(m.id, m);
+    return idx;
+  }, [data.markers]);
+  const editorialById = useMemo(() => {
+    const idx = new Map<string, EditorialMarkerData>();
+    for (const m of editorialMarkers ?? []) if (m.id) idx.set(m.id, m);
+    return idx;
+  }, [editorialMarkers]);
+  // Помеченные = editorial (ключ = id) + синканые (ключ = `src:<id>`) → в EditorialMarkerData для дровера.
   const markedForDelete = useMemo(() => {
-    const ed = (editorialMarkers ?? []).filter((m) => m.id && deleteMarks.includes(m.id));
-    const syn = mapId
-      ? data.markers.filter((m) => deleteMarks.includes(`src:${m.id}`)).map((m) => syncedToEditorial(m, mapId))
-      : [];
-    return [...ed, ...syn];
-  }, [editorialMarkers, deleteMarks, data.markers, mapId]);
+    const out: EditorialMarkerData[] = [];
+    for (const key of deleteMarks) {
+      if (key.startsWith('src:')) {
+        if (!mapId) continue;
+        const sm = syncedById.get(key.slice(4));
+        if (sm) out.push(syncedToEditorial(sm, mapId));
+      } else {
+        const em = editorialById.get(key);
+        if (em) out.push(em);
+      }
+    }
+    return out;
+  }, [deleteMarks, syncedById, editorialById, mapId]);
   const confirmDeleteMarks = async () => {
     if (markedForDelete.length === 0) return;
     setDeleteBusy(true);
