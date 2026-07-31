@@ -33,7 +33,7 @@ const shots = (v: unknown): string[] =>
   Array.isArray(v)
     ? v.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim().slice(0, MAX_KEY)).slice(0, MAX_SHOTS)
     : [];
-const linkKind = (v: unknown): EditorialLinkKind => (v === "story" || v === "quest" ? v : "none");
+const linkKind = (v: unknown): EditorialLinkKind => (v === "story" || v === "quest" || v === "event" ? v : "none");
 
 export async function GET(req: Request): Promise<NextResponse> {
   const me = await getMe();

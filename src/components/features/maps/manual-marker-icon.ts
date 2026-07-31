@@ -36,6 +36,8 @@ export interface ManualMarkerLike {
   transferItemName?: string | null;
   /** тип-специфичная нагрузка (hazard: {hazardType}, quest_zone: {objectiveKind}) для резолвера. */
   meta?: Record<string, unknown> | null;
+  /** editorial: тип связи (story|event|…) — морфит quest-иконку в резолвере (Ф4). */
+  linkKind?: string | null;
 }
 
 export function manualMarkerIcon(m: ManualMarkerLike, del = false, showLabel = false): L.DivIcon {

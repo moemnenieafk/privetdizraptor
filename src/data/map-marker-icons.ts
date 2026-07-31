@@ -42,6 +42,8 @@ export interface MarkerIconInput {
   linkedItemId?: string | null;
   /** тип-специфичная нагрузка маркера (hazard: `{ hazardType }` — snайпер/мина/миномёт/…). */
   meta?: Record<string, unknown> | null;
+  /** editorial: тип связи (story|event|quest|none) — морфит quest-иконку по типу привязки (Ф4). */
+  linkKind?: string | null;
 }
 
 /* ── КОНТЕЙНЕРЫ ── synced-маркеры приходят с ru-`label`, ручные (редактор) — с `category`-ключом. */
@@ -295,9 +297,15 @@ export function markerIconUrl(m: MarkerIconInput): ResolvedMarkerIcon | null {
       return { url: `${SVG}/exfil/transition-point.svg`, mode: 'img', size: 30 };
 
     case 'quest_zone':
-    case 'quest':
+    case 'quest': {
+      // Морфинг editorial-маркера по типу связи (Ф4): сюжет/событие → спец-иконка quest-item-*.
+      // Синканные зоны linkKind не несут → падают в объектную логику (quest-maker/quest-item).
+      // NB: побочный (quest-item-side) — открытая развилка «квест vs побочный», ждёт различения.
+      if (m.linkKind === 'story') return { url: `${SVG}/quest/quest-item-story.svg`, mode: 'img', size: 30 };
+      if (m.linkKind === 'event') return { url: `${SVG}/quest/quest-item-event.svg`, mode: 'img', size: 30 };
       // Цель задания (quest-maker) vs предметы для заданий (quest-item) — по meta.objectiveKind.
       return { url: `${SVG}/quest/${questZoneKind(m) === 'item' ? 'quest-item' : 'quest-maker'}.svg`, mode: 'img', size: 30 };
+    }
 
     case 'container':
     case 'loot_container':

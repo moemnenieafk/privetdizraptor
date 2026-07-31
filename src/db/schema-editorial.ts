@@ -8,7 +8,7 @@ import { pgTable, uuid, text, integer, real, jsonb, timestamp, index } from "dri
 import { sql } from "drizzle-orm";
 import { games, maps, profiles } from "./schema";
 
-export type EditorialLinkKind = "story" | "quest" | "none";
+export type EditorialLinkKind = "story" | "quest" | "event" | "none";
 
 export const editorialMarkers = pgTable(
   "editorial_markers",
@@ -34,7 +34,7 @@ export const editorialMarkers = pgTable(
     description: text("description"),
     /** Массив media-ключей Supabase Storage (скриншоты). */
     screenshots: jsonb("screenshots").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
-    /** Привязка: 'story' (story slug) | 'quest' (BSG id) | 'none'. */
+    /** Привязка: 'story' (story slug) | 'quest' (BSG id) | 'event' (игровое событие) | 'none'. */
     linkKind: text("link_kind").$type<EditorialLinkKind>().notNull().default("none"),
     linkId: text("link_id"),
     /** Опц. шаг сюжетной истории. */

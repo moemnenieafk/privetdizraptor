@@ -210,7 +210,7 @@ export function MapViewerClient({
     const group = L.layerGroup().addTo(map);
     editorialLayerRef.current = group;
     // Цвет капли по типу привязки: сюжет=стальной, квест=амбер, POI/без=серый.
-    const kindColor = (k: string) => (k === 'story' ? '#6096a6' : k === 'quest' ? '#e68e25' : '#8a8a95');
+    const kindColor = (k: string) => (k === 'story' ? '#6096a6' : k === 'quest' ? '#e68e25' : k === 'event' ? '#c26be0' : '#8a8a95');
     const pinIcon = (color: string) =>
       L.divIcon({
         className: 'cta-editorial-mk',
@@ -231,7 +231,7 @@ export function MapViewerClient({
             : undefined;
       const icon =
         m.type && m.type !== 'poi'
-          ? manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title, meta })
+          ? manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title, meta, linkKind: m.linkKind })
           : pinIcon(kindColor(m.linkKind));
       const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
       if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });

@@ -54,7 +54,7 @@ const QUESTZONE_KINDS: { key: string; label: string }[] = [
 ];
 
 // Цвет закладки/чипа по типу привязки (совпадает с цветом капли в MapViewerClient).
-const LINK_KIND_COLOR: Record<EditorialLinkKind, string> = { story: '#6096a6', quest: '#e68e25', none: '#8a8a95' };
+const LINK_KIND_COLOR: Record<EditorialLinkKind, string> = { story: '#6096a6', quest: '#e68e25', event: '#c26be0', none: '#8a8a95' };
 
 // ─── Визард ─────────────────────────────────────────────────────────────────
 type WizardStep = 'category' | 'object' | 'details' | 'link';
@@ -563,7 +563,7 @@ export function EditorialMarkerCard({
                   <LinkKindButton on={draft.linkKind === 'none'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'none', linkId: null, linkStep: null })); setLinkQ(''); }} label="Нет связи" color="#8a8a95" />
                   <LinkKindButton on={draft.linkKind === 'quest'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'quest', linkId: null, linkStep: null })); setLinkQ(''); }} label="Задание" color={LINK_KIND_COLOR.quest} iconClass="icon-eft-quests-side" />
                   <LinkKindButton on={draft.linkKind === 'story'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'story', linkId: null, linkStep: null })); setLinkQ(''); }} label="Сюжет" color={LINK_KIND_COLOR.story} iconClass="icon-eft-quests-lore" />
-                  <LinkKindButton on={false} onClick={() => {}} disabled label="Событие" color="#c26be0" iconClass="icon-eft-quests-events" title="Событие — в следующем обновлении (Ф4)" />
+                  <LinkKindButton on={draft.linkKind === 'event'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'event', linkId: null, linkStep: null })); setLinkQ(''); }} label="Событие" color={LINK_KIND_COLOR.event} iconClass="icon-eft-quests-events" />
                 </div>
 
                 {/* Квест — автокомплит */}
@@ -704,20 +704,23 @@ export function EditorialMarkerCard({
             {/* Описание */}
             {marker.description && <p className="w-full font-blender-book text-xs leading-none text-text-secondary">{marker.description}</p>}
 
-            {/* Чип связи с сюжетом: рамка + закладка + имя истории + опц. шаг */}
-            {marker.linkKind === 'story' && (
+            {/* Чип связи (сюжет/событие): рамка + иконка-маска + имя + опц. шаг */}
+            {(marker.linkKind === 'story' || marker.linkKind === 'event') && (
               <div
                 className="flex w-full items-center gap-2 rounded-xs border-[0.5px] px-2.5 py-2"
                 style={{
-                  borderColor: `color-mix(in srgb, ${LINK_KIND_COLOR.story} 45%, transparent)`,
-                  background: `color-mix(in srgb, ${LINK_KIND_COLOR.story} 10%, transparent)`,
+                  borderColor: `color-mix(in srgb, ${LINK_KIND_COLOR[marker.linkKind]} 45%, transparent)`,
+                  background: `color-mix(in srgb, ${LINK_KIND_COLOR[marker.linkKind]} 10%, transparent)`,
                 }}
               >
-                <Bookmark className="h-4 w-4 shrink-0" style={{ color: LINK_KIND_COLOR.story }} />
-                <span className="min-w-0 flex-1 truncate font-blender-medium text-xs" style={{ color: LINK_KIND_COLOR.story }}>
-                  {linkedStory?.title ?? marker.linkId}
+                <span
+                  className={`icon-mask size-4 shrink-0 ${marker.linkKind === 'story' ? 'icon-eft-quests-lore' : 'icon-eft-quests-events'}`}
+                  style={{ backgroundColor: LINK_KIND_COLOR[marker.linkKind] }}
+                />
+                <span className="min-w-0 flex-1 truncate font-blender-medium text-xs" style={{ color: LINK_KIND_COLOR[marker.linkKind] }}>
+                  {marker.linkKind === 'story' ? (linkedStory?.title ?? marker.linkId) : (marker.linkId ?? 'Событие')}
                 </span>
-                {marker.linkStep != null && (
+                {marker.linkKind === 'story' && marker.linkStep != null && (
                   <span className="shrink-0 font-blender-medium text-[10px] uppercase text-text-secondary">шаг {marker.linkStep}</span>
                 )}
               </div>
