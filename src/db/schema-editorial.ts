@@ -39,6 +39,8 @@ export const editorialMarkers = pgTable(
     linkId: text("link_id"),
     /** Опц. шаг сюжетной истории. */
     linkStep: integer("link_step"),
+    /** Полигон-область (лассо): массив игровых точек {x,z}; null — обычная точка-маркер. */
+    polygon: jsonb("polygon").$type<{ x: number; z: number }[]>(),
     authorId: uuid("author_id").references(() => profiles.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Plus, X, Paperclip, ChevronLeft, ChevronRight, ZoomIn, Bookmark, Move3d, MapPinPen,
-  ArrowLeft, ArrowRight, Save, Trash2,
+  ArrowLeft, ArrowRight, Save, Trash2, Lasso,
 } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
@@ -162,6 +162,8 @@ export interface EditorialMarkerView {
   linkKind: EditorialLinkKind;
   linkId?: string | null;
   linkStep?: number | null;
+  /** Полигон-область (лассо): игровые точки {x,z}; null/пусто — обычная точка-маркер. */
+  polygon?: { x: number; z: number }[] | null;
 }
 
 /** Разрешённая привязка к квесту — для верхнего ряда (трейдер/уровень/каппа). */
@@ -204,6 +206,7 @@ interface Draft {
   linkKind: EditorialLinkKind;
   linkId: string | null;
   linkStep: number | null;
+  polygon: { x: number; z: number }[] | null;
 }
 function makeDraft(m: EditorialMarkerView): Draft {
   return {
@@ -216,6 +219,7 @@ function makeDraft(m: EditorialMarkerView): Draft {
     linkKind: m.linkKind,
     linkId: m.linkId ?? null,
     linkStep: m.linkStep ?? null,
+    polygon: m.polygon ?? null,
   };
 }
 
@@ -264,6 +268,8 @@ interface Props {
   onMutated?: () => void;
   /** Отмена правки НОВОГО маркера (без id) — родитель закрывает карточку. */
   onCancel?: () => void;
+  /** Запросить рисование области-лассо на карте: parent рисует, onDone возвращает точки (или null). */
+  onDrawArea?: (req: { current: { x: number; z: number }[] | null; color: string; onDone: (poly: { x: number; z: number }[] | null) => void }) => void;
 }
 
 export function EditorialMarkerCard({
@@ -277,6 +283,7 @@ export function EditorialMarkerCard({
   mapSlug,
   onMutated,
   onCancel,
+  onDrawArea,
 }: Props) {
   const [sel, setSel] = useState(0);
   const [editing, setEditing] = useState(defaultEditing);
@@ -371,6 +378,7 @@ export function EditorialMarkerCard({
           linkKind: draft.linkKind,
           linkId: draft.linkId,
           linkStep: draft.linkStep,
+          polygon: draft.polygon,
         }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? `HTTP ${res.status}`);
@@ -745,6 +753,18 @@ export function EditorialMarkerCard({
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Назад
               </button>
+              {onDrawArea && (
+                <button
+                  type="button"
+                  onClick={() => onDrawArea({ current: draft.polygon, color: markerColor(draft.type), onDone: (poly) => editField({ polygon: poly }) })}
+                  title={draft.polygon ? 'Перерисовать область (лассо)' : 'Обвести область (лассо)'}
+                  className={`flex h-9 min-w-px flex-1 items-center justify-center gap-1.5 rounded-xs border-[0.5px] font-blender-medium text-type-micro uppercase tracking-widest transition-colors ${
+                    draft.polygon ? 'border-(--primary) text-(--primary)' : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
+                  }`}
+                >
+                  <Lasso className="h-3.5 w-3.5" /> Область{draft.polygon ? ' ✓' : ''}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={goNext}

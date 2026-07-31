@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus } from 'lucide-react';
+import { Check, Crosshair, LocateFixed, MapPin, Minus, Navigation, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -15,6 +15,7 @@ import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
+import { markerColor } from '@/data/map-marker-icons';
 import { EditorialMarkerCard, type EditorialMarkerData, type QuestIndexItem, type StoryIndexItem } from './EditorialMarkerCard';
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
@@ -204,6 +205,30 @@ export function MapViewerClient({
     setPendingMarker(null);
   };
 
+  // Рисование области-лассо (по запросу из карточки). Точки в ref (перф) + счётчик для UI.
+  // Пока активно — карточка спрятана (но смонтирована → черновик жив), onDone пишет polygon в её draft.
+  const [areaDraw, setAreaDraw] = useState<{ color: string; onDone: (p: { x: number; z: number }[] | null) => void } | null>(null);
+  const areaPtsRef = useRef<{ x: number; z: number }[]>([]);
+  const areaLayerRef = useRef<L.LayerGroup | null>(null);
+  const [areaCount, setAreaCount] = useState(0);
+  const startAreaDraw = (req: { current: { x: number; z: number }[] | null; color: string; onDone: (p: { x: number; z: number }[] | null) => void }) => {
+    areaPtsRef.current = req.current ? req.current.map((p) => ({ x: p.x, z: p.z })) : [];
+    setAreaCount(areaPtsRef.current.length);
+    setAreaDraw({ color: req.color, onDone: req.onDone });
+  };
+  const finishAreaDraw = () => {
+    const pts = areaPtsRef.current;
+    areaDraw?.onDone(pts.length >= 3 ? pts.map((p) => ({ x: p.x, z: p.z })) : null);
+    setAreaDraw(null);
+    areaPtsRef.current = [];
+    setAreaCount(0);
+  };
+  const cancelAreaDraw = () => {
+    setAreaDraw(null);
+    areaPtsRef.current = [];
+    setAreaCount(0);
+  };
+
   useEffect(() => {
     const map = mapInst;
     if (!map) return;
@@ -211,6 +236,7 @@ export function MapViewerClient({
     editorialLayerRef.current = group;
     for (const m of editorialMarkers ?? []) {
       if (!m.id) continue;
+      const id = m.id;
       // Иконка — единый резолвер (реальный img со своим градиентом/обводкой); POI → default-marker.
       // Опасности/зоны-заданий резолвятся по meta → кладём под-тип из категории.
       const meta =
@@ -220,9 +246,20 @@ export function MapViewerClient({
             ? { objectiveKind: m.category }
             : undefined;
       const icon = manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title, meta, linkKind: m.linkKind });
+      // Область-лассо → пунктирный полигон с заливкой цветом категории + иконка в центроиде.
+      if (m.polygon && m.polygon.length >= 3) {
+        const color = markerColor(m.type);
+        const poly = L.polygon(m.polygon.map(ll), { color, weight: 2, dashArray: '6 5', fillColor: color, fillOpacity: 0.18 });
+        if (m.title) poly.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', opacity: 1 });
+        poly.on('click', () => setOpenEditorialId(id));
+        poly.addTo(group);
+        const cx = m.polygon.reduce((s, p) => s + p.x, 0) / m.polygon.length;
+        const cz = m.polygon.reduce((s, p) => s + p.z, 0) / m.polygon.length;
+        L.marker(ll({ x: cx, z: cz }), { icon, interactive: false }).addTo(group);
+        continue;
+      }
       const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
       if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });
-      const id = m.id;
       mk.on('click', () => setOpenEditorialId(id));
       mk.addTo(group);
     }
@@ -267,7 +304,7 @@ export function MapViewerClient({
   // Закрытие по нажатию в ЛЮБОМ месте вне карточки (карта, drawer, страница). setTimeout —
   // чтобы клик-открытие капли не закрыл окно сразу же тем же событием.
   useEffect(() => {
-    if (!activeMarker) return;
+    if (!activeMarker || areaDraw) return; // в режиме лассо клики по карте — это вершины, не закрытие
     const onDown = (e: MouseEvent) => {
       if (!editorialOverlayRef.current?.contains(e.target as Node)) closeCard();
     };
@@ -276,7 +313,7 @@ export function MapViewerClient({
       clearTimeout(t);
       document.removeEventListener('mousedown', onDown);
     };
-  }, [activeMarker]);
+  }, [activeMarker, areaDraw]);
 
   // Постановка: в addMode следующий клик по карте открывает ЧЕРНОВИК (x=lng, z=lat) в памяти —
   // без записи в БД. INSERT произойдёт только при «Сохранить» в карточке.
@@ -327,6 +364,52 @@ export function MapViewerClient({
       mk.remove();
     };
   }, [mapInst, pendingMarker]);
+
+  // Режим лассо: ЛКМ ставит вершину, ПКМ убирает последнюю; живой полигон (пунктир+заливка).
+  // Завершение — кнопкой «Готово» в панели (dblclick конфликтует с двойным click). Pan остаётся.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !areaDraw) return;
+    const el = map.getContainer();
+    el.style.cursor = 'crosshair';
+    map.doubleClickZoom.disable(); // клики-вершины не должны зумить; pan на drag остаётся
+    const group = L.layerGroup().addTo(map);
+    areaLayerRef.current = group;
+    const redraw = () => {
+      group.clearLayers();
+      const pts = areaPtsRef.current;
+      if (pts.length >= 3) {
+        L.polygon(pts.map(ll), { color: areaDraw.color, weight: 2, dashArray: '6 5', fillColor: areaDraw.color, fillOpacity: 0.2, interactive: false }).addTo(group);
+      } else if (pts.length === 2) {
+        L.polyline(pts.map(ll), { color: areaDraw.color, weight: 2, dashArray: '6 5', interactive: false }).addTo(group);
+      }
+      for (const p of pts) {
+        L.circleMarker(ll(p), { radius: 4, color: '#fff', weight: 1, fillColor: areaDraw.color, fillOpacity: 1, interactive: false }).addTo(group);
+      }
+    };
+    redraw();
+    const onClick = (e: L.LeafletMouseEvent) => {
+      areaPtsRef.current.push({ x: e.latlng.lng, z: e.latlng.lat });
+      setAreaCount(areaPtsRef.current.length);
+      redraw();
+    };
+    const onContext = (e: L.LeafletMouseEvent) => {
+      e.originalEvent.preventDefault();
+      areaPtsRef.current.pop();
+      setAreaCount(areaPtsRef.current.length);
+      redraw();
+    };
+    map.on('click', onClick);
+    map.on('contextmenu', onContext);
+    return () => {
+      map.off('click', onClick);
+      map.off('contextmenu', onContext);
+      map.doubleClickZoom.enable();
+      el.style.cursor = '';
+      group.remove();
+      areaLayerRef.current = null;
+    };
+  }, [mapInst, areaDraw]);
 
   // Число маркеров на под-слой (для drawer'а + скрытия пустых слоёв).
   const counts = useMemo(() => {
@@ -833,7 +916,11 @@ export function MapViewerClient({
       {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом).
           activeMarker = черновик (pending, без id) ЛИБО открытый сохранённый маркер. */}
       {activeMarker && (
-        <div ref={editorialOverlayRef} className="absolute z-[520] w-87" style={{ transform: 'translateX(-50%)' }}>
+        <div
+          ref={editorialOverlayRef}
+          className={`absolute z-[520] w-87 ${areaDraw ? 'pointer-events-none opacity-0' : ''}`}
+          style={{ transform: 'translateX(-50%)' }}
+        >
           <EditorialMarkerCard
             key={activeMarker.id ?? 'new'}
             marker={activeMarker}
@@ -845,11 +932,36 @@ export function MapViewerClient({
             storyIndex={storyIndex}
             mapSlug={data.slug}
             onCancel={closeCard}
+            onDrawArea={startAreaDraw}
             onMutated={() => {
               closeCard();
               router.refresh();
             }}
           />
+        </div>
+      )}
+
+      {/* Панель рисования области-лассо (карточка на это время спрятана, но смонтирована → черновик жив). */}
+      {areaDraw && (
+        <div className="absolute top-3 left-1/2 z-[560] flex -translate-x-1/2 items-center gap-3 rounded-sm border border-lines-hover bg-card-menu px-4 py-2 backdrop-blur-md">
+          <span className="font-blender-medium text-xs text-text-secondary">
+            Область: <span className="text-text-primary">ЛКМ</span> — точка · <span className="text-text-primary">ПКМ</span> — убрать · <span className="tabular-nums text-(--primary)">{areaCount}</span> точ.
+          </span>
+          <button
+            type="button"
+            onClick={finishAreaDraw}
+            disabled={areaCount < 3}
+            className="flex h-8 items-center gap-1.5 rounded-xs bg-(--primary) px-3 font-blender-medium text-type-micro uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            <Check className="h-3.5 w-3.5" /> Готово
+          </button>
+          <button
+            type="button"
+            onClick={cancelAreaDraw}
+            className="flex h-8 items-center rounded-xs border border-lines-hover px-3 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:text-danger"
+          >
+            Отмена
+          </button>
         </div>
       )}
 

@@ -282,6 +282,7 @@ export default async function MapPage({ params, searchParams }: Props) {
           linkKind: r.linkKind,
           linkId: r.linkId,
           linkStep: r.linkStep,
+          polygon: r.polygon ?? null,
           linkedQuest: q
             ? {
                 name: q.name,

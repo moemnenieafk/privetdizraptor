@@ -34,6 +34,15 @@ const shots = (v: unknown): string[] =>
     ? v.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim().slice(0, MAX_KEY)).slice(0, MAX_SHOTS)
     : [];
 const linkKind = (v: unknown): EditorialLinkKind => (v === "story" || v === "quest" || v === "event" ? v : "none");
+// Полигон-область: массив игровых точек {x,z}. < 3 точек или мусор → null (обычная точка-маркер).
+const polygon = (v: unknown): { x: number; z: number }[] | null => {
+  if (!Array.isArray(v)) return null;
+  const pts = v
+    .filter((p): p is { x: number; z: number } => isObject(p) && typeof p.x === "number" && Number.isFinite(p.x) && typeof p.z === "number" && Number.isFinite(p.z))
+    .map((p) => ({ x: p.x, z: p.z }))
+    .slice(0, 200);
+  return pts.length >= 3 ? pts : null;
+};
 
 export async function GET(req: Request): Promise<NextResponse> {
   const me = await getMe();
@@ -87,6 +96,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     linkKind: kind,
     linkId: kind === "none" ? null : str(body.linkId, 80) || null,
     linkStep: intOrNull(body.linkStep),
+    polygon: polygon(body.polygon),
     authorId: me.id,
   };
 

@@ -26,6 +26,7 @@ export const EDITORIAL_MARKERS_DDL: string[] = [
     link_kind   text not null default 'none',
     link_id     text,
     link_step   integer,
+    polygon     jsonb,
     author_id   uuid references public.profiles(id) on delete set null,
     created_at  timestamptz not null default now(),
     updated_at  timestamptz not null default now()
@@ -33,6 +34,7 @@ export const EDITORIAL_MARKERS_DDL: string[] = [
 
   // Аддитивно для уже созданной таблицы (create if not exists её бы пропустил).
   `alter table public.editorial_markers add column if not exists faction text`,
+  `alter table public.editorial_markers add column if not exists polygon jsonb`,
 
   `create index if not exists editorial_markers_map_idx
      on public.editorial_markers (game_id, map_id)`,
