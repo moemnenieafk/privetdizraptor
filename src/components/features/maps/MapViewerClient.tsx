@@ -15,7 +15,7 @@ import { useTrackingStore } from '@/store/useTrackingStore';
 import { mapIconClass } from '@/data/map-icons';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
-import { markerColor } from '@/data/map-marker-icons';
+import { markerColor, isItemId } from '@/data/map-marker-icons';
 import { EditorialMarkerCard, type EditorialMarkerData, type QuestIndexItem, type StoryIndexItem } from './EditorialMarkerCard';
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
@@ -229,6 +229,16 @@ export function MapViewerClient({
     setAreaCount(0);
   };
 
+  // Индекс лута карты (loose loot, БЕЗ контейнеров) — для поиска предмета в визарде (Лут шаг 2).
+  const lootIndex = useMemo(() => {
+    const byLabel = new Map<string, { id: string; label: string }>();
+    for (const m of data.markers) {
+      if (m.type !== 'loot_loose' || !m.label || !m.linkedItemId || m.lootCat === 'container') continue;
+      if (!byLabel.has(m.label)) byLabel.set(m.label, { id: m.linkedItemId, label: m.label });
+    }
+    return [...byLabel.values()].sort((a, b) => a.label.localeCompare(b.label));
+  }, [data.markers]);
+
   useEffect(() => {
     const map = mapInst;
     if (!map) return;
@@ -245,7 +255,15 @@ export function MapViewerClient({
           : m.type === 'quest_zone' && m.category
             ? { objectiveKind: m.category }
             : undefined;
-      const icon = manualMarkerIcon({ type: m.type, category: m.category ?? undefined, faction: m.faction ?? undefined, label: m.title, meta, linkKind: m.linkKind });
+      const icon = manualMarkerIcon({
+        type: m.type,
+        category: m.category ?? undefined,
+        faction: m.faction ?? undefined,
+        label: m.title,
+        meta,
+        linkKind: m.linkKind,
+        linkedItemId: m.type === 'loot' && isItemId(m.category) ? m.category ?? undefined : undefined,
+      });
       // Область-лассо → пунктирный полигон с заливкой цветом категории + иконка в центроиде.
       if (m.polygon && m.polygon.length >= 3) {
         const color = markerColor(m.type);
@@ -933,6 +951,7 @@ export function MapViewerClient({
             mapSlug={data.slug}
             onCancel={closeCard}
             onDrawArea={startAreaDraw}
+            lootIndex={lootIndex}
             onMutated={() => {
               closeCard();
               router.refresh();

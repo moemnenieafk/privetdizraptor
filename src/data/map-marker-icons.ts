@@ -386,6 +386,9 @@ export const markerColor = (type: string): string => MARKER_TYPE_COLOR[type] ?? 
 /** Иконка инструмента «Область» (полигональное лассо) — моно svg, красится currentColor (маска). */
 export const MAKE_REGION_ICON = `${SVG}/make-region.svg`;
 
+/** BSG item id (24-hex) — отличает лут-ПРЕДМЕТ (editorial: category=id) от лут-категории (ключ). */
+export const isItemId = (s?: string | null): boolean => !!s && /^[0-9a-f]{24}$/i.test(s);
+
 /* ─────────────────── Иконки боссов (нижняя панель карты) ─────────────────── */
 // boss.meta.bossNormalizedName → файл в /public/images/bosses/eft. Нет ассета → null.
 const BOSS_ICON: Record<string, string> = {

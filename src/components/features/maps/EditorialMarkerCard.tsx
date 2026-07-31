@@ -15,8 +15,9 @@ import {
   ArrowLeft, ArrowRight, Save, Trash2,
 } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
-import { SPAWN_CATEGORIES, LOOT_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
-import { markerIconUrl, markerColor, BOSS_ROSTER, type MarkerIconInput } from '@/data/map-marker-icons';
+import { SPAWN_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
+import { markerIconUrl, markerColor, BOSS_ROSTER, isItemId, type MarkerIconInput } from '@/data/map-marker-icons';
+import { itemIconUrl } from '@/lib/item-icon';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
@@ -283,6 +284,8 @@ interface Props {
   onCancel?: () => void;
   /** Запросить рисование области-лассо на карте: parent рисует, onDone возвращает точки (или null). */
   onDrawArea?: (req: { current: { x: number; z: number }[] | null; color: string; onDone: (poly: { x: number; z: number }[] | null) => void }) => void;
+  /** Индекс лута карты (loose loot, без контейнеров) — для поиска предмета в Лут-шаге 2. */
+  lootIndex?: { id: string; label: string }[];
 }
 
 export function EditorialMarkerCard({
@@ -297,6 +300,7 @@ export function EditorialMarkerCard({
   onMutated,
   onCancel,
   onDrawArea,
+  lootIndex,
 }: Props) {
   const [sel, setSel] = useState(0);
   const [editing, setEditing] = useState(defaultEditing);
@@ -366,6 +370,14 @@ export function EditorialMarkerCard({
     draft.linkKind === 'quest' && draft.linkId
       ? (questIndex?.find((q) => q.id === draft.linkId)?.name ?? linkedQuest?.name ?? draft.linkId)
       : null;
+  // Поиск предмета (Лут шаг 2) — по индексу лута карты (loose loot, без контейнеров).
+  const [lootQ, setLootQ] = useState('');
+  const lq = lootQ.trim().toLowerCase();
+  const lootHits =
+    catKey === 'loot' && lq.length >= 2 && lootIndex ? lootIndex.filter((i) => i.label.toLowerCase().includes(lq)).slice(0, 30) : [];
+  const selLootLabel = isItemId(draft.category)
+    ? (lootIndex?.find((i) => i.id === draft.category)?.label ?? (draft.title || 'Предмет'))
+    : null;
 
   // Сохранение/удаление через API (запись защищена canEditContent на сервере).
   const [busy, setBusy] = useState(false);
@@ -536,7 +548,7 @@ export function EditorialMarkerCard({
             {/* Индикатор выбранного объекта (шаги 2-4) */}
             {si >= 1 && (
               <div className="flex w-full items-center gap-2">
-                <MarkerGlyph input={glyphInputFor(draft)} size={24} />
+                <GlyphFor shape={draft} size={24} />
                 <span className="min-w-0 truncate font-blender-medium text-xs text-text-primary">{markerCategoryLabel(draft)}</span>
               </div>
             )}
@@ -607,24 +619,64 @@ export function EditorialMarkerCard({
                     ))}
                   </div>
                 )}
-                {(draft.type === 'loot' || draft.type === 'container') && (
+                {/* Лут → ПОИСК ПРЕДМЕТА (лут этой карты, без контейнеров; как в drawer «Поиск на локации») */}
+                {catKey === 'loot' && (
+                  <div className="flex w-full flex-col gap-1.5">
+                    <div className="flex h-9 items-center gap-2 rounded-xs border border-lines-hover bg-(--color-base) px-2.5">
+                      <span className="icon-mask icon-eft-items-loot-tier h-4 w-4 shrink-0 text-text-muted" />
+                      <input
+                        value={lootQ}
+                        onChange={(e) => setLootQ(e.target.value)}
+                        placeholder="Поиск предмета…"
+                        className="w-full bg-transparent font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
+                      />
+                      {lootQ && (
+                        <button type="button" onClick={() => setLootQ('')} aria-label="Очистить" className="shrink-0 text-text-muted transition-colors hover:text-(--primary)">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    {selLootLabel ? (
+                      <div className="flex items-center gap-2 rounded-xs border border-lines-hover px-2 py-1.5">
+                        <img src={itemIconUrl(draft.category as string)} alt="" className="size-7 shrink-0 rounded-xs object-contain" />
+                        <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{selLootLabel}</span>
+                        <button type="button" onClick={() => setDraft((d) => ({ ...d, category: null }))} title="Сменить предмет" className="shrink-0 text-text-muted transition-colors hover:text-danger">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : lootHits.length > 0 ? (
+                      <div className="scrollbar-hidden flex max-h-48 flex-col overflow-y-auto rounded-xs border border-lines-hover">
+                        {lootHits.map((it) => (
+                          <button
+                            key={it.id}
+                            type="button"
+                            onClick={() => setDraft((d) => ({ ...d, category: it.id, title: d.title.trim() || it.label }))}
+                            className="flex items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-card-menu"
+                          >
+                            <img src={itemIconUrl(it.id)} alt="" className="size-7 shrink-0 rounded-xs object-contain" />
+                            <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{it.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="px-1 py-2 font-blender-book text-[10px] text-text-muted">
+                        {lq.length >= 2 ? 'Ничего не найдено на этой карте' : lootIndex?.length ? 'Введите название предмета (по луту этой карты)' : 'На карте нет синканного лута'}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {/* Контейнер → группы контейнеров (без лута) */}
+                {catKey === 'container' && (
                   <div className="scrollbar-hidden flex max-h-56 flex-col gap-1.5 overflow-y-auto">
-                    {(draft.type === 'loot' ? LOOT_CATEGORIES : CONTAINER_CATEGORIES).map((g) => (
+                    {CONTAINER_CATEGORIES.map((g) => (
                       <div key={g.group} className="flex flex-col gap-1">
                         <span className="font-blender-medium text-[9px] uppercase tracking-wide text-text-muted">{g.group}</span>
                         <div className="flex flex-wrap gap-1">
-                          {g.items.map((it) => {
-                            const on = draft.category === it.key;
-                            return (
-                              <SubCell key={it.key} on={on} onClick={() => setDraft((d) => ({ ...d, category: it.key }))} label={it.label}>
-                                {draft.type === 'loot' && it.icon ? (
-                                  <span className={`icon-mask ${it.icon} size-6`} style={{ backgroundColor: on ? 'var(--primary)' : 'var(--color-text-secondary)' }} />
-                                ) : (
-                                  <MarkerGlyph input={{ type: 'container', category: it.key }} size={30} />
-                                )}
-                              </SubCell>
-                            );
-                          })}
+                          {g.items.map((it) => (
+                            <SubCell key={it.key} on={draft.category === it.key} onClick={() => setDraft((d) => ({ ...d, category: it.key }))} label={it.label}>
+                              <MarkerGlyph input={{ type: 'container', category: it.key }} size={30} />
+                            </SubCell>
+                          ))}
                         </div>
                       </div>
                     ))}
@@ -806,7 +858,7 @@ export function EditorialMarkerCard({
             {/* Строка категории: иконка + подпись слева · закладка связи справа */}
             <div className="flex w-full items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
-                <MarkerGlyph input={glyphInputFor(marker)} size={28} />
+                <GlyphFor shape={marker} size={28} />
                 <span className="min-w-0 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
                   {markerCategoryLabel(marker)}
                 </span>
@@ -1068,6 +1120,14 @@ function MarkerGlyph({ input, size = 22 }: { input: MarkerIconInput; size?: numb
       }}
     />
   );
+}
+
+// Глиф с поддержкой лут-ПРЕДМЕТА (editorial: category=itemId → иконка предмета), иначе резолвер.
+function GlyphFor({ shape, size }: { shape: CatShape; size: number }) {
+  if (shape.type === 'loot' && isItemId(shape.category)) {
+    return <img src={itemIconUrl(shape.category as string)} alt="" className="shrink-0 rounded-xs object-contain" style={{ width: size, height: size }} />;
+  }
+  return <MarkerGlyph input={glyphInputFor(shape)} size={size} />;
 }
 
 // Иконка категории шага 1 — цветной img (у всех marker-svg свой градиент+обводка).
