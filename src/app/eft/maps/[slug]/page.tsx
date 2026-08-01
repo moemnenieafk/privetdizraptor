@@ -11,6 +11,7 @@ import { classifyLoot15 } from '@/data/map-markers/loot-15';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
 import { getEditorialMarkers } from '@/db/editorial-markers';
+import { getLootHeatPoints } from '@/db/loot-heat';
 import { getCmsUser } from '@/lib/auth/admin';
 import { EFT_QUESTS } from '@/data/quests';
 import { STORY_WALKTHROUGHS } from '@/data/story-walkthroughs';
@@ -111,6 +112,8 @@ export default async function MapPage({ params, searchParams }: Props) {
       // Прайс-индекс — тарковский цвет фона слота предмета (для плиток loose loot);
       // каталог — slug категории предмета (для под-слоёв «Случайной добычи»).
       const [priceIndex, catalog, editorialRows] = await Promise.all([getEftPriceIndex(), getEftCatalog(), getEditorialMarkers(data.asset.mapId)]);
+      // Heatmap плотности денег (фаза 2): EV loose-точек считаем сервером из loot_spawns × цена.
+      const heatPoints = await getLootHeatPoints(data.asset.mapId, priceIndex);
       // Оверрайды синканных маркеров (source_marker_id) — оригинал подавляем на рендере, правки живут в editorial.
       const overrideIds = new Set(editorialRows.map((r) => r.sourceMarkerId).filter((v): v is string => !!v));
       const lootCatById = new Map(catalog.map((i) => [i.id, i.category]));
@@ -319,6 +322,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             bosses={bosses}
             questZones={questZones}
             editorialMarkers={editorialMarkers}
+            heatPoints={heatPoints}
             canEditMarkers={canEditMarkers}
             mapId={data.asset.mapId}
             questIndex={questIndex}

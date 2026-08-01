@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Crosshair, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
+import { Check, Crosshair, Flame, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -17,6 +17,8 @@ import { useSquadStore, type SquadPose } from '@/store/useSquadStore';
 import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { useLootFilterStore } from '@/store/useLootFilterStore';
 import { useStoryFilterStore } from '@/store/useStoryFilterStore';
+import { useHeatmapStore } from '@/store/useHeatmapStore';
+import type { HeatPoint } from '@/db/loot-heat';
 import { useSquad } from './useSquad';
 import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
@@ -212,6 +214,7 @@ export function MapViewerClient({
   activeFloor = 0,
   onRequestFloor,
   editorialMarkers,
+  heatPoints,
   canEditMarkers,
   mapId,
   questIndex,
@@ -222,6 +225,7 @@ export function MapViewerClient({
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
   editorialMarkers?: EditorialMarkerData[];
+  heatPoints?: HeatPoint[];
   canEditMarkers?: boolean;
   mapId?: string;
   questIndex?: QuestIndexItem[];
@@ -986,6 +990,48 @@ export function MapViewerClient({
     };
   }, [mapInst, storyCheckpoints]);
 
+  // ── Heatmap плотности ДЕНЕГ (EV): L.heatLayer из heatPoints (сервер посчитал EV), режим-toggle, вне LOD. ──
+  const heatActive = useHeatmapStore((s) => s.active);
+  const heatToggle = useHeatmapStore((s) => s.toggle);
+  const heatData = useMemo<[number, number, number][]>(
+    // ll = [z, x]; третий элемент — интенсивность (EV ₽). Проекция через наш CRS (latLngToContainerPoint).
+    () => (heatPoints ?? []).map((p) => [p.z, p.x, p.ev]),
+    [heatPoints],
+  );
+  // Нормировка по p95 — редкие джекпоты (LEDX и т.п.) не «выжигают» всю карту в один цвет.
+  const heatMax = useMemo(() => {
+    if (!heatData.length) return 1;
+    const evs = heatData.map((d) => d[2]).sort((a, b) => a - b);
+    return evs[Math.floor(evs.length * 0.95)] || evs[evs.length - 1] || 1;
+  }, [heatData]);
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !heatActive || heatData.length === 0) return;
+    let layer: L.Layer | null = null;
+    let cancelled = false;
+    // leaflet.heat патчит leaflet-СИНГЛТОН; неймспейс `import * as L` его не отражает (свойство
+    // добавлено после eval модуля) → грузим плагин динамикой и берём heatLayer с `leaflet.default`.
+    void (async () => {
+      const leaflet = (await import('leaflet')) as unknown as { default?: unknown };
+      const Lx = (leaflet.default ?? leaflet) as { heatLayer?: (d: unknown, o: unknown) => L.Layer };
+      if (typeof Lx.heatLayer !== 'function') await import('leaflet.heat');
+      if (cancelled || typeof Lx.heatLayer !== 'function') return;
+      layer = Lx.heatLayer(heatData, {
+        radius: 34,
+        blur: 24,
+        max: heatMax,
+        minOpacity: 0.4,
+        // Черновой градиент NIGHTFALL (тепло→жар): nvg-green → amber → danger. Финал-стопы за V4DYA.
+        gradient: { 0.15: '#5FB85B', 0.5: '#E68E25', 0.8: '#E5484D', 1.0: '#ffce54' },
+      });
+      layer.addTo(map);
+    })();
+    return () => {
+      cancelled = true;
+      if (layer) map.removeLayer(layer);
+    };
+  }, [mapInst, heatActive, heatData, heatMax]);
+
   // Линейка (measure): флаг из стора, точки/слой замера. Хендлеры клика — в init-эффекте карты
   // (через ref, чтобы не пересоздавать карту). Выключение линейки очищает замер.
   const rulerActive = useMapUiStore((s) => s.rulerActive);
@@ -1647,6 +1693,18 @@ export function MapViewerClient({
 
       {/* Зум — левый край по центру (классическая зумовая зона; угол низ-право освобождён под Позицию) */}
       <div className="absolute left-3.5 top-1/2 z-[500] flex -translate-y-1/2 flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
+        {!!heatPoints?.length && (
+          <button
+            type="button"
+            onClick={heatToggle}
+            aria-label="Тепловая карта денег"
+            aria-pressed={heatActive}
+            title={heatActive ? 'Скрыть тепловую карту денег' : 'Тепловая карта денег (EV лута)'}
+            className={`flex h-9 w-9 items-center justify-center border-b border-lines-hover transition-colors hover:bg-lines-hover hover:text-(--primary) ${heatActive ? 'bg-lines-hover text-(--primary)' : 'text-text-secondary'}`}
+          >
+            <Flame className="h-5.5 w-5.5" />
+          </button>
+        )}
         <button type="button" onClick={zoomIn} aria-label="Приблизить" className="flex h-9 w-9 items-center justify-center border-b border-lines-hover text-text-secondary transition-colors hover:bg-lines-hover hover:text-(--primary)">
           <Plus className="h-5.5 w-5.5" />
         </button>

@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapViewerLoader } from './MapViewerLoader';
 import { MapTopBar } from './MapTopBar';
 import { MapSearchDrawer } from './MapSearchDrawer';
+import type { HeatPoint } from '@/db/loot-heat';
 import { MapBottomBar } from './MapBottomBar';
 import { MapBossDock } from './MapBossDock';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
@@ -40,6 +41,8 @@ interface Props {
   questZones: MapQuestZone[];
   /** Редакторские маркеры (editorial_markers) — рендер слоя + карточка по клику. */
   editorialMarkers?: EditorialMarkerData[];
+  /** Точки heatmap плотности денег (EV loose-лута) — режим-toggle. */
+  heatPoints?: HeatPoint[];
   /** Юзер admin/editor — показывать кнопку правки на карточке маркера. */
   canEditMarkers?: boolean;
   /** id карты — для постановки нового editorial-маркера (POST на пустой карте). */
@@ -57,7 +60,7 @@ const mapHref = (slug: string) => `/eft/maps/${slug}`;
  * Оболочка карты. TopBar (десктоп) + адаптивный MapSearchDrawer (десктоп drawer / мобилка
  * bottom-sheet). Прочие мобильные шиты (карты/задания/рейд) — из MobileMapBar/нижнего бара.
  */
-export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, canEditMarkers, mapId, questIndex, storyIndex, focusQuestId }: Props) {
+export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, heatPoints, canEditMarkers, mapId, questIndex, storyIndex, focusQuestId }: Props) {
   const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
   const searchOpen = useMapUiStore((s) => s.searchOpen);
@@ -231,6 +234,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           activeFloor={activeFloor}
           onRequestFloor={setActiveFloor}
           editorialMarkers={editorialMarkers}
+          heatPoints={heatPoints}
           canEditMarkers={canEditMarkers}
           mapId={mapId}
           questIndex={questIndex}

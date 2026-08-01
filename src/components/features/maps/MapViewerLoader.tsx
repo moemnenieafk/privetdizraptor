@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import type { MapView } from './map-types';
 import type { MapViewerApi } from './map-frame-types';
 import type { EditorialMarkerData, QuestIndexItem, StoryIndexItem } from './EditorialMarkerCard';
+import type { HeatPoint } from '@/db/loot-heat';
 
 // Leaflet работает только в браузере (нужен window) → грузим клиент без SSR (правило 6).
 const MapViewerClient = dynamic(
@@ -26,6 +27,7 @@ export function MapViewerLoader({
   activeFloor,
   onRequestFloor,
   editorialMarkers,
+  heatPoints,
   canEditMarkers,
   mapId,
   questIndex,
@@ -36,6 +38,7 @@ export function MapViewerLoader({
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
   editorialMarkers?: EditorialMarkerData[];
+  heatPoints?: HeatPoint[];
   canEditMarkers?: boolean;
   mapId?: string;
   questIndex?: QuestIndexItem[];
@@ -48,6 +51,7 @@ export function MapViewerLoader({
       activeFloor={activeFloor}
       onRequestFloor={onRequestFloor}
       editorialMarkers={editorialMarkers}
+      heatPoints={heatPoints}
       canEditMarkers={canEditMarkers}
       mapId={mapId}
       questIndex={questIndex}
