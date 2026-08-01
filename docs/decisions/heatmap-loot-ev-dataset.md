@@ -1,5 +1,5 @@
 ---
-status: ✅ ФАЗА 1 (датасет) + ФАЗА 2 v1 (loose heat-визуал) — реализованы; TODO: контейнеры в heat + полиш градиента (V4DYA)
+status: ✅ ФАЗА 1 (датасет) + ФАЗА 2 (heat-визуал: loose + контейнеры) — реализованы; TODO: полиш градиента/накала (V4DYA)
 affects: eft-maps, loot, data-ingest, supabase, heatmap
 date: 2026-08-01
 ---
@@ -126,10 +126,14 @@ container-маркеров (уже в зеркале), джойн `containerTpl 
 - **ГОЧА leaflet.heat + Turbopack:** неймспейс `import * as L` НЕ видит `heatLayer` (плагин патчит
   leaflet-синглтон ПОСЛЕ eval модуля) → плагин грузим ДИНАМИКОЙ в эффекте, `heatLayer` берём с
   `(await import('leaflet')).default`, не с неймспейса.
-- **v1 = loose-лут.** Контейнеры (позиции из наших tarkov.dev-маркеров × SPT per-тип EV) — следующий
-  инкремент; пока интерьер зданий пустоват (ценное там в контейнерах).
+- **ГОЧА z-index:** `leaflet.heat` кладёт канвас в `overlayPane` — ПОД непрозрачную арт-подложку
+  карты (тоже overlayPane), heat виден только по краям. Фикс: `_canvas.style.zIndex = '450'` (над
+  артом, ниже `markerPane` — иконки выходов видны). Опцию `pane` плагин 0.2.0 игнорит (хардкод overlayPane).
+- **loose + контейнеры.** Контейнеры: позиция из наших tarkov.dev container-маркеров × EV пула типа
+  (`loot_container_pools`, джойн `linkedItemId == containerTpl`), считается сервером, мержится с loose
+  (`containerHeatPoints` в `loot-heat.ts`). Наполняет интерьеры зданий (ценность там в контейнерах).
 - **Черновое (за V4DYA):** градиент-стопы, радиус/blur/opacity, нормировка. Токен-стопы в Figma.
 
 ---
 *Процесс: [[engineering-loop]] · ресёрч: [[heatmap-research]] · playbook: `/game-data-ingest` ·
-статус: фаза 1 ✅ + фаза 2 v1 ✅ (loose). Дальше: контейнеры в heat + полиш градиента (V4DYA).*
+статус: фаза 1 ✅ + фаза 2 ✅ (loose + контейнеры). Дальше: полиш градиента/накала (V4DYA).*
