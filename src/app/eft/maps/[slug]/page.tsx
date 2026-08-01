@@ -11,7 +11,7 @@ import { classifyLoot15 } from '@/data/map-markers/loot-15';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
 import { getEditorialMarkers } from '@/db/editorial-markers';
-import { getLootHeatPoints } from '@/db/loot-heat';
+import { getLootHeatPoints, getLootContainerPools, containerHeatPoints } from '@/db/loot-heat';
 import { getCmsUser } from '@/lib/auth/admin';
 import { EFT_QUESTS } from '@/data/quests';
 import { STORY_WALKTHROUGHS } from '@/data/story-walkthroughs';
@@ -112,8 +112,11 @@ export default async function MapPage({ params, searchParams }: Props) {
       // Прайс-индекс — тарковский цвет фона слота предмета (для плиток loose loot);
       // каталог — slug категории предмета (для под-слоёв «Случайной добычи»).
       const [priceIndex, catalog, editorialRows] = await Promise.all([getEftPriceIndex(), getEftCatalog(), getEditorialMarkers(data.asset.mapId)]);
-      // Heatmap плотности денег (фаза 2): EV loose-точек считаем сервером из loot_spawns × цена.
-      const heatPoints = await getLootHeatPoints(data.asset.mapId, priceIndex);
+      // Heatmap плотности денег (фаза 2): loose-EV (loot_spawns) + пулы контейнеров (per-тип) — сервером.
+      const [looseHeat, containerPools] = await Promise.all([
+        getLootHeatPoints(data.asset.mapId, priceIndex),
+        getLootContainerPools(data.asset.mapId),
+      ]);
       // Оверрайды синканных маркеров (source_marker_id) — оригинал подавляем на рендере, правки живут в editorial.
       const overrideIds = new Set(editorialRows.map((r) => r.sourceMarkerId).filter((v): v is string => !!v));
       const lootCatById = new Map(catalog.map((i) => [i.id, i.category]));
@@ -239,6 +242,9 @@ export default async function MapPage({ params, searchParams }: Props) {
           position: m.position ? { x: m.position.x, z: m.position.z } : null,
           outline: (m.outline ?? []).map((p) => ({ x: p.x, z: p.z })),
         }));
+
+      // Контейнеры в heat: позиция из наших маркеров × EV пула типа (loot_container_pools) → мержим с loose.
+      const heatPoints = [...looseHeat, ...containerHeatPoints(markers, containerPools, priceIndex)];
 
       const view: MapView = {
         slug,
