@@ -8,6 +8,7 @@ import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { useLootFilterStore } from '@/store/useLootFilterStore';
+import { useStoryFilterStore } from '@/store/useStoryFilterStore';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
@@ -189,6 +190,9 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
     const tq = qQuests.trim().toLowerCase();
     return storiesForMap(slug).filter((s) => !tq || s.title.toLowerCase().includes(tq));
   }, [slug, qQuests]);
+  // Story/lore-слой: выбранная история → подсветка маршрута на карте.
+  const selectedStory = useStoryFilterStore((s) => s.slug);
+  const selectStory = useStoryFilterStore((s) => s.select);
 
   // Фаза B: реальные пины сюжетки — editorial-маркеры с linkKind='story' → координаты по slug истории.
   const storyPins = useMemo(() => {
@@ -475,7 +479,19 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
               ) : (
                 stories.map((s) => {
                   const pins = storyPins.get(s.slug);
-                  return <StoryRow key={s.slug} s={s} query={qQuests} pins={pins} onFocus={() => focus(pins ?? [])} />;
+                  return (
+                    <StoryRow
+                      key={s.slug}
+                      s={s}
+                      query={qQuests}
+                      pins={pins}
+                      active={selectedStory === s.slug}
+                      onFocus={() => {
+                        selectStory(s.slug);
+                        if (pins?.length) focus(pins);
+                      }}
+                    />
+                  );
                 })
               )
             ) : shownQuests.length === 0 ? (
@@ -574,11 +590,12 @@ function QuestRow({ q, query, active, onSelect }: { q: MapQuestLite; query: stri
 // ЧЕРНОВИК строки сюжетной истории (по образцу QuestRow — для итерации в Figma).
 // Тинт = стальной STORY_TINT; слева иконка-маска истории, справа сложность (черепа) +
 // число этапов НА ЭТОЙ карте; клик → walkthrough /eft/quests/<slug>. Пинов пока нет (фаза B).
-function StoryRow({ s, query, pins, onFocus }: { s: StoryOnMap; query: string; pins?: { x: number; z: number }[]; onFocus?: () => void }) {
+function StoryRow({ s, query, pins, active, onFocus }: { s: StoryOnMap; query: string; pins?: { x: number; z: number }[]; active?: boolean; onFocus?: () => void }) {
   const skullColor = s.difficulty.skulls >= 5 ? 'var(--color-danger)' : s.difficulty.skulls >= 3 ? 'var(--primary)' : 'var(--color-nvg-green)';
   const hasPins = !!pins && pins.length > 0;
-  const cls =
-    'flex h-9 w-full items-center justify-between rounded border-[0.5px] px-3.5 transition-shadow hover:ring-1 hover:ring-(--primary)';
+  const cls = `flex h-9 w-full items-center justify-between rounded border-[0.5px] px-3.5 transition-shadow hover:ring-1 hover:ring-(--primary) ${
+    active ? 'ring-1 ring-(--primary)' : ''
+  }`;
   const style = {
     borderColor: `color-mix(in srgb, ${STORY_TINT} 55%, transparent)`,
     background: `radial-gradient(140% 160% at 0% 50%, color-mix(in srgb, ${STORY_TINT} 30%, transparent), transparent 55%)`,
@@ -607,13 +624,13 @@ function StoryRow({ s, query, pins, onFocus }: { s: StoryOnMap; query: string; p
       </span>
     </>
   );
-  // Есть пины на карте → клик подлетает к ним; иначе → walkthrough истории.
+  // Есть пины на карте → клик подсвечивает маршрут (toggle); иначе → walkthrough истории.
   return hasPins ? (
-    <button type="button" onClick={onFocus} title={`${s.title} — показать на карте (${pins.length})`} className={cls} style={style}>
+    <button type="button" onClick={onFocus} aria-pressed={active} title={active ? `${s.title} — скрыть маршрут` : `${s.title} — показать маршрут на карте (${pins.length})`} className={cls} style={style}>
       {inner}
     </button>
   ) : (
-    <Link href={`/eft/quests/${s.slug}`} title={`${s.title} — ${s.difficulty.label}`} className={cls} style={style}>
+    <Link href={`/eft/quests/${s.slug}`} title={`${s.title} — чекпоинты на карте не размечены, открыть гайд`} className={cls} style={style}>
       {inner}
     </Link>
   );

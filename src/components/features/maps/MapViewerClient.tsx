@@ -16,6 +16,7 @@ import { useTrackingStore } from '@/store/useTrackingStore';
 import { useSquadStore, type SquadPose } from '@/store/useSquadStore';
 import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { useLootFilterStore } from '@/store/useLootFilterStore';
+import { useStoryFilterStore } from '@/store/useStoryFilterStore';
 import { useSquad } from './useSquad';
 import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
@@ -948,6 +949,42 @@ export function MapViewerClient({
       group.remove();
     };
   }, [mapInst, lootPositions]);
+
+  // ── Story/lore-слой: маршрут выбранной истории (кольца-номера + пунктирная линия) из editorial linkKind='story'. ──
+  const storySlug = useStoryFilterStore((s) => s.slug);
+  const storyCheckpoints = useMemo(() => {
+    if (!storySlug) return [];
+    return (editorialMarkers ?? [])
+      .filter((m) => m.linkKind === 'story' && m.linkId === storySlug && Number.isFinite(m.x) && Number.isFinite(m.z))
+      .map((m) => ({ x: m.x, z: m.z, step: m.linkStep ?? null }))
+      .sort((a, b) => (a.step ?? 1e9) - (b.step ?? 1e9));
+  }, [storySlug, editorialMarkers]);
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || storyCheckpoints.length === 0) return;
+    const group = L.layerGroup().addTo(map);
+    const tint = '#6096a6'; // story-tint (черновой, как чип СЮЖЕТ; токен закрепим в Figma)
+    const stepped = storyCheckpoints.filter((c) => c.step != null);
+    if (stepped.length >= 2) {
+      L.polyline(stepped.map((c) => ll({ x: c.x, z: c.z })), { color: tint, weight: 2, dashArray: '6 5', opacity: 0.8, interactive: false }).addTo(group);
+    }
+    for (const c of storyCheckpoints) {
+      const label = c.step != null ? String(c.step) : '•';
+      L.marker(ll({ x: c.x, z: c.z }), {
+        interactive: false,
+        zIndexOffset: 8000,
+        icon: L.divIcon({
+          className: 'cta-story-cp',
+          iconSize: [26, 26],
+          iconAnchor: [13, 13],
+          html: `<div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:color-mix(in srgb, ${tint} 22%, transparent);border:2px solid ${tint};color:#fff;font-size:12px;font-weight:700;box-shadow:0 0 6px rgba(0,0,0,.55)">${label}</div>`,
+        }),
+      }).addTo(group);
+    }
+    return () => {
+      group.remove();
+    };
+  }, [mapInst, storyCheckpoints]);
 
   // Линейка (measure): флаг из стора, точки/слой замера. Хендлеры клика — в init-эффекте карты
   // (через ref, чтобы не пересоздавать карту). Выключение линейки очищает замер.

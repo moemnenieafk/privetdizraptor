@@ -996,6 +996,18 @@ export function EditorialMarkerCard({
                 {marker.linkKind === 'story' && marker.linkStep != null && (
                   <span className="shrink-0 font-blender-medium text-[10px] uppercase text-text-secondary">шаг {marker.linkStep}</span>
                 )}
+                {marker.linkKind === 'story' && marker.linkId && (
+                  <a
+                    href={`/eft/quests/${marker.linkId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Открыть гайд"
+                    className="shrink-0"
+                    style={{ color: LINK_KIND_COLOR.story }}
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </a>
+                )}
               </div>
             )}
 
