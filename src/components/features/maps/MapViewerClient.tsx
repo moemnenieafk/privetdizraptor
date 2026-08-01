@@ -25,7 +25,7 @@ import { floorIndexForHeight } from '@/lib/eft-screenshot';
 import { mapIconClass } from '@/data/map-icons';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
-import { markerColor, isItemId } from '@/data/map-marker-icons';
+import { markerColor, isItemId, LINK_KIND_COLOR } from '@/data/map-marker-icons';
 import { EditorialMarkerCard, type EditorialMarkerData, type QuestIndexItem, type StoryIndexItem } from './EditorialMarkerCard';
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
@@ -963,7 +963,7 @@ export function MapViewerClient({
     const map = mapInst;
     if (!map || storyCheckpoints.length === 0) return;
     const group = L.layerGroup().addTo(map);
-    const tint = '#6096a6'; // story-tint (черновой, как чип СЮЖЕТ; токен закрепим в Figma)
+    const tint = LINK_KIND_COLOR.story; // story-tint — единый источник (map-marker-icons)
     const stepped = storyCheckpoints.filter((c) => c.step != null);
     if (stepped.length >= 2) {
       L.polyline(stepped.map((c) => ll({ x: c.x, z: c.z })), { color: tint, weight: 2, dashArray: '6 5', opacity: 0.8, interactive: false }).addTo(group);

@@ -10,7 +10,7 @@ import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { useLootFilterStore } from '@/store/useLootFilterStore';
 import { useStoryFilterStore } from '@/store/useStoryFilterStore';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
-import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
+import { markerIconUrl, markerColor, LINK_KIND_COLOR, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
 import { storiesForMap, type StoryOnMap } from '@/lib/story-map-link';
 import type { EditorialMarkerData } from './EditorialMarkerCard';
@@ -36,8 +36,8 @@ import type { TaskRaw } from '@/types/quest';
 
 const SECTION = 'font-blender-medium text-type-caption uppercase tracking-widest text-text-muted';
 const CONTAINER_WEBP = '/images/maps/eft/markers/loot-containers/loot-container-';
-// ЧЕРНОВОЙ цвет сюжетной истории — как у чипа СЮЖЕТ (сталь). В Figma закрепить токен.
-const STORY_TINT = '#6096a6';
+// Цвет сюжетной истории — единый источник LINK_KIND_COLOR.story (сталь), как чип СЮЖЕТ.
+const STORY_TINT = LINK_KIND_COLOR.story;
 
 // Порядок и состав 1:1 с Figma (node 2242:2662).
 const CONTAINER_TILES: { file: string; label: string }[] = [
@@ -446,7 +446,7 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
           {/* Чипы фильтров: ВСЕ / СЮЖЕТ / Смотритель% / Каппа% */}
           <div className="flex gap-2">
             <FilterChip active={qf === 'all'} color="var(--color-text-secondary)" onClick={() => setQf('all')} maskIcon="icon-eft-quests" label="Все" />
-            <FilterChip active={qf === 'story'} color="#6096a6" onClick={() => pickFilter('story')} icon={<Bookmark className="h-3 w-3" />} label="Сюжет" />
+            <FilterChip active={qf === 'story'} color={STORY_TINT} onClick={() => pickFilter('story')} icon={<Bookmark className="h-3 w-3" />} label="Сюжет" />
             <FilterChip active={qf === 'lightkeeper'} color="var(--color-lightkeeper)" onClick={() => pickFilter('lightkeeper')} maskIcon="icon-eft-profile-lightkeeper" label={`${lkPct}%`} />
             <FilterChip active={qf === 'kappa'} color="var(--color-kappa)" onClick={() => pickFilter('kappa')} maskIcon="icon-eft-profile-kappa" label={`${kappaPct}%`} />
           </div>
@@ -487,8 +487,10 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
                       pins={pins}
                       active={selectedStory === s.slug}
                       onFocus={() => {
+                        // Toggle: подлетаем к пинам только при ВЫБОРЕ, не при снятии.
+                        const willSelect = selectedStory !== s.slug;
                         selectStory(s.slug);
-                        if (pins?.length) focus(pins);
+                        if (willSelect && pins?.length) focus(pins);
                       }}
                     />
                   );

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { SPAWN_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
-import { markerIconUrl, markerColor, BOSS_ROSTER, isItemId, type MarkerIconInput } from '@/data/map-marker-icons';
+import { markerIconUrl, markerColor, BOSS_ROSTER, isItemId, LINK_KIND_COLOR, type MarkerIconInput } from '@/data/map-marker-icons';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { searchEftItemsAction } from '@/actions/search-actions';
@@ -70,9 +70,6 @@ const QUESTZONE_KINDS: { key: string; label: string }[] = [
   { key: 'target', label: 'Цель' },
   { key: 'item', label: 'Предмет' },
 ];
-
-// Цвет закладки/чипа по типу привязки (совпадает с цветом капли в MapViewerClient).
-const LINK_KIND_COLOR: Record<EditorialLinkKind, string> = { story: '#6096a6', quest: '#e68e25', event: '#c26be0', none: '#8a8a95', item: '#5FB85B' };
 
 // ─── Визард ─────────────────────────────────────────────────────────────────
 type WizardStep = 'category' | 'object' | 'details' | 'link';

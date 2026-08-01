@@ -10,6 +10,8 @@
  * нет только у hazard → резолвер отдаёт `null` (плейсхолдер).
  */
 
+import type { EditorialLinkKind } from '@/db/schema-editorial';
+
 const WEBP = '/images/maps/eft/markers';
 const SVG = '/icons/eft/01-maps/markers';
 
@@ -382,6 +384,17 @@ export const MARKER_TYPE_COLOR: Record<string, string> = {
 };
 
 export const markerColor = (type: string): string => MARKER_TYPE_COLOR[type] ?? '#9696A1';
+
+/** Цвет закладки/чипа/оверлея editorial-маркера по типу привязки — ЕДИНЫЙ ИСТОЧНИК:
+ *  карточка маркера, чип СЮЖЕТ в поиске, маршрут story-слоя на карте. Story-тинт = сталь;
+ *  черновой, токен закрепим в Figma. */
+export const LINK_KIND_COLOR: Record<EditorialLinkKind, string> = {
+  story: '#6096a6',
+  quest: '#e68e25',
+  event: '#c26be0',
+  none: '#8a8a95',
+  item: '#5FB85B',
+};
 
 /** Иконка инструмента «Область» (полигональное лассо) — моно svg, красится currentColor (маска). */
 export const MAKE_REGION_ICON = `${SVG}/make-region.svg`;
