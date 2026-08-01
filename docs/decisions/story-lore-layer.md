@@ -1,5 +1,5 @@
 ---
-status: 🔵 спека
+status: ✅ реализовано
 affects: maps, stories
 date: 2026-08-01
 ---
