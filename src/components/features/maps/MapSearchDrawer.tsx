@@ -2,8 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, ChevronRight, MapPin, X } from 'lucide-react';
+import { Bookmark, CheckSquare, ChevronRight, KeyRound, MapPin, Square, X } from 'lucide-react';
 import { HighlightedText } from '@/components/ui/HighlightedText';
+import { itemIconUrl } from '@/lib/item-icon';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
@@ -128,6 +131,28 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   const focus = (positions: { x: number; z: number }[]) => {
     if (positions.length) apiRef.current?.focusPoints(positions);
   };
+
+  // ── Ключи (реверс Ключ→Двери): ключи этой карты из lock-маркеров, сгруппированы по id. ──
+  const myKeys = useMyKeysStore((s) => s.keys);
+  const toggleMyKey = useMyKeysStore((s) => s.toggle);
+  const [qKeys, setQKeys] = useState('');
+  const keysOnMap = useMemo(() => {
+    const byKey = new Map<string, { keyId: string; name: string; slug: string | null; itemBg: string | undefined; doors: { x: number; z: number }[]; count: number }>();
+    for (const m of markers) {
+      if (m.type !== 'lock' || !m.linkedItemId || !m.position) continue;
+      const p = { x: m.position.x, z: m.position.z };
+      const g = byKey.get(m.linkedItemId);
+      if (g) {
+        g.count += 1;
+        g.doors.push(p);
+      } else {
+        byKey.set(m.linkedItemId, { keyId: m.linkedItemId, name: m.label ?? 'Ключ', slug: m.itemSlug ?? null, itemBg: m.itemBg ?? undefined, doors: [p], count: 1 });
+      }
+    }
+    return [...byKey.values()].sort((a, b) => b.count - a.count);
+  }, [markers]);
+  const kq = qKeys.trim().toLowerCase();
+  const keyHits = kq ? keysOnMap.filter((k) => k.name.toLowerCase().includes(kq)) : keysOnMap;
 
   // Задания: лента торговцев (уникальные), отфильтрованный список.
   const traders = useMemo(() => [...new Set(quests.map((q) => q.trader))], [quests]);
@@ -294,6 +319,75 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
             </>
           )}
         </section>
+
+        {/* ─────────────── КЛЮЧИ (реверс Ключ→Двери) ─────────────── */}
+        {keysOnMap.length > 0 && (
+          <section className="flex flex-col gap-3.5">
+            <div className="flex items-center justify-between">
+              <p className={SECTION}>Ключи</p>
+              {myKeys.length > 0 && (
+                <span className="font-blender-medium text-type-micro tabular-nums text-(--primary)">
+                  Моих здесь: {keysOnMap.filter((k) => myKeys.includes(k.keyId)).length}
+                </span>
+              )}
+            </div>
+            <div className="flex h-9 items-center gap-3.5 rounded-xs border border-lines-hover bg-(--color-base) px-3.5">
+              <KeyRound className="h-4 w-4 shrink-0 text-text-muted" />
+              <input
+                value={qKeys}
+                onChange={(e) => setQKeys(e.target.value)}
+                placeholder="ПОИСК КЛЮЧА"
+                className="w-full bg-transparent font-blender-medium text-type-caption uppercase tracking-wide text-text-primary outline-none placeholder:text-text-muted"
+              />
+              {qKeys && (
+                <button type="button" onClick={() => setQKeys('')} aria-label="Очистить" className="shrink-0 text-text-muted transition-colors hover:text-(--primary)">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <p className="font-blender-medium text-[10px] text-text-secondary">
+              Отметь «есть» — двери ключа подсветятся на карте. Клик по строке — подлёт к дверям.
+            </p>
+            {keyHits.length === 0 ? (
+              <p className="px-1 py-4 text-center font-blender-book text-xs text-text-muted">Ничего не найдено</p>
+            ) : (
+              <div className="flex flex-col">
+                {keyHits.slice(0, 60).map((k) => {
+                  const owned = myKeys.includes(k.keyId);
+                  return (
+                    <div key={k.keyId} className="flex items-center gap-1 border-b border-lines-hover">
+                      <button
+                        type="button"
+                        onClick={() => toggleMyKey(k.keyId)}
+                        aria-pressed={owned}
+                        title={owned ? 'Убрать из «Моих ключей»' : 'У меня есть этот ключ'}
+                        className={`flex h-9 w-7 shrink-0 items-center justify-center transition-colors ${owned ? 'text-(--primary)' : 'text-text-muted hover:text-(--primary)'}`}
+                      >
+                        {owned ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                      </button>
+                      <button type="button" onClick={() => focus(k.doors)} className="flex h-9 min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:bg-card-menu">
+                        <span className="relative h-6 w-6 shrink-0 overflow-hidden rounded-xs border border-lines-hover">
+                          <span className="absolute inset-0 bg-(--color-darkbase)" />
+                          <span className="absolute inset-0" style={{ backgroundColor: getTarkovBackgroundColor(k.itemBg) }} />
+                          <img src={itemIconUrl(k.keyId)} alt="" className="absolute inset-0 h-full w-full object-contain p-0.5" />
+                        </span>
+                        <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">
+                          <HighlightedText text={k.name} query={qKeys} />
+                        </span>
+                        <span className="shrink-0 font-blender-medium text-type-micro tabular-nums text-text-muted">{k.count} дв.</span>
+                      </button>
+                      {k.slug && (
+                        <Link href={`/eft/items/item/${k.slug}`} title="Открыть страницу ключа" className="flex h-9 w-7 shrink-0 items-center justify-center text-text-muted transition-colors hover:text-(--primary)">
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* ─────────────── ЗАДАНИЯ ─────────────── */}
         <section className="flex flex-col gap-3.5">

@@ -14,6 +14,7 @@ import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
 import { useSquadStore, type SquadPose } from '@/store/useSquadStore';
+import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { useSquad } from './useSquad';
 import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
@@ -899,6 +900,28 @@ export function MapViewerClient({
       document.removeEventListener('keydown', onEsc);
     };
   }, [lockMarker]);
+
+  // ── Реверс Ключ→Двери: постоянная подсветка дверей «моих ключей» (вне LOD/фильтра слоя замков). ──
+  const myKeys = useMyKeysStore((s) => s.keys);
+  const myKeyDoors = useMemo(() => {
+    const pts: { x: number; z: number }[] = [];
+    for (const id of myKeys) {
+      for (const m of locksByKey.get(id) ?? []) if (m.position) pts.push({ x: m.position.x, z: m.position.z });
+    }
+    return pts;
+  }, [myKeys, locksByKey]);
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || myKeyDoors.length === 0) return;
+    const group = L.layerGroup().addTo(map);
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#e68e25';
+    for (const p of myKeyDoors) {
+      L.circleMarker(ll(p), { radius: 13, color: primary, weight: 2, opacity: 0.9, fillColor: primary, fillOpacity: 0.12, interactive: false }).addTo(group);
+    }
+    return () => {
+      group.remove();
+    };
+  }, [mapInst, myKeyDoors]);
 
   // Линейка (measure): флаг из стора, точки/слой замера. Хендлеры клика — в init-эффекте карты
   // (через ref, чтобы не пересоздавать карту). Выключение линейки очищает замер.
