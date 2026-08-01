@@ -1395,18 +1395,7 @@ export function MapViewerClient({
         else map.flyToBounds(L.latLngBounds(lls), { padding: [90, 90], maxZoom: cfg.maxZoom, duration: 0.6 });
         flashPoints(pts);
       },
-      flyToNearest: (pts) => {
-        if (!pts.length) return;
-        const c = map.getCenter();
-        let best = pts[0];
-        let bestD = Infinity;
-        for (const p of pts) {
-          const d = c.distanceTo(ll(p)); // расстояние в единицах CRS — монотонно, годится для «ближайший»
-          if (d < bestD) { bestD = d; best = p; }
-        }
-        map.flyTo(ll(best), Math.min(cfg.maxZoom, 5), { duration: 0.6 });
-        flashPoints([best]);
-      },
+      cycleToLayer: (keys) => cycleToLayer(keys),
       highlightZone: (outline) => {
         if (highlightRef.current) {
           highlightRef.current.remove();

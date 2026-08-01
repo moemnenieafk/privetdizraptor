@@ -75,11 +75,11 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   const activeFilters = useMapViewStore((s) => s.activeFilters);
   // Контейнеры ЭТОЙ карты — из РЕАЛЬНЫХ маркеров (не статик-список): группа по containerFile;
   // оруж.ящики всех размеров → одна группа «Оружейный ящик». Иконка = самый частый размер;
-  // fileKeys — ключи фильтра карты (container-<file>); positions — для ПКМ-перелёта к ближайшему.
+  // fileKeys — ключи слоёв карты (container-<file>): и для фильтра (ЛКМ), и для ПКМ-цикла (cycleToLayer).
   const containerGroups = useMemo(() => {
     const g = new Map<
       string,
-      { key: string; label: string; fileCount: Map<string, number>; fileKeys: Set<string>; count: number; positions: { x: number; z: number }[] }
+      { key: string; label: string; fileCount: Map<string, number>; fileKeys: Set<string>; count: number }
     >();
     for (const m of markers) {
       if ((m.type !== 'loot_container' && m.type !== 'container') || !m.position) continue;
@@ -88,13 +88,12 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
       const key = weapon ? 'weaponbox' : file;
       let e = g.get(key);
       if (!e) {
-        e = { key, label: weapon ? 'Оружейный ящик' : m.label ?? file, fileCount: new Map(), fileKeys: new Set(), count: 0, positions: [] };
+        e = { key, label: weapon ? 'Оружейный ящик' : m.label ?? file, fileCount: new Map(), fileKeys: new Set(), count: 0 };
         g.set(key, e);
       }
       e.fileCount.set(file, (e.fileCount.get(file) ?? 0) + 1);
       e.fileKeys.add(`container-${file}`);
       e.count++;
-      e.positions.push({ x: m.position.x, z: m.position.z });
     }
     return [...g.values()]
       .map((e) => ({
@@ -103,7 +102,6 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
         iconFile: [...e.fileCount.entries()].sort((a, b) => b[1] - a[1])[0][0],
         fileKeys: [...e.fileKeys],
         count: e.count,
-        positions: e.positions,
       }))
       .sort((a, b) => b.count - a.count);
   }, [markers]);
@@ -327,9 +325,9 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
                         onClick={() => useMapViewStore.getState().setGroupFilters(c.fileKeys, !on)}
                         onContextMenu={(e) => {
                           e.preventDefault();
-                          apiRef.current?.flyToNearest(c.positions);
+                          apiRef.current?.cycleToLayer(c.fileKeys);
                         }}
-                        title={`${c.label} · ${c.count} на карте — ЛКМ: фильтр, ПКМ: к ближайшему`}
+                        title={`${c.label} · ${c.count} на карте — ЛКМ: фильтр, ПКМ: перелёт по циклу`}
                         aria-pressed={on}
                         className={`flex size-9 items-center justify-center rounded border transition-colors ${
                           on ? 'border-(--primary)' : 'border-lines-hover hover:border-(--primary)/40'
