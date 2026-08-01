@@ -1,5 +1,5 @@
 ---
-status: 📥 принято (грил 2026-08-01) — спека; шаг 1 (SPT feasibility) ✅ ПРИГОДЕН; код/db:push НЕ трогались
+status: 🚧 в работе — шаг 1 ✅ пригоден; шаг 2 прототип OK (loose, origin PASS, EV из live-цен); схема/db:push НЕ трогались
 affects: eft-maps, loot, data-ingest, supabase, heatmap
 date: 2026-08-01
 ---
@@ -64,6 +64,21 @@ date: 2026-08-01
    версию SPT). Не затирать при пустом ответе (как `sync-prices`).
 6. **→ ФАЗА 2 (отдельная спека):** heat-визуал по [[heatmap-research]] (leaflet.heat, режим-toggle,
    EV = join priceIndex на рендере).
+
+## Шаг 2 — прогресс (2026-08-01, прототип на локальном SPT)
+Источник (выбор V4DYA): `D:/Games/SPT/SPT/SPT_Data/database` — текущий SPT, все карты (вкл. labyrinth/terminal/town).
+- **Формат подтверждён (ТЕКУЩИЙ):** looseLoot `spawnpoints[]` — у ВСЕХ есть
+  `itemDistribution:[{composedKey:{key}, relativeProbability}]`; `template.Items[]` = union (~133/точку)
+  с `composedKey`→`_tpl`; `probability` = шанс точки. staticLoot per-type:
+  `itemDistribution:[{tpl, relativeProbability}]` + `itemcountDistribution:[{count, relativeProbability}]`.
+- **Нормализатор-прототип (Customs):** 1768 loose + 552 container точек.
+  `EV = probability × Σ (relProb/Σrel) × price(tpl)`, цена из нашего `getEftPriceIndex` (5060 позиций).
+  **1586/1768 (90%) loose с EV>0**, суммарный EV карты ≈ **15.2M ₽**. `_tpl` == наш item id (join без маппинга).
+- **Origin-сверка ✅ PASS:** loose bounds `z∈[-235..210]` ≈ наши customs-маркеры `z∈[-233..213]`,
+  x-min совпал (-331 vs -320) → тот же простор, доп. трансформ SPT→наш CRS НЕ нужен.
+- ⚠️ **Контейнер-позиции (открытый рефайн):** в `staticContainers.json` координаты обнулены `{0,0,0}`
+  (топ-EV контейнеры схлопнулись в origin). Реальные позиции — не там; источник TBD (`base.json` Loot /
+  `statics.json`). Loose (главный сигнал) — с реальными позициями, контейнеры доработать перед полным синком.
 
 ## Риски
 1. ~~Доступность/формат SPT loot-таблиц~~ — ✅ СНЯТ (шаг 1: пригоден). Лицензия-нюанс: JSON базы =
