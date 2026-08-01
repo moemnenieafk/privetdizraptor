@@ -1025,6 +1025,11 @@ export function MapViewerClient({
         gradient: { 0.15: '#5FB85B', 0.5: '#E68E25', 0.8: '#E5484D', 1.0: '#ffce54' },
       });
       layer.addTo(map);
+      // leaflet.heat кладёт канвас в overlayPane — ПОД непрозрачную арт-подложку карты (тоже overlayPane),
+      // heat виден только по краям. Поднимаем z-index канваса НАД артом (но канвас остаётся в overlayPane,
+      // ниже markerPane — иконки выходов/спавнов не прячем).
+      const heatCanvas = (layer as unknown as { _canvas?: HTMLElement })._canvas;
+      if (heatCanvas) heatCanvas.style.zIndex = '450';
     })();
     return () => {
       cancelled = true;
