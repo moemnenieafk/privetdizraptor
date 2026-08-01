@@ -1,5 +1,5 @@
 ---
-status: 🚧 в работе — шаг 1 ✅ пригоден; шаг 2 прототип OK (loose, origin PASS, EV из live-цен); схема/db:push НЕ трогались
+status: ✅ ФАЗА 1 (датасет) ЗАКРЫТА — зеркало наполнено (28484 loose + 228 пулов, 11 карт); фаза 2 (визуал) — отдельная спека
 affects: eft-maps, loot, data-ingest, supabase, heatmap
 date: 2026-08-01
 ---
@@ -96,9 +96,27 @@ date: 2026-08-01
 
 ## Критерий готовности (фаза 1)
 - [x] Шаг 1: подтверждён пригодный SPT-источник ([[spt-loot-tables-research]], вердикт «пригоден»).
-- [ ] `loot_spawns` в зеркале, синк идемпотентен, покрытие ≥1 карты валидировано (точки ложатся на
-  арт после трансформа; EV считается join'ом `priceIndex`).
-- [ ] Точки + пулы отдаются во вьюер, EV вычислим — фаза 2 разблокирована.
+- [x] `loot_spawns`/`loot_container_pools` в зеркале (28484 + 228, 11 карт), ингест идемпотентен,
+  origin PASS на Customs, EV считается join'ом `priceIndex` (проверено из зеркала: топ-EV точки Customs).
+- [x] Точки + пулы в зеркале, EV вычислим — **фаза 2 (heat-визуал) РАЗБЛОКИРОВАНА**.
+
+## Фаза 1 — ИТОГ (2026-08-01)
+Код: `feat(loot)` `b6e37a21`. Схема `src/db/schema.ts` (`lootSpawns`+`lootContainerPools`), RLS
+`supabase/loot-tables-rls.sql`, ингест `src/db/loot-tables.ts` + `db:ingest-loot` (читает ЛОКАЛЬНЫЙ
+SPT `D:/Games/SPT/SPT/SPT_Data/database`). Наполнено: 28484 loose-точки + 228 container-пулов, 11 карт
+(streets 7873 макс). `_tpl` == наш item id (join цен без маппинга). SPT-key→slug словарь в `loot-tables.ts`.
+
+**ГОЧА db:push (важно на будущее):** `drizzle-kit push --force` требует ИНТЕРАКТИВНЫЙ TTY — в
+неинтерактивном шелле падает на rename-prompt (`drizzle.config` без `tablesFilter` → видит DDL-модульные
+таблицы как «drop» + новые как «create» → спрашивает про rename). Схема-ДОБАВЛЕНИЕ применена прямым
+идемпотентным SQL (точно по schema.ts) → безопаснее (не роняет RLS, в отличие от push --force), будущий
+интерактивный db:push видит совпадение. Порядок был: create-tables (SQL) → `db:sql` (RLS) →
+`db:audit-rls` (55/55 ✅) → `db:ingest-loot`.
+
+**Контейнер-позиции решены:** SPT JSON их не хранит (все `{0,0,0}`) → берём из НАШИХ tarkov.dev
+container-маркеров (уже в зеркале), джойн `containerTpl == linkedItemId`; SPT даёт per-тип пул+eCount.
+
+**Пере-ингест при обновлении SPT:** `npm run db:ingest-loot` (delete-by-map → insert; `sourceVersion`).
 
 ---
 *Процесс: [[engineering-loop]] · ресёрч: [[heatmap-research]] · playbook: `/game-data-ingest` ·
