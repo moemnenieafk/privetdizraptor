@@ -18,6 +18,9 @@ import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { SPAWN_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
 import { markerIconUrl, markerColor, BOSS_ROSTER, isItemId, type MarkerIconInput } from '@/data/map-marker-icons';
 import { itemIconUrl } from '@/lib/item-icon';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { searchEftItemsAction } from '@/actions/search-actions';
+import type { SearchItemResult } from '@/types/search';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
 import { useMapUiStore } from '@/store/useMapUiStore';
@@ -69,7 +72,7 @@ const QUESTZONE_KINDS: { key: string; label: string }[] = [
 ];
 
 // Цвет закладки/чипа по типу привязки (совпадает с цветом капли в MapViewerClient).
-const LINK_KIND_COLOR: Record<EditorialLinkKind, string> = { story: '#6096a6', quest: '#e68e25', event: '#c26be0', none: '#8a8a95' };
+const LINK_KIND_COLOR: Record<EditorialLinkKind, string> = { story: '#6096a6', quest: '#e68e25', event: '#c26be0', none: '#8a8a95', item: '#5FB85B' };
 
 // ─── Визард ─────────────────────────────────────────────────────────────────
 type WizardStep = 'category' | 'object' | 'details' | 'link';
@@ -195,6 +198,8 @@ export interface EditorialMarkerData extends EditorialMarkerView {
   linkedQuest?: LinkedQuestInfo | null;
   /** Название привязанной сюжетной истории (linkKind='story') — резолвится на сервере всем. */
   linkedStory?: { title: string } | null;
+  /** Связанный предмет (linkKind='item', напр. пропуск выхода) — резолвится на сервере. */
+  linkedItem?: { id: string; name: string; slug: string | null; bg: string | null } | null;
 }
 
 /** Лёгкий элемент индекса квестов для автокомплита привязки (только редакторам). */
@@ -273,6 +278,8 @@ interface Props {
   linkedQuest?: LinkedQuestInfo | null;
   /** Название привязанной истории (linkKind='story') — для чипа связи в показе. */
   linkedStory?: { title: string } | null;
+  /** Связанный предмет (linkKind='item') — для чипа связи в показе. */
+  linkedItem?: { id: string; name: string; slug: string | null; bg: string | null } | null;
   /** Юзер может править (admin/editor) — показывает ряд «Переместить/Редактировать» в показе. */
   canEdit?: boolean;
   /** Открыть сразу в режиме правки (новый маркер, только что поставленный). */
@@ -301,6 +308,7 @@ export function EditorialMarkerCard({
   marker,
   linkedQuest,
   linkedStory,
+  linkedItem,
   canEdit = false,
   defaultEditing = false,
   questIndex,
@@ -374,6 +382,27 @@ export function EditorialMarkerCard({
   const selName =
     draft.linkKind === 'quest' && draft.linkId
       ? (questIndex?.find((q) => q.id === draft.linkId)?.name ?? linkedQuest?.name ?? draft.linkId)
+      : null;
+  // Связь-предмет (linkKind='item'): async-поиск по каталогу (5044 предмета не тащим в клиент).
+  const [itemQ, setItemQ] = useState('');
+  const [itemHits, setItemHits] = useState<SearchItemResult[]>([]);
+  const [pickedItem, setPickedItem] = useState<{ id: string; name: string } | null>(null);
+  useEffect(() => {
+    if (draft.linkKind !== 'item') return;
+    const q = itemQ.trim();
+    let alive = true;
+    const t = setTimeout(async () => {
+      const res = q.length < 2 ? [] : await searchEftItemsAction(q);
+      if (alive) setItemHits(res);
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [itemQ, draft.linkKind]);
+  const selItemName =
+    draft.linkKind === 'item' && draft.linkId
+      ? (pickedItem?.id === draft.linkId ? pickedItem.name : (linkedItem?.name ?? draft.linkId))
       : null;
   // Поиск предмета (Лут шаг 2) — по индексу лута карты (loose loot, без контейнеров).
   const [lootQ, setLootQ] = useState('');
@@ -754,6 +783,7 @@ export function EditorialMarkerCard({
                   <LinkKindButton on={draft.linkKind === 'quest'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'quest', linkId: null, linkStep: null })); setLinkQ(''); }} label="Задание" color={LINK_KIND_COLOR.quest} iconClass="icon-eft-quests-side" />
                   <LinkKindButton on={draft.linkKind === 'story'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'story', linkId: null, linkStep: null })); setLinkQ(''); }} label="Сюжет" color={LINK_KIND_COLOR.story} iconClass="icon-eft-quests-lore" />
                   <LinkKindButton on={draft.linkKind === 'event'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'event', linkId: null, linkStep: null })); setLinkQ(''); }} label="Событие" color={LINK_KIND_COLOR.event} iconClass="icon-eft-quests-events" />
+                  <LinkKindButton on={draft.linkKind === 'item'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'item', linkId: null, linkStep: null })); setItemQ(''); setPickedItem(null); }} label="Предмет" color={LINK_KIND_COLOR.item} iconClass="icon-eft-items-loot-tier" />
                 </div>
 
                 {/* Квест — автокомплит */}
@@ -821,6 +851,46 @@ export function EditorialMarkerCard({
                     />
                   </div>
                 )}
+
+                {/* Предмет — async-автокомплит по каталогу (пропуск выхода: записка/валюта/Red Rebel) */}
+                {draft.linkKind === 'item' &&
+                  (selItemName ? (
+                    <div className="flex items-center gap-2 rounded-xs border border-lines-hover px-2 py-1.5">
+                      <img src={itemIconUrl(draft.linkId!)} alt="" className="size-5 shrink-0 object-contain" />
+                      <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{selItemName}</span>
+                      <button type="button" onClick={() => { setDraft((d) => ({ ...d, linkId: null })); setPickedItem(null); }} title="Сменить предмет" className="shrink-0 text-text-muted transition-colors hover:text-danger">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        value={itemQ}
+                        onChange={(e) => setItemQ(e.target.value)}
+                        placeholder="Найти предмет-пропуск…"
+                        className="h-8 w-full rounded-xs border border-lines-hover bg-(--color-base) px-2 font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
+                      />
+                      {itemHits.length > 0 && (
+                        <div className="absolute top-9 right-0 left-0 z-20 max-h-48 overflow-y-auto rounded-xs border border-lines-hover bg-(--color-base) shadow-xl">
+                          {itemHits.map((it) => (
+                            <button
+                              key={it.id}
+                              type="button"
+                              onClick={() => { setDraft((d) => ({ ...d, linkId: it.id })); setPickedItem({ id: it.id, name: it.name }); setItemQ(''); setItemHits([]); }}
+                              className="flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-card-menu"
+                            >
+                              <span className="relative size-6 shrink-0 overflow-hidden rounded-xs border-[0.5px] border-lines-hover">
+                                <span className="absolute inset-0 bg-(--color-darkbase)" />
+                                <span className="absolute inset-0" style={{ backgroundColor: getTarkovBackgroundColor(it.backgroundColor) }} />
+                                <img src={itemIconUrl(it.id)} alt="" className="absolute inset-0 size-full object-contain p-0.5" />
+                              </span>
+                              <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{it.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
               </div>
             )}
 
@@ -927,6 +997,28 @@ export function EditorialMarkerCard({
                   <span className="shrink-0 font-blender-medium text-[10px] uppercase text-text-secondary">шаг {marker.linkStep}</span>
                 )}
               </div>
+            )}
+
+            {/* Чип связи (предмет): ячейка-иконка + имя → страница предмета */}
+            {marker.linkKind === 'item' && linkedItem && (
+              <a
+                href={linkedItem.slug ? `/eft/items/item/${linkedItem.slug}` : undefined}
+                target={linkedItem.slug ? '_blank' : undefined}
+                rel="noopener noreferrer"
+                className="flex w-full items-center gap-2 rounded-xs border-[0.5px] px-2.5 py-2 transition-colors"
+                style={{
+                  borderColor: `color-mix(in srgb, ${LINK_KIND_COLOR.item} 45%, transparent)`,
+                  background: `color-mix(in srgb, ${LINK_KIND_COLOR.item} 10%, transparent)`,
+                }}
+              >
+                <span className="relative size-6 shrink-0 overflow-hidden rounded-xs border-[0.5px] border-lines-hover">
+                  <span className="absolute inset-0 bg-(--color-darkbase)" />
+                  <span className="absolute inset-0" style={{ backgroundColor: getTarkovBackgroundColor(linkedItem.bg ?? undefined) }} />
+                  <img src={itemIconUrl(linkedItem.id)} alt="" className="absolute inset-0 size-full object-contain p-0.5" />
+                </span>
+                <span className="min-w-0 flex-1 truncate font-blender-medium text-xs" style={{ color: LINK_KIND_COLOR.item }}>{linkedItem.name}</span>
+                {linkedItem.slug && <ChevronRight className="h-3.5 w-3.5 shrink-0" style={{ color: LINK_KIND_COLOR.item }} />}
+              </a>
             )}
 
             {/* Ряд действий квеста: «Выполнено?» (toggleQuest) + скрепка (togglePin) */}

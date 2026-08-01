@@ -8,7 +8,7 @@ import { pgTable, uuid, text, integer, real, jsonb, timestamp, index, boolean } 
 import { sql } from "drizzle-orm";
 import { games, maps, profiles } from "./schema";
 
-export type EditorialLinkKind = "story" | "quest" | "event" | "none";
+export type EditorialLinkKind = "story" | "quest" | "event" | "none" | "item";
 
 export const editorialMarkers = pgTable(
   "editorial_markers",

@@ -269,6 +269,8 @@ export default async function MapPage({ params, searchParams }: Props) {
       const questById = new Map(EFT_QUESTS.map((t) => [t.id, t]));
       // Название истории — для индикатора привязки в карточке (всем, не только редакторам).
       const storyTitle = new Map(Object.values(STORY_WALKTHROUGHS).map((s) => [s.slug, s.title]));
+      // Имена предметов (linkKind='item') — из уже загруженного каталога; slug/bg из priceIndex.
+      const itemNameById = new Map(catalog.map((i) => [i.id, i.name]));
       const editorialMarkers: EditorialMarkerData[] = editorialRows.filter((r) => !r.hidden).map((r) => {
         const q = r.linkKind === 'quest' && r.linkId ? questById.get(r.linkId) : undefined;
         return {
@@ -300,6 +302,10 @@ export default async function MapPage({ params, searchParams }: Props) {
               }
             : null,
           linkedStory: r.linkKind === 'story' && r.linkId ? { title: storyTitle.get(r.linkId) ?? r.linkId } : null,
+          linkedItem:
+            r.linkKind === 'item' && r.linkId
+              ? { id: r.linkId, name: itemNameById.get(r.linkId) ?? r.linkId, slug: priceIndex.get(r.linkId)?.normalizedName ?? null, bg: priceIndex.get(r.linkId)?.backgroundColor ?? null }
+              : null,
         };
       });
 

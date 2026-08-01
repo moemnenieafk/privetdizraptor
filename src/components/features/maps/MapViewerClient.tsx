@@ -1420,6 +1420,7 @@ export function MapViewerClient({
             marker={activeMarker}
             linkedQuest={activeMarker.linkedQuest}
             linkedStory={activeMarker.linkedStory}
+            linkedItem={activeMarker.linkedItem}
             canEdit={canEditMarkers}
             defaultEditing={!activeMarker.id && !activeMarker.sourceMarkerId}
             questIndex={questIndex}
