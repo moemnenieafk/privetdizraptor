@@ -1,5 +1,5 @@
 ---
-status: ✅ ФАЗА 1 (датасет) ЗАКРЫТА — зеркало наполнено (28484 loose + 228 пулов, 11 карт); фаза 2 (визуал) — отдельная спека
+status: ✅ ФАЗА 1 (датасет) + ФАЗА 2 v1 (loose heat-визуал) — реализованы; TODO: контейнеры в heat + полиш градиента (V4DYA)
 affects: eft-maps, loot, data-ingest, supabase, heatmap
 date: 2026-08-01
 ---
@@ -118,6 +118,18 @@ container-маркеров (уже в зеркале), джойн `containerTpl 
 
 **Пере-ингест при обновлении SPT:** `npm run db:ingest-loot` (delete-by-map → insert; `sourceVersion`).
 
+## Фаза 2 — heat-визуал v1 (2026-08-01) ✅ loose
+Код: `feat(maps)` `79cab645`. `leaflet.heat` (CRS-safe), EV считается СЕРВЕРОМ (`src/db/loot-heat.ts`
+`getLootHeatPoints` → `page.tsx` join `priceIndex`) → клиент получает `[z,x,ev]`. Слой в
+`MapViewerClient` (вне LOD, как рецепт 2), режим-toggle (огонёк в зум-кластере, `useHeatmapStore`),
+градиент NIGHTFALL, нормировка p95. Verify (Playwright): canvas рендерится/чистится на toggle.
+- **ГОЧА leaflet.heat + Turbopack:** неймспейс `import * as L` НЕ видит `heatLayer` (плагин патчит
+  leaflet-синглтон ПОСЛЕ eval модуля) → плагин грузим ДИНАМИКОЙ в эффекте, `heatLayer` берём с
+  `(await import('leaflet')).default`, не с неймспейса.
+- **v1 = loose-лут.** Контейнеры (позиции из наших tarkov.dev-маркеров × SPT per-тип EV) — следующий
+  инкремент; пока интерьер зданий пустоват (ценное там в контейнерах).
+- **Черновое (за V4DYA):** градиент-стопы, радиус/blur/opacity, нормировка. Токен-стопы в Figma.
+
 ---
 *Процесс: [[engineering-loop]] · ресёрч: [[heatmap-research]] · playbook: `/game-data-ingest` ·
-следующий шаг — шаг 1 (SPT-ресёрч, блокер).*
+статус: фаза 1 ✅ + фаза 2 v1 ✅ (loose). Дальше: контейнеры в heat + полиш градиента (V4DYA).*
