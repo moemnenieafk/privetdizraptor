@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CheckSquare, ChevronRight, KeyRound, MapPin, Square, Target, X } from 'lucide-react';
+import { CheckSquare, ChevronRight, MapPin, Square, Target, X } from 'lucide-react';
 import { HighlightedText } from '@/components/ui/HighlightedText';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
@@ -355,16 +355,13 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
         {/* ─────────────── КЛЮЧИ (реверс Ключ→Двери) ─────────────── */}
         {keysOnMap.length > 0 && (
           <section className="flex flex-col gap-3.5">
-            <div className="flex items-center justify-between">
-              <p className={SECTION}>Ключи</p>
-              {myKeys.length > 0 && (
-                <span className="font-blender-medium text-type-micro tabular-nums text-(--primary)">
-                  Моих здесь: {keysOnMap.filter((k) => myKeys.includes(k.keyId)).length}
-                </span>
-              )}
-            </div>
+            {myKeys.length > 0 && (
+              <span className="text-right font-blender-medium text-type-micro tabular-nums text-(--primary)">
+                Моих здесь: {keysOnMap.filter((k) => myKeys.includes(k.keyId)).length}
+              </span>
+            )}
             <div className="flex h-9 items-center gap-3.5 rounded-xs border border-lines-hover bg-(--color-base) px-3.5">
-              <KeyRound className="h-4 w-4 shrink-0 text-text-muted" />
+              <span className="icon-mask icon-eft-eq-keys h-4 w-4 shrink-0" style={{ backgroundColor: 'var(--color-text-muted)' }} />
               <input
                 value={qKeys}
                 onChange={(e) => setQKeys(e.target.value)}
