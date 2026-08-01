@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, CheckSquare, ChevronRight, KeyRound, MapPin, Square, Target, X } from 'lucide-react';
+import { CheckSquare, ChevronRight, KeyRound, MapPin, Square, Target, X } from 'lucide-react';
 import { HighlightedText } from '@/components/ui/HighlightedText';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
@@ -446,7 +446,7 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
           {/* Чипы фильтров: ВСЕ / СЮЖЕТ / Смотритель% / Каппа% */}
           <div className="flex gap-2">
             <FilterChip active={qf === 'all'} color="var(--color-text-secondary)" onClick={() => setQf('all')} maskIcon="icon-eft-quests" label="Все" />
-            <FilterChip active={qf === 'story'} color={STORY_TINT} onClick={() => pickFilter('story')} icon={<Bookmark className="h-3 w-3" />} label="Сюжет" />
+            <FilterChip active={qf === 'story'} color={STORY_TINT} onClick={() => pickFilter('story')} maskIcon="icon-eft-quests-lore" label="Сюжет" />
             <FilterChip active={qf === 'lightkeeper'} color="var(--color-lightkeeper)" onClick={() => pickFilter('lightkeeper')} maskIcon="icon-eft-profile-lightkeeper" label={`${lkPct}%`} />
             <FilterChip active={qf === 'kappa'} color="var(--color-kappa)" onClick={() => pickFilter('kappa')} maskIcon="icon-eft-profile-kappa" label={`${kappaPct}%`} />
           </div>
