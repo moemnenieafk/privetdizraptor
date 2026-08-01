@@ -98,6 +98,17 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
       .map((e) => ({ key: e.file, label: e.label, iconFile: e.file, fileKeys: [`container-${e.file}`], count: e.count }))
       .sort((a, b) => b.count - a.count);
   }, [markers]);
+  // Случайная добыча ЭТОЙ карты — только категории (из 15), что РЕАЛЬНО есть на карте (без пустышек).
+  // Порядок LOOT_15 сохранён (дизайн-таксономия). Ключ слоя loose-<key> — и фильтр (ЛКМ), и ПКМ-цикл.
+  const looseTiles = useMemo(() => {
+    const cnt = new Map<string, number>();
+    for (const m of markers) {
+      if (m.type !== 'loot_loose') continue;
+      const key = m.lootCat ?? 'other';
+      cnt.set(key, (cnt.get(key) ?? 0) + 1);
+    }
+    return LOOT_15.filter((l) => (cnt.get(l.key) ?? 0) > 0).map((l) => ({ ...l, count: cnt.get(l.key) ?? 0 }));
+  }, [markers]);
   const [qItems, setQItems] = useState('');
   const [qQuests, setQQuests] = useState('');
   const [qf, setQf] = useState<QuestFilter>('all');
@@ -336,14 +347,18 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
               <div className="flex flex-col gap-2">
                 <p className={SECTION}>Случайная добыча</p>
                 <div className="flex flex-wrap gap-2">
-                  {LOOT_15.map((l) => {
+                  {looseTiles.map((l) => {
                     const on = !!activeFilters[`loose-${l.key}`];
                     return (
                       <button
                         key={l.key}
                         type="button"
                         onClick={() => useMapViewStore.getState().toggleFilter(`loose-${l.key}`)}
-                        title={l.label}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          apiRef.current?.cycleToLayer([`loose-${l.key}`]);
+                        }}
+                        title={`${l.label} · ${l.count} на карте — ЛКМ: фильтр, ПКМ: перелёт по циклу`}
                         aria-pressed={on}
                         className={`flex size-9 items-center justify-center rounded border bg-card-menu transition-colors ${
                           on ? 'border-(--primary)' : 'border-lines-hover hover:border-(--primary)/40'
