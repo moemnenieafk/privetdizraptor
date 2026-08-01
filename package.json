@@ -17,6 +17,7 @@
     "db:check": "tsx scripts/check-db.ts",
     "db:etl": "tsx scripts/etl-items.ts",
     "db:sql": "tsx scripts/apply-sql.ts",
+    "db:ingest-loot": "tsx scripts/ingest-loot-tables.ts",
     "db:audit-rls": "tsx scripts/audit-rls.ts",
     "db:migrate-all": "tsx scripts/migrate-all-ddl.ts",
     "db:admin": "tsx scripts/make-admin.ts",

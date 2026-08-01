@@ -419,6 +419,59 @@ export const hideoutUpgrades = pgTable(
   (t) => [primaryKey({ columns: [t.gameId, t.stationNormalizedName, t.level] })],
 );
 
+/* ───────────────── loot tables (self-mirror из файлов SPT — /game-data-ingest) ───────────────── */
+/**
+ * Зеркало loot-таблиц EFT из файлов SPT (шанс спавна × пул предметов) — фундамент heatmap EV.
+ * Данных нет во внешнем API (json.tarkov.dev даёт ПОЗИЦИИ, не пулы/шансы) → берём из SPT database.
+ * EV = probability × Σ prob·price(tpl) считается на РЕНДЕРЕ (цена из `prices`), в БД НЕ хранится (цена живая).
+ * Наполняет ЛОКАЛЬНЫЙ `db:ingest-loot` (читает SPT database с диска — источник файловый, не крон).
+ * Решение: docs/decisions/heatmap-loot-ev-dataset.md.
+ */
+export type LootPoolEntry = { tpl: string; prob: number };
+
+// Loose-точки (позиционированы SPT). Пул = нормализованное itemDistribution точки.
+export const lootSpawns = pgTable(
+  "loot_spawns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    gameId: uuid("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+    mapId: text("map_id").notNull().references(() => maps.id, { onDelete: "cascade" }),
+    x: real("x").notNull(),
+    y: real("y"), // высота (для фильтра этажей позже)
+    z: real("z").notNull(),
+    /** Шанс спавна точки (0..1). */
+    probability: real("probability").notNull(),
+    /** Нормализованное распределение предметов точки: [{tpl, prob}], Σprob≈1. */
+    pool: jsonb("pool").$type<LootPoolEntry[]>().notNull(),
+    /** Версия SPT-дампа (свежесть / пере-ингест). */
+    sourceVersion: text("source_version"),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("loot_spawns_map_idx").on(t.gameId, t.mapId)],
+);
+
+// Пулы контейнеров per-ТИП (staticLoot). Позиции контейнеров берём из наших tarkov.dev-маркеров
+// (SPT их не хранит — зануляет), джойн по containerTpl == linkedItemId маркера.
+export const lootContainerPools = pgTable(
+  "loot_container_pools",
+  {
+    gameId: uuid("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+    mapId: text("map_id").notNull().references(() => maps.id, { onDelete: "cascade" }),
+    /** BSG id типа контейнера (== linkedItemId container-маркера). */
+    containerTpl: text("container_tpl").notNull(),
+    /** E[кол-во предметов в контейнере] (itemcountDistribution). */
+    eCount: real("e_count").notNull(),
+    /** Нормализованное распределение предметов типа: [{tpl, prob}]. */
+    pool: jsonb("pool").$type<LootPoolEntry[]>().notNull(),
+    sourceVersion: text("source_version"),
+    syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.gameId, t.mapId, t.containerTpl] })],
+);
+
+export type LootSpawnRow = typeof lootSpawns.$inferSelect;
+export type LootContainerPoolRow = typeof lootContainerPools.$inferSelect;
+
 /* ───────────────── map geometry (self-mirror tarkov.dev) — Phase 4 интерактивные карты ───────────────── */
 /**
  * Зеркало ГЕОМЕТРИИ интерактивных карт из tarkov.dev GraphQL (Map.{spawns,extracts,…}).
