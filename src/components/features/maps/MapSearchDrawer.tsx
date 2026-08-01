@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, CheckSquare, ChevronRight, KeyRound, MapPin, Square, X } from 'lucide-react';
+import { Bookmark, CheckSquare, ChevronRight, KeyRound, MapPin, Square, Target, X } from 'lucide-react';
 import { HighlightedText } from '@/components/ui/HighlightedText';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { useMyKeysStore } from '@/store/useMyKeysStore';
+import { useLootFilterStore } from '@/store/useLootFilterStore';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
 import { markerIconUrl, markerColor, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
@@ -127,6 +128,10 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
 
   const iq = qItems.trim().toLowerCase();
   const itemHits = iq.length >= 2 ? groups.filter((g) => g.label.toLowerCase().includes(iq)).slice(0, 40) : [];
+  // Лут-фильтр: подсвеченные label'ы предметов (постоянный оверлей на карте).
+  const lootLabels = useLootFilterStore((s) => s.labels);
+  const toggleLoot = useLootFilterStore((s) => s.toggle);
+  const clearLoot = useLootFilterStore((s) => s.clear);
 
   const focus = (positions: { x: number; z: number }[]) => {
     if (positions.length) apiRef.current?.focusPoints(positions);
@@ -246,27 +251,50 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
             </p>
           </div>
 
+          {lootLabels.length > 0 && (
+            <div className="flex items-center justify-between rounded-xs border-[0.5px] border-accent-frago/40 bg-accent-frago/10 px-2 py-1.5">
+              <span className="flex items-center gap-1.5 font-blender-medium text-type-micro uppercase tracking-wide text-accent-frago">
+                <Target className="h-3.5 w-3.5" /> Подсвечено спавнов: {lootLabels.length}
+              </span>
+              <button type="button" onClick={clearLoot} className="font-blender-medium text-type-micro uppercase tracking-wide text-text-muted transition-colors hover:text-danger">
+                Сброс
+              </button>
+            </div>
+          )}
+
           {iq.length >= 2 ? (
             itemHits.length === 0 ? (
               <p className="px-1 py-4 text-center font-blender-book text-xs text-text-muted">Ничего не найдено</p>
             ) : (
               <div className="flex flex-col">
-                {itemHits.map((g) => (
-                  <div key={g.label} className="flex items-center gap-2 border-b border-lines-hover">
-                    <button type="button" onClick={() => focus(g.positions)} className="flex h-9 min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:bg-card-menu">
-                      <Glyph sample={{ type: g.type, label: g.label }} size={18} />
-                      <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">
-                        <HighlightedText text={g.label} query={qItems} />
-                      </span>
-                      <span className="shrink-0 font-blender-medium text-type-micro text-text-muted tabular-nums">{g.count}</span>
-                    </button>
-                    {g.itemSlug && (
-                      <Link href={`/eft/items/item/${g.itemSlug}`} title="Открыть страницу предмета" className="flex h-9 w-7 shrink-0 items-center justify-center text-text-muted transition-colors hover:text-(--primary)">
-                        <ChevronRight className="h-4 w-4" />
-                      </Link>
-                    )}
-                  </div>
-                ))}
+                {itemHits.map((g) => {
+                  const lit = lootLabels.includes(g.label);
+                  return (
+                    <div key={g.label} className="flex items-center gap-1 border-b border-lines-hover">
+                      <button
+                        type="button"
+                        onClick={() => toggleLoot(g.label)}
+                        aria-pressed={lit}
+                        title={lit ? 'Убрать подсветку спавнов' : 'Подсветить все спавны на карте'}
+                        className={`flex h-9 w-7 shrink-0 items-center justify-center transition-colors ${lit ? 'text-accent-frago' : 'text-text-muted hover:text-accent-frago'}`}
+                      >
+                        <Target className="h-4 w-4" />
+                      </button>
+                      <button type="button" onClick={() => focus(g.positions)} className="flex h-9 min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:bg-card-menu">
+                        <Glyph sample={{ type: g.type, label: g.label }} size={18} />
+                        <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">
+                          <HighlightedText text={g.label} query={qItems} />
+                        </span>
+                        <span className="shrink-0 font-blender-medium text-type-micro text-text-muted tabular-nums">{g.count}</span>
+                      </button>
+                      {g.itemSlug && (
+                        <Link href={`/eft/items/item/${g.itemSlug}`} title="Открыть страницу предмета" className="flex h-9 w-7 shrink-0 items-center justify-center text-text-muted transition-colors hover:text-(--primary)">
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )
           ) : (

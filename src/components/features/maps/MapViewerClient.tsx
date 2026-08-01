@@ -15,6 +15,7 @@ import { useMapViewStore } from '@/store/useMapViewStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
 import { useSquadStore, type SquadPose } from '@/store/useSquadStore';
 import { useMyKeysStore } from '@/store/useMyKeysStore';
+import { useLootFilterStore } from '@/store/useLootFilterStore';
 import { useSquad } from './useSquad';
 import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
@@ -923,6 +924,30 @@ export function MapViewerClient({
       group.remove();
     };
   }, [mapInst, myKeyDoors]);
+
+  // ── Лут-фильтр: постоянная подсветка спавнов выбранных предметов (accent-frago, вне LOD/фильтра). ──
+  const lootLabels = useLootFilterStore((s) => s.labels);
+  const lootPositions = useMemo(() => {
+    if (lootLabels.length === 0) return [];
+    const set = new Set(lootLabels);
+    const pts: { x: number; z: number }[] = [];
+    for (const m of data.markers) {
+      if (m.position && m.label && set.has(m.label)) pts.push({ x: m.position.x, z: m.position.z });
+    }
+    return pts;
+  }, [lootLabels, data.markers]);
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || lootPositions.length === 0) return;
+    const group = L.layerGroup().addTo(map);
+    const teal = getComputedStyle(document.documentElement).getPropertyValue('--color-accent-frago').trim() || '#00CDAB';
+    for (const p of lootPositions) {
+      L.circleMarker(ll(p), { radius: 11, color: teal, weight: 2, opacity: 0.95, fillColor: teal, fillOpacity: 0.14, interactive: false }).addTo(group);
+    }
+    return () => {
+      group.remove();
+    };
+  }, [mapInst, lootPositions]);
 
   // Линейка (measure): флаг из стора, точки/слой замера. Хендлеры клика — в init-эффекте карты
   // (через ref, чтобы не пересоздавать карту). Выключение линейки очищает замер.
