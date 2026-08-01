@@ -1,5 +1,5 @@
 ---
-status: 🔵 спека
+status: ✅ реализовано
 affects: maps
 date: 2026-08-01
 ---

@@ -1,5 +1,5 @@
 ---
-status: 🔵 спека
+status: ✅ реализовано
 affects: maps, realtime, supabase
 date: 2026-07-31
 ---
