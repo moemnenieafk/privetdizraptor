@@ -39,6 +39,12 @@ const CONTAINER_WEBP = '/images/maps/eft/markers/loot-containers/loot-container-
 // Цвет сюжетной истории — единый источник LINK_KIND_COLOR.story (сталь), как чип СЮЖЕТ.
 const STORY_TINT = LINK_KIND_COLOR.story;
 
+// Лейбл контейнера: оруж.ящики — по размеру (иконки/вместимость разные), остальные — ru-имя маркера.
+function containerLabel(file: string, mLabel: string | null): string {
+  const wb = file.match(/^weaponbox-(\d+)x(\d+)$/);
+  return wb ? `Оружейный ящик ${wb[1]}×${wb[2]}` : mLabel ?? file;
+}
+
 type QuestFilter = 'all' | 'story' | 'lightkeeper' | 'kappa';
 
 /** Глиф строки поиска: резолвер (цветной img) → точка по типу. */
@@ -73,36 +79,23 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   const setOpen = useMapUiStore((s) => s.setSearchOpen);
   // Видимость слоёв — общий стор: тогглы фильтруют карту и синхронны с правой легендой (GRILL-2 §3).
   const activeFilters = useMapViewStore((s) => s.activeFilters);
-  // Контейнеры ЭТОЙ карты — из РЕАЛЬНЫХ маркеров (не статик-список): группа по containerFile;
-  // оруж.ящики всех размеров → одна группа «Оружейный ящик». Иконка = самый частый размер;
-  // fileKeys — ключи слоёв карты (container-<file>): и для фильтра (ЛКМ), и для ПКМ-цикла (cycleToLayer).
+  // Контейнеры ЭТОЙ карты — из РЕАЛЬНЫХ маркеров (не статик-список): ТАЙЛ НА КАЖДЫЙ ТИП (по containerFile).
+  // Оруж.ящики разных размеров — РАЗНЫМИ тайлами (иконки/вместимость различаются). key=file: и иконка
+  // (container-<file>.webp), и ключ слоя карты (container-<file>) для фильтра (ЛКМ) и ПКМ-цикла.
   const containerGroups = useMemo(() => {
-    const g = new Map<
-      string,
-      { key: string; label: string; fileCount: Map<string, number>; fileKeys: Set<string>; count: number }
-    >();
+    const g = new Map<string, { file: string; label: string; count: number }>();
     for (const m of markers) {
       if ((m.type !== 'loot_container' && m.type !== 'container') || !m.position) continue;
       const file = containerFile(m as unknown as MarkerIconInput);
-      const weapon = file.startsWith('weaponbox');
-      const key = weapon ? 'weaponbox' : file;
-      let e = g.get(key);
+      let e = g.get(file);
       if (!e) {
-        e = { key, label: weapon ? 'Оружейный ящик' : m.label ?? file, fileCount: new Map(), fileKeys: new Set(), count: 0 };
-        g.set(key, e);
+        e = { file, label: containerLabel(file, m.label ?? null), count: 0 };
+        g.set(file, e);
       }
-      e.fileCount.set(file, (e.fileCount.get(file) ?? 0) + 1);
-      e.fileKeys.add(`container-${file}`);
       e.count++;
     }
     return [...g.values()]
-      .map((e) => ({
-        key: e.key,
-        label: e.label,
-        iconFile: [...e.fileCount.entries()].sort((a, b) => b[1] - a[1])[0][0],
-        fileKeys: [...e.fileKeys],
-        count: e.count,
-      }))
+      .map((e) => ({ key: e.file, label: e.label, iconFile: e.file, fileKeys: [`container-${e.file}`], count: e.count }))
       .sort((a, b) => b.count - a.count);
   }, [markers]);
   const [qItems, setQItems] = useState('');
