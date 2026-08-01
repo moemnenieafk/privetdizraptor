@@ -20,7 +20,7 @@ import { useMapViewStore } from '@/store/useMapViewStore';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewUrlSync } from './useMapViewUrlSync';
 import { buildMapFloors, orderFloorsByLevel } from '@/data/eft-map-config';
-import type { MapView } from './map-types';
+import type { MapView, MapViewMarker } from './map-types';
 import type { MapViewerApi, MapBossStat, MapQuestLite, MapQuestZone } from './map-frame-types';
 import type { TaskRaw } from '@/types/quest';
 
@@ -41,6 +41,9 @@ interface Props {
   questZones: MapQuestZone[];
   /** Редакторские маркеры (editorial_markers) — рендер слоя + карточка по клику. */
   editorialMarkers?: EditorialMarkerData[];
+  /** ФАЗА 0 единой системы (unified-markers.md): editorial на языке MapViewMarker — для
+   *  drawer-секций/фильтра/ПКМ-цикла (мост на чтении; рендер маркеров остаётся за своим слоем). */
+  editorialBridge?: MapViewMarker[];
   /** Точки heatmap плотности денег (EV loose-лута) — режим-toggle. */
   heatPoints?: HeatPoint[];
   /** Юзер admin/editor — показывать кнопку правки на карточке маркера. */
@@ -60,7 +63,7 @@ const mapHref = (slug: string) => `/eft/maps/${slug}`;
  * Оболочка карты. TopBar (десктоп) + адаптивный MapSearchDrawer (десктоп drawer / мобилка
  * bottom-sheet). Прочие мобильные шиты (карты/задания/рейд) — из MobileMapBar/нижнего бара.
  */
-export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, heatPoints, canEditMarkers, mapId, questIndex, storyIndex, focusQuestId }: Props) {
+export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, editorialBridge, heatPoints, canEditMarkers, mapId, questIndex, storyIndex, focusQuestId }: Props) {
   const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
   const searchOpen = useMapUiStore((s) => s.searchOpen);
@@ -220,7 +223,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
 
       {/* Левый drawer «ПОИСК НА ЛОКАЦИИ» (десктоп) — оверлей поверх карты, карту не двигает.
           Только интерактивные карты (у статик-карт нет слоёв/таксономии добычи). */}
-      {!data.config.staticMap && <MapSearchDrawer slug={data.slug} markers={data.markers} quests={quests} questTasks={questTasks} editorialMarkers={editorialMarkers} apiRef={apiRef} />}
+      {!data.config.staticMap && <MapSearchDrawer slug={data.slug} markers={data.markers} quests={quests} questTasks={questTasks} editorialMarkers={editorialMarkers} editorialBridge={editorialBridge} apiRef={apiRef} />}
 
       {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) / нижнего бара */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
@@ -234,6 +237,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           activeFloor={activeFloor}
           onRequestFloor={setActiveFloor}
           editorialMarkers={editorialMarkers}
+          editorialBridge={editorialBridge}
           heatPoints={heatPoints}
           canEditMarkers={canEditMarkers}
           mapId={mapId}

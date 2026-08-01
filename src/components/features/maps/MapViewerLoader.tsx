@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { MapView } from './map-types';
+import type { MapView, MapViewMarker } from './map-types';
 import type { MapViewerApi } from './map-frame-types';
 import type { EditorialMarkerData, QuestIndexItem, StoryIndexItem } from './EditorialMarkerCard';
 import type { HeatPoint } from '@/db/loot-heat';
@@ -27,6 +27,7 @@ export function MapViewerLoader({
   activeFloor,
   onRequestFloor,
   editorialMarkers,
+  editorialBridge,
   heatPoints,
   canEditMarkers,
   mapId,
@@ -38,6 +39,7 @@ export function MapViewerLoader({
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
   editorialMarkers?: EditorialMarkerData[];
+  editorialBridge?: MapViewMarker[];
   heatPoints?: HeatPoint[];
   canEditMarkers?: boolean;
   mapId?: string;
@@ -51,6 +53,7 @@ export function MapViewerLoader({
       activeFloor={activeFloor}
       onRequestFloor={onRequestFloor}
       editorialMarkers={editorialMarkers}
+      editorialBridge={editorialBridge}
       heatPoints={heatPoints}
       canEditMarkers={canEditMarkers}
       mapId={mapId}

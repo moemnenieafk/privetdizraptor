@@ -214,6 +214,7 @@ export function MapViewerClient({
   activeFloor = 0,
   onRequestFloor,
   editorialMarkers,
+  editorialBridge,
   heatPoints,
   canEditMarkers,
   mapId,
@@ -225,6 +226,7 @@ export function MapViewerClient({
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
   editorialMarkers?: EditorialMarkerData[];
+  editorialBridge?: MapViewMarker[];
   heatPoints?: HeatPoint[];
   canEditMarkers?: boolean;
   mapId?: string;
@@ -1485,12 +1487,32 @@ export function MapViewerClient({
   const setGroup = (keys: string[], value: boolean) =>
     useMapViewStore.getState().setGroupFilters(keys, value);
 
+  // ФАЗА 0 единой системы (unified-markers.md): позиции editorial-моста по ключу слоя — чтобы
+  // ПКМ-цикл по секции drawer'а долетал и до Wizard-маркеров. Только ИНДЕКС ПОЗИЦИЙ для чтения;
+  // сами капли рисует editorial-слой — второй раз тут НЕ создаём (иначе дубль-рендер).
+  const bridgePosByLayer = useMemo(() => {
+    const out: Record<string, { x: number; z: number }[]> = {};
+    for (const m of editorialBridge ?? []) {
+      if (!m.position) continue;
+      const key = layerKeyForMarker(m);
+      if (key) (out[key] ??= []).push({ x: m.position.x, z: m.position.z });
+    }
+    return out;
+  }, [editorialBridge]);
+  const bridgePosByLayerRef = useRef(bridgePosByLayer);
+  useEffect(() => {
+    bridgePosByLayerRef.current = bridgePosByLayer;
+  });
+
   // ПКМ по слою в drawer: подлёт к ближайшему объекту слоя; повтор — к следующему по циклу.
   const cycleToLayer = useCallback(
     (keys: string[]) => {
       const map = mapRef.current;
       if (!map) return;
-      const list = keys.flatMap((k) => positionsByLayerRef.current[k] ?? []);
+      const list = keys.flatMap((k) => [
+        ...(positionsByLayerRef.current[k] ?? []),
+        ...(bridgePosByLayerRef.current[k] ?? []),
+      ]);
       if (!list.length) return;
       const ck = keys.join(',');
       let idx = cycleCursorRef.current[ck];

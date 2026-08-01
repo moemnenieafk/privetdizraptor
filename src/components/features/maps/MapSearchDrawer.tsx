@@ -71,20 +71,29 @@ interface Props {
   quests: MapQuestLite[];
   questTasks: TaskRaw[];
   editorialMarkers?: EditorialMarkerData[];
+  /** ФАЗА 0 единой системы (unified-markers.md): editorial на языке MapViewMarker — подмешиваем
+   *  в деривации секций «Контейнеры»/«Случайная добыча», чтобы Wizard-маркеры давали свои тайлы. */
+  editorialBridge?: MapViewMarker[];
   apiRef: React.RefObject<MapViewerApi | null>;
 }
 
-export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMarkers, apiRef }: Props) {
+export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMarkers, editorialBridge, apiRef }: Props) {
   const open = useMapUiStore((s) => s.searchOpen);
   const setOpen = useMapUiStore((s) => s.setSearchOpen);
   // Видимость слоёв — общий стор: тогглы фильтруют карту и синхронны с правой легендой (GRILL-2 §3).
   const activeFilters = useMapViewStore((s) => s.activeFilters);
+  // ФАЗА 0 единой системы (unified-markers.md): синканные + editorial-мост в одном списке для
+  // деривации секций/тайлов — Wizard-маркеры дают свой тайл наравне с tarkov.dev.
+  const allMarkers = useMemo(
+    () => (editorialBridge && editorialBridge.length > 0 ? [...markers, ...editorialBridge] : markers),
+    [markers, editorialBridge],
+  );
   // Контейнеры ЭТОЙ карты — из РЕАЛЬНЫХ маркеров (не статик-список): ТАЙЛ НА КАЖДЫЙ ТИП (по containerFile).
   // Оруж.ящики разных размеров — РАЗНЫМИ тайлами (иконки/вместимость различаются). key=file: и иконка
   // (container-<file>.webp), и ключ слоя карты (container-<file>) для фильтра (ЛКМ) и ПКМ-цикла.
   const containerGroups = useMemo(() => {
     const g = new Map<string, { file: string; label: string; count: number }>();
-    for (const m of markers) {
+    for (const m of allMarkers) {
       if ((m.type !== 'loot_container' && m.type !== 'container') || !m.position) continue;
       const file = containerFile(m as unknown as MarkerIconInput);
       let e = g.get(file);
@@ -97,18 +106,18 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
     return [...g.values()]
       .map((e) => ({ key: e.file, label: e.label, iconFile: e.file, fileKeys: [`container-${e.file}`], count: e.count }))
       .sort((a, b) => b.count - a.count);
-  }, [markers]);
+  }, [allMarkers]);
   // Случайная добыча ЭТОЙ карты — только категории (из 15), что РЕАЛЬНО есть на карте (без пустышек).
   // Порядок LOOT_15 сохранён (дизайн-таксономия). Ключ слоя loose-<key> — и фильтр (ЛКМ), и ПКМ-цикл.
   const looseTiles = useMemo(() => {
     const cnt = new Map<string, number>();
-    for (const m of markers) {
+    for (const m of allMarkers) {
       if (m.type !== 'loot_loose') continue;
       const key = m.lootCat ?? 'other';
       cnt.set(key, (cnt.get(key) ?? 0) + 1);
     }
     return LOOT_15.filter((l) => (cnt.get(l.key) ?? 0) > 0).map((l) => ({ ...l, count: cnt.get(l.key) ?? 0 }));
-  }, [markers]);
+  }, [allMarkers]);
   const [qItems, setQItems] = useState('');
   const [qQuests, setQQuests] = useState('');
   const [qf, setQf] = useState<QuestFilter>('all');

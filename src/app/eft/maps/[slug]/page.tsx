@@ -10,6 +10,7 @@ import { getManualMarkers } from '@/data/map-markers';
 import { classifyLoot15 } from '@/data/map-markers/loot-15';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
+import { buildEditorialBridge } from '@/components/features/maps/editorial-bridge';
 import { getEditorialMarkers } from '@/db/editorial-markers';
 import { getLootHeatPoints, getLootContainerPools, containerHeatPoints } from '@/db/loot-heat';
 import { getCmsUser } from '@/lib/auth/admin';
@@ -318,6 +319,13 @@ export default async function MapPage({ params, searchParams }: Props) {
         };
       });
 
+      // ФАЗА 0 «единой системы маркеров» (docs/decisions/unified-markers.md): мост на чтении.
+      // Editorial-маркеры на языке MapViewMarker → drawer-секции/фильтр/ПКМ-цикл видят их как
+      // синканные. lootCat считаем тем же классификатором, что и синканный loose-лут.
+      const editorialBridge = buildEditorialBridge(editorialMarkers, (id) =>
+        classifyLoot15(lootCatById.get(id), priceIndex.get(id)?.bsgCategoryId),
+      );
+
       return (
         <main className="w-full">
           <MapFrame
@@ -328,6 +336,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             bosses={bosses}
             questZones={questZones}
             editorialMarkers={editorialMarkers}
+            editorialBridge={editorialBridge}
             heatPoints={heatPoints}
             canEditMarkers={canEditMarkers}
             mapId={data.asset.mapId}

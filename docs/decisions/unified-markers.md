@@ -1,5 +1,5 @@
 ---
-status: 📥 принято (грил 2026-08-02) — модель/спека; код/миграция/db НЕ трогались
+status: 🚧 в работе — Фаза 0 (мост на чтении) ИСПОЛНЕНА 2026-08-02; Фазы 1–5 (схема/миграция/db) ждут
 affects: maps, markers, editorial, supabase, sync, cms
 date: 2026-08-02
 ---
@@ -45,10 +45,22 @@ drawer-секции, фильтр, ПКМ-цикл, счётчики. А зад�
 - `outline` (map_markers) vs `polygon` (editorial) — одно jsonb-поле.
 
 ## План миграции (ПОЭТАПНО; db:push/миграция прод-данных = §5, необратимо → отмашка V4DYA)
-- **Фаза 0 — мост на ЧТЕНИИ (безопасно, обратимо, БЕЗ схемы):** временно влить `editorialMarkers` в
-  drawer-деривации (`containerGroups`/`looseTiles`, нормализация типов) + их позиции в
-  `positionsByLayerRef` → Wizard-маркеры сразу видны в секциях/фильтре/цикле. **Даёт ценность
-  немедленно, де-рискует большую миграцию.** Рекомендуется как первый шаг.
+- **✅ Фаза 0 — мост на ЧТЕНИИ (безопасно, обратимо, БЕЗ схемы) — ИСПОЛНЕНА 2026-08-02:** временно
+  влить `editorialMarkers` в drawer-деривации (`containerGroups`/`looseTiles`, нормализация типов) +
+  их позиции в `positionsByLayerRef` → Wizard-маркеры сразу видны в секциях/фильтре/цикле. **Даёт
+  ценность немедленно, де-рискует большую миграцию.**
+  *Реализация:* новый чистый нормализатор `src/components/features/maps/editorial-bridge.ts`
+  (`buildEditorialBridge`: editorial → `MapViewMarker[]`, вокабуляр `loot→loot_loose`/
+  `container→loot_container`/`stationary→stationary_weapon`, центроид для polygon, `lootCat` тем же
+  `classifyLoot15`, что синканный loose). Собирается на сервере (`page.tsx`, где есть каталог+прайс),
+  прокинут пропом `editorialBridge` через `MapFrame` → `MapSearchDrawer` (секции считают из
+  `[...markers, ...bridge]`) и `MapViewerLoader`→`MapViewerClient` (позиции моста мёржатся в
+  `cycleToLayer` read-time — БЕЗ дубль-рендера: капли рисует свой editorial-слой).
+  *Верификация:* `tsc --noEmit` 0 · `eslint` изменённых файлов чист (3 проблемы `MapViewerClient` —
+  предобработанные React-Compiler, доказано `git stash`) · `next build` 0 (прод-компиляция + 249 стр.).
+  **Не тронуты (вне названного скоупа):** правая легенда `counts` (`MapLayersDrawer`), синканный
+  рендер, схема/крон. Live-verify (тайл+цикл на Wizard-маркере) — при наличии editorial-данных карты.
+  Обратимо: убрать `editorial-bridge.ts` + проброс пропа → поведение 1:1.
 - **Фаза 1:** новая таблица `markers` (superset) в `schema.ts` + `markers-rls.sql` (крон-owner пишет
   sync; user-RLS admin/editor). `db:push → db:migrate-all → db:sql` (порядок cta-backend).
 - **Фаза 2:** рефактор крона → пишет в `markers` `source='sync'`, prune `WHERE source='sync'` (НЕ
@@ -71,10 +83,12 @@ drawer-секции, фильтр, ПКМ-цикл, счётчики. А зад�
 ## Открытые развилки (дожать перед/в исполнении)
 - **id/PK:** surrogate uuid + externalId(text) для sync?
 - **Координаты:** jsonb `position` vs `x/y/z`.
-- **Вокабуляр типов** (привести к synced-именам?).
+- **Вокабуляр типов** (привести к synced-именам?). *Прецедент из Фазы 0:* `editorial-bridge.ts`
+  уже маппит `loot→loot_loose`/`container→loot_container`/`stationary→stationary_weapon` — этот
+  словарь можно взять за основу канона при заведении таблицы `markers`.
 - **Единый рендер:** синканные через editorial-путь (богатый: карточка/медиа) vs мерж-рендерер.
 - **Карточка/медиа для синканных:** клик по любому маркеру → единая карточка (можно добавить медиа/описание)?
-- **Фазировка:** делать Фазу 0 (мост) сейчас как быстрый фикс gap, параллельно готовя Фазы 1–5?
+- **Фазировка:** ✅ решено — Фаза 0 (мост) исполнена 2026-08-02 как быстрый фикс gap; Фазы 1–5 готовятся отдельно.
 
 ---
 *Процесс: [[engineering-loop]] · грил 2026-08-02 (цель=полная единая · source-колонка · override для
