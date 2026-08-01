@@ -1,5 +1,5 @@
 ---
-status: 🚧 в работе — Фаза 0 (мост на чтении) ИСПОЛНЕНА 2026-08-02; Фазы 1–5 (схема/миграция/db) ждут
+status: 🚧 в работе — Ф0 (мост) ИСПОЛНЕНА + Ф1 (схема markers) НАПИСАНА как код 2026-08-02; развилки решены (кроме рендера Ф4); Ф1(накат)–5 = runbook под надзором V4DYA (§5 необратимо, TTY)
 affects: maps, markers, editorial, supabase, sync, cms
 date: 2026-08-02
 ---
@@ -29,20 +29,21 @@ drawer-секции, фильтр, ПКМ-цикл, счётчики. А зад�
 5. **ОДИН рендер-пайплайн для всех** → drawer-секции/фильтр/ПКМ-цикл/иконки видят ВСЕ маркеры —
    **это и закрывает изначальный gap**.
 
-## Схема `markers` (superset, ЧЕРНОВИК — дожать)
-Объединяет поля обеих таблиц:
-- **Общее:** `id` (см. развилку id), `gameId`, `mapId`, `source`, `type`, `floor?`, координаты,
-  `outline/polygon` (jsonb точек), `label`, `faction`, `sides`, `categories`, `linkedItemId`,
-  `linkedQuestId`, `meta`, `syncedAt/createdAt/updatedAt`.
-- **User-надстройка** (из editorial): `category`, `title`, `description`, `screenshots` (jsonb),
-  `linkKind`, `linkId`, `linkStep`, `sourceMarkerId` (override), `hidden`, `authorId`.
+## Схема `markers` (superset) — НАПИСАНА как код-предложение 2026-08-02
+Реализация: **`src/db/markers-ddl.ts`** (`MARKERS_DDL`, идемпотентно, RLS read-all внутри модуля) +
+**`src/db/schema-markers.ts`** (Drizzle query-дефиниция). ⚠️ Пока НЕ накачена — на прод не влияет.
 
-Расхождения, которые надо свести (см. развилки):
-- **Координаты:** `map_markers.position` (jsonb `{x,y,z}`) vs `editorial.x/y/z` (real). → одно.
-- **id/PK:** synced — стабильный tarkov.dev text-id (composite PK `mapId,id`); user — uuid. → свести
-  (напр. surrogate `uuid` PK + `externalId text` для sync).
-- **Вокабуляр типов:** synced `loot_container`/`loot_loose` vs editorial `container`/`loot`. → единый.
-- `outline` (map_markers) vs `polygon` (editorial) — одно jsonb-поле.
+**Развилки схемы РЕШЕНЫ дефолтами (ПОДТВЕРДИТЬ перед накатом):**
+- **id/PK:** surrogate `uuid` PK + `external_id text` (tarkov.dev id у sync); апсерт крона — partial-
+  unique `(map_id, external_id) WHERE source='sync'`. (Как editorial + подсказка заметки.)
+- **Координаты:** real-колонки `x/y/z` (как editorial, индексируемо), НЕ jsonb (как map_markers).
+  `x/y/z` NULLABLE — боссы (спавн по зоне) и чисто-полигональные зоны.
+- **Вокабуляр типов:** канон = SYNCED-имена (`loot_container`/`loot_loose`/`stationary_weapon`);
+  прецедент — `editorial-bridge.ts`. Миграция маппит editorial `container→loot_container` и т.д.
+- **Полигон:** одно jsonb-поле `polygon` (`outline` map_markers + `polygon` editorial → сюда).
+- **Размещение:** DDL-модуль (`db:migrate-all`), НЕ `schema.ts`+`db:push`. ⚠️ Отступление от исходного
+  плана заметки — но БЕЗОПАСНЕЕ: `db:push --force` откатывает RLS управляемых им таблиц; DDL-модуль
+  идемпотентен, аддитивен и НЕ трогается чужим `db:push` (как editorial/codex/media).
 
 ## План миграции (ПОЭТАПНО; db:push/миграция прод-данных = §5, необратимо → отмашка V4DYA)
 - **✅ Фаза 0 — мост на ЧТЕНИИ (безопасно, обратимо, БЕЗ схемы) — ИСПОЛНЕНА 2026-08-02:** временно
@@ -61,15 +62,34 @@ drawer-секции, фильтр, ПКМ-цикл, счётчики. А зад�
   **Не тронуты (вне названного скоупа):** правая легенда `counts` (`MapLayersDrawer`), синканный
   рендер, схема/крон. Live-verify (тайл+цикл на Wizard-маркере) — при наличии editorial-данных карты.
   Обратимо: убрать `editorial-bridge.ts` + проброс пропа → поведение 1:1.
-- **Фаза 1:** новая таблица `markers` (superset) в `schema.ts` + `markers-rls.sql` (крон-owner пишет
-  sync; user-RLS admin/editor). `db:push → db:migrate-all → db:sql` (порядок cta-backend).
-- **Фаза 2:** рефактор крона → пишет в `markers` `source='sync'`, prune `WHERE source='sync'` (НЕ
-  трогает user — критично, тест обязателен).
-- **Фаза 3:** миграция данных: `editorial_markers` → `markers` `source='user'` (сохранить
-  `sourceMarkerId`-override-связи); `map_markers` → `source='sync'` (или первый прогон крона наполнит).
-- **Фаза 4:** CMS/Wizard-райтеры + ридеры (`getEditorialMarkers`/`getEftMapData`) → на `markers`;
-  **рендер унифицировать** (синканные через тот же путь, что user).
-- **Фаза 5:** удалить старые `map_markers`/`editorial_markers` после live-верификации.
+### ⏳ Фазы 1–5 — RUNBOOK под надзором V4DYA (код-предложения готовы; DB-шаги = §5, отмашка)
+> Почему не исполнено ботом ночью: Ф1/3/5 = необратимые операции над ПРОД-БД (§5 + гард заметки +
+> `db:push`/`db:migrate-all` требуют TTY и надзора), Ф4-рендер = нерешённая дизайн-развилка (твой
+> выбор), Ф2-prune = «критично, тест обязателен», а тест-раннера в проекте нет. Довожу до готового
+> плана, исполняем вместе.
+
+- **Фаза 1 — таблица `markers`. ✅ КОД НАПИСАН** (`markers-ddl.ts` + `schema-markers.ts`, tsc 0).
+  - ⚠️ **Накат (создаёт пустую таблицу на проде):** `npm run db:migrate-all` — идемпотентно,
+    аддитивно, БЕЗ `db:push`. Затем `npm run db:audit-rls` (убедиться: `markers` имеет RLS).
+  - **Примечание:** после коммита `markers-ddl.ts` таблица создастся при ЛЮБОМ следующем
+    `db:migrate-all` (в т.ч. после чужого `db:push`) — безопасно (пустая, не используется до Ф2–4).
+- **Фаза 2 — крон-синк → `markers` `source='sync'`.** Рефактор `db:sync-maps-geometry` + прюн в
+  `src/db/maps.ts`: писать `source='sync'`, апсерт по `(map_id, external_id)`, **prune
+  `WHERE source='sync' AND map_id=…`** (user НЕ трогать — критично). ⚠️ Нет тест-раннера → прогон на
+  дампе/стейдже ДО прод-крона; риск: неверный WHERE сотрёт user. НЕ деплоить, пока ридеры на старых.
+- **Фаза 3 — миграция данных (⚠️ НЕОБРАТИМО, отмашка).** SQL-скрипт в `scripts/`:
+  `editorial_markers`→`markers` (`source='user'`, сохранить `source_marker_id`-override-связи, все
+  user-поля); `map_markers`→`markers` (`source='sync'`, `external_id`=старый text-id, `position`
+  jsonb→`x/y/z`) **ЛИБО** просто прогнать обновлённый крон Ф2 (наполнит sync заново). INSERT-аддитив,
+  старые таблицы пока живут (откат = TRUNCATE `markers`).
+- **Фаза 4 — ридеры/райтеры/рендер → `markers`.** Ридеры `getEditorialMarkers`/`getEftMapData`
+  (`src/db/`) читают `markers` (sync+user одним запросом); райтер `/api/admin/editorial-markers` пишет
+  `source='user'`. Мост Ф0 (`editorial-bridge.ts`) снять — его роль займёт единый ридер.
+  🔀 **РАЗВИЛКА РЕНДЕРА (твой дизайн-выбор перед Ф4):** (A) ВСЕ маркеры через editorial-путь (богатая
+  карточка/медиа для всех, вкл. синканные) vs (B) мерж-рендерер. Не потерять editorial-фичи
+  (медиа/линки/карточка) и synced-фичи (кросс-линк лут→предмет, зоны выходов).
+- **Фаза 5 — уборка (⚠️ НЕОБРАТИМО, после live-верификации Ф4).** DROP `map_markers` +
+  `editorial_markers`, удалить их DDL-модуль/схемы/ридеры. Только когда Ф4 подтверждён на проде.
 
 ## Риски / гарды
 1. **§5:** миграция прод-маркеров необратима → отмашка на db-шаге.
@@ -80,15 +100,16 @@ drawer-секции, фильтр, ПКМ-цикл, счётчики. А зад�
 6. **Единый рендер:** синканные должны пойти через тот же путь, что user (или мерж) — не потерять
    editorial-фичи (медиа/линки/карточка) и synced-фичи (кросс-линк лут→предмет, зоны выходов).
 
-## Открытые развилки (дожать перед/в исполнении)
-- **id/PK:** surrogate uuid + externalId(text) для sync?
-- **Координаты:** jsonb `position` vs `x/y/z`.
-- **Вокабуляр типов** (привести к synced-именам?). *Прецедент из Фазы 0:* `editorial-bridge.ts`
-  уже маппит `loot→loot_loose`/`container→loot_container`/`stationary→stationary_weapon` — этот
-  словарь можно взять за основу канона при заведении таблицы `markers`.
-- **Единый рендер:** синканные через editorial-путь (богатый: карточка/медиа) vs мерж-рендерер.
-- **Карточка/медиа для синканных:** клик по любому маркеру → единая карточка (можно добавить медиа/описание)?
-- **Фазировка:** ✅ решено — Фаза 0 (мост) исполнена 2026-08-02 как быстрый фикс gap; Фазы 1–5 готовятся отдельно.
+## Развилки — статус
+- ✅ **id/PK:** surrogate uuid + `external_id(text)` для sync (решено, в `markers-ddl.ts`).
+- ✅ **Координаты:** real-колонки `x/y/z` (решено).
+- ✅ **Вокабуляр типов:** synced-имена, прецедент `editorial-bridge.ts` (решено).
+- ✅ **outline/polygon:** одно jsonb-поле `polygon` (решено).
+- ✅ **Размещение:** DDL-модуль вместо schema.ts+db:push (решено — безопаснее).
+- ✅ **Фазировка:** Ф0 исполнена; Ф1 схема написана; Ф1(накат)–5 = runbook под надзором.
+- 🔀 **ОСТАЁТСЯ — единый рендер (Фаза 4, твой дизайн-выбор):** синканные через editorial-путь
+  (богатый: карточка/медиа для всех) vs мерж-рендерер. Связано: карточка/медиа для синканных
+  (клик по любому маркеру → единая карточка?). **← решить перед Фазой 4.**
 
 ---
 *Процесс: [[engineering-loop]] · грил 2026-08-02 (цель=полная единая · source-колонка · override для
