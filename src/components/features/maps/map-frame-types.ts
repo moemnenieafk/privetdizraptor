@@ -10,6 +10,8 @@ export interface MapViewerApi {
   toggleLayer(key: string): void;
   /** Подлёт к набору точек (fit + пульс-подсветка) — спавны босса и т.п. */
   focusPoints(points: { x: number; z: number }[]): void;
+  /** Перелёт к БЛИЖАЙШЕЙ к текущему центру точке из набора (ПКМ по контейнеру → ближайший). */
+  flyToNearest(points: { x: number; z: number }[]): void;
 }
 
 /** Статистика босса для BottomBar. */

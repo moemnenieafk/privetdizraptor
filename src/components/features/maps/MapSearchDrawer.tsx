@@ -10,7 +10,7 @@ import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { useLootFilterStore } from '@/store/useLootFilterStore';
 import { useStoryFilterStore } from '@/store/useStoryFilterStore';
 import { QuestDetail } from '@/components/features/quests/QuestDetail';
-import { markerIconUrl, markerColor, LINK_KIND_COLOR, type MarkerIconInput } from '@/data/map-marker-icons';
+import { markerIconUrl, markerColor, LINK_KIND_COLOR, containerFile, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
 import { storiesForMap, type StoryOnMap } from '@/lib/story-map-link';
 import type { EditorialMarkerData } from './EditorialMarkerCard';
@@ -38,28 +38,6 @@ const SECTION = 'font-blender-medium text-type-caption uppercase tracking-widest
 const CONTAINER_WEBP = '/images/maps/eft/markers/loot-containers/loot-container-';
 // Цвет сюжетной истории — единый источник LINK_KIND_COLOR.story (сталь), как чип СЮЖЕТ.
 const STORY_TINT = LINK_KIND_COLOR.story;
-
-// Порядок и состав 1:1 с Figma (node 2242:2662).
-const CONTAINER_TILES: { file: string; label: string }[] = [
-  { file: 'sportsbag', label: 'Спортивная сумка' },
-  { file: 'medbag-smu06', label: 'Медсумка' },
-  { file: 'medcase', label: 'Медукладка' },
-  { file: 'toolbox', label: 'Ящик с инструментами' },
-  { file: 'weaponbox-4x4', label: 'Оружейный ящик 4×4' },
-  { file: 'wooden-crate', label: 'Деревянный ящик' },
-  { file: 'wooden-technical-supply-crate', label: 'Ящик техснабжения' },
-  { file: 'wooden-ammo-box', label: 'Патронный ящик' },
-  { file: 'ground-cache', label: 'Схрон в земле' },
-  { file: 'burried-barrel-cache', label: 'Закопанная бочка' },
-  { file: 'wooden-ration-supply-crate', label: 'Ящик с провизией' },
-  { file: 'dead-scav', label: 'Труп ЧВК' },
-  { file: 'wooden-grenade-box', label: 'Гранатный ящик' },
-  { file: 'jacket', label: 'Куртка' },
-  { file: 'pc-block', label: 'Системный блок' },
-  { file: 'drawer', label: 'Выдвижной ящик' },
-  { file: 'dead-pmc', label: 'Труп Дикого' },
-  { file: 'bank-safe', label: 'Сейф' },
-];
 
 type QuestFilter = 'all' | 'story' | 'lightkeeper' | 'kappa';
 
@@ -95,6 +73,40 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   const setOpen = useMapUiStore((s) => s.setSearchOpen);
   // Видимость слоёв — общий стор: тогглы фильтруют карту и синхронны с правой легендой (GRILL-2 §3).
   const activeFilters = useMapViewStore((s) => s.activeFilters);
+  // Контейнеры ЭТОЙ карты — из РЕАЛЬНЫХ маркеров (не статик-список): группа по containerFile;
+  // оруж.ящики всех размеров → одна группа «Оружейный ящик». Иконка = самый частый размер;
+  // fileKeys — ключи фильтра карты (container-<file>); positions — для ПКМ-перелёта к ближайшему.
+  const containerGroups = useMemo(() => {
+    const g = new Map<
+      string,
+      { key: string; label: string; fileCount: Map<string, number>; fileKeys: Set<string>; count: number; positions: { x: number; z: number }[] }
+    >();
+    for (const m of markers) {
+      if ((m.type !== 'loot_container' && m.type !== 'container') || !m.position) continue;
+      const file = containerFile(m as unknown as MarkerIconInput);
+      const weapon = file.startsWith('weaponbox');
+      const key = weapon ? 'weaponbox' : file;
+      let e = g.get(key);
+      if (!e) {
+        e = { key, label: weapon ? 'Оружейный ящик' : m.label ?? file, fileCount: new Map(), fileKeys: new Set(), count: 0, positions: [] };
+        g.set(key, e);
+      }
+      e.fileCount.set(file, (e.fileCount.get(file) ?? 0) + 1);
+      e.fileKeys.add(`container-${file}`);
+      e.count++;
+      e.positions.push({ x: m.position.x, z: m.position.z });
+    }
+    return [...g.values()]
+      .map((e) => ({
+        key: e.key,
+        label: e.label,
+        iconFile: [...e.fileCount.entries()].sort((a, b) => b[1] - a[1])[0][0],
+        fileKeys: [...e.fileKeys],
+        count: e.count,
+        positions: e.positions,
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [markers]);
   const [qItems, setQItems] = useState('');
   const [qQuests, setQQuests] = useState('');
   const [qf, setQf] = useState<QuestFilter>('all');
@@ -306,20 +318,24 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
               <div className="flex flex-col gap-2">
                 <p className={SECTION}>Контейнеры</p>
                 <div className="flex flex-wrap gap-[9px]">
-                  {CONTAINER_TILES.map((c) => {
-                    const on = !!activeFilters[`container-${c.file}`];
+                  {containerGroups.map((c) => {
+                    const on = c.fileKeys.every((k) => activeFilters[k]);
                     return (
                       <button
-                        key={c.file}
+                        key={c.key}
                         type="button"
-                        onClick={() => useMapViewStore.getState().toggleFilter(`container-${c.file}`)}
-                        title={c.label}
+                        onClick={() => useMapViewStore.getState().setGroupFilters(c.fileKeys, !on)}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          apiRef.current?.flyToNearest(c.positions);
+                        }}
+                        title={`${c.label} · ${c.count} на карте — ЛКМ: фильтр, ПКМ: к ближайшему`}
                         aria-pressed={on}
                         className={`flex size-9 items-center justify-center rounded border transition-colors ${
                           on ? 'border-(--primary)' : 'border-lines-hover hover:border-(--primary)/40'
                         }`}
                       >
-                        <img src={`${CONTAINER_WEBP}${c.file}.webp`} alt="" className="size-8 object-contain" />
+                        <img src={`${CONTAINER_WEBP}${c.iconFile}.webp`} alt="" className="size-8 object-contain" />
                       </button>
                     );
                   })}
