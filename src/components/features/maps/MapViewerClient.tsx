@@ -18,6 +18,7 @@ import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { useSquad } from './useSquad';
 import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
+import { ExtractCard } from './ExtractCard';
 import { floorIndexForHeight } from '@/lib/eft-screenshot';
 import { mapIconClass } from '@/data/map-icons';
 import { useRouter } from 'next/navigation';
@@ -831,12 +832,12 @@ export function MapViewerClient({
     };
   }, [mapInst, squadMembers, squadPoses, squadMapId, squadSelfId, data.config.coordinateRotation]);
 
-  // ── Замок→Ключ: клик по замку → read-only карточка ключа (позиционируется НАД меткой). ──
-  const [lockMarker, setLockMarker] = useState<MapViewMarker | null>(null);
-  const lockCardRef = useRef<HTMLDivElement | null>(null);
-  const openLockCardRef = useRef<(m: MapViewMarker) => void>(() => {});
+  // ── Read-only инфо-карточка (замок→ключ / требования выхода) — один поповер за раз, НАД меткой. ──
+  const [infoMarker, setInfoMarker] = useState<MapViewMarker | null>(null);
+  const infoCardRef = useRef<HTMLDivElement | null>(null);
+  const openInfoCardRef = useRef<(m: MapViewMarker) => void>(() => {});
   useEffect(() => {
-    openLockCardRef.current = (m: MapViewMarker) => setLockMarker(m);
+    openInfoCardRef.current = (m: MapViewMarker) => setInfoMarker(m);
   }, []);
   // Индекс замков по ключу (linkedItemId) — счётчик «ещё N дверей» + подсветка соседей.
   const locksByKey = useMemo(() => {
@@ -850,16 +851,16 @@ export function MapViewerClient({
     return idx;
   }, [data.markers]);
   const lockSiblings = useMemo(
-    () => (lockMarker?.linkedItemId ? (locksByKey.get(lockMarker.linkedItemId) ?? []).filter((m) => m.id !== lockMarker.id) : []),
-    [lockMarker, locksByKey],
+    () => (infoMarker?.type === 'lock' && infoMarker.linkedItemId ? (locksByKey.get(infoMarker.linkedItemId) ?? []).filter((m) => m.id !== infoMarker.id) : []),
+    [infoMarker, locksByKey],
   );
   // Карточка держится НАД меткой замка (как editorial-card): пересчёт при пане/зуме.
   useEffect(() => {
     const map = mapInst;
-    if (!map || !lockMarker?.position) return;
-    const latlng = ll({ x: lockMarker.position.x, z: lockMarker.position.z });
+    if (!map || !infoMarker?.position) return;
+    const latlng = ll({ x: infoMarker.position.x, z: infoMarker.position.z });
     const place = () => {
-      const el = lockCardRef.current;
+      const el = infoCardRef.current;
       if (!el) return;
       const pt = map.latLngToContainerPoint(latlng);
       const size = map.getSize();
@@ -875,20 +876,20 @@ export function MapViewerClient({
     place();
     map.on('move zoom', place);
     const ro = new ResizeObserver(place);
-    if (lockCardRef.current) ro.observe(lockCardRef.current);
+    if (infoCardRef.current) ro.observe(infoCardRef.current);
     return () => {
       map.off('move zoom', place);
       ro.disconnect();
     };
-  }, [mapInst, lockMarker]);
+  }, [mapInst, infoMarker]);
   // Закрытие карточки замка: клик вне / Esc.
   useEffect(() => {
-    if (!lockMarker) return;
+    if (!infoMarker) return;
     const onDown = (e: MouseEvent) => {
-      if (!lockCardRef.current?.contains(e.target as Node)) setLockMarker(null);
+      if (!infoCardRef.current?.contains(e.target as Node)) setInfoMarker(null);
     };
     const onEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLockMarker(null);
+      if (e.key === 'Escape') setInfoMarker(null);
     };
     const t = setTimeout(() => {
       document.addEventListener('mousedown', onDown);
@@ -899,7 +900,7 @@ export function MapViewerClient({
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onEsc);
     };
-  }, [lockMarker]);
+  }, [infoMarker]);
 
   // ── Реверс Ключ→Двери: постоянная подсветка дверей «моих ключей» (вне LOD/фильтра слоя замков). ──
   const myKeys = useMyKeysStore((s) => s.keys);
@@ -1098,7 +1099,7 @@ export function MapViewerClient({
         // иначе кросс-линк (квест-зона→задача, лут→предмет).
         marker.on('click', () => {
           if (overrideModeRef.current || deleteOpenRef.current) return openOverrideRef.current(m);
-          if (m.type === 'lock') return openLockCardRef.current(m); // Замок→Ключ: карточка ключа
+          if (m.type === 'lock' || m.type === 'extract') return openInfoCardRef.current(m); // read-only инфо-карточка
           if (m.type === 'quest' && m.questId) window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener');
           else if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
         });
@@ -1437,15 +1438,19 @@ export function MapViewerClient({
         </div>
       )}
 
-      {/* Карточка «Замок→Ключ» — popup НАД меткой замка (позиция ставится эффектом). */}
-      {lockMarker && (
-        <div ref={lockCardRef} className="absolute z-[520] w-72" style={{ transform: 'translateX(-50%)' }}>
-          <LockKeyCard
-            marker={lockMarker}
-            sameKeyCount={lockSiblings.length}
-            onHighlightSiblings={() => flashPointsRef.current(lockSiblings.map((m) => ({ x: m.position!.x, z: m.position!.z })))}
-            onClose={() => setLockMarker(null)}
-          />
+      {/* Read-only инфо-карточка — popup НАД меткой (замок→ключ / требования выхода). Позиция ставится эффектом. */}
+      {infoMarker && (
+        <div ref={infoCardRef} className="absolute z-[520] w-72" style={{ transform: 'translateX(-50%)' }}>
+          {infoMarker.type === 'extract' ? (
+            <ExtractCard marker={infoMarker} onClose={() => setInfoMarker(null)} />
+          ) : (
+            <LockKeyCard
+              marker={infoMarker}
+              sameKeyCount={lockSiblings.length}
+              onHighlightSiblings={() => flashPointsRef.current(lockSiblings.map((m) => ({ x: m.position!.x, z: m.position!.z })))}
+              onClose={() => setInfoMarker(null)}
+            />
+          )}
         </div>
       )}
 
