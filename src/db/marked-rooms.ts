@@ -1,21 +1,28 @@
 // Ридер меченых/цветных комнат для страницы /eft/maps/<map>/rooms/<slug>.
 // Решение: docs/decisions/marked-rooms.md (Фаза 2). Данные: marked_rooms + markers (якорь-замок) +
 // loot_spawns (лут в радиусе вокруг замка — подтверждено пробой; полигон уточнит границы позже) +
-// живые цены (prices). EV/шанс считаются ЗДЕСЬ (сервер), как в loot-heat.ts.
+// живые цены (prices) + бартеры (реальная цена получения ключа). EV/шанс/цены считаются ЗДЕСЬ.
 //
 // Импорты относительные (не @/) — модуль читается и из RSC, и под tsx-скриптом (как prices.ts).
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "./index";
-import { games, maps, lootSpawns, type LootPoolEntry } from "./schema";
+import { games, maps, lootSpawns, barters, type LootPoolEntry, type TradeSlot } from "./schema";
 import { markers } from "./schema-markers";
 import { markedRooms, type MarkedRoomRow } from "./schema-marked-rooms";
 import { getEftPriceMapFromDb } from "./prices";
 import { getEftCatalog } from "../lib/eft-catalog";
+import type { EftPriceInfo } from "../lib/eft-prices";
 
 /** Радиус (в игровых метрах) вокруг замка, из которого берём loose-лут комнаты (черновой срез до полигона). */
 export const ROOM_LOOT_RADIUS = 12;
 /** Сколько позиций лут-таблицы отдаём (топ по матожиданию). */
 const LOOT_TOP_N = 24;
+
+type PriceMap = Map<string, EftPriceInfo>;
+const unitPrice = (m: PriceMap, tpl: string): number => {
+  const p = m.get(tpl);
+  return p?.lastLowPrice ?? p?.avg24hPrice ?? 0;
+};
 
 export interface RoomLootItem {
   itemId: string;
@@ -27,18 +34,31 @@ export interface RoomLootItem {
   ev: number;                     // вклад в матожидание ₽
 }
 
+/** Дешевейший способ получить ключ. cost=null — ключ только в рейде / цены нет. */
+export interface KeyAcquisition {
+  method: "flea" | "barter" | null;
+  cost: number | null;
+  fleaPrice: number | null; // null, если ключ noFlea
+  noFlea: boolean;
+  barter: { trader: string; cost: number } | null; // дешевейший бартер (₽ за 1 ключ)
+}
+
 export interface MarkedRoomKey {
   id: string;
   name: string;
   shortName: string;
-  price: number | null; // live-цена ключа; null — не в зеркале цен
+  acquisition: KeyAcquisition;
 }
 
 export interface MarkedRoomVerdict {
-  keyPrice: number;
+  keyCost: number;
+  method: "flea" | "barter";
   sumEv: number;
-  net: number;        // sumEv − keyPrice
-  profitable: boolean;
+  net: number;              // sumEv − keyCost (за ОДНО открытие)
+  profitable: boolean;      // одно открытие ≥ цены ключа (одноразовая логика)
+  breakeven: number | null; // за сколько открытий ключ окупается ⌈keyCost / sumEv⌉ — ключ многоразовый
+  keyUses: number | null;       // лимит использований ключа; null — безлимит/неизвестно
+  lifetimeProfit: number | null; // профит за срок ключа: keyUses·sumEv − keyCost; null — безлимит
 }
 
 export interface MarkedRoomView {
@@ -49,7 +69,43 @@ export interface MarkedRoomView {
   key: MarkedRoomKey | null;
   loot: RoomLootItem[];
   sumEv: number;
-  verdict: MarkedRoomVerdict | null; // null, если цена ключа неизвестна
+  verdict: MarkedRoomVerdict | null; // null, если цена получения ключа неизвестна
+}
+
+/** Дешевейшая цена получения ключа: бартер (Σ требуемых) либо flea (если не noFlea). */
+async function keyAcquisition(gameId: string, keyId: string, priceMap: PriceMap): Promise<KeyAcquisition> {
+  const kp = priceMap.get(keyId);
+  const noFlea = kp?.types?.includes("noFlea") ?? false;
+  const fleaPrice = noFlea ? null : (kp?.lastLowPrice ?? kp?.avg24hPrice ?? null);
+
+  // Бартеры, где ключ — в награде (jsonb-containment: matched даже с доп. полем count).
+  const rows = await db
+    .select({ requiredItems: barters.requiredItems, rewardItems: barters.rewardItems, trader: barters.traderNormalizedName })
+    .from(barters)
+    .where(and(eq(barters.gameId, gameId), sql`${barters.rewardItems} @> ${JSON.stringify([{ itemId: keyId }])}::jsonb`));
+
+  let barter: { trader: string; cost: number } | null = null;
+  for (const b of rows) {
+    const rew = (b.rewardItems ?? []).find((r: TradeSlot) => r.itemId === keyId);
+    const rewCount = rew?.count || 1;
+    let cost = 0;
+    let ok = true;
+    for (const req of b.requiredItems ?? []) {
+      const rp = unitPrice(priceMap, req.itemId);
+      if (rp <= 0) { ok = false; break; } // требуемый предмет без цены → бартер не оценить надёжно
+      cost += rp * req.count;
+    }
+    if (!ok) continue;
+    const per = Math.round(cost / rewCount);
+    if (!barter || per < barter.cost) barter = { trader: b.trader ?? "?", cost: per };
+  }
+
+  const opts: { method: "flea" | "barter"; cost: number }[] = [];
+  if (fleaPrice != null && fleaPrice > 0) opts.push({ method: "flea", cost: fleaPrice });
+  if (barter) opts.push({ method: "barter", cost: barter.cost });
+  opts.sort((a, b) => a.cost - b.cost);
+  const best = opts[0];
+  return { method: best?.method ?? null, cost: best?.cost ?? null, fleaPrice, noFlea, barter };
 }
 
 /** Лёгкий список комнат карты (для подсветки/ссылок на странице карты). */
@@ -91,10 +147,6 @@ export async function getMarkedRoomBySlug(mapSlug: string, roomSlug: string): Pr
   }
 
   const [priceMap, catalog] = await Promise.all([getEftPriceMapFromDb(), getEftCatalog()]);
-  const priceOf = (tpl: string): number => {
-    const p = priceMap.get(tpl);
-    return p?.lastLowPrice ?? p?.avg24hPrice ?? 0;
-  };
   const catById = new Map(catalog.map((i) => [i.id, i]));
 
   // Лут комнаты: loose-точки в радиусе вокруг замка → агрегат по предметам.
@@ -115,7 +167,7 @@ export async function getMarkedRoomBySlug(mapSlug: string, roomSlug: string): Pr
         const w = Math.min(1, (s.probability ?? 0) * it.prob);
         const cur = agg.get(it.tpl) ?? { notAppear: 1, ev: 0 };
         cur.notAppear *= 1 - w;
-        cur.ev += w * priceOf(it.tpl);
+        cur.ev += w * unitPrice(priceMap, it.tpl);
         agg.set(it.tpl, cur);
       }
     }
@@ -128,7 +180,7 @@ export async function getMarkedRoomBySlug(mapSlug: string, roomSlug: string): Pr
         shortName: cat?.shortName ?? "",
         backgroundColor: priceMap.get(tpl)?.backgroundColor ?? null,
         chance: 1 - v.notAppear,
-        price: priceOf(tpl),
+        price: unitPrice(priceMap, tpl),
         ev: v.ev,
       });
     }
@@ -136,16 +188,31 @@ export async function getMarkedRoomBySlug(mapSlug: string, roomSlug: string): Pr
   }
   sumEv = Math.round(sumEv);
 
-  // Ключ + вердикт окупаемости.
+  // Ключ (реальная цена получения) + вердикт окупаемости.
   let key: MarkedRoomKey | null = null;
   if (room.keyItemId) {
     const kc = catById.get(room.keyItemId);
-    const kp = priceOf(room.keyItemId) || null;
-    key = { id: room.keyItemId, name: kc?.name ?? room.title, shortName: kc?.shortName ?? "", price: kp };
+    key = {
+      id: room.keyItemId,
+      name: kc?.name ?? room.title,
+      shortName: kc?.shortName ?? "",
+      acquisition: await keyAcquisition(eft.id, room.keyItemId, priceMap),
+    };
   }
+  const keyUsesRaw = room.keyItemId ? catById.get(room.keyItemId)?.properties.uses : undefined;
+  const keyUses = keyUsesRaw && keyUsesRaw > 0 ? keyUsesRaw : null; // 0/undefined = безлимит
   const verdict: MarkedRoomVerdict | null =
-    key?.price != null
-      ? { keyPrice: key.price, sumEv, net: sumEv - key.price, profitable: sumEv - key.price > 0 }
+    key?.acquisition.cost != null && key.acquisition.method != null
+      ? {
+          keyCost: key.acquisition.cost,
+          method: key.acquisition.method,
+          sumEv,
+          net: sumEv - key.acquisition.cost,
+          profitable: sumEv - key.acquisition.cost > 0,
+          breakeven: sumEv > 0 ? Math.ceil(key.acquisition.cost / sumEv) : null,
+          keyUses,
+          lifetimeProfit: keyUses != null ? keyUses * sumEv - key.acquisition.cost : null,
+        }
       : null;
 
   return {
