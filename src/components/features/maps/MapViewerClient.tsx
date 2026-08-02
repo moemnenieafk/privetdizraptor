@@ -1155,6 +1155,25 @@ export function MapViewerClient({
       map.fitBounds(bb(cfg.bounds));
     }
 
+    // Оверлей МЕЧЕНЫХ КОМНАТ: тонкий SVG (тот же viewBox/bounds арта → ложится пиксель-в-пиксель),
+    // кликабельный → страница комнаты. 404 для карт без меченок — просто пропускаем. Слой снимет map.remove().
+    if (!isStatic && imgBounds) {
+      fetch(`/images/maps/eft/marked-rooms/${data.slug}.svg`)
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error('нет меченок'))))
+        .then((txt) => {
+          if (cancelledSvg || !mapRef.current) return;
+          const doc = new DOMParser().parseFromString(txt, 'image/svg+xml');
+          const svgEl = doc.documentElement as unknown as SVGSVGElement;
+          if (svgEl.nodeName.toLowerCase() !== 'svg') return;
+          L.svgOverlay(svgEl, imgBounds, { interactive: false, className: 'cta-marked-rooms' }).addTo(map);
+          svgEl.addEventListener('click', (e) => {
+            const room = (e.target as Element | null)?.closest?.('[data-room]')?.getAttribute('data-room');
+            if (room) router.push(`/eft/maps/${data.slug}/rooms/${room}`);
+          });
+        })
+        .catch(() => {});
+    }
+
     // Пропорциональный зум: маркеры мельче при отдалении (fit), крупнее при приближении.
     const setMarkerScale = () => {
       const span = Math.max(0.001, cfg.maxZoom - cfg.minZoom);
@@ -1439,7 +1458,7 @@ export function MapViewerClient({
       staticLayerRef.current = null;
       setMapInst(null);
     };
-  }, [data, onReady, floors, isStatic]);
+  }, [data, onReady, floors, isStatic, router]);
 
   // Статичная мульти-этажная карта: подгрузка SVG-подложки текущего этажа.
   useEffect(() => {

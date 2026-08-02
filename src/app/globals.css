@@ -741,6 +741,14 @@ html {
 .cta-map-root .leaflet-container:active { cursor: grabbing; }
 .cta-map-svg { filter: saturate(0.92) brightness(0.96) contrast(1.02); }
 
+/* Меченые комнаты: оверлей сквозной, кликабелен только силуэт комнаты; ховер подсвечивает. */
+.cta-marked-rooms { pointer-events: none; }
+.cta-marked-rooms [data-room] { pointer-events: auto; cursor: pointer; }
+.cta-marked-rooms [data-room] > path,
+.cta-marked-rooms [data-room] > rect { transition: fill-opacity 0.2s ease; }
+.cta-marked-rooms [data-room]:hover > path,
+.cta-marked-rooms [data-room]:hover > rect { fill-opacity: 0.55; }
+
 /* этажи: соседние <g>-слои затемнены+блюр (контекст). Карты с soloFloors (.solo-floors, Ледокол) — соседние скрыты полностью. */
 .cta-map-svg [data-floor] { transition: opacity 0.25s ease, filter 0.25s ease; }
 .cta-map-svg [data-floor].is-dimmed { opacity: 0.28; filter: blur(2px) saturate(0.6); }
