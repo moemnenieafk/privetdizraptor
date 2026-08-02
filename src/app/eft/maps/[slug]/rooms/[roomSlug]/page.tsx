@@ -10,6 +10,7 @@ import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { getMe } from '@/lib/auth/me';
 import { canEditContent } from '@/lib/auth/roles';
 import { RoomOpenAdder } from '@/components/features/maps/RoomOpenAdder';
+import { MyRoomOpens } from '@/components/features/maps/MyRoomOpens';
 
 interface Props {
   params: Promise<{ slug: string; roomSlug: string }>;
@@ -184,6 +185,11 @@ export default async function MarkedRoomPage({ params }: Props) {
             )}
           </div>
         </div>
+      </section>
+
+      {/* ── Мои открытия (личный счётчик, localStorage) + прогресс к окупаемости ── */}
+      <section className="mt-6">
+        <MyRoomOpens roomId={room.id} breakeven={verdict?.breakeven ?? null} sumEv={sumEv} keyCost={verdict?.keyCost ?? null} />
       </section>
 
       {/* ── Таблица лута ── */}
