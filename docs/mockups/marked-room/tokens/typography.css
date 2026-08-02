@@ -1,0 +1,40 @@
+/* ============================================================
+   CTA — Typography tokens
+   Two faces only. Headings are ALWAYS uppercase with positive
+   tracking. Numbers/prices/stats use Blender Pro Medium — never
+   a monospace font (font-mono is forbidden by the design system).
+   ============================================================ */
+
+:root {
+  --font-blender-book:   "BlenderPro-Book", sans-serif;   /* body, 400 */
+  --font-blender-medium: "BlenderPro-Medium", sans-serif; /* headings, numbers, labels, 500 */
+
+  /* Semantic font aliases */
+  --font-body:    var(--font-blender-book);
+  --font-heading: var(--font-blender-medium);
+  --font-data:    var(--font-blender-medium);
+
+  /* ---- Type scale (px) ---- */
+  --text-2xs: 10px;  /* coordinate labels, micro-meta */
+  --text-xs:  12px;  /* prices, stats, dense data */
+  --text-sm:  14px;  /* secondary body */
+  --text-base:16px;  /* body */
+  --text-lg:  18px;  /* card titles */
+  --text-xl:  20px;  /* section headings */
+  --text-2xl: 24px;  /* page sub-stats */
+  --text-3xl: 28px;  /* page titles (PageHeader) */
+  --text-4xl: 36px;  /* hero stats — K/D, survival %, balance */
+  --text-hero:56px;  /* hero display */
+
+  /* ---- Tracking (military caps need air) ---- */
+  --tracking-tight:   -0.02em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.05em;
+  --tracking-wider:   0.1em;
+  --tracking-widest:  0.2em;
+  --tracking-command: 0.3em;  /* hero eyebrows, [ COMMANDS ] */
+
+  --leading-none: 1;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+}

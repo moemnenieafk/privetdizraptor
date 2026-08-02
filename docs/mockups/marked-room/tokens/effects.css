@@ -1,0 +1,30 @@
+/* ============================================================
+   CTA — Effects: shadows, neon glows, transitions
+   Elevation is built with borders + colored "neon" glows rather
+   than soft drop shadows. Each game theme has its own glow.
+   ============================================================ */
+
+:root {
+  /* ---- Per-game neon glows (used on card hover via --shadow-neon) ---- */
+  --shadow-neon-eft:    0 14px 28px rgba(230, 142, 37, 0.35);
+  --shadow-neon-frago:  0 14px 28px rgba(0, 205, 171, 0.35);
+  --shadow-neon-abi:    0 14px 28px rgba(163, 65, 50, 0.35);
+  --shadow-neon-gzw:    0 14px 28px rgba(95, 202, 255, 0.35);
+  --shadow-neon-arcr:   0 14px 28px rgba(138, 134, 255, 0.35);
+  --shadow-neon-mrthn:  0 14px 28px rgba(192, 254, 4, 0.35);
+  --shadow-neon-actmat: 0 14px 28px rgba(255, 168, 0, 0.35);
+  --shadow-neon-wdg:    0 14px 28px rgba(227, 189, 116, 0.35);
+
+  /* ---- Generic elevation ---- */
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.6);
+  --slot-inset: inset 0 0 10px rgba(0, 0, 0, 0.8); /* tarkov item slot */
+
+  /* ---- Motion ---- */
+  --ease-tactical: cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --ease-out-soft: cubic-bezier(0.165, 0.84, 0.44, 1); /* @kind other */
+  --dur-fast: 200ms; /* @kind other */
+  --dur-base: 300ms; /* @kind other */
+  --dur-slow: 700ms; /* @kind other */
+  --transition-base: all var(--dur-base) var(--ease-tactical);
+}

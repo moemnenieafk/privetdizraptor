@@ -1,0 +1,38 @@
+/* ============================================================
+   CTA — Spacing, radii & layout tokens
+   Strict 4px tactical grid. Layout container caps at 1100px for
+   readability on ultra-wide monitors.
+   ============================================================ */
+
+:root {
+  /* ---- 4px spacing scale ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;   /* tactical-grid gap */
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;  /* section rhythm */
+  --space-16: 64px;
+
+  /* ---- Corner radii (sharp, utilitarian) ---- */
+  --radius-none: 0px;
+  --radius-xs: 2px;   /* item slots */
+  --radius-sm: 4px;   /* default — chips, buttons, cards */
+  --radius-md: 6px;
+  --radius-lg: 8px;   /* large cards, game cards */
+  --radius-full: 9999px;
+
+  /* ---- Borders ---- */
+  --border-width: 1px;
+
+  /* ---- Layout ---- */
+  --container-max: 1100px;   /* tactical content column */
+  --container-wide: 1920px;  /* full-bleed bars (header, ticker) */
+  --grid-col: 160px;         /* tactical-grid column width */
+  --grid-gap: 28px;
+  --dot-grid: 53px;          /* background dot pattern step */
+}

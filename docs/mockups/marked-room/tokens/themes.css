@@ -1,0 +1,24 @@
+/* ============================================================
+   CTA — Theme tokens
+   The interactive accent (--primary) is set by a per-game theme
+   class on a wrapping element (route-level). Default root = EFT.
+   Each theme also rebinds --shadow-neon to its colored glow.
+   ============================================================ */
+
+:root {
+  --primary: #E68E25;              /* EFT amber */
+  --shadow-neon: var(--shadow-neon-eft);
+}
+
+.theme-eft        { --primary: #E68E25; --shadow-neon: var(--shadow-neon-eft); }
+.theme-frago      { --primary: #00CDAB; --shadow-neon: var(--shadow-neon-frago); }
+.theme-abi        { --primary: #a34132; --shadow-neon: var(--shadow-neon-abi); }
+.theme-gzw        { --primary: #5FCAFF; --shadow-neon: var(--shadow-neon-gzw); }
+.theme-arcraiders,
+.theme-arcr       { --primary: #8A86FF; --shadow-neon: var(--shadow-neon-arcr); }
+.theme-marathon,
+.theme-mrthn      { --primary: #C0FE04; --shadow-neon: var(--shadow-neon-mrthn); }
+.theme-activematter,
+.theme-actmat     { --primary: #FFA800; --shadow-neon: var(--shadow-neon-actmat); }
+.theme-wardogs,
+.theme-wdg        { --primary: #E3BD74; --shadow-neon: var(--shadow-neon-wdg); }

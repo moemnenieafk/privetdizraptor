@@ -1,0 +1,58 @@
+/* ============================================================
+   CTA — Color tokens  ("Nightfall" palette)
+   Monochromatic-minimalist dark UI with a per-game tactical
+   accent. Pure black (#000) is FORBIDDEN as a surface — the
+   deepest canvas is #0D0D0E. White text is softened to #F2F2F2.
+   ============================================================ */
+
+:root {
+  /* ---- Surfaces / structure ---- */
+  --color-darkbase: #0D0D0E;   /* deepest canvas — footer, wells */
+  --color-base: #141416;       /* app background (carries dot grid) */
+  --color-card-menu: #242426;  /* cards, modals, tables, inputs */
+  --color-lines-hover: #313135;/* borders, dividers, table lines */
+
+  /* ---- Text ---- */
+  --color-text-primary: #F2F2F2;   /* headings, item names, key data */
+  --color-text-secondary: #9696A1; /* descriptions, subtitles, meta */
+  --color-text-muted: #54545C;     /* placeholders, disabled, empty */
+
+  /* ---- Tactical accents (per-game --primary lives in themes.css) ---- */
+  --color-tactical-amber: #E68E25; /* EFT amber — default brand accent */
+  --color-accent-frago: #00CDAB;   /* Fragmentary Order teal */
+  --color-accent-abi:   #a34132;   /* Arena Breakout rust */
+
+  /* ---- System / status ---- */
+  --color-nvg-green: #689963;  /* success, profit, craft, hideout */
+  --color-online:    #6B9963;  /* online status dot */
+  --color-danger:    #C24339;  /* errors, failed, danger zones */
+  --color-danger-dim:#7E2C25;  /* modal close, dim destructive bg */
+  --color-success:   #8DE736;  /* bright positive flash */
+  --color-failure:   #E3433F;  /* bright negative */
+  --color-moderate:  #FF7724;  /* warning / conditional */
+
+  /* ---- Game-mode indicators ---- */
+  --color-mode-pvp: #9A8866;   /* PvP (scav-brown) */
+  --color-mode-pve: #0095E2;   /* PvE (cobalt) */
+
+  /* ---- EFT edition accents ---- */
+  --color-edition-tue: #51C6DB; /* The Unheard */
+  --color-edition-eod: #CB8A00; /* Edge of Darkness */
+  --color-edition-pfe: #9A8866; /* Prepare for Escape */
+  --color-edition-lb:  #9CA3AF; /* Left Behind */
+  --color-edition-std: #52525B; /* Standard */
+
+  /* ---- Loot rarity ---- */
+  --rarity-common:    #D4D4D4;
+  --rarity-rare:      #60a5fa;
+  --rarity-epic:      #c084fc;
+  --rarity-legendary: #eab308;
+
+  /* ---- Semantic aliases ---- */
+  --surface-app: var(--color-base);
+  --surface-deep: var(--color-darkbase);
+  --surface-card: var(--color-card-menu);
+  --border-default: var(--color-lines-hover);
+  --text-body: var(--color-text-secondary);
+  --text-heading: var(--color-text-primary);
+}

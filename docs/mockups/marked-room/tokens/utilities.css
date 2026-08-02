@@ -1,0 +1,126 @@
+/* ============================================================
+   CTA — Global utilities & base
+   Body canvas with the signature dot grid, the tactical card
+   primitive, hazard stripes, rarity classes, icon masks and the
+   cascade fade-in animations. Vanilla CSS so any consumer (HTML
+   card, React kit) inherits the look without Tailwind.
+   ============================================================ */
+
+/* ---- Base ---- */
+body {
+  margin: 0;
+  background-color: var(--color-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-blender-book);
+  -webkit-font-smoothing: antialiased;
+
+  /* Signature tactical dot grid */
+  background-image: radial-gradient(circle, var(--color-lines-hover) 1px, transparent 1px);
+  background-size: var(--dot-grid) var(--dot-grid);
+  background-position: center;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-blender-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ---- Custom tactical scrollbar ---- */
+* { scrollbar-width: thin; scrollbar-color: var(--color-lines-hover) var(--color-base); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-base); }
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-lines-hover);
+  border-radius: 20px;
+  border: 2px solid var(--color-base);
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--primary); }
+::-webkit-scrollbar-corner { background-color: var(--color-base); }
+
+/* ---- Tactical content grid (6 × 160px, gap 28, capped 1100) ---- */
+.tactical-grid {
+  display: grid;
+  grid-template-columns: repeat(2, var(--grid-col));
+  gap: var(--grid-gap);
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto;
+}
+@media (min-width: 768px)  { .tactical-grid { grid-template-columns: repeat(4, var(--grid-col)); } }
+@media (min-width: 1280px) { .tactical-grid { grid-template-columns: repeat(6, var(--grid-col)); max-width: var(--container-max); } }
+
+/* ---- Tactical card primitive (border + neon-glow lift on hover) ---- */
+.tactical-card-base {
+  background-color: var(--color-card-menu);
+  border: 1px solid var(--color-lines-hover);
+  border-radius: var(--radius-lg);
+  transition: transform var(--dur-base) var(--ease-tactical), border-color var(--dur-base), box-shadow var(--dur-base);
+}
+.tactical-card-base:not(.is-inactive):hover {
+  border-color: transparent;
+  box-shadow: var(--shadow-neon);
+  transform: translateY(-28px);
+}
+.tactical-card-base.is-inactive:hover { border-color: var(--color-text-muted); }
+
+/* ---- Gradient border (active / hover accent edge) ---- */
+.tactical-gradient-border {
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(to bottom, transparent, var(--primary)) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-tactical);
+}
+
+/* ---- Loot rarity (text + border color coding) ---- */
+.rarity-common    { color: var(--rarity-common);    border-color: color-mix(in srgb, var(--rarity-common) 30%, transparent); }
+.rarity-rare      { color: var(--rarity-rare);      border-color: color-mix(in srgb, var(--rarity-rare) 30%, transparent); }
+.rarity-epic      { color: var(--rarity-epic);      border-color: color-mix(in srgb, var(--rarity-epic) 30%, transparent); }
+.rarity-legendary { color: var(--rarity-legendary); border-color: color-mix(in srgb, var(--rarity-legendary) 30%, transparent); }
+
+/* ---- Tarkov item slot backing ---- */
+.item-slot {
+  background: linear-gradient(to bottom, #2c2c2c, #121212);
+  border: 1px solid #444;
+  box-shadow: var(--slot-inset);
+  border-radius: var(--radius-xs);
+}
+
+/* ---- Hazard stripes (warning buttons / empty states) ---- */
+.bg-hazard-pattern {
+  background-image: repeating-linear-gradient(-45deg, currentColor, currentColor 4px, transparent 4px, transparent 8px);
+}
+@keyframes hazard-slide { 0% { background-position: 0 0; } 100% { background-position: 0 11.31px; } }
+.animate-hazard { animation: hazard-slide 1s linear infinite; }
+
+/* ---- Icon masks ---- */
+.icon-mask {
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask-size: contain; mask-size: contain;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  -webkit-mask-position: center; mask-position: center;
+}
+.icon-bg {
+  display: inline-block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* ---- Cascade fade-in ---- */
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes flash-success { 50% { color: var(--color-nvg-green); text-shadow: 0 0 10px var(--color-nvg-green); } }
+.animate-on-scroll { opacity: 0; }
+.animate-on-scroll.is-visible { animation: fade-in-up 1s var(--ease-out-soft) both; }

@@ -1,0 +1,26 @@
+/* ============================================================
+   CTA — Webfonts
+   Blender Pro: a utilitarian military grotesque. Book (400) for
+   body, Medium (500) for headings/numbers/labels. There is NO
+   monospace face — numbers are set in Blender Pro Medium.
+   ============================================================ */
+
+@font-face {
+  font-family: "BlenderPro-Book";
+  src: local("Blender Pro Book"), local("BlenderPro-Book"),
+       url("../assets/fonts/BlenderPro-Book.woff2") format("woff2"),
+       url("../assets/fonts/BlenderPro-Book.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "BlenderPro-Medium";
+  src: local("Blender Pro Medium"), local("BlenderPro-Medium"),
+       url("../assets/fonts/BlenderPro-Medium.woff2") format("woff2"),
+       url("../assets/fonts/BlenderPro-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
