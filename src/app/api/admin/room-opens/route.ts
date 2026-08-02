@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getMe } from "@/lib/auth/me";
 import { canEditContent } from "@/lib/auth/roles";
 import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
-import { addRoomOpen } from "@/db/marked-rooms";
+import { addRoomOpen, moderateRoomOpen } from "@/db/marked-rooms";
 
 export const runtime = "nodejs";
 
@@ -48,4 +48,37 @@ export async function POST(req: Request): Promise<NextResponse> {
   const roomSlug = typeof body.roomSlug === "string" ? body.roomSlug.toLowerCase() : "";
   if (SLUG_RE.test(mapSlug) && SLUG_RE.test(roomSlug)) revalidatePath(`/eft/maps/${mapSlug}/rooms/${roomSlug}`);
   return NextResponse.json({ ok: true, openId });
+}
+
+// PATCH — модерация открытия из очереди: approve (→approved + репутация) / reject (→rejected).
+export async function PATCH(req: Request): Promise<NextResponse> {
+  const me = await getMe();
+  if (!me) return err(401, "Не авторизован");
+  if (!canEditContent(me.role)) return err(403, "Только для редакторов ЦТА");
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return err(400, "Некорректный JSON");
+  }
+  if (!isObject(body)) return err(400, "Ожидался объект");
+
+  const openId = typeof body.openId === "string" ? body.openId : "";
+  if (!UUID_RE.test(openId)) return err(422, "Некорректный openId");
+  const action = body.action === "approve" || body.action === "reject" ? body.action : null;
+  if (!action) return err(422, "action: approve | reject");
+
+  try {
+    const res = await moderateRoomOpen(openId, action, me.id);
+    if (!res.ok) return err(404, "Открытие не найдено");
+  } catch (e) {
+    console.error("[api/admin/room-opens PATCH]", e);
+    return err(500, "Ошибка модерации");
+  }
+
+  const mapSlug = typeof body.mapSlug === "string" ? body.mapSlug.toLowerCase() : "";
+  const roomSlug = typeof body.roomSlug === "string" ? body.roomSlug.toLowerCase() : "";
+  if (SLUG_RE.test(mapSlug) && SLUG_RE.test(roomSlug)) revalidatePath(`/eft/maps/${mapSlug}/rooms/${roomSlug}`);
+  return NextResponse.json({ ok: true });
 }

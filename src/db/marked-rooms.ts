@@ -8,7 +8,7 @@ import { and, eq, sql, desc, inArray } from "drizzle-orm";
 import { db } from "./index";
 import { games, maps, lootSpawns, barters, type LootPoolEntry, type TradeSlot } from "./schema";
 import { markers } from "./schema-markers";
-import { markedRooms, roomOpens, roomOpenItems, type MarkedRoomRow } from "./schema-marked-rooms";
+import { markedRooms, roomOpens, roomOpenItems, reputationEvents, type MarkedRoomRow } from "./schema-marked-rooms";
 import { getEftPriceMapFromDb } from "./prices";
 import { getEftCatalog, type EftCatalogItem } from "../lib/eft-catalog";
 import type { EftPriceInfo } from "../lib/eft-prices";
@@ -179,6 +179,71 @@ export async function addRoomOpen(roomId: string, itemIds: string[], moderatorId
   const uniq = [...new Set(itemIds.filter((s) => typeof s === "string" && s.length > 0))];
   if (uniq.length) await db.insert(roomOpenItems).values(uniq.map((itemId) => ({ openId: open.id, itemId, qty: 1 })));
   return open.id;
+}
+
+/** Репутация автору за принятое открытие. */
+const REP_PER_OPEN = 10;
+
+/** Открытие на модерации (панель модератора). */
+export interface PendingRoomOpen {
+  id: string;
+  createdAt: Date;
+  proofYoutubeUrl: string | null;
+  gameVersion: string | null;
+  authorId: string | null;
+  items: { itemId: string; name: string; shortName: string }[];
+}
+
+/** Публичная подача открытия (любой авторизованный) → status='pending'. Возвращает id. */
+export async function submitRoomOpen(
+  roomId: string,
+  itemIds: string[],
+  authorId: string,
+  opts: { proofYoutubeUrl?: string | null; gameVersion?: string | null; openedAt?: Date | null } = {},
+): Promise<string> {
+  const [open] = await db
+    .insert(roomOpens)
+    .values({ roomId, authorId, status: "pending", proofYoutubeUrl: opts.proofYoutubeUrl ?? null, gameVersion: opts.gameVersion ?? null, openedAt: opts.openedAt ?? null })
+    .returning({ id: roomOpens.id });
+  const uniq = [...new Set(itemIds.filter((s) => typeof s === "string" && s.length > 0))];
+  if (uniq.length) await db.insert(roomOpenItems).values(uniq.map((itemId) => ({ openId: open.id, itemId, qty: 1 })));
+  return open.id;
+}
+
+/** Модерация: approve (→approved + репутация автору) / reject (→rejected). */
+export async function moderateRoomOpen(openId: string, action: "approve" | "reject", moderatorId: string): Promise<{ ok: boolean }> {
+  const [open] = await db.select({ authorId: roomOpens.authorId }).from(roomOpens).where(eq(roomOpens.id, openId));
+  if (!open) return { ok: false };
+  await db
+    .update(roomOpens)
+    .set({ status: action === "approve" ? "approved" : "rejected", moderatorId, moderatedAt: new Date() })
+    .where(eq(roomOpens.id, openId));
+  if (action === "approve" && open.authorId) {
+    await db.insert(reputationEvents).values({ userId: open.authorId, delta: REP_PER_OPEN, reason: "room_open_approved", refType: "room_open", refId: openId });
+  }
+  return { ok: true };
+}
+
+/** Открытия на модерации (pending) для комнаты. */
+export async function getPendingRoomOpens(roomId: string): Promise<PendingRoomOpen[]> {
+  const rows = await db
+    .select({ id: roomOpens.id, createdAt: roomOpens.createdAt, proofYoutubeUrl: roomOpens.proofYoutubeUrl, gameVersion: roomOpens.gameVersion, authorId: roomOpens.authorId })
+    .from(roomOpens)
+    .where(and(eq(roomOpens.roomId, roomId), eq(roomOpens.status, "pending")))
+    .orderBy(desc(roomOpens.createdAt))
+    .limit(50);
+  if (rows.length === 0) return [];
+  const catalog = await getEftCatalog();
+  const catById = new Map(catalog.map((i) => [i.id, i]));
+  const itemRows = await db.select().from(roomOpenItems).where(inArray(roomOpenItems.openId, rows.map((r) => r.id)));
+  const byOpen = new Map<string, { itemId: string; name: string; shortName: string }[]>();
+  for (const it of itemRows) {
+    const cat = catById.get(it.itemId);
+    const l = byOpen.get(it.openId) ?? [];
+    l.push({ itemId: it.itemId, name: cat?.name ?? it.itemId, shortName: cat?.shortName ?? "" });
+    byOpen.set(it.openId, l);
+  }
+  return rows.map((r) => ({ ...r, items: byOpen.get(r.id) ?? [] }));
 }
 
 /** Лёгкий список комнат карты (для подсветки/ссылок на странице карты). */

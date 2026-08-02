@@ -4,13 +4,15 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getMarkedRoomBySlug, type MarkedRoomVerdict } from '@/db/marked-rooms';
+import { getMarkedRoomBySlug, getPendingRoomOpens, type MarkedRoomVerdict } from '@/db/marked-rooms';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { getMe } from '@/lib/auth/me';
 import { canEditContent } from '@/lib/auth/roles';
 import { RoomOpenAdder } from '@/components/features/maps/RoomOpenAdder';
 import { MyRoomOpens } from '@/components/features/maps/MyRoomOpens';
+import { RoomOpenSubmit } from '@/components/features/maps/RoomOpenSubmit';
+import { RoomOpenModeration } from '@/components/features/maps/RoomOpenModeration';
 
 interface Props {
   params: Promise<{ slug: string; roomSlug: string }>;
@@ -60,6 +62,8 @@ export default async function MarkedRoomPage({ params }: Props) {
   const { room, mapName, key, loot, sumEv, verdict, opens, totalOpens } = view;
   const me = await getMe();
   const isAdmin = !!me && canEditContent(me.role);
+  const pending = isAdmin ? await getPendingRoomOpens(room.id) : [];
+  const lootItemsForForm = loot.map((l) => ({ itemId: l.itemId, name: l.name, shortName: l.shortName, backgroundColor: l.backgroundColor }));
   const acq = key?.acquisition ?? null;
   const acqLabel = acq
     ? acq.method === 'barter'
@@ -269,14 +273,18 @@ export default async function MarkedRoomPage({ params }: Props) {
           </div>
         )}
 
-        {isAdmin && (
+        {isAdmin ? (
+          <div className="mt-4 flex flex-col gap-3">
+            {pending.length > 0 && <RoomOpenModeration pending={pending} mapSlug={slug} roomSlug={roomSlug} />}
+            <RoomOpenAdder roomId={room.id} mapSlug={slug} roomSlug={roomSlug} lootItems={lootItemsForForm} />
+          </div>
+        ) : me ? (
           <div className="mt-4">
-            <RoomOpenAdder
-              roomId={room.id}
-              mapSlug={slug}
-              roomSlug={roomSlug}
-              lootItems={loot.map((l) => ({ itemId: l.itemId, name: l.name, shortName: l.shortName, backgroundColor: l.backgroundColor }))}
-            />
+            <RoomOpenSubmit roomId={room.id} mapSlug={slug} roomSlug={roomSlug} lootItems={lootItemsForForm} />
+          </div>
+        ) : (
+          <div className="mt-4 rounded border border-lines-hover bg-card-menu p-4 text-center text-xs text-text-muted">
+            Войдите, чтобы добавить своё открытие (с пруфом на YouTube).
           </div>
         )}
       </section>
