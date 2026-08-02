@@ -7,12 +7,25 @@ import Link from 'next/link';
 import { getMarkedRoomBySlug, type MarkedRoomVerdict } from '@/db/marked-rooms';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { getMe } from '@/lib/auth/me';
+import { canEditContent } from '@/lib/auth/roles';
+import { RoomOpenAdder } from '@/components/features/maps/RoomOpenAdder';
 
 interface Props {
   params: Promise<{ slug: string; roomSlug: string }>;
 }
 
 const fmt = (n: number): string => Math.round(n).toLocaleString('ru-RU');
+
+function timeAgo(d: Date): string {
+  const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
+  if (s < 60) return 'только что';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} мин назад`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} ч назад`;
+  return `${Math.floor(h / 24)} дн назад`;
+}
 
 const TRADER_RU: Record<string, string> = {
   prapor: 'Прапор', therapist: 'Терапевт', skier: 'Лыжник', peacekeeper: 'Миротворец',
@@ -43,7 +56,9 @@ export default async function MarkedRoomPage({ params }: Props) {
   const view = await getMarkedRoomBySlug(slug, roomSlug);
   if (!view) notFound();
 
-  const { room, mapName, key, loot, sumEv, verdict } = view;
+  const { room, mapName, key, loot, sumEv, verdict, opens, totalOpens } = view;
+  const me = await getMe();
+  const isAdmin = !!me && canEditContent(me.role);
   const acq = key?.acquisition ?? null;
   const acqLabel = acq
     ? acq.method === 'barter'
@@ -190,7 +205,12 @@ export default async function MarkedRoomPage({ params }: Props) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-blender-medium text-sm text-text-primary">{it.name}</div>
-                  <div className="text-xs text-text-muted">шанс {(it.chance * 100).toFixed(1)}%</div>
+                  <div className="text-xs text-text-muted">
+                    шанс {(it.chance * 100).toFixed(1)}%
+                    {it.communityChance != null && (
+                      <span className="text-(--primary)"> · сообщество {(it.communityChance * 100).toFixed(0)}%</span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="font-blender-medium text-sm text-text-primary">{fmt(it.price)} ₽</div>
@@ -207,22 +227,52 @@ export default async function MarkedRoomPage({ params }: Props) {
         </p>
       </section>
 
-      {/* ── Живой трекер (заглушка до первых открытий) ── */}
+      {/* ── Живой трекер открытий: лента approved + добавление модератором ── */}
       <section className="mt-10">
         <div className="mb-3.5 flex items-baseline justify-between gap-3 border-b border-lines-hover pb-2">
           <h2 className="font-blender-medium text-xs uppercase tracking-widest text-text-secondary">{'// Живой трекер открытий'}</h2>
-          <span className="font-blender-medium text-xs text-text-muted">на слово не верим — только пруф</span>
-        </div>
-        <div className="rounded border border-lines-hover bg-card-menu p-6 text-center">
-          <p className="text-sm text-text-secondary">Пока нет подтверждённых открытий этой комнаты.</p>
-          <p className="mt-1 text-xs text-text-muted">Добавляйте свои — с видео (YouTube) или скриншотом; после модерации попадут в статистику и пересчёт шансов.</p>
-          <span
-            className="mt-4 inline-block rounded border border-lines-hover px-4 py-2.5 font-blender-medium text-xs uppercase tracking-widest text-text-muted"
-            aria-disabled="true"
-          >
-            [ + добавить открытие · скоро ]
+          <span className="font-blender-medium text-xs text-text-muted">
+            {totalOpens > 0 ? `${totalOpens} откр. · шанс по последним ${totalOpens}` : 'на слово не верим — только пруф'}
           </span>
         </div>
+        {opens.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {opens.slice(0, 12).map((o) => (
+              <div key={o.id} className="flex items-center gap-3 rounded border border-lines-hover bg-card-menu p-2.5">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-nvg-green" />
+                <span className="w-24 shrink-0 font-blender-medium text-xs text-text-muted">{timeAgo(o.createdAt)}</span>
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                  {o.items.length > 0 ? (
+                    o.items.map((it) => (
+                      <span key={it.itemId} title={it.name} className="flex items-center gap-1 rounded-xs border border-lines-hover px-1.5 py-0.5">
+                        <img src={itemIconUrl(it.itemId)} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                        <span className="text-xs text-text-secondary">{it.shortName || it.name}</span>
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-text-muted">без предметов</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded border border-lines-hover bg-card-menu p-6 text-center">
+            <p className="text-sm text-text-secondary">Пока нет подтверждённых открытий этой комнаты.</p>
+            <p className="mt-1 text-xs text-text-muted">Добавляйте свои — с видео (YouTube) или скриншотом; после модерации попадут в статистику и пересчёт шансов.</p>
+          </div>
+        )}
+
+        {isAdmin && (
+          <div className="mt-4">
+            <RoomOpenAdder
+              roomId={room.id}
+              mapSlug={slug}
+              roomSlug={roomSlug}
+              lootItems={loot.map((l) => ({ itemId: l.itemId, name: l.name, shortName: l.shortName, backgroundColor: l.backgroundColor }))}
+            />
+          </div>
+        )}
       </section>
     </div>
   );

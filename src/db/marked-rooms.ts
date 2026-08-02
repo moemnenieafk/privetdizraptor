@@ -4,13 +4,13 @@
 // живые цены (prices) + бартеры (реальная цена получения ключа). EV/шанс/цены считаются ЗДЕСЬ.
 //
 // Импорты относительные (не @/) — модуль читается и из RSC, и под tsx-скриптом (как prices.ts).
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, desc, inArray } from "drizzle-orm";
 import { db } from "./index";
 import { games, maps, lootSpawns, barters, type LootPoolEntry, type TradeSlot } from "./schema";
 import { markers } from "./schema-markers";
-import { markedRooms, type MarkedRoomRow } from "./schema-marked-rooms";
+import { markedRooms, roomOpens, roomOpenItems, type MarkedRoomRow } from "./schema-marked-rooms";
 import { getEftPriceMapFromDb } from "./prices";
-import { getEftCatalog } from "../lib/eft-catalog";
+import { getEftCatalog, type EftCatalogItem } from "../lib/eft-catalog";
 import type { EftPriceInfo } from "../lib/eft-prices";
 
 /** Радиус (в игровых метрах) вокруг замка, из которого берём loose-лут комнаты (черновой срез до полигона). */
@@ -29,9 +29,26 @@ export interface RoomLootItem {
   name: string;
   shortName: string;
   backgroundColor: string | null; // цвет фона слота (редкость), из зеркала цен
-  chance: number;                 // P(предмет появится ≥1 раз в комнате), 0..1
+  chance: number;                 // P(предмет появится ≥1 раз в комнате), 0..1 — базовый (SPT)
+  communityChance?: number | null; // динамический шанс по открытиям сообщества (окно 100), 0..1
   price: number;                  // цена за штуку (live)
   ev: number;                     // вклад в матожидание ₽
+}
+
+/** Предмет в открытии (лента трекера). */
+export interface RoomOpenItemView {
+  itemId: string;
+  name: string;
+  shortName: string;
+  qty: number;
+  backgroundColor: string | null;
+}
+/** Одно подтверждённое открытие комнаты. */
+export interface RoomOpenView {
+  id: string;
+  createdAt: Date;
+  openedAt: Date | null;
+  items: RoomOpenItemView[];
 }
 
 /** Дешевейший способ получить ключ. cost=null — ключ только в рейде / цены нет. */
@@ -70,6 +87,8 @@ export interface MarkedRoomView {
   loot: RoomLootItem[];
   sumEv: number;
   verdict: MarkedRoomVerdict | null; // null, если цена получения ключа неизвестна
+  opens: RoomOpenView[];             // лента подтверждённых открытий (новые сверху)
+  totalOpens: number;                // всего approved-открытий в окне (знаменатель динам. шанса)
 }
 
 /** Дешевейшая цена получения ключа: бартер (Σ требуемых) либо flea (если не noFlea). */
@@ -106,6 +125,60 @@ async function keyAcquisition(gameId: string, keyId: string, priceMap: PriceMap)
   opts.sort((a, b) => a.cost - b.cost);
   const best = opts[0];
   return { method: best?.method ?? null, cost: best?.cost ?? null, fleaPrice, noFlea, barter };
+}
+
+/** Окно последних approved-открытий для динамического шанса. */
+const OPENS_WINDOW = 100;
+
+/** Лента approved-открытий (последние 100) + динамический шанс предмета (частота появления). */
+async function loadRoomOpens(
+  roomId: string,
+  catById: Map<string, EftCatalogItem>,
+  priceMap: PriceMap,
+): Promise<{ opens: RoomOpenView[]; total: number; chanceByItem: Map<string, number> }> {
+  const openRows = await db
+    .select({ id: roomOpens.id, createdAt: roomOpens.createdAt, openedAt: roomOpens.openedAt })
+    .from(roomOpens)
+    .where(and(eq(roomOpens.roomId, roomId), eq(roomOpens.status, "approved")))
+    .orderBy(desc(roomOpens.createdAt))
+    .limit(OPENS_WINDOW);
+  const total = openRows.length;
+  if (total === 0) return { opens: [], total: 0, chanceByItem: new Map() };
+
+  const itemRows = await db
+    .select()
+    .from(roomOpenItems)
+    .where(inArray(roomOpenItems.openId, openRows.map((o) => o.id)));
+
+  const byOpen = new Map<string, RoomOpenItemView[]>();
+  const appear = new Map<string, number>(); // item → в скольких открытиях появился
+  const seen = new Map<string, Set<string>>(); // openId → set(itemId) для уникальности
+  for (const it of itemRows) {
+    const cat = catById.get(it.itemId);
+    const list = byOpen.get(it.openId) ?? [];
+    list.push({ itemId: it.itemId, name: cat?.name ?? it.itemId, shortName: cat?.shortName ?? "", qty: it.qty, backgroundColor: priceMap.get(it.itemId)?.backgroundColor ?? null });
+    byOpen.set(it.openId, list);
+    let s = seen.get(it.openId);
+    if (!s) { s = new Set(); seen.set(it.openId, s); }
+    if (!s.has(it.itemId)) { s.add(it.itemId); appear.set(it.itemId, (appear.get(it.itemId) ?? 0) + 1); }
+  }
+  const chanceByItem = new Map<string, number>();
+  for (const [itemId, c] of appear) chanceByItem.set(itemId, c / total);
+
+  const opens: RoomOpenView[] = openRows.map((o) => ({ id: o.id, createdAt: o.createdAt, openedAt: o.openedAt, items: byOpen.get(o.id) ?? [] }));
+  return { opens, total, chanceByItem };
+}
+
+/** Добавить подтверждённое открытие (модератор/админ). Возвращает id открытия. */
+export async function addRoomOpen(roomId: string, itemIds: string[], moderatorId: string): Promise<string> {
+  const now = new Date();
+  const [open] = await db
+    .insert(roomOpens)
+    .values({ roomId, status: "approved", moderatorId, moderatedAt: now, openedAt: now })
+    .returning({ id: roomOpens.id });
+  const uniq = [...new Set(itemIds.filter((s) => typeof s === "string" && s.length > 0))];
+  if (uniq.length) await db.insert(roomOpenItems).values(uniq.map((itemId) => ({ openId: open.id, itemId, qty: 1 })));
+  return open.id;
 }
 
 /** Лёгкий список комнат карты (для подсветки/ссылок на странице карты). */
@@ -215,6 +288,10 @@ export async function getMarkedRoomBySlug(mapSlug: string, roomSlug: string): Pr
         }
       : null;
 
+  // Трекер открытий: лента approved + динамический шанс (окно 100); communityChance мёржим в лут.
+  const { opens, total: totalOpens, chanceByItem } = await loadRoomOpens(room.id, catById, priceMap);
+  for (const l of loot) l.communityChance = chanceByItem.get(l.itemId) ?? null;
+
   return {
     room,
     mapSlug,
@@ -224,5 +301,7 @@ export async function getMarkedRoomBySlug(mapSlug: string, roomSlug: string): Pr
     loot: loot.slice(0, LOOT_TOP_N),
     sumEv,
     verdict,
+    opens,
+    totalOpens,
   };
 }
