@@ -45,6 +45,12 @@ function containerLabel(file: string, mLabel: string | null): string {
   return wb ? `Оружейный ящик ${wb[1]}×${wb[2]}` : mLabel ?? file;
 }
 
+// Имя меченой комнаты из имени ключа: «Ключ от комнаты 314 общежития (Меченый)» → «Комнаты 314 общежития».
+function markedRoomName(label: string | null): string {
+  const base = (label ?? '').replace(/\s*\(Мечен[^)]*\)\s*$/i, '').replace(/^Ключ(-карта)?\s+(от\s+)?/i, '').trim();
+  return base ? base[0].toUpperCase() + base.slice(1) : (label ?? 'Меченая комната');
+}
+
 type QuestFilter = 'all' | 'story' | 'lightkeeper' | 'kappa';
 
 /** Глиф строки поиска: резолвер (цветной img) → точка по типу. */
@@ -88,6 +94,17 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
     () => (editorialBridge && editorialBridge.length > 0 ? [...markers, ...editorialBridge] : markers),
     [markers, editorialBridge],
   );
+  // Меченые комнаты ЭТОЙ карты — из lock-маркеров с roomHref (сервер вешает; дедуп по href).
+  const markedRoomsList = useMemo(() => {
+    const seen = new Set<string>();
+    const out: { href: string; name: string; keyId: string | null; bg: string | null }[] = [];
+    for (const m of markers) {
+      if (m.type !== 'lock' || !m.roomHref || seen.has(m.roomHref)) continue;
+      seen.add(m.roomHref);
+      out.push({ href: m.roomHref, name: markedRoomName(m.label ?? null), keyId: m.linkedItemId ?? null, bg: m.itemBg ?? null });
+    }
+    return out;
+  }, [markers]);
   // Контейнеры ЭТОЙ карты — из РЕАЛЬНЫХ маркеров (не статик-список): ТАЙЛ НА КАЖДЫЙ ТИП (по containerFile).
   // Оруж.ящики разных размеров — РАЗНЫМИ тайлами (иконки/вместимость различаются). key=file: и иконка
   // (container-<file>.webp), и ключ слоя карты (container-<file>) для фильтра (ЛКМ) и ПКМ-цикла.
@@ -382,6 +399,32 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
             </>
           )}
         </section>
+
+        {/* ─────────────── МЕЧЕНЫЕ КОМНАТЫ ─────────────── */}
+        {markedRoomsList.length > 0 && (
+          <section className="flex flex-col gap-2.5">
+            <p className={SECTION}>Меченые комнаты</p>
+            <div className="flex flex-col gap-1.5">
+              {markedRoomsList.map((r) => (
+                <Link
+                  key={r.href}
+                  href={r.href}
+                  className="group flex items-center gap-3 rounded-xs border border-lines-hover bg-(--color-base) px-2.5 py-2 transition-colors hover:border-(--primary)"
+                >
+                  {r.keyId && (
+                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xs border border-lines-hover">
+                      <div className="absolute inset-0 bg-(--color-darkbase)" />
+                      <div className="absolute inset-0" style={{ backgroundColor: getTarkovBackgroundColor(r.bg ?? undefined) }} />
+                      <img src={itemIconUrl(r.keyId)} alt="" className="absolute inset-0 z-10 h-full w-full object-contain p-0.5" />
+                    </div>
+                  )}
+                  <span className="min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-primary group-hover:text-(--primary)">{r.name}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-text-muted transition-colors group-hover:text-(--primary)" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ─────────────── КЛЮЧИ (реверс Ключ→Двери) ─────────────── */}
         {keysOnMap.length > 0 && (
