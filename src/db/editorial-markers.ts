@@ -1,20 +1,78 @@
-// Чтение и запись editorial_markers (ручные маркеры карт от админа/модератора).
-// Reader — публичный (RLS read-all), CRUD — только через API после проверки canEditContent.
-// Resilience: таблицы ещё нет (не накатана) → reader отдаёт [], билд не падает (паттерн codex).
-// Решения/схема: docs/decisions/editorial-markers-tool.md.
+// Чтение и запись ПОЛЬЗОВАТЕЛЬСКИХ маркеров карт (Wizard/CMS). Ф4 единой системы маркеров
+// (docs/decisions/unified-markers.md): источник переключён с editorial_markers на
+// markers(source='user'); ВЫХОДНОЙ shape сохранён (EditorialMarkerRow) + контракт API
+// (NewEditorialMarker) → route и рендер НЕ меняются (мерж-рендерер Б). editorial_markers
+// заморожена (снапшот для отката, дропнем в Ф5). Reader публичный (RLS read-all), CRUD — API после
+// canEditContent. Resilience: ошибка/нет таблицы → reader отдаёт [], билд не падает.
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "./index";
-import { editorialMarkers, type EditorialMarkerRow, type NewEditorialMarker } from "./schema-editorial";
+import type { EditorialMarkerRow, NewEditorialMarker } from "./schema-editorial";
+import { markers, type MarkerRow, type NewMarker } from "./schema-markers";
 import { eftGameId } from "./eft";
 
-/** Все редакторские маркеры карты (по mapId) — для рендера слоя. Ошибка/нет таблицы → []. */
+/** markers(user) → форма EditorialMarkerRow (контракт карточки/рендера не меняется). */
+function toEditorialRow(m: MarkerRow): EditorialMarkerRow {
+  return {
+    id: m.id,
+    gameId: m.gameId,
+    mapId: m.mapId,
+    floor: m.floor,
+    x: m.x ?? 0,
+    y: m.y,
+    z: m.z ?? 0,
+    type: m.type,
+    category: m.category,
+    faction: m.faction,
+    title: m.title ?? "",
+    description: m.description,
+    screenshots: m.screenshots ?? [],
+    linkKind: m.linkKind,
+    linkId: m.linkId,
+    linkStep: m.linkStep,
+    polygon: (m.polygon as { x: number; z: number }[] | null) ?? null,
+    sourceMarkerId: m.sourceMarkerId,
+    hidden: m.hidden,
+    authorId: m.authorId,
+    createdAt: m.createdAt,
+    updatedAt: m.updatedAt,
+  };
+}
+
+/** NewEditorialMarker (контракт API) → строка markers(source='user'), без id (id — отдельно). */
+function toUserMarker(row: NewEditorialMarker): NewMarker {
+  return {
+    gameId: row.gameId,
+    mapId: row.mapId,
+    source: "user",
+    type: row.type ?? "poi",
+    floor: row.floor ?? null,
+    x: row.x,
+    y: row.y ?? null,
+    z: row.z,
+    polygon: row.polygon ?? null,
+    category: row.category ?? null,
+    faction: row.faction ?? null,
+    title: row.title,
+    description: row.description ?? null,
+    screenshots: row.screenshots ?? [],
+    linkKind: row.linkKind ?? "none",
+    linkId: row.linkId ?? null,
+    linkStep: row.linkStep ?? null,
+    sourceMarkerId: row.sourceMarkerId ?? null,
+    hidden: row.hidden ?? false,
+    authorId: row.authorId ?? null,
+  };
+}
+
+/** Все пользовательские маркеры карты (по mapId) — для рендера слоя. Ошибка/нет таблицы → []. */
 export async function getEditorialMarkers(mapId: string): Promise<EditorialMarkerRow[]> {
   try {
-    return await db
+    const rows = await db
       .select()
-      .from(editorialMarkers)
-      .where(eq(editorialMarkers.mapId, mapId))
-      .orderBy(asc(editorialMarkers.createdAt));
+      .from(markers)
+      .where(and(eq(markers.mapId, mapId), eq(markers.source, "user")))
+      .orderBy(asc(markers.createdAt));
+    return rows.map(toEditorialRow);
   } catch (e) {
     console.error("[getEditorialMarkers]", e);
     return [];
@@ -28,16 +86,18 @@ export async function getEditorialMarkersByLink(
 ): Promise<EditorialMarkerRow[]> {
   try {
     const gameId = await eftGameId();
-    return await db
+    const rows = await db
       .select()
-      .from(editorialMarkers)
+      .from(markers)
       .where(
         and(
-          eq(editorialMarkers.gameId, gameId),
-          eq(editorialMarkers.linkKind, kind),
-          eq(editorialMarkers.linkId, linkId),
+          eq(markers.gameId, gameId),
+          eq(markers.source, "user"),
+          eq(markers.linkKind, kind),
+          eq(markers.linkId, linkId),
         ),
       );
+    return rows.map(toEditorialRow);
   } catch (e) {
     console.error("[getEditorialMarkersByLink]", e);
     return [];
@@ -46,23 +106,27 @@ export async function getEditorialMarkersByLink(
 
 /** Апсерт маркера (создание/правка) — вызывает только API после getCmsUser. Возвращает строку. */
 export async function upsertEditorialMarker(row: NewEditorialMarker): Promise<EditorialMarkerRow> {
+  const m = toUserMarker(row);
   if (row.id) {
     const [updated] = await db
-      .update(editorialMarkers)
-      .set({ ...row, updatedAt: new Date() })
-      .where(eq(editorialMarkers.id, row.id))
+      .update(markers)
+      .set({ ...m, updatedAt: new Date() })
+      .where(and(eq(markers.id, row.id), eq(markers.source, "user")))
       .returning();
-    if (updated) return updated;
+    if (updated) return toEditorialRow(updated);
   }
-  const [inserted] = await db.insert(editorialMarkers).values(row).returning();
-  return inserted;
+  const [inserted] = await db
+    .insert(markers)
+    .values(row.id ? { ...m, id: row.id } : m)
+    .returning();
+  return toEditorialRow(inserted);
 }
 
-/** Удаление маркера по id (в скоупе игры). Возвращает число удалённых. */
+/** Удаление маркера по id (в скоупе игры + source='user'). Возвращает число удалённых. */
 export async function deleteEditorialMarker(id: string): Promise<number> {
   const gameId = await eftGameId();
   const res = await db
-    .delete(editorialMarkers)
-    .where(and(eq(editorialMarkers.id, id), eq(editorialMarkers.gameId, gameId)));
+    .delete(markers)
+    .where(and(eq(markers.id, id), eq(markers.source, "user"), eq(markers.gameId, gameId)));
   return res.count;
 }

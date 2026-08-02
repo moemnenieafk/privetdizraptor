@@ -4,7 +4,7 @@
 //    (Фазы 2–4). Форма 1:1 с MARKERS_DDL. Ничего пока не импортирует эту таблицу → рантайм не задет.
 import { pgTable, uuid, text, integer, real, jsonb, timestamp, index, uniqueIndex, boolean } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { games, maps, profiles, type MapMarkerKind, type MapPos } from "./schema";
+import { games, maps, profiles, type MapPos } from "./schema";
 import type { EditorialLinkKind } from "./schema-editorial";
 
 /** Источник маркера: зеркало tarkov.dev (крон) или пользовательский (Wizard/CMS). */
@@ -24,8 +24,9 @@ export const markers = pgTable(
     source: text("source").$type<MarkerSource>().notNull(),
     /** tarkov.dev id (source='sync'); null у user. Апсерт крона — по (map_id, external_id). */
     externalId: text("external_id"),
-    /** Канон MapMarkerKind (synced-вокабуляр). */
-    type: text("type").$type<MapMarkerKind>().notNull(),
+    /** Смешанный вокабуляр: sync — MapMarkerKind (loot_container…), user — editorial (loot/container…).
+     *  Ридер ветвится по source (мерж-рендерер), потому колонка — свободный text. */
+    type: text("type").notNull(),
     floor: integer("floor"),
     /** Координаты игрового мира. Nullable: боссы (спавн по зоне) и чисто-полигональные зоны. */
     x: real("x"),

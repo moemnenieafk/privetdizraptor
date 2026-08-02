@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import { syncEftPrices } from "@/db/prices";
 import { syncEftBartersCrafts } from "@/db/barters-crafts";
 import { syncEftLandingData } from "@/db/landing";
-import { syncEftMapsGeometry, syncEftQuestZones } from "@/db/maps";
+import { syncEftMapsGeometry, syncEftQuestZones, mirrorSyncMarkers } from "@/db/maps";
 import { syncEftIcons, type SyncIconsResult } from "@/db/icons";
 
 export const runtime = "nodejs";
@@ -80,6 +80,14 @@ export async function GET(req: Request): Promise<NextResponse> {
     } catch (e) {
       console.error("[cron/sync-prices] quest-zones:", e);
     }
+    // Ф2 единой системы маркеров (unified-markers.md): зеркалим map_markers → markers(source='sync')
+    // ПОСЛЕ обоих синков (best-effort). map_markers остаётся источником-правдой (нулевой регресс/откат).
+    let markersMirror = { synced: 0 };
+    try {
+      markersMirror = await mirrorSyncMarkers();
+    } catch (e) {
+      console.error("[cron/sync-prices] markers-mirror:", e);
+    }
     // Иконки — best-effort: зеркалит недостающие 512px из tarkov.dev по мере их появления.
     // Не должно ронять прайс-синк. См. src/db/icons.ts.
     let iconsRes: SyncIconsResult = {
@@ -102,6 +110,7 @@ export async function GET(req: Request): Promise<NextResponse> {
       ...landingRes,
       mapsGeometry: mapsRes,
       questZones: questZonesRes,
+      markersMirror,
       icons: iconsRes,
       at: new Date().toISOString(),
     });

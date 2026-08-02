@@ -16,8 +16,10 @@ import {
   type NewMapMarkerRow,
   type MapAssetRow,
   type MapMarkerRow,
+  type MapMarkerKind,
   type MapPos,
 } from "./schema";
+import { markers } from "./schema-markers";
 import { eftGameId } from "./eft";
 import { pruneStale } from "./landing";
 import { EFT_MAP_CONFIG } from "../data/eft-map-config";
@@ -708,6 +710,43 @@ export async function syncEftMapsGeometry(): Promise<SyncMapsResult> {
   };
 }
 
+/* ───────────────── Ф2 единой системы маркеров (docs/decisions/unified-markers.md) ─────────────────
+ * MIRROR-шаг: map_markers → markers(source='sync'). Крон/райтеры map_markers НЕ трогаем (нулевой
+ * регресс + бесплатный откат: map_markers всегда свежий), а markers держим синхронной их зеркалом.
+ * Прюн — ТОЛЬКО source='sync' (user неприкосновенен). Реконсайл к уже-гардированному map_markers
+ * (его синк не прюнит при пустом/обрезанном ответе) → отдельный ratio-гард здесь не нужен.
+ * Вызывается из /api/cron/sync-prices после обоих синков (best-effort). */
+export async function mirrorSyncMarkers(): Promise<{ synced: number }> {
+  const gameId = await eftGameId();
+  // upsert: id→external_id, position jsonb→x/y/z, outline→polygon; вокабуляр sync НЕ ремапим.
+  await db.execute(sql`
+    insert into public.markers
+      (game_id, map_id, source, external_id, type, x, y, z, top, bottom, polygon,
+       label, faction, sides, categories, linked_item_id, linked_quest_id, meta, synced_at)
+    select
+      mm.game_id, mm.map_id, 'sync', mm.id, mm.type,
+      (mm.position->>'x')::real, (mm.position->>'y')::real, (mm.position->>'z')::real,
+      mm.top, mm.bottom, mm.outline,
+      mm.label, mm.faction, mm.sides, mm.categories, mm.linked_item_id, mm.linked_quest_id, mm.meta, mm.synced_at
+    from public.map_markers mm
+    where mm.game_id = ${gameId}
+    on conflict (map_id, external_id) where source = 'sync'
+    do update set
+      type = excluded.type, x = excluded.x, y = excluded.y, z = excluded.z,
+      top = excluded.top, bottom = excluded.bottom, polygon = excluded.polygon,
+      label = excluded.label, faction = excluded.faction, sides = excluded.sides,
+      categories = excluded.categories, linked_item_id = excluded.linked_item_id,
+      linked_quest_id = excluded.linked_quest_id, meta = excluded.meta,
+      synced_at = excluded.synced_at, updated_at = now()`);
+  // прюн стейл sync-зеркала — те, кого больше нет в map_markers. source='user' НЕ ЗАТРАГИВАЕТСЯ.
+  await db.execute(sql`
+    delete from public.markers m
+    where m.source = 'sync' and m.game_id = ${gameId}
+      and not exists (select 1 from public.map_markers mm where mm.map_id = m.map_id and mm.id = m.external_id)`);
+  const synced = await db.$count(markers, and(eq(markers.source, "sync"), eq(markers.gameId, gameId)));
+  return { synced };
+}
+
 /* ───────────────── читалки (рантайм, чистое чтение нашей БД) ───────────────── */
 
 /** Карта (+ru-имя из maps) и её маркеры для страницы /eft/maps/[slug]. null — нет данных. */
@@ -723,8 +762,31 @@ export async function getEftMapData(
       .where(and(eq(mapAssets.gameId, gameId), eq(mapAssets.normalizedName, slug)))
       .limit(1);
     if (!row) return null;
-    const markers = await db.select().from(mapMarkers).where(eq(mapMarkers.mapId, row.asset.mapId));
-    return { asset: row.asset, name: row.name, markers };
+    // Ф4-Б: синканные из единой markers(source='sync') → тот же shape MapMarkerRow (id = external_id,
+    // x/y/z → position, polygon → outline) → страница/рендер не меняются (мерж-рендерер по source).
+    const rows = await db
+      .select()
+      .from(markers)
+      .where(and(eq(markers.mapId, row.asset.mapId), eq(markers.source, "sync")));
+    const markerRows: MapMarkerRow[] = rows.map((m) => ({
+      mapId: m.mapId,
+      id: m.externalId ?? m.id,
+      gameId: m.gameId,
+      type: m.type as MapMarkerKind,
+      position: m.x != null && m.z != null ? { x: m.x, y: m.y ?? 0, z: m.z } : null,
+      outline: (m.polygon as MapPos[] | null) ?? null,
+      top: m.top,
+      bottom: m.bottom,
+      label: m.label,
+      faction: m.faction,
+      sides: m.sides ?? null,
+      categories: m.categories ?? null,
+      linkedItemId: m.linkedItemId ?? null,
+      linkedQuestId: m.linkedQuestId ?? null,
+      meta: m.meta ?? null,
+      syncedAt: m.syncedAt ?? new Date(),
+    }));
+    return { asset: row.asset, name: row.name, markers: markerRows };
   } catch (e) {
     console.error("[getEftMapData]", e);
     return null;
