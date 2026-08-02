@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
 import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
+import { getMarkedRoomsForMap } from '@/db/marked-rooms';
 import { getEftPriceIndex } from '@/db/prices';
 import { getEftCatalog } from '@/lib/eft-catalog';
 import { bossIconUrl, bossPortraitKey, GOONS_FILES } from '@/data/map-marker-icons';
@@ -112,7 +113,9 @@ export default async function MapPage({ params, searchParams }: Props) {
     if (data?.asset.imageKey) {
       // Прайс-индекс — тарковский цвет фона слота предмета (для плиток loose loot);
       // каталог — slug категории предмета (для под-слоёв «Случайной добычи»).
-      const [priceIndex, catalog, editorialRows] = await Promise.all([getEftPriceIndex(), getEftCatalog(), getEditorialMarkers(data.asset.mapId)]);
+      const [priceIndex, catalog, editorialRows, markedRoomRows] = await Promise.all([getEftPriceIndex(), getEftCatalog(), getEditorialMarkers(data.asset.mapId), getMarkedRoomsForMap(data.asset.mapId)]);
+      // Ключ замка → slug меченой комнаты (для ссылки «Открыть комнату» в карточке Замок→Ключ).
+      const roomByKey = new Map(markedRoomRows.filter((r) => r.keyItemId).map((r) => [r.keyItemId as string, r.slug]));
       // Heatmap плотности денег (фаза 2): loose-EV (loot_spawns) + пулы контейнеров (per-тип) — сервером.
       const [looseHeat, containerPools] = await Promise.all([
         getLootHeatPoints(data.asset.mapId, priceIndex),
@@ -191,6 +194,7 @@ export default async function MapPage({ params, searchParams }: Props) {
           category: goonsKeys.has(bossPortraitOf.get(m.id) ?? '') ? 'goons' : null,
           itemBg: (m.type === 'loot_loose' || m.type === 'lock' || m.type === 'extract') && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.backgroundColor ?? null) : null,
           itemSlug: (m.type === 'loot_loose' || m.type === 'lock' || m.type === 'extract') && m.linkedItemId ? (priceIndex.get(m.linkedItemId)?.normalizedName ?? null) : null,
+          roomHref: m.type === 'lock' && m.linkedItemId && roomByKey.has(m.linkedItemId) ? `/eft/maps/${slug}/rooms/${roomByKey.get(m.linkedItemId)}` : null,
           lootCat:
             m.type === 'loot_loose' && m.linkedItemId
               ? classifyLoot15(lootCatById.get(m.linkedItemId), priceIndex.get(m.linkedItemId)?.bsgCategoryId)

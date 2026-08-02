@@ -2,6 +2,7 @@
 
 // Read-only карточка-поповер «Замок→Ключ»: клик по замку → какой ключ открывает + контекст.
 // Данные целиком из маркера (meta.key/lockType/needsPower, linkedItemId, keyPrice) — см. решение lock-key-mapping.
+import Link from 'next/link';
 import { X, Zap, ExternalLink, DoorOpen, Lock } from 'lucide-react';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
@@ -111,13 +112,27 @@ export function LockKeyCard({ marker, sameKeyCount, onHighlightSiblings, onClose
         </button>
       )}
 
-      {/* Открыть страницу ключа */}
+      {/* Открыть страницу МЕЧЕНОЙ КОМНАТЫ (если ключ замка = ключ меченки) — приоритетный CTA */}
+      {marker.roomHref && (
+        <Link
+          href={marker.roomHref}
+          className="flex items-center justify-center gap-1.5 rounded-xs bg-(--primary) py-2 font-blender-medium text-type-micro uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90"
+        >
+          <DoorOpen className="h-3.5 w-3.5" /> Открыть комнату
+        </Link>
+      )}
+
+      {/* Открыть страницу ключа (вторичный, если есть ссылка на комнату) */}
       {hasKey && keySlug && (
         <a
           href={`/eft/items/item/${keySlug}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 rounded-xs bg-(--primary) py-2 font-blender-medium text-type-micro uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90"
+          className={`flex items-center justify-center gap-1.5 rounded-xs py-2 font-blender-medium text-type-micro uppercase tracking-widest transition-colors ${
+            marker.roomHref
+              ? 'border-[0.5px] border-lines-hover text-text-secondary hover:border-(--primary) hover:text-(--primary)'
+              : 'bg-(--primary) text-(--color-base) hover:opacity-90'
+          }`}
         >
           <ExternalLink className="h-3.5 w-3.5" /> Открыть ключ
         </a>

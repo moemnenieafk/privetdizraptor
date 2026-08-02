@@ -27,6 +27,8 @@ export interface MapViewMarker {
   transferItemName?: string | null;
   /** Замок: цена ключа (avg24h/lastLow из зеркала) — для карточки «Замок→Ключ». */
   keyPrice?: number | null;
+  /** Замок меченой комнаты: ссылка на страницу комнаты (ключ замка = ключ меченки). */
+  roomHref?: string | null;
   /** loose loot: slug категории предмета (barter/provisions/injectors/keys/poster/container/other) — для под-слоя. */
   lootCat?: string | null;
   meta: Record<string, unknown> | null;
