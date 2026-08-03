@@ -24,6 +24,8 @@ interface Props {
   lootItems: PickerItem[];
   /** Актуальный список выбранных id — для сабмита в родителе. */
   onChange: (selectedIds: string[]) => void;
+  /** Предвыбранные предметы (модерация: то, что заявил подавший) — читаются только на маунт. */
+  initial?: PickerItem[];
 }
 
 /** Чип-иконка предмета (общий вид с лут-таблицей: фон-редкость + инсет-тень + кольцо выбора). */
@@ -46,14 +48,17 @@ function ItemChip({ item, on, onClick }: { item: PickerItem; on: boolean; onClic
   );
 }
 
-export function RoomItemPicker({ lootItems, onChange }: Props) {
-  const [sel, setSel] = useState<Set<string>>(new Set());
-  const [extra, setExtra] = useState<PickerItem[]>([]); // выбранные предметы вне лут-таблицы (из поиска)
-  const [q, setQ] = useState('');
-  const [hits, setHits] = useState<SearchItemResult[]>([]);
-
+export function RoomItemPicker({ lootItems, onChange, initial }: Props) {
   // Множество id лут-таблицы — стабильно на маунт (сброс = remount по key в родителе).
   const lootIds = useRef<Set<string>>(new Set(lootItems.map((i) => i.itemId)));
+  // Преднаполнение (модерация): выбранные id + чипы для тех предвыбранных, что вне лут-таблицы.
+  const [sel, setSel] = useState<Set<string>>(() => new Set((initial ?? []).map((i) => i.itemId)));
+  const [extra, setExtra] = useState<PickerItem[]>(() => {
+    const ids = new Set(lootItems.map((i) => i.itemId)); // локальный набор — реф нельзя читать в рендере
+    return (initial ?? []).filter((i) => !ids.has(i.itemId));
+  });
+  const [q, setQ] = useState('');
+  const [hits, setHits] = useState<SearchItemResult[]>([]);
 
   // Родитель получает актуальный выбор (эффект, не сайд-эффект в updater'е). onChange стабилен (useState-сеттер).
   useEffect(() => {

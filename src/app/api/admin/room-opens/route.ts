@@ -68,9 +68,13 @@ export async function PATCH(req: Request): Promise<NextResponse> {
   if (!UUID_RE.test(openId)) return err(422, "Некорректный openId");
   const action = body.action === "approve" || body.action === "reject" ? body.action : null;
   if (!action) return err(422, "action: approve | reject");
+  // Опц. правка списка предметов модератором (только для approve). undefined — не трогаем набор.
+  const itemIds = Array.isArray(body.itemIds)
+    ? body.itemIds.filter((x): x is string => typeof x === "string" && x.length > 0 && x.length <= 40).slice(0, 50)
+    : undefined;
 
   try {
-    const res = await moderateRoomOpen(openId, action, me.id);
+    const res = await moderateRoomOpen(openId, action, me.id, itemIds);
     if (!res.ok) return err(404, "Открытие не найдено");
   } catch (e) {
     console.error("[api/admin/room-opens PATCH]", e);

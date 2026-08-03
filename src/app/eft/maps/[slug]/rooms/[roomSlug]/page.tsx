@@ -275,7 +275,7 @@ export default async function MarkedRoomPage({ params }: Props) {
 
         {isAdmin ? (
           <div className="mt-4 flex flex-col gap-3">
-            {pending.length > 0 && <RoomOpenModeration pending={pending} mapSlug={slug} roomSlug={roomSlug} />}
+            {pending.length > 0 && <RoomOpenModeration pending={pending} mapSlug={slug} roomSlug={roomSlug} lootItems={lootItemsForForm} />}
             <RoomOpenAdder roomId={room.id} mapSlug={slug} roomSlug={roomSlug} lootItems={lootItemsForForm} />
           </div>
         ) : me ? (

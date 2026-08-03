@@ -210,10 +210,25 @@ export async function submitRoomOpen(
   return open.id;
 }
 
-/** Модерация: approve (→approved + репутация автору) / reject (→rejected). */
-export async function moderateRoomOpen(openId: string, action: "approve" | "reject", moderatorId: string): Promise<{ ok: boolean }> {
+/**
+ * Модерация: approve (→approved + репутация автору) / reject (→rejected).
+ * `itemIds` (только для approve) — модератор поправил список найденных предметов: заменяем набор
+ * открытия перед сменой статуса. undefined — оставляем как заявил подавший; [] — очистить.
+ */
+export async function moderateRoomOpen(
+  openId: string,
+  action: "approve" | "reject",
+  moderatorId: string,
+  itemIds?: string[],
+): Promise<{ ok: boolean }> {
   const [open] = await db.select({ authorId: roomOpens.authorId }).from(roomOpens).where(eq(roomOpens.id, openId));
   if (!open) return { ok: false };
+  // Замена набора предметов — до смены статуса: упадёт запись — открытие не одобрится.
+  if (action === "approve" && itemIds !== undefined) {
+    const uniq = [...new Set(itemIds.filter((s) => typeof s === "string" && s.length > 0))];
+    await db.delete(roomOpenItems).where(eq(roomOpenItems.openId, openId));
+    if (uniq.length) await db.insert(roomOpenItems).values(uniq.map((itemId) => ({ openId, itemId, qty: 1 })));
+  }
   await db
     .update(roomOpens)
     .set({ status: action === "approve" ? "approved" : "rejected", moderatorId, moderatedAt: new Date() })
