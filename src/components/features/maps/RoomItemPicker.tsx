@@ -4,7 +4,7 @@
 // каталогу (предмет мог выпасть вне топ-таблицы). Поиск — searchEftItemsAction (наше зеркало, без
 // рантайм-вызова api.tarkov.dev), дебаунс 250мс — паттерн как в EditorialMarkerCard. Владеет выбором,
 // сообщает родителю актуальный список id через onChange. Общий для формы юзера (RoomOpenSubmit) и
-// модератора (RoomOpenAdder). Решение: docs/decisions/marked-rooms.md (трекер v2.1 — поиск вне лут-таблицы).
+// модератора (RoomOpenAdder). Решение: docs/decisions/done/marked-rooms.md (трекер v2.1 — поиск вне лут-таблицы).
 import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { itemIconUrl } from '@/lib/item-icon';

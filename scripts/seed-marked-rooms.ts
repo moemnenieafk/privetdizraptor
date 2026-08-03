@@ -1,4 +1,4 @@
-// Сид реестра `marked_rooms` из синканных lock-маркеров (Фаза 1.5, docs/decisions/marked-rooms.md).
+// Сид реестра `marked_rooms` из синканных lock-маркеров (Фаза 1.5, docs/decisions/done/marked-rooms.md).
 // Меченый замок опознаём тем же классификатором `lockKind` из map-marker-icons.ts (точка правды).
 // Идемпотентно: снести существующие kind='marked' (eft) → вставить свежие; kind='lab_color' НЕ трогаем.
 //   npx tsx scripts/seed-marked-rooms.ts --dry   — превью без записи

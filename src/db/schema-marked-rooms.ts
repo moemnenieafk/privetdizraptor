@@ -1,4 +1,4 @@
-// Drizzle query-дефиниции таблиц меченых комнат (docs/decisions/marked-rooms.md, Фаза 1).
+// Drizzle query-дефиниции таблиц меченых комнат (docs/decisions/done/marked-rooms.md, Фаза 1).
 // ⚠️ Миграцию ведёт marked-rooms-ddl.ts (db:migrate-all), НЕ schema.ts → db:push эти таблицы не
 //    трогает (как schema-markers.ts / schema-editorial.ts). Здесь — типизированный доступ для
 //    будущих ридеров/райтеров. Форма 1:1 с MARKED_ROOMS_DDL.

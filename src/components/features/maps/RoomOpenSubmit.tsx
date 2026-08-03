@@ -2,7 +2,7 @@
 
 // Публичная подача открытия меченой комнаты (любой авторизованный) → на модерацию (pending).
 // Пикер предметов (чипы лут-таблицы + поиск по каталогу) + обязательный пруф-ссылка YouTube → POST /api/room-opens.
-// Решение: docs/decisions/marked-rooms.md (трекер v2 + v2.1 — поиск вне лут-таблицы).
+// Решение: docs/decisions/done/marked-rooms.md (трекер v2 + v2.1 — поиск вне лут-таблицы).
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoomItemPicker, type PickerItem } from './RoomItemPicker';

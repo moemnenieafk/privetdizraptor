@@ -1,6 +1,6 @@
 // Страница меченой/цветной комнаты: /eft/maps/<map>/rooms/<slug>.
 // RSC — читает getMarkedRoomBySlug (комната + экономика ключа + лут-таблица + вердикт).
-// Решение: docs/decisions/marked-rooms.md (Фаза 2). Макет: docs/mockups/marked-room/.
+// Решение: docs/decisions/done/marked-rooms.md (Фаза 2). Макет: docs/mockups/marked-room/.
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';

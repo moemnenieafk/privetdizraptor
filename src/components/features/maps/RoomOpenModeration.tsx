@@ -3,7 +3,7 @@
 // Панель модерации меченой комнаты (admin|editor): очередь pending-открытий → Принять / Отклонить.
 // ✎ раскрывает RoomItemPicker (преднаполнен тем, что заявил подавший) — модератор правит список
 // найденных предметов перед approve. PATCH /api/admin/room-opens. Принять → approved + репутация
-// автору (+ при правке — замена набора предметов). Решение: docs/decisions/marked-rooms.md (v2.1).
+// автору (+ при правке — замена набора предметов). Решение: docs/decisions/done/marked-rooms.md (v2.1).
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, X, ExternalLink, Pencil } from 'lucide-react';

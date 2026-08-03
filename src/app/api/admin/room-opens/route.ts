@@ -1,6 +1,6 @@
 // /api/admin/room-opens — добавить ПОДТВЕРЖДЁННОЕ открытие меченой комнаты (админ/модератор).
 //   POST { roomId, itemIds[], mapSlug?, roomSlug? } — создаёт approved-открытие + предметы, +ревалидация.
-// Права: admin | editor (canEditContent). moderatorId ставит сервер. Решение: docs/decisions/marked-rooms.md.
+// Права: admin | editor (canEditContent). moderatorId ставит сервер. Решение: docs/decisions/done/marked-rooms.md.
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getMe } from "@/lib/auth/me";

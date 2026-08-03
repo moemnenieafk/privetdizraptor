@@ -1,7 +1,7 @@
 'use client';
 
 // Личный счётчик «сколько раз Я открыл эту комнату» (localStorage, per-room) + прогресс к окупаемости
-// ключа. Индивидуальный — отдельно от общего трекера сообщества. Решение: docs/decisions/marked-rooms.md.
+// ключа. Индивидуальный — отдельно от общего трекера сообщества. Решение: docs/decisions/done/marked-rooms.md.
 import { useSyncExternalStore } from 'react';
 import { Minus, Plus, RotateCcw } from 'lucide-react';
 import { useRoomOpensStore } from '@/store/useRoomOpensStore';

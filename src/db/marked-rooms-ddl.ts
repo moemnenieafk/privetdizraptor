@@ -1,4 +1,4 @@
-// МЕЧЕНЫЕ И ЦВЕТНЫЕ КОМНАТЫ — трекер открытий. Решение docs/decisions/marked-rooms.md (Фаза 1).
+// МЕЧЕНЫЕ И ЦВЕТНЫЕ КОМНАТЫ — трекер открытий. Решение docs/decisions/done/marked-rooms.md (Фаза 1).
 // ⚠️ Таблицы создаются аддитивно и идемпотентно (create if not exists); db:push их НЕ трогает
 //    (не в schema.ts) → чужой db:push не откатит их RLS. Паттерн — markers-ddl.ts (накат
 //    db:migrate-all, auto-discovery по экспорту *_DDL). Query-дефиниция для Drizzle —

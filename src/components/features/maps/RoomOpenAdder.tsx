@@ -2,7 +2,7 @@
 
 // Инструмент модератора: добавить подтверждённое открытие меченой комнаты.
 // Пикер предметов (чипы лут-таблицы + поиск по каталогу) → POST /api/admin/room-opens.
-// Рендерится только для admin|editor (страница проверяет canEditContent). Решение: docs/decisions/marked-rooms.md.
+// Рендерится только для admin|editor (страница проверяет canEditContent). Решение: docs/decisions/done/marked-rooms.md.
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoomItemPicker, type PickerItem } from './RoomItemPicker';
