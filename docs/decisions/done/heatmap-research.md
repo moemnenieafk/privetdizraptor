@@ -1,5 +1,6 @@
 ---
-status: 🔬 research — подготовка к грил-сессии + мини-спеке; код НЕ писан
+status: ✅ Закрыто (2026-08-03, superseded) — research отработал: грил проведён, спека [[heatmap-loot-ev-dataset]] реализована и в main. Архив.
+closed: 2026-08-03
 affects: maps, eft-maps, loot, map-interactions, leaflet
 date: 2026-08-01
 ---
@@ -363,7 +364,7 @@ Leaflet-карты EFT перед грил-сессией с владельце�
 - `src/db/prices.ts` — `getEftPriceIndex`/`EftPriceIndexInfo` (`:260-304`).
 - `src/components/features/maps/map-types.ts` — `MapViewMarker` (только координаты, без веса).
 - `src/data/map-markers/loot-15.ts` — объёмы («~4500 на ведро бартера», `:5`).
-- `docs/decisions/loot-filter.md`, `reverse-key-doors.md` — паттерн «рецепт 2» (оверлей вне LOD +
+- `docs/decisions/done/loot-filter.md`, `reverse-key-doors.md` — паттерн «рецепт 2» (оверлей вне LOD +
   эфемерный стор).
 
 ---

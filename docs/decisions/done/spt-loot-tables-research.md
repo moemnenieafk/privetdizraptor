@@ -1,5 +1,6 @@
 ---
-status: 🔬 research — feasibility шага 1 спеки [[heatmap-loot-ev-dataset]]; код НЕ писан, дампы НЕ качались
+status: ✅ Закрыто (2026-08-03, superseded) — feasibility подтверждён, лут ингещён в [[heatmap-loot-ev-dataset]] (в main). Архив.
+closed: 2026-08-03
 affects: eft-maps, loot, data-ingest, supabase, heatmap
 date: 2026-08-01
 ---
@@ -371,7 +372,7 @@ join-совместимыми id. План спеки (шаги 2–5: дамп 
 
 **Наш код/доки (внутренние):**
 - `MapViewerClient.tsx` — CRS (`:50-64`), `ll=(p)=>[p.z,p.x]` (`:69`), floor (`applyFloor`).
-- `docs/decisions/heatmap-loot-ev-dataset.md` (спека, шаг 1) · `heatmap-research.md` (priceIndex/join,
+- `docs/decisions/done/heatmap-loot-ev-dataset.md` (спека, шаг 1) · `heatmap-research.md` (priceIndex/join,
   объёмы) · `eft-data-autonomy-research.md` (инжест фактов игры) · `container-grids-todo.md:10`
   (лаг SPT/tarkov.dev за патчем) · `HANDOFF-step-marker-wizard.md:137` (`isItemId`=24-hex).
 

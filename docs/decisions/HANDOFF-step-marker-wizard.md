@@ -7,7 +7,7 @@ read-first: true
 # HANDOFF — Interactive Maps: editorial-маркеры → Step Marker Wizard
 
 **Первым делом в новом чате прочитать:** этот файл + `docs/decisions/UI - Step Marker Creation
-control.md` (полная дизайн-спека визарда) + `docs/decisions/editorial-markers-tool.md` (что уже
+control.md` (полная дизайн-спека визарда) + `docs/decisions/done/editorial-markers-tool.md` (что уже
 построено). Скилл реализации — `/figma` (брать отдельный скрин КАЖДОГО фрейма, не по памяти).
 
 ## Git-состояние
