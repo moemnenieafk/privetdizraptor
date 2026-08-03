@@ -58,7 +58,12 @@ def ntype(name, norm):
 def main():
     feed = json.load(open(FEED, encoding="utf-8"))["data"]["items"]
     cat = json.load(open(CATALOG, encoding="utf-8"))
-    new = cat[-291:]
+    # «новые» ингест-предметы устойчиво по маркеру (пустое описание + имя ru==en),
+    # а не по позиции — чтобы не ломалось после чистки мусора.
+    new = [it for it in cat
+           if it.get("descriptions", {}).get("en", "") == ""
+           and it["names"]["ru"] == it["names"]["en"]
+           and it["id"] in feed]
     for it in new:
         it["_norm"] = feed.get(it["id"], {}).get("normalizedName", "")
         it["_toks"] = toks(it["names"]["en"] + " " + it["_norm"])

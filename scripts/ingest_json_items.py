@@ -21,6 +21,9 @@ FEED_CACHE = ".tmp/tkitems.json"
 CATALOG = "public/images/items/eft/items_database.json"
 DRY = "--dry" in sys.argv
 
+# Мусорные серии из фида (промо/Twitch-дропы/пронумерованные дубли) — НЕ заводим в каталог.
+JUNK_NORM_PREFIXES = ("twitch-seasons",)
+
 CALIBER = re.compile(r"^(\d)(\d{1,2})x(\d+)$")  # 58x42->5.8x42, 556x45->5.56x45, 762x51->7.62x51
 
 _GENERIC = {"assault", "rifle", "carbine", "barrel", "magazine", "sight", "mount", "receiver",
@@ -83,6 +86,8 @@ def main():
     for iid in new_ids:
         it = feed[iid]
         norm = it.get("normalizedName") or ""
+        if any(norm.startswith(p) for p in JUNK_NORM_PREFIXES):
+            continue  # мусор — пропускаем
         name = derive_name(norm)
         short = derive_short(norm, name)
         props = it.get("properties")
