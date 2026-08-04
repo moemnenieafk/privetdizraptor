@@ -54,6 +54,17 @@ async function glassTintFromTarkovDev(id, sharp) {
   return n ? [r / n / 255, g / n / 255, b / n / 255] : null;
 }
 
+// --- сборка дефолт-пресета (Гейт-3): preset-файл [{slot,bundleKey}], резолв deps через Windows.json ---
+const ASSEMBLY = arg("assembly", null);
+let WCAT = null;
+const partResolve = (key) => {
+  if (!WCAT) WCAT = JSON.parse(readFileSync(join(WIN, "Windows.json"), "utf8"));
+  const e = WCAT[key];
+  const deps = (e?.Dependencies || []).map((d) => join(WIN, d)).filter(existsSync);
+  return { bundlePath: join(WIN, key), depPaths: deps };
+};
+const ASSEMBLY_PARTS = ASSEMBLY && existsSync(ASSEMBLY) ? JSON.parse(readFileSync(ASSEMBLY, "utf8")) : null;
+
 // --- 2. собрать jobs ---
 const jobs = [];
 const glassToFix = [];
@@ -71,6 +82,7 @@ for (const id of ids) {
     // которого НЕТ в Windows.json Dependencies → без ручной догрузки рендер выходит ПУСТЫМ.
     const bundleAbs = join(WIN, m.bundleKey || key);
     const isWeapon = bundleAbs.replace(/\\/g, "/").includes("/weapons/");
+    const isDogtag = /dogtag/i.test(bundleAbs.replace(/\\/g, "/"));
     const extraDeps = [];
     if (isWeapon) {
       const bdir = dirname(bundleAbs);
@@ -89,10 +101,21 @@ for (const id of ids) {
       pivotRotation: m.pivotRotation,
       cameraMode: 5, // предмет=identity, камера=Inverse(Icon.rotation) — пиксель-точно (сверено: 0.0° vs tarkov.dev)
       weaponMode: isWeapon ? 1 : 0, // оружейный контейнер: визуал из client_assets, отсечь fp-руки/LOD1+
+      dogtagMode: isDogtag ? 1 : 0, // жетон: кадр по пластине (широкая полоса), цепь уходит вверх за кадр
       perspective: m.perspective, boundsScale: m.boundsScale,
       orthographic: m.orthographic | 0, orthographicSize: m.orthographicSize || 10,
       outPath: join(OUT, `${id}.png`), res: parseInt(arg("master", "2048"), 10),
     };
+    if (ASSEMBLY_PARTS && isWeapon) {
+      // Древо-пресет: [{partId,parentId,slot,bundleKey,root}]. root = главный префаб (inst). Остальные крепятся к слоту parentId.
+      const rootE = ASSEMBLY_PARTS.find((e) => e.root); // корень = только явный root:true (у флэт-пресета его нет — рендерится ствол из --map)
+      if (rootE) job.rootPartId = rootE.partId;
+      job.assembly = ASSEMBLY_PARTS.filter((e) => !e.root).map((e) => {
+        const r = partResolve(e.bundleKey);
+        return { partId: e.partId, parentId: e.parentId, slot: e.slot, bundlePath: r.bundlePath, depPaths: r.depPaths };
+      });
+      console.log(`  assembly: ${job.assembly.length} частей по дереву (root=${job.rootPartId})`);
+    }
     jobs.push(job);
     if (m.isGlass) glassToFix.push({ job, id }); // стекло -> авто-тинт из иконки tarkov.dev
   } catch (e) { console.log(`  FAIL prep ${id}: ${String(e.message || e).split("\n")[0]}`); }

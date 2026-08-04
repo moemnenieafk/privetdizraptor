@@ -37,6 +37,17 @@ public static class IconRenderer
         public float[] glassTint;    // хак для стекла: заменить материал на непрозрачный с этим тинтом (+нормаль-фростинг)
         public int weaponMode;       // 1 = оружейный контейнер: визуал в client_assets отдельными GO;
                                      //     собрать по ВСЕМ бандлам, отсечь fp-руки (Base Human*/joint*) и LOD1+
+        public int dogtagMode;       // 1 = жетон: цепь раздувает верт. границы -> кадр по ПЛАСТИНЕ (широкие ряды),
+                                     //     цепь уходит вверх за кадр (как на tarkov.dev)
+        public AssemblyPart[] assembly; // сборка дефолт-пресета оружия ПО ДЕРЕВУ (родитель→ребёнок)
+        public string rootPartId;    // partId, соответствующий главному префабу (inst) — корень дерева
+    }
+    [Serializable] public class AssemblyPart {
+        public string partId;        // id этой части в дереве пресета
+        public string parentId;      // id родителя (пусто/rootPartId → крепить к слоту КОРНЯ оружия)
+        public string slot;          // имя слот-трансформа на РОДИТЕЛЕ (mod_barrel/mod_stock/…)
+        public string bundlePath;    // бандл мода (с визуалом)
+        public string[] depPaths;    // текстуры/шейдеры мода (иначе белый)
     }
     [Serializable] public class JobList { public Job[] jobs; }
 
@@ -91,6 +102,7 @@ public static class IconRenderer
                 // иначе цепляется чужой ассет из общих deps (foregrip и т.п. без материалов).
                 string wdir = Path.GetDirectoryName(mainFull);
                 int best = -1;
+                bool wantSlots = job.assembly != null && job.assembly.Length > 0;
                 foreach (var b in bundles) {
                     if (!bpath.TryGetValue(b, out var bp) || !bp.StartsWith(wdir)) continue;
                     foreach (var g in b.LoadAllAssets<GameObject>()) {
@@ -102,7 +114,12 @@ public static class IconRenderer
                                 System.Text.RegularExpressions.Regex.IsMatch(nm, "_LOD[1-9]")) continue;
                             n++;
                         }
-                        if (n > best) { best = n; prefab = g; }
+                        // При сборке предпочесть КОРЕНЬ СО СЛОТАМИ (mod_*): слоты, ресивер и моды окажутся в ОДНОМ фрейме.
+                        // Без сборки — как раньше, по максимуму мешей.
+                        int slots = 0;
+                        if (wantSlots) foreach (var t in g.GetComponentsInChildren<Transform>(true)) if (t.gameObject.name.StartsWith("mod_")) slots++;
+                        int score = wantSlots ? slots * 1000 + n : n;
+                        if (score > best) { best = score; prefab = g; }
                     }
                 }
             } else {
@@ -119,7 +136,7 @@ public static class IconRenderer
             if (prefab == null) throw new Exception("префаб не найден в бандле");
 
             inst = UnityEngine.Object.Instantiate(prefab);
-            inst.transform.position = Vector3.zero;
+            inst.transform.position = Vector3.zero; // монтаж модов относителен слотам инстанса → корень можно в origin
             // Оружие: отсечь fp-руки (SkinnedMeshRenderer рига) и LOD1+ — оставить только визуал предмета.
             if (job.weaponMode == 1) {
                 foreach (var r in inst.GetComponentsInChildren<Renderer>(true)) {
@@ -127,6 +144,60 @@ public static class IconRenderer
                     if (r is SkinnedMeshRenderer || nm.StartsWith("Base Human") || nm.StartsWith("joint") ||
                         System.Text.RegularExpressions.Regex.IsMatch(nm, "_LOD[1-9]"))
                         r.enabled = false;
+                }
+            }
+
+            // Сборка дефолт-пресета ПО ДЕРЕВУ (калибровано на эталоне): каждый part цепляется к СЛОТУ своего РОДИТЕЛЯ
+            // (корень мода → слот-трансформ родителя, zero-local = mount на слот), рекурсия по parentId через instMap.
+            // Порядок assembly[] = родитель раньше ребёнка. rootPartId = partId главного префаба (inst).
+            if (job.assembly != null && job.assembly.Length > 0) {
+                var instMap = new Dictionary<string, GameObject>();
+                if (!string.IsNullOrEmpty(job.rootPartId)) instMap[job.rootPartId] = inst;
+                foreach (var part in job.assembly) {
+                    if (part == null || string.IsNullOrEmpty(part.bundlePath)) continue;
+                    if (part.depPaths != null) foreach (var dp in part.depPaths) {
+                        if (string.IsNullOrEmpty(dp) || !File.Exists(dp)) continue;
+                        var f = Path.GetFullPath(dp).ToLowerInvariant();
+                        if (!seenPaths.Add(f)) continue;
+                        var db = AssetBundle.LoadFromFile(dp); if (db != null) { bundles.Add(db); bpath[db] = f; }
+                    }
+                    AssetBundle pb = null;
+                    var pf = Path.GetFullPath(part.bundlePath).ToLowerInvariant();
+                    if (seenPaths.Add(pf)) { pb = AssetBundle.LoadFromFile(part.bundlePath); if (pb != null) { bundles.Add(pb); bpath[pb] = pf; } }
+                    if (pb == null) { Console.WriteLine($"[assembly] бандл не загрузился/дубль: {part.slot}"); continue; }
+                    GameObject mp = null; int mbest = -1;
+                    foreach (var g in pb.LoadAllAssets<GameObject>()) {
+                        if (g.transform.parent != null) continue; // корень префаба мода = точка крепления (mount origin)
+                        int n = 0;
+                        foreach (var mf in g.GetComponentsInChildren<MeshFilter>(true)) {
+                            if (mf.sharedMesh == null) continue;
+                            var nm2 = mf.gameObject.name;
+                            if (nm2.StartsWith("Base Human") || nm2.StartsWith("joint") || System.Text.RegularExpressions.Regex.IsMatch(nm2, "_LOD[1-9]")) continue;
+                            n++;
+                        }
+                        if (n > mbest) { mbest = n; mp = g; }
+                    }
+                    if (mp == null) { Console.WriteLine($"[assembly] нет меша: {part.slot}"); continue; }
+                    // РОДИТЕЛЬ: инстанс части parentId (или корень оружия, если parent пуст/не найден)
+                    GameObject parentInst = inst;
+                    if (!string.IsNullOrEmpty(part.parentId) && instMap.TryGetValue(part.parentId, out var pi)) parentInst = pi;
+                    // СЛОТ в поддереве родителя
+                    Transform slotT = null;
+                    foreach (var t in parentInst.GetComponentsInChildren<Transform>(true)) if (t.gameObject.name == part.slot) { slotT = t; break; }
+                    if (slotT == null) { Console.WriteLine($"[assembly] слот {part.slot} не найден у родителя {part.parentId} — пропуск"); continue; }
+                    var mi = UnityEngine.Object.Instantiate(mp);
+                    foreach (var r in mi.GetComponentsInChildren<Renderer>(true)) {
+                        var nm3 = r.gameObject.name;
+                        if (r is SkinnedMeshRenderer || nm3.StartsWith("Base Human") || nm3.StartsWith("joint") || System.Text.RegularExpressions.Regex.IsMatch(nm3, "_LOD[1-9]")) r.enabled = false;
+                    }
+                    // МОНТАЖ: корень мода на слот родителя, обнулить локаль → mount мода = позиция/ориентация слота
+                    // Моды: POSITION mount-relative (меш в origin), а ROTATION уже weapon-space (авторская).
+                    // → ТОЛЬКО трансляция root в мировую позицию слота; поворот НЕ наследуем от слота и НЕ обнуляем.
+                    var slotWorld = slotT.position;
+                    mi.transform.SetParent(inst.transform, true); // keep-world сохраняет авторскую ориентацию мода
+                    mi.transform.position = slotWorld;            // сдвиг mount(origin) → точка слота
+                    if (!string.IsNullOrEmpty(part.partId)) instMap[part.partId] = mi;
+                    Console.WriteLine($"[assembly] {part.slot} → ({slotWorld.x:F3},{slotWorld.y:F3},{slotWorld.z:F3})");
                 }
             }
             // модели композиции pivotRotation/Icon.rotation (перебор для точного ракурса)
@@ -224,16 +295,34 @@ public static class IconRenderer
                 mt.ReadPixels(new Rect(0, 0, mres, mres), 0, 0); mt.Apply(); RenderTexture.active = prevA;
                 var pxs = mt.GetPixels32();
                 int minx = mres, miny = mres, maxx = -1, maxy = -1;
+                int[] rMinX = new int[mres], rMaxX = new int[mres];
+                for (int y = 0; y < mres; y++) { rMinX[y] = mres; rMaxX[y] = -1; }
                 for (int y = 0; y < mres; y++) for (int x = 0; x < mres; x++)
-                    if (pxs[y * mres + x].a > 20) { if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; }
+                    if (pxs[y * mres + x].a > 20) {
+                        if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y;
+                        if (x < rMinX[y]) rMinX[y] = x; if (x > rMaxX[y]) rMaxX[y] = x;
+                    }
                 UnityEngine.Object.DestroyImmediate(mt); mrt.Release(); UnityEngine.Object.DestroyImmediate(mrt);
                 if (maxx >= minx) {
                     float halfTan = Mathf.Tan(cam.fieldOfView * Mathf.Deg2Rad * 0.5f);
                     float wpp = (2f * dist * halfTan) / mres; // мир на пиксель на глубине предмета
                     float cx = (minx + maxx) * 0.5f, cy = (miny + maxy) * 0.5f;
-                    cam.transform.position += cam.transform.right * ((cx - mres * 0.5f) * wpp) + cam.transform.up * ((cy - mres * 0.5f) * wpp);
                     float extent = Mathf.Max(maxx - minx, maxy - miny) + 1f;
-                    float newFov = 2f * Mathf.Atan((extent / (mres * target)) * halfTan) * Mathf.Rad2Deg;
+                    float tgt = target;
+                    if (job.dogtagMode != 0) {
+                        // жетон: цепь раздувает верт. границы -> кадрируем по ПЛАСТИНЕ = полоса самых широких рядов,
+                        // цепь уходит вверх за кадр (как на tarkov.dev). Центр и зум — по этой полосе, не по всему альфа.
+                        int maxRW = 0;
+                        for (int y = 0; y < mres; y++) if (rMaxX[y] >= rMinX[y]) { int w = rMaxX[y] - rMinX[y]; if (w > maxRW) maxRW = w; }
+                        int bminx = mres, bmaxx = -1, bminy = mres, bmaxy = -1;
+                        for (int y = 0; y < mres; y++) if (rMaxX[y] >= rMinX[y] && (rMaxX[y] - rMinX[y]) >= 0.55f * maxRW) {
+                            if (rMinX[y] < bminx) bminx = rMinX[y]; if (rMaxX[y] > bmaxx) bmaxx = rMaxX[y];
+                            if (y < bminy) bminy = y; if (y > bmaxy) bmaxy = y;
+                        }
+                        if (bmaxx >= bminx) { cx = (bminx + bmaxx) * 0.5f; cy = (bminy + bmaxy) * 0.5f; extent = Mathf.Max(bmaxx - bminx, bmaxy - bminy) + 1f; tgt = 0.80f; }
+                    }
+                    cam.transform.position += cam.transform.right * ((cx - mres * 0.5f) * wpp) + cam.transform.up * ((cy - mres * 0.5f) * wpp);
+                    float newFov = 2f * Mathf.Atan((extent / (mres * tgt)) * halfTan) * Mathf.Rad2Deg;
                     cam.fieldOfView = Mathf.Clamp(newFov, 0.3f, 60f);
                 }
             }
