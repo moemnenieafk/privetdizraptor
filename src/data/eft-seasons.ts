@@ -5,9 +5,9 @@
 //     Основной профиль (стаж, схрон, убежище, Каппа) не трогается вообще.
 //   • Сезонные модификаторы навязаны всем — их не выбирают.
 //   • Личные модификаторы — БЮДЖЕТ: старт 0 очков, негативные ДАЮТ очки, позитивные ТРАТЯТ.
-//     Баланс обязан остаться ≥ 0. Хочешь Каппу (−21) — набери +21 болью.
+//     Баланс обязан остаться ≥ 0. Хочешь Каппу (−12) — набери +12 болью.
 //
-// ⚠ Цифры и формулировки — из превью сезона; BSG может подкрутить их к релизу.
+// ✔ Цифры и формулировки сверены с релизом 1.1.0.0 (экран «Личные модификаторы» в игре).
 // Иконки: SVG-ассеты сезона 1 (отрисованы V4DYA) — монохром, красятся в UI CSS-маской
 // по типу перка (баф → зелёный, дебаф → красный, сезонный/глобальный → lightkeeper).
 // Имена файлов не равны id — маппинг ниже (S1_PERK_ICON).
@@ -97,7 +97,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
     effects: ['Персонаж получает на 25% больше опыта за рейд.'],
   },
 
-  /* ── Позитивные: тратят очки ────────────────────────────────────── */
+  /* ── Позитивные: тратят очки (по возрастанию цены) ──────────────── */
   {
     id: 'street-tax',
     name: 'Бизнесмен',
@@ -106,15 +106,23 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
     effects: ['Раз в неделю часть Диких отстёгивает вам за «крышу».'],
   },
   {
+    id: 'lucky',
+    name: 'Везучий',
+    cost: -1,
+    kind: 'positive',
+    effects: ['Fortes fortuna adiuvat.'],
+    excludes: ['unlucky'],
+  },
+  {
     id: 'diet',
     name: 'Диета',
-    cost: -1,
+    cost: -2,
     kind: 'positive',
     effects: ['Вся провизия расходуется вдвое экономнее.'],
   },
   {
     id: 'juice-time',
-    name: 'The Juice Time',
+    name: 'Juice Time',
     cost: -2,
     kind: 'positive',
     effects: ['Выпитый сок даёт эффект обезболивающего на 60 секунд.'],
@@ -124,14 +132,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
     name: 'Ностальгия моряка',
     cost: -2,
     kind: 'positive',
-    effects: ['Консервированная рыба даёт регенерацию здоровья (+2) на 10 секунд.'],
-  },
-  {
-    id: 'sprinter',
-    name: 'Спринтер',
-    cost: -2,
-    kind: 'positive',
-    effects: ['Скорость бега выше на 5%.'],
+    effects: ['Консервированная рыба даёт регенерацию здоровья (+2) на 30 секунд.'],
   },
   {
     id: 'thrombophilia',
@@ -146,7 +147,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
     name: 'Гиподипсия',
     cost: -2,
     kind: 'positive',
-    effects: ['Гидратация расходуется на 15% медленнее.'],
+    effects: ['Гидратация расходуется на 20% медленнее.'],
     excludes: ['polydipsia'],
   },
   {
@@ -154,99 +155,98 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
     name: 'Полифагия',
     cost: -2,
     kind: 'positive',
-    effects: ['Энергия расходуется на 15% медленнее.'],
+    effects: ['Энергия расходуется на 20% медленнее.'],
     excludes: ['chronic-fatigue'],
+  },
+  {
+    id: 'tarkov-shooter',
+    name: 'Тарковский стрелок',
+    cost: -2,
+    kind: 'positive',
+    effects: [
+      'Навык «Болтовые винтовки» качается вдвое быстрее.',
+      'Навык стартует с 25 уровня.',
+    ],
+  },
+  {
+    id: 'sprinter',
+    name: 'Спринтер',
+    cost: -3,
+    kind: 'positive',
+    effects: ['Скорость бега выше на 5%.'],
   },
   {
     id: 'marathon-runner',
     name: 'Марафонец',
     cost: -3,
     kind: 'positive',
-    effects: ['Выносливость рук и ног тратится на 15% медленнее.'],
+    effects: ['Выносливость рук и ног тратится на 20% медленнее.'],
     excludes: ['exhaustion'],
-  },
-  {
-    id: 'youth',
-    name: 'Молодость',
-    cost: -3,
-    kind: 'positive',
-    effects: ['Энергия расходуется на 20% медленнее.', 'Выносливость рук и ног выше на 10.'],
-    excludes: ['exhaustion', 'chronic-fatigue'],
-  },
-  {
-    id: 'tarkov-shooter',
-    name: 'Тарковский стрелок',
-    cost: -3,
-    kind: 'positive',
-    effects: [
-      'Навык «Болтовые винтовки» качается вдвое быстрее.',
-      'Навык стартует с 10 уровня.',
-    ],
-  },
-  {
-    id: 'hercules',
-    name: 'Геркулес',
-    cost: -3,
-    kind: 'positive',
-    effects: ['Навыки «Сила» и «Выносливость» стартуют с 15 уровня.'],
   },
   {
     id: 'sturdy-bones',
     name: 'Крепкие кости',
     cost: -3,
     kind: 'positive',
-    effects: ['Шанс перелома ниже на 15%.', 'Урон от падения меньше на 15%.'],
+    effects: ['Шанс перелома ниже на 25%.', 'Урон от падения меньше на 20%.'],
     excludes: ['osteoporosis'],
   },
   {
-    id: 'bushborne',
-    name: 'Кусторожденный',
+    id: 'youth',
+    name: 'Молодость',
     cost: -5,
     kind: 'positive',
-    effects: ['Ходьба по растительности вдвое тише и вдвое меньше замедляет.'],
+    effects: ['Энергия расходуется на 20% медленнее.', 'Выносливость рук и ног выше на 10.'],
+    excludes: ['exhaustion', 'chronic-fatigue'],
+  },
+  {
+    id: 'hercules',
+    name: 'Геркулес',
+    cost: -5,
+    kind: 'positive',
+    effects: ['Навыки «Сила» и «Выносливость» стартуют с 15 уровня.'],
+  },
+  {
+    id: 'wunderkind',
+    name: 'Вундеркинд',
+    cost: -5,
+    kind: 'positive',
+    effects: ['Опыт умений начисляется на 30% быстрее.'],
+    excludes: ['incompetent', 'average'],
+  },
+  {
+    id: 'bushborne',
+    name: 'Кусторождённый',
+    cost: -5,
+    kind: 'positive',
+    effects: ['Задевание веток, травы и кустов на 75% тише и меньше замедляет.'],
   },
   {
     id: 'safecracker',
     name: 'Медвежатник',
-    cost: -6,
+    cost: -5,
     kind: 'positive',
-    effects: ['Механические ключи с шансом 20% не тратят прочность (карты-ключи не в счёт).'],
+    effects: ['Механические ключи с шансом 25% не тратят прочность (карты-ключи не в счёт).'],
   },
   {
     id: 'average',
     name: 'Середнячок',
-    cost: -10,
+    cost: -12,
     kind: 'positive',
     effects: [
       'Все навыки сразу на 25 уровне, но дальше не растут (кроме «Крафта»).',
     ],
-    excludes: ['incompetent'],
+    excludes: ['incompetent', 'wunderkind'],
   },
   {
     id: 'kappa-protocol',
     name: 'Kappa Protocol',
-    cost: -21,
+    cost: -12,
     kind: 'positive',
     effects: ['Разгрузочный контейнер «Каппа» выдаётся сразу.'],
   },
 
-  /* ── Негативные: дают очки ──────────────────────────────────────── */
-  {
-    id: 'polydipsia',
-    name: 'Полидипсия',
-    cost: 1,
-    kind: 'negative',
-    effects: ['Гидратация расходуется на 15% быстрее.'],
-    excludes: ['hypodipsia'],
-  },
-  {
-    id: 'chronic-fatigue',
-    name: 'Синдром хронической усталости',
-    cost: 1,
-    kind: 'negative',
-    effects: ['Энергия расходуется на 15% быстрее.'],
-    excludes: ['polyphagia', 'youth'],
-  },
+  /* ── Негативные: дают очки (по возрастанию награды) ─────────────── */
   {
     id: 'dr-jekyll',
     name: 'Доктор Джекил',
@@ -256,10 +256,34 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
   },
   {
     id: 'third-leg',
-    name: 'Большое достоинство',
+    name: 'Третья нога',
     cost: 1,
     kind: 'negative',
     effects: ['Скорость передвижения ниже на 1%.', 'Покупки у Терапевта дешевле на 5%.'],
+  },
+  {
+    id: 'unlucky',
+    name: 'Невезучий',
+    cost: 1,
+    kind: 'negative',
+    effects: ['Ваше невезение иногда оборачивается плачевными последствиями.'],
+    excludes: ['lucky'],
+  },
+  {
+    id: 'polydipsia',
+    name: 'Полидипсия',
+    cost: 2,
+    kind: 'negative',
+    effects: ['Гидратация расходуется на 15% быстрее.'],
+    excludes: ['hypodipsia'],
+  },
+  {
+    id: 'chronic-fatigue',
+    name: 'Синдром хронической усталости',
+    cost: 2,
+    kind: 'negative',
+    effects: ['Энергия расходуется на 20% быстрее.'],
+    excludes: ['polyphagia', 'youth'],
   },
   {
     id: 'hemophilia',
@@ -288,7 +312,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
     name: 'Остеопороз',
     cost: 3,
     kind: 'negative',
-    effects: ['Шанс перелома выше на 15%.', 'Урон от падения больше на 15%.'],
+    effects: ['Шанс перелома выше на 25%.', 'Урон от падения больше на 20%.'],
     excludes: ['sturdy-bones'],
   },
   {
@@ -296,43 +320,43 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
     name: 'Аллергик',
     cost: 3,
     kind: 'negative',
-    effects: ['Аллергия на 2 случайных предмета из провизии или медикаментов.'],
+    effects: ['Аллергия на 3 случайных предмета из провизии или медикаментов.'],
   },
   {
     id: 'exhaustion',
     name: 'Истощение',
-    cost: 4,
+    cost: 5,
     kind: 'negative',
     effects: [
-      'Выносливость рук и ног восстанавливается на 15% медленнее.',
+      'Выносливость рук и ног восстанавливается на 20% медленнее.',
       'Запас выносливости меньше на 10.',
     ],
     excludes: ['marathon-runner', 'youth'],
   },
   {
+    id: 'broken-secure-container',
+    name: 'Сломанный защищённый контейнер',
+    cost: 6,
+    kind: 'negative',
+    effects: [
+      'В разгрузочный контейнер влезают только деньги, ключи, жетоны, спецснаряжение, часть контейнеров и документы Боевого пропуска.',
+    ],
+  },
+  {
     id: 'incompetent',
     name: 'Необучаемый',
-    cost: 4,
+    cost: 10,
     kind: 'negative',
     effects: [
       'Все навыки качаются на 25% медленнее (кроме «Болтовых винтовок»).',
       'Навыки не поднимаются выше 30 уровня (кроме «Крафта»).',
     ],
-    excludes: ['average'],
-  },
-  {
-    id: 'broken-secure-container',
-    name: 'Сломанный защищённый контейнер',
-    cost: 4,
-    kind: 'negative',
-    effects: [
-      'В разгрузочный контейнер влезают только деньги, ключи, жетоны, спецснаряжение и часть контейнеров.',
-    ],
+    excludes: ['average', 'wunderkind'],
   },
   {
     id: 'no-flea-market',
     name: 'Неработающая барахолка',
-    cost: 6,
+    cost: 10,
     kind: 'negative',
     effects: ['Торговля с игроками на барахолке недоступна.'],
   },
@@ -340,6 +364,7 @@ const KORD_BREACH_PERKS: SeasonPerk[] = [
 
 // SVG-иконки перков сезона 1. Имена файлов заданы дизайнером и не совпадают с id,
 // поэтому маппинг явный. Монохром → красятся CSS-маской по kind в UI.
+// ⚠ Файл вундеркинда назван personal-buff-vunderkind.svg (через «v») — маппинг это учитывает.
 const S1_ICON_DIR = '/icons/eft/04-progression/seasons/season01/perks';
 const S1_PERK_ICON: Record<string, string> = {
   /* Позитивные (buffs) */
@@ -360,6 +385,8 @@ const S1_PERK_ICON: Record<string, string> = {
   safecracker: `${S1_ICON_DIR}/buffs/personal-buff-safecracker.svg`,
   average: `${S1_ICON_DIR}/buffs/personal-buff-average-joe.svg`,
   'kappa-protocol': `${S1_ICON_DIR}/buffs/personal-buff-kappa-protocol.svg`,
+  lucky: `${S1_ICON_DIR}/buffs/personal-buff-lucky.svg`,
+  wunderkind: `${S1_ICON_DIR}/buffs/personal-buff-vunderkind.svg`,
 
   /* Негативные (debuff) */
   polydipsia: `${S1_ICON_DIR}/debuff/personal-debuff-polydipsia.svg`,
@@ -375,6 +402,7 @@ const S1_PERK_ICON: Record<string, string> = {
   incompetent: `${S1_ICON_DIR}/debuff/personal-debuff-slow-learner.svg`,
   'broken-secure-container': `${S1_ICON_DIR}/debuff/personal-debuff-broken-secure-container.svg`,
   'no-flea-market': `${S1_ICON_DIR}/debuff/personal-debuff-broken-flea-market.svg`,
+  unlucky: `${S1_ICON_DIR}/debuff/personal-debuff-unlucky.svg`,
 
   /* Сезонные / глобальные (global) */
   'no-insurance': `${S1_ICON_DIR}/global/global-perk-broken-ensurance.svg`,
