@@ -5,7 +5,7 @@
 // (common=серый, rare=синий, legendary=золотой). Если V4DYA захочет выделенные
 // --color-rarity-* — менять только здесь.
 
-export type AchRarity = "common" | "rare" | "legendary";
+export type AchRarity = "common" | "rare" | "legendary" | "seasonal";
 export type AchSide = "pmc" | "scavs" | "all";
 
 // Форма, которую рендерят и список, и деталь. Структурно совместима с AchievementDTO
@@ -70,14 +70,25 @@ const RARITY: Record<AchRarity, RarityMeta> = {
     tintClass: "bg-rarity-legendary/30",
     barClass: "bg-rarity-legendary",
   },
+  // Сезонное — 4-й тир, добавлен в 1.1.0 (KORD BREACH). Цвет = акцент сезона
+  // --color-season-01 (#5FD5C0). Только у сезонных достижений — плюс синяя рамка AchievementSeasonal.
+  seasonal: {
+    key: "seasonal",
+    label: "Сезонное",
+    textClass: "text-season-01",
+    badgeClass: "border border-season-01/50 bg-season-01/10 text-season-01",
+    borderClass: "border-season-01/70",
+    tintClass: "bg-season-01/30",
+    barClass: "bg-season-01",
+  },
 };
 
 export function rarityMeta(normalizedRarity: string): RarityMeta {
   return RARITY[normalizedRarity as AchRarity] ?? RARITY.common;
 }
 
-// Порядок сортировки «сначала престижные»: легендарное → редкое → обычное.
-export const RARITY_RANK: Record<string, number> = { legendary: 0, rare: 1, common: 2 };
+// Порядок сортировки «сначала престижные»: сезонное → легендарное → редкое → обычное.
+export const RARITY_RANK: Record<string, number> = { seasonal: -1, legendary: 0, rare: 1, common: 2 };
 
 const SIDE_LABEL: Record<AchSide, string> = {
   pmc: "ЧВК",
@@ -89,5 +100,5 @@ export function sideLabel(normalizedSide: string): string {
   return SIDE_LABEL[normalizedSide as AchSide] ?? (normalizedSide || "—");
 }
 
-export const ALL_RARITIES: AchRarity[] = ["legendary", "rare", "common"];
+export const ALL_RARITIES: AchRarity[] = ["seasonal", "legendary", "rare", "common"];
 export const ALL_SIDES: AchSide[] = ["pmc", "scavs", "all"];

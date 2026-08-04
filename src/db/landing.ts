@@ -5,6 +5,7 @@ import { and, eq, notInArray, sql } from "drizzle-orm";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { achievements, maps, traders } from "./schema";
+import { SEASONAL_ACHIEVEMENTS_EFT } from "@/data/eft/seasonal-achievements";
 import { eftGameId } from "./eft";
 import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "../lib/tarkov-fallback";
 import { TRADER_RU, MAP_RU } from "../lib/tarkov-labels";
@@ -236,15 +237,18 @@ export async function getEftAchievements(): Promise<AchievementDTO[]> {
   try {
     const gameId = await eftGameId();
     const rows = await db.select().from(achievements).where(eq(achievements.gameId, gameId));
-    return rows.map(toAchievementDTO);
+    // + статические сезонные (нет в tarkov.dev/зеркале; крон их не стирает — см. data/eft/seasonal-achievements.ts)
+    return [...rows.map(toAchievementDTO), ...SEASONAL_ACHIEVEMENTS_EFT];
   } catch (e) {
     console.error("[getEftAchievements]", e);
-    return [];
+    return [...SEASONAL_ACHIEVEMENTS_EFT]; // сезонные — data-at-rest, доступны даже если зеркало легло
   }
 }
 
 /** Одно достижение по id (для детальной страницы). null — если не найдено. */
 export async function getEftAchievement(id: string): Promise<AchievementDTO | null> {
+  const seasonal = SEASONAL_ACHIEVEMENTS_EFT.find((a) => a.id === id);
+  if (seasonal) return seasonal; // сезонные — статика, в БД их нет
   try {
     const gameId = await eftGameId();
     const [row] = await db
