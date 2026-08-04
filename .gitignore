@@ -77,6 +77,15 @@ public/images/items/frago/
 # Отчёты find-missing (tsv/json выгрузки) — генерятся, в репо не держим.
 /scripts/reports/
 
+# Слепки бандлов клиента ДО патча (диф новых ассетов) — машинно-зависимый throwaway
+# (Windows.json ~2.6 МБ). Снимается перед патчем, удаляется после дифа. Не в репо.
+/scripts/icon-render/snapshots/
+
+# Рендер-скретч иконок (extract-меши/OBJ, Unity PNG, webp-превью) — локальный throwaway.
+/scripts/icon-render/out-poc/
+/scripts/icon-render/out-unity/
+/scripts/icon-render/.work-unity/
+
 # graphify — генерируемый граф кода (корневой = живой, src/ = старый артефакт). Не версионируем.
 graphify-out/
 

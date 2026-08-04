@@ -105,8 +105,9 @@ function toSlotItems(slots: RawTradeSlot[]): (EftBarterItem & EftCraftIngredient
  */
 export function estimateFleaFee(basePrice: number, sellPrice: number, count = 1): number {
   if (basePrice <= 0 || sellPrice <= 0) return 0;
-  const Ti = 0.03;
-  const Tr = 0.03;
+  // 1.1.0.0 (03.08.2026): комиссия Барахолки 3% → 5%.
+  const Ti = 0.05;
+  const Tr = 0.05;
   const vo = basePrice;
   const vr = sellPrice;
   let po = Math.log10(vo / vr);

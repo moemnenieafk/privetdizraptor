@@ -67,10 +67,21 @@ for (const id of ids) {
     const w = join(WORK, id);
     run(PY, ["scripts/icon-render/extract_item.py", "--bundle", join(WIN, key), "--out", w, "--win", WIN], { cwd: ROOT });
     const m = JSON.parse(readFileSync(join(w, "meta.json"), "utf8"));
+    // Оружейные контейнеры (Гейт-3): визуальные меши лежат в соседнем client_assets.bundle,
+    // которого НЕТ в Windows.json Dependencies → без ручной догрузки рендер выходит ПУСТЫМ.
+    const bundleAbs = join(WIN, m.bundleKey || key);
+    const extraDeps = [];
+    if (bundleAbs.replace(/\\/g, "/").includes("/weapons/")) {
+      const bdir = dirname(bundleAbs);
+      for (const rel of ["client_assets.bundle", "textures/client_assets.bundle"]) {
+        const p = join(bdir, rel);
+        if (existsSync(p)) extraDeps.push(p);
+      }
+    }
     const job = {
       prefabName: m.prefabName || "",
-      bundlePath: join(WIN, m.bundleKey || key),
-      depPaths: (m.depKeys || []).map(k => join(WIN, k)),
+      bundlePath: bundleAbs,
+      depPaths: [...(m.depKeys || []).map(k => join(WIN, k)), ...extraDeps],
       iconRotation: m.iconRotation,
       pivotRotation: m.pivotRotation,
       cameraMode: 5, // предмет=identity, камера=Inverse(Icon.rotation) — пиксель-точно (сверено: 0.0° vs tarkov.dev)
