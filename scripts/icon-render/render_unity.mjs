@@ -64,6 +64,9 @@ const partResolve = (key) => {
   return { bundlePath: join(WIN, key), depPaths: deps };
 };
 const ASSEMBLY_PARTS = ASSEMBLY && existsSync(ASSEMBLY) ? JSON.parse(readFileSync(ASSEMBLY, "utf8")) : null;
+// --assembly-map <file>: {id: [{partId,parentId,slot,bundleKey,root}]} — пер-id пресет (много стволов за ОДИН Unity-batch).
+const ASSEMBLY_MAP_F = arg("assembly-map", null);
+const ASSEMBLY_MAP = ASSEMBLY_MAP_F && existsSync(ASSEMBLY_MAP_F) ? JSON.parse(readFileSync(ASSEMBLY_MAP_F, "utf8")) : null;
 
 // --- 2. собрать jobs ---
 const jobs = [];
@@ -106,11 +109,13 @@ for (const id of ids) {
       orthographic: m.orthographic | 0, orthographicSize: m.orthographicSize || 10,
       outPath: join(OUT, `${id}.png`), res: parseInt(arg("master", "2048"), 10),
     };
-    if (ASSEMBLY_PARTS && isWeapon) {
+    // пер-id пресет из --assembly-map имеет приоритет; иначе общий --assembly для всех оружейных
+    const parts = (ASSEMBLY_MAP && ASSEMBLY_MAP[id]) || (ASSEMBLY_PARTS && isWeapon ? ASSEMBLY_PARTS : null);
+    if (parts && isWeapon) {
       // Древо-пресет: [{partId,parentId,slot,bundleKey,root}]. root = главный префаб (inst). Остальные крепятся к слоту parentId.
-      const rootE = ASSEMBLY_PARTS.find((e) => e.root); // корень = только явный root:true (у флэт-пресета его нет — рендерится ствол из --map)
+      const rootE = parts.find((e) => e.root); // корень = только явный root:true (у флэт-пресета его нет — рендерится ствол из --map)
       if (rootE) job.rootPartId = rootE.partId;
-      job.assembly = ASSEMBLY_PARTS.filter((e) => !e.root).map((e) => {
+      job.assembly = parts.filter((e) => !e.root).map((e) => {
         const r = partResolve(e.bundleKey);
         return { partId: e.partId, parentId: e.parentId, slot: e.slot, bundlePath: r.bundlePath, depPaths: r.depPaths };
       });
