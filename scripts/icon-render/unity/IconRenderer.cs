@@ -35,6 +35,8 @@ public static class IconRenderer
         public float ambientLevel;
         public float[] bgColor;      // фон; null = прозрачный
         public float[] glassTint;    // хак для стекла: заменить материал на непрозрачный с этим тинтом (+нормаль-фростинг)
+        public int weaponMode;       // 1 = оружейный контейнер: визуал в client_assets отдельными GO;
+                                     //     собрать по ВСЕМ бандлам, отсечь fp-руки (Base Human*/joint*) и LOD1+
     }
     [Serializable] public class JobList { public Job[] jobs; }
 
@@ -63,28 +65,70 @@ public static class IconRenderer
         var bundles = new List<AssetBundle>();
         GameObject inst = null; Camera cam = null; RenderTexture rt = null; GameObject lightGo = null; Cubemap cube = null;
         try {
-            // 1. зависимости (shaders/textures/cubemaps) ДО основного бандла
-            foreach (var dp in job.depPaths)
-                if (File.Exists(dp)) { var b = AssetBundle.LoadFromFile(dp); if (b != null) bundles.Add(b); }
-            var main = AssetBundle.LoadFromFile(job.bundlePath);
+            // 1. зависимости (shaders/textures/cubemaps) ДО основного бандла.
+            //    Дедуп по нормализованному пути: у EFT client_assets часто дублируется
+            //    (в depKeys И как weapon-сосед) → повторный LoadFromFile = null и рвёт линковку мешей.
+            var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var bpath = new Dictionary<AssetBundle, string>();
+            foreach (var dp in job.depPaths) {
+                if (string.IsNullOrEmpty(dp) || !File.Exists(dp)) continue;
+                var full = Path.GetFullPath(dp).ToLowerInvariant();
+                if (!seenPaths.Add(full)) continue;
+                var b = AssetBundle.LoadFromFile(dp); if (b != null) { bundles.Add(b); bpath[b] = full; }
+            }
+            AssetBundle main = null;
+            var mainFull = Path.GetFullPath(job.bundlePath).ToLowerInvariant();
+            if (seenPaths.Add(mainFull)) main = AssetBundle.LoadFromFile(job.bundlePath);
             if (main == null) throw new Exception("бандл не загрузился: " + job.bundlePath);
-            bundles.Add(main);
+            bundles.Add(main); bpath[main] = mainFull;
 
-            // 2. префаб (по имени; иначе — GameObject с максимумом рендереров)
+            // 2. префаб. Обычный предмет: по имени из main. Оружие (weaponMode): визуал —
+            //    отдельные GO в client_assets (не дети контейнера) → ищем по ВСЕМ бандлам
+            //    GameObject с максимумом статических мешей БЕЗ fp-рига (Base Human*/joint*) и LOD1+.
             GameObject prefab = null;
-            var gos = main.LoadAllAssets<GameObject>();
-            foreach (var g in gos) if (g.name == job.prefabName) { prefab = g; break; }
-            if (prefab == null) {
+            if (job.weaponMode == 1) {
+                // Визуал ищем ТОЛЬКО в бандлах из папки самого оружия (контейнер + его client_assets),
+                // иначе цепляется чужой ассет из общих deps (foregrip и т.п. без материалов).
+                string wdir = Path.GetDirectoryName(mainFull);
                 int best = -1;
-                foreach (var g in gos) {
-                    int n = g.GetComponentsInChildren<Renderer>(true).Length;
-                    if (n > best) { best = n; prefab = g; }
+                foreach (var b in bundles) {
+                    if (!bpath.TryGetValue(b, out var bp) || !bp.StartsWith(wdir)) continue;
+                    foreach (var g in b.LoadAllAssets<GameObject>()) {
+                        int n = 0;
+                        foreach (var mf in g.GetComponentsInChildren<MeshFilter>(true)) {
+                            if (mf.sharedMesh == null) continue;
+                            var nm = mf.gameObject.name;
+                            if (nm.StartsWith("Base Human") || nm.StartsWith("joint") ||
+                                System.Text.RegularExpressions.Regex.IsMatch(nm, "_LOD[1-9]")) continue;
+                            n++;
+                        }
+                        if (n > best) { best = n; prefab = g; }
+                    }
+                }
+            } else {
+                var gos = main.LoadAllAssets<GameObject>();
+                foreach (var g in gos) if (g.name == job.prefabName) { prefab = g; break; }
+                if (prefab == null) {
+                    int best = -1;
+                    foreach (var g in gos) {
+                        int n = g.GetComponentsInChildren<Renderer>(true).Length;
+                        if (n > best) { best = n; prefab = g; }
+                    }
                 }
             }
             if (prefab == null) throw new Exception("префаб не найден в бандле");
 
             inst = UnityEngine.Object.Instantiate(prefab);
             inst.transform.position = Vector3.zero;
+            // Оружие: отсечь fp-руки (SkinnedMeshRenderer рига) и LOD1+ — оставить только визуал предмета.
+            if (job.weaponMode == 1) {
+                foreach (var r in inst.GetComponentsInChildren<Renderer>(true)) {
+                    var nm = r.gameObject.name;
+                    if (r is SkinnedMeshRenderer || nm.StartsWith("Base Human") || nm.StartsWith("joint") ||
+                        System.Text.RegularExpressions.Regex.IsMatch(nm, "_LOD[1-9]"))
+                        r.enabled = false;
+                }
+            }
             // модели композиции pivotRotation/Icon.rotation (перебор для точного ракурса)
             var icon = new Quaternion(job.iconRotation[0], job.iconRotation[1], job.iconRotation[2], job.iconRotation[3]);
             var pivot = (job.pivotRotation != null && job.pivotRotation.Length == 4)
@@ -121,6 +165,7 @@ public static class IconRenderer
             var rends = inst.GetComponentsInChildren<Renderer>(true);
             Bounds b2 = new Bounds(Vector3.zero, Vector3.zero); bool first = true;
             foreach (var r in rends) {
+                if (!r.enabled) continue; // отключённые (fp-руки/LOD1+ в weaponMode) в границы не берём
                 Bounds rb;
                 if (r is SkinnedMeshRenderer smr) {
                     // SkinnedMeshRenderer.bounds РАЗДУТ (bind-pose/анимация) и зависит от костей -> носимые
@@ -139,7 +184,7 @@ public static class IconRenderer
                 } else continue;
                 if (first) { b2 = rb; first = false; } else b2.Encapsulate(rb);
             }
-            if (first) throw new Exception("нет видимых рендереров");
+            if (first) throw new Exception($"нет видимых рендереров (всего {rends.Length}, weaponMode={job.weaponMode})");
             Vector3 center = b2.center; float radius = b2.extents.magnitude;
 
             // 4. камера по Icon (нативные координаты Unity)

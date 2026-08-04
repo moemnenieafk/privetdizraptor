@@ -70,21 +70,25 @@ for (const id of ids) {
     // Оружейные контейнеры (Гейт-3): визуальные меши лежат в соседнем client_assets.bundle,
     // которого НЕТ в Windows.json Dependencies → без ручной догрузки рендер выходит ПУСТЫМ.
     const bundleAbs = join(WIN, m.bundleKey || key);
+    const isWeapon = bundleAbs.replace(/\\/g, "/").includes("/weapons/");
     const extraDeps = [];
-    if (bundleAbs.replace(/\\/g, "/").includes("/weapons/")) {
+    if (isWeapon) {
       const bdir = dirname(bundleAbs);
       for (const rel of ["client_assets.bundle", "textures/client_assets.bundle"]) {
         const p = join(bdir, rel);
         if (existsSync(p)) extraDeps.push(p);
       }
     }
+    // Дедуп путей: у EFT client_assets часто в depKeys И как weapon-сосед → двойная загрузка = null.
+    const depPaths = [...new Set([...(m.depKeys || []).map(k => join(WIN, k)), ...extraDeps])];
     const job = {
       prefabName: m.prefabName || "",
       bundlePath: bundleAbs,
-      depPaths: [...(m.depKeys || []).map(k => join(WIN, k)), ...extraDeps],
+      depPaths,
       iconRotation: m.iconRotation,
       pivotRotation: m.pivotRotation,
       cameraMode: 5, // предмет=identity, камера=Inverse(Icon.rotation) — пиксель-точно (сверено: 0.0° vs tarkov.dev)
+      weaponMode: isWeapon ? 1 : 0, // оружейный контейнер: визуал из client_assets, отсечь fp-руки/LOD1+
       perspective: m.perspective, boundsScale: m.boundsScale,
       orthographic: m.orthographic | 0, orthographicSize: m.orthographicSize || 10,
       outPath: join(OUT, `${id}.png`), res: parseInt(arg("master", "2048"), 10),
