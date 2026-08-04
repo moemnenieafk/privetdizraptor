@@ -181,5 +181,13 @@
   "6a049a082232cf0a5108aed6": "assets/content/location_objects/lootable/prefab/rand_loot_container_twitch_superrare.bundle",
   "6a049a1a2232cf0a5108aedd": "assets/content/location_objects/lootable/prefab/rand_loot_container_twitch_superrare.bundle",
   "6a04fab776cb0efb8f05969f": "assets/content/items/barter/item_barter_info_maps/item_barter_info_maps.bundle",
-  "6a073d5fe3d3ac861e09c429": "assets/content/location_objects/lootable/prefab/rand_loot_container_twitch_rare.bundle"
+  "6a073d5fe3d3ac861e09c429": "assets/content/location_objects/lootable/prefab/rand_loot_container_twitch_rare.bundle",
+  "69d3708c8d8009073d0a9df4": "assets/content/items/equipment/armor_gladiator_s/item_equipment_armor_gladiator_s.bundle",
+  "69d4458d289401f49e046808": "assets/content/items/equipment/armor_gladiator_s/item_equipment_armor_gladiator_s.bundle",
+  "69cbd36d8eeaa243ed097112": "assets/content/items/equipment/helmet_crye_airframe_chops/item_equipment_helmet_crye_airframe_ears.bundle",
+  "6981ee9cf819a414310292fb": "assets/content/items/mods/stocks/stock_ak_armacon_monolit_3_gen2_champ.bundle",
+  "6981d72ed009ad83920da43a": "assets/content/weapons/saiga12/weapon_kiba_saiga12k_fa_12g_container.bundle",
+  "69a6bdfa896d77866e096752": "assets/content/weapons/saiga12/weapon_kiba_saiga12k_fa_12g_container.bundle",
+  "69eb793db978f26a9304e78c": "assets/content/weapons/mp7/weapon_hk_mp7a1_46x30_container.bundle",
+  "707265736574000000000021": "assets/content/weapons/ak308/weapon_izhmash_ak308_762x51_container.bundle"
 }

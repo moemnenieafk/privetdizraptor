@@ -38,6 +38,7 @@ updated: 2026-08-03
 - **Сезонка (бартеры/контейнеры):** документация TerraGroup, флаеры Battle Pass, контейнер БП, жетоны Black Division, `bdtoughbook`.
 - **Прочее:** еда (GigaBeef, baguette), коллекционки (модель KC-130, ледокол «Борей»), кастомизация убежища Black Division.
 - **Рендер иконок:** 122/140 обычных предметов отрендерены автономно из клиента; стволы (Гейт-3) и skinned-тактичка — пока нет. Runbook: `!future-requests/assets-1.1.0.0-render-sprint.md`.
+  - **2026-08-04: 121/122 из этого батча сматчены с id и залиты в R2** (`items/eft/512/{id}.webp`, HTTP 200) — стволовые моды QBZ/Howa/HK/AK308/UMP + бартер (жетоны Black Division, документы TerraGroup finance/medicine/…, флаеры Battle Pass, патроны 5.8×42, еда, контейнеры). Матчинг filename↔`newItems.normalizedName` + ручной ревью; манифест `scripts/icon-render/out-poc/icon-matching.json`. Придержан 1 (`dogtags_blackdivision_old` — нет цели в каталоге).
 
 ### Ассеты сезона у нас (`public/icons/eft/04-progression/seasons/`)
 - `season01/KORD_BREACH_Season01_logo.svg` — полный лого · `season01/kord-breach-logo-short-icon.svg` — короткий лого · `season01/season1-badge-icon.svg` — бейдж-иконка (16×16) · `battlepass-text-icon.svg` — вордмарк «BATTLE PASS» (435×45).
