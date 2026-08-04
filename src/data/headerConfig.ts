@@ -545,9 +545,10 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             label: 'Сезоны',
             description: 'Механика сезонного персонажа и интерактивный конструктор модификаторов с бюджетом очков.',
             path: '/eft/progress/seasons',
-            iconUrl: '/icons/eft/progress-icon.svg',
+            iconUrl: '/icons/eft/04-progression/seasons/seasons-icon.svg',
+            iconClass: 'icon-eft-seasons',
             children: [
-              { id: 'p-seasons-perks', label: 'Конструктор перков', path: '/eft/progress/seasons/perks', iconUrl: '/icons/eft/progress-icon.svg' },
+              { id: 'p-seasons-perks', label: 'Конструктор перков', path: '/eft/progress/seasons/perks', iconUrl: '/icons/eft/04-progression/seasons/build-constructor.svg' },
             ],
           },
           {
@@ -574,7 +575,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         children: [
           { id: 'gs-lore', label: 'История мира', path: '/eft/gamesetting/lore', iconUrl: '/icons/eft/05-gamesetting/tarkov-lore.svg' },
           { id: 'gs-timeline', label: 'Хронология', path: '/eft/gamesetting/timeline', iconUrl: '/icons/eft/05-gamesetting/timeline.svg' },
-          { id: 'gs-game-updates', label: 'Обновления игры', path: '/eft/gamesetting/game-updates', iconUrl: '/icons/eft/05-gamesetting/timeline.svg' },
+          { id: 'gs-game-updates', label: 'Обновления игры', path: '/eft/gamesetting/game-updates', iconUrl: '/icons/eft/05-gamesetting/game-updates.svg', iconClass: 'icon-eft-lore-game-updates' },
           { 
             id: 'gs-characters', 
             label: 'Персонажи', 
