@@ -95,7 +95,7 @@ const KORD_BREACH: CuratedBuild[] = [
   {
     id: 'pain-department',
     name: 'Отдел страданий',
-    tagline: 'Ноль позитивных. 50 очков боли уходят в никуда. Награда — только право хвастаться в чате.',
+    tagline: 'Ноль позитивных. 49 очков боли уходят в никуда — последний негатив несовместим с остальными. Награда — только право хвастаться в чате.',
     vibe: 'pain',
     perks: [
       'no-flea-market',
@@ -110,7 +110,6 @@ const KORD_BREACH: CuratedBuild[] = [
       'polydipsia',
       'chronic-fatigue',
       'dr-jekyll',
-      'third-leg',
       'unlucky',
     ],
   },
@@ -119,14 +118,14 @@ const KORD_BREACH: CuratedBuild[] = [
     name: 'Ровно по нулям',
     tagline: 'Дешёвая боль, честно потраченная на кости и скорость. Ноль в балансе — ноль вопросов.',
     vibe: 'meme',
-    perks: ['sturdy-bones', 'sprinter', 'polydipsia', 'chronic-fatigue', 'third-leg', 'dr-jekyll'],
+    perks: ['sturdy-bones', 'sprinter', 'polydipsia', 'chronic-fatigue', 'unlucky', 'dr-jekyll'],
   },
   {
     id: 'therapist-affair',
     name: 'Особые отношения с Терапевтом',
     tagline: '−1% к скорости и скидка у Терапевта. Реддит нашёл в этом больше, чем задумывала BSG.',
     vibe: 'meme',
-    perks: ['third-leg', 'dr-jekyll', 'polydipsia', 'unlucky', 'sprinter', 'juice-time'],
+    perks: ['third-leg', 'dr-jekyll', 'polydipsia', 'unlucky', 'sturdy-bones', 'juice-time'],
   },
   {
     id: 'bush-looter',
@@ -142,7 +141,7 @@ const KORD_BREACH: CuratedBuild[] = [
     vibe: 'comfort',
     perks: [
       'marathon-runner',
-      'sprinter',
+      'sturdy-bones',
       'youth',
       'bushborne',
       'no-flea-market',
@@ -160,7 +159,7 @@ const KORD_BREACH: CuratedBuild[] = [
       'hypodipsia',
       'diet',
       'street-tax',
-      'personality-vacuum',
+      'hemophilia',
       'well-that-hurt',
       'allergic',
       'third-leg',
@@ -259,7 +258,6 @@ const KORD_BREACH: CuratedBuild[] = [
     perks: [
       'sturdy-bones',
       'marathon-runner',
-      'sprinter',
       'hercules',
       'diet',
       'no-flea-market',
@@ -272,7 +270,7 @@ const KORD_BREACH: CuratedBuild[] = [
     tagline: 'Чёрная дивизия расплодилась, а за фраги капает +25% опыта — грех не пушить. Сок глушит боль в бою, кровь не хлещет, дыхалки хватает на все рывки. Барахолки нет — трофеи снимаешь с тел.',
     vibe: 'meta',
     perks: [
-      'sprinter',
+      'sturdy-bones',
       'marathon-runner',
       'juice-time',
       'thrombophilia',
