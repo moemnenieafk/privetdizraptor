@@ -57,6 +57,16 @@ docs/voice-notes/*.ogg
 # items_database.json / fetch_tarkov_db.py / search_index.txt — остаются в гите.
 public/images/items/eft/*.webp
 
+# Достижения: веб-иконки eft/*.webp — В РЕПО (их отдаёт src/lib/achievement-icon.ts из public).
+# А исходники (мастера ~2000px + JPG-плитки видео) под .../недостающие/ — heavy и под public
+# (улетели бы в деплой Vercel). Держим локально, как прочие asset-дампы.
+public/images/achievements/eft/недостающие/
+
+# Референс-скрины из игры (source-of-truth для текстов достижений/перков) — тяжёлые бинарники,
+# держим локально в валте, как голосовые. Спеки ссылаются на них по пути.
+docs/eft/codex/
+docs/eft/progress/seasons/build-constructor/
+
 # Design sync — generated/machine state (durable set in .design-sync/ IS committed)
 .ds-sync/
 ds-bundle/

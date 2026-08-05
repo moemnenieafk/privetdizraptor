@@ -153,6 +153,8 @@ public static class IconRenderer
             if (job.assembly != null && job.assembly.Length > 0) {
                 var instMap = new Dictionary<string, GameObject>();
                 if (!string.IsNullOrEmpty(job.rootPartId)) instMap[job.rootPartId] = inst;
+                // --- ФАЗА 1: загрузка бандлов + выбор меш-префаба mp для каждой части (ОДИН раз) ---
+                var loaded = new List<(AssemblyPart part, GameObject mp, bool done)>();
                 foreach (var part in job.assembly) {
                     if (part == null || string.IsNullOrEmpty(part.bundlePath)) continue;
                     if (part.depPaths != null) foreach (var dp in part.depPaths) {
@@ -178,27 +180,43 @@ public static class IconRenderer
                         if (n > mbest) { mbest = n; mp = g; }
                     }
                     if (mp == null) { Console.WriteLine($"[assembly] нет меша: {part.slot}"); continue; }
-                    // РОДИТЕЛЬ: инстанс части parentId (или корень оружия, если parent пуст/не найден)
-                    GameObject parentInst = inst;
-                    if (!string.IsNullOrEmpty(part.parentId) && instMap.TryGetValue(part.parentId, out var pi)) parentInst = pi;
-                    // СЛОТ в поддереве родителя
-                    Transform slotT = null;
-                    foreach (var t in parentInst.GetComponentsInChildren<Transform>(true)) if (t.gameObject.name == part.slot) { slotT = t; break; }
-                    if (slotT == null) { Console.WriteLine($"[assembly] слот {part.slot} не найден у родителя {part.parentId} — пропуск"); continue; }
-                    var mi = UnityEngine.Object.Instantiate(mp);
-                    foreach (var r in mi.GetComponentsInChildren<Renderer>(true)) {
-                        var nm3 = r.gameObject.name;
-                        if (r is SkinnedMeshRenderer || nm3.StartsWith("Base Human") || nm3.StartsWith("joint") || System.Text.RegularExpressions.Regex.IsMatch(nm3, "_LOD[1-9]")) r.enabled = false;
-                    }
-                    // МОНТАЖ: корень мода на слот родителя, обнулить локаль → mount мода = позиция/ориентация слота
-                    // Моды: POSITION mount-relative (меш в origin), а ROTATION уже weapon-space (авторская).
-                    // → ТОЛЬКО трансляция root в мировую позицию слота; поворот НЕ наследуем от слота и НЕ обнуляем.
-                    var slotWorld = slotT.position;
-                    mi.transform.SetParent(inst.transform, true); // keep-world сохраняет авторскую ориентацию мода
-                    mi.transform.position = slotWorld;            // сдвиг mount(origin) → точка слота
-                    if (!string.IsNullOrEmpty(part.partId)) instMap[part.partId] = mi;
-                    Console.WriteLine($"[assembly] {part.slot} → ({slotWorld.x:F3},{slotWorld.y:F3},{slotWorld.z:F3})");
+                    loaded.Add((part, mp, false));
                 }
+                // --- ФАЗА 2: МНОГОПРОХОДНЫЙ монтаж. Слот части может принадлежать под-моду, что цепляется
+                //     ПОЗЖЕ (напр. mod_handguard живёт на mod_mount_001 «стойка цевья», а не на root). Крутим
+                //     проходы, пока цепляется хоть что-то — порядок дерева тогда не критичен. ---
+                bool progress = true;
+                while (progress) {
+                    progress = false;
+                    for (int i = 0; i < loaded.Count; i++) {
+                        if (loaded[i].done) continue;
+                        var part = loaded[i].part;
+                        GameObject parentInst = inst;
+                        if (!string.IsNullOrEmpty(part.parentId) && instMap.TryGetValue(part.parentId, out var pi)) parentInst = pi;
+                        Transform slotT = null;
+                        foreach (var t in parentInst.GetComponentsInChildren<Transform>(true)) if (t.gameObject.name == part.slot) { slotT = t; break; }
+                        // ФОЛБЭК: слот на другой уже прицепленной части (не у названного родителя)
+                        if (slotT == null) {
+                            foreach (var kv in instMap) { foreach (var t in kv.Value.GetComponentsInChildren<Transform>(true)) if (t.gameObject.name == part.slot) { slotT = t; break; } if (slotT != null) break; }
+                            if (slotT == null) foreach (var t in inst.GetComponentsInChildren<Transform>(true)) if (t.gameObject.name == part.slot) { slotT = t; break; }
+                        }
+                        if (slotT == null) continue; // носитель слота ещё не прицеплен — ждём следующего прохода
+                        var mi = UnityEngine.Object.Instantiate(loaded[i].mp);
+                        foreach (var r in mi.GetComponentsInChildren<Renderer>(true)) {
+                            var nm3 = r.gameObject.name;
+                            if (r is SkinnedMeshRenderer || nm3.StartsWith("Base Human") || nm3.StartsWith("joint") || System.Text.RegularExpressions.Regex.IsMatch(nm3, "_LOD[1-9]")) r.enabled = false;
+                        }
+                        // МОНТАЖ: корень мода → мировая позиция слота, авторский поворот сохраняем (keep-world)
+                        var slotWorld = slotT.position;
+                        mi.transform.SetParent(inst.transform, true);
+                        mi.transform.position = slotWorld;
+                        if (!string.IsNullOrEmpty(part.partId)) instMap[part.partId] = mi;
+                        loaded[i] = (part, loaded[i].mp, true);
+                        progress = true;
+                        Console.WriteLine($"[assembly] {part.slot} → ({slotWorld.x:F3},{slotWorld.y:F3},{slotWorld.z:F3})");
+                    }
+                }
+                foreach (var L in loaded) if (!L.done) Console.WriteLine($"[assembly] слот {L.part.slot} не найден нигде — пропуск");
             }
             // модели композиции pivotRotation/Icon.rotation (перебор для точного ракурса)
             var icon = new Quaternion(job.iconRotation[0], job.iconRotation[1], job.iconRotation[2], job.iconRotation[3]);
