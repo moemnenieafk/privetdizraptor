@@ -4,7 +4,7 @@
 # Запуск: python extract_item.py --bundle <key|disk-path> --out <dir> [--win <StreamingAssets/Windows>]
 #
 # Полностью офлайн (только файлы EFT), BattlEye-safe. См. docs/SPRINT-ICON-RENDER-PIPELINE.md.
-import os, sys, json, argparse
+import os, sys, json, argparse, re
 import UnityPy
 
 def _q(d):
@@ -91,9 +91,17 @@ def main():
     ic = icon.get("Icon", {})
 
     # 2. рендер-меши: GameObject с MeshFilter+MeshRenderer (пропуск коллайдеров/LOD>0)
-    parts = []
-    seen_mesh = set()
-    is_glass = False  # кастомный EFT glass/heat-шейдер (frosted-бутылки) — для авто-тинта
+    # Стем предмета (из имени префаба) для выбора «скин»-материала, когда ОДИН меш встречается
+    # с РАЗНЫМИ материалами (кастом-принт: базовый + скин-оверрайд на том же меше, напр.
+    # item_filterbottle_LOD0 несёт и белую базу, и item_drink_water_skeleton_diff). Дедуп по
+    # имени меша брал первый (базу) → скин терялся. Теперь при дубле берём материал, ЛУЧШЕ
+    # совпадающий со стемом префаба. Общие токены отбрасываем.
+    def _toks(s):
+        return set(t for t in re.split(r"[^a-z0-9]+", (s or "").lower())
+                   if t and t not in ("item", "lod", "lod0", "lod1", "loot", "container", "0", "1", "mat", "material"))
+    stem_toks = _toks(prefab_name)
+
+    cand = {}  # mname -> {mesh, mr, mat, score}
     for o in objs:
         if o.type.name != "GameObject":
             continue
@@ -113,10 +121,21 @@ def main():
         except Exception:
             continue
         mname = mesh.m_Name
-        if mname in seen_mesh:
-            continue
-        seen_mesh.add(mname)
-        safe = "".join(c if c.isalnum() else "_" for c in mname)[:60]
+        try:
+            mr = comp["MeshRenderer"].read()
+            mat = mr.m_Materials[0].read()
+        except Exception:
+            mr = mat = None
+        score = len(_toks(getattr(mat, "m_Name", "")) & stem_toks) if mat is not None else -1
+        # берём первый; заменяем ТОЛЬКО при СТРОГО лучшем совпадении со стемом (ничьи = старое поведение)
+        if mname not in cand or score > cand[mname]["score"]:
+            cand[mname] = {"mesh": mesh, "mr": mr, "mat": mat, "score": score}
+
+    parts = []
+    is_glass = False  # кастомный EFT glass/heat-шейдер (frosted-бутылки) — для авто-тинта
+    for mname, c in cand.items():
+        mesh, mat = c["mesh"], c["mat"]
+        safe = "".join(ch if ch.isalnum() else "_" for ch in mname)[:60]
         obj_path = os.path.join(a.out, safe + ".obj")
         try:
             open(obj_path, "w").write(mesh.export())
@@ -125,27 +144,26 @@ def main():
         # материал -> текстуры
         albedo = normal = None
         try:
-            mr = comp["MeshRenderer"].read()
-            mat = mr.m_Materials[0].read()
-            # стекло детектим по ИМЕНИ ШЕЙДЕРА (не по _HeatColor — это термал-свойства,
-            # которые есть у тканей/брони/риг → ложные срабатывания и порча рендера тинтом)
-            try:
-                _sn = (getattr(mat.m_Shader.read(), "m_Name", "") or "").lower()
-            except Exception:
-                _sn = ""
-            if any(g in _sn for g in ("glass", "refract", "distort", "moonshine")):
-                is_glass = True
-            tex = mat.m_SavedProperties.m_TexEnvs
-            tex = tex.items() if hasattr(tex, "items") else tex
-            for k, te in tex:
-                if getattr(te.m_Texture, "m_PathID", 0) == 0:
-                    continue
-                if k in ("_MainTex", "_BumpMap"):
-                    t = te.m_Texture.read()
-                    fn = os.path.join(a.out, safe + ("_albedo" if k == "_MainTex" else "_normal") + ".png")
-                    t.image.save(fn)
-                    if k == "_MainTex": albedo = fn
-                    else: normal = fn
+            if mat is not None:
+                # стекло детектим по ИМЕНИ ШЕЙДЕРА (не по _HeatColor — термал-свойства есть
+                # у тканей/брони/риг → ложные срабатывания и порча рендера тинтом)
+                try:
+                    _sn = (getattr(mat.m_Shader.read(), "m_Name", "") or "").lower()
+                except Exception:
+                    _sn = ""
+                if any(g in _sn for g in ("glass", "refract", "distort", "moonshine")):
+                    is_glass = True
+                tex = mat.m_SavedProperties.m_TexEnvs
+                tex = tex.items() if hasattr(tex, "items") else tex
+                for k, te in tex:
+                    if getattr(te.m_Texture, "m_PathID", 0) == 0:
+                        continue
+                    if k in ("_MainTex", "_BumpMap"):
+                        t = te.m_Texture.read()
+                        fn = os.path.join(a.out, safe + ("_albedo" if k == "_MainTex" else "_normal") + ".png")
+                        t.image.save(fn)
+                        if k == "_MainTex": albedo = fn
+                        else: normal = fn
         except Exception as e:
             print("материал", mname, "skip tex:", e, file=sys.stderr)
         parts.append({"obj": obj_path, "albedo": albedo, "normal": normal})
