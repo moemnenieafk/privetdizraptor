@@ -25,7 +25,7 @@ import { pruneStale } from "./landing";
 import { EFT_MAP_CONFIG } from "../data/eft-map-config";
 import { EFT_QUESTS } from "../data/quests";
 import { MAP_RU } from "../lib/tarkov-labels";
-import { fetchTarkovGraphQL, fetchTarkovJson, fetchWithFallback } from "../lib/tarkov-fallback";
+import { fetchTarkovJson, fetchMirrorRows } from "../lib/tarkov-fallback";
 
 // json.tarkov.dev — чистое зеркало ID/структуры/координат/энамов: отображаемые ИМЕНА в нём
 // плейсхолдеры («<id> name», независимо от ?lang). Поэтому имена резолвим из нашего зеркала по
@@ -164,45 +164,6 @@ interface RawMap {
   lootLoose?: RawLootLoose[] | null;
   stationaryWeapons?: RawStationary[] | null;
 }
-// Запрос сверён против живой схемы (интроспекция + прогон, 0 ошибок полей, 2026-06-23).
-// transit.map (карта-назначение) НЕ запрашиваем — резолвер падает на битых ссылках в данных
-// источника; destination добавим в v2 при необходимости.
-const QUERY = `
-  query {
-    maps(lang: ru) {
-      id tarkovDataId name normalizedName raidDuration players minPlayerLevel maxPlayerLevel
-      bosses {
-        boss { id name normalizedName }
-        spawnChance spawnTime spawnTrigger
-        spawnLocations { spawnKey name chance }
-        escorts { boss { id name } amount { count chance } }
-        switch { id }
-      }
-      spawns { zoneName position { x y z } sides categories }
-      extracts {
-        id name faction
-        switches { id name }
-        transferItem { item { id name } count }
-        position { x y z } outline { x y z } top bottom
-      }
-      transits { id description conditions position { x y z } outline { x y z } top bottom }
-      locks {
-        lockType key { id name normalizedName } needsPower
-        position { x y z } outline { x y z } top bottom
-      }
-      switches {
-        id name switchType activatedBy { id }
-        activates { operation target { __typename ... on MapSwitch { id name } ... on MapExtract { id name } } }
-        position { x y z }
-      }
-      hazards { hazardType name position { x y z } outline { x y z } top bottom }
-      lootContainers { lootContainer { id name normalizedName } position { x y z } }
-      lootLoose { items { id name } position { x y z } }
-      stationaryWeapons { stationaryWeapon { id name } position { x y z } }
-    }
-  }
-`;
-
 /* ───────────────── стабильные id маркеров без GraphQL-id ───────────────── */
 // 64-битный FNV-1a (две ленты с разными seed) → коллизии на ~18k маркеров пренебрежимы.
 function hash64(s: string): string {
@@ -583,17 +544,10 @@ export interface SyncMapsResult {
 export async function syncEftMapsGeometry(): Promise<SyncMapsResult> {
   const gameId = await eftGameId();
 
-  // PRIMARY: flat JSON (json.tarkov.dev/regular/maps) → адаптер mapsFromJson в RawMap[],
-  // имена из нашего зеркала (§4.11). FALLBACK: GraphQL (сейчас 503 — tarkov-api#474).
-  // Координаты в обоих источниках идентичны; защита «не затираем при пустоте» сохранена.
-  const all = await fetchWithFallback<RawMap>(
-    () => mapsFromJson(gameId),
-    async () => {
-      const data = await fetchTarkovGraphQL<{ maps?: RawMap[] }>(QUERY);
-      return (data.maps ?? []).filter((m) => m.id && m.normalizedName);
-    },
-    "maps-geometry",
-  );
+  // Источник: flat JSON (json.tarkov.dev/regular/maps) → адаптер mapsFromJson в RawMap[],
+  // имена из нашего зеркала (§4.11); GraphQL отставлен (§4.12). Защита «не затираем при
+  // пустоте» сохранена (пусто → throw ниже, старые данные целы).
+  const all = await fetchMirrorRows<RawMap>(() => mapsFromJson(gameId), "maps-geometry");
   if (all.length === 0) throw new Error("maps пусто — синк отменён (старые данные сохранены)");
 
   // 1) maps — самодостаточный upsert (гарантирует FK для map_assets/map_markers независимо от порядка синков).
@@ -809,40 +763,6 @@ export async function getEftInteractiveMaps(): Promise<MapAssetRow[]> {
 // Координаты зон (TaskZone) — факты, как и геометрия карт. Только этот синк (крон/CLI)
 // ходит в tarkov.dev (правило 11). Изолирован от syncEftMapsGeometry: свой прюн по
 // type='quest_zone' + гард на пустой ответ. Поля сверены интроспекцией (2026-06-24).
-const QUEST_ZONES_QUERY = `
-  query {
-    tasks(lang: ru) {
-      id name
-      objectives {
-        id type
-        ... on TaskObjectiveBasic     { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
-        ... on TaskObjectiveItem      { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
-        ... on TaskObjectiveMark      { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
-        ... on TaskObjectiveQuestItem { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
-        ... on TaskObjectiveShoot     { zones { id map { normalizedName } position { x y z } outline { x y z } top bottom } }
-      }
-    }
-  }
-`;
-
-interface RawZone {
-  id: string;
-  map?: { normalizedName: string } | null;
-  position?: RawPos | null;
-  outline?: RawPos[] | null;
-  top?: number | null;
-  bottom?: number | null;
-}
-interface RawObjectiveZones {
-  id: string;
-  type?: string | null;
-  zones?: RawZone[] | null;
-}
-interface RawTaskZones {
-  id: string;
-  name: string;
-  objectives?: RawObjectiveZones[] | null;
-}
 /** Базовый slug карты: срезаем суффиксы вариантов рейда (день/ночь/21+). */
 const baseSlug = (s: string): string => s.replace(/-(21|day|night)$/i, "");
 
@@ -934,26 +854,7 @@ export async function syncEftQuestZones(): Promise<SyncQuestZonesResult> {
     return [...dedup.values()];
   };
 
-  // FALLBACK: GraphQL (сейчас 503 — tarkov-api#474; форма зоны — {normalizedName}).
-  const graphqlSource = async (): Promise<NewMapMarkerRow[]> => {
-    const data = await fetchTarkovGraphQL<{ tasks?: RawTaskZones[] }>(QUEST_ZONES_QUERY);
-    const dedup = new Map<string, NewMapMarkerRow>();
-    for (const t of data.tasks ?? []) {
-      for (const o of t.objectives ?? []) {
-        const kind = objectiveKind(o.type);
-        for (const z of o.zones ?? []) {
-          if (!z.position || !z.map?.normalizedName) continue;
-          const mapId = slugToId.get(baseSlug(z.map.normalizedName));
-          if (!mapId) continue;
-          const row = build(mapId, t, { id: z.id, position: z.position, outline: z.outline, top: z.top, bottom: z.bottom }, kind);
-          dedup.set(`${mapId} ${row.id}`, row);
-        }
-      }
-    }
-    return [...dedup.values()];
-  };
-
-  const rows = await fetchWithFallback(jsonSource, graphqlSource, "quest-zones");
+  const rows = await fetchMirrorRows(jsonSource, "quest-zones");
   // Пусто → НЕ прюним (страховка от обрезанного ответа), старые зоны сохраняем.
   if (rows.length === 0) return { zones: 0, deleted: 0, pruneSkipped: true };
 

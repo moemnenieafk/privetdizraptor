@@ -13,7 +13,7 @@ import { and, eq, notInArray, sql } from "drizzle-orm";
 import { db } from "./index";
 import { barters, crafts, type TradeSlot } from "./schema";
 import { eftGameId } from "./eft";
-import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "../lib/tarkov-fallback";
+import { fetchMirrorRows, fetchTarkovJson } from "../lib/tarkov-fallback";
 import { traderLabelMap, stationLabelMap } from "../lib/tarkov-labels";
 
 // Порог защиты прюна: НЕ удаляем стейл-строки, если свежий набор из источника меньше этой
@@ -119,76 +119,6 @@ async function craftsFromJson(gameId: string): Promise<CraftRow[]> {
     });
 }
 
-/* ─────────────── GraphQL (fallback) ─────────────── */
-interface GqlSlot {
-  count?: number;
-  item?: { id?: string } | null;
-}
-interface GqlBarter {
-  id: string;
-  trader?: { name?: string; normalizedName?: string };
-  level?: number;
-  buyLimit?: number | null;
-  taskUnlock?: { id?: string; name?: string } | null;
-  requiredItems?: GqlSlot[];
-  rewardItems?: GqlSlot[];
-}
-interface GqlCraft {
-  id: string;
-  station?: { name?: string; normalizedName?: string };
-  level?: number;
-  duration?: number;
-  requiredItems?: GqlSlot[];
-  rewardItems?: GqlSlot[];
-}
-
-const toSlotsGql = (arr?: GqlSlot[]): TradeSlot[] =>
-  (arr ?? [])
-    .filter((s): s is GqlSlot & { item: { id: string } } => !!s.item?.id)
-    .map((s) => ({ itemId: s.item.id, count: s.count ?? 1 }));
-
-async function bartersFromGraphQL(gameId: string): Promise<BarterRow[]> {
-  const data = await fetchTarkovGraphQL<{ barters?: GqlBarter[] }>(`
-    query { barters(lang: ru) {
-      id trader { name normalizedName } level buyLimit taskUnlock { id name }
-      requiredItems { count item { id } } rewardItems { count item { id } }
-    } }`);
-  return (data.barters ?? [])
-    .filter((b) => b.id)
-    .map((b) => ({
-      id: b.id,
-      gameId,
-      traderName: b.trader?.name ?? "-",
-      traderNormalizedName: b.trader?.normalizedName ?? null,
-      level: b.level ?? null,
-      buyLimit: b.buyLimit ?? null,
-      taskUnlockId: b.taskUnlock?.id ?? null,
-      taskUnlockName: b.taskUnlock?.name ?? null,
-      requiredItems: toSlotsGql(b.requiredItems),
-      rewardItems: toSlotsGql(b.rewardItems),
-    }));
-}
-
-async function craftsFromGraphQL(gameId: string): Promise<CraftRow[]> {
-  const data = await fetchTarkovGraphQL<{ crafts?: GqlCraft[] }>(`
-    query { crafts(lang: ru) {
-      id station { name normalizedName } level duration
-      requiredItems { count item { id } } rewardItems { count item { id } }
-    } }`);
-  return (data.crafts ?? [])
-    .filter((c) => c.id)
-    .map((c) => ({
-      id: c.id,
-      gameId,
-      stationName: c.station?.name ?? "-",
-      stationNormalizedName: c.station?.normalizedName ?? null,
-      level: c.level ?? null,
-      duration: c.duration ?? null,
-      requiredItems: toSlotsGql(c.requiredItems),
-      rewardItems: toSlotsGql(c.rewardItems),
-    }));
-}
-
 export interface SyncStaticResult {
   barters: number;
   crafts: number;
@@ -202,16 +132,8 @@ export interface SyncStaticResult {
 export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
   const gameId = await eftGameId();
 
-  const barterRows = await fetchWithFallback<BarterRow>(
-    () => bartersFromJson(gameId),
-    () => bartersFromGraphQL(gameId),
-    "barters",
-  );
-  const craftRows = await fetchWithFallback<CraftRow>(
-    () => craftsFromJson(gameId),
-    () => craftsFromGraphQL(gameId),
-    "crafts",
-  );
+  const barterRows = await fetchMirrorRows<BarterRow>(() => bartersFromJson(gameId), "barters");
+  const craftRows = await fetchMirrorRows<CraftRow>(() => craftsFromJson(gameId), "crafts");
 
   if (barterRows.length === 0 && craftRows.length === 0) {
     throw new Error("barters/crafts пусто — синк отменён (старые данные сохранены)");

@@ -7,17 +7,17 @@
 // Строки помечаются source='tarkovdev'. Наши собственные снимки не перезаписываются:
 // ON CONFLICT DO NOTHING — свои данные надёжнее чужих.
 //
-// GraphQL-only «особый случай» (§4.11 + eft-data-autonomy-research): historicalPrices —
-// временной ряд, которого в JSON-плоскости json.tarkov.dev НЕТ, поэтому JSON-primary
-// невозможен. Идём через общий fetchTarkovGraphQL (единый HTTP/ошибки), а устойчивость
-// даёт no-wipe: пока GraphQL 503 — просто ничего не доливаем, свои снимки не трогаем.
+// ИСТОЧНИК: JSON-плоскость json.tarkov.dev/regular/prices/{itemId} — отдаёт ВЕСЬ ряд
+// истории цен по предмету (per-item эндпоинт). GraphQL ОТСТАВЛЕН (§4.12): раньше тут был
+// historicalPrices через api.tarkov.dev/graphql — она схлопнута; JSON-путь теперь есть.
+// Устойчивость — no-wipe: источник лёг/пуст → ничего не доливаем, свои снимки целы.
 import { sql } from "drizzle-orm";
 import { db } from "./index";
 import { eftGameId } from "./eft";
 import { getArenaOffers } from "./arena-offers";
-import { fetchTarkovGraphQL } from "@/lib/tarkov-fallback";
+import { fetchTarkovJson } from "@/lib/tarkov-fallback";
 
-/** Предметов в одном GraphQL-запросе. Больше — рискуем положить чужой сервис. */
+/** Предметов в одной пачке параллельных запросов. Больше — рискуем словить Cloudflare 403. */
 const BATCH_SIZE = 10;
 
 /** Пауза между батчами, мс. */
@@ -33,7 +33,7 @@ export interface BackfillResult {
 
 interface HistoricalPoint {
   price: number | null;
-  timestamp: string | null;
+  timestamp: number | string | null; // JSON-плоскость отдаёт число (мс), GraphQL отдавал строку
 }
 
 function median(values: number[]): number {
@@ -61,18 +61,20 @@ function toDailyMedians(points: HistoricalPoint[]): Map<string, number> {
 }
 
 async function fetchBatch(ids: string[], days: number): Promise<Map<string, HistoricalPoint[]>> {
-  const fields = ids
-    .map((id, i) => `i${i}: item(id: "${id}") { id historicalPrices(days: ${days}) { price timestamp } }`)
-    .join("\n");
-
-  const data = await fetchTarkovGraphQL<Record<string, { id: string; historicalPrices?: HistoricalPoint[] } | null>>(
-    `{ ${fields} }`,
-  );
-
+  // json.tarkov.dev/regular/prices/{id} отдаёт ВЕСЬ ряд → отсекаем окно `days`.
+  const cutoff = Date.now() - days * 86_400_000;
   const result = new Map<string, HistoricalPoint[]>();
-  for (const entry of Object.values(data ?? {})) {
-    if (entry?.id) result.set(entry.id, entry.historicalPrices ?? []);
-  }
+  const fetched = await Promise.all(
+    ids.map(async (id): Promise<[string, HistoricalPoint[]]> => {
+      try {
+        const points = await fetchTarkovJson<HistoricalPoint[]>(`regular/prices/${id}`);
+        return [id, (points ?? []).filter((p) => p.timestamp != null && Number(p.timestamp) >= cutoff)];
+      } catch {
+        return [id, []]; // предмет без истории/ошибка — пропускаем, свои снимки целы
+      }
+    }),
+  );
+  for (const [id, points] of fetched) result.set(id, points);
   return result;
 }
 

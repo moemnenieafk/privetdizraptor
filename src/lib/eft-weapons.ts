@@ -17,16 +17,10 @@
 // 3789 из 3789 без slotNameId). Поэтому слот выводится постобработкой —
 // resolvePresetSlots() по allowedItemIds. См. src/lib/preset-slots.ts.
 //
-// Запрос тяжёлый (весь оружейный слой), tarkov.dev под нагрузкой отдаёт 503 →
-// ретраим с бэкоффом. 4xx не ретраим: это наша ошибка в запросе, повтор не поможет.
+// Источник — JSON-плоскость json.tarkov.dev/regular/items (GraphQL отставлен, §4.12).
+// Имена предметов/пресетов там плейсхолдеры → резолвим из /regular/items_ru по «<id> Name».
 import { resolvePresetSlots } from "@/lib/preset-slots";
 import { fetchTarkovJson } from "@/lib/tarkov-fallback";
-import { isPlaceholderName } from "@/lib/tarkov-labels";
-
-const ENDPOINT = "https://api.tarkov.dev/graphql";
-
-const RETRIES = 3;
-const BACKOFF_MS = [1000, 3000, 7000];
 
 /* ───────────────── публичная форма (её пишет в БД src/db/weapons.ts) ───────────────── */
 
@@ -155,77 +149,6 @@ interface RawItem {
   containsItems?: RawContained[] | null;
   properties?: RawProps | null;
 }
-interface RawResponse {
-  data?: { items?: RawItem[] | null } | null;
-  errors?: unknown;
-}
-
-/* ───────────────── запросы ───────────────── */
-
-const SLOT_FRAGMENT = `
-  slots {
-    id
-    nameId
-    name
-    required
-    filters { allowedItems { id } excludedItems { id } }
-  }
-`;
-
-const MAIN_QUERY = `
-  query {
-    items(lang: ru, types: [gun, mods, preset]) {
-      id
-      name
-      types
-      ergonomicsModifier
-      recoilModifier
-      accuracyModifier
-      velocity
-      loudness
-      conflictingItems { id }
-      conflictingSlotIds
-      containsItems { item { id } count attributes { type name value } }
-      properties {
-        __typename
-        ... on ItemPropertiesWeapon {
-          caliber
-          ergonomics
-          recoilVertical
-          recoilHorizontal
-          fireRate
-          fireModes
-          sightingRange
-          centerOfImpact
-          deviationCurve
-          deviationMax
-          defaultPreset { id }
-          defaultAmmo { id }
-          allowedAmmo { id }
-          ${SLOT_FRAGMENT}
-        }
-        ... on ItemPropertiesWeaponMod { ergonomics recoilModifier accuracyModifier ${SLOT_FRAGMENT} }
-        ... on ItemPropertiesMagazine  { ergonomics recoilModifier capacity ${SLOT_FRAGMENT} }
-        ... on ItemPropertiesScope     { ergonomics recoilModifier sightingRange ${SLOT_FRAGMENT} }
-        ... on ItemPropertiesBarrel    { ergonomics recoilModifier centerOfImpact deviationCurve ${SLOT_FRAGMENT} }
-        ... on ItemPropertiesPreset    { baseItem { id } ergonomics recoilVertical recoilHorizontal moa default }
-      }
-    }
-  }
-`;
-
-const AMMO_QUERY = `
-  query {
-    items(lang: ru, types: [ammo]) {
-      id
-      properties {
-        __typename
-        ... on ItemPropertiesAmmo { initialSpeed recoilModifier accuracyModifier }
-      }
-    }
-  }
-`;
-
 /* ───────────────── коэрсеры ───────────────── */
 
 const num = (v: number | null | undefined, fallback = 0): number =>
@@ -263,55 +186,9 @@ function slotNameFromAttributes(attrs: RawAttribute[] | null | undefined): strin
   return typeof hit?.value === "string" && hit.value.length > 0 ? hit.value : "";
 }
 
-const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
-
-/**
- * GraphQL-запрос с ретраями. Ретраим 5xx и сетевые обрывы (tarkov.dev под нагрузкой
- * отдаёт 503), не ретраим 4xx — это ошибка в самом запросе, повтор не поможет.
- */
-async function gql(query: string, label: string): Promise<RawItem[]> {
-  let lastError = "";
-
-  for (let attempt = 0; attempt <= RETRIES; attempt++) {
-    if (attempt > 0) await sleep(BACKOFF_MS[attempt - 1] ?? 7000);
-
-    try {
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ query }),
-        cache: "no-store",
-      });
-
-      if (res.status >= 400 && res.status < 500) {
-        throw new Error(`tarkov.dev [${label}] → ${res.status} (запрос битый, ретрай не поможет)`);
-      }
-      if (!res.ok) {
-        lastError = `tarkov.dev [${label}] → ${res.status}`;
-        continue; // 5xx — ретраим
-      }
-
-      const json = (await res.json()) as RawResponse;
-      if (json.errors) {
-        throw new Error(`tarkov.dev [${label}] вернул errors: ${JSON.stringify(json.errors)}`);
-      }
-      return json.data?.items ?? [];
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      // Битый запрос — сразу наружу, ретраить нечего.
-      if (msg.includes("ретрай не поможет") || msg.includes("вернул errors")) throw e;
-      lastError = msg; // сетевой обрыв / таймаут — ретраим
-    }
-  }
-
-  throw new Error(`${lastError} — исчерпаны ${RETRIES} ретрая, синк отменён`);
-}
-
-/* ───────────────── JSON-плоскость (fallback) ─────────────────
- * weapons — GraphQL-primary (проверенный парсер + 503-ретрай), а JSON-плоскость —
- * запасной слой на случай дауна GraphQL. Формы данных те же, но рефы там — id-строки
- * (не {id}); адаптер приводит JSON-предмет к внутренней RawItem, дальше работает тот
- * же билдер дампа. Имена пресетов в плоскости — плейсхолдеры → берём normalizedName. */
+/* ───────────────── JSON-плоскость (единственный источник) ─────────────────
+ * Рефы в плоскости — id-строки (не {id}); адаптер приводит JSON-предмет к внутренней
+ * RawItem, дальше работает тот же билдер дампа. Имена — из /regular/items_ru по «<id> Name». */
 interface JsonWpnSlotFilters { allowedItems?: string[]; excludedItems?: string[] }
 interface JsonWpnSlot { id?: string; nameId?: string; name?: string; required?: boolean; filters?: JsonWpnSlotFilters }
 interface JsonWpnProps {
@@ -337,11 +214,11 @@ interface JsonWpnItem {
 
 const toRefs = (v?: string[] | null): RawRef[] => (v ?? []).map((id) => ({ id }));
 
-function jsonItemToRaw(it: JsonWpnItem): RawItem {
+function jsonItemToRaw(it: JsonWpnItem, tr: Record<string, string>): RawItem {
   const p = it.properties;
   return {
     id: it.id,
-    name: isPlaceholderName(it.name, it.id) ? it.normalizedName ?? it.id : (it.name as string),
+    name: tr[`${it.id} Name`] ?? it.normalizedName ?? it.id,
     types: it.types ?? null,
     ergonomicsModifier: it.ergonomicsModifier ?? null,
     recoilModifier: it.recoilModifier ?? null,
@@ -387,30 +264,23 @@ function jsonItemToRaw(it: JsonWpnItem): RawItem {
 }
 
 async function weaponsRawFromJson(): Promise<{ main: RawItem[]; ammo: RawItem[] }> {
-  const data = await fetchTarkovJson<{ items?: Record<string, JsonWpnItem> }>("regular/items");
+  const [data, tr] = await Promise.all([
+    fetchTarkovJson<{ items?: Record<string, JsonWpnItem> }>("regular/items"),
+    fetchTarkovJson<Record<string, string>>("regular/items_ru"),
+  ]);
   const items = data.items ?? {};
   const main: RawItem[] = [];
   const ammo: RawItem[] = [];
   for (const it of Object.values(items)) {
     const types = it.types ?? [];
-    if (types.includes("gun") || types.includes("mods") || types.includes("preset")) main.push(jsonItemToRaw(it));
-    else if (types.includes("ammo")) ammo.push(jsonItemToRaw(it));
+    if (types.includes("gun") || types.includes("mods") || types.includes("preset")) main.push(jsonItemToRaw(it, tr));
+    else if (types.includes("ammo")) ammo.push(jsonItemToRaw(it, tr));
   }
   return { main, ammo };
 }
 
-/** GraphQL-primary → JSON-fallback. GraphQL пуст/лёг → берём плоскость. */
+/** Оружейный слой из JSON-плоскости (GraphQL отставлен, §4.12). */
 async function getRawWeapons(): Promise<{ main: RawItem[]; ammo: RawItem[] }> {
-  try {
-    // Последовательно, а не Promise.all: два тяжёлых запроса параллельно — верный способ
-    // выбить у tarkov.dev 503. Ammo-запрос лёгкий, лишние 2 секунды не жалко.
-    const main = await gql(MAIN_QUERY, "gun+mods+preset");
-    const ammo = await gql(AMMO_QUERY, "ammo");
-    if (main.length > 0) return { main, ammo };
-    console.warn("[weapons] GraphQL отдал пустой список — фолбэк на JSON-плоскость");
-  } catch (e) {
-    console.warn(`[weapons] GraphQL недоступен (${e instanceof Error ? e.message : String(e)}) — фолбэк на JSON-плоскость`);
-  }
   return weaponsRawFromJson();
 }
 

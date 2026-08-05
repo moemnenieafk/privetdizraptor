@@ -11,12 +11,7 @@
 // делает src/lib/gunsmith.ts. Здесь зеркалим 1:1, без интерпретации.
 import type { GunsmithThreshold } from "@/db/schema-gunsmith";
 import { fetchTarkovJson } from "@/lib/tarkov-fallback";
-import { traderLabelMap, isPlaceholderName } from "@/lib/tarkov-labels";
-
-const ENDPOINT = "https://api.tarkov.dev/graphql";
-
-const RETRIES = 3;
-const BACKOFF_MS = [1000, 3000, 7000];
+import { traderLabelMap } from "@/lib/tarkov-labels";
 
 /* ───────────────── публичная форма ───────────────── */
 
@@ -62,32 +57,6 @@ interface RawTask {
   trader?: { name?: string | null } | null;
   objectives?: (RawObjective | null)[] | null;
 }
-interface RawResponse {
-  data?: { tasks?: RawTask[] | null } | null;
-  errors?: unknown;
-}
-
-const QUERY = `
-  query {
-    tasks(lang: ru) {
-      id
-      name
-      minPlayerLevel
-      trader { name }
-      objectives {
-        id
-        type
-        ... on TaskObjectiveBuildItem {
-          item { id }
-          containsAll { id }
-          containsCategory { id }
-          attributes { name requirement { compareMethod value } }
-        }
-      }
-    }
-  }
-`;
-
 /* ───────────────── помощники ───────────────── */
 
 const ids = (v: RawRef[] | null | undefined): string[] =>
@@ -118,51 +87,9 @@ function mapThresholds(attrs: RawAttr[] | null | undefined): GunsmithThreshold[]
   return out;
 }
 
-const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
-
-/** Запрос с ретраями: tarkov.dev под нагрузкой отдаёт 503. 4xx не ретраим. */
-async function gql(query: string): Promise<RawTask[]> {
-  let lastError = "";
-
-  for (let attempt = 0; attempt <= RETRIES; attempt++) {
-    if (attempt > 0) await sleep(BACKOFF_MS[attempt - 1] ?? 7000);
-
-    try {
-      const res = await fetch(ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ query }),
-        cache: "no-store",
-      });
-
-      if (res.status >= 400 && res.status < 500) {
-        throw new Error(`tarkov.dev [tasks] → ${res.status} (запрос битый, ретрай не поможет)`);
-      }
-      if (!res.ok) {
-        lastError = `tarkov.dev [tasks] → ${res.status}`;
-        continue;
-      }
-
-      const json = (await res.json()) as RawResponse;
-      if (json.errors) {
-        throw new Error(`tarkov.dev [tasks] вернул errors: ${JSON.stringify(json.errors)}`);
-      }
-      return json.data?.tasks ?? [];
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes("ретрай не поможет") || msg.includes("вернул errors")) throw e;
-      lastError = msg;
-    }
-  }
-
-  throw new Error(`${lastError} — исчерпаны ${RETRIES} ретрая`);
-}
-
-/* ───────────────── JSON-плоскость (fallback) ─────────────────
- * gunsmith — GraphQL-primary (проверенный парсер + ретрай + живые ru-имена/«Часть N»),
- * JSON-плоскость — запасной слой. Рефы там id-строки, buildAttributes — объект (не
- * массив), trader — id (имя резолвим), имя квеста — плейсхолдер (part берём из
- * normalizedName: «gunsmith-part-7» → 7). Адаптер приводит к внутренней RawTask. */
+/* ───────────────── JSON-плоскость (единственный источник) ─────────────────
+ * Рефы — id-строки, buildAttributes — объект (не массив), trader — id (имя резолвим),
+ * имя квеста — из /regular/tasks_ru по «<id> name» (part из normalizedName «gunsmith-part-7»). */
 interface JsonBuildAttr { value?: number | null; compareMethod?: string | null }
 interface JsonObjective {
   id?: string;
@@ -181,10 +108,10 @@ interface JsonTask {
   objectives?: JsonObjective[] | null;
 }
 
-function jsonTaskToRaw(t: JsonTask, traders: Map<string, { name: string; normalizedName: string }>): RawTask {
+function jsonTaskToRaw(t: JsonTask, traders: Map<string, { name: string; normalizedName: string }>, tr: Record<string, string>): RawTask {
   return {
     id: t.id,
-    name: isPlaceholderName(t.name, t.id) ? t.normalizedName ?? t.id : (t.name as string),
+    name: tr[`${t.id} name`] ?? t.normalizedName ?? t.id,
     minPlayerLevel: t.minPlayerLevel ?? null,
     trader: { name: t.trader ? traders.get(t.trader)?.name ?? null : null },
     objectives: (t.objectives ?? []).map((o) => ({
@@ -201,25 +128,14 @@ function jsonTaskToRaw(t: JsonTask, traders: Map<string, { name: string; normali
   };
 }
 
-async function gunsmithFromJson(): Promise<RawTask[]> {
-  // У /tasks коллекция вложена: data.tasks (dict по id).
-  const [tasksData, traders] = await Promise.all([
+async function getRawGunsmithTasks(): Promise<RawTask[]> {
+  // У /tasks коллекция вложена: data.tasks (dict по id). Имена — из /tasks_ru (GraphQL отставлен, §4.12).
+  const [tasksData, tr, traders] = await Promise.all([
     fetchTarkovJson<{ tasks?: Record<string, JsonTask> }>("regular/tasks"),
+    fetchTarkovJson<Record<string, string>>("regular/tasks_ru"),
     traderLabelMap(),
   ]);
-  return Object.values(tasksData.tasks ?? {}).map((t) => jsonTaskToRaw(t, traders));
-}
-
-/** GraphQL-primary → JSON-fallback. */
-async function getRawGunsmithTasks(): Promise<RawTask[]> {
-  try {
-    const tasks = await gql(QUERY);
-    if (tasks.length > 0) return tasks;
-    console.warn("[gunsmith] GraphQL отдал пустой список — фолбэк на JSON-плоскость");
-  } catch (e) {
-    console.warn(`[gunsmith] GraphQL недоступен (${e instanceof Error ? e.message : String(e)}) — фолбэк на JSON-плоскость`);
-  }
-  return gunsmithFromJson();
+  return Object.values(tasksData.tasks ?? {}).map((t) => jsonTaskToRaw(t, traders, tr));
 }
 
 /* ───────────────── публичный фетч ───────────────── */

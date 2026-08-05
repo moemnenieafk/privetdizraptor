@@ -2,28 +2,18 @@
 // серверный синк (src/db/prices.ts → крон /api/cron/sync-prices). Рантайм-UI цены
 // отсюда НЕ тянет — он читает нашу таблицу `prices`. В рамках CLAUDE.md §4.11.
 //
-// ДВА ИСТОЧНИКА (resilience): primary — JSON-плоскость tarkov.dev
-// (`json.tarkov.dev/{gameMode}/items` + `.../traders`), fallback — GraphQL
-// (`api.tarkov.dev/graphql`). Причина: 2026-07-21 лёг ТОЛЬКО GraphQL-слой (503,
-// issue the-hideout/tarkov-api#474), тогда как плоские JSON-фиды того же tarkov.dev
-// оставались живы (на них крутится и их собственный сайт) — а мы 3 дня стояли, потому
-// что зависели ровно от одного слоя. Теперь: жив любой из двух → цены синкаются; лёг
-// primary → берём fallback; лежат оба → пустая Map, синк НЕ затирает last-known-good.
-// Данные у обоих слоёв одни и те же, отличаются лишь имена полей (переводим ниже).
-// Полностью независимый вторичный источник (tarkov-market) — отдельный P3.
-// Диагностика/решение: decisions/eft-data-autonomy-research.md.
+// ИСТОЧНИК: JSON-плоскость tarkov.dev (`json.tarkov.dev/{gameMode}/items` + `.../traders`).
+// GraphQL ОТСТАВЛЕН (§4.12) — фолбэка на него нет; лёг источник → пустая Map, синк НЕ
+// затирает last-known-good. Полностью независимый вторичный источник (tarkov-market) —
+// отдельный P3. Диагностика: decisions/eft-data-autonomy-research.md.
 //
-// Карта отличий JSON-плоскость → GraphQL (что переводит каждый адаптер в EftPriceInfo):
-//   JSON: sellToTrader/buyFromTrader (ТОЛЬКО торговцы, trader=id) + синтез записи
-//         барахолки из lastLowPrice; categories[0]=bsgCategoryId; имена торговцев из
-//         /traders + TRADER_RU; low24hPrice отсутствует (null).
-//   GraphQL: sellFor/buyFor уже включают вендора «Барахолка» и локализованные имена;
-//         bsgCategoryId и low24hPrice — прямые поля.
+// Адаптер JSON-плоскости → EftPriceInfo: sellToTrader/buyFromTrader (ТОЛЬКО торговцы,
+// trader=id) + синтез записи барахолки из lastLowPrice; categories[0]=bsgCategoryId;
+// имена торговцев из /traders + TRADER_RU; low24hPrice отсутствует (null).
 import type { EftCurrency } from "@/lib/formatters";
 import { TRADER_RU, FLEA_NORMALIZED_NAME, FLEA_VENDOR_RU } from "@/lib/tarkov-labels";
 
 const JSON_BASE = "https://json.tarkov.dev";
-const GRAPHQL_ENDPOINT = "https://api.tarkov.dev/graphql";
 
 export interface CtaVendorOffer {
   price: number;
@@ -194,95 +184,12 @@ async function fetchFromJsonPlane(gameMode: "regular" | "pve"): Promise<Map<stri
   return result;
 }
 
-/* ═══════════════ ИСТОЧНИК 2 (fallback): GraphQL api.tarkov.dev ═══════════════ */
-
-interface GqlOffer {
-  price?: number;
-  priceRUB?: number;
-  currency?: string;
-  vendor?: { name?: string; normalizedName?: string };
-}
-interface GqlItem {
-  id: string;
-  normalizedName?: string;
-  bsgCategoryId?: string;
-  minLevelForFlea?: number;
-  backgroundColor?: string;
-  types?: string[];
-  lastLowPrice?: number;
-  avg24hPrice?: number;
-  changeLast48hPercent?: number;
-  low24hPrice?: number;
-  high24hPrice?: number;
-  sellFor?: GqlOffer[];
-  buyFor?: GqlOffer[];
-}
-interface GqlResponse {
-  data?: { items?: GqlItem[] };
-  errors?: { message?: string }[];
-}
-
-const gqlQuery = (gameMode: "regular" | "pve") => `
-  query {
-    items(lang: ru, gameMode: ${gameMode}) {
-      id normalizedName bsgCategoryId minLevelForFlea backgroundColor types
-      lastLowPrice avg24hPrice changeLast48hPercent low24hPrice high24hPrice
-      sellFor { price priceRUB currency vendor { name normalizedName } }
-      buyFor  { price priceRUB currency vendor { name normalizedName } }
-    }
-  }`;
-
-const mapGqlOffer = (o: GqlOffer): CtaVendorOffer => ({
-  price: o.price ?? 0,
-  priceRUB: o.priceRUB,
-  currency: o.currency as EftCurrency | undefined,
-  vendor: { name: o.vendor?.name ?? "-", normalizedName: o.vendor?.normalizedName },
-});
-
-/** Fallback-источник: GraphQL. Пустая Map = источник недоступен/пуст. */
-async function fetchFromGraphQL(gameMode: "regular" | "pve"): Promise<Map<string, EftPriceInfo>> {
-  const res = await fetch(GRAPHQL_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ query: gqlQuery(gameMode) }),
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    lastFetchError = `HTTP ${res.status} от api.tarkov.dev/graphql`;
-    return new Map();
-  }
-  const json = (await res.json()) as GqlResponse;
-  if (!json.data?.items) {
-    lastFetchError = `GraphQL: ${(json.errors ?? []).map((e) => e?.message ?? "").join(" | ").slice(0, 200) || "ответ без data.items"}`;
-    return new Map();
-  }
-  return new Map(
-    json.data.items.map((it) => [
-      it.id,
-      {
-        normalizedName: it.normalizedName ?? "",
-        bsgCategoryId: it.bsgCategoryId ?? undefined,
-        minLevelForFlea: it.minLevelForFlea ?? undefined,
-        backgroundColor: it.backgroundColor,
-        types: it.types,
-        lastLowPrice: it.lastLowPrice ?? undefined,
-        avg24hPrice: it.avg24hPrice ?? undefined,
-        changeLast48hPercent: it.changeLast48hPercent ?? undefined,
-        low24hPrice: it.low24hPrice ?? undefined,
-        high24hPrice: it.high24hPrice ?? undefined,
-        sellFor: (it.sellFor ?? []).map(mapGqlOffer),
-        buyFor: (it.buyFor ?? []).map(mapGqlOffer),
-      } satisfies EftPriceInfo,
-    ]),
-  );
-}
-
-/* ═══════════════ Оркестратор: primary → fallback → degradation ═══════════════ */
+/* ═══════════════ Оркестратор: JSON-плоскость → degradation ═══════════════ */
 
 /**
- * Карта id → экономика/мета. Никогда не бросает. Порядок: JSON-плоскость (primary),
- * при пустоте — GraphQL (fallback). Обе пусты → пустая Map (синк НЕ затирает данные,
- * каталог живёт на последних успешных ценах), причина — в getLastPriceFetchError().
+ * Карта id → экономика/мета. Никогда не бросает. Источник — JSON-плоскость; пусто/лёг
+ * → пустая Map (синк НЕ затирает данные, каталог живёт на последних успешных ценах),
+ * причина — в getLastPriceFetchError(). GraphQL-фолбэка нет (§4.12).
  */
 export async function getEftPriceMap(
   gameMode: "regular" | "pve" = "regular",
@@ -290,20 +197,11 @@ export async function getEftPriceMap(
   lastFetchError = null;
   try {
     const fromJson = await fetchFromJsonPlane(gameMode);
-    if (fromJson.size > 0) return fromJson;
-
-    const jsonErr = lastFetchError;
-    console.warn(`[getEftPriceMap] JSON-плоскость пуста (${jsonErr}) — пробую GraphQL-фолбэк`);
-    lastFetchError = null;
-    const fromGql = await fetchFromGraphQL(gameMode);
-    if (fromGql.size > 0) {
-      console.warn("[getEftPriceMap] отдал GraphQL-фолбэк (JSON-плоскость недоступна)");
-      return fromGql;
+    if (fromJson.size === 0) {
+      lastFetchError = lastFetchError ?? "JSON-плоскость пуста";
+      console.error(`[getEftPriceMap] ${lastFetchError}`);
     }
-
-    lastFetchError = `оба источника пусты — json: ${jsonErr}; graphql: ${lastFetchError}`;
-    console.error("[getEftPriceMap]", lastFetchError);
-    return new Map();
+    return fromJson;
   } catch (e) {
     lastFetchError = e instanceof Error ? e.message : String(e);
     console.error("[getEftPriceMap]", lastFetchError);

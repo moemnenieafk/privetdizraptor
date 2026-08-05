@@ -13,7 +13,7 @@
 // у tarkov.dev всё ещё unknown-item, пропускаются и дождутся следующего прогона.
 import { createClient } from "@supabase/supabase-js";
 import backfillIds from "@/data/icon-backfill-eft.json";
-import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "@/lib/tarkov-fallback";
+import { fetchMirrorRows, fetchTarkovJson } from "@/lib/tarkov-fallback";
 
 const BUCKET = "cta-media";
 const PREFIX = "items/eft";
@@ -35,14 +35,6 @@ async function iconsFromJson(ids: string[]): Promise<TdIcon[]> {
   return ids.map((id) => ({ id, image512pxLink: items[id]?.image512pxLink ?? null }));
 }
 
-// GraphQL (fallback): точечный запрос по ids (ids вшиваем в запрос — это BSG-id, безопасно).
-async function iconsFromGraphQL(ids: string[]): Promise<TdIcon[]> {
-  const data = await fetchTarkovGraphQL<{ items?: TdIcon[] }>(
-    `query { items(ids: ${JSON.stringify(ids)}) { id image512pxLink } }`,
-  );
-  return data.items ?? [];
-}
-
 export type SyncIconsResult = {
   iconsChecked: number; // сколько id вернул tarkov.dev
   iconsReady: number; // у скольких уже есть настоящая 512px
@@ -59,11 +51,7 @@ export async function syncEftIcons(): Promise<SyncIconsResult> {
   }
 
   const ids = (backfillIds as string[]).slice(0, MAX_PER_RUN);
-  const items = await fetchWithFallback<TdIcon>(
-    () => iconsFromJson(ids),
-    () => iconsFromGraphQL(ids),
-    "icons",
-  );
+  const items = await fetchMirrorRows<TdIcon>(() => iconsFromJson(ids), "icons");
   const ready = items.filter((it) => isReal(it.image512pxLink));
 
   const admin = createClient(url, key, {
