@@ -1,4 +1,5 @@
-// Сезонные достижения EFT (тир «Сезонные», добавлен патчем 1.1.0 «KORD BREACH»).
+// Статические достижения EFT, которых НЕТ в зеркале tarkov.dev:
+// сезонный тир 1.1.0 «KORD BREACH» + отдельные легендарные (real-id, зеркало пока не догнало).
 //
 // ПОЧЕМУ СТАТИКА, А НЕ ЗЕРКАЛО: этих достижений НЕТ в tarkov.dev (концепт 1.1.0; §4.12 —
 // на живой tarkov.dev не опираемся). Крон `syncEftLandingData()` реконсилит таблицу
@@ -6,10 +7,9 @@
 // СТЁР. Поэтому держим их как data-at-rest (паттерн /game-data-ingest, §4.11) и мёржим
 // в ридере `getEftAchievements()` поверх зеркала. Крон их не трогает — их нет в БД.
 //
-// id — РЕАЛЬНЫЕ BSG achievement-id (24-hex). Эмблемы-с-рамкой лежат в
-// `public/images/achievements/eft/<id>.webp` (извлечено из клиента + скомпоновано V4DYA
-// с гекс-рамкой/подложкой сезонного тира) → резолвятся `achievement-icon.ts` по id.
-// Маппинг имя↔id восстановлен по названным V4DYA файлам (md5-сверка), tarkov.dev их не знает.
+// id: реальные BSG achievement-id (24-hex) где известны, иначе синтетические `kbreach-<slug>`
+// (3 достижения из видео-плиток — их id tarkov.dev не знает). Эмблемы (512px из мастеров V4DYA)
+// лежат в `public/images/achievements/eft/<id>.webp` → резолвятся `achievement-icon.ts` по id.
 //
 // Источник текста: игровые скрины `docs/eft/codex/achievments/`. Спека:
 // `docs/decisions/seasonal-achievements-kord-breach.md`. side=all (прогрессия сезонного
@@ -35,7 +35,29 @@ const seasonal = (
   normalizedSide: "all",
 });
 
-export const SEASONAL_ACHIEVEMENTS_EFT: AchievementView[] = [
+// Легендарное достижение с РЕАЛЬНЫМ BSG-id, которого нет в зеркале tarkov.dev.
+// Живёт статикой по той же причине, что и сезонные: крон-реконсиляция снесла бы
+// строку в БД (id не в keep-set tarkov.dev). Дедуп в ридере отдаст приоритет
+// зеркалу, если оно когда-нибудь догонит этот id.
+const legendary = (
+  id: string,
+  name: string,
+  description: string,
+  pct: number,
+): AchievementView => ({
+  id,
+  name,
+  description,
+  hidden: false,
+  playersCompletedPercent: pct,
+  adjustedPlayersCompletedPercent: pct,
+  rarity: "Легендарные",
+  normalizedRarity: "legendary",
+  side: "All",
+  normalizedSide: "all",
+});
+
+const SEASONAL: AchievementView[] = [
   seasonal(
     "6a59f4d4ceec2980f10364db",
     "Одна хорошо, а две лучше",
@@ -97,9 +119,7 @@ export const SEASONAL_ACHIEVEMENTS_EFT: AchievementView[] = [
     "Убить 100 бойцов Black Division, используя их снаряжение.",
     0.1,
   ),
-  // +4 из видео-плиток сезона (docs V4DYA). Первые три — синтетические id kbreach-*
-  // (в tarkov.dev их нет); «Рассвет» — реальный BSG-id (Каппа на основном перс., если
-  // зеркало догонит — ридер отдаст зеркальную версию, см. getEftAchievements).
+  // +3 из видео-плиток сезона (docs V4DYA) — синтетические id kbreach-* (в tarkov.dev их нет).
   seasonal(
     "kbreach-first-step",
     "Первый шаг",
@@ -118,10 +138,18 @@ export const SEASONAL_ACHIEVEMENTS_EFT: AchievementView[] = [
     "Получить все отрицательные эффекты до аллергии в одном рейде, выбрав модификатор «Аллергик».",
     0,
   ),
-  seasonal(
+];
+
+// Легендарные достижения (реальный BSG-id), которых нет в зеркале. «Рассвет новой эпохи» —
+// Каппа на ОСНОВНОМ персонаже (не сезонный тир, уточнил V4DYA); эмблема золотая, без «I».
+const LEGENDARY_STATIC: AchievementView[] = [
+  legendary(
     "6a60f6f7d97ca215e600b6c4",
     "Рассвет новой эпохи",
     "Получить защищённый контейнер «Каппа» после появления системы сезонов.",
     0.1,
   ),
 ];
+
+// Всё, что мёржим поверх зеркала в ридере (крон эти строки не трогает — их нет в tarkov.dev).
+export const STATIC_ACHIEVEMENTS_EFT: AchievementView[] = [...SEASONAL, ...LEGENDARY_STATIC];

@@ -68,10 +68,12 @@ EFT кэширует скачанные UI-картинки в `%LOCALAPPDATA%/T
 - Бонус: ещё ~18 несезонных 1.1.0-эмблем лежат в public по реальному id — подхватятся, когда зеркало догонит.
 
 ### ✅ +4 из видео-плиток сезона (2026-08-05, V4DYA)
-Плитки `public/images/achievements/eft/недостающие/*.jpg` (source-of-truth по текстам) → добор до **15 сезонных**:
-Первый шаг (`kbreach-first-step`), Достигнуть вершины (`kbreach-to-the-top`), Весна пришла (`kbreach-spring-comes`)
-на **синтетических id** (в tarkov.dev их нет); «Рассвет новой эпохи» — на **реальном id `6a60f6f7`** (Каппа на
-основном перс.). `getEftAchievements` теперь **дедупит по id** (зеркало главнее, если догонит real-id), `getEftAchievement` —
+Плитки `public/images/achievements/eft/недостающие/*.jpg` (source-of-truth по текстам) → **+3 сезонных**
+(Первый шаг `kbreach-first-step`, Достигнуть вершины `kbreach-to-the-top`, Весна пришла `kbreach-spring-comes` —
+синтетические id, в tarkov.dev их нет) **+ 1 легендарное** «Рассвет новой эпохи» на **реальном id `6a60f6f7`**
+(Каппа на ОСНОВНОМ персонаже — НЕ сезонный тир, уточнил V4DYA; в зеркале его нет, синк deprecated → держим статикой).
+Экспорт переименован `SEASONAL_ACHIEVEMENTS_EFT` → `STATIC_ACHIEVEMENTS_EFT` (сезонные + легендарные вне зеркала).
+`getEftAchievements` теперь **дедупит по id** (зеркало главнее, если догонит real-id), `getEftAchievement` —
 зеркало-first с фолбэком на статику (резильентно к падению БД). Иконки **пере-экспортированы в 512px** из мастеров
 V4DYA (`converted/`) скриптом `scripts/reexport-seasonal-icons.mjs`; убраны 17 сырых эмблем-сирот из `be335d34`.
 Исходники (мастера ~2000px + JPG-плитки) — в `.gitignore` (heavy, под `public/` → иначе улетают в деплой).
