@@ -237,8 +237,11 @@ export async function getEftAchievements(): Promise<AchievementDTO[]> {
   try {
     const gameId = await eftGameId();
     const rows = await db.select().from(achievements).where(eq(achievements.gameId, gameId));
-    // + статические сезонные (нет в tarkov.dev/зеркале; крон их не стирает — см. data/eft/seasonal-achievements.ts)
-    return [...rows.map(toAchievementDTO), ...SEASONAL_ACHIEVEMENTS_EFT];
+    // + статические сезонные (нет в tarkov.dev/зеркале; крон их не стирает — см. data/eft/seasonal-achievements.ts).
+    // Дедуп по id: если зеркало догонит real-id (напр. «Рассвет» 6a60f6f7) — зеркало главнее, статику отбрасываем.
+    const mirroredIds = new Set(rows.map((r) => r.id));
+    const seasonalOnly = SEASONAL_ACHIEVEMENTS_EFT.filter((a) => !mirroredIds.has(a.id));
+    return [...rows.map(toAchievementDTO), ...seasonalOnly];
   } catch (e) {
     console.error("[getEftAchievements]", e);
     return [...SEASONAL_ACHIEVEMENTS_EFT]; // сезонные — data-at-rest, доступны даже если зеркало легло
@@ -248,7 +251,6 @@ export async function getEftAchievements(): Promise<AchievementDTO[]> {
 /** Одно достижение по id (для детальной страницы). null — если не найдено. */
 export async function getEftAchievement(id: string): Promise<AchievementDTO | null> {
   const seasonal = SEASONAL_ACHIEVEMENTS_EFT.find((a) => a.id === id);
-  if (seasonal) return seasonal; // сезонные — статика, в БД их нет
   try {
     const gameId = await eftGameId();
     const [row] = await db
@@ -256,10 +258,11 @@ export async function getEftAchievement(id: string): Promise<AchievementDTO | nu
       .from(achievements)
       .where(and(eq(achievements.gameId, gameId), eq(achievements.id, id)))
       .limit(1);
-    return row ? toAchievementDTO(row) : null;
+    if (row) return toAchievementDTO(row); // зеркало главнее (real-id, если догнало)
+    return seasonal ?? null; // иначе статика (синтетические kbreach-* и не-догнанные)
   } catch (e) {
     console.error("[getEftAchievement]", e);
-    return null;
+    return seasonal ?? null; // резильентно: сезонные — data-at-rest, доступны даже если БД легла
   }
 }
 
