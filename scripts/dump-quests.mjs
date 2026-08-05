@@ -71,12 +71,24 @@ async function getJson(path) {
 
 async function main() {
   console.log('Fetching quests from json.tarkov.dev (GraphQL отставлен)...');
-  const [tasksData, tr, itemsRu, tradersData] = await Promise.all([
+  const [tasksData, tr, itemsRu, tradersData, mapsData, mapsRu] = await Promise.all([
     getJson('regular/tasks'),
     getJson('regular/tasks_ru'),
     getJson('regular/items_ru'),
     getJson('regular/traders'),
+    getJson('regular/maps'),
+    getJson('regular/maps_ru'),
   ]);
+
+  // карта id → {id, name(ru), normalizedName} для зон объективов (раньше имена были null)
+  const mapArr = Array.isArray(mapsData.maps) ? mapsData.maps : Object.values(mapsData.maps ?? {});
+  const mapById = new Map(
+    mapArr.filter((m) => m.id).map((m) => [m.id, {
+      id: m.id,
+      name: mapsRu[`${m.id} Name`] ?? m.normalizedName ?? m.id,
+      normalizedName: m.normalizedName ?? m.id,
+    }]),
+  );
 
   const T = (s) => (s == null ? s : tr[s] ?? s);                 // перевод по плейсхолдеру
   const itemObj = (id) => id && {
@@ -110,7 +122,7 @@ async function main() {
     if (o.markerItem) out.markerItem = itemObj(o.markerItem);
     // карты: JSON — [id]; разворачиваем в {id,name,normalizedName}
     if (Array.isArray(o.maps) && o.maps.length) {
-      out.maps = o.maps.map((mid) => ({ id: mid, name: null, normalizedName: null }));
+      out.maps = o.maps.map((mid) => mapById.get(mid) ?? { id: mid, name: null, normalizedName: null });
     }
     return out;
   };
@@ -127,6 +139,18 @@ async function main() {
       .filter((r) => r?.task)
       .map((r) => ({ task: { id: r.task, name: nameById.get(r.task) ?? r.task } })),
     trader: traderObj(t.trader),
+    // УЛ-гейт: требования лояльности торговца — основа вью «по уровню лояльности» (1.1.0.0).
+    // NB: у tarkov.dev пока размечено немного задач; остальное гейтится taskRequirements+minLevel.
+    traderRequirements: (t.traderRequirements ?? [])
+      .filter((r) => r?.trader)
+      .map((r) => ({
+        trader: { id: r.trader, name: traderObj(r.trader).name, normalizedName: traderObj(r.trader).normalizedName },
+        requirementType: r.requirementType ?? null,
+        compareMethod: r.compareMethod ?? '>=',
+        level: r.value ?? null,
+      })),
+    requiredPrestige: t.requiredPrestige ?? null,
+    factionName: t.factionName ?? null,
     objectives: (t.objectives ?? []).map(mapObjective),
     finishRewards: {
       traderStanding: (t.finishRewards?.traderStanding ?? []).map((s) => ({
@@ -162,7 +186,9 @@ async function main() {
     tasks.push({
       id: sq.id, name: sq.name, normalizedName: sq.normalizedName,
       kappaRequired: false, lightkeeperRequired: false, minPlayerLevel: 0, experience: 0,
-      taskRequirements: [], trader: storyTrader, objectives: [],
+      taskRequirements: [], trader: storyTrader,
+      traderRequirements: [], requiredPrestige: null, factionName: null,
+      objectives: [],
       finishRewards: { traderStanding: [], items: [] },
     });
   }
