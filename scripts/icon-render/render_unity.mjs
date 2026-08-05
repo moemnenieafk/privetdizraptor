@@ -84,7 +84,11 @@ for (const id of ids) {
     // Оружейные контейнеры (Гейт-3): визуальные меши лежат в соседнем client_assets.bundle,
     // которого НЕТ в Windows.json Dependencies → без ручной догрузки рендер выходит ПУСТЫМ.
     const bundleAbs = join(WIN, m.bundleKey || key);
-    const isWeapon = bundleAbs.replace(/\\/g, "/").includes("/weapons/");
+    // usable_items (еда/напитки/меды/бутылки) лежат под /weapons/, но это НЕ оружие: им нужен
+    // plain-режим (меши+текстуры из extract_item.py, где material-скоринг берёт скин-принт),
+    // а weaponMode грузил бы бандл сам и брал базовый материал (белый вместо скелет-принта).
+    const isWeapon = bundleAbs.replace(/\\/g, "/").includes("/weapons/")
+      && !bundleAbs.replace(/\\/g, "/").includes("/usable_items/");
     const isDogtag = /dogtag/i.test(bundleAbs.replace(/\\/g, "/"));
     const extraDeps = [];
     if (isWeapon) {
