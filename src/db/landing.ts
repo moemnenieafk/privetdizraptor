@@ -5,7 +5,7 @@ import { and, eq, notInArray, sql } from "drizzle-orm";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { achievements, maps, traders } from "./schema";
-import { SEASONAL_ACHIEVEMENTS_EFT } from "@/data/eft/seasonal-achievements";
+import { STATIC_ACHIEVEMENTS_EFT } from "@/data/eft/seasonal-achievements";
 import { eftGameId } from "./eft";
 import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "../lib/tarkov-fallback";
 import { TRADER_RU, MAP_RU } from "../lib/tarkov-labels";
@@ -237,20 +237,20 @@ export async function getEftAchievements(): Promise<AchievementDTO[]> {
   try {
     const gameId = await eftGameId();
     const rows = await db.select().from(achievements).where(eq(achievements.gameId, gameId));
-    // + статические сезонные (нет в tarkov.dev/зеркале; крон их не стирает — см. data/eft/seasonal-achievements.ts).
+    // + статические (сезонные + легендарные вне зеркала; крон их не стирает — см. data/eft/seasonal-achievements.ts).
     // Дедуп по id: если зеркало догонит real-id (напр. «Рассвет» 6a60f6f7) — зеркало главнее, статику отбрасываем.
     const mirroredIds = new Set(rows.map((r) => r.id));
-    const seasonalOnly = SEASONAL_ACHIEVEMENTS_EFT.filter((a) => !mirroredIds.has(a.id));
-    return [...rows.map(toAchievementDTO), ...seasonalOnly];
+    const staticOnly = STATIC_ACHIEVEMENTS_EFT.filter((a) => !mirroredIds.has(a.id));
+    return [...rows.map(toAchievementDTO), ...staticOnly];
   } catch (e) {
     console.error("[getEftAchievements]", e);
-    return [...SEASONAL_ACHIEVEMENTS_EFT]; // сезонные — data-at-rest, доступны даже если зеркало легло
+    return [...STATIC_ACHIEVEMENTS_EFT]; // статика — data-at-rest, доступна даже если зеркало легло
   }
 }
 
 /** Одно достижение по id (для детальной страницы). null — если не найдено. */
 export async function getEftAchievement(id: string): Promise<AchievementDTO | null> {
-  const seasonal = SEASONAL_ACHIEVEMENTS_EFT.find((a) => a.id === id);
+  const staticMatch = STATIC_ACHIEVEMENTS_EFT.find((a) => a.id === id);
   try {
     const gameId = await eftGameId();
     const [row] = await db
@@ -259,10 +259,10 @@ export async function getEftAchievement(id: string): Promise<AchievementDTO | nu
       .where(and(eq(achievements.gameId, gameId), eq(achievements.id, id)))
       .limit(1);
     if (row) return toAchievementDTO(row); // зеркало главнее (real-id, если догнало)
-    return seasonal ?? null; // иначе статика (синтетические kbreach-* и не-догнанные)
+    return staticMatch ?? null; // иначе статика (синтетические kbreach-* и не-догнанные)
   } catch (e) {
     console.error("[getEftAchievement]", e);
-    return seasonal ?? null; // резильентно: сезонные — data-at-rest, доступны даже если БД легла
+    return staticMatch ?? null; // резильентно: статика — data-at-rest, доступна даже если БД легла
   }
 }
 
