@@ -191,5 +191,10 @@
   "69eb793db978f26a9304e78c": "assets/content/weapons/mp7/weapon_hk_mp7a1_46x30_container.bundle",
   "707265736574000000000021": "assets/content/weapons/ak308/weapon_izhmash_ak308_762x51_container.bundle",
   "6a3557f841667bc4bb00fea4": "assets/content/weapons/usable_items/item_filterbottle/item_drink_water_skeleton_loot.bundle",
-  "6a33c17933cff6b88c08902e": "assets/content/items/spec/keys/item_key_9.bundle"
+  "6a33c17933cff6b88c08902e": "assets/content/items/spec/keys/item_key_9.bundle",
+  "707265736574000000000033": "assets/content/items/equipment/rig_cryeavs/item_equipment_rig_cryeavs_arena_bp_01.bundle",
+  "70726573657400000000003b": "assets/content/items/equipment/rig_m2/item_equipment_rig_m2_winter.bundle",
+  "707265736574000000000071": "assets/content/items/equipment/armor_kirasa/item_equipment_armor_kirasa_arena_bp_01.bundle",
+  "707265736574000000000032": "assets/content/items/equipment/rig_carriertactec/item_equipment_rig_carriertactec_arena_bp_01.bundle",
+  "707265736574000000000049": "assets/content/items/equipment/armor_trooper/item_equipment_armor_trooper_arena_bp_01.bundle"
 }
