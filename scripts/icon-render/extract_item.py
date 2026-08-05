@@ -102,6 +102,10 @@ def main():
         if "MeshRenderer" not in comp or "MeshFilter" not in comp:
             continue
         name = (getattr(go, "m_Name", "") or "").lower()
+        # физ-прокси не рендерим: у лут-моделей еды/напитков видимый GO "collider" (MeshFilter+MeshRenderer)
+        # затесался бы в кадр коробкой поверх предмета. Оружие такие GO не имеет — регрессии нет.
+        if "collider" in name or "collision" in name:
+            continue
         if "lod" in name and "lod0" not in name and "lod_0" not in name:
             continue
         try:
