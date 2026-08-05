@@ -7,7 +7,7 @@ import { db } from "./index";
 import { achievements, maps, traders } from "./schema";
 import { STATIC_ACHIEVEMENTS_EFT } from "@/data/eft/seasonal-achievements";
 import { eftGameId } from "./eft";
-import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "../lib/tarkov-fallback";
+import { fetchMirrorRows, fetchTarkovJson } from "../lib/tarkov-fallback";
 import { TRADER_RU, MAP_RU } from "../lib/tarkov-labels";
 
 // Порог защиты прюна: НЕ удаляем стейл-строки, если свежий набор из источника меньше этой
@@ -46,9 +46,7 @@ interface RawAchievement {
   rarity?: string | null; normalizedRarity?: string | null; side?: string | null; normalizedSide?: string | null;
   adjustedPlayersCompletedPercent?: number | null;
 }
-interface RawMap { id: string; name?: string; normalizedName?: string }
-interface RawTrader { name?: string; normalizedName: string; resetTime?: string | null; levels?: { level: number; requiredPlayerLevel: number }[] }
-/* ─────── строки БД + источники (JSON-плоскость / GraphQL) ─────── */
+/* ─────── строки БД + источники (JSON-плоскость) ─────── */
 interface MapRow { id: string; gameId: string; name: string; normalizedName: string }
 interface TraderLevel { level: number; requiredPlayerLevel: number }
 interface TraderRow { normalizedName: string; gameId: string; name: string; resetTime: string | null; levels: TraderLevel[] | null }
@@ -56,14 +54,31 @@ interface TraderRow { normalizedName: string; gameId: string; name: string; rese
 interface JsonMap { id: string; name?: string; normalizedName?: string }
 interface JsonTrader { normalizedName?: string; resetTime?: string | null; levels?: { level?: number; requiredPlayerLevel?: number }[] | null }
 
-// achievements — ТЕКСТ (имя+описание). JSON-плоскость отдаёт плейсхолдеры, поэтому сюда
-// НЕ фолбэчим: при дауне GraphQL достижения просто НЕ обновляем (last-known-good целее
-// плейсхолдеров). GraphQL-only.
-async function achievementsFromGraphQL(): Promise<RawAchievement[]> {
-  const data = await fetchTarkovGraphQL<{ achievements?: RawAchievement[] }>(
-    `query { achievements(lang: ru) { id name description hidden playersCompletedPercent rarity normalizedRarity side normalizedSide adjustedPlayersCompletedPercent } }`,
-  );
-  return (data.achievements ?? []).filter((x) => x.id);
+// achievements — ТЕКСТ (имя+описание). Лежат в json.tarkov.dev/regular/tasks
+// (data.achievements); имена — плейсхолдеры, реальные RU берём из /regular/tasks_ru
+// по ключу-плейсхолдеру (GraphQL отставлен, §4.12).
+interface JsonAchievement {
+  id: string; name?: string; description?: string; hidden?: boolean; playersCompletedPercent?: number;
+  rarity?: string | null; normalizedRarity?: string | null; side?: string | null; normalizedSide?: string | null;
+  adjustedPlayersCompletedPercent?: number | null;
+}
+async function achievementsFromJson(): Promise<RawAchievement[]> {
+  const [data, tr] = await Promise.all([
+    fetchTarkovJson<{ achievements?: Record<string, JsonAchievement> }>("regular/tasks"),
+    fetchTarkovJson<Record<string, string>>("regular/tasks_ru"),
+  ]);
+  return Object.values(data.achievements ?? {})
+    .filter((a) => a.id)
+    .map((a) => ({
+      id: a.id,
+      name: (a.name && tr[a.name]) || a.name,
+      description: (a.description && tr[a.description]) || a.description,
+      hidden: a.hidden,
+      playersCompletedPercent: a.playersCompletedPercent,
+      rarity: a.rarity, normalizedRarity: a.normalizedRarity,
+      side: a.side, normalizedSide: a.normalizedSide,
+      adjustedPlayersCompletedPercent: a.adjustedPlayersCompletedPercent,
+    }));
 }
 
 // maps/traders — СТРУКТУРА (имена из наших словарей MAP_RU/TRADER_RU) → JSON-primary.
@@ -73,12 +88,6 @@ async function mapsFromJson(gameId: string): Promise<MapRow[]> {
   return Object.values(data.maps ?? {})
     .filter((m) => m.id)
     .map((m) => ({ id: m.id, gameId, name: MAP_RU[m.normalizedName ?? ""] ?? m.normalizedName ?? "—", normalizedName: m.normalizedName ?? m.id }));
-}
-async function mapsFromGraphQL(gameId: string): Promise<MapRow[]> {
-  const data = await fetchTarkovGraphQL<{ maps?: RawMap[] }>(`query { maps(lang: ru) { id name normalizedName } }`);
-  return (data.maps ?? [])
-    .filter((m) => m.id)
-    .map((m) => ({ id: m.id, gameId, name: m.name ?? "—", normalizedName: m.normalizedName ?? m.id }));
 }
 
 async function tradersFromJson(gameId: string): Promise<TraderRow[]> {
@@ -92,14 +101,6 @@ async function tradersFromJson(gameId: string): Promise<TraderRow[]> {
       resetTime: t.resetTime ?? null,
       levels: (t.levels ?? []).map((l) => ({ level: l.level ?? 0, requiredPlayerLevel: l.requiredPlayerLevel ?? 0 })),
     }));
-}
-async function tradersFromGraphQL(gameId: string): Promise<TraderRow[]> {
-  const data = await fetchTarkovGraphQL<{ traders?: RawTrader[] }>(
-    `query { traders(lang: ru) { name normalizedName resetTime levels { level requiredPlayerLevel } } }`,
-  );
-  return (data.traders ?? [])
-    .filter((t) => t.normalizedName)
-    .map((t) => ({ normalizedName: t.normalizedName, gameId, name: t.name ?? t.normalizedName, resetTime: t.resetTime ?? null, levels: t.levels ?? [] }));
 }
 
 export interface SyncLandingResult {
@@ -136,7 +137,7 @@ const TRADERS_UPSERT_SET = {
  */
 export async function syncEftTraders(): Promise<{ traders: number; tradersDeleted: number; tradersPruneSkipped: boolean }> {
   const gameId = await eftGameId();
-  const t = await fetchWithFallback<TraderRow>(() => tradersFromJson(gameId), () => tradersFromGraphQL(gameId), "traders");
+  const t = await fetchMirrorRows<TraderRow>(() => tradersFromJson(gameId), "traders");
   if (t.length) {
     await db.insert(traders).values(t).onConflictDoUpdate({ target: traders.normalizedName, set: TRADERS_UPSERT_SET });
   }
@@ -148,16 +149,11 @@ export async function syncEftTraders(): Promise<{ traders: number; tradersDelete
 export async function syncEftLandingData(): Promise<SyncLandingResult> {
   const gameId = await eftGameId();
 
-  // achievements — GraphQL-only (JSON-плоскость = плейсхолдеры имён). Лёг → пропуск,
-  // старые сохранены (last-known-good). maps/traders — JSON-primary → GraphQL-fallback.
-  let a: RawAchievement[] = [];
-  try {
-    a = await achievementsFromGraphQL();
-  } catch (e) {
-    console.warn(`[landing] achievements: GraphQL недоступен (${e instanceof Error ? e.message : String(e)}) — пропуск, старые сохранены`);
-  }
-  const m = await fetchWithFallback<MapRow>(() => mapsFromJson(gameId), () => mapsFromGraphQL(gameId), "maps");
-  const t = await fetchWithFallback<TraderRow>(() => tradersFromJson(gameId), () => tradersFromGraphQL(gameId), "traders");
+  // achievements/maps/traders — все из JSON-плоскости; источник лёг/пуст → пустой набор,
+  // прюн пропускается (keep=[] или PRUNE_MIN_RATIO), last-known-good в БД сохраняется.
+  const a = await fetchMirrorRows<RawAchievement>(() => achievementsFromJson(), "achievements");
+  const m = await fetchMirrorRows<MapRow>(() => mapsFromJson(gameId), "maps");
+  const t = await fetchMirrorRows<TraderRow>(() => tradersFromJson(gameId), "traders");
 
   if (a.length) {
     await db

@@ -17,84 +17,10 @@ import {
   type HideoutSkillReq,
 } from "./schema";
 import { eftGameId } from "./eft";
-import { fetchWithFallback, fetchTarkovJson, fetchTarkovGraphQL } from "../lib/tarkov-fallback";
+import { fetchMirrorRows, fetchTarkovJson } from "../lib/tarkov-fallback";
 import { STATION_RU, traderLabelMap } from "../lib/tarkov-labels";
 
-/* ═══════════ ИСТОЧНИК 2 (fallback): GraphQL — сырой ответ (без any) ═══════════ */
-interface RawItemReq {
-  count?: number;
-  item?: { id?: string } | null;
-  attributes?: { name?: string; value?: string }[] | null;
-}
-interface RawStationReq {
-  level?: number;
-  station?: { normalizedName?: string } | null;
-}
-interface RawTraderReq {
-  level?: number;
-  trader?: { normalizedName?: string } | null;
-}
-interface RawSkillReq {
-  name?: string;
-  level?: number;
-}
-interface RawLevel {
-  level?: number;
-  constructionTime?: number;
-  itemRequirements?: RawItemReq[];
-  stationLevelRequirements?: RawStationReq[];
-  traderRequirements?: RawTraderReq[];
-  skillRequirements?: RawSkillReq[];
-}
-interface RawStation {
-  name?: string;
-  normalizedName?: string;
-  levels?: RawLevel[];
-}
-
-const QUERY = `
-  query {
-    hideoutStations(lang: ru) {
-      name
-      normalizedName
-      levels {
-        level
-        constructionTime
-        itemRequirements { count item { id } attributes { name value } }
-        stationLevelRequirements { level station { normalizedName } }
-        traderRequirements { level trader { normalizedName } }
-        skillRequirements { name level }
-      }
-    }
-  }
-`;
-
-const toItems = (arr?: RawItemReq[]): HideoutItemReq[] =>
-  (arr ?? [])
-    .filter((s): s is RawItemReq & { item: { id: string } } => !!s.item?.id)
-    .map((s) => {
-      const fir = (s.attributes ?? []).some(
-        (a) => a?.name === 'foundInRaid' && String(a?.value).toLowerCase() === 'true',
-      );
-      return { itemId: s.item.id, count: s.count ?? 1, ...(fir ? { fir: true } : {}) };
-    });
-
-const toStations = (arr?: RawStationReq[]): HideoutModuleReq[] =>
-  (arr ?? [])
-    .filter((s): s is RawStationReq & { station: { normalizedName: string } } => !!s.station?.normalizedName)
-    .map((s) => ({ station: s.station.normalizedName, level: s.level ?? 1 }));
-
-const toTraders = (arr?: RawTraderReq[]): HideoutTraderReq[] =>
-  (arr ?? [])
-    .filter((s): s is RawTraderReq & { trader: { normalizedName: string } } => !!s.trader?.normalizedName)
-    .map((s) => ({ trader: s.trader.normalizedName, level: s.level ?? 1 }));
-
-const toSkills = (arr?: RawSkillReq[]): HideoutSkillReq[] =>
-  (arr ?? [])
-    .filter((s): s is RawSkillReq & { name: string } => !!s.name)
-    .map((s) => ({ skill: s.name, level: s.level ?? 1 }));
-
-/* ───────────── строка БД + JSON-плоскость (primary) ───────────── */
+/* ───────────── строка БД + JSON-плоскость ───────────── */
 interface HideoutRow {
   gameId: string;
   stationNormalizedName: string;
@@ -155,25 +81,6 @@ async function hideoutFromJson(gameId: string): Promise<HideoutRow[]> {
   );
 }
 
-async function hideoutFromGraphQL(gameId: string): Promise<HideoutRow[]> {
-  const data = await fetchTarkovGraphQL<{ hideoutStations?: RawStation[] }>(QUERY);
-  return (data.hideoutStations ?? []).flatMap((st) =>
-    (st.levels ?? [])
-      .filter((lv) => lv.level != null)
-      .map((lv) => ({
-        gameId,
-        stationNormalizedName: st.normalizedName ?? "-",
-        stationName: st.name ?? "-",
-        level: lv.level as number,
-        constructionTime: lv.constructionTime ?? null,
-        itemRequirements: toItems(lv.itemRequirements),
-        stationRequirements: toStations(lv.stationLevelRequirements),
-        traderRequirements: toTraders(lv.traderRequirements),
-        skillRequirements: toSkills(lv.skillRequirements),
-      })),
-  );
-}
-
 export interface SyncHideoutResult {
   stations: number;
   upgrades: number;
@@ -182,11 +89,7 @@ export interface SyncHideoutResult {
 /** Тянет апгрейды убежища (JSON-primary → GraphQL-fallback) и bulk-upsert'ит в `hideout_upgrades`. */
 export async function syncEftHideout(): Promise<SyncHideoutResult> {
   const gameId = await eftGameId();
-  const rows = await fetchWithFallback<HideoutRow>(
-    () => hideoutFromJson(gameId),
-    () => hideoutFromGraphQL(gameId),
-    "hideout",
-  );
+  const rows = await fetchMirrorRows<HideoutRow>(() => hideoutFromJson(gameId), "hideout");
 
   if (rows.length === 0) {
     throw new Error("hideout пусто — синк отменён (старые данные сохранены)");
