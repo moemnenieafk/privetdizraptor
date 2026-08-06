@@ -242,7 +242,9 @@ function computeFilteredIds(
           const taskMaps = t.objectives
             .filter(o => o.__typename === 'TaskObjectiveBasic' && o.maps?.length)
             .flatMap(o => (o.maps ?? []).map(m => m.normalizedName.replace(BASE_RE, '')));
-          if (taskMaps.length > 0 && !taskMaps.some(id => selectedMaps.has(id))) return false;
+          // Строго: квест виден на локации, только если у него ЕСТЬ цель именно на ней.
+          // Квесты без привязки к карте (сдать предмет и т.п.) под фильтром карты скрываем.
+          if (!taskMaps.some(id => selectedMaps.has(id))) return false;
         }
         return true;
       }).map(t => t.id)
