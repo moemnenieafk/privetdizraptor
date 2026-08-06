@@ -37,9 +37,8 @@ const NODE_W         = 348;
 const NODE_H         = 90;
 const TRADER_W       = 168;
 const TRADER_H       = 196;
-const QUEST_START_Y  = TRADER_H + 72;   // 268
+const QUEST_START_Y  = TRADER_H + 164;  // 360 — зазор портрет → первая полка (единый GAP)
 const CELL_GAP       = 164;
-const ROW_GAP        = 256;
 const COLUMN_GAP     = 256;
 const MAX_PER_ROW    = 15;
 const LAST_QUEST_KEY = 'cta-last-quest-id';
@@ -55,15 +54,12 @@ const OBJ_ROW_H         = 36;
 const CARD_BASE_H       = 206;
 const CELL_W            = NODE_W + CELL_GAP;    // 512 — slot step (used in snap grid)
 const ROW_STAGGER       = CELL_W / 2;                        // 256 — half-cell shift for odd rows (chess pattern)
-const MAX_CARD_H        = CARD_BASE_H + 5 * OBJ_ROW_H + 24; // 364 — max card height (5 objectives + overflow badge)
-const ROW_STEP          = MAX_CARD_H + ROW_GAP;              // 620 — fixed row height (chess grid)
-const SNAP_ROW_H        = ROW_STEP;                          // 620 — snap grid row step
 const DRAG_POSITIONS_KEY = 'cta-quest-positions-ul'; // v2: старые (граф-цепочки) позиции инвалидированы
 
 // ─── УЛ-полки (loyalty tiers) ────────────────────────────────────────────────
 const TIER_HEADER_H = 56;           // высота заголовка полки (иконка УЛ + метка)
 const TIER_TOP_GAP  = 96;           // отступ над полкой — место под пунктир-разделитель
-const TIER_ROW_GAP  = 44;           // вертикальный зазор между рядами внутри полки
+const TIER_ROW_GAP  = 164;          // вертикальный зазор между рядами (= гориз. CELL_GAP)
 const COL_PAD_L     = ROW_STAGGER;  // 256 — левый отступ контента (совпадает со снапом)
 const TIER_PER_ROW  = 8;            // карточек в ряду полки
 
@@ -99,8 +95,11 @@ const clampTier = (n: number | undefined): number => Math.min(4, Math.max(1, n ?
 // Раскладка «по уровню лояльности»: колонка на торговца, портрет сверху, ниже —
 // полки УЛ1→УЛ4 (заголовок с иконкой УЛ + ряды квестов), между полками пунктир
 // (рисуется в JSX из tierBands). Цепочек/связей больше нет — ось — уровень лояльности.
-function computeLayout(tasks: TaskRaw[]): LayoutResult {
+function computeLayout(tasks: TaskRaw[], measuredH: Map<string, number>): LayoutResult {
   const CELL_W   = NODE_W + CELL_GAP;                          // 512 — шаг по X (= сетке снапа)
+  // Высота карточки: реальная (замер после рендера) → иначе оценка. Реальная критична:
+  // оценка занижает до ~157px → ряды находят друг на дружку. Замер убирает наслоение.
+  const heightOf = (t: TaskRaw): number => measuredH.get(t.id) ?? getQuestNodeHeight(t.objectives.length);
   const colWidth = COL_PAD_L + TIER_PER_ROW * CELL_W - CELL_GAP;
 
   const byTrader = new Map<string, TaskRaw[]>();
@@ -151,7 +150,7 @@ function computeLayout(tasks: TaskRaw[]): LayoutResult {
         const row = group.slice(i, i + TIER_PER_ROW);
         let rowMaxH = 0;
         for (let j = 0; j < row.length; j++) {
-          const h = getQuestNodeHeight(row[j].objectives.length);
+          const h = heightOf(row[j]);
           positions.set(row[j].id, { x: currentX + COL_PAD_L + j * CELL_W, y });
           nodeHeights.set(row[j].id, h);
           if (h > rowMaxH) rowMaxH = h;
@@ -286,6 +285,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   const [snapPreview, setSnapPreview]         = useState<{ id: string; x: number; y: number } | null>(null);
   const [selectedNodes, setSelectedNodes]     = useState<Set<string>>(new Set());
   const [groupPreview, setGroupPreview]       = useState<Map<string, { x: number; y: number }>>(new Map());
+  const [measuredH, setMeasuredH]             = useState<Map<string, number>>(() => new Map());
 
   const vpRef           = useRef<QuestMapViewportRef | null>(null);
   const dragActiveRef   = useRef(false);
@@ -405,7 +405,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     graphBounds,
     nodeHeights,
     tierBands,
-  } = useMemo(() => computeLayout(initialTasks), [initialTasks]);
+  } = useMemo(() => computeLayout(initialTasks, measuredH), [initialTasks, measuredH]);
 
   const layoutPositionsRef     = useRef(layoutPositions);
   layoutPositionsRef.current   = layoutPositions;
@@ -415,6 +415,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   traderColumnBoundsRef.current = traderColumnBounds;
   const traderOrderRef         = useRef(traderOrder);
   traderOrderRef.current       = traderOrder;
+  const nodeHeightsRef         = useRef(nodeHeights);
+  nodeHeightsRef.current       = nodeHeights;
 
   // ── Effective positions: algorithm → preset → user drag (localStorage) ──────
   const connPositions = useMemo(() => {
@@ -433,6 +435,27 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     () => computeStatusMap(initialTasks, new Set(completedQuests), playerLevel),
     [completedQuests, playerLevel, initialTasks],
   );
+
+  // Реальные высоты карточек: расчёт занижает (переносы заголовка, бейджи, статус-кнопка)
+  // → меряем offsetHeight после рендера и переукладываем от факта, чтобы ряды НЕ находили
+  // друг на дружку. Функц. setState со сверкой размеров → без бесконечного перерендера.
+  useEffect(() => {
+    const els = document.querySelectorAll<HTMLElement>('[data-qid]');
+    if (els.length === 0) return;
+    const next = new Map<string, number>();
+    els.forEach((el) => {
+      const id = el.dataset.qid;
+      if (id && el.offsetHeight > 0) next.set(id, el.offsetHeight);
+    });
+    setMeasuredH((prev) => {
+      if (prev.size === next.size) {
+        let same = true;
+        for (const [id, h] of next) if (prev.get(id) !== h) { same = false; break; }
+        if (same) return prev;
+      }
+      return next;
+    });
+  }, [initialTasks, statusMap]);
 
   const { filteredIds, subgraphTargetIds } = useMemo(
     () => computeFilteredIds(initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, ancestorMap),
@@ -725,13 +748,14 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     flyToNextInPath('lk');
   }, [flyToNextInPath]);
 
-  // ── Snap: find nearest slot X in any column + nearest row Y ──────────────
+  // ── Snap: nearest column slot X; Y остаётся свободным ────────────────────
   // nodeWidth: width of element being snapped (NODE_W for quests, TRADER_W for portraits).
-  //   Center of element aligns with center of nearest quest slot.
-  // snapYGrid: false → Y is free (trader portraits can float vertically).
+  //   Center of element aligns with center of nearest quest slot (гориз. зазор = CELL_GAP 164).
+  // Вертикаль магнитит edge-snap к соседям с зазором 164 (высоты карточек переменные,
+  // поэтому фиксированной Y-сетки нет — иначе карточки не выровнялись бы под замер-раскладку).
   const snapPosition = useCallback((
     rawX: number, rawY: number,
-    nodeWidth = NODE_W, snapYGrid = true,
+    nodeWidth = NODE_W,
   ): { x: number; y: number } => {
     const rawCenterX = rawX + nodeWidth / 2;
     let bestX    = rawX;
@@ -746,10 +770,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
       const dist        = Math.abs(rawCenterX - slotCenterX);
       if (dist < bestDist) { bestDist = dist; bestX = slotCenterX - nodeWidth / 2; }
     }
-    const snappedY = snapYGrid
-      ? Math.max(QUEST_START_Y, QUEST_START_Y + Math.round((rawY - QUEST_START_Y) / SNAP_ROW_H) * SNAP_ROW_H)
-      : rawY;
-    return { x: bestX, y: snappedY };
+    return { x: bestX, y: rawY };
   }, []);
 
   // ── Drag-mode: pointer capture per node ──────────────────────────────────
@@ -803,22 +824,35 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
       const rawX = startX + (c.x - canvasStart.x);
       const rawY = startY + (c.y - canvasStart.y);
 
-      // Primary grid snap: portraits center over quest slots, free Y; quests snap to grid
-      let { x: snX, y: snY } = snapPosition(rawX, rawY, isTrader ? TRADER_W : NODE_W, !isTrader);
+      // Primary snap: X к сетке колонок (гориз. зазор 164), Y свободный.
+      let { x: snX, y: snY } = snapPosition(rawX, rawY, isTrader ? TRADER_W : NODE_W);
 
-      // Secondary edge-snap: align with existing quest nodes at similar Y
+      // Secondary edge-snap: примагнитить к соседям по колонке с зазором ровно 164px.
+      //   X — к колонке соседа (±1 слот); Y — верх карточки под низ соседа (+164)
+      //   либо низ над верхом соседа (−164), в зависимости от близости.
       if (!isTrader) {
-        const OBJ_SNAP = 40; // px — magnetic radius for object alignment
+        const X_SNAP = 90;                 // px — радиус примагничивания по X (колонка)
+        const Y_SNAP = 130;                // px — радиус примагничивания по Y (зазор к соседу)
+        const dh     = nodeHeightsRef.current.get(taskId) ?? NODE_H;
+        let bestXDist = Math.abs(rawX - snX);
+        let bestYDist = Y_SNAP;            // Y магнитится, только если сосед в пределах радиуса
         for (const [id, existPos] of connPositionsRef.current) {
-          if (id === taskId || id.startsWith('trader-')) continue;
-          if (Math.abs(existPos.y - rawY) > SNAP_ROW_H / 2) continue;
-          // Snap targets: same column X, one slot left, one slot right
+          if (id === taskId || id.startsWith('trader-') || id.startsWith('tier-')) continue;
+          // X: колонка соседа и ±1 слот (сохраняет 164 по горизонтали).
           for (const cx of [existPos.x, existPos.x - CELL_W, existPos.x + CELL_W]) {
-            if (Math.abs(rawX - cx) < OBJ_SNAP && Math.abs(rawX - cx) < Math.abs(rawX - snX)) {
-              snX = cx;
+            const d = Math.abs(rawX - cx);
+            if (d < X_SNAP && d < bestXDist) { bestXDist = d; snX = cx; }
+          }
+          // Y: зазор 164 только к соседям той же колонки (иначе выравнивание бессмысленно).
+          if (Math.abs(rawX - existPos.x) < X_SNAP) {
+            const nh = nodeHeightsRef.current.get(id) ?? NODE_H;
+            for (const cy of [existPos.y + nh + CELL_GAP, existPos.y - dh - CELL_GAP]) {
+              const d = Math.abs(rawY - cy);
+              if (d < bestYDist) { bestYDist = d; snY = cy; }
             }
           }
         }
+        snY = Math.max(QUEST_START_Y, snY);   // не заезжать под портрет
       }
 
       lastSnapped = { x: snX, y: snY };
@@ -1018,6 +1052,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
               return (
                 <div
                   key={task.id}
+                  data-qid={task.id}
                   style={{
                     position:      'absolute',
                     left:          pos.x,
