@@ -305,6 +305,19 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   const [measuredH, setMeasuredH]             = useState<Map<string, number>>(() => new Map());
   const [enabledTiers, setEnabledTiers]       = useState<Set<number>>(() => new Set([1, 2, 3, 4]));
 
+  // near-fullscreen (как MapFrame): фрейм = 100svh − реальная высота хедера (ROW 1, крошки/поиск
+  // на карт-роутах скрыты). ResizeObserver ловит адаптивный clamp-паддинг шапки на ресайзе.
+  const [headerOffset, setHeaderOffset] = useState(88);
+  useEffect(() => {
+    const header = document.querySelector('header');
+    if (!header) return;
+    const measure = () => setHeaderOffset(header.getBoundingClientRect().height);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(header);
+    return () => ro.disconnect();
+  }, []);
+
   const vpRef           = useRef<QuestMapViewportRef | null>(null);
   const interactedRef   = useRef(false); // юзер уже выбрал торговца/квест — не перебивать mount-восстановлением
   const dragActiveRef   = useRef(false);
@@ -553,11 +566,11 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           return;
         }
 
-        // Явный ?trader= — перелёт к его портрету (торговец уже выбран инициализатором).
+        // Явный ?trader= — приземление на верх его колонки (торговец уже выбран инициализатором).
         const urlTrader = ((n: string | null) => (n === 'btr-driver' ? 'btrdriver' : n))(searchParams.get('trader'));
-        if (urlTrader) {
-          const tp = connPositionsRef.current.get(`trader-${urlTrader}`);
-          if (tp) { vp.setCenter(tp.x + TRADER_W / 2, tp.y + TRADER_H / 2, { zoom: 1.0, duration: 0 }); return; }
+        if (urlTrader && traderColumnBoundsRef.current.has(urlTrader)) {
+          fitTraderColumn(urlTrader, 0);
+          return;
         }
 
         // Restore last visited quest (+ показать его колонку, иначе куллинг скроет восстановленную ноду).
@@ -569,14 +582,15 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           return;
         }
 
-        // Portrait of first trader
+        // Дефолт: верх колонки первого торговца (Прапор). Колонка, а не весь граф — иначе
+        // при гонке (позиции не готовы) получался пустой fit всего графа на ZOOM_MIN.
         const firstTrader = traderOrderRef.current[0];
-        if (firstTrader) {
-          const pos = connPositionsRef.current.get(`trader-${firstTrader}`);
-          if (pos) { vp.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: 1.0, duration: 0 }); return; }
+        if (firstTrader && traderColumnBoundsRef.current.has(firstTrader)) {
+          fitTraderColumn(firstTrader, 0);
+          return;
         }
 
-        // Fallback: fit entire graph
+        // Крайний фолбэк: фит всего графа.
         vp.fitToBounds(graphBoundsRef.current, { padding: 0.08, duration: 0 });
       });
     });
@@ -718,13 +732,23 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
   // Дропдаун карты заданий: выбрать торговца (single-select + перелёт) или «Все» (name=null →
   // пустой набор = кросс-трейдер режим).
+  // Приземление на ВЕРХ колонки торговца (портрет + первые полки). На near-fullscreen центр
+  // портрета оставлял пол-экрана пустым сверху; fitToBounds верх-региона надёжен (bounds колонки
+  // всегда посчитаны в computeLayout, не зависят от готовности портрет-ноды).
+  const fitTraderColumn = useCallback((name: string, duration = 500) => {
+    const b = traderColumnBoundsRef.current.get(name);
+    if (b) vpRef.current?.fitToBounds(
+      { minX: b.minX, minY: b.minY, maxX: b.maxX, maxY: Math.min(b.maxY, b.minY + 1400) },
+      { padding: 0.05, duration },
+    );
+  }, []);
+
   const handleSelectTrader = useCallback((name: string | null) => {
     interactedRef.current = true;
     if (name === null) { setSelectedTraders(new Set()); return; }
     setSelectedTraders(new Set([name]));
-    const pos = connPositionsRef.current.get(`trader-${name}`);
-    if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: fitZoom(TRADER_W), duration: 500 });
-  }, [fitZoom]);
+    fitTraderColumn(name);
+  }, [fitTraderColumn]);
 
   // Клик по результату левого поиска (глобального): сменить торговца на канвасе → перелёт к
   // квесту → открыть правый дровер деталей. На узком экране (<1440) закрываем поиск (правило шелла Карт).
@@ -971,10 +995,12 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
   // Фрейм: на мобилке тянется по вьюпорту (как MapFrame карт локаций), на десктопе — эталон 1100×768.
   // z-[200] в фуллскрине перекрывает бургер-меню (у него бэкдроп z-100).
+  // near-fullscreen как MapFrame: edge-to-edge под шапкой, без bounded-box/паддингов/рамки.
+  // Высота — definite (100svh − высота ROW 1), фрейм = ровно остаток вьюпорта → страница не скроллится.
   const containerCls   = isFullscreen
     ? 'fixed inset-0 z-[200] flex flex-col bg-(--color-base) overflow-hidden'
-    : 'relative mx-auto flex h-[calc(100svh-220px)] max-h-192 min-h-105 w-full max-w-275 flex-col overflow-hidden rounded-lg outline outline-2 outline-(--color-lines-hover)';
-  const containerStyle = isFullscreen ? undefined : undefined;
+    : 'relative flex w-full flex-col overflow-hidden bg-(--color-base)';
+  const containerStyle = isFullscreen ? undefined : { height: `calc(100svh - ${headerOffset}px)` };
 
   return (
     <>
@@ -982,7 +1008,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
         {/* Мобильная верхняя панель: поиск / торговцы / карты */}
         <MobileQuestBar mapsFilterActive={selectedMaps.size > 0} />
 
-        {/* Десктопная верхняя панель: поиск · пути-пилюли + трейдер-пилюля/дропдаун · фуллскрин */}
+        {/* Десктопный топбар — плавающий прозрачный оверлей поверх канваса (как MapTopBar карт локаций) */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 hidden lg:block">
         <QuestTopBar
           searchOpen={searchOpen}
           onSearchOpen={() => setSearchOpen(v => !v)}
@@ -1001,6 +1028,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsFullscreen(v => !v)}
         />
+        </div>
 
         {/* Мобильные шиты */}
         <QuestSearchSheet tasks={initialTasks} onFocus={handleFocusNode} />
@@ -1015,8 +1043,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
         <div className="flex flex-1 min-h-0">
 
           <div className="relative flex-1 min-w-0">
-            {/* УЛ-тоглы — плавающая полоса под верхней панелью, по центру (десктоп). */}
-            <div className="pointer-events-none absolute inset-x-0 top-3 z-30 hidden justify-center lg:flex">
+            {/* УЛ-тоглы — плавающая полоса ПОД плавающим топбаром, по центру (десктоп). */}
+            <div className="pointer-events-none absolute inset-x-0 top-16 z-20 hidden justify-center lg:flex">
               <div className="pointer-events-auto">
                 <QuestTierToggles enabled={enabledTiers} onToggle={handleToggleTier} />
               </div>

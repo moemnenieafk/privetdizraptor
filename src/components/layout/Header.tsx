@@ -29,9 +29,9 @@ export function Header() {
   const menuItems = config?.menuItems || [];
   const isHomePage = pathname === '/';
   const showFeatures = !isHomePage;
-  // На карт-страницах ROW 2 (лого игры + глоб. поиск + «Я новичок» + крошки) скрыт:
-  // near-fullscreen каркас отдаёт вертикаль карте, оставляя только ROW 1.
-  const isMapRoute = (pathname || '').startsWith('/eft/maps');
+  // На near-fullscreen страницах (карты локаций + карта заданий) ROW 2 (лого игры + глоб. поиск +
+  // «Я новичок» + крошки) скрыт: каркас отдаёт вертикаль контенту, оставляя только ROW 1.
+  const isMapRoute = (pathname || '').startsWith('/eft/maps') || (pathname || '').startsWith('/eft/questmap');
 
   return (
     <>

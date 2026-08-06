@@ -1,5 +1,6 @@
 'use client';
 
+import { Maximize, Minimize } from 'lucide-react';
 import { QuestTraderDropdown, type TraderOpt } from '@/components/features/quests/QuestTraderDropdown';
 
 interface Props {
@@ -14,7 +15,7 @@ interface Props {
   filterLK:           boolean;
   onKappa:            () => void;
   onLK:               () => void;
-  // Трейдер-пилюля + дропдаун.
+  // Трейдер-плашка + дропдаун (центр-переключатель, паттерн MapNavDropdown).
   traders:            TraderOpt[];
   traderLevels:       Record<string, number>;
   selectedTrader:     string | null;
@@ -24,18 +25,20 @@ interface Props {
   onToggleFullscreen: () => void;
 }
 
-const iconBtn = (active: boolean) =>
-  `flex h-7 w-7 shrink-0 items-center justify-center rounded border transition-colors ${
+// Кнопка-тоггл бара 36×36 — как MapTopBar.toggleCls: pointer-events-auto + фон card-menu
+// (бар прозрачный/плавающий, сквозь него виден канвас; интерактив ловят только кнопки).
+const toggleCls = (active: boolean): string =>
+  `pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded border bg-card-menu transition-colors ${
     active
-      ? 'border-(--primary)/40 bg-(--primary)/20 text-(--primary)'
+      ? 'border-(--primary) text-(--primary)'
       : 'border-lines-hover text-text-secondary hover:border-(--primary)/40 hover:text-(--primary)'
   }`;
 
 /**
- * Верхняя панель карты заданий (десктоп) по паттерну MapTopBar: поиск слева · пути-пилюли
- * (Смотритель/Каппа) + трейдер-пилюля/дропдаун по центру · фуллскрин справа. Заменяет ряд из
- * 11 портретов (старый QuestFilterBar). УЛ-тоглы плавают отдельной полосой ПОД баром (см.
- * QuestMapClient). Мобилка — отдельным проходом (`hidden lg:flex`).
+ * Верхний бар карты заданий — раскладка 1:1 с MapTopBar карт локаций: прозрачный плавающий оверлей
+ * (border-t, без фона), поиск слева (36×36) · ЦЕНТР [пилюля Смотрителя · трейдер-плашка/дропдаун ·
+ * пилюля Каппы] · фуллскрин справа. flex-1 по краям центрируют группу. Позиционирует QuestMapClient
+ * (`pointer-events-none absolute inset-x-0 top-0`). Мобилка — MobileQuestBar (отдельный проход).
  */
 export function QuestTopBar({
   searchOpen, onSearchOpen,
@@ -47,20 +50,21 @@ export function QuestTopBar({
   const lkPct    = lkTotal    > 0 ? Math.round((lkCompleted    / lkTotal)    * 100) : 0;
 
   return (
-    <div className="relative hidden h-14 shrink-0 items-center gap-3.5 border-b border-lines-hover bg-card-menu px-3.5 lg:flex">
+    <div className="relative flex h-14 items-center overflow-x-auto scrollbar-hidden border-t border-lines-hover px-3.5">
 
-      {/* Поиск (слева) — тоггл левого дровера «Поиск по заданию» */}
-      <button onClick={onSearchOpen} title="Поиск по заданию (Ctrl+F)" className={iconBtn(searchOpen)}>
-        <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
-      </button>
+      {/* Слева — поиск 36×36 (тоггл левого дровера «Поиск по заданию») */}
+      <div className="flex flex-1 items-center">
+        <button onClick={onSearchOpen} title="Поиск по заданию (Ctrl+F)" className={toggleCls(searchOpen)}>
+          <span className="icon-mask icon-eft-search-icon h-5.5 w-5.5" />
+        </button>
+      </div>
 
-      {/* Центр: пилюля Смотрителя · трейдер-пилюля · пилюля Каппы */}
-      <div className="flex flex-1 items-center justify-center gap-3">
-
+      {/* Центр: пилюля Смотрителя · трейдер-плашка · пилюля Каппы */}
+      <div className="flex shrink-0 items-center gap-3.5">
         <button
           onClick={onLK}
           title="Путь Смотрителя маяка"
-          className="flex h-9 shrink-0 items-center gap-1.5 rounded border px-2.5 transition-colors"
+          className="pointer-events-auto flex h-9 shrink-0 items-center gap-1.5 rounded border px-2.5 transition-colors"
           style={filterLK
             ? { borderColor: 'var(--color-lightkeeper)', backgroundColor: 'var(--color-lightkeeper)', color: 'var(--color-darkbase)' }
             : { borderColor: 'var(--color-lightkeeper)', color: 'var(--color-lightkeeper)' }}
@@ -74,7 +78,7 @@ export function QuestTopBar({
         <button
           onClick={onKappa}
           title="Путь Каппы"
-          className="flex h-9 shrink-0 items-center gap-1.5 rounded border px-2.5 transition-colors"
+          className="pointer-events-auto flex h-9 shrink-0 items-center gap-1.5 rounded border px-2.5 transition-colors"
           style={filterKappa
             ? { borderColor: 'var(--color-kappa)', backgroundColor: 'var(--color-kappa)', color: 'var(--color-darkbase)' }
             : { borderColor: 'var(--color-kappa)', color: 'var(--color-kappa)' }}
@@ -82,15 +86,14 @@ export function QuestTopBar({
           <span className="icon-mask icon-eft-profile-kappa h-5.5 w-5.5" style={filterKappa ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
           <span className="font-blender-medium text-type-caption">{kappaCompleted} / {kappaTotal} - {kappaPct}%</span>
         </button>
-
       </div>
 
-      {/* Фуллскрин (справа) */}
-      <button onClick={onToggleFullscreen} title={isFullscreen ? 'Выйти из полноэкранного (Esc)' : 'Полноэкранный режим'} className={iconBtn(false)}>
-        {isFullscreen
-          ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 1v3H1M8 1v3h3M11 8H8v3M1 8h3v3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          : <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4V1h3M8 1h3v3M11 8v3H8M4 11H1V8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-      </button>
+      {/* Справа — фуллскрин 36×36 */}
+      <div className="flex flex-1 items-center justify-end">
+        <button onClick={onToggleFullscreen} title={isFullscreen ? 'Выйти из полноэкранного (Esc)' : 'Полноэкранный режим'} className={toggleCls(false)}>
+          {isFullscreen ? <Minimize className="h-5.5 w-5.5" /> : <Maximize className="h-5.5 w-5.5" />}
+        </button>
+      </div>
 
     </div>
   );

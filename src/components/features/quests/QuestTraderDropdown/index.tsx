@@ -60,7 +60,7 @@ export function QuestTraderDropdown({ traders, traderLevels, selected, onSelect 
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`pointer-events-auto flex h-14 w-134 items-center gap-4 rounded-lg border px-5 transition-colors ${
+        className={`pointer-events-auto flex h-14 w-134 items-center gap-4 rounded-t-none rounded-b-lg border px-7 transition-colors ${
           open ? 'border-(--primary)/40 bg-card-menu' : 'border-lines-hover bg-card-menu hover:border-(--primary)/40'
         }`}
       >
