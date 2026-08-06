@@ -67,7 +67,7 @@ export function QuestTraderDropdown({ traders, traderLevels, selected, onSelect 
         {cur ? (
           <img src={traderImg(cur.normalizedName)} alt={cur.name} width={40} height={40} className="h-10 w-10 shrink-0 rounded object-cover object-top" />
         ) : (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-lines-hover text-text-secondary font-blender-medium">∀</span>
+          <span className="icon-mask icon-eft-lore-traders h-9 w-9 shrink-0 text-text-primary" />
         )}
         <span className="whitespace-nowrap font-blender-medium text-lg uppercase leading-none tracking-widest text-text-primary">
           {cur ? cur.name : 'Все торговцы'}
@@ -91,7 +91,7 @@ export function QuestTraderDropdown({ traders, traderLevels, selected, onSelect 
             onClick={() => pick(null)}
             className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${selected === null ? 'bg-(--primary)/15' : 'hover:bg-card-menu'}`}
           >
-            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border font-blender-medium ${selected === null ? 'border-(--primary)/40 text-(--primary)' : 'border-lines-hover text-text-secondary'}`}>∀</span>
+            <span className={`icon-mask icon-eft-lore-traders h-9 w-9 shrink-0 ${selected === null ? 'text-(--primary)' : 'text-text-secondary'}`} />
             <span className={`flex-1 font-blender-medium text-sm uppercase tracking-widest ${selected === null ? 'text-(--primary)' : 'text-text-secondary'}`}>Все торговцы</span>
           </button>
           {traders.map((t) => {

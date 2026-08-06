@@ -64,7 +64,7 @@ export function QuestTopBar({
         <button
           onClick={onLK}
           title="Путь Смотрителя маяка"
-          className="pointer-events-auto flex h-9 shrink-0 items-center gap-1.5 rounded border px-2.5 transition-colors"
+          className="pointer-events-auto flex h-9 w-32 shrink-0 items-center justify-center gap-1.5 rounded border transition-colors"
           style={filterLK
             ? { borderColor: 'var(--color-lightkeeper)', backgroundColor: 'var(--color-lightkeeper)', color: 'var(--color-darkbase)' }
             : { borderColor: 'var(--color-lightkeeper)', color: 'var(--color-lightkeeper)' }}
@@ -78,7 +78,7 @@ export function QuestTopBar({
         <button
           onClick={onKappa}
           title="Путь Каппы"
-          className="pointer-events-auto flex h-9 shrink-0 items-center gap-1.5 rounded border px-2.5 transition-colors"
+          className="pointer-events-auto flex h-9 w-32 shrink-0 items-center justify-center gap-1.5 rounded border transition-colors"
           style={filterKappa
             ? { borderColor: 'var(--color-kappa)', backgroundColor: 'var(--color-kappa)', color: 'var(--color-darkbase)' }
             : { borderColor: 'var(--color-kappa)', color: 'var(--color-kappa)' }}

@@ -25,10 +25,8 @@ export function QuestTierToggles({ enabled, onToggle }: Props) {
             onClick={() => onToggle(tier)}
             title={`Уровень лояльности ${tier}`}
             aria-pressed={on}
-            className={`flex h-8 w-8 items-center justify-center rounded border transition-colors duration-150 ${
-              on
-                ? 'border-(--primary)/40 bg-(--primary)/15 text-(--primary)'
-                : 'border-lines-hover text-text-muted hover:border-(--primary)/40 hover:text-(--primary)'
+            className={`flex h-9 w-9 items-center justify-center transition-colors duration-150 ${
+              on ? 'text-(--primary)' : 'text-text-primary hover:text-(--primary)'
             }`}
           >
             <span className={`icon-mask icon-eft-profile-rep-${tier} h-5 w-5`} />
