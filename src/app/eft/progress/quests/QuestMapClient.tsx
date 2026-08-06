@@ -1262,42 +1262,46 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           <QuestLocationDock maps={maps} selectedMaps={selectedMaps} onMap={handleMap} />
           <QuestActionsDock onExport={handleExport} onImport={handleImport} onResetProgress={() => setResetModalOpen(true)} />
 
-          {/* Pinned panel — absolute overlay at bottom of map */}
-          {pinnedQuests.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 z-30 flex items-center gap-2 px-3 h-11 bg-black/35 backdrop-blur-2xl overflow-x-auto">
-              <div className="w-7 h-7 flex items-center justify-center shrink-0">
-                <Paperclip className="w-4 h-4 text-text-muted" />
-              </div>
-              {pinnedQuests.map(id => {
-                const task = initialTasks.find(t => t.id === id);
-                if (!task) return null;
-                return (
-                  <div key={id} className="flex items-center gap-1.5 h-7 bg-card-menu px-2 rounded shrink-0 text-text-secondary">
-                    <img
-                      src={traderImg(task.trader.normalizedName)}
-                      alt={task.trader.name}
-                      width={16} height={16}
-                      className="rounded-xs shrink-0"
-                    />
-                    <button
-                      className="text-type-caption font-blender-medium uppercase tracking-widest truncate max-w-36 text-text-secondary hover:text-text-primary transition-colors duration-150"
-                      onClick={() => flyToQuest(id, 1.4, 500)}
-                    >
-                      {task.name}
-                    </button>
-                    <button
-                      onClick={() => togglePin(id)}
-                      className="text-type-caption leading-none text-text-secondary hover:text-(--primary) transition-colors duration-150"
-                      aria-label="Снять закладку"
-                    >✕</button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
           </div>
         </div>
+
+        {/* Панель закреплённых квестов — в ПОТОКЕ фрейма (не оверлей): при появлении отодвигает
+            канвас с доками ВВЕРХ, не перекрывая их. Плашки — с фоном торговца для быстрого опознания. */}
+        {pinnedQuests.length > 0 && (
+          <div className="hidden h-13 shrink-0 items-center gap-2 border-t border-lines-hover bg-(--color-base) px-3 backdrop-blur-2xl overflow-x-auto scrollbar-hidden lg:flex">
+            <span className="flex size-7 shrink-0 items-center justify-center">
+              <Paperclip className="h-4 w-4 text-text-muted" />
+            </span>
+            {pinnedQuests.map(id => {
+              const task = initialTasks.find(t => t.id === id);
+              if (!task) return null;
+              const tint = TRADER_COLORS[task.trader.normalizedName] ?? TRADER_COLORS.stories ?? '#555555';
+              return (
+                <div
+                  key={id}
+                  className="flex h-9 shrink-0 items-center gap-2 rounded border px-2"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${tint} 45%, transparent)`,
+                    background: `radial-gradient(150% 170% at 0% 50%, color-mix(in srgb, ${tint} 40%, transparent), transparent 60%)`,
+                  }}
+                >
+                  <img src={traderImg(task.trader.normalizedName)} alt={task.trader.name} width={20} height={20} className="shrink-0 rounded-xs" />
+                  <button
+                    className="max-w-44 truncate font-blender-medium text-sm text-text-primary transition-colors hover:text-(--primary)"
+                    onClick={() => flyToQuest(id, 1.4, 500)}
+                  >
+                    {task.name}
+                  </button>
+                  <button
+                    onClick={() => togglePin(id)}
+                    className="shrink-0 leading-none text-text-secondary transition-colors hover:text-(--primary)"
+                    aria-label="Снять закладку"
+                  >✕</button>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Мобилка — прежний статус-бар (десктоп: плавающие доки внутри канваса — прогресс/локации/действия) */}
         <div className="lg:hidden">
