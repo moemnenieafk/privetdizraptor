@@ -30,7 +30,7 @@ import {
   type Bounds,
 } from '@/components/features/quests/QuestMapViewport';
 import { traderImg } from '@/lib/trader-utils';
-import { Paperclip, Pencil } from 'lucide-react';
+import { Paperclip } from 'lucide-react';
 import PRESET_POSITIONS from '@/data/quests/quest-positions.json';
 
 interface Props { initialTasks: TaskRaw[]; bartersByQuest?: Record<string, QuestBarterLite[]> }
@@ -1028,6 +1028,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           onSelectTrader={handleSelectTrader}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsFullscreen(v => !v)}
+          isDragMode={isDragMode}
+          onToggleDrag={() => { setIsDragMode(v => !v); setSnapPreview(null); setSelectedNodes(new Set()); setGroupPreview(new Map()); }}
         />
         </div>
 
@@ -1213,19 +1215,9 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
           {/* Drag mode controls */}
           {/* Дев-режим расстановки нод — только десктоп */}
-          <div className="absolute top-2 right-2 z-40 hidden items-center gap-1.5 lg:flex" data-no-pan>
-            <button
-              onClick={() => { setIsDragMode(v => !v); setSnapPreview(null); setSelectedNodes(new Set()); setGroupPreview(new Map()); }}
-              title={isDragMode ? 'Правка расстановки — выключить' : 'Правка расстановки нод (админ/модер)'}
-              aria-pressed={isDragMode}
-              className={`flex h-9 w-9 items-center justify-center rounded border bg-card-menu backdrop-blur-sm transition-colors ${
-                isDragMode
-                  ? 'border-(--primary) text-(--primary)'
-                  : 'border-lines-hover text-text-secondary hover:border-(--primary)/40 hover:text-(--primary)'
-              }`}
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
+          {/* Дев-инструменты drag-режима — «Правка» уехала в топбар (рядом с фуллскрином);
+              здесь остаются Копировать/Сброс, видимы только при перемещённых нодах. */}
+          <div className="absolute top-14 right-2 z-40 hidden items-center gap-1.5 lg:flex" data-no-pan>
             {manualPositions.size > 0 && (
               <>
                 <button

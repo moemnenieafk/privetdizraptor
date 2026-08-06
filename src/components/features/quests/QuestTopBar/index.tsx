@@ -1,6 +1,6 @@
 'use client';
 
-import { Maximize, Minimize } from 'lucide-react';
+import { Maximize, Minimize, Pencil } from 'lucide-react';
 import { QuestTraderDropdown, type TraderOpt } from '@/components/features/quests/QuestTraderDropdown';
 
 interface Props {
@@ -23,6 +23,9 @@ interface Props {
   // Фуллскрин.
   isFullscreen:       boolean;
   onToggleFullscreen: () => void;
+  // Dev-тул drag-режима (админ/модер) — рядом с фуллскрином.
+  isDragMode:         boolean;
+  onToggleDrag:       () => void;
 }
 
 // Кнопка-тоггл бара 36×36 — как MapTopBar.toggleCls: pointer-events-auto + фон card-menu
@@ -44,7 +47,7 @@ export function QuestTopBar({
   searchOpen, onSearchOpen,
   kappaTotal, kappaCompleted, lkTotal, lkCompleted, filterKappa, filterLK, onKappa, onLK,
   traders, traderLevels, selectedTrader, onSelectTrader,
-  isFullscreen, onToggleFullscreen,
+  isFullscreen, onToggleFullscreen, isDragMode, onToggleDrag,
 }: Props) {
   const kappaPct = kappaTotal > 0 ? Math.round((kappaCompleted / kappaTotal) * 100) : 0;
   const lkPct    = lkTotal    > 0 ? Math.round((lkCompleted    / lkTotal)    * 100) : 0;
@@ -88,8 +91,11 @@ export function QuestTopBar({
         </button>
       </div>
 
-      {/* Справа — фуллскрин 36×36 */}
-      <div className="flex flex-1 items-center justify-end">
+      {/* Справа — правка (dev, админ/модер) + фуллскрин 36×36 */}
+      <div className="flex flex-1 items-center justify-end gap-2">
+        <button onClick={onToggleDrag} title={isDragMode ? 'Правка расстановки — выключить' : 'Правка расстановки нод (админ/модер)'} aria-pressed={isDragMode} className={toggleCls(isDragMode)}>
+          <Pencil className="h-4 w-4" />
+        </button>
         <button onClick={onToggleFullscreen} title={isFullscreen ? 'Выйти из полноэкранного (Esc)' : 'Полноэкранный режим'} className={toggleCls(false)}>
           {isFullscreen ? <Minimize className="h-5.5 w-5.5" /> : <Maximize className="h-5.5 w-5.5" />}
         </button>

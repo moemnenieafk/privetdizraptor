@@ -76,7 +76,7 @@ export function QuestTraderDropdown({ traders, traderLevels, selected, onSelect 
         {cur && (
           <span className="flex shrink-0 items-center gap-2">
             <span className="font-blender-book text-type-caption uppercase tracking-widest text-text-muted">Ваш уровень лояльности</span>
-            <span className={`icon-mask icon-eft-profile-rep-${curLvl} h-6 w-6 text-(--primary)`} />
+            <span className={`icon-mask icon-eft-profile-rep-${curLvl} h-6 w-6 text-text-primary`} />
           </span>
         )}
       </button>
