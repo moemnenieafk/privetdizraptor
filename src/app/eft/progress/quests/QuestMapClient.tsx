@@ -8,6 +8,7 @@ import { QuestNode } from '@/components/features/quests/QuestNode';
 import { QuestFilterBar } from '@/components/features/quests/QuestFilterBar';
 import { QuestResetModal } from '@/components/features/quests/QuestResetModal';
 import { QuestDrawer } from '@/components/features/quests/QuestDrawer';
+import { QuestTierToggles } from '@/components/features/quests/QuestTierToggles';
 import { QuestStatusBar } from '@/components/features/quests/QuestStatusBar';
 import { MobileQuestBar } from '@/components/features/quests/MobileQuestBar';
 import { QuestSearchSheet } from '@/components/features/quests/QuestSearchSheet';
@@ -228,16 +229,20 @@ function computeFilteredIds(
   filterLK: boolean,
   selectedTraders: Set<string>,
   selectedMaps: Set<string>,
+  enabledTiers: Set<number>,
   ancestorMap: Map<string, Set<string>>,
 ): { filteredIds: Set<string> | null; subgraphTargetIds: Set<string> | null } {
   if (filterKappa || filterLK)
     return computeMinSubgraph(tasks, filterKappa, filterLK, ancestorMap);
-  if (selectedTraders.size === 0 && selectedMaps.size === 0)
+  // Тир-тоглы (УЛ-полки) применяются всегда, кроме путь-режима каппы/смотрителя.
+  const allTiers = enabledTiers.size >= 4;
+  if (selectedTraders.size === 0 && selectedMaps.size === 0 && allTiers)
     return { filteredIds: null, subgraphTargetIds: null };
   return {
     filteredIds: new Set(
       tasks.filter(t => {
         if (selectedTraders.size > 0 && !selectedTraders.has(t.trader.normalizedName)) return false;
+        if (!allTiers && !enabledTiers.has(Math.min(4, Math.max(1, t.ulTier ?? 1)))) return false;
         if (selectedMaps.size > 0) {
           const taskMaps = t.objectives
             .filter(o => o.__typename === 'TaskObjectiveBasic' && o.maps?.length)
@@ -296,6 +301,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   const [selectedNodes, setSelectedNodes]     = useState<Set<string>>(new Set());
   const [groupPreview, setGroupPreview]       = useState<Map<string, { x: number; y: number }>>(new Map());
   const [measuredH, setMeasuredH]             = useState<Map<string, number>>(() => new Map());
+  const [enabledTiers, setEnabledTiers]       = useState<Set<number>>(() => new Set([1, 2, 3, 4]));
 
   const vpRef           = useRef<QuestMapViewportRef | null>(null);
   const dragActiveRef   = useRef(false);
@@ -467,11 +473,11 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     });
     // selectedTraders/selectedMaps/filter* меняют набор смонтированных нод (куллинг),
     // isDragMode тоже (в ПРАВКЕ монтируются все) → пере-замер обязателен.
-  }, [initialTasks, statusMap, selectedTraders, selectedMaps, filterKappa, filterLK, isDragMode]);
+  }, [initialTasks, statusMap, selectedTraders, selectedMaps, filterKappa, filterLK, enabledTiers, isDragMode]);
 
   const { filteredIds, subgraphTargetIds } = useMemo(
-    () => computeFilteredIds(initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, ancestorMap),
-    [initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, ancestorMap],
+    () => computeFilteredIds(initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, enabledTiers, ancestorMap),
+    [initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, enabledTiers, ancestorMap],
   );
 
   // ── Chain highlight ──────────────────────────────────────────────────────
@@ -739,7 +745,20 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     setFilterLK(false);
     setSelectedTraders(new Set());
     setSelectedMaps(new Set());
+    setEnabledTiers(new Set([1, 2, 3, 4]));
   };
+
+  // УЛ-тоглы: тоггл видимости полки лояльности; последний выключить нельзя (иначе пустой канвас).
+  const handleToggleTier = useCallback((tier: number) => {
+    setEnabledTiers(prev => {
+      const next = new Set(prev);
+      if (next.has(tier)) {
+        if (next.size <= 1) return prev;
+        next.delete(tier);
+      } else next.add(tier);
+      return next;
+    });
+  }, []);
 
   const handleFocusNode = useCallback((task: TaskRaw) => { flyToQuest(task.id, 1.5, 500); }, [flyToQuest]);
 
@@ -984,6 +1003,12 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
         <div className="flex flex-1 min-h-0">
 
           <div className="relative flex-1 min-w-0">
+            {/* УЛ-тоглы — плавающая полоса сверху-по-центру (десктоп). Позже переедет в QuestTopBar. */}
+            <div className="pointer-events-none absolute inset-x-0 top-3 z-30 hidden justify-center lg:flex">
+              <div className="pointer-events-auto">
+                <QuestTierToggles enabled={enabledTiers} onToggle={handleToggleTier} />
+              </div>
+            </div>
             <QuestMapViewport
               ref={vpRef}
               connections={staticConnections}
@@ -995,9 +1020,9 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
             >
             {/* УЛ-полки: заголовок (иконка УЛ + метка) + пунктир-разделитель между полками */}
             {tierBands.map(band => {
-              // Куллинг УЛ-меток и пунктиров: в обычном режиме рисуем только у видимых торговцев,
-              // чтобы полки/разделители чужих колонок не висели в пустоте. В ПРАВКЕ — все.
-              if (!isDragMode && tradersInFilter !== null && !tradersInFilter.has(band.trader)) return null;
+              // Куллинг УЛ-меток и пунктиров: в обычном режиме рисуем только у видимых торговцев
+              // и только для включённых УЛ-тоглов; чужие/выключенные полки не висят в пустоте. В ПРАВКЕ — все.
+              if (!isDragMode && ((tradersInFilter !== null && !tradersInFilter.has(band.trader)) || !enabledTiers.has(band.tier))) return null;
               const pos = connPositions.get(`tier-${band.trader}-${band.tier}`);
               if (!pos) return null;
               return (
