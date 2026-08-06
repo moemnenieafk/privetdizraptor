@@ -9,6 +9,7 @@ import { QuestFilterBar } from '@/components/features/quests/QuestFilterBar';
 import { QuestResetModal } from '@/components/features/quests/QuestResetModal';
 import { QuestDrawer } from '@/components/features/quests/QuestDrawer';
 import { QuestTierToggles } from '@/components/features/quests/QuestTierToggles';
+import { QuestTraderDropdown } from '@/components/features/quests/QuestTraderDropdown';
 import { QuestStatusBar } from '@/components/features/quests/QuestStatusBar';
 import { MobileQuestBar } from '@/components/features/quests/MobileQuestBar';
 import { QuestSearchSheet } from '@/components/features/quests/QuestSearchSheet';
@@ -508,6 +509,12 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     [filteredIds, initialTasks],
   );
 
+  // «Все» (пустой набор торговцев) без активного фильтра → гейт: квесты НЕ рендерим,
+  // показываем подсказку — иначе вернётся лаг от 510 нод (см. спеку, вопрос 4).
+  const isGate = selectedTraders.size === 0 && selectedMaps.size === 0
+    && !filterKappa && !filterLK && enabledTiers.size >= 4;
+  const selectedTrader = selectedTraders.size === 1 ? [...selectedTraders][0] : null;
+
   const pinnedSet = useMemo(() => new Set(pinnedQuests), [pinnedQuests]);
 
   // Зум, при котором объект шириной w влезает в экран целиком (с полями).
@@ -712,6 +719,15 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
       if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: fitZoom(TRADER_W), duration: 500 });
       return new Set([name]);
     });
+  }, [fitZoom]);
+
+  // Дропдаун карты заданий: выбрать торговца (single-select + перелёт) или «Все» (name=null →
+  // пустой набор = кросс-трейдер режим). В отличие от handleTrader тут нет тоггла в пустоту.
+  const handleSelectTrader = useCallback((name: string | null) => {
+    if (name === null) { setSelectedTraders(new Set()); return; }
+    setSelectedTraders(new Set([name]));
+    const pos = connPositionsRef.current.get(`trader-${name}`);
+    if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: fitZoom(TRADER_W), duration: 500 });
   }, [fitZoom]);
 
   // Мобилка: перелёт к портрету торговца без изменения фильтра (фильтрация по торговцам на телефоне убрана).
@@ -1003,12 +1019,32 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
         <div className="flex flex-1 min-h-0">
 
           <div className="relative flex-1 min-w-0">
-            {/* УЛ-тоглы — плавающая полоса сверху-по-центру (десктоп). Позже переедет в QuestTopBar. */}
-            <div className="pointer-events-none absolute inset-x-0 top-3 z-30 hidden justify-center lg:flex">
+            {/* Трейдер-пилюля + УЛ-тоглы — плавающая полоса сверху-по-центру (десктоп). Позже переедет в QuestTopBar. */}
+            <div className="pointer-events-none absolute inset-x-0 top-3 z-30 hidden flex-col items-center gap-2 lg:flex">
+              <div className="pointer-events-auto">
+                <QuestTraderDropdown
+                  traders={mobileTraders}
+                  traderLevels={traderLevels}
+                  selected={selectedTrader}
+                  onSelect={handleSelectTrader}
+                />
+              </div>
               <div className="pointer-events-auto">
                 <QuestTierToggles enabled={enabledTiers} onToggle={handleToggleTier} />
               </div>
             </div>
+
+            {/* Гейт «Все без фильтра»: не рендерим 510 нод, зовём выбрать путь/фильтр. */}
+            {isGate && (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-6">
+                <div className="pointer-events-auto max-w-md rounded-lg border border-lines-hover bg-(--color-base)/80 px-8 py-6 text-center backdrop-blur-md">
+                  <p className="font-blender-medium text-lg uppercase tracking-widest text-text-primary">Выбери путь или фильтр</p>
+                  <p className="mt-2 font-blender-book text-sm leading-relaxed text-text-muted">
+                    Режим «Все» показывает квесты по фильтру — путь Каппы или Смотрителя, поиск по заданию либо локация. Или выбери торговца, чтобы увидеть его ветку.
+                  </p>
+                </div>
+              </div>
+            )}
             <QuestMapViewport
               ref={vpRef}
               connections={staticConnections}
@@ -1022,7 +1058,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
             {tierBands.map(band => {
               // Куллинг УЛ-меток и пунктиров: в обычном режиме рисуем только у видимых торговцев
               // и только для включённых УЛ-тоглов; чужие/выключенные полки не висят в пустоте. В ПРАВКЕ — все.
-              if (!isDragMode && ((tradersInFilter !== null && !tradersInFilter.has(band.trader)) || !enabledTiers.has(band.tier))) return null;
+              if (!isDragMode && (isGate || (tradersInFilter !== null && !tradersInFilter.has(band.trader)) || !enabledTiers.has(band.tier))) return null;
               const pos = connPositions.get(`tier-${band.trader}-${band.tier}`);
               if (!pos) return null;
               return (
@@ -1094,7 +1130,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
               // Куллинг: в обычном режиме рисуем ТОЛЬКО видимые ноды (выбранный торговец + фильтры),
               // остальные unmount — иначе все 510 карточек висят в DOM и лагают при отдалении.
               // В ПРАВКЕ (drag) показываем все, чтобы расставлять. filteredIds===null → «показать все».
-              if (!isDragMode && filteredIds !== null && !filteredIds.has(task.id)) return null;
+              if (!isDragMode && (isGate || (filteredIds !== null && !filteredIds.has(task.id)))) return null;
               const basePos    = connPositions.get(task.id);
               const anchorPrev = snapPreview?.id === task.id ? snapPreview : undefined;
               const groupPrev  = groupPreview.get(task.id);
