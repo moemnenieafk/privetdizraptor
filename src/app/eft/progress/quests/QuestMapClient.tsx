@@ -9,8 +9,9 @@ import { QuestResetModal } from '@/components/features/quests/QuestResetModal';
 import { QuestDrawer } from '@/components/features/quests/QuestDrawer';
 import { QuestTierToggles } from '@/components/features/quests/QuestTierToggles';
 import { QuestTopBar } from '@/components/features/quests/QuestTopBar';
-import { QuestBottomBar } from '@/components/features/quests/QuestBottomBar';
 import { QuestSearchDrawer } from '@/components/features/quests/QuestSearchDrawer';
+import { QuestLocationDock } from '@/components/features/quests/QuestLocationDock';
+import { QuestActionsDock } from '@/components/features/quests/QuestActionsDock';
 import { QuestStatusBar } from '@/components/features/quests/QuestStatusBar';
 import { MobileQuestBar } from '@/components/features/quests/MobileQuestBar';
 import { QuestSearchSheet } from '@/components/features/quests/QuestSearchSheet';
@@ -1258,6 +1259,15 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
             </div>
           )}
 
+          {/* Плавающие доки (десктоп): прогресс низ-лево · локации низ-центр · действия низ-право */}
+          <div className="pointer-events-none absolute bottom-3.5 left-3.5 z-20 hidden items-center gap-1.5 rounded border border-lines-hover bg-card-menu px-3 py-1.5 backdrop-blur-sm lg:flex">
+            <span className="font-blender-medium text-sm uppercase tracking-widest text-success/25">Выполнено:</span>
+            <span className="font-blender-medium text-sm text-success">{completedQuests.length}</span>
+            <span className="font-blender-medium text-sm text-text-secondary">/ {initialTasks.length} - {initialTasks.length ? Math.round((completedQuests.length / initialTasks.length) * 100) : 0}%</span>
+          </div>
+          <QuestLocationDock maps={maps} selectedMaps={selectedMaps} onMap={handleMap} />
+          <QuestActionsDock onExport={handleExport} onImport={handleImport} onResetProgress={() => setResetModalOpen(true)} />
+
           {/* Pinned panel — absolute overlay at bottom of map */}
           {pinnedQuests.length > 0 && (
             <div className="absolute bottom-0 left-0 right-0 z-30 flex items-center gap-2 px-3 h-11 bg-black/35 backdrop-blur-2xl overflow-x-auto">
@@ -1295,7 +1305,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           </div>
         </div>
 
-        {/* Мобилка — прежний статус-бар; десктоп — новый нижний бар (прогресс · карты · импорт/экспорт) */}
+        {/* Мобилка — прежний статус-бар (десктоп: плавающие доки внутри канваса — прогресс/локации/действия) */}
         <div className="lg:hidden">
           <QuestStatusBar
             totalQuests={initialTasks.length}
@@ -1315,16 +1325,6 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
             onImport={handleImport}
           />
         </div>
-        <QuestBottomBar
-          totalQuests={initialTasks.length}
-          completedCount={completedQuests.length}
-          maps={maps}
-          selectedMaps={selectedMaps}
-          onMap={handleMap}
-          onExport={handleExport}
-          onImport={handleImport}
-          onResetProgress={() => setResetModalOpen(true)}
-        />
         <QuestDrawer
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
