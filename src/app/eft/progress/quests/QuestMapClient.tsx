@@ -120,8 +120,8 @@ function computeLayout(tasks: TaskRaw[]): LayoutResult {
   for (const traderName of traderOrder) {
     const quests = byTrader.get(traderName)!;
 
-    // Портрет — сверху колонки, по центру (обозначение раздела торговца).
-    positions.set(`trader-${traderName}`, { x: currentX + colWidth / 2 - TRADER_W / 2, y: 0 });
+    // Портрет — сверху-СЛЕВА, в одну вертикаль с заголовками полок и рядами (обозначение раздела).
+    positions.set(`trader-${traderName}`, { x: currentX + COL_PAD_L, y: 0 });
 
     // Группировка квестов по УЛ.
     const byTier = new Map<number, TaskRaw[]>();
@@ -959,7 +959,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                   )}
                   <div
                     style={{ position: 'absolute', left: pos.x, top: pos.y }}
-                    className="flex items-center gap-3 select-none pointer-events-none"
+                    className="flex items-center gap-3 whitespace-nowrap select-none pointer-events-none"
                   >
                     <span className={`icon-mask icon-eft-profile-rep-${band.tier} h-12 w-12 shrink-0 text-(--primary)`} />
                     <span className="text-3xl font-blender-medium uppercase tracking-widest leading-none text-(--primary)">
