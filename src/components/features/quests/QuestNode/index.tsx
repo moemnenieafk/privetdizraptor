@@ -167,12 +167,12 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
           </div>
         </header>
 
-        {/* Hero-баннер + название в один ряд (спека Figma: картинка 144×81 слева, заголовок справа).
+        {/* Hero-баннер + название в один ряд (картинка 100×56 слева, заголовок справа).
             Если картинки для квеста нет — остаётся только название на всю ширину. */}
         <div className="flex items-center gap-3.5 px-4 pb-3">
           {!heroFailed && (
             <div
-              className="relative h-[81px] w-36 shrink-0 overflow-hidden rounded-xs border"
+              className="relative h-14 w-25 shrink-0 overflow-hidden rounded-xs border"
               style={{ borderColor: 'rgba(0,0,0,0.5)' }}
             >
               <img
@@ -183,7 +183,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
               />
             </div>
           )}
-          <h3 className="min-w-0 flex-1 font-blender-medium text-lg leading-none text-text-primary">
+          <h3 className="min-w-0 flex-1 font-blender-medium text-base leading-none text-text-primary">
             {task.name}
           </h3>
         </div>
