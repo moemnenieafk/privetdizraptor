@@ -58,10 +58,10 @@ const ROW_STAGGER       = CELL_W / 2;                        // 256 — half-cel
 const MAX_CARD_H        = CARD_BASE_H + 5 * OBJ_ROW_H + 24; // 364 — max card height (5 objectives + overflow badge)
 const ROW_STEP          = MAX_CARD_H + ROW_GAP;              // 620 — fixed row height (chess grid)
 const SNAP_ROW_H        = ROW_STEP;                          // 620 — snap grid row step
-const DRAG_POSITIONS_KEY = 'cta-quest-positions';
+const DRAG_POSITIONS_KEY = 'cta-quest-positions-ul'; // v2: старые (граф-цепочки) позиции инвалидированы
 
 // ─── УЛ-полки (loyalty tiers) ────────────────────────────────────────────────
-const TIER_HEADER_H = 44;           // высота заголовка полки (иконка УЛ + метка)
+const TIER_HEADER_H = 56;           // высота заголовка полки (иконка УЛ + метка)
 const TIER_TOP_GAP  = 96;           // отступ над полкой — место под пунктир-разделитель
 const TIER_ROW_GAP  = 44;           // вертикальный зазор между рядами внутри полки
 const COL_PAD_L     = ROW_STAGGER;  // 256 — левый отступ контента (совпадает со снапом)
@@ -952,20 +952,20 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                         top:       band.y - TIER_TOP_GAP / 2,
                         width:     band.width - COL_PAD_L - 40,
                         height:    0,
-                        borderTop: '2px dashed var(--color-lines-hover)',
-                        opacity:   0.55,
+                        borderTop: '3px dashed var(--color-lines-hover)',
+                        opacity:   0.6,
                       }}
                     />
                   )}
                   <div
-                    style={{ position: 'absolute', left: pos.x, top: pos.y, height: TIER_HEADER_H }}
-                    className="flex items-center gap-2.5 select-none pointer-events-none"
+                    style={{ position: 'absolute', left: pos.x, top: pos.y }}
+                    className="flex items-center gap-3 select-none pointer-events-none"
                   >
-                    <span className={`icon-mask icon-eft-profile-rep-${band.tier} h-8 w-8 shrink-0 text-(--primary)`} />
-                    <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                    <span className={`icon-mask icon-eft-profile-rep-${band.tier} h-12 w-12 shrink-0 text-(--primary)`} />
+                    <span className="text-3xl font-blender-medium uppercase tracking-widest leading-none text-(--primary)">
                       Уровень лояльности {band.tier}
                     </span>
-                    <span className="text-type-micro font-blender-medium text-text-muted/50">· {band.count}</span>
+                    <span className="text-xl font-blender-medium leading-none text-text-muted">· {band.count}</span>
                   </div>
                 </Fragment>
               );
