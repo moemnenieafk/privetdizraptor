@@ -317,33 +317,39 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters }: Prop
     </div>
   );
 
+  // Награды крупно (спека «редизайн шелла», элемент F): строки «иконка/портрет · название · значение».
+  const rewardRow = 'flex items-center gap-3';
+  const rewardTile = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xs border border-lines-hover bg-(--color-darkbase)';
   const rewardsBlock = hasRewards && (
-    <div className={isPage ? 'px-6 py-6' : 'px-4 py-6'}>
+    <div className={isPage ? 'px-6 py-6' : 'px-5 py-5'}>
       <div className="text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary mb-4">Награды</div>
-      {task.experience > 0 && (
-        <div className="flex items-center gap-3 mb-3">
-          <span className="icon-eft-profile-pvp icon-mask w-4 h-4 shrink-0 text-text-secondary" />
-          <span className="text-xs font-blender-medium text-success">+{task.experience.toLocaleString('ru-RU')} XP</span>
-        </div>
-      )}
-      {task.finishRewards.traderStanding.map((ts, i) => (
-        <div key={i} className="flex items-center gap-3 mb-3">
-          <img src={traderImg(ts.trader.normalizedName)} alt={ts.trader.name} width={16} height={16} className="rounded-xs shrink-0" />
-          <span className="text-xs font-blender-medium text-success">+{ts.standing}</span>
-        </div>
-      ))}
-      {task.finishRewards.items.length > 0 && (
-        <div className="flex flex-wrap gap-3 mt-2">
-          {task.finishRewards.items.map((ri, i) => (
-            <div key={i} className="relative w-12 h-12 bg-(--color-darkbase) border border-lines-hover rounded-xs flex items-center justify-center">
-              <img src={ri.item.image512pxLink} alt={ri.item.shortName} width={48} height={48} className="w-full h-full object-contain p-1" />
-              {ri.count > 1 && (
-                <span className="absolute bottom-0.5 right-0.5 text-xs font-blender-medium text-text-primary leading-none bg-black/60 px-0.5 rounded-xs">×{ri.count}</span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="flex flex-col gap-2.5">
+        {task.experience > 0 && (
+          <div className={rewardRow}>
+            <span className={rewardTile}><span className="icon-eft-profile-pvp icon-mask h-5 w-5 text-text-secondary" /></span>
+            <span className="flex-1 font-blender-medium text-sm uppercase tracking-wide text-text-primary">Опыт ЧВК</span>
+            <span className="shrink-0 font-blender-medium text-sm text-(--primary)">+{task.experience.toLocaleString('ru-RU')} XP</span>
+          </div>
+        )}
+        {task.finishRewards.traderStanding.map((ts, i) => (
+          <div key={`ts-${i}`} className={rewardRow}>
+            <img src={traderImg(ts.trader.normalizedName)} alt={ts.trader.name} width={40} height={40} className="h-10 w-10 shrink-0 rounded-xs object-cover object-top" />
+            <span className="flex-1 truncate font-blender-medium text-sm uppercase tracking-wide text-text-primary">{ts.trader.name}</span>
+            <span className={`shrink-0 font-blender-medium text-sm ${ts.standing >= 0 ? 'text-success' : 'text-danger'}`}>
+              {ts.standing >= 0 ? '+' : ''}{ts.standing}
+            </span>
+          </div>
+        ))}
+        {task.finishRewards.items.map((ri, i) => (
+          <div key={`it-${i}`} className={rewardRow}>
+            <span className={rewardTile}>
+              <img src={ri.item.image512pxLink} alt={ri.item.shortName} className="h-9 w-9 object-contain p-0.5" />
+            </span>
+            <span className="min-w-0 flex-1 truncate font-blender-book text-sm text-text-primary">{ri.item.name}</span>
+            {ri.count > 1 && <span className="shrink-0 font-blender-medium text-sm text-text-secondary">×{ri.count.toLocaleString('ru-RU')}</span>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 
