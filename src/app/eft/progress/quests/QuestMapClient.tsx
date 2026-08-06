@@ -269,10 +269,18 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   const [selectedTask, setSelectedTask]       = useState<TaskRaw | null>(null);
   const [filterKappa, setFilterKappa]         = useState(false);
   const [filterLK, setFilterLK]               = useState(false);
+  // Дефолт — ОДИН торговец (Прапор). Пустой набор = рендер всех 510 нод = лаг при отдалении,
+  // поэтому на входе всегда одна колонка: ?trader= → торговец из ?quest= → первый (Прапор).
   const [selectedTraders, setSelectedTraders] = useState<Set<string>>(() => {
-    const t = searchParams.get('trader');
-    const normalized = t === 'btr-driver' ? 'btrdriver' : t;
-    return normalized ? new Set([normalized]) : new Set();
+    const norm = (n: string | null) => (n === 'btr-driver' ? 'btrdriver' : n);
+    const t = norm(searchParams.get('trader'));
+    if (t) return new Set([t]);
+    const q = searchParams.get('quest');
+    if (q) {
+      const task = initialTasks.find(x => x.id === q);
+      if (task) return new Set([task.trader.normalizedName]);
+    }
+    return new Set([TRADER_ORDER[0]]);
   });
   const [selectedMaps, setSelectedMaps]       = useState<Set<string>>(new Set());
   const [isFullscreen, setIsFullscreen]       = useState(false);
@@ -447,15 +455,17 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
       const id = el.dataset.qid;
       if (id && el.offsetHeight > 0) next.set(id, el.offsetHeight);
     });
+    // Аккумулируем: замеренная высота ноды кэшируется, даже когда её колонку скрыл куллинг,
+    // поэтому возврат к торговцу не даёт вспышки-наслоения (высоты уже известны).
     setMeasuredH((prev) => {
-      if (prev.size === next.size) {
-        let same = true;
-        for (const [id, h] of next) if (prev.get(id) !== h) { same = false; break; }
-        if (same) return prev;
-      }
-      return next;
+      let changed = false;
+      const merged = new Map(prev);
+      for (const [id, h] of next) if (prev.get(id) !== h) { merged.set(id, h); changed = true; }
+      return changed ? merged : prev;
     });
-  }, [initialTasks, statusMap]);
+    // selectedTraders/selectedMaps/filter* меняют набор смонтированных нод (куллинг),
+    // isDragMode тоже (в ПРАВКЕ монтируются все) → пере-замер обязателен.
+  }, [initialTasks, statusMap, selectedTraders, selectedMaps, filterKappa, filterLK, isDragMode]);
 
   const { filteredIds, subgraphTargetIds } = useMemo(
     () => computeFilteredIds(initialTasks, filterKappa, filterLK, selectedTraders, selectedMaps, ancestorMap),
@@ -523,9 +533,18 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           return;
         }
 
-        // Restore last visited quest
+        // Явный ?trader= — перелёт к его портрету (торговец уже выбран инициализатором).
+        const urlTrader = ((n: string | null) => (n === 'btr-driver' ? 'btrdriver' : n))(searchParams.get('trader'));
+        if (urlTrader) {
+          const tp = connPositionsRef.current.get(`trader-${urlTrader}`);
+          if (tp) { vp.setCenter(tp.x + TRADER_W / 2, tp.y + TRADER_H / 2, { zoom: 1.0, duration: 0 }); return; }
+        }
+
+        // Restore last visited quest (+ показать его колонку, иначе куллинг скроет восстановленную ноду).
         const lastId = localStorage.getItem(LAST_QUEST_KEY);
         if (lastId && connPositionsRef.current.has(lastId)) {
+          const task = initialTasks.find(x => x.id === lastId);
+          if (task) setSelectedTraders(new Set([task.trader.normalizedName]));
           flyToQuest(lastId, 1.2, 0);
           return;
         }
@@ -1007,6 +1026,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
             {/* Trader portraits */}
             {traderOrder.map(traderName => {
+              // Куллинг портрета-заголовка: в обычном режиме рисуем колонки только видимых торговцев.
+              if (!isDragMode && tradersInFilter !== null && !tradersInFilter.has(traderName)) return null;
               const nodeId     = `trader-${traderName}`;
               const basePos    = connPositions.get(nodeId);
               const previewPos = snapPreview?.id === nodeId ? snapPreview : undefined;
@@ -1032,7 +1053,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                     traderName:     srcTask.trader.name,
                     normalizedName: traderName,
                     color:          TRADER_COLORS[traderName] ?? '#555555',
-                    dimmed:         tradersInFilter !== null && !tradersInFilter.has(traderName),
+                    dimmed:         isDragMode && tradersInFilter !== null && !tradersInFilter.has(traderName),
                   }} />
                 </div>
               );
@@ -1040,6 +1061,10 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
             {/* Quest nodes */}
             {initialTasks.map(task => {
+              // Куллинг: в обычном режиме рисуем ТОЛЬКО видимые ноды (выбранный торговец + фильтры),
+              // остальные unmount — иначе все 510 карточек висят в DOM и лагают при отдалении.
+              // В ПРАВКЕ (drag) показываем все, чтобы расставлять. filteredIds===null → «показать все».
+              if (!isDragMode && filteredIds !== null && !filteredIds.has(task.id)) return null;
               const basePos    = connPositions.get(task.id);
               const anchorPrev = snapPreview?.id === task.id ? snapPreview : undefined;
               const groupPrev  = groupPreview.get(task.id);
@@ -1072,7 +1097,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                     status:           entry.status,
                     lockReason:       entry.lockReason,
                     levelGap:         entry.levelGap,
-                    dimmed:           filteredIds !== null && !filteredIds.has(task.id),
+                    dimmed:           isDragMode && filteredIds !== null && !filteredIds.has(task.id),
                     isSubgraphTarget: subgraphTargetIds?.has(task.id) ?? false,
                     isMapTarget:      !filterKappa && !filterLK && selectedMaps.size > 0 && (filteredIds?.has(task.id) ?? false),
                     freshlyUnlocked:  freshlyUnlocked.has(task.id),
