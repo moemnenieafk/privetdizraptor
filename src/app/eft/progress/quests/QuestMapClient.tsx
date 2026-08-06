@@ -5,11 +5,11 @@ import { useSearchParams } from 'next/navigation';
 import type { TaskRaw, QuestNodeStatus, QuestBarterLite } from '@/types/quest';
 import { computeStatusMap } from '@/lib/quest-status';
 import { QuestNode } from '@/components/features/quests/QuestNode';
-import { QuestFilterBar } from '@/components/features/quests/QuestFilterBar';
 import { QuestResetModal } from '@/components/features/quests/QuestResetModal';
 import { QuestDrawer } from '@/components/features/quests/QuestDrawer';
 import { QuestTierToggles } from '@/components/features/quests/QuestTierToggles';
-import { QuestTraderDropdown } from '@/components/features/quests/QuestTraderDropdown';
+import { QuestTopBar } from '@/components/features/quests/QuestTopBar';
+import { QuestBottomBar } from '@/components/features/quests/QuestBottomBar';
 import { QuestStatusBar } from '@/components/features/quests/QuestStatusBar';
 import { MobileQuestBar } from '@/components/features/quests/MobileQuestBar';
 import { QuestSearchSheet } from '@/components/features/quests/QuestSearchSheet';
@@ -711,18 +711,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
       return next;
     });
 
-  // Toggle-once: deselect if already active, else select and fly to trader portrait
-  const handleTrader = useCallback((name: string) => {
-    setSelectedTraders(prev => {
-      if (prev.has(name)) return new Set();
-      const pos = connPositionsRef.current.get(`trader-${name}`);
-      if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: fitZoom(TRADER_W), duration: 500 });
-      return new Set([name]);
-    });
-  }, [fitZoom]);
-
   // Дропдаун карты заданий: выбрать торговца (single-select + перелёт) или «Все» (name=null →
-  // пустой набор = кросс-трейдер режим). В отличие от handleTrader тут нет тоггла в пустоту.
+  // пустой набор = кросс-трейдер режим).
   const handleSelectTrader = useCallback((name: string | null) => {
     if (name === null) { setSelectedTraders(new Set()); return; }
     setSelectedTraders(new Set([name]));
@@ -755,14 +745,6 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
       .map(m => ({ id: m.id, name: m.name, iconClass: MAP_CSS[m.normalizedName] ?? null })),
     [maps],
   );
-
-  const handleReset = () => {
-    setFilterKappa(false);
-    setFilterLK(false);
-    setSelectedTraders(new Set());
-    setSelectedMaps(new Set());
-    setEnabledTiers(new Set([1, 2, 3, 4]));
-  };
 
   // УЛ-тоглы: тоггл видимости полки лояльности; последний выключить нельзя (иначе пустой канвас).
   const handleToggleTier = useCallback((tier: number) => {
@@ -984,27 +966,27 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
         {/* Мобильная верхняя панель: поиск / торговцы / карты */}
         <MobileQuestBar mapsFilterActive={selectedMaps.size > 0} />
 
-        {/* Десктопный фильтр-бар — прячем на мобилке */}
-        <div className="hidden lg:block">
-        <QuestFilterBar
+        {/* Десктопная верхняя панель: поиск · пути-пилюли + трейдер-пилюля/дропдаун · фуллскрин */}
+        <QuestTopBar
           tasks={initialTasks}
-          completedQuests={completedQuests}
-          filterKappa={filterKappa}
-          filterLK={filterLK}
-          selectedTraders={selectedTraders}
-          onKappa={handleKappaClick}
-          onLK={handleLKClick}
-          onTrader={handleTrader}
-          onReset={handleReset}
-          onResetProgress={() => setResetModalOpen(true)}
           searchOpen={searchOpen}
           onSearchOpen={() => setSearchOpen(v => !v)}
-          maps={maps}
-          selectedMaps={selectedMaps}
-          onMap={handleMap}
           onFocus={handleFocusNode}
+          kappaTotal={kappaTotal}
+          kappaCompleted={kappaCompleted}
+          lkTotal={lkTotal}
+          lkCompleted={lkCompleted}
+          filterKappa={filterKappa}
+          filterLK={filterLK}
+          onKappa={handleKappaClick}
+          onLK={handleLKClick}
+          traders={mobileTraders}
+          traderLevels={traderLevels}
+          selectedTrader={selectedTrader}
+          onSelectTrader={handleSelectTrader}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={() => setIsFullscreen(v => !v)}
         />
-        </div>
 
         {/* Мобильные шиты */}
         <QuestSearchSheet tasks={initialTasks} onFocus={handleFocusNode} />
@@ -1019,16 +1001,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
         <div className="flex flex-1 min-h-0">
 
           <div className="relative flex-1 min-w-0">
-            {/* Трейдер-пилюля + УЛ-тоглы — плавающая полоса сверху-по-центру (десктоп). Позже переедет в QuestTopBar. */}
-            <div className="pointer-events-none absolute inset-x-0 top-3 z-30 hidden flex-col items-center gap-2 lg:flex">
-              <div className="pointer-events-auto">
-                <QuestTraderDropdown
-                  traders={mobileTraders}
-                  traderLevels={traderLevels}
-                  selected={selectedTrader}
-                  onSelect={handleSelectTrader}
-                />
-              </div>
+            {/* УЛ-тоглы — плавающая полоса под верхней панелью, по центру (десктоп). */}
+            <div className="pointer-events-none absolute inset-x-0 top-3 z-30 hidden justify-center lg:flex">
               <div className="pointer-events-auto">
                 <QuestTierToggles enabled={enabledTiers} onToggle={handleToggleTier} />
               </div>
@@ -1268,22 +1242,35 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           </div>
         </div>
 
-        <QuestStatusBar
+        {/* Мобилка — прежний статус-бар; десктоп — новый нижний бар (прогресс · карты · импорт/экспорт) */}
+        <div className="lg:hidden">
+          <QuestStatusBar
+            totalQuests={initialTasks.length}
+            completedCount={completedQuests.length}
+            kappaTotal={kappaTotal}
+            kappaCompleted={kappaCompleted}
+            lkTotal={lkTotal}
+            lkCompleted={lkCompleted}
+            filterKappa={filterKappa}
+            filterLK={filterLK}
+            onKappa={handleKappaClick}
+            onLK={handleLKClick}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={() => setIsFullscreen(v => !v)}
+            onResetProgress={() => setResetModalOpen(true)}
+            onExport={handleExport}
+            onImport={handleImport}
+          />
+        </div>
+        <QuestBottomBar
           totalQuests={initialTasks.length}
           completedCount={completedQuests.length}
-          kappaTotal={kappaTotal}
-          kappaCompleted={kappaCompleted}
-          lkTotal={lkTotal}
-          lkCompleted={lkCompleted}
-          filterKappa={filterKappa}
-          filterLK={filterLK}
-          onKappa={handleKappaClick}
-          onLK={handleLKClick}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={() => setIsFullscreen(v => !v)}
-          onResetProgress={() => setResetModalOpen(true)}
+          maps={maps}
+          selectedMaps={selectedMaps}
+          onMap={handleMap}
           onExport={handleExport}
           onImport={handleImport}
+          onResetProgress={() => setResetModalOpen(true)}
         />
         <QuestDrawer
           task={selectedTask}
