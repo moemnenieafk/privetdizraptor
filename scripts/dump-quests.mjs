@@ -103,6 +103,25 @@ async function main() {
     return { name: TRADER_RU[nn] ?? nn, normalizedName: nn, imageLink: `https://assets.tarkov.dev/${id}.webp` };
   };
 
+  // УЛ квеста (1..4): явный traderRequirements для СВОЕГО торговца → его level; иначе
+  // аппроксимация minPlayerLevel → полка по порогам requiredPlayerLevel торговца (реальные
+  // пороги УЛ из /traders). NB: tarkov.dev размечает УЛ явно лишь у ~16/510 → остальное — оценка.
+  const llBands = (traderId) => (tradersById[traderId]?.levels ?? [])
+    .filter((l) => l.level != null)
+    .map((l) => ({ level: l.level, minLevel: l.requiredPlayerLevel ?? 0 }))
+    .sort((a, b) => a.level - b.level);
+  const ulTierOf = (t) => {
+    const own = (t.traderRequirements ?? [])
+      .filter((r) => r?.requirementType === 'level' && r?.value != null && r?.trader === t.trader)
+      .map((r) => r.value);
+    let ul = own.length ? Math.max(...own) : 1;
+    if (!own.length) {
+      const ml = t.minPlayerLevel ?? 0;
+      for (const b of llBands(t.trader)) if (b.minLevel <= ml) ul = b.level;
+    }
+    return Math.min(4, Math.max(1, ul));
+  };
+
   const rawTasks = Object.values(tasksData.tasks ?? {});
   const nameById = new Map(rawTasks.map((t) => [t.id, T(t.name)]));
 
@@ -151,6 +170,7 @@ async function main() {
       })),
     requiredPrestige: t.requiredPrestige ?? null,
     factionName: t.factionName ?? null,
+    ulTier: ulTierOf(t),
     objectives: (t.objectives ?? []).map(mapObjective),
     finishRewards: {
       traderStanding: (t.finishRewards?.traderStanding ?? []).map((s) => ({
@@ -187,7 +207,7 @@ async function main() {
       id: sq.id, name: sq.name, normalizedName: sq.normalizedName,
       kappaRequired: false, lightkeeperRequired: false, minPlayerLevel: 0, experience: 0,
       taskRequirements: [], trader: storyTrader,
-      traderRequirements: [], requiredPrestige: null, factionName: null,
+      traderRequirements: [], requiredPrestige: null, factionName: null, ulTier: 1,
       objectives: [],
       finishRewards: { traderStanding: [], items: [] },
     });
