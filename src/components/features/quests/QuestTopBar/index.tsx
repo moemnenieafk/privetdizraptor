@@ -1,15 +1,10 @@
 'use client';
 
-import { useRef } from 'react';
-import type { TaskRaw } from '@/types/quest';
-import { QuestSearch } from '@/components/features/quests/QuestSearch';
 import { QuestTraderDropdown, type TraderOpt } from '@/components/features/quests/QuestTraderDropdown';
 
 interface Props {
-  tasks:              TaskRaw[];
   searchOpen:         boolean;
   onSearchOpen:       () => void;
-  onFocus:            (task: TaskRaw) => void;
   // Пути (Каппа / Смотритель) — пилюли-прогресс + тоглы фильтра.
   kappaTotal:         number;
   kappaCompleted:     number;
@@ -43,25 +38,21 @@ const iconBtn = (active: boolean) =>
  * QuestMapClient). Мобилка — отдельным проходом (`hidden lg:flex`).
  */
 export function QuestTopBar({
-  tasks, searchOpen, onSearchOpen, onFocus,
+  searchOpen, onSearchOpen,
   kappaTotal, kappaCompleted, lkTotal, lkCompleted, filterKappa, filterLK, onKappa, onLK,
   traders, traderLevels, selectedTrader, onSelectTrader,
   isFullscreen, onToggleFullscreen,
 }: Props) {
-  const searchAnchorRef = useRef<HTMLDivElement>(null);
   const kappaPct = kappaTotal > 0 ? Math.round((kappaCompleted / kappaTotal) * 100) : 0;
   const lkPct    = lkTotal    > 0 ? Math.round((lkCompleted    / lkTotal)    * 100) : 0;
 
   return (
     <div className="relative hidden h-14 shrink-0 items-center gap-3.5 border-b border-lines-hover bg-card-menu px-3.5 lg:flex">
 
-      {/* Поиск (слева) */}
-      <div ref={searchAnchorRef} className="relative shrink-0">
-        <button onClick={onSearchOpen} title="Поиск по заданию (Ctrl+F)" className={iconBtn(searchOpen)}>
-          <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
-        </button>
-        {searchOpen && <QuestSearch tasks={tasks} onFocus={onFocus} anchorRef={searchAnchorRef} />}
-      </div>
+      {/* Поиск (слева) — тоггл левого дровера «Поиск по заданию» */}
+      <button onClick={onSearchOpen} title="Поиск по заданию (Ctrl+F)" className={iconBtn(searchOpen)}>
+        <span className="icon-mask icon-eft-search-icon h-3.5 w-3.5" />
+      </button>
 
       {/* Центр: пилюля Смотрителя · трейдер-пилюля · пилюля Каппы */}
       <div className="flex flex-1 items-center justify-center gap-3">

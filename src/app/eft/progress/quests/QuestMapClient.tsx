@@ -10,6 +10,7 @@ import { QuestDrawer } from '@/components/features/quests/QuestDrawer';
 import { QuestTierToggles } from '@/components/features/quests/QuestTierToggles';
 import { QuestTopBar } from '@/components/features/quests/QuestTopBar';
 import { QuestBottomBar } from '@/components/features/quests/QuestBottomBar';
+import { QuestSearchDrawer } from '@/components/features/quests/QuestSearchDrawer';
 import { QuestStatusBar } from '@/components/features/quests/QuestStatusBar';
 import { MobileQuestBar } from '@/components/features/quests/MobileQuestBar';
 import { QuestSearchSheet } from '@/components/features/quests/QuestSearchSheet';
@@ -305,6 +306,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   const [enabledTiers, setEnabledTiers]       = useState<Set<number>>(() => new Set([1, 2, 3, 4]));
 
   const vpRef           = useRef<QuestMapViewportRef | null>(null);
+  const interactedRef   = useRef(false); // юзер уже выбрал торговца/квест — не перебивать mount-восстановлением
   const dragActiveRef   = useRef(false);
   const selectedNodesRef = useRef(selectedNodes);
   selectedNodesRef.current = selectedNodes;
@@ -540,6 +542,9 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
       raf2 = requestAnimationFrame(() => {
         const vp = vpRef.current;
         if (!vp) return;
+        // Если пользователь уже выбрал торговца/квест (клик обогнал поздний rAF при медленной
+        // компиляции) — не перебиваем его восстановлением последнего квеста.
+        if (interactedRef.current) return;
 
         // Deep-link из глобального поиска: плавный полёт к конкретному квесту (?quest=<id>)
         const focusId = searchParams.get('quest');
@@ -714,11 +719,22 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   // Дропдаун карты заданий: выбрать торговца (single-select + перелёт) или «Все» (name=null →
   // пустой набор = кросс-трейдер режим).
   const handleSelectTrader = useCallback((name: string | null) => {
+    interactedRef.current = true;
     if (name === null) { setSelectedTraders(new Set()); return; }
     setSelectedTraders(new Set([name]));
     const pos = connPositionsRef.current.get(`trader-${name}`);
     if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: fitZoom(TRADER_W), duration: 500 });
   }, [fitZoom]);
+
+  // Клик по результату левого поиска (глобального): сменить торговца на канвасе → перелёт к
+  // квесту → открыть правый дровер деталей. На узком экране (<1440) закрываем поиск (правило шелла Карт).
+  const handleSearchResult = useCallback((task: TaskRaw) => {
+    interactedRef.current = true;
+    setSelectedTraders(new Set([task.trader.normalizedName]));
+    flyToQuest(task.id, 1.4, 500);
+    setSelectedTask(task);
+    if (typeof window !== 'undefined' && window.innerWidth < 1440) setSearchOpen(false);
+  }, [flyToQuest]);
 
   // Мобилка: перелёт к портрету торговца без изменения фильтра (фильтрация по торговцам на телефоне убрана).
   const handleFocusTrader = useCallback((name: string) => {
@@ -968,10 +984,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
         {/* Десктопная верхняя панель: поиск · пути-пилюли + трейдер-пилюля/дропдаун · фуллскрин */}
         <QuestTopBar
-          tasks={initialTasks}
           searchOpen={searchOpen}
           onSearchOpen={() => setSearchOpen(v => !v)}
-          onFocus={handleFocusNode}
           kappaTotal={kappaTotal}
           kappaCompleted={kappaCompleted}
           lkTotal={lkTotal}
@@ -1156,6 +1170,17 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
             })}
 
           </QuestMapViewport>
+
+          {/* Левый дровер «Поиск по заданию» (десктоп; мобилка — отдельным проходом) */}
+          <div className="hidden lg:block">
+            <QuestSearchDrawer
+              open={searchOpen}
+              onClose={() => setSearchOpen(false)}
+              tasks={initialTasks}
+              bartersByQuest={bartersByQuest}
+              onSelectResult={handleSearchResult}
+            />
+          </div>
 
           {/* Drag mode controls */}
           {/* Дев-режим расстановки нод — только десктоп */}
