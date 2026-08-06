@@ -17,7 +17,6 @@ import { MAP_ICON_CSS as MAP_CSS } from '@/data/map-icons';
 import { useQuestStore, exportProgress, importProgress } from '@/store/useQuestStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { TraderNode } from '@/components/features/quests/TraderNode';
-import { StubNode, CollapsedStub } from '@/components/features/quests/StubNode';
 import { TRADER_COLORS } from '@/data/traderColors';
 import {
   QuestMapViewport,
@@ -26,8 +25,7 @@ import {
   type BackgroundRect,
   type Bounds,
 } from '@/components/features/quests/QuestMapViewport';
-import { traderImg, traderCssVar } from '@/lib/trader-utils';
-import { makeQuestPath } from '@/lib/quest-path';
+import { traderImg } from '@/lib/trader-utils';
 import { Paperclip } from 'lucide-react';
 import PRESET_POSITIONS from '@/data/quests/quest-positions.json';
 
@@ -47,11 +45,6 @@ const MAX_PER_ROW    = 15;
 const LAST_QUEST_KEY = 'cta-last-quest-id';
 const BASE_RE        = /-(day|night)$/i;
 
-const STUB_W            = 180;
-const STUB_H            = 52;
-const STUB_GAP          = 8;
-const MAX_STUBS_VISIBLE = 5;
-
 const TRADER_ORDER = [
   'prapor', 'therapist', 'skier', 'peacekeeper', 'mechanic',
   'jaeger', 'ragman', 'ref', 'fence', 'lightkeeper', 'btrdriver',
@@ -62,62 +55,53 @@ const OBJ_ROW_H         = 36;
 const CARD_BASE_H       = 206;
 const CELL_W            = NODE_W + CELL_GAP;    // 512 — slot step (used in snap grid)
 const ROW_STAGGER       = CELL_W / 2;                        // 256 — half-cell shift for odd rows (chess pattern)
-const MAX_PER_ROW_ODD   = 13;                                // cards per odd (staggered) row
 const MAX_CARD_H        = CARD_BASE_H + 5 * OBJ_ROW_H + 24; // 364 — max card height (5 objectives + overflow badge)
 const ROW_STEP          = MAX_CARD_H + ROW_GAP;              // 620 — fixed row height (chess grid)
 const SNAP_ROW_H        = ROW_STEP;                          // 620 — snap grid row step
 const DRAG_POSITIONS_KEY = 'cta-quest-positions';
 
+// ─── УЛ-полки (loyalty tiers) ────────────────────────────────────────────────
+const TIER_HEADER_H = 44;           // высота заголовка полки (иконка УЛ + метка)
+const TIER_TOP_GAP  = 96;           // отступ над полкой — место под пунктир-разделитель
+const TIER_ROW_GAP  = 44;           // вертикальный зазор между рядами внутри полки
+const COL_PAD_L     = ROW_STAGGER;  // 256 — левый отступ контента (совпадает со снапом)
+const TIER_PER_ROW  = 8;            // карточек в ряду полки
+
 function getQuestNodeHeight(objCount: number): number {
   return CARD_BASE_H + Math.min(objCount, 5) * OBJ_ROW_H + (objCount > 5 ? 24 : 0);
 }
 
-// ─── Local quest depths (same-trader chain only) ──────────────────────────────
+// ─── Layout: УЛ-полки (loyalty tiers) ─────────────────────────────────────────
 
-function computeLocalDepths(tasks: TaskRaw[]): Map<string, number> {
-  const prereqMap = new Map<string, string[]>(
-    tasks.map(t => [t.id, t.taskRequirements
-      .filter(r => {
-        const parent = tasks.find(p => p.id === r.task.id);
-        return parent && parent.trader.normalizedName === t.trader.normalizedName;
-      })
-      .map(r => r.task.id)
-    ])
-  );
-  const depths    = new Map<string, number>();
-  const computing = new Set<string>();
-
-  function depth(id: string): number {
-    if (depths.has(id))    return depths.get(id)!;
-    if (computing.has(id)) return 0;
-    computing.add(id);
-    const pids = prereqMap.get(id) ?? [];
-    const d    = pids.length === 0 ? 0 : 1 + Math.max(...pids.map(depth));
-    computing.delete(id);
-    depths.set(id, d);
-    return d;
-  }
-
-  for (const t of tasks) depth(t.id);
-  return depths;
+interface TierBand {
+  key:     string;   // `${trader}-${tier}`
+  trader:  string;
+  tier:    number;   // 1..4
+  x:       number;
+  y:       number;
+  width:   number;
+  height:  number;
+  count:   number;
+  isFirst: boolean;  // первая полка колонки → без разделителя сверху
 }
-
-// ─── Layout ───────────────────────────────────────────────────────────────────
 
 interface LayoutResult {
   layoutPositions:    Map<string, { x: number; y: number }>;
-  staticEdgeIds:      Set<string>;
   traderOrder:        string[];
-  traderRoots:        Map<string, string[]>;
   traderColumnBounds: Map<string, Bounds>;
   graphBounds:        Bounds;
   nodeHeights:        Map<string, number>;
+  tierBands:          TierBand[];
 }
 
+const clampTier = (n: number | undefined): number => Math.min(4, Math.max(1, n ?? 1));
+
+// Раскладка «по уровню лояльности»: колонка на торговца, портрет сверху, ниже —
+// полки УЛ1→УЛ4 (заголовок с иконкой УЛ + ряды квестов), между полками пунктир
+// (рисуется в JSX из tierBands). Цепочек/связей больше нет — ось — уровень лояльности.
 function computeLayout(tasks: TaskRaw[]): LayoutResult {
-  const depths   = computeLocalDepths(tasks);
-  const CELL_W   = NODE_W + CELL_GAP;
-  const taskById = new Map(tasks.map(t => [t.id, t]));
+  const CELL_W   = NODE_W + CELL_GAP;                          // 512 — шаг по X (= сетке снапа)
+  const colWidth = COL_PAD_L + TIER_PER_ROW * CELL_W - CELL_GAP;
 
   const byTrader = new Map<string, TaskRaw[]>();
   for (const t of tasks) {
@@ -130,130 +114,81 @@ function computeLayout(tasks: TaskRaw[]): LayoutResult {
   const positions          = new Map<string, { x: number; y: number }>();
   const nodeHeights        = new Map<string, number>();
   const traderColumnBounds = new Map<string, Bounds>();
-  const traderRoots        = new Map<string, string[]>();
-  const edgeIds            = new Set<string>();
-
-  for (const t of tasks)
-    for (const r of t.taskRequirements) edgeIds.add(`${r.task.id}->${t.id}`);
+  const tierBands: TierBand[] = [];
 
   let currentX = 0;
-
   for (const traderName of traderOrder) {
     const quests = byTrader.get(traderName)!;
 
-    // Absolute roots (no prereqs at all) — used for portrait connections
-    const roots: string[] = [];
+    // Портрет — сверху колонки, по центру (обозначение раздела торговца).
+    positions.set(`trader-${traderName}`, { x: currentX + colWidth / 2 - TRADER_W / 2, y: 0 });
+
+    // Группировка квестов по УЛ.
+    const byTier = new Map<number, TaskRaw[]>();
     for (const q of quests) {
-      if (q.taskRequirements.length === 0) roots.push(q.id);
-    }
-    traderRoots.set(traderName, roots);
-
-    // Sort by global depth then name for a stable ordering
-    const sorted = [...quests].sort((a, b) => {
-      const da = depths.get(a.id) ?? 0;
-      const db = depths.get(b.id) ?? 0;
-      return da !== db ? da - db : a.name.localeCompare(b.name);
-    });
-
-    // Group by depth
-    const depthGroups = new Map<number, TaskRaw[]>();
-    for (const q of sorted) {
-      const d = depths.get(q.id) ?? 0;
-      const g = depthGroups.get(d) ?? [];
+      const ul = clampTier(q.ulTier);
+      const g = byTier.get(ul) ?? [];
       g.push(q);
-      depthGroups.set(d, g);
+      byTier.set(ul, g);
     }
+    const tiers = [...byTier.keys()].sort((a, b) => a - b);
 
-    let currentY  = QUEST_START_Y;
-    let rowIndex  = 0;                     // persists across depth groups → global chess pattern
-    const COL_PAD = ROW_STAGGER;           // 256px left margin inside column
+    let y = QUEST_START_Y;
+    let firstTier = true;
+    for (const tier of tiers) {
+      const group = [...byTier.get(tier)!].sort(
+        (a, b) => (a.minPlayerLevel - b.minPlayerLevel) || a.name.localeCompare(b.name),
+      );
+      if (!firstTier) y += TIER_TOP_GAP;                 // место под пунктир-разделитель
+      const bandTop = y;
 
-    for (const dep of [...depthGroups.keys()].sort((a, b) => a - b)) {
-      const group = depthGroups.get(dep)!;
+      // Заголовок полки (иконка УЛ + метка) — слева, «на входе» ряда.
+      positions.set(`tier-${traderName}-${tier}`, { x: currentX + COL_PAD_L, y });
+      y += TIER_HEADER_H + 20;
 
-      // Sort by avg X of same-trader parents already placed (reduces edge crossings)
-      const sortedGroup = [...group].sort((a, b) => {
-        const avgX = (q: TaskRaw) => {
-          const parents = q.taskRequirements
-            .map(r => taskById.get(r.task.id))
-            .filter((p): p is TaskRaw => !!p && p.trader.normalizedName === q.trader.normalizedName);
-          if (parents.length === 0) return 0;
-          const xs = parents.map(p => positions.get(p.id)?.x ?? 0);
-          return xs.reduce((s, x) => s + x, 0) / xs.length;
-        };
-        return avgX(a) - avgX(b);
+      // Квесты полки — ряды по TIER_PER_ROW, высота ряда = макс. карточка ряда.
+      for (let i = 0; i < group.length; i += TIER_PER_ROW) {
+        const row = group.slice(i, i + TIER_PER_ROW);
+        let rowMaxH = 0;
+        for (let j = 0; j < row.length; j++) {
+          const h = getQuestNodeHeight(row[j].objectives.length);
+          positions.set(row[j].id, { x: currentX + COL_PAD_L + j * CELL_W, y });
+          nodeHeights.set(row[j].id, h);
+          if (h > rowMaxH) rowMaxH = h;
+        }
+        y += rowMaxH + TIER_ROW_GAP;
+      }
+
+      tierBands.push({
+        key: `${traderName}-${tier}`, trader: traderName, tier,
+        x: currentX, y: bandTop, width: colWidth, height: y - bandTop,
+        count: group.length, isFirst: firstTier,
       });
-
-      let processed = 0;
-      while (processed < sortedGroup.length) {
-        const maxSlots = rowIndex % 2 === 0 ? MAX_PER_ROW : MAX_PER_ROW_ODD;
-        const baseOff  = rowIndex % 2 === 0 ? COL_PAD : COL_PAD + ROW_STAGGER;
-        const row      = sortedGroup.slice(processed, processed + maxSlots);
-        const offset   = baseOff + Math.floor((maxSlots - row.length) / 2) * CELL_W;
-        for (let i = 0; i < row.length; i++) {
-          positions.set(row[i].id, { x: currentX + offset + i * CELL_W, y: currentY });
-          nodeHeights.set(row[i].id, getQuestNodeHeight(row[i].objectives.length));
-        }
-        currentY += ROW_STEP;
-        processed += row.length;
-        rowIndex++;
-      }
+      firstTier = false;
     }
-
-    // Ref: portrait inlined between depth 0 and depth 1, not at top
-    let portraitY = 0;
-    if (traderName === 'ref') {
-      const depthKeys = [...depthGroups.keys()].sort((a, b) => a - b);
-      if (depthKeys.length >= 2) {
-        const depth0 = depthGroups.get(depthKeys[0])!;
-        const maxH0  = Math.max(...depth0.map(q => getQuestNodeHeight(q.objectives.length)));
-        const y0     = positions.get(depth0[0].id)?.y ?? QUEST_START_Y;
-        portraitY    = y0 + maxH0 + ROW_GAP;
-        const shift  = TRADER_H + ROW_GAP;
-        for (const dk of depthKeys.slice(1)) {
-          for (const q of depthGroups.get(dk)!) {
-            const p = positions.get(q.id);
-            if (p) positions.set(q.id, { x: p.x, y: p.y + shift });
-          }
-        }
-        currentY += shift;
-      }
-    }
-
-    const colHeight      = currentY - QUEST_START_Y;
-    const effectiveWidth = Math.max(COL_PAD * 2 + MAX_PER_ROW * CELL_W - CELL_GAP, TRADER_W);
-
-    positions.set(`trader-${traderName}`, {
-      x: currentX + effectiveWidth / 2 - TRADER_W / 2,
-      y: portraitY,
-    });
 
     traderColumnBounds.set(traderName, {
-      minX: currentX - 20,
-      minY: 0,
-      maxX: currentX + effectiveWidth + 20,
-      maxY: QUEST_START_Y + colHeight + 20,
+      minX: currentX - 20, minY: 0, maxX: currentX + colWidth + 20, maxY: y + 20,
     });
-
-    currentX += effectiveWidth + COLUMN_GAP;
+    currentX += colWidth + COLUMN_GAP;
   }
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const [id, p] of positions) {
-    const isT = id.startsWith('trader-');
+    const isT    = id.startsWith('trader-');
+    const isTier = id.startsWith('tier-');
     minX = Math.min(minX, p.x);
     minY = Math.min(minY, p.y);
-    maxX = Math.max(maxX, p.x + (isT ? TRADER_W : NODE_W));
-    maxY = Math.max(maxY, p.y + (isT ? TRADER_H : (nodeHeights.get(id) ?? NODE_H)));
+    maxX = Math.max(maxX, p.x + (isT ? TRADER_W : isTier ? 240 : NODE_W));
+    maxY = Math.max(maxY, p.y + (isT ? TRADER_H : isTier ? TIER_HEADER_H : (nodeHeights.get(id) ?? NODE_H)));
   }
 
   return {
     layoutPositions:    positions,
-    staticEdgeIds:      edgeIds,
     traderOrder,
-    traderRoots,
     traderColumnBounds,
     nodeHeights,
+    tierBands,
     graphBounds: {
       minX: isFinite(minX) ? minX : 0,
       minY: isFinite(minY) ? minY : 0,
@@ -465,12 +400,11 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   // ── Layout ───────────────────────────────────────────────────────────────
   const {
     layoutPositions,
-    staticEdgeIds,
     traderOrder,
-    traderRoots,
     traderColumnBounds,
     graphBounds,
     nodeHeights,
+    tierBands,
   } = useMemo(() => computeLayout(initialTasks), [initialTasks]);
 
   const layoutPositionsRef     = useRef(layoutPositions);
@@ -481,8 +415,6 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   traderColumnBoundsRef.current = traderColumnBounds;
   const traderOrderRef         = useRef(traderOrder);
   traderOrderRef.current       = traderOrder;
-  const traderRootsRef         = useRef(traderRoots);
-  traderRootsRef.current       = traderRoots;
 
   // ── Effective positions: algorithm → preset → user drag (localStorage) ──────
   const connPositions = useMemo(() => {
@@ -523,148 +455,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     return null;
   }, [chainSet, hoveredId, ancestorMap, descendantMap]);
 
-  // Stubs подсвечиваются как descendant при ховере на оригинал
-  const getStubChainRole = useCallback((origId: string): 'ancestor' | 'descendant' | 'self' | null | undefined => {
-    if (hoveredId === origId) return 'descendant';
-    return getChainRole(origId);
-  }, [hoveredId, getChainRole]);
-
-  // ── Cross-trader edges ───────────────────────────────────────────────────
-  const crossTraderEdges = useMemo(() => {
-    const map = new Map<string, TaskRaw[]>();
-    for (const task of initialTasks) {
-      const foreignPrereqs = task.taskRequirements
-        .map(r => initialTasks.find(t => t.id === r.task.id))
-        .filter((p): p is TaskRaw => !!p && p.trader.normalizedName !== task.trader.normalizedName);
-      if (foreignPrereqs.length > 0) map.set(task.id, foreignPrereqs);
-    }
-    return map;
-  }, [initialTasks]);
-
-  // ── Stub row positions ───────────────────────────────────────────────────
-  const stubRowPositions = useMemo(() => {
-    const map = new Map<string, { x: number; y: number }>();
-    for (const [childId, prereqs] of crossTraderEdges) {
-      const childPos    = connPositions.get(childId);
-      if (!childPos) continue;
-      const visCount    = Math.min(prereqs.length, MAX_STUBS_VISIBLE);
-      const rowWidth    = visCount * (STUB_W + STUB_GAP) - STUB_GAP;
-      map.set(childId, {
-        x: childPos.x + NODE_W / 2 - rowWidth / 2,
-        y: childPos.y - STUB_H - 12,
-      });
-    }
-    return map;
-  }, [crossTraderEdges, connPositions]);
-
-  // ── Static Connections (no chainSet — ключевой фикс FPS) ─────────────────
-  const staticConnections = useMemo<ConnectionDef[]>(() => {
-    const result: ConnectionDef[] = [];
-    const taskById = new Map(initialTasks.map(t => [t.id, t]));
-
-    for (const task of initialTasks) {
-      for (const req of task.taskRequirements) {
-        const edgeId = `${req.task.id}->${task.id}`;
-        if (!staticEdgeIds.has(edgeId)) continue;
-
-        const srcTask = taskById.get(req.task.id);
-        if (!srcTask) continue;
-        if (srcTask.trader.normalizedName !== task.trader.normalizedName) continue;
-
-        const srcPos = connPositions.get(req.task.id);
-        const tgtPos = connPositions.get(task.id);
-        if (!srcPos || !tgtPos) continue;
-
-        const srcStatus   = statusMap.get(req.task.id)?.status ?? 'locked';
-        const traderVar   = `var(${traderCssVar(task.trader.normalizedName)})`;
-        const stroke      = srcStatus === 'completed' ? 'var(--color-nvg-green)'
-          : srcStatus === 'locked'  ? 'var(--color-lines-hover)'
-          : traderVar;
-        const baseOpacity = srcStatus === 'completed' ? 0.25 : 1.0;
-        const srcH        = nodeHeights.get(req.task.id) ?? NODE_H;
-
-        result.push({
-          id:      edgeId,
-          d:       makeQuestPath(srcPos.x + NODE_W / 2, srcPos.y + srcH, tgtPos.x + NODE_W / 2, tgtPos.y),
-          stroke,
-          opacity:   baseOpacity,
-          nodeIds:   [req.task.id, task.id],
-          className: `qc-${srcStatus}`,
-        });
-      }
-    }
-
-    // Trader portrait → root quests
-    for (const [traderName, rootIds] of traderRoots) {
-      if (traderName === 'ref') continue; // portrait inlined, handled separately below
-      const traderVar = `var(${traderCssVar(traderName)})`;
-      const traderPos = connPositions.get(`trader-${traderName}`);
-      if (!traderPos) continue;
-      for (const rootId of rootIds.slice(0, 4)) {
-        const questPos = connPositions.get(rootId);
-        if (!questPos) continue;
-        result.push({
-          id:        `trader-${traderName}->${rootId}`,
-          d:         makeQuestPath(traderPos.x + TRADER_W / 2, traderPos.y + TRADER_H, questPos.x + NODE_W / 2, questPos.y),
-          stroke:    traderVar,
-          opacity:   0.5,
-          nodeIds:   [`trader-${traderName}`, rootId],
-          className: 'qc-active',
-        });
-      }
-    }
-
-    // Ref portrait inlined — lines from depth-0 ref quests → portrait
-    const refPortraitPos = connPositions.get('trader-ref');
-    if (refPortraitPos) {
-      const refVar      = `var(${traderCssVar('ref')})`;
-      const refQuests   = initialTasks.filter(t => t.trader.normalizedName === 'ref');
-      const refQuestIds = new Set(refQuests.map(q => q.id));
-      const refRoots    = refQuests.filter(q =>
-        !(parentsMap.get(q.id) ?? []).some(pid => refQuestIds.has(pid))
-      );
-      for (const q of refRoots) {
-        const qPos = connPositions.get(q.id);
-        if (!qPos) continue;
-        const qH = nodeHeights.get(q.id) ?? NODE_H;
-        result.push({
-          id:        `ref-root-${q.id}->portrait`,
-          d:         `M ${qPos.x + NODE_W / 2} ${qPos.y + qH} L ${refPortraitPos.x + TRADER_W / 2} ${refPortraitPos.y}`,
-          stroke:    refVar,
-          opacity:   0.4,
-          nodeIds:   [q.id, 'trader-ref'],
-          className: 'qc-active',
-        });
-      }
-    }
-
-    // Stub → child connections
-    for (const [childId, prereqs] of crossTraderEdges) {
-      const childPos = connPositions.get(childId);
-      const rowPos   = stubRowPositions.get(childId);
-      if (!childPos || !rowPos) continue;
-      const childStatus = statusMap.get(childId)?.status ?? 'locked';
-      prereqs.slice(0, MAX_STUBS_VISIBLE).forEach((orig, i) => {
-        const stubCenterX   = rowPos.x + i * (STUB_W + STUB_GAP) + STUB_W / 2;
-        const origTraderVar = `var(${traderCssVar(orig.trader.normalizedName)})`;
-        const stroke        = childStatus === 'completed' ? 'var(--color-nvg-green)'
-          : childStatus === 'active' ? origTraderVar
-          : 'var(--color-lines-hover)';
-        result.push({
-          id:        `stub-${orig.id}->${childId}-${i}`,
-          d:         `M ${stubCenterX} ${rowPos.y + STUB_H} L ${childPos.x + NODE_W / 2} ${childPos.y}`,
-          stroke,
-          opacity:   childStatus === 'completed' ? 0.25 : 1.0,
-          nodeIds:   [orig.id, childId],
-          className: `qc-${childStatus}`,
-        });
-      });
-    }
-
-    return result;
-  // chainSet намеренно исключён — ключевой фикс FPS
-  }, [initialTasks, connPositions, nodeHeights, statusMap, staticEdgeIds, traderRoots,
-      crossTraderEdges, stubRowPositions, childrenMap, parentsMap]);
+  // Связей/зависимостей больше нет — questmap группирует квесты по УЛ (loyalty tiers).
+  const staticConnections = useMemo<ConnectionDef[]>(() => [], []);
 
   const columnBackgrounds = useMemo<BackgroundRect[]>(() => [], []);
 
@@ -1146,6 +938,39 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
               isDragMode={isDragMode}
               onBoxSelect={handleBoxSelect}
             >
+            {/* УЛ-полки: заголовок (иконка УЛ + метка) + пунктир-разделитель между полками */}
+            {tierBands.map(band => {
+              const pos = connPositions.get(`tier-${band.trader}-${band.tier}`);
+              if (!pos) return null;
+              return (
+                <Fragment key={band.key}>
+                  {!band.isFirst && (
+                    <div
+                      style={{
+                        position:  'absolute',
+                        left:      band.x + COL_PAD_L,
+                        top:       band.y - TIER_TOP_GAP / 2,
+                        width:     band.width - COL_PAD_L - 40,
+                        height:    0,
+                        borderTop: '2px dashed var(--color-lines-hover)',
+                        opacity:   0.55,
+                      }}
+                    />
+                  )}
+                  <div
+                    style={{ position: 'absolute', left: pos.x, top: pos.y, height: TIER_HEADER_H }}
+                    className="flex items-center gap-2.5 select-none pointer-events-none"
+                  >
+                    <span className={`icon-mask icon-eft-profile-rep-${band.tier} h-8 w-8 shrink-0 text-(--primary)`} />
+                    <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                      Уровень лояльности {band.tier}
+                    </span>
+                    <span className="text-type-micro font-blender-medium text-text-muted/50">· {band.count}</span>
+                  </div>
+                </Fragment>
+              );
+            })}
+
             {/* Trader portraits */}
             {traderOrder.map(traderName => {
               const nodeId     = `trader-${traderName}`;
@@ -1230,40 +1055,6 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
               );
             })}
 
-            {/* Stubs for cross-trader prereqs */}
-            {Array.from(crossTraderEdges.entries()).map(([childId, prereqs]) => {
-              const rowPos = stubRowPositions.get(childId);
-              if (!rowPos) return null;
-              const visible   = prereqs.slice(0, MAX_STUBS_VISIBLE);
-              const collapsed = prereqs.length - MAX_STUBS_VISIBLE;
-              return (
-                <Fragment key={`stubs-${childId}`}>
-                  {visible.map((orig, i) => (
-                    <div
-                      key={orig.id}
-                      style={{ position: 'absolute', left: rowPos.x + i * (STUB_W + STUB_GAP), top: rowPos.y, zIndex: 5 }}
-                    >
-                      <StubNode
-                        originalTask={orig}
-                        chainRole={getStubChainRole(orig.id)}
-                        dimmed={filteredIds !== null && !filteredIds.has(orig.id)}
-                        onFlyTo={(id, task) => {
-                          flyToQuest(id, 1.5, 400);
-                          setTimeout(() => setSelectedTask(task), 450);
-                        }}
-                      />
-                    </div>
-                  ))}
-                  {collapsed > 0 && (
-                    <div
-                      style={{ position: 'absolute', left: rowPos.x + MAX_STUBS_VISIBLE * (STUB_W + STUB_GAP), top: rowPos.y, zIndex: 5 }}
-                    >
-                      <CollapsedStub count={collapsed} onExpand={() => {}} />
-                    </div>
-                  )}
-                </Fragment>
-              );
-            })}
           </QuestMapViewport>
 
           {/* Drag mode controls */}

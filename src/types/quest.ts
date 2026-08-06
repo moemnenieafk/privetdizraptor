@@ -68,6 +68,17 @@ export interface TaskRaw {
   taskRequirements: Array<{ task: { id: string; name: string } }>;
   objectives: TaskObjective[];
   finishRewards: FinishRewards;
+  /** Уровень лояльности торговца (1..4) — ось раскладки questmap 1.1.0.0. Из dump-quests. */
+  ulTier?: number;
+  /** УЛ-гейт: требования лояльности торговца (где размечено tarkov.dev). */
+  traderRequirements?: Array<{
+    trader: { id: string; name: string; normalizedName: string };
+    requirementType: string | null;
+    compareMethod: string;
+    level: number | null;
+  }>;
+  requiredPrestige?: string | null;
+  factionName?: string | null;
 }
 
 // Бартер, открываемый квестом (для бейджа ноды + списка в QuestDetail).
