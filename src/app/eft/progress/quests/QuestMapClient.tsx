@@ -30,7 +30,7 @@ import {
   type Bounds,
 } from '@/components/features/quests/QuestMapViewport';
 import { traderImg } from '@/lib/trader-utils';
-import { Paperclip } from 'lucide-react';
+import { Paperclip, Pencil } from 'lucide-react';
 import PRESET_POSITIONS from '@/data/quests/quest-positions.json';
 
 interface Props { initialTasks: TaskRaw[]; bartersByQuest?: Record<string, QuestBarterLite[]> }
@@ -1213,16 +1213,18 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
           {/* Drag mode controls */}
           {/* Дев-режим расстановки нод — только десктоп */}
-          <div className="absolute top-2 right-2 z-40 hidden gap-1.5 lg:flex" data-no-pan>
+          <div className="absolute top-2 right-2 z-40 hidden items-center gap-1.5 lg:flex" data-no-pan>
             <button
               onClick={() => { setIsDragMode(v => !v); setSnapPreview(null); setSelectedNodes(new Set()); setGroupPreview(new Map()); }}
-              className={`h-7 px-2.5 rounded-xs text-type-caption font-blender-medium uppercase tracking-widest border transition-colors duration-150 ${
+              title={isDragMode ? 'Правка расстановки — выключить' : 'Правка расстановки нод (админ/модер)'}
+              aria-pressed={isDragMode}
+              className={`flex h-9 w-9 items-center justify-center rounded border bg-card-menu backdrop-blur-sm transition-colors ${
                 isDragMode
-                  ? 'bg-(--primary)/20 border-(--primary)/50 text-(--primary)'
-                  : 'bg-card-menu border-lines-hover text-text-secondary hover:text-text-primary'
+                  ? 'border-(--primary) text-(--primary)'
+                  : 'border-lines-hover text-text-secondary hover:border-(--primary)/40 hover:text-(--primary)'
               }`}
             >
-              {isDragMode ? 'Правка вкл' : 'Правка'}
+              <Pencil className="h-4 w-4" />
             </button>
             {manualPositions.size > 0 && (
               <>
