@@ -995,6 +995,9 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
             >
             {/* УЛ-полки: заголовок (иконка УЛ + метка) + пунктир-разделитель между полками */}
             {tierBands.map(band => {
+              // Куллинг УЛ-меток и пунктиров: в обычном режиме рисуем только у видимых торговцев,
+              // чтобы полки/разделители чужих колонок не висели в пустоте. В ПРАВКЕ — все.
+              if (!isDragMode && tradersInFilter !== null && !tradersInFilter.has(band.trader)) return null;
               const pos = connPositions.get(`tier-${band.trader}-${band.tier}`);
               if (!pos) return null;
               return (
