@@ -1287,9 +1287,9 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                 проходят на канвас под ним (панорама сбрасывает таймер, наезд на ноду гасит гард). */}
             {emptyGuard && !isGate && (
               <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center px-6">
-                <div className="max-w-md rounded-lg border border-(--primary)/40 bg-(--color-base)/85 px-8 py-6 text-center backdrop-blur-md">
-                  <p className="font-blender-medium text-lg uppercase tracking-widest text-text-primary">Ты куда, другалёк?</p>
-                  <p className="mt-2 font-blender-book text-sm leading-relaxed text-text-muted">
+                <div className="max-w-56 rounded-lg border border-(--primary)/40 bg-(--color-base)/85 px-4 py-3 text-center backdrop-blur-md lg:max-w-md lg:px-8 lg:py-6">
+                  <p className="font-blender-medium text-sm uppercase tracking-widest text-text-primary lg:text-lg">Ты куда, другалёк?</p>
+                  <p className="mt-1.5 font-blender-book text-xs leading-relaxed text-text-muted lg:mt-2 lg:text-sm">
                     Занесло в пустошь — ни заданий, ни души. Через{' '}
                     <span className="font-blender-medium text-(--primary)">{emptyGuard.secondsLeft}</span>{' '}
                     сек оттащим к своим. Или крути карту сам, боец — квесты где-то рядом.
