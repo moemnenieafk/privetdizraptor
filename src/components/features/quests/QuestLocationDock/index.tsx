@@ -50,11 +50,12 @@ export function QuestLocationDock({ maps, selectedMaps, onMap }: Props) {
 
   return (
     <div className="absolute bottom-0 left-1/2 z-20 hidden -translate-x-1/2 lg:block">
-      <div className="flex flex-col overflow-hidden rounded-t-lg border border-lines-hover bg-card-menu backdrop-blur-sm">
+      {/* Ширина дока = ширине дропдауна торговца (w-134), иконки распределены по ширине. */}
+      <div className="flex w-134 flex-col overflow-hidden rounded-t-lg border border-lines-hover bg-card-menu backdrop-blur-sm">
         {/* Ряд локаций — сворачивается вниз (grid-rows 1fr↔0fr) */}
         <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
           <div className="overflow-hidden">
-            <div className="flex h-12 items-center gap-2 px-5">
+            <div className="flex h-12 items-center justify-between px-5">
               {allMaps.map((m) => {
                 const active = selectedMaps.has(m.id);
                 const iconCls = MAP_CSS[m.normalizedName];
