@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 
-export type MapSheet = 'maps' | 'quests' | 'search' | 'layers' | 'raid' | 'tools';
+export type MapSheet = 'maps' | 'quests' | 'search' | 'layers' | 'raid' | 'tools' | 'questDetail';
 
 interface MapUiState {
   activeSheet: MapSheet | null;
+  /** Выбранный квест для мобильного drawer'а деталей (sheet 'questDetail'). */
+  selectedQuestId: string | null;
   chromeCollapsed: boolean;
   /** Открыта ли панель слоёв/фильтров. Единый канал для десктоп-бара и мобильного MobileMapBar. */
   layersOpen: boolean;
@@ -20,6 +22,8 @@ interface MapUiState {
   openSheet: (sheet: MapSheet) => void;
   closeSheet: () => void;
   toggleSheet: (sheet: MapSheet) => void;
+  /** Открыть мобильный drawer деталей квеста поверх карты (M6). */
+  openQuestDetail: (questId: string) => void;
   toggleChrome: () => void;
   setLayersOpen: (v: boolean) => void;
   toggleLayers: () => void;
@@ -49,6 +53,7 @@ const narrow = (): boolean => typeof window !== 'undefined' && window.innerWidth
 
 export const useMapUiStore = create<MapUiState>((set) => ({
   activeSheet: null,
+  selectedQuestId: null,
   chromeCollapsed: false,
   layersOpen: false,
   searchOpen: false,
@@ -57,6 +62,8 @@ export const useMapUiStore = create<MapUiState>((set) => ({
   closeSheet: () => set({ activeSheet: null }),
   toggleSheet: (sheet) =>
     set((s) => ({ activeSheet: s.activeSheet === sheet ? null : sheet })),
+  // Тап по квесту в шите заданий → drawer деталей поверх карты (не уводит на /eft/questmap).
+  openQuestDetail: (questId) => set({ activeSheet: 'questDetail', selectedQuestId: questId }),
   toggleChrome: () => set((s) => ({ chromeCollapsed: !s.chromeCollapsed })),
   setLayersOpen: (layersOpen) =>
     set((s) => ({ layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, squadOpen: layersOpen ? false : s.squadOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen })),

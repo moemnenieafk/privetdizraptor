@@ -4,6 +4,7 @@ import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
 import { MapQuestSheet } from '@/components/features/maps/MapQuestSheet';
+import { MapQuestDetailSheet } from '@/components/features/maps/MapQuestDetailSheet';
 import { MapRaidSheet } from '@/components/features/maps/MapRaidSheet';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -227,7 +228,9 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
 
       {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) / нижнего бара */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
-      <MapQuestSheet quests={quests} mapSlug={data.slug} />
+      <MapQuestSheet quests={quests} />
+      {/* M6 — детали квеста drawer'ом поверх карты (переиспользует QuestDetail + видео + map-пины). */}
+      <MapQuestDetailSheet questTasks={questTasks} questZones={questZones} apiRef={apiRef} />
       <MapRaidSheet data={data} />
 
       <div ref={viewportRef} className="relative min-h-0 flex-1">

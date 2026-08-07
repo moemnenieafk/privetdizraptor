@@ -10,17 +10,17 @@ import type { MapQuestLite } from './map-frame-types';
 
 interface MapQuestSheetProps {
   quests: MapQuestLite[];
-  mapSlug: string;
 }
 
 /**
- * Drawer заданий локации (mobile). Тап по строке → перелёт к зоне квеста на карте
- * (?quest=id, MapFrame ловит через focusQuestId); стрелка → страница квеста (/eft/questmap).
+ * Drawer заданий локации (mobile). Тап по строке → drawer деталей квеста ПОВЕРХ карты (M6:
+ * QuestDetail + видео + map-пины, MapQuestDetailSheet); стрелка → карта заданий (/eft/questmap).
  * Статус выполнения — из useQuestStore.completedQuests; пройденные можно скрыть.
  */
-export function MapQuestSheet({ quests, mapSlug }: MapQuestSheetProps) {
+export function MapQuestSheet({ quests }: MapQuestSheetProps) {
   const open = useMapUiStore((s) => s.activeSheet === 'quests');
   const close = useMapUiStore((s) => s.closeSheet);
+  const openQuestDetail = useMapUiStore((s) => s.openQuestDetail);
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const [hideDone, setHideDone] = useState(true);
 
@@ -42,24 +42,24 @@ export function MapQuestSheet({ quests, mapSlug }: MapQuestSheetProps) {
           const done = isDone(quest.id);
           return (
             <li key={quest.id} className="flex items-center gap-1">
-              {/* Тап по строке — перелёт к зоне квеста на карте */}
-              <Link
-                href={`/eft/maps/${mapSlug}?quest=${quest.id}`}
-                onClick={close}
-                className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-xs border border-lines-hover bg-card-menu px-3"
+              {/* Тап по строке — детали квеста drawer'ом поверх карты (M6) */}
+              <button
+                type="button"
+                onClick={() => openQuestDetail(quest.id)}
+                className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-xs border border-lines-hover bg-card-menu px-3 text-left transition-colors hover:border-(--primary)/40"
               >
                 <MapPin className="size-4 shrink-0 text-(--primary)" strokeWidth={2} />
-                <span className="flex min-w-0 flex-1 flex-col text-left">
+                <span className="flex min-w-0 flex-1 flex-col">
                   <span className={`truncate font-blender-book text-sm ${done ? 'text-text-muted line-through' : 'text-text-primary'}`}>
                     {quest.name}
                   </span>
                   <span className="font-blender-medium text-xs uppercase tracking-widest text-text-muted">{quest.trader}</span>
                 </span>
-              </Link>
-              {/* Стрелка — на страницу квеста */}
+              </button>
+              {/* Стрелка — вторичное действие: открыть на карте заданий */}
               <Link
                 href={`/eft/questmap?quest=${quest.id}`}
-                aria-label="Открыть квест"
+                aria-label="Открыть на карте заданий"
                 className="flex size-11 shrink-0 items-center justify-center rounded-xs border border-lines-hover text-text-secondary transition-colors hover:text-(--primary)"
               >
                 <ExternalLink className="size-4" strokeWidth={2} />

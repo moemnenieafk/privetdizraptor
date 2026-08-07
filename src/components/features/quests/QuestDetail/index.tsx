@@ -38,15 +38,18 @@ function getObjIcon(typename?: string, type?: string): string {
   return typename ? (TYPENAME_ICON[typename] ?? 'icon-eft-quests-investigate') : 'icon-eft-quests-investigate';
 }
 
-function ObjectiveRow({ obj, checked, onToggle }: { obj: TaskObjective; checked: boolean; onToggle: () => void }) {
+function ObjectiveRow({ obj, checked, onToggle, onLocate }: { obj: TaskObjective; checked: boolean; onToggle: () => void; onLocate?: () => void }) {
   const iconCls = getObjIcon(obj.__typename, obj.type);
   return (
     <li className={`flex items-start gap-3 ${obj.optional ? 'opacity-50 italic' : ''}`}>
       <div className="flex flex-col flex-1 min-w-0">
-        <div className="flex items-start gap-3 cursor-pointer" onClick={onToggle}>
-          <span className={`text-base font-blender-book leading-snug flex-1 transition-colors duration-150 ${
-            checked ? 'line-through text-success' : 'text-text-primary'
-          }`}>
+        <div className="flex items-start gap-3">
+          <span
+            onClick={onToggle}
+            className={`text-base font-blender-book leading-snug flex-1 cursor-pointer transition-colors duration-150 ${
+              checked ? 'line-through text-success' : 'text-text-primary'
+            }`}
+          >
             {obj.description}
           </span>
           <div className="flex items-start gap-1.5 shrink-0 pt-0.5">
@@ -55,9 +58,25 @@ function ObjectiveRow({ obj, checked, onToggle }: { obj: TaskObjective; checked:
                 НЕ ОБЯ.
               </span>
             )}
-            <span className={`${iconCls} icon-mask w-4 h-4 shrink-0 transition-colors duration-150 ${
-              checked ? 'text-success' : 'text-text-secondary'
-            }`} />
+            {/* Map-пин объекта (только drawer карты): перелёт к зоне квеста + сворачивание шита. */}
+            {onLocate ? (
+              <button
+                type="button"
+                onClick={onLocate}
+                title="Показать на карте"
+                aria-label="Показать на карте"
+                className="shrink-0 text-(--primary) transition-opacity hover:opacity-70"
+              >
+                <MapPin className="w-4 h-4" />
+              </button>
+            ) : (
+              <span
+                onClick={onToggle}
+                className={`${iconCls} icon-mask w-4 h-4 shrink-0 cursor-pointer transition-colors duration-150 ${
+                  checked ? 'text-success' : 'text-text-secondary'
+                }`}
+              />
+            )}
           </div>
         </div>
 
@@ -114,13 +133,20 @@ interface Props {
   onClose?: () => void;
   /** Бартеры, которые открывает этот квест (кросс-линк Quest→Barter→Item). */
   barters?: QuestBarterLite[];
+  /**
+   * Только drawer карты (M6): у объектов появляется map-пин, тап зовёт этот колбэк
+   * (перелёт к зоне квеста + сворачивание шита). Не передан — пины не рисуются.
+   * Гранулярность — на уровне квеста: в зеркале нет координат отдельных объектов
+   * (TaskObjective без x/z), поэтому все пины ведут к одной зоне квеста.
+   */
+  onLocate?: () => void;
 }
 
 /**
  * Детальный разбор квеста: цели+чекбоксы, hero, трекер предметов, видео-гайд,
  * награды, toggle «выполнено» / pin. Общий рендер для дровера карты и полноэкранной страницы.
  */
-export function QuestDetail({ task, variant = 'drawer', onClose, barters }: Props) {
+export function QuestDetail({ task, variant = 'drawer', onClose, barters, onLocate }: Props) {
   const isPage = variant === 'page';
 
   const [heroFailed, setHeroFailed]               = useState(false);
@@ -283,7 +309,13 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters }: Prop
       <div className="text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary mb-3">Задачи</div>
       <ul className="flex flex-col gap-4">
         {dedupedObjectives.map((obj) => (
-          <ObjectiveRow key={obj.id} obj={obj} checked={checkedObjectives.has(obj.id)} onToggle={() => toggleObjective(obj.id)} />
+          <ObjectiveRow
+            key={obj.id}
+            obj={obj}
+            checked={checkedObjectives.has(obj.id)}
+            onToggle={() => toggleObjective(obj.id)}
+            onLocate={!isPage && onLocate ? onLocate : undefined}
+          />
         ))}
       </ul>
     </div>
