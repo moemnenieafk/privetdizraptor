@@ -13,12 +13,12 @@ export function HeaderStreamStatus() {
   const { isLive, isLoading } = useStreamLive();
   const expandDock = useStreamDockStore((s) => s.expand);
 
-  const base = 'flex h-10 shrink-0 items-center justify-center gap-1.5 rounded border px-2.5 transition-colors xl:hidden';
+  const base = 'flex h-10 w-10 shrink-0 items-center justify-center rounded border transition-colors xl:hidden';
 
   if (isLoading) {
     return (
       <span className={`${base} border-lines-hover`} aria-hidden style={{ backgroundColor: 'var(--color-base)' }}>
-        <span className="size-1.5 rounded-full bg-neutral-600" />
+        <span className="size-2 rounded-full bg-neutral-600" />
       </span>
     );
   }
@@ -32,11 +32,10 @@ export function HeaderStreamStatus() {
         style={{ backgroundColor: 'var(--color-base)' }}
         className={`${base} border-danger hover:brightness-125`}
       >
-        <span className="relative flex size-2 items-center justify-center">
-          <span className="absolute inline-flex size-2 animate-ping rounded-full bg-danger opacity-75" />
-          <span className="relative inline-flex size-2 rounded-full bg-danger" />
+        <span className="relative flex size-2.5 items-center justify-center">
+          <span className="absolute inline-flex size-2.5 animate-ping rounded-full bg-danger opacity-75" />
+          <span className="relative inline-flex size-2.5 rounded-full bg-danger" />
         </span>
-        <span className="font-blender-medium text-type-micro uppercase leading-none text-danger">LIVE</span>
       </button>
     );
   }
@@ -51,7 +50,7 @@ export function HeaderStreamStatus() {
       style={{ backgroundColor: 'var(--color-base)' }}
       className={`${base} border-lines-hover text-text-muted hover:border-(--primary)/40`}
     >
-      <span className="size-1.5 rounded-full bg-text-muted" />
+      <span className="size-2 rounded-full bg-text-muted" />
     </a>
   );
 }

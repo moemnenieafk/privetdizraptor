@@ -73,7 +73,7 @@ export function BurgerMenu({ menuItems = [], onOpenNewbie, newbieLabel }: Burger
         aria-label={isOpen ? "Закрыть меню" : "Открыть меню"}
         aria-expanded={isOpen}
         data-header-burger
-        className={`relative z-102 flex h-11 w-11 items-center justify-center rounded border transition-colors duration-300 active:scale-95 ${isOpen ? "border-transparent text-text-muted hover:text-(--primary)" : "border-lines-hover text-text-primary hover:border-(--primary) hover:text-(--primary)"}`}
+        className={`relative z-102 flex h-10 w-10 items-center justify-center rounded border transition-colors duration-300 active:scale-95 ${isOpen ? "border-transparent text-text-muted hover:text-(--primary)" : "border-lines-hover text-text-primary hover:border-(--primary) hover:text-(--primary)"}`}
       >
         <BurgerIcon open={isOpen} />
       </button>
