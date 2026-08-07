@@ -51,6 +51,10 @@ export interface QuestMapViewportRef {
   /** Fit a bounding box into view with optional padding. */
   fitToBounds(bounds: Bounds, opts?: { padding?: number; duration?: number }): void;
   getTransform(): Transform;
+  /** Current visible viewport as a canvas-space rect (for empty-view detection). */
+  getVisibleBounds(): Bounds;
+  /** Commit a transform directly, no animation — used to restore a saved view. */
+  setTransform(t: Transform): void;
   /** Convert screen (client) coordinates to canvas coordinates. */
   screenToCanvas(screenX: number, screenY: number): { x: number; y: number };
   zoomIn():  void;
@@ -523,6 +527,27 @@ export const QuestMapViewport = forwardRef<QuestMapViewportRef, Props>(
       },
 
       getTransform: () => ({ ...transform.current }),
+
+      getVisibleBounds() {
+        const vp = containerRef.current;
+        const t  = transform.current;
+        if (!vp) return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+        // Screen point (0,0)..(W,H) → canvas: (screen - translate) / scale.
+        return {
+          minX: (0            - t.x) / t.scale,
+          minY: (0            - t.y) / t.scale,
+          maxX: (vp.clientWidth  - t.x) / t.scale,
+          maxY: (vp.clientHeight - t.y) / t.scale,
+        };
+      },
+
+      setTransform(t) {
+        const vp = containerRef.current;
+        if (!vp) return;
+        cancelAnim.current?.();
+        cancelAnim.current = null;
+        commit(clamp(vp, t));
+      },
 
       screenToCanvas(sx, sy) {
         const vp = containerRef.current;

@@ -70,7 +70,7 @@ export function QuestTopBar({
           className="pointer-events-auto flex h-9 w-32 shrink-0 items-center justify-center gap-1.5 rounded border transition-colors"
           style={filterLK
             ? { borderColor: 'var(--color-lightkeeper)', backgroundColor: 'var(--color-lightkeeper)', color: 'var(--color-darkbase)' }
-            : { borderColor: 'var(--color-lightkeeper)', color: 'var(--color-lightkeeper)' }}
+            : { borderColor: 'var(--color-lightkeeper)', backgroundColor: 'var(--color-base)', color: 'var(--color-lightkeeper)' }}
         >
           <span className="icon-mask icon-eft-profile-lightkeeper h-5.5 w-5.5" style={filterLK ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
           <span className="font-blender-medium text-type-caption">{lkCompleted} / {lkTotal} - {lkPct}%</span>
@@ -84,7 +84,7 @@ export function QuestTopBar({
           className="pointer-events-auto flex h-9 w-32 shrink-0 items-center justify-center gap-1.5 rounded border transition-colors"
           style={filterKappa
             ? { borderColor: 'var(--color-kappa)', backgroundColor: 'var(--color-kappa)', color: 'var(--color-darkbase)' }
-            : { borderColor: 'var(--color-kappa)', color: 'var(--color-kappa)' }}
+            : { borderColor: 'var(--color-kappa)', backgroundColor: 'var(--color-base)', color: 'var(--color-kappa)' }}
         >
           <span className="icon-mask icon-eft-profile-kappa h-5.5 w-5.5" style={filterKappa ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
           <span className="font-blender-medium text-type-caption">{kappaCompleted} / {kappaTotal} - {kappaPct}%</span>

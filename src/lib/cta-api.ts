@@ -105,6 +105,55 @@ export async function saveCtaProgress(p: ProgressPayload): Promise<boolean> {
   return res.ok;
 }
 
+/* ───────────────── чекпоинты прогресса (фикс-слоты) ───────────────── */
+// В отличие от saveCtaProgress (одна живая строка) — снимки в слотах: 0 = автосохранение
+// (страховка перед restore/сбросом), 1..3 = ручные. Привязаны к аккаунту → грузятся с любого
+// устройства. Сохранение = upsert по слоту (перезапись).
+export const AUTO_SLOT = 0;
+
+export interface SlotMeta {
+  slot: number; // 0 = авто, 1..3 = ручной
+  name: string;
+  createdAt: string;
+  completedCount: number;
+}
+
+// Все занятые слоты текущего юзера (без тяжёлого payload). null — не авторизован.
+export async function listSlots(): Promise<SlotMeta[] | null> {
+  const res = await fetch(`${baseUrl()}/api/eft/checkpoints`, { cache: "no-store" });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`CTA API /eft/checkpoints → ${res.status}`);
+  const json = (await res.json()) as { slots: SlotMeta[] };
+  return json.slots;
+}
+
+// Сохранить снимок прогресса в слот (перезапись). false — не авторизован/ошибка.
+export async function saveSlot(
+  slot: number,
+  name: string,
+  payload: ProgressPayload,
+): Promise<boolean> {
+  const res = await fetch(`${baseUrl()}/api/eft/checkpoints`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slot, name, payload }),
+  });
+  return res.ok;
+}
+
+// Полный payload слота для восстановления. null — пусто/не авторизован.
+export async function getSlot(slot: number): Promise<ProgressPayload | null> {
+  const res = await fetch(`${baseUrl()}/api/eft/checkpoints/${slot}`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return res.json() as Promise<ProgressPayload>;
+}
+
+// Очистить слот. false — ошибка.
+export async function clearSlot(slot: number): Promise<boolean> {
+  const res = await fetch(`${baseUrl()}/api/eft/checkpoints/${slot}`, { method: "DELETE" });
+  return res.ok;
+}
+
 /* ───────────────── трекинг достижений (Фаза 2) ───────────────── */
 // Форма 1:1 повторяет persisted-поля useAchievementStore.
 export interface AchievementProgressPayload {

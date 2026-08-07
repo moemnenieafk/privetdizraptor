@@ -121,3 +121,4 @@ map-exports/
 
 # Сессии и настройки плагина Claudian (Claude Code внутри Obsidian) — локальное.
 /.claudian/
+.figma-tmp/

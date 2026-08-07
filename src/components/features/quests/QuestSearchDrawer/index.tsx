@@ -118,7 +118,7 @@ export function QuestSearchDrawer({ open, onClose, tasks, bartersByQuest, onSele
 
         {/* Лента портретов-фильтров */}
         {traders.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex justify-between">
             {traders.map((t) => {
               const on = traderFilter === t.normalizedName;
               return (
@@ -127,7 +127,7 @@ export function QuestSearchDrawer({ open, onClose, tasks, bartersByQuest, onSele
                   type="button"
                   onClick={() => setTraderFilter((cur) => (cur === t.normalizedName ? null : t.normalizedName))}
                   title={t.name}
-                  className={`size-6 shrink-0 overflow-hidden rounded-xs border transition-colors ${on ? 'border-(--primary)' : 'border-transparent hover:border-lines-hover'}`}
+                  className={`size-5.5 shrink-0 overflow-hidden rounded-xs border transition-colors ${on ? 'border-(--primary)' : 'border-transparent hover:border-lines-hover'}`}
                 >
                   <img src={traderImg(t.normalizedName)} alt="" className="size-full object-cover" />
                 </button>

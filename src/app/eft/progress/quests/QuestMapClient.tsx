@@ -28,12 +28,24 @@ import {
   type ConnectionDef,
   type BackgroundRect,
   type Bounds,
+  type Transform,
 } from '@/components/features/quests/QuestMapViewport';
 import { traderImg } from '@/lib/trader-utils';
 import { Paperclip } from 'lucide-react';
 import PRESET_POSITIONS from '@/data/quests/quest-positions.json';
 
 interface Props { initialTasks: TaskRaw[]; bartersByQuest?: Record<string, QuestBarterLite[]> }
+
+// Снимок «непустого» вида — куда откатываемся, если кнопка увела в пустоту (анти-пустой-экран гард).
+interface GoodSnapshot {
+  selectedTraders: Set<string>;
+  filterKappa:     boolean;
+  filterLK:        boolean;
+  selectedMaps:    Set<string>;
+  enabledTiers:    Set<number>;
+  isFullscreen:    boolean;
+  transform:       Transform;
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -47,6 +59,7 @@ const COLUMN_GAP     = 256;
 const MAX_PER_ROW    = 15;
 const LAST_QUEST_KEY = 'cta-last-quest-id';
 const BASE_RE        = /-(day|night)$/i;
+const EMPTY_COUNTDOWN = 6;   // сек — откат с пустого кадра (анти-пустой-экран гард)
 
 const TRADER_ORDER = [
   'prapor', 'therapist', 'skier', 'peacekeeper', 'mechanic',
@@ -305,6 +318,9 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   const [groupPreview, setGroupPreview]       = useState<Map<string, { x: number; y: number }>>(new Map());
   const [measuredH, setMeasuredH]             = useState<Map<string, number>>(() => new Map());
   const [enabledTiers, setEnabledTiers]       = useState<Set<number>>(() => new Set([1, 2, 3, 4]));
+  // Анти-пустой-экран: если после действия в кадре нет ни одной карточки квеста — оверлей
+  // с обратным отсчётом и откат на последний непустой вид. null = гард спит.
+  const [emptyGuard, setEmptyGuard]           = useState<{ secondsLeft: number } | null>(null);
 
   // near-fullscreen (как MapFrame): фрейм = 100svh − реальная высота хедера (ROW 1, крошки/поиск
   // на карт-роутах скрыты). ResizeObserver ловит адаптивный clamp-паддинг шапки на ресайзе.
@@ -327,6 +343,24 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   // Tracks latest snapPreview for onUp closure (avoids stale capture)
   const snapPreviewRef = useRef(snapPreview);
   snapPreviewRef.current = snapPreview;
+
+  // ── Anti-empty-view guard: refs (стабильные, чтобы колбэки гарда были []-deps) ──
+  const initialTasksRef   = useRef(initialTasks);   initialTasksRef.current   = initialTasks;
+  const selectedTradersRef = useRef(selectedTraders); selectedTradersRef.current = selectedTraders;
+  const filterKappaRef    = useRef(filterKappa);    filterKappaRef.current    = filterKappa;
+  const filterLKRef       = useRef(filterLK);       filterLKRef.current       = filterLK;
+  const selectedMapsRef   = useRef(selectedMaps);   selectedMapsRef.current   = selectedMaps;
+  const enabledTiersRef   = useRef(enabledTiers);   enabledTiersRef.current   = enabledTiers;
+  const isFullscreenRef   = useRef(isFullscreen);   isFullscreenRef.current   = isFullscreen;
+  const isDragModeRef     = useRef(isDragMode);     isDragModeRef.current     = isDragMode;
+  const emptyGuardRef     = useRef(emptyGuard);     emptyGuardRef.current     = emptyGuard;
+  // Derived (filteredIds / tradersInFilter / isGate) — присваиваются ниже, после расчёта.
+  const filteredIdsRef    = useRef<Set<string> | null>(null);
+  const tradersInFilterRef = useRef<Set<string> | null>(null);
+  const isGateRef         = useRef(false);
+  const lastGoodRef       = useRef<GoodSnapshot | null>(null);
+  const countdownRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scheduleRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [resetModalOpen, setResetModalOpen] = useState(false);
 
@@ -531,6 +565,144 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     && !filterKappa && !filterLK && enabledTiers.size >= 4;
   const selectedTrader = selectedTraders.size === 1 ? [...selectedTraders][0] : null;
 
+  filteredIdsRef.current     = filteredIds;
+  tradersInFilterRef.current = tradersInFilter;
+  isGateRef.current          = isGate;
+
+  // ── Anti-empty-view guard: логика ────────────────────────────────────────
+  // Пусто = в видимой области канваса нет ни одной РЕНДЕРящейся карточки квеста
+  // (детект «по камере», решение V4DYA). Гейт «Все без фильтра» и режим правки исключены.
+  const computeViewEmpty = useCallback((): boolean => {
+    const vp = vpRef.current;
+    if (!vp) return false;
+    const vb = vp.getVisibleBounds();
+    if (vb.maxX - vb.minX <= 0 || vb.maxY - vb.minY <= 0) return false; // не готов — не трогаем
+    const fids = filteredIdsRef.current;
+    const pos  = connPositionsRef.current;
+    const hts  = nodeHeightsRef.current;
+    for (const t of initialTasksRef.current) {
+      if (fids !== null && !fids.has(t.id)) continue;      // тот же куллинг, что в JSX
+      const p = pos.get(t.id);
+      if (!p) continue;
+      const h = hts.get(t.id) ?? NODE_H;
+      if (p.x < vb.maxX && p.x + NODE_W > vb.minX && p.y < vb.maxY && p.y + h > vb.minY) return false;
+    }
+    return true;
+  }, []);
+
+  const captureGood = useCallback((): GoodSnapshot => ({
+    selectedTraders: new Set(selectedTradersRef.current),
+    filterKappa:     filterKappaRef.current,
+    filterLK:        filterLKRef.current,
+    selectedMaps:    new Set(selectedMapsRef.current),
+    enabledTiers:    new Set(enabledTiersRef.current),
+    isFullscreen:    isFullscreenRef.current,
+    transform:       vpRef.current?.getTransform() ?? { x: 0, y: 0, scale: 1 },
+  }), []);
+
+  // Bounds множества РЕНДЕРящихся нод — фит-по-содержимому (фуллскрин, фолбэк отката).
+  const renderedBounds = useCallback((): Bounds => {
+    const fids = filteredIdsRef.current;
+    const tif  = tradersInFilterRef.current;
+    const pos  = connPositionsRef.current;
+    const hts  = nodeHeightsRef.current;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    const add = (x: number, y: number, w: number, h: number) => {
+      if (x < minX) minX = x;         if (y < minY) minY = y;
+      if (x + w > maxX) maxX = x + w; if (y + h > maxY) maxY = y + h;
+    };
+    for (const t of initialTasksRef.current) {
+      if (fids !== null && !fids.has(t.id)) continue;
+      const p = pos.get(t.id); if (!p) continue;
+      add(p.x, p.y, NODE_W, hts.get(t.id) ?? NODE_H);
+    }
+    for (const name of traderOrderRef.current) {
+      if (tif !== null && !tif.has(name)) continue;
+      const p = pos.get(`trader-${name}`); if (!p) continue;
+      add(p.x, p.y, TRADER_W, TRADER_H);
+    }
+    return isFinite(minX) ? { minX, minY, maxX, maxY } : graphBoundsRef.current;
+  }, []);
+
+  const stopCountdown = useCallback(() => {
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
+  }, []);
+
+  // Откат на последний непустой вид (фильтры + позиция камеры). Нет истории → колонка первого торговца.
+  const revertToGood = useCallback(() => {
+    stopCountdown();
+    setEmptyGuard(null);
+    const g = lastGoodRef.current;
+    if (g) {
+      setSelectedTraders(new Set(g.selectedTraders));
+      setFilterKappa(g.filterKappa);
+      setFilterLK(g.filterLK);
+      setSelectedMaps(new Set(g.selectedMaps));
+      setEnabledTiers(new Set(g.enabledTiers));
+      setIsFullscreen(g.isFullscreen);
+      const tr = g.transform;
+      requestAnimationFrame(() => vpRef.current?.setTransform(tr));
+      return;
+    }
+    const first = traderOrderRef.current[0];
+    if (first) {
+      setSelectedTraders(new Set([first]));
+      setFilterKappa(false); setFilterLK(false);
+      setSelectedMaps(new Set()); setEnabledTiers(new Set([1, 2, 3, 4]));
+      const b = traderColumnBoundsRef.current.get(first);
+      if (b) requestAnimationFrame(() => vpRef.current?.fitToBounds(
+        { minX: b.minX, minY: b.minY, maxX: b.maxX, maxY: Math.min(b.maxY, b.minY + 1400) },
+        { padding: 0.05, duration: 400 },
+      ));
+    }
+  }, [stopCountdown]);
+
+  // Пусто → запустить/сбросить отсчёт. Каждый вызов при пустоте (панорама) = рестарт таймера.
+  const startOrResetCountdown = useCallback(() => {
+    setEmptyGuard({ secondsLeft: EMPTY_COUNTDOWN });
+    if (countdownRef.current) return;   // уже тикает — выше просто сбросили секунды
+    countdownRef.current = setInterval(() => {
+      const cur = emptyGuardRef.current;
+      if (!cur) { stopCountdown(); return; }
+      if (cur.secondsLeft <= 1) revertToGood();
+      else setEmptyGuard({ secondsLeft: cur.secondsLeft - 1 });
+    }, 1000);
+  }, [stopCountdown, revertToGood]);
+
+  // Центральная проверка — после оседания камеры или не-летающей смены фильтра.
+  const evaluateView = useCallback(() => {
+    if (isGateRef.current || isDragModeRef.current) {   // легальная пустота — гард молчит
+      stopCountdown(); setEmptyGuard(null);
+      return;
+    }
+    if (!computeViewEmpty()) {                           // есть квест в кадре → «хороший» вид
+      lastGoodRef.current = captureGood();
+      if (emptyGuardRef.current) { stopCountdown(); setEmptyGuard(null); }
+      return;
+    }
+    startOrResetCountdown();                             // пусто → отсчёт (рестарт при повторе)
+  }, [computeViewEmpty, captureGood, startOrResetCountdown, stopCountdown]);
+
+  // Камера осела (жест юзера ИЛИ конец программного полёта) → проверка.
+  const handleTransformSettle = useCallback(() => { evaluateView(); }, [evaluateView]);
+
+  // Не-летающие смены фильтра (карта / УЛ-тогл) камеру не двигают → проверка с задержкой на реукладку.
+  const scheduleEvaluate = useCallback((delay = 180) => {
+    if (scheduleRef.current) clearTimeout(scheduleRef.current);
+    scheduleRef.current = setTimeout(() => { scheduleRef.current = null; evaluateView(); }, delay);
+  }, [evaluateView]);
+
+  // Юзер тронул квест — он вовлечён, откатом не дёргаем.
+  const clearGuardSoft = useCallback(() => {
+    if (scheduleRef.current) { clearTimeout(scheduleRef.current); scheduleRef.current = null; }
+    stopCountdown(); setEmptyGuard(null);
+  }, [stopCountdown]);
+
+  useEffect(() => () => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    if (scheduleRef.current)  clearTimeout(scheduleRef.current);
+  }, []);
+
   const pinnedSet = useMemo(() => new Set(pinnedQuests), [pinnedQuests]);
 
   // Зум, при котором объект шириной w влезает в экран целиком (с полями).
@@ -603,14 +775,16 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   useEffect(() => {
     if (isFullscreen) {
       document.body.setAttribute('data-quest-fullscreen', '');
+      // Фит по РЕНДЕРящемуся набору (выбранный торговец/фильтр), а не по всему графу —
+      // иначе камера кадрирует 11 колонок, из которых видна одна → пустой кадр.
       requestAnimationFrame(() =>
-        vpRef.current?.fitToBounds(graphBoundsRef.current, { padding: 0.06, duration: 400 }),
+        vpRef.current?.fitToBounds(renderedBounds(), { padding: 0.06, duration: 400 }),
       );
     } else {
       document.body.removeAttribute('data-quest-fullscreen');
     }
     return () => document.body.removeAttribute('data-quest-fullscreen');
-  }, [isFullscreen]);
+  }, [isFullscreen, renderedBounds]);
 
   // Пока открыт боковой drawer квеста — прячем плавающий «Завоз». Он живёт в корневом
   // fixed-контексте (z-40 в layout), а drawer заперт в контексте наложения страницы,
@@ -669,6 +843,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   }, [ancestorMap]);
 
   const handleToggle = useCallback((taskId: string) => {
+    clearGuardSoft();   // юзер вовлечён в квест — не откатывать
     const { completedQuests: nowCompleted, toggleQuest } = useQuestStore.getState();
     const wasCompleted = nowCompleted.includes(taskId);
     toggleQuest(taskId);
@@ -700,7 +875,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
         }
       }
     }
-  }, [childrenMap, initialTasks, togglePin, flyToQuest]);
+  }, [childrenMap, initialTasks, togglePin, flyToQuest, clearGuardSoft]);
 
   const handleExport = useCallback(() => {
     const { completedQuests: cq, itemProgress: ip } = useQuestStore.getState();
@@ -724,12 +899,14 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     reader.readAsText(file);
   }, [loadProgress]);
 
-  const handleMap = (id: string) =>
+  const handleMap = (id: string) => {
     setSelectedMaps(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+    scheduleEvaluate();   // фильтр карт может обнулить выдачу текущего торговца → проверяем кадр
+  };
 
   // Дропдаун карты заданий: выбрать торговца (single-select + перелёт) или «Все» (name=null →
   // пустой набор = кросс-трейдер режим).
@@ -797,17 +974,46 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
       } else next.add(tier);
       return next;
     });
-  }, []);
+    scheduleEvaluate();   // тогл камеру не двигает — проверяем кадр после реукладки
+  }, [scheduleEvaluate]);
+
+  // ПКМ по УЛ-табу: навести камеру ровно на квест-ноды этого уровня (весь ряд в кадр).
+  // Учитывает текущий куллинг (выбранный торговец / фильтр); заголовок полки не включаем.
+  const handleFocusTier = useCallback((tier: number) => {
+    if (isGateRef.current) return;   // в гейте ничего не рендерится — фокусить нечего
+    const pos = connPositionsRef.current, hts = nodeHeightsRef.current, fids = filteredIdsRef.current;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const t of initialTasks) {
+      if (clampTier(t.ulTier) !== tier) continue;
+      if (fids !== null && !fids.has(t.id)) continue;   // тот же куллинг, что в JSX
+      const p = pos.get(t.id); if (!p) continue;
+      const h = hts.get(t.id) ?? NODE_H;
+      if (p.x < minX) minX = p.x;         if (p.y < minY) minY = p.y;
+      if (p.x + NODE_W > maxX) maxX = p.x + NODE_W; if (p.y + h > maxY) maxY = p.y + h;
+    }
+    if (isFinite(minX)) vpRef.current?.fitToBounds({ minX, minY, maxX, maxY }, { padding: 0.08, duration: 600 });
+  }, [initialTasks]);
 
   const handleFocusNode = useCallback((task: TaskRaw) => { flyToQuest(task.id, 1.5, 500); }, [flyToQuest]);
 
   // ── Fly to next active quest in Kappa / LK path ──────────────────────────
   const flyToNextInPath = useCallback((type: 'kappa' | 'lk') => {
-    const candidates = initialTasks.filter(t => {
-      const inPath = type === 'kappa' ? t.kappaRequired : t.lightkeeperRequired;
-      return inPath && statusMap.get(t.id)?.status === 'active';
-    });
-    if (candidates.length === 0) return;
+    const inPathOf = (t: TaskRaw) => type === 'kappa' ? t.kappaRequired : t.lightkeeperRequired;
+    const candidates = initialTasks.filter(t => inPathOf(t) && statusMap.get(t.id)?.status === 'active');
+    if (candidates.length === 0) {
+      // Активного шага нет → кадрируем ВЕСЬ путь, чтобы кадр не остался пустым.
+      const pos = connPositionsRef.current, hts = nodeHeightsRef.current;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const t of initialTasks) {
+        if (!inPathOf(t)) continue;
+        const p = pos.get(t.id); if (!p) continue;
+        const h = hts.get(t.id) ?? NODE_H;
+        if (p.x < minX) minX = p.x;         if (p.y < minY) minY = p.y;
+        if (p.x + NODE_W > maxX) maxX = p.x + NODE_W; if (p.y + h > maxY) maxY = p.y + h;
+      }
+      if (isFinite(minX)) vpRef.current?.fitToBounds({ minX, minY, maxX, maxY }, { padding: 0.08, duration: 700 });
+      return;
+    }
     // Shallowest in the dependency tree = fewest ancestors = first step toward Kappa/LK
     const target = candidates.reduce((best, t) => {
       const da = ancestorMap.get(t.id)?.size ?? 0;
@@ -1049,7 +1255,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
             {/* УЛ-тоглы — плавающая полоса ПОД плавающим топбаром, по центру (десктоп). */}
             <div className="pointer-events-none absolute inset-x-0 top-16 z-20 hidden justify-center lg:flex">
               <div className="pointer-events-auto">
-                <QuestTierToggles enabled={enabledTiers} onToggle={handleToggleTier} />
+                <QuestTierToggles enabled={enabledTiers} onToggle={handleToggleTier} onFocusTier={handleFocusTier} />
               </div>
             </div>
 
@@ -1064,6 +1270,21 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                 </div>
               </div>
             )}
+
+            {/* Анти-пустой-экран: оверлей обратного отсчёта. pointer-events-none — жесты
+                проходят на канвас под ним (панорама сбрасывает таймер, наезд на ноду гасит гард). */}
+            {emptyGuard && !isGate && (
+              <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center px-6">
+                <div className="max-w-md rounded-lg border border-(--primary)/40 bg-(--color-base)/85 px-8 py-6 text-center backdrop-blur-md">
+                  <p className="font-blender-medium text-lg uppercase tracking-widest text-text-primary">Ты куда, другалёк?</p>
+                  <p className="mt-2 font-blender-book text-sm leading-relaxed text-text-muted">
+                    Занесло в пустошь — ни заданий, ни души. Через{' '}
+                    <span className="font-blender-medium text-(--primary)">{emptyGuard.secondsLeft}</span>{' '}
+                    сек оттащим к своим. Или крути карту сам, боец — квесты где-то рядом.
+                  </p>
+                </div>
+              </div>
+            )}
             <QuestMapViewport
               ref={vpRef}
               connections={staticConnections}
@@ -1072,6 +1293,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
               className="absolute inset-0"
               isDragMode={isDragMode}
               onBoxSelect={handleBoxSelect}
+              onTransformChange={handleTransformSettle}
             >
             {/* УЛ-полки: заголовок (иконка УЛ + метка) + пунктир-разделитель между полками */}
             {tierBands.map(band => {
@@ -1193,7 +1415,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                     onToggle:         handleToggle,
                     onForceComplete:  handleForceComplete,
                     onPin:            togglePin,
-                    onSelect:         setSelectedTask,
+                    onSelect:         (t) => { clearGuardSoft(); setSelectedTask(t); },
                     onHover:          handleHover,
                   }} />
                 </div>
