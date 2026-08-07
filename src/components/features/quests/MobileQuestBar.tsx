@@ -20,10 +20,10 @@ export function MobileQuestBar({ mapsFilterActive, pinnedCount }: Props) {
   const activeSheet = useQuestMapUiStore((s) => s.activeSheet);
 
   const cell = (active: boolean) =>
-    `flex size-7 shrink-0 items-center justify-center rounded border transition-colors ${
+    `flex size-7 shrink-0 items-center justify-center rounded transition-colors ${
       active
-        ? 'border-(--primary) text-(--primary)'
-        : 'border-lines-hover text-(--color-text-secondary) hover:border-(--primary)/40 hover:text-(--primary)'
+        ? 'border border-(--primary) text-(--primary)'
+        : 'text-(--color-text-secondary) hover:text-(--primary)'
     }`;
 
   return (
