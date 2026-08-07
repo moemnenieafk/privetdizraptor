@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type QuestSheet = 'search' | 'traders' | 'maps' | 'save' | 'pinned' | 'checkpoints';
+export type QuestSheet = 'search' | 'maps' | 'pinned' | 'checkpoints';
 
 interface QuestMapUiState {
   activeSheet: QuestSheet | null;
