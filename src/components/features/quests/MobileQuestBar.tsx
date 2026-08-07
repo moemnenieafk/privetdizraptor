@@ -65,13 +65,14 @@ export function MobileQuestBar({
     <div className="flex h-14 shrink-0 items-center gap-2 px-3 lg:hidden">
       {pathBtn(filterKappa, 'var(--color-kappa)', 'icon-eft-profile-kappa', 'Путь Каппы', onKappa)}
 
-      {/* Трейдер-пилюля + дропдаун */}
-      <div ref={rootRef} className="relative flex-1 min-w-0">
+      {/* Трейдер-пилюля + дропдаун. self-stretch + h-full: контейнер прижат к верхней
+          линии shell и тянется на всю высоту ряда; верх прямой, низ — скруглён 4px. */}
+      <div ref={rootRef} className="relative flex-1 min-w-0 self-stretch">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className={`flex h-10 w-full items-center gap-2 rounded border px-2.5 transition-colors ${
+          className={`flex h-full w-full items-center gap-2 rounded-b-sm border px-2.5 transition-colors ${
             open ? 'border-(--primary)/50' : 'border-lines-hover'
           }`}
         >
