@@ -17,6 +17,7 @@ import { MobileQuestBar } from '@/components/features/quests/MobileQuestBar';
 import { QuestSearchSheet } from '@/components/features/quests/QuestSearchSheet';
 import { QuestTraderSheet } from '@/components/features/quests/QuestTraderSheet';
 import { QuestMapsSheet } from '@/components/features/quests/QuestMapsSheet';
+import { QuestPinnedSheet } from '@/components/features/quests/QuestPinnedSheet';
 import { MAP_ICON_CSS as MAP_CSS } from '@/data/map-icons';
 import { useQuestStore, exportProgress, importProgress } from '@/store/useQuestStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -1212,8 +1213,8 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   return (
     <>
       <div className={containerCls} style={containerStyle}>
-        {/* Мобильная верхняя панель: поиск / торговцы / карты */}
-        <MobileQuestBar mapsFilterActive={selectedMaps.size > 0} />
+        {/* Мобильная верхняя панель: поиск / трекер / торговцы / карты */}
+        <MobileQuestBar mapsFilterActive={selectedMaps.size > 0} pinnedCount={pinnedQuests.length} />
 
         {/* Десктопный топбар — плавающий прозрачный оверлей поверх канваса (как MapTopBar карт локаций) */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-30 hidden lg:block">
@@ -1241,6 +1242,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
         {/* Мобильные шиты */}
         <QuestSearchSheet tasks={initialTasks} onFocus={handleFocusNode} />
+        <QuestPinnedSheet tasks={initialTasks} onFocus={handleFocusNode} />
         <QuestTraderSheet traders={mobileTraders} onFocusTrader={handleFocusTrader} />
         <QuestMapsSheet
           maps={mobileMaps}
@@ -1258,6 +1260,15 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                 <QuestTierToggles enabled={enabledTiers} onToggle={handleToggleTier} onFocusTier={handleFocusTier} />
               </div>
             </div>
+
+            {/* УЛ-тоглы (мобилка) — вертикальная полоса у левого края канваса (по макету Q1). */}
+            {!isGate && (
+              <div className="pointer-events-none absolute top-1/2 left-1.5 z-20 -translate-y-1/2 lg:hidden">
+                <div className="pointer-events-auto">
+                  <QuestTierToggles enabled={enabledTiers} onToggle={handleToggleTier} onFocusTier={handleFocusTier} orientation="vertical" />
+                </div>
+              </div>
+            )}
 
             {/* Гейт «Все без фильтра»: не рендерим 510 нод, зовём выбрать путь/фильтр. */}
             {isGate && (

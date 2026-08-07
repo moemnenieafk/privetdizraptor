@@ -8,6 +8,8 @@ interface Props {
   onToggle: (tier: number) => void;
   /** ПКМ по табу — навести камеру на ряд квестов этого УЛ (fit только его ноды). */
   onFocusTier?: (tier: number) => void;
+  /** Раскладка: горизонталь (десктоп, дефолт) или вертикаль (мобилка — полоса у левого края канваса). */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 /**
@@ -15,9 +17,13 @@ interface Props {
  * заданий. По умолчанию все включены; выключить последний нельзя (min 1). Иконки — те же
  * `icon-eft-profile-rep-{tier}`, что и в заголовках полок.
  */
-export function QuestTierToggles({ enabled, onToggle, onFocusTier }: Props) {
+export function QuestTierToggles({ enabled, onToggle, onFocusTier, orientation = 'horizontal' }: Props) {
   return (
-    <div className="flex items-center gap-1.5" role="group" aria-label="Фильтр по уровням лояльности">
+    <div
+      className={`flex items-center gap-1.5 ${orientation === 'vertical' ? 'flex-col' : ''}`}
+      role="group"
+      aria-label="Фильтр по уровням лояльности"
+    >
       {TIERS.map((tier) => {
         const on = enabled.has(tier);
         return (
