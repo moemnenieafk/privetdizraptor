@@ -81,7 +81,7 @@ function RestockDockActive() {
         onClick={() => setOpen(true)}
         aria-label="Завоз у торговцев"
         title="Завоз у торговцев"
-        className={`fixed right-0 top-6 z-40 flex items-center gap-2 rounded-l border border-r-0 border-lines-hover py-2 pr-2 pl-3 shadow-lg backdrop-blur-sm transition-all duration-300
+        className={`fixed right-0 top-6 z-40 flex items-center gap-2 rounded-l border border-r-0 border-lines-hover py-2 pr-2 pl-3 shadow-lg backdrop-blur-sm transition-all duration-300 max-xl:hidden
           bg-[color-mix(in_srgb,var(--color-base)_90%,transparent)]
           hover:border-(--primary) hover:shadow-[0_0_16px_color-mix(in_srgb,var(--primary)_25%,transparent)]
           ${questDrawerOpen ? 'pointer-events-none opacity-0' : ''}

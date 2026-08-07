@@ -2,7 +2,6 @@
 
 import { Search, Crosshair, Layers, Wrench } from 'lucide-react';
 import { useMapUiStore } from '@/store/useMapUiStore';
-import { MapRestockChip } from './MapRestockChip';
 import type { TrackerControls } from './PlayerTracker';
 
 interface MobileMapBarProps {
@@ -42,9 +41,8 @@ export function MobileMapBar({
 
   return (
     <div className="absolute inset-x-0 top-0 z-[560] flex h-14 items-center bg-card-menu px-3.5 lg:hidden">
-      {/* Слева — завоз + условия рейда + поиск + инструменты */}
+      {/* Слева — условия рейда + поиск + инструменты (завоз переехал в хедер сайта) */}
       <div className="flex flex-1 items-center justify-start gap-2">
-        <MapRestockChip />
         <button aria-label="Условия рейда" onClick={() => openSheet('raid')} className={cell(activeSheet === 'raid')}>
           <span className="icon-mask icon-eft-lore-docs h-4 w-4" />
         </button>

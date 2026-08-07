@@ -12,6 +12,7 @@ import { GameLogo } from './header-modules/GameLogo';
 import { BurgerMenu } from './header-modules/BurgerMenu';
 import { PlayerTelemetry } from './header-modules/PlayerTelemetry';
 import { GameModeBadge } from './header-modules/GameModeBadge';
+import { HeaderRestockChip } from './header-modules/HeaderRestockChip';
 import StreamStatus from './header-modules/StreamStatus';
 import { TacticalSearch } from './header-modules/TacticalSearch';
 import NewbieButton from './header-modules/NewbieButton';
@@ -56,6 +57,9 @@ export function Header() {
               <div className="hidden xl:block">
                 <PlayerTelemetry />
               </div>
+              {/* Завоз (ресток торговцев) — мобильный слот у бургера (Figma ROW1). Сам гейтит
+                  по /eft + xl:hidden; десктоп берёт плавающий RestockDock. */}
+              <HeaderRestockChip />
               <BurgerMenu menuItems={menuItems} newbieLabel={newbieLabel} onOpenNewbie={() => router.push('/eft/hub')} />
             </div>
           )}
