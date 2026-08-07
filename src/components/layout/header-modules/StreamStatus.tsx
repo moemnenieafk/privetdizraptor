@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useStreamDockStore } from '@/store/useStreamDockStore';
+import { useStreamLive } from '@/hooks/useStreamLive';
 
 // Плавающая кнопка-индикатор статуса стрима.
 // Сам плеер живёт в StreamDock (features/streams). Здесь — ТОЛЬКО индикатор LIVE/OFFLINE
 // и триггер: клик по LIVE разворачивает fullkamen-док (если юзер его свернул в 1×1).
 // mapVariant — на Картах: левый гуттер, высота хедера (низ-право там занят контролами карты).
 export default function StreamStatus({ mapVariant = false }: { mapVariant?: boolean }) {
-  const [isLive, setIsLive] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isLive, isLoading } = useStreamLive();
   const [isQuestFullscreen, setIsQuestFullscreen] = useState(false);
   const expandDock = useStreamDockStore((s) => s.expand);
 
@@ -27,31 +27,6 @@ export default function StreamStatus({ mapVariant = false }: { mapVariant?: bool
     });
     check();
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchStreamStatus = async () => {
-      try {
-        const response = await fetch('/api/twitch-status', { cache: 'no-store' });
-        const data = await response.json();
-        if (mounted) setIsLive(data.isLive);
-      } catch {
-        // silent
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    const initialDelay = setTimeout(fetchStreamStatus, 3000);
-    const interval = setInterval(fetchStreamStatus, 300_000);
-
-    return () => {
-      mounted = false;
-      clearTimeout(initialDelay);
-      clearInterval(interval);
-    };
   }, []);
 
   // Редизайн (эпик E12, фрейм 1661-2505): LIVE = красный «ON AIR LIVE» + гекс-скобки,
@@ -89,7 +64,7 @@ export default function StreamStatus({ mapVariant = false }: { mapVariant?: bool
     // ширину блока = w-40 = 10rem), на узких — фолбэк к 1rem. Обёртка кликопрозрачна.
     // mapVariant: левый гуттер + высота хедера (top-6, зеркало «Завоза»); иначе правый низ.
     <div
-      className={`fixed flex flex-col gap-2 pointer-events-none ${
+      className={`fixed hidden xl:flex flex-col gap-2 pointer-events-none ${
         mapVariant ? 'top-6 items-start z-40' : 'bottom-4 items-end z-70'
       }`}
       style={
