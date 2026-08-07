@@ -165,23 +165,28 @@ export function MapLayersDrawer({
 
   return (
     <>
-      {/* Десктоп-триггер «Слои» переехал в верхний бар (MapTopBar); открытие — через useMapUiStore. */}
+      {/* Десктоп-триггер «Слои» переехал в верхний бар (MapTopBar); открытие — через useMapUiStore.
+          Адаптив (как MapSearchDrawer): десктоп — правый drawer (w-87), мобилка — bottom-sheet
+          (M4 Figma 2591:4428). Тот же контент/логика дерева — меняется только оболочка. */}
       <div
-        className={`absolute top-0 right-0 z-[540] flex h-full w-87 flex-col border-l border-lines-hover bg-(--color-base)/95 backdrop-blur-md transition-transform duration-200 ${
-          open ? 'translate-x-0' : 'translate-x-full'
+        className={`absolute inset-x-0 bottom-0 z-[540] flex max-h-[85svh] flex-col rounded-t-xl border-t border-lines-hover bg-(--color-base)/95 backdrop-blur-md transition-transform duration-200 lg:inset-x-auto lg:top-0 lg:right-0 lg:bottom-auto lg:h-full lg:max-h-none lg:w-87 lg:rounded-t-none lg:border-t-0 lg:border-l ${
+          open ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-y-0 lg:translate-x-full'
         }`}
       >
-        {/* Шапка 56px: заголовок + кнопка-закрыть = амбер-кнопка слоёв (та же, что открывает в баре). */}
-        <div className="flex h-14 shrink-0 items-center justify-end gap-3 px-3.5">
-          <span className="font-blender-medium text-base uppercase tracking-widest text-text-primary">Легенда карты</span>
+        {/* Мобильный хват боттом-шита */}
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-lines-hover lg:hidden" />
+        {/* Шапка 56px: амбер-кнопка слоёв (та же, что открывает в баре) + заголовок. На мобилке кнопка
+            слева (закрыть), на десктопе — справа; заголовок между ними растягивается. */}
+        <div className="flex h-14 shrink-0 items-center gap-3 px-3.5 lg:justify-end">
           <button
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Закрыть легенду"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-(--primary) bg-(--primary) text-(--color-base)"
+            className="order-first flex h-9 w-9 shrink-0 items-center justify-center rounded border border-(--primary) bg-(--primary) text-(--color-base) lg:order-last"
           >
             <Layers className="h-5.5 w-5.5" />
           </button>
+          <span className="flex-1 font-blender-medium text-base uppercase tracking-widest text-text-primary lg:flex-none">Легенда карты</span>
         </div>
 
         {/* Мульти-фильтр по маркерам (термины через запятую): инпут сверху, подпись снизу — как в «Поиске». */}

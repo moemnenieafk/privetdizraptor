@@ -1,7 +1,8 @@
 'use client';
 
-import { Search, Crosshair, Layers } from 'lucide-react';
+import { Search, Crosshair, Layers, Wrench } from 'lucide-react';
 import { useMapUiStore } from '@/store/useMapUiStore';
+import { MapRestockChip } from './MapRestockChip';
 import type { TrackerControls } from './PlayerTracker';
 
 interface MobileMapBarProps {
@@ -15,8 +16,9 @@ interface MobileMapBarProps {
 
 /**
  * Верхняя панель карты (mobile-only) в стиле нижнего бара. Раскладка на 3 зоны:
- * слева — условия рейда + поиск, по центру — карта, справа — позиция + слои.
- * Кнопки как FullscreenToggleButton (rounded border border-lines-hover), 28×28.
+ * слева — завоз + условия рейда + поиск + инструменты, по центру — карта,
+ * справа — позиция + слои. Кнопки как FullscreenToggleButton (rounded border
+ * border-lines-hover), 28×28. Инструменты/слои/поиск открывают свои шиты.
  */
 export function MobileMapBar({
   activeMapIconClass,
@@ -40,13 +42,19 @@ export function MobileMapBar({
 
   return (
     <div className="absolute inset-x-0 top-0 z-[560] flex h-14 items-center bg-card-menu px-3.5 lg:hidden">
-      {/* Слева — условия рейда + поиск */}
+      {/* Слева — завоз + условия рейда + поиск + инструменты */}
       <div className="flex flex-1 items-center justify-start gap-2">
+        <MapRestockChip />
         <button aria-label="Условия рейда" onClick={() => openSheet('raid')} className={cell(activeSheet === 'raid')}>
           <span className="icon-mask icon-eft-lore-docs h-4 w-4" />
         </button>
-        <button aria-label="Поиск" onClick={toggleSearch} className={cell(searchOpen)}>
-          <Search className="size-4" strokeWidth={2} />
+        {hasLayers && (
+          <button aria-label="Поиск" onClick={toggleSearch} className={cell(searchOpen)}>
+            <Search className="size-4" strokeWidth={2} />
+          </button>
+        )}
+        <button aria-label="Инструменты" onClick={() => openSheet('tools')} className={cell(activeSheet === 'tools')}>
+          <Wrench className="size-4" strokeWidth={2} />
         </button>
       </div>
 

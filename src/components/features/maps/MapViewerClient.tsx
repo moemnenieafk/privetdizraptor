@@ -10,6 +10,7 @@ import { MapLayersDrawer } from './MapLayersDrawer';
 import { MarkerDeletionDrawer } from './MarkerDeletionDrawer';
 import { useEftTracker } from './PlayerTracker';
 import { MobileMapBar } from './MobileMapBar';
+import { MapToolsSheet } from './MapToolsSheet';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useTrackingStore } from '@/store/useTrackingStore';
@@ -1737,6 +1738,9 @@ export function MapViewerClient({
         layersOpen={layersOpen}
         onLayersToggle={toggleLayers}
       />
+
+      {/* Мобильный шит «Инструменты» (M2) — режимы правки/линейка/GPS из useMapUiStore + трекер. */}
+      <MapToolsSheet canEditMarkers={!isStatic && canEditMarkers} tracker={tracker} />
 
       {/* Зум — левый край по центру (классическая зумовая зона; угол низ-право освобождён под Позицию) */}
       <div className="absolute left-3.5 top-1/2 z-[500] flex -translate-y-1/2 flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">

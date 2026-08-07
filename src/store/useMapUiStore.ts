@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type MapSheet = 'maps' | 'quests' | 'search' | 'layers' | 'raid';
+export type MapSheet = 'maps' | 'quests' | 'search' | 'layers' | 'raid' | 'tools';
 
 interface MapUiState {
   activeSheet: MapSheet | null;
