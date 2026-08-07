@@ -20,6 +20,7 @@ export const TRADER_RU: Record<string, string> = {
   jaeger: "Егерь",
   lightkeeper: "Смотритель",
   ref: "Реф",
+  "btr-driver": "Водитель БТР",
 };
 
 export const STATION_RU: Record<string, string> = {

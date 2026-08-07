@@ -23,7 +23,7 @@ const JSON_BASE = 'https://json.tarkov.dev';
 const TRADER_RU = {
   prapor: 'Прапор', therapist: 'Терапевт', fence: 'Скупщик', skier: 'Лыжник',
   peacekeeper: 'Миротворец', mechanic: 'Механик', ragman: 'Барахольщик',
-  jaeger: 'Егерь', ref: 'Реф', lightkeeper: 'Смотритель', btr: 'БТР',
+  jaeger: 'Егерь', ref: 'Реф', lightkeeper: 'Смотритель', 'btr-driver': 'Водитель БТР',
 };
 
 // type задачи-цели -> __typename (как в старом GraphQL-файле; questmap матчит предметы
