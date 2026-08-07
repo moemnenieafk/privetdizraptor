@@ -1,215 +1,94 @@
 'use client';
 
-import { useRef } from 'react';
-import { Download, Upload, Save, RotateCcw } from 'lucide-react';
-import { usePlayerStore } from '@/store/usePlayerStore';
+import { useState } from 'react';
+import { Maximize, Minimize, Save, Paperclip, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQuestMapUiStore } from '@/store/useQuestMapUiStore';
-import { BottomSheet } from '@/components/layout/BottomSheet';
-
-const getLevelGroup = (level: number) => {
-  if (level < 5) return 1;
-  return Math.min(16, Math.floor(level / 5) + 1);
-};
+import { QuestCheckpointsSheet } from '@/components/features/quests/QuestCheckpointsSheet';
 
 interface Props {
-  totalQuests:        number;
-  completedCount:     number;
-  kappaTotal:         number;
-  kappaCompleted:     number;
-  lkTotal:            number;
-  lkCompleted:        number;
-  filterKappa:        boolean;
-  filterLK:           boolean;
   isFullscreen:       boolean;
-  onKappa:            () => void;
-  onLK:               () => void;
   onToggleFullscreen: () => void;
+  /** Активен ли фильтр по картам — подсветка центральной иконки карт. */
+  mapsFilterActive:   boolean;
+  /** Проброс в шит чекпоинтов: офлайн-бэкап файлом + сброс. */
   onExport:           () => void;
   onImport:           (file: File) => void;
   onResetProgress:    () => void;
 }
 
+/**
+ * Нижний плавающий док мобильной карты заданий (Figma Q1, mobile-only): по краям —
+ * фуллскрин · дискета (чекпоинты) слева, скрепка (пины) · поиск справа; по центру —
+ * подсвеченные карты (шит локаций) с шевроном-вниз, который сворачивает весь док.
+ * Каппа/Смотритель и прогресс переехали в верхний ряд-фильтров — тут их нет.
+ */
 export function QuestStatusBar({
-  totalQuests, completedCount,
-  kappaTotal, kappaCompleted,
-  lkTotal, lkCompleted,
-  filterKappa, filterLK,
-  isFullscreen, onToggleFullscreen,
-  onKappa, onLK,
+  isFullscreen, onToggleFullscreen, mapsFilterActive,
   onExport, onImport, onResetProgress,
 }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const openSheet   = useQuestMapUiStore((s) => s.openSheet);
+  const activeSheet = useQuestMapUiStore((s) => s.activeSheet);
 
-  const saveOpen = useQuestMapUiStore(s => s.activeSheet === 'save');
-  const openSheet = useQuestMapUiStore(s => s.openSheet);
-  const closeSheet = useQuestMapUiStore(s => s.closeSheet);
+  const cell = (active: boolean) =>
+    `flex size-9 shrink-0 items-center justify-center rounded border transition-colors ${
+      active
+        ? 'border-(--primary) text-(--primary)'
+        : 'border-lines-hover text-text-secondary active:text-(--primary)'
+    }`;
 
-  const profiles       = usePlayerStore(s => s.profiles);
-  const activeProfileId = usePlayerStore(s => s.activeProfileId);
-  const activeProfile  = profiles.find(p => p.id === activeProfileId) ?? profiles[0];
-  const levelGroup     = getLevelGroup(Number(activeProfile?.level) || 1);
-
-  const pct      = totalQuests > 0 ? Math.round((completedCount / totalQuests) * 100) : 0;
-  const kappaPct = kappaTotal  > 0 ? Math.round((kappaCompleted / kappaTotal)  * 100) : 0;
-  const lkPct    = lkTotal     > 0 ? Math.round((lkCompleted    / lkTotal)     * 100) : 0;
-
-  const btnCls = 'w-7 h-7 flex items-center justify-center rounded border border-lines-hover text-(--color-text-secondary) hover:border-(--primary)/40 hover:text-(--primary) transition-colors';
-
-  const pickFile = () => fileInputRef.current?.click();
+  if (collapsed) {
+    return (
+      <>
+        <div className="flex shrink-0 justify-center bg-card-menu lg:hidden">
+          <button
+            onClick={() => setCollapsed(false)}
+            aria-label="Развернуть панель"
+            className="flex h-6 w-20 items-center justify-center rounded-t-md border border-b-0 border-lines-hover text-text-secondary active:text-(--primary)"
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
+        </div>
+        <QuestCheckpointsSheet onExport={onExport} onImport={onImport} onResetProgress={onResetProgress} />
+      </>
+    );
+  }
 
   return (
-    <div className="@container/questbar flex items-center gap-3 px-3 h-14 bg-card-menu shrink-0">
-
-      <div className="flex shrink-0 items-center gap-1.5 font-blender-medium text-sm uppercase tracking-widest">
-        <span className="hidden text-success/25 @4xl/questbar:inline">Выполнено:</span>
-        <span className="text-success">{completedCount}</span>
-        <span className="text-text-secondary">
-          / {totalQuests}<span className="hidden @4xl/questbar:inline"> - {pct}%</span>
-        </span>
-      </div>
-
-      <div className="flex flex-1 items-center justify-center gap-2">
-
-        <button
-          onClick={onLK}
-          title="Фильтр: только квесты для Смотрителя"
-          className="flex h-7 shrink-0 items-center gap-1.5 rounded border px-2 transition-colors"
-          style={filterLK
-            ? { borderColor: 'var(--color-lightkeeper)', backgroundColor: 'var(--color-lightkeeper)', color: 'var(--color-darkbase)' }
-            : { borderColor: 'var(--color-lightkeeper)', color: 'var(--color-lightkeeper)' }
-          }
-        >
-          <span className="icon-mask icon-eft-profile-lightkeeper w-5.5 h-5.5" style={filterLK ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
-          <span className="font-blender-medium text-type-caption">
-            <span className="@4xl/questbar:hidden">{lkCompleted}/{lkTotal}</span>
-            <span className="hidden @4xl/questbar:inline">{lkCompleted} / {lkTotal} - {lkPct}%</span>
-          </span>
-        </button>
-
-        <button
-          onClick={onKappa}
-          title="Фильтр: только квесты для Каппы"
-          className="flex h-7 shrink-0 items-center gap-1.5 rounded border px-2 transition-colors"
-          style={filterKappa
-            ? { borderColor: 'var(--color-kappa)', backgroundColor: 'var(--color-kappa)', color: 'var(--color-darkbase)' }
-            : { borderColor: 'var(--color-kappa)', color: 'var(--color-kappa)' }
-          }
-        >
-          <span className="icon-mask icon-eft-profile-kappa w-5.5 h-5.5" style={filterKappa ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
-          <span className="font-blender-medium text-type-caption">
-            <span className="@4xl/questbar:hidden">{kappaCompleted}/{kappaTotal}</span>
-            <span className="hidden @4xl/questbar:inline">{kappaCompleted} / {kappaTotal} - {kappaPct}%</span>
-          </span>
-        </button>
-
-        <div className="hidden shrink-0 items-center gap-1.5 @4xl/questbar:flex">
-          <div className="relative w-7 h-7 shrink-0">
-            {!activeProfile?.prestige || activeProfile.prestige === '0' ? (
-              <img src={`/icons/eft/lvl-icons/player-level-group-${levelGroup}.webp`} alt="Level" className="w-full h-full object-contain" />
-            ) : (
-              <img src={`/icons/eft/prestige/prestige-${activeProfile.prestige}.webp`} alt="Prestige" className="w-full h-full object-contain" />
-            )}
-          </div>
-          <span className="text-text-secondary text-sm font-blender-medium leading-none">
-            {activeProfile?.level || '1'}
-          </span>
-          <div className="flex h-3 items-center justify-center rounded-[3px] border border-text-secondary px-1">
-            <span className="text-text-secondary text-type-caption uppercase tracking-wide leading-none">
-              {activeProfile?.faction}
-            </span>
-          </div>
+    <>
+      <div className="flex h-14 shrink-0 items-center justify-between bg-card-menu px-4 lg:hidden">
+        {/* Слева — фуллскрин · дискета (чекпоинты) */}
+        <div className="flex items-center gap-3">
+          <button onClick={onToggleFullscreen} title={isFullscreen ? 'Выйти из полноэкранного' : 'Полноэкранный режим'} className={cell(false)}>
+            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+          </button>
+          <button onClick={() => openSheet('checkpoints')} title="Чекпоинты прогресса" className={cell(activeSheet === 'checkpoints')}>
+            <Save className="h-4 w-4" />
+          </button>
         </div>
 
+        {/* Центр — карты (шит локаций, подсвечены) + шеврон-сворачивание */}
+        <div className="flex flex-col items-center gap-0.5">
+          <button onClick={() => openSheet('maps')} title="Локации" className={cell(activeSheet === 'maps' || mapsFilterActive)}>
+            <span className="icon-mask icon-eft-maps h-4.5 w-4.5" />
+          </button>
+          <button onClick={() => setCollapsed(true)} aria-label="Свернуть панель" className="flex h-4 w-9 items-center justify-center text-text-muted active:text-(--primary)">
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Справа — скрепка (пины) · поиск */}
+        <div className="flex items-center gap-3">
+          <button onClick={() => openSheet('pinned')} title="Отслеживание квестов" className={cell(activeSheet === 'pinned')}>
+            <Paperclip className="h-4 w-4" />
+          </button>
+          <button onClick={() => openSheet('search')} title="Поиск по заданию" className={cell(activeSheet === 'search')}>
+            <span className="icon-mask icon-eft-search-icon h-4.5 w-4.5" />
+          </button>
+        </div>
       </div>
 
-      <div className="flex shrink-0 items-center">
-
-        {/* Мобилка — дискета: импорт / экспорт / сброс */}
-        <button onClick={() => openSheet('save')} title="Прогресс" className={`${btnCls} @4xl/questbar:hidden`}>
-          <Save className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Десктоп — раздельно, как было */}
-        <button onClick={pickFile} title="Импорт прогресса" className={`${btnCls} hidden @4xl/questbar:flex`}>
-          <Upload className="w-3.5 h-3.5" />
-        </button>
-        <button onClick={onExport} title="Экспорт прогресса" className={`${btnCls} ml-2 hidden @4xl/questbar:flex`}>
-          <Download className="w-3.5 h-3.5" />
-        </button>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          className="hidden"
-          onChange={e => {
-            const f = e.currentTarget.files?.[0];
-            if (f) { onImport(f); e.currentTarget.value = ''; }
-          }}
-        />
-
-        <div className="w-px h-7 bg-lines-hover mx-3.5" />
-
-        <button
-          onClick={onToggleFullscreen}
-          title={isFullscreen ? 'Выйти из полноэкранного (Esc)' : 'Полноэкранный режим'}
-          className={btnCls}
-        >
-          {isFullscreen
-            ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 1v3H1M8 1v3h3M11 8H8v3M1 8h3v3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            : <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1 4V1h3M8 1h3v3M11 8v3H8M4 11H1V8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          }
-        </button>
-
-      </div>
-
-      {/* Шит прогресса (mobile) */}
-      <BottomSheet open={saveOpen} title="Прогресс" onClose={closeSheet}>
-        <ul className="flex flex-col gap-1 pb-2">
-          <li>
-            <button
-              onClick={() => { pickFile(); closeSheet(); }}
-              className="flex h-14 w-full items-center gap-3 rounded-xs border border-lines-hover bg-card-menu px-3"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center text-(--primary)">
-                <Upload className="size-5" strokeWidth={2} />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col text-left">
-                <span className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">Импорт</span>
-                <span className="font-blender-book text-xs text-text-muted">Загрузить прогресс из файла</span>
-              </span>
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={() => { onExport(); closeSheet(); }}
-              className="flex h-14 w-full items-center gap-3 rounded-xs border border-lines-hover bg-card-menu px-3"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center text-(--primary)">
-                <Download className="size-5" strokeWidth={2} />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col text-left">
-                <span className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">Экспорт</span>
-                <span className="font-blender-book text-xs text-text-muted">Сохранить прогресс в файл</span>
-              </span>
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={() => { closeSheet(); onResetProgress(); }}
-              className="flex h-14 w-full items-center gap-3 rounded-xs border border-lines-hover bg-card-menu px-3"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center text-red-400">
-                <RotateCcw className="size-5" strokeWidth={2} />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col text-left">
-                <span className="font-blender-medium text-sm uppercase tracking-widest text-red-400">Сброс прогресса</span>
-                <span className="font-blender-book text-xs text-text-muted">Обнулить все выполненные квесты</span>
-              </span>
-            </button>
-          </li>
-        </ul>
-      </BottomSheet>
-    </div>
+      <QuestCheckpointsSheet onExport={onExport} onImport={onImport} onResetProgress={onResetProgress} />
+    </>
   );
 }

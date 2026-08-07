@@ -15,7 +15,6 @@ import { QuestActionsDock } from '@/components/features/quests/QuestActionsDock'
 import { QuestStatusBar } from '@/components/features/quests/QuestStatusBar';
 import { MobileQuestBar } from '@/components/features/quests/MobileQuestBar';
 import { QuestSearchSheet } from '@/components/features/quests/QuestSearchSheet';
-import { QuestTraderSheet } from '@/components/features/quests/QuestTraderSheet';
 import { QuestMapsSheet } from '@/components/features/quests/QuestMapsSheet';
 import { QuestPinnedSheet } from '@/components/features/quests/QuestPinnedSheet';
 import { MAP_ICON_CSS as MAP_CSS } from '@/data/map-icons';
@@ -939,13 +938,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     if (typeof window !== 'undefined' && window.innerWidth < 1440) setSearchOpen(false);
   }, [flyToQuest]);
 
-  // Мобилка: перелёт к портрету торговца без изменения фильтра (фильтрация по торговцам на телефоне убрана).
-  const handleFocusTrader = useCallback((name: string) => {
-    const pos = connPositionsRef.current.get(`trader-${name}`);
-    if (pos) vpRef.current?.setCenter(pos.x + TRADER_W / 2, pos.y + TRADER_H / 2, { zoom: fitZoom(TRADER_W), duration: 500 });
-  }, [fitZoom]);
-
-  // Список торговцев для мобильного шита (в порядке TRADER_ORDER).
+  // Список торговцев для мобильного дропдауна (в порядке TRADER_ORDER).
   const mobileTraders = useMemo(() => {
     const seen = new Map<string, { normalizedName: string; name: string }>();
     for (const t of initialTasks) {
@@ -1213,8 +1206,17 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
   return (
     <>
       <div className={containerCls} style={containerStyle}>
-        {/* Мобильная верхняя панель: поиск / трекер / торговцы / карты */}
-        <MobileQuestBar mapsFilterActive={selectedMaps.size > 0} pinnedCount={pinnedQuests.length} />
+        {/* Мобильный ряд-фильтров (Figma Q1): Каппа-тоггл · трейдер-пилюля→дропдаун · Смотритель-тоггл */}
+        <MobileQuestBar
+          filterKappa={filterKappa}
+          filterLK={filterLK}
+          onKappa={handleKappaClick}
+          onLK={handleLKClick}
+          traders={mobileTraders}
+          traderLevels={traderLevels}
+          selectedTrader={selectedTrader}
+          onSelectTrader={handleSelectTrader}
+        />
 
         {/* Десктопный топбар — плавающий прозрачный оверлей поверх канваса (как MapTopBar карт локаций) */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-30 hidden lg:block">
@@ -1240,10 +1242,9 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
         />
         </div>
 
-        {/* Мобильные шиты */}
+        {/* Мобильные шиты (торговцы — дропдаун в ряду-фильтров, не шит) */}
         <QuestSearchSheet tasks={initialTasks} onFocus={handleFocusNode} />
         <QuestPinnedSheet tasks={initialTasks} onFocus={handleFocusNode} />
-        <QuestTraderSheet traders={mobileTraders} onFocusTrader={handleFocusTrader} />
         <QuestMapsSheet
           maps={mobileMaps}
           selectedMaps={selectedMaps}
@@ -1536,21 +1537,12 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
           </div>
         )}
 
-        {/* Мобилка — прежний статус-бар (десктоп: плавающие доки внутри канваса — прогресс/локации/действия) */}
+        {/* Мобильный нижний док (Figma Q1): фуллскрин · дискета(чекпоинты) · карты · скрепка(пины) · поиск + шеврон-сворачивание */}
         <div className="lg:hidden">
           <QuestStatusBar
-            totalQuests={initialTasks.length}
-            completedCount={completedQuests.length}
-            kappaTotal={kappaTotal}
-            kappaCompleted={kappaCompleted}
-            lkTotal={lkTotal}
-            lkCompleted={lkCompleted}
-            filterKappa={filterKappa}
-            filterLK={filterLK}
-            onKappa={handleKappaClick}
-            onLK={handleLKClick}
             isFullscreen={isFullscreen}
             onToggleFullscreen={() => setIsFullscreen(v => !v)}
+            mapsFilterActive={selectedMaps.size > 0}
             onResetProgress={() => setResetModalOpen(true)}
             onExport={handleExport}
             onImport={handleImport}
