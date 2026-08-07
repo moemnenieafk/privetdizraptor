@@ -72,7 +72,7 @@ export function MobileQuestBar({
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           className={`flex h-10 w-full items-center gap-2 rounded border px-2.5 transition-colors ${
-            open ? 'border-(--primary)/50 bg-card-menu' : 'border-lines-hover bg-card-menu'
+            open ? 'border-(--primary)/50' : 'border-lines-hover'
           }`}
         >
           {cur ? (
@@ -87,7 +87,7 @@ export function MobileQuestBar({
         </button>
 
         {open && (
-          <div className="absolute inset-x-0 top-full z-[560] mt-1 max-h-[60svh] overflow-y-auto scrollbar-hidden rounded-sm border border-lines-hover bg-(--color-base)/97 py-1 shadow-lg backdrop-blur-md">
+          <div className="absolute inset-x-0 top-full z-[560] mt-1 max-h-[60svh] overflow-y-auto scrollbar-hidden rounded-sm border border-lines-hover py-1 shadow-lg backdrop-blur-md">
             <button
               type="button"
               onClick={() => pick(null)}
