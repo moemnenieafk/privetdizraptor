@@ -54,6 +54,22 @@ function useAppHidden() {
   return hidden;
 }
 
+// Десктоп-порог xl (1280px) — тот же сплит, что xl:hidden / hidden xl:flex у стрим-статуса.
+// Ниже xl это «мобилка»: там док по умолчанию свёрнут (разворот — кнопкой стрима в хедере).
+function useDesktopUp() {
+  const [up, setUp] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 1280px)').matches : true,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1280px)');
+    const sync = () => setUp(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+  return up;
+}
+
 export function StreamDockLayer() {
   const [channels, setChannels] = useState<LiveChannel[]>([]);
   const hidden = useAppHidden();
@@ -97,9 +113,13 @@ export function StreamDockLayer() {
 function StreamDock({ channel, label, side }: { channel: string; label: string; side: Side }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<TwitchPlayerInstance | null>(null);
-  const hidden = useStreamDockStore((s) => s.views[channel] === 'hidden');
+  const view = useStreamDockStore((s) => s.views[channel]);
   const hide = useStreamDockStore((s) => s.hide);
-  const expanded = !hidden; // дефолт (нет записи) = развёрнут
+  const desktopUp = useDesktopUp();
+  // Явную запись уважаем; без записи дефолт зависит от вьюпорта: развёрнут на десктопе,
+  // свёрнут на мобилке (<xl) — там 280px-плеер налезал на контент, разворот идёт кнопкой
+  // стрима в хедере. Плеер всё равно смонтирован в 1×1 → зритель Twitch продолжает считаться.
+  const expanded = view ? view === 'expanded' : desktopUp;
 
   // Создаём плеер один раз. Чистим детей контейнера в cleanup (StrictMode-safe).
   useEffect(() => {
