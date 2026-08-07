@@ -52,12 +52,12 @@ export function MobileQuestBar({
       onClick={on}
       title={label}
       aria-pressed={active}
-      className="flex size-10 shrink-0 items-center justify-center rounded border transition-colors"
+      className="flex size-7 shrink-0 items-center justify-center rounded border transition-colors"
       style={active
         ? { borderColor: color, backgroundColor: color, color: 'var(--color-darkbase)' }
         : { borderColor: color, color }}
     >
-      <span className={`icon-mask ${icon} size-5.5`} style={active ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
+      <span className={`icon-mask ${icon} size-4`} style={active ? { backgroundColor: 'var(--color-darkbase)' } : undefined} />
     </button>
   );
 
