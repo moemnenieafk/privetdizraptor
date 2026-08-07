@@ -952,3 +952,13 @@ html {
     animation: none !important;
   }
 }
+
+/* ─── Полноэкранный режим карт/заданий: бургер уходит ПОД ui-shell ──────────────
+   Шелл (fixed inset-0 z-200) заперт в стек-контексте контента (<ViewTransition> +
+   fade-in), поэтому его реальный уровень в корневом контексте = flow. Бургер же был
+   z-102 в корне → поднимался НАД шеллом и вылезал сверху в фуллскрине. В фуллскрине
+   опускаем бургер к flow-уровню — шелл (позже в DOM) его накрывает. Оба раздела. */
+body[data-quest-fullscreen] [data-header-burger],
+body[data-app-fullscreen] [data-header-burger] {
+  z-index: 0;
+}
