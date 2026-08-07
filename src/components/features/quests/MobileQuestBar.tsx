@@ -62,7 +62,7 @@ export function MobileQuestBar({
   );
 
   return (
-    <div className="flex h-14 shrink-0 items-center gap-2 bg-card-menu px-3 lg:hidden">
+    <div className="flex h-14 shrink-0 items-center gap-2 px-3 lg:hidden">
       {pathBtn(filterKappa, 'var(--color-kappa)', 'icon-eft-profile-kappa', 'Путь Каппы', onKappa)}
 
       {/* Трейдер-пилюля + дропдаун */}

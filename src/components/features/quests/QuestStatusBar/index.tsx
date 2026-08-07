@@ -40,7 +40,7 @@ export function QuestStatusBar({
   if (collapsed) {
     return (
       <>
-        <div className="flex shrink-0 justify-center bg-card-menu lg:hidden">
+        <div className="flex shrink-0 justify-center lg:hidden">
           <button
             onClick={() => setCollapsed(false)}
             aria-label="Развернуть панель"
@@ -56,7 +56,7 @@ export function QuestStatusBar({
 
   return (
     <>
-      <div className="flex h-14 shrink-0 items-center justify-between bg-card-menu px-4 lg:hidden">
+      <div className="flex h-14 shrink-0 items-center justify-between px-4 lg:hidden">
         {/* Слева — фуллскрин · дискета (чекпоинты) */}
         <div className="flex items-center gap-3">
           <button onClick={onToggleFullscreen} title={isFullscreen ? 'Выйти из полноэкранного' : 'Полноэкранный режим'} className={cell(false)}>
