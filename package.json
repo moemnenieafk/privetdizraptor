@@ -25,6 +25,7 @@
     "db:login-link": "tsx scripts/login-link.ts",
     "db:sync-prices": "tsx scripts/sync-prices.ts",
     "db:sync-icons": "tsx scripts/sync-icons.ts",
+    "db:sync-quest-icons": "node scripts/sync-quest-icons.mjs",
     "icons:render-missing": "node scripts/icon-render/render_missing.mjs",
     "icons:render-unity": "node scripts/icon-render/render_unity.mjs",
     "db:sync-barters-crafts": "tsx scripts/sync-barters-crafts.ts",
