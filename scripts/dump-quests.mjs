@@ -227,6 +227,27 @@ async function main() {
   mkdirSync('./src/data/quests', { recursive: true });
   writeFileSync('./src/data/quests/eft-quests.json', JSON.stringify(tasks, null, 2), 'utf-8');
   console.log(`Done: src/data/quests/eft-quests.json (${tasks.length} quests total)`);
+
+  // Пообъектные точки целей (possibleLocations, сырые game x/y/z) — ОТДЕЛЬНЫЙ лёгкий файл:
+  // читает только серверная страница карты (пообъектные пины по ?quest=id), в клиентский
+  // бандл eft-quests.json не тащим. Форма: { questId: { mapSlug: [{x,y,z,label}] } }.
+  const objectivePoints = {};
+  let ptCount = 0;
+  for (const t of rawTasks) {
+    for (const o of t.objectives ?? []) {
+      const label = T(o.description) ?? '';
+      for (const pl of o.possibleLocations ?? []) {
+        const slug = mapById.get(pl.map)?.normalizedName;
+        if (!slug || !Array.isArray(pl.positions)) continue;
+        for (const p of pl.positions) {
+          ((objectivePoints[t.id] ??= {})[slug] ??= []).push({ x: p.x, y: p.y, z: p.z, label });
+          ptCount++;
+        }
+      }
+    }
+  }
+  writeFileSync('./src/data/quests/eft-objective-points.json', JSON.stringify(objectivePoints), 'utf-8');
+  console.log(`Done: src/data/quests/eft-objective-points.json (${Object.keys(objectivePoints).length} квестов, ${ptCount} точек)`);
 }
 
 main().catch((err) => { console.error('Error:', err.message); process.exit(1); });
