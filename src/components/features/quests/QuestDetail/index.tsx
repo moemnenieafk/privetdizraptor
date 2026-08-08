@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Paperclip, Maximize2, Map as MapIcon, MapPin, ArrowLeftRight, ChevronRight } from 'lucide-react';
-import { useQuestStore } from '@/store/useQuestStore';
+import { useQuestStore, isObjectiveComplete } from '@/store/useQuestStore';
 import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem, QuestBarterLite } from '@/types/quest';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
@@ -149,28 +149,34 @@ interface Props {
 export function QuestDetail({ task, variant = 'drawer', onClose, barters, onLocate }: Props) {
   const isPage = variant === 'page';
 
-  const [heroFailed, setHeroFailed]               = useState(false);
-  const [checkedObjectives, setCheckedObjectives] = useState<Set<string>>(new Set());
-  const autoCompletedRef                          = useRef(false);
+  const [heroFailed, setHeroFailed] = useState(false);
+  const autoCompletedRef            = useRef(false);
 
   useEffect(() => {
     setHeroFailed(false);
-    setCheckedObjectives(new Set());
     autoCompletedRef.current = false;
   }, [task.id]);
 
-  const toggleObjective = (id: string) =>
-    setCheckedObjectives(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const completedQuests        = useQuestStore((s) => s.completedQuests);
+  const toggleQuest            = useQuestStore((s) => s.toggleQuest);
+  const pinnedQuests           = useQuestStore((s) => s.pinnedQuests);
+  const togglePin              = useQuestStore((s) => s.togglePin);
+  const itemProgress           = useQuestStore((s) => s.itemProgress);
+  const checkedObjectives      = useQuestStore((s) => s.checkedObjectives);
+  const setItemCount           = useQuestStore((s) => s.setItemCount);
+  const toggleCheckedObjective = useQuestStore((s) => s.toggleCheckedObjective);
 
-  const completedQuests = useQuestStore((s) => s.completedQuests);
-  const toggleQuest     = useQuestStore((s) => s.toggleQuest);
-  const pinnedQuests    = useQuestStore((s) => s.pinnedQuests);
-  const togglePin       = useQuestStore((s) => s.togglePin);
-  const itemProgress    = useQuestStore((s) => s.itemProgress);
+  // Прожать цель: item — заполнить/обнулить счётчик (двусторонняя связка с трекером);
+  // прочие — галка в checkedObjectives. Завершённость выводит isObjectiveComplete.
+  const handleToggleObjective = (obj: TaskObjective) => {
+    if (obj.__typename === 'TaskObjectiveItem') {
+      const count = (obj as TaskObjectiveItem).count ?? 0;
+      const done = count > 0 && (itemProgress[task.id]?.[obj.id] ?? 0) >= count;
+      setItemCount(task.id, obj.id, done ? 0 : count);
+    } else {
+      toggleCheckedObjective(task.id, obj.id);
+    }
+  };
 
   const dedupedObjectives = useMemo(
     () => task.objectives.filter((obj, i, arr) => arr.findIndex(o => o.id === obj.id) === i),
@@ -179,16 +185,9 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, onLoca
 
   useEffect(() => {
     const isNowCompleted = completedQuests.includes(task.id);
-
-    const allChecked = dedupedObjectives.every(obj => checkedObjectives.has(obj.id));
-    const allItemsCollected = dedupedObjectives
-      .filter(obj => obj.__typename === 'TaskObjectiveItem')
-      .every(obj => {
-        const count = (obj as TaskObjectiveItem).count ?? 0;
-        if (count === 0) return true;
-        return (itemProgress[task.id]?.[obj.id] ?? 0) >= count;
-      });
-    const allDone = allChecked && allItemsCollected;
+    const allDone =
+      dedupedObjectives.length > 0 &&
+      dedupedObjectives.every((obj) => isObjectiveComplete(obj, task.id, itemProgress, checkedObjectives));
 
     if (!isNowCompleted && allDone) {
       autoCompletedRef.current = true;
@@ -312,8 +311,8 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, onLoca
           <ObjectiveRow
             key={obj.id}
             obj={obj}
-            checked={checkedObjectives.has(obj.id)}
-            onToggle={() => toggleObjective(obj.id)}
+            checked={isObjectiveComplete(obj, task.id, itemProgress, checkedObjectives)}
+            onToggle={() => handleToggleObjective(obj)}
             onLocate={!isPage && onLocate ? onLocate : undefined}
           />
         ))}

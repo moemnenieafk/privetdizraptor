@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { TaskRaw, TaskObjectiveItem } from '@/types/quest';
+import type { TaskRaw, TaskObjective, TaskObjectiveItem } from '@/types/quest';
 
 interface QuestStore {
   // Runtime cache — populated by QuestMapClient on mount, not persisted
@@ -17,6 +17,11 @@ interface QuestStore {
   incrementItem: (questId: string, objectiveId: string, max: number) => void;
   decrementItem: (questId: string, objectiveId: string) => void;
   resetItemProgress: (questId: string) => void;
+
+  // B: завершение НЕ-предметных целей (галки) — локально-персистентно (Tier 1).
+  // Item-цели завершаются через itemProgress (счётчик ≥ нужного), тут их нет.
+  checkedObjectives: Record<string, string[]>; // questId → objectiveId[]
+  toggleCheckedObjective: (questId: string, objectiveId: string) => void;
 
   // UX-8: Progress persistence
   loadProgress: (completedQuests: string[], itemProgress: Record<string, Record<string, number>>) => void;
@@ -47,7 +52,7 @@ export const useQuestStore = create<QuestStore>()(
               : s.pinnedQuests,
           };
         }),
-      resetProgress: () => set({ completedQuests: [], itemProgress: {} }),
+      resetProgress: () => set({ completedQuests: [], itemProgress: {}, checkedObjectives: {} }),
 
       itemProgress: {},
       setItemCount: (questId, objectiveId, count) =>
@@ -79,8 +84,22 @@ export const useQuestStore = create<QuestStore>()(
         }),
       resetItemProgress: (questId) =>
         set((s) => {
-          const { [questId]: _removed, ...rest } = s.itemProgress;
-          return { itemProgress: rest };
+          const { [questId]: _item, ...itemRest } = s.itemProgress;
+          const { [questId]: _checks, ...checkRest } = s.checkedObjectives;
+          return { itemProgress: itemRest, checkedObjectives: checkRest };
+        }),
+
+      checkedObjectives: {},
+      toggleCheckedObjective: (questId, objectiveId) =>
+        set((s) => {
+          const cur = s.checkedObjectives[questId] ?? [];
+          const next = cur.includes(objectiveId)
+            ? cur.filter((o) => o !== objectiveId)
+            : [...cur, objectiveId];
+          const rest = { ...s.checkedObjectives };
+          if (next.length) rest[questId] = next;
+          else delete rest[questId];
+          return { checkedObjectives: rest };
         }),
 
       loadProgress: (completedQuests, itemProgress) => set({ completedQuests, itemProgress }),
@@ -104,12 +123,29 @@ export const useQuestStore = create<QuestStore>()(
       partialize: (s) => ({
         completedQuests: s.completedQuests,
         itemProgress: s.itemProgress,
+        checkedObjectives: s.checkedObjectives,
         pinnedQuests: s.pinnedQuests,
         questNotes: s.questNotes,
       }),
     },
   ),
 );
+
+// B: единый предикат «цель завершена». item-цель — счётчик ≥ нужного (перс. itemProgress);
+// прочие — прожата галка (перс. checkedObjectives). Используют QuestDetail и авто-закрытие.
+export function isObjectiveComplete(
+  obj: TaskObjective,
+  questId: string,
+  itemProgress: Record<string, Record<string, number>>,
+  checkedObjectives: Record<string, string[]>,
+): boolean {
+  if (obj.__typename === 'TaskObjectiveItem') {
+    const count = (obj as TaskObjectiveItem).count ?? 0;
+    if (count === 0) return true;
+    return (itemProgress[questId]?.[obj.id] ?? 0) >= count;
+  }
+  return checkedObjectives[questId]?.includes(obj.id) ?? false;
+}
 
 // Bridge API for /eft/progress/tracker
 export function getActiveItemRequirements(
