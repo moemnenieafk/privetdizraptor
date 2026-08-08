@@ -13,7 +13,8 @@ export function QuestItemTracker({ task }: Props) {
   const decrementItem = useQuestStore((s) => s.decrementItem);
 
   const itemObjs = task.objectives.filter(
-    (o): o is TaskObjectiveItem => o.__typename === 'TaskObjectiveItem',
+    (o): o is TaskObjectiveItem & { item: NonNullable<TaskObjectiveItem['item']> } =>
+      o.__typename === 'TaskObjectiveItem' && o.item != null,
   );
 
   if (itemObjs.length === 0) return null;

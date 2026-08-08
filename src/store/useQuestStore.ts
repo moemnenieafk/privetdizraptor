@@ -166,7 +166,10 @@ export function getActiveItemRequirements(
     .filter((t) => !completedSet.has(t.id))
     .flatMap((t) =>
       t.objectives
-        .filter((o): o is TaskObjectiveItem => o.__typename === 'TaskObjectiveItem')
+        .filter(
+          (o): o is TaskObjectiveItem & { item: NonNullable<TaskObjectiveItem['item']> } =>
+            o.__typename === 'TaskObjectiveItem' && o.item != null,
+        )
         .map((o) => ({
           questId: t.id,
           questName: t.name,

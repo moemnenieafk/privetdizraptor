@@ -28,7 +28,9 @@ export interface TaskObjective {
 // Discriminated types for type-safe narrowing (UX-3+)
 export interface TaskObjectiveItem extends TaskObjective {
   __typename: 'TaskObjectiveItem';
-  item: { id: string; name: string; shortName: string; image512pxLink: string };
+  // Дамп 1.1.0.0: у части item-целей (уникальные квест-предметы) предмет не резолвится
+  // в каталог → item отсутствует. Тип повторяет реальность данных (§4.4); читатели гардят.
+  item?: { id: string; name: string; shortName: string; image512pxLink: string };
   count: number;
   foundInRaid: boolean;
 }

@@ -17,6 +17,7 @@ function buildQuestReqs(): NeededReq[] {
     for (const o of t.objectives) {
       if (o.__typename === 'TaskObjectiveItem') {
         const oi = o as TaskObjectiveItem;
+        if (!oi.item) continue; // дамп 1.1.0.0: уникальный квест-предмет без резолва в каталог → пропуск
         out.push({
           questId: t.id,
           questName: t.name,
