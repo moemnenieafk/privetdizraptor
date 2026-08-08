@@ -142,11 +142,16 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
     setActiveFloor(0);
   }
 
-  // Дип-линк «Посмотреть на карте»: ?quest=id → перелёт + подсветка зоны квеста.
+  // Дип-линк «Посмотреть на карте»: ?quest=id → изоляция + перелёт + подсветка зоны квеста.
+  // Изоляция (слайс C): гасим ВСЕ слои-маркеры (бартер/ключи/лут/спавны) — остаётся только
+  // зона-цель квеста (highlightZone рисует полигон напрямую, вне фильтра слоёв). Гасим лишь
+  // когда зона найдена, иначе карта осталась бы пустой. Вернуть слои — группами в правой легенде.
   useEffect(() => {
     if (!ready || !focusQuestId) return;
     const z = questZones.find((q) => q.questId === focusQuestId);
     if (!z) return;
+    const keys = Object.keys(useMapViewStore.getState().activeFilters);
+    useMapViewStore.getState().setGroupFilters(keys, false);
     if (z.outline.length >= 3) apiRef.current?.highlightZone(z.outline);
     else if (z.position) apiRef.current?.flyTo(z.position, 4);
   }, [ready, focusQuestId, questZones]);
