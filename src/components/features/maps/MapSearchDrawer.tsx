@@ -16,6 +16,7 @@ import { storiesForMap, type StoryOnMap } from '@/lib/story-map-link';
 import type { EditorialMarkerData } from './EditorialMarkerCard';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { useMapUiStore } from '@/store/useMapUiStore';
+import { SheetCloseButton } from '@/components/ui/SheetCloseButton';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { MapViewMarker } from './map-types';
@@ -270,6 +271,8 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
           <span className="icon-mask icon-eft-search-icon h-5.5 w-5.5" />
         </button>
         <span className="font-blender-medium text-base uppercase tracking-widest text-text-primary">Поиск на локации</span>
+        {/* Мобильный крестик-закрытие (десктоп закрывает амбер-лупой слева). */}
+        <SheetCloseButton onClick={() => setOpen(false)} ariaLabel="Закрыть поиск" className="ml-auto lg:hidden" />
       </div>
 
       <div className="scrollbar-hidden flex min-h-0 flex-1 flex-col gap-7 overflow-y-auto p-3">

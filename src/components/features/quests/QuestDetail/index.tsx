@@ -65,7 +65,7 @@ function ObjectiveRow({ obj, checked, onToggle, onLocate }: { obj: TaskObjective
                 onClick={onLocate}
                 title="Показать на карте"
                 aria-label="Показать на карте"
-                className="shrink-0 text-(--primary) transition-opacity hover:opacity-70"
+                className={`shrink-0 transition-opacity hover:opacity-70 ${checked ? 'text-success' : 'text-text-primary'}`}
               >
                 <MapPin className="w-4 h-4" />
               </button>

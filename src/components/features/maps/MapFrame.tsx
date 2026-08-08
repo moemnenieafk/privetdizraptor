@@ -12,7 +12,8 @@ import { MapViewerLoader } from './MapViewerLoader';
 import { MapTopBar } from './MapTopBar';
 import { MapSearchDrawer } from './MapSearchDrawer';
 import type { HeatPoint } from '@/db/loot-heat';
-import { MapBottomBar } from './MapBottomBar';
+import { MobileMapBar } from './MobileMapBar';
+import { MapMobileDock } from './MapMobileDock';
 import { MapBossDock } from './MapBossDock';
 import { MapFloorSwitcher } from './MapFloorSwitcher';
 import type { EditorialMarkerData, QuestIndexItem, StoryIndexItem } from './EditorialMarkerCard';
@@ -113,7 +114,6 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
     apiRef.current?.focusPoints(boss.spawns);
   }, []);
 
-  const questIds = useMemo(() => quests.map((q) => q.id), [quests]);
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
   const floorOrder = useMemo(() => orderFloorsByLevel(floors), [floors]);
 
@@ -245,6 +245,9 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
       <MapRaidSheet data={data} />
 
       <div ref={viewportRef} className="relative min-h-0 flex-1">
+        {/* Мобильный верхний бар — плавает над картой (десктоп: MapTopBar выше). */}
+        <MobileMapBar data={data} isFullscreen={isFullscreen} onToggleFullscreen={toggle} />
+
         <MapViewerLoader
           data={data}
           onReady={handleReady}
@@ -258,21 +261,23 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           questIndex={questIndex}
           storyIndex={storyIndex}
         />
+        {/* Десктопный переключатель этажей (на мобилке этаж живёт в нижнем доке). */}
         {floors.length > 1 && (
-          <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />
+          <div className="hidden lg:block">
+            <MapFloorSwitcher floors={floors} active={activeFloor} onChange={setActiveFloor} />
+          </div>
         )}
-        {/* Десктоп-док боссов — плавающий оверлей низ-лево (каркас E11 §3) */}
+        {/* Десктоп-док боссов — плавающий оверлей низ-по-центру (каркас E11 §3) */}
         <MapBossDock bosses={bosses} onBossClick={focusBoss} />
-      </div>
-      {/* Нижний бар — только мобилка (десктоп: фуллскрин→верхний бар, боссы→MapBossDock) */}
-      <div className="shrink-0 lg:hidden">
-        <MapBottomBar
-          data={data}
-          questIds={questIds}
+
+        {/* Мобильный нижний док — этаж · босс+спавн · слои/поиск (десктоп: MapTopBar+MapBossDock+MapFloorSwitcher). */}
+        <MapMobileDock
+          floors={floors}
+          activeFloor={activeFloor}
+          onStepFloor={stepFloor}
           bosses={bosses}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={toggle}
           onBossClick={focusBoss}
+          hasLayers={!data.config.staticMap}
         />
       </div>
     </div>

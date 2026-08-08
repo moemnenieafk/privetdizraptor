@@ -9,7 +9,6 @@ import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
 import { MarkerDeletionDrawer } from './MarkerDeletionDrawer';
 import { useEftTracker } from './PlayerTracker';
-import { MobileMapBar } from './MobileMapBar';
 import { MapToolsSheet } from './MapToolsSheet';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useMapViewStore } from '@/store/useMapViewStore';
@@ -25,7 +24,6 @@ import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
 import { ExtractCard } from './ExtractCard';
 import { floorIndexForHeight } from '@/lib/eft-screenshot';
-import { mapIconClass } from '@/data/map-icons';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
 import { markerColor, isItemId, LINK_KIND_COLOR } from '@/data/map-marker-icons';
@@ -793,10 +791,9 @@ export function MapViewerClient({
   const isStatic = !!data.config.staticMap;
 
   // Открытость панели слоёв поднята в стор (§E11 каркас #1): десктоп-триггер живёт в верхнем
-  // баре (MapFrame), мобильный — в MobileMapBar; оба пишут в один useMapUiStore.
+  // баре (MapTopBar), мобильный — в нижнем доке (MapMobileDock); оба пишут в один useMapUiStore.
   const layersOpen = useMapUiStore((s) => s.layersOpen);
   const setLayersOpen = useMapUiStore((s) => s.setLayersOpen);
-  const toggleLayers = useMapUiStore((s) => s.toggleLayers);
 
   // Инстанс трекера один (нужен mapRef здесь). Кнопка+координаты живут в низ-право (GRILL-2),
   // рендерятся ниже прямо из этого хука — публикация наверх больше не нужна.
@@ -1734,6 +1731,7 @@ export function MapViewerClient({
           onCycle={cycleToLayer}
           open={layersOpen}
           onOpenChange={setLayersOpen}
+          hasHeat={!!heatPoints?.length}
         />
       )}
 
@@ -1758,20 +1756,11 @@ export function MapViewerClient({
         />
       )}
 
-      <MobileMapBar
-        activeMapIconClass={mapIconClass(data.slug)}
-        activeMapName={data.name}
-        tracker={tracker}
-        hasLayers={!isStatic}
-        layersOpen={layersOpen}
-        onLayersToggle={toggleLayers}
-      />
-
       {/* Мобильный шит «Инструменты» (M2) — режимы правки/линейка/GPS из useMapUiStore + трекер. */}
       <MapToolsSheet canEditMarkers={!isStatic && canEditMarkers} tracker={tracker} />
 
-      {/* Зум — левый край по центру (классическая зумовая зона; угол низ-право освобождён под Позицию) */}
-      <div className="absolute left-3.5 top-1/2 z-[500] flex -translate-y-1/2 flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md">
+      {/* Зум — левый край по центру (десктоп-only: на мобилке зум пинчем, по макету кнопок нет). */}
+      <div className="absolute left-3.5 top-1/2 z-[500] hidden -translate-y-1/2 flex-col overflow-hidden rounded-sm border border-lines-hover bg-card-menu backdrop-blur-md lg:flex">
         {!!heatPoints?.length && (
           <button
             type="button"
@@ -1795,8 +1784,8 @@ export function MapViewerClient({
         </button>
       </div>
 
-      {/* Позиция + атрибуция (низ-право) */}
-      <div className="absolute right-3.5 bottom-3.5 z-[500] flex flex-col items-end gap-2">
+      {/* Позиция + трекер (низ-право, десктоп-only: на мобилке слои/поиск в нижнем доке, GPS — в шите «Инструменты»). */}
+      <div className="absolute right-3.5 bottom-3.5 z-[500] hidden flex-col items-end gap-2 lg:flex">
 
         {/* Трекер позиции игрока + координаты (низ-право, GRILL-2). Только карты с проекцией. */}
         {data.config.transform && (

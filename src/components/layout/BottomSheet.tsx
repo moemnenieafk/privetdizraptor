@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { SheetCloseButton } from '@/components/ui/SheetCloseButton';
 
 interface BottomSheetProps {
   open: boolean;
@@ -56,13 +56,7 @@ export function BottomSheet({ open, title, onClose, children }: BottomSheetProps
           <h2 className="font-blender-medium text-sm uppercase tracking-widest text-(--color-text)">
             {title}
           </h2>
-          <button
-            aria-label="Закрыть"
-            onClick={onClose}
-            className="flex size-9 items-center justify-center rounded-xs text-(--color-muted) hover:text-(--primary)"
-          >
-            <X className="size-5" strokeWidth={2} />
-          </button>
+          <SheetCloseButton onClick={onClose} ariaLabel="Закрыть" />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {children}

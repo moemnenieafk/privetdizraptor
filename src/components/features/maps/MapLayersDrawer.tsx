@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, Layers, Minus, X } from 'lucide-react';
+import { Check, ChevronDown, Flame, Layers, Minus, X } from 'lucide-react';
 import { LAYER_GROUPS, type LayerItem } from './map-layers';
 import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
+import { useHeatmapStore } from '@/store/useHeatmapStore';
+import { SheetCloseButton } from '@/components/ui/SheetCloseButton';
 
 /**
  * Drawer «Легенда карты» (слои + легенда + счётчики + текст-фильтр слиты, GRILL-2). Дерево
@@ -67,6 +69,7 @@ export function MapLayersDrawer({
   onCycle,
   open: openProp,
   onOpenChange,
+  hasHeat = false,
 }: {
   vis: Record<string, boolean>;
   counts: Record<string, number>;
@@ -77,7 +80,11 @@ export function MapLayersDrawer({
   /** Управляемое открытие (мобильная панель). Без пропа — внутренний стейт (десктоп). */
   open?: boolean;
   onOpenChange?: (v: boolean) => void;
+  /** Есть ли у карты heat-датасет — тогда на мобилке показываем тоггл (десктоп: в зум-кластере). */
+  hasHeat?: boolean;
 }) {
+  const heatActive = useHeatmapStore((s) => s.active);
+  const heatToggle = useHeatmapStore((s) => s.toggle);
   const cycle = (e: React.MouseEvent, keys: string[]) => {
     e.preventDefault();
     onCycle(keys);
@@ -187,6 +194,8 @@ export function MapLayersDrawer({
             <Layers className="h-5.5 w-5.5" />
           </button>
           <span className="flex-1 font-blender-medium text-base uppercase tracking-widest text-text-primary lg:flex-none">Легенда карты</span>
+          {/* Мобильный крестик-закрытие (десктоп закрывает амбер-кнопкой слоёв справа). */}
+          <SheetCloseButton onClick={() => setOpen(false)} ariaLabel="Закрыть легенду" className="order-last lg:hidden" />
         </div>
 
         {/* Мульти-фильтр по маркерам (термины через запятую): инпут сверху, подпись снизу — как в «Поиске». */}
@@ -209,6 +218,22 @@ export function MapLayersDrawer({
             Доступна мульти-фильтрация, например: Платный, Босс, Опасности
           </p>
         </div>
+
+        {/* Тепловая карта денег (EV лута) — на мобилке живёт тут (зум-кластер с этим тогглом скрыт <lg). */}
+        {hasHeat && (
+          <button
+            type="button"
+            onClick={heatToggle}
+            aria-pressed={heatActive}
+            className={`mx-3 mb-1 flex h-9 shrink-0 items-center gap-2 rounded-xs border px-2.5 transition-colors lg:hidden ${
+              heatActive ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-secondary'
+            }`}
+          >
+            <Flame className="h-4 w-4 shrink-0" strokeWidth={2} />
+            <span className="flex-1 text-left font-blender-medium text-type-caption uppercase tracking-widest">Тепловая карта денег</span>
+            <Box state={heatActive ? 'on' : 'off'} />
+          </button>
+        )}
 
         <div className="scrollbar-hidden flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">
           {groups.length === 0 && (

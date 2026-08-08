@@ -9,7 +9,7 @@ import type { MapBossStat } from './map-frame-types';
  * Ряд кнопок (иконка 28px + % шанса); клик → подлёт к спавнам (onBossClick → focusPoints).
  * СВОРАЧИВАЕМЫЙ шевроном внизу, по умолчанию СВЁРНУТ — инфа не критичная. Сворачивается вниз
  * (grid-rows height-анимация) и разворачивается обратно на своё место.
- * Мобилка использует свою раскладку (MapBottomBar) — сюда не идёт (hidden lg:block).
+ * Мобилка использует свою раскладку (MapMobileDock, центр-чип) — сюда не идёт (hidden lg:block).
  */
 export function MapBossDock({
   bosses,
