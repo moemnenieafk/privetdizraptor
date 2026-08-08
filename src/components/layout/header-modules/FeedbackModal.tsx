@@ -3,9 +3,10 @@
 // Модалка «Сообщение об ошибке или неточности данных» (Figma 1588:1322).
 // Namertvo цепляет текущий URL страницы (pageUrl), шлёт multipart на /api/feedback:
 // email, сообщение, до 5 скриншотов (≤500 КБ каждый). SMTP отложен — копим в БД.
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { AlertTriangle, Paperclip, Check } from 'lucide-react';
 import { useModalAnimation } from '@/hooks/useModalAnimation';
+import { useUser } from '@/hooks/useUser';
 
 const MAX_FILES = 5;
 const MAX_FILE_BYTES = 500 * 1024;
@@ -24,8 +25,10 @@ export default function FeedbackModal({
   pageUrl: string;
 }) {
   const { isRendered, isVisible, modalRef } = useModalAnimation(isOpen, onClose);
+  const { user } = useUser();
 
   const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [consent, setConsent] = useState(false);
@@ -38,6 +41,11 @@ export default function FeedbackModal({
     () => emailValid && message.trim().length > 0 && consent && state !== 'sending',
     [emailValid, message, consent, state],
   );
+
+  // Автозаполнение email авторизованному — до первой ручной правки (поле остаётся редактируемым).
+  useEffect(() => {
+    if (!emailTouched && user?.email) setEmail(user.email);
+  }, [user?.email, emailTouched]);
 
   if (!isRendered) return null;
 
@@ -128,7 +136,10 @@ export default function FeedbackModal({
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailTouched(true);
+              }}
               placeholder="tarkovcitizen@gmail.com"
               className="h-10.5 rounded border-[0.5px] border-lines-hover bg-(--color-darkbase) px-3.5 font-blender-book text-lg text-(--primary) placeholder:text-text-muted focus:border-(--primary) focus:outline-none"
             />
