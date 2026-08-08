@@ -16,6 +16,7 @@ import { getEditorialMarkers } from '@/db/editorial-markers';
 import { getLootHeatPoints, getLootContainerPools, containerHeatPoints } from '@/db/loot-heat';
 import { getCmsUser } from '@/lib/auth/admin';
 import { EFT_QUESTS } from '@/data/quests';
+import objectivePointsData from '@/data/quests/eft-objective-points.json';
 import { STORY_WALKTHROUGHS } from '@/data/story-walkthroughs';
 import { questsForMap, questTasksForMap } from '@/lib/map-quests';
 import type { EditorialMarkerData } from '@/components/features/maps/EditorialMarkerCard';
@@ -51,6 +52,11 @@ export default async function MapPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { quest: focusQuestId } = await searchParams;
   const config = getMapConfig(slug);
+
+  // Пообъектные точки цели для ?quest= (пины ВМЕСТО зоны) — по questId+slug из лёгкого файла точек.
+  const objectivePoints = focusQuestId
+    ? ((objectivePointsData as Record<string, Record<string, { x: number; y: number; z: number; label: string }[]>>)[focusQuestId]?.[slug] ?? null)
+    : null;
 
   // Статичная карта (наш собственный арт в /public): подложка с зумом/паном, БЕЗ маркеров,
   // слоёв и поиска. Не ходит в БД и не зависит от tarkov.dev-геометрии.
@@ -103,7 +109,7 @@ export default async function MapPage({ params, searchParams }: Props) {
     const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
     return (
       <main className="w-full">
-        <MapFrame data={view} navMaps={navMaps} quests={[]} questTasks={[]} bosses={[]} questZones={questZones} focusQuestId={focusQuestId} />
+        <MapFrame data={view} navMaps={navMaps} quests={[]} questTasks={[]} bosses={[]} questZones={questZones} focusQuestId={focusQuestId} objectivePoints={objectivePoints} />
       </main>
     );
   }
@@ -347,6 +353,7 @@ export default async function MapPage({ params, searchParams }: Props) {
             questIndex={questIndex}
             storyIndex={storyIndex}
             focusQuestId={focusQuestId}
+            objectivePoints={objectivePoints}
           />
         </main>
       );

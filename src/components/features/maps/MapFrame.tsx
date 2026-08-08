@@ -56,6 +56,8 @@ interface Props {
   /** Индекс сюжетных историй для привязки (редакторам). */
   storyIndex?: StoryIndexItem[];
   focusQuestId?: string;
+  /** Пообъектные точки цели (possibleLocations, game x/z) для ?quest= — пины ВМЕСТО зоны. */
+  objectivePoints?: { x: number; z: number; label?: string }[] | null;
 }
 
 const mapHref = (slug: string) => `/eft/maps/${slug}`;
@@ -64,7 +66,7 @@ const mapHref = (slug: string) => `/eft/maps/${slug}`;
  * Оболочка карты. TopBar (десктоп) + адаптивный MapSearchDrawer (десктоп drawer / мобилка
  * bottom-sheet). Прочие мобильные шиты (карты/задания/рейд) — из MobileMapBar/нижнего бара.
  */
-export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, editorialBridge, heatPoints, canEditMarkers, mapId, questIndex, storyIndex, focusQuestId }: Props) {
+export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones, editorialMarkers, editorialBridge, heatPoints, canEditMarkers, mapId, questIndex, storyIndex, focusQuestId, objectivePoints }: Props) {
   const router = useRouter();
   const { isFullscreen, toggle, exit } = useFullscreen();
   const searchOpen = useMapUiStore((s) => s.searchOpen);
@@ -148,13 +150,17 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
   // когда зона найдена, иначе карта осталась бы пустой. Вернуть слои — группами в правой легенде.
   useEffect(() => {
     if (!ready || !focusQuestId) return;
+    const pts = objectivePoints;
     const z = questZones.find((q) => q.questId === focusQuestId);
-    if (!z) return;
+    if (!pts?.length && !z) return;
+    // Изоляция (слайс C): гасим чужие слои-маркеры, остаётся только цель квеста.
     const keys = Object.keys(useMapViewStore.getState().activeFilters);
     useMapViewStore.getState().setGroupFilters(keys, false);
-    if (z.outline.length >= 3) apiRef.current?.highlightZone(z.outline);
-    else if (z.position) apiRef.current?.flyTo(z.position, 4);
-  }, [ready, focusQuestId, questZones]);
+    // Пообъектные ТОЧКИ вместо зоны, если у квеста есть possibleLocations; иначе — зона.
+    if (pts?.length) apiRef.current?.showObjectivePoints(pts);
+    else if (z && z.outline.length >= 3) apiRef.current?.highlightZone(z.outline);
+    else if (z?.position) apiRef.current?.flyTo(z.position, 4);
+  }, [ready, focusQuestId, questZones, objectivePoints]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

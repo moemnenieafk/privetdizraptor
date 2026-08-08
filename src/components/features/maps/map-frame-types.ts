@@ -4,6 +4,9 @@ export interface MapViewerApi {
   flyTo(pos: { x: number; z: number }, zoom?: number): void;
   /** Подсветить зону (контур в игровых координатах) пульсирующим полигоном; null — снять. */
   highlightZone(outline: { x: number; z: number }[] | null): void;
+  /** Пообъектные пины цели квеста (точки в игровых координатах) с квест-иконкой; null — снять.
+   *  Точнее зоны — показываем ВМЕСТО неё по ?quest=, если у квеста есть possibleLocations. */
+  showObjectivePoints(points: { x: number; z: number; label?: string }[] | null): void;
   /** Вернуть стартовый вид (fitBounds). */
   fitView(): void;
   /** Переключить видимость слоя маркеров (extract/spawn/transit/hazard). */

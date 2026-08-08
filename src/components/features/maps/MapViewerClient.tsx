@@ -237,6 +237,7 @@ export function MapViewerClient({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const highlightRef = useRef<L.Polygon | null>(null);
+  const objectivePinsRef = useRef<L.LayerGroup | null>(null);
   const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null }[]>([]);
   // Синканые маркеры по их source-id → для класса .cta-mk-del без пересборки слоя (режим удаления).
   const sourceMarkerElsRef = useRef<Map<string, L.Marker>>(new Map());
@@ -1423,6 +1424,7 @@ export function MapViewerClient({
           highlightRef.current.remove();
           highlightRef.current = null;
         }
+        if (objectivePinsRef.current) { objectivePinsRef.current.remove(); objectivePinsRef.current = null; }
         if (!outline || outline.length < 3) return;
         const poly = L.polygon(outline.map((o) => ll(o)), {
           className: 'cta-ex-zone cta-quest-zone ef-all',
@@ -1431,6 +1433,31 @@ export function MapViewerClient({
         poly.addTo(map);
         highlightRef.current = poly;
         map.flyToBounds(poly.getBounds(), { padding: [60, 60], maxZoom: cfg.maxZoom, duration: 0.6 });
+      },
+      showObjectivePoints: (points) => {
+        // Пообъектные пины ВМЕСТО зоны (?quest= с possibleLocations): свой layerGroup вне фильтра/
+        // LOD (гоча №2 скилла map-interactions), квест-иконка на каждой возможной позиции.
+        // Снимаем и зону, и прошлые пины.
+        if (highlightRef.current) { highlightRef.current.remove(); highlightRef.current = null; }
+        if (objectivePinsRef.current) { objectivePinsRef.current.remove(); objectivePinsRef.current = null; }
+        if (!points || !points.length) return;
+        const icon = L.divIcon({
+          className: 'cta-di',
+          html: '<img src="/icons/eft/01-maps/markers/quest/quest-maker.svg" alt="" style="width:26px;height:26px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.65))" />',
+          iconSize: [26, 26],
+          iconAnchor: [13, 26],
+        });
+        const group = L.layerGroup();
+        for (const p of points) {
+          const mk = L.marker(ll(p), { icon, interactive: !!p.label, riseOnHover: true });
+          if (p.label) mk.bindTooltip(p.label, { direction: 'top', offset: [0, -24] });
+          mk.addTo(group);
+        }
+        group.addTo(map);
+        objectivePinsRef.current = group;
+        const lls = points.map((p) => ll(p));
+        if (lls.length === 1) map.flyTo(lls[0], Math.min(cfg.maxZoom, 4), { duration: 0.6 });
+        else map.flyToBounds(L.latLngBounds(lls), { padding: [80, 80], maxZoom: cfg.maxZoom, duration: 0.6 });
       },
       fitView: () => {
         if (cfg.bounds) map.fitBounds(bb(cfg.bounds));
@@ -1443,6 +1470,7 @@ export function MapViewerClient({
       cancelledSvg = true;
       resizeObs.disconnect();
       highlightRef.current = null;
+      objectivePinsRef.current = null;
       svgGroupsRef.current = null;
       markersRef.current = [];
       layerGroupsRef.current = {};
