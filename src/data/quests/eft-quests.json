@@ -368,6 +368,12 @@
         "description": "Найти информационный носитель",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6575a6ca8778e96ded05a802",
+          "name": "Жесткий диск ученого TerraGroup",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/6575a6ca8778e96ded05a802-512.webp"
+        },
         "maps": [
           {
             "id": "653e6760052c01c1c805532f",
@@ -387,7 +393,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать информационный носитель",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "6575a6ca8778e96ded05a802",
+          "name": "Жесткий диск ученого TerraGroup",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/6575a6ca8778e96ded05a802-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -688,6 +700,12 @@
         "description": "Найти бутылку вина в магазине",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6582bd252b50c61c565828e2",
+          "name": "Бутылка вина Le Jean",
+          "shortName": "Вино",
+          "image512pxLink": "https://assets.tarkov.dev/6582bd252b50c61c565828e2-512.webp"
+        },
         "maps": [
           {
             "id": "653e6760052c01c1c805532f",
@@ -707,7 +725,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать бутылку вина",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "6582bd252b50c61c565828e2",
+          "name": "Бутылка вина Le Jean",
+          "shortName": "Вино",
+          "image512pxLink": "https://assets.tarkov.dev/6582bd252b50c61c565828e2-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -793,6 +817,12 @@
         "description": "Найти Бронзовые часы на цепочке на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5937fd0086f7742bf33fc198",
+          "name": "Бронзовые часы на цепочке",
+          "shortName": "Часы",
+          "image512pxLink": "https://assets.tarkov.dev/5937fd0086f7742bf33fc198-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -822,7 +852,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный предмет",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5937fd0086f7742bf33fc198",
+          "name": "Бронзовые часы на цепочке",
+          "shortName": "Часы",
+          "image512pxLink": "https://assets.tarkov.dev/5937fd0086f7742bf33fc198-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -1643,6 +1679,12 @@
         "description": "Найти послание от Егеря",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5d3ec50586f774183a607442",
+          "name": "Зашифрованное сообщение",
+          "shortName": "Шифр. пакет",
+          "image512pxLink": "https://assets.tarkov.dev/5d3ec50586f774183a607442-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -1657,7 +1699,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать послание Механику",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5d3ec50586f774183a607442",
+          "name": "Зашифрованное сообщение",
+          "shortName": "Шифр. пакет",
+          "image512pxLink": "https://assets.tarkov.dev/5d3ec50586f774183a607442-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -3293,14 +3341,14 @@
         "optional": false,
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -4099,6 +4147,12 @@
         "description": "Найти кейс с информацией в кабинете директора Tarcone на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "591092ef86f7747bb8703422",
+          "name": "Защищенный кейс для документов 0022",
+          "shortName": "0022",
+          "image512pxLink": "https://assets.tarkov.dev/591092ef86f7747bb8703422-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -4114,16 +4168,22 @@
         "description": "Оставить груз во времянке на 2-м этаже около Ворот 3 на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "591092ef86f7747bb8703422",
+          "name": "Защищенный кейс для документов 0022",
+          "shortName": "0022",
+          "image512pxLink": "https://assets.tarkov.dev/591092ef86f7747bb8703422-512.webp"
+        },
         "maps": [
-          {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       }
@@ -4778,6 +4838,12 @@
         "description": "Найти Защищенный кейс для документов 0031 во времянке на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5938188786f77474f723e87f",
+          "name": "Защищенный кейс для документов 0031",
+          "shortName": "0031",
+          "image512pxLink": "https://assets.tarkov.dev/5938188786f77474f723e87f-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -4794,14 +4860,14 @@
         "optional": true,
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -4826,7 +4892,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать кейс",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5938188786f77474f723e87f",
+          "name": "Защищенный кейс для документов 0031",
+          "shortName": "0031",
+          "image512pxLink": "https://assets.tarkov.dev/5938188786f77474f723e87f-512.webp"
+        }
       },
       {
         "id": "596762ec86f77426d3687a87",
@@ -5099,6 +5171,12 @@
         "description": "Найти спрятанный ценный груз на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "593965cf86f774087a77e1b6",
+          "name": "Защищенный кейс для документов 0048",
+          "shortName": "0048",
+          "image512pxLink": "https://assets.tarkov.dev/593965cf86f774087a77e1b6-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -5141,7 +5219,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать ценный груз",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "593965cf86f774087a77e1b6",
+          "name": "Защищенный кейс для документов 0048",
+          "shortName": "0048",
+          "image512pxLink": "https://assets.tarkov.dev/593965cf86f774087a77e1b6-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -5638,6 +5722,12 @@
         "description": "Найти Золотую бензиновую зажигалку Zibbo на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5939a00786f7742fe8132936",
+          "name": "Золотая бензиновая зажигалка Zibbo",
+          "shortName": "ZibboG",
+          "image512pxLink": "https://assets.tarkov.dev/5939a00786f7742fe8132936-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -5653,6 +5743,12 @@
         "description": "Оставить зажигалку во времянке на трейлерной стоянке на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5939a00786f7742fe8132936",
+          "name": "Золотая бензиновая зажигалка Zibbo",
+          "shortName": "ZibboG",
+          "image512pxLink": "https://assets.tarkov.dev/5939a00786f7742fe8132936-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -5976,6 +6072,12 @@
         "description": "Найти ценную вещь в комнате 203 общежития на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "590dde5786f77405e71908b2",
+          "name": "Банковский кейс",
+          "shortName": "Кейс",
+          "image512pxLink": "https://assets.tarkov.dev/590dde5786f77405e71908b2-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -6004,7 +6106,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать ценную вещь",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "590dde5786f77405e71908b2",
+          "name": "Банковский кейс",
+          "shortName": "Кейс",
+          "image512pxLink": "https://assets.tarkov.dev/590dde5786f77405e71908b2-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -6588,6 +6696,12 @@
         "description": "Найти кейс с прибором на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5910922b86f7747d96753483",
+          "name": "Карбоновый кейс",
+          "shortName": "Кейс",
+          "image512pxLink": "https://assets.tarkov.dev/5910922b86f7747d96753483-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -6630,7 +6744,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать кейс с прибором",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5910922b86f7747d96753483",
+          "name": "Карбоновый кейс",
+          "shortName": "Кейс",
+          "image512pxLink": "https://assets.tarkov.dev/5910922b86f7747d96753483-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -6707,6 +6827,12 @@
         "description": "Найти информацию о прошлой жизни замначальника на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5939e5a786f77461f11c0098",
+          "name": "Защищенный кейс для документов 0013",
+          "shortName": "0013",
+          "image512pxLink": "https://assets.tarkov.dev/5939e5a786f77461f11c0098-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -6750,7 +6876,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5939e5a786f77461f11c0098",
+          "name": "Защищенный кейс для документов 0013",
+          "shortName": "0013",
+          "image512pxLink": "https://assets.tarkov.dev/5939e5a786f77461f11c0098-512.webp"
+        }
       },
       {
         "id": "5979fc9286f77426d702a0f5",
@@ -6833,6 +6965,12 @@
         "description": "Найти письмо на теле посыльного на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "591093bb86f7747caa7bb2ee",
+          "name": "Запечатанное письмо",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/591093bb86f7747caa7bb2ee-512.webp"
+        },
         "maps": [
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
@@ -7137,7 +7275,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать письмо посыльного",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "591093bb86f7747caa7bb2ee",
+          "name": "Запечатанное письмо",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/591093bb86f7747caa7bb2ee-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -7539,6 +7683,12 @@
         "description": "Найти любую зацепку, которая может помочь расследованию, на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "590c62a386f77412b0130255",
+          "name": "Защищенный флеш-накопитель Sliderkey",
+          "shortName": "Sliderkey",
+          "image512pxLink": "https://assets.tarkov.dev/590c62a386f77412b0130255-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -7554,6 +7704,12 @@
         "description": "Найти любую информацию, которая может помочь расследованию, на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5939e9b286f77462a709572c",
+          "name": "Запечатанное письмо c логотипом TG",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/5939e9b286f77462a709572c-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -7568,7 +7724,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать зацепку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "590c62a386f77412b0130255",
+          "name": "Защищенный флеш-накопитель Sliderkey",
+          "shortName": "Sliderkey",
+          "image512pxLink": "https://assets.tarkov.dev/590c62a386f77412b0130255-512.webp"
+        }
       },
       {
         "id": "597a0bdb86f7742717106d12",
@@ -7576,7 +7738,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5939e9b286f77462a709572c",
+          "name": "Запечатанное письмо c логотипом TG",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/5939e9b286f77462a709572c-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -7915,6 +8083,12 @@
         "description": "Найти бортовой журнал вертолета на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66c0b90c8398582e4b0c2e27",
+          "name": "Бортовой журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/66c0b90c8398582e4b0c2e27-512.webp"
+        },
         "maps": [
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
@@ -7934,7 +8108,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "66c0b90c8398582e4b0c2e27",
+          "name": "Бортовой журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/66c0b90c8398582e4b0c2e27-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -8730,6 +8910,12 @@
         "description": "Найти компромат на Распорядителя",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "664fce7a90294949fe2d81cb",
+          "name": "Компромат на Распорядителя",
+          "shortName": "Компромат",
+          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -8744,7 +8930,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "664fce7a90294949fe2d81cb",
+          "name": "Компромат на Распорядителя",
+          "shortName": "Компромат",
+          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -9028,6 +9220,12 @@
         "description": "Найти компромат на Распорядителя",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "664fce7a90294949fe2d81cb",
+          "name": "Компромат на Распорядителя",
+          "shortName": "Компромат",
+          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -9042,7 +9240,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "664fce7a90294949fe2d81cb",
+          "name": "Компромат на Распорядителя",
+          "shortName": "Компромат",
+          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -9793,6 +9997,12 @@
         "description": "Найти шприц с реагентом на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "593a87af86f774122f54a951",
+          "name": "Шприц с реагентом",
+          "shortName": "Реагент",
+          "image512pxLink": "https://assets.tarkov.dev/593a87af86f774122f54a951-512.webp"
+        },
         "maps": [
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
@@ -9812,7 +10022,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный предмет",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "593a87af86f774122f54a951",
+          "name": "Шприц с реагентом",
+          "shortName": "Реагент",
+          "image512pxLink": "https://assets.tarkov.dev/593a87af86f774122f54a951-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -9910,6 +10126,12 @@
         "description": "Найти SAS диск со второго разбившегося беспилотника",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5a294d8486f774068638cd93",
+          "name": "SAS диск с беспилотника №2",
+          "shortName": "SAS №2",
+          "image512pxLink": "https://assets.tarkov.dev/5a294d8486f774068638cd93-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -9925,6 +10147,12 @@
         "description": "Найти SAS диск с первого разбившегося беспилотника",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5a294d7c86f7740651337cf9",
+          "name": "SAS диск с беспилотника №1",
+          "shortName": "SAS №1",
+          "image512pxLink": "https://assets.tarkov.dev/5a294d7c86f7740651337cf9-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -9939,7 +10167,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать первый SAS диск",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5a294d7c86f7740651337cf9",
+          "name": "SAS диск с беспилотника №1",
+          "shortName": "SAS №1",
+          "image512pxLink": "https://assets.tarkov.dev/5a294d7c86f7740651337cf9-512.webp"
+        }
       },
       {
         "id": "5a3ba3b086f7745ab1081101",
@@ -9961,7 +10195,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать второй SAS диск",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5a294d8486f774068638cd93",
+          "name": "SAS диск с беспилотника №2",
+          "shortName": "SAS №2",
+          "image512pxLink": "https://assets.tarkov.dev/5a294d8486f774068638cd93-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -11110,6 +11350,12 @@
         "description": "Найти журнал с информацией о жильцах на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "638e0057ab150a5f56238960",
+          "name": "Журнал ЖКУ",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/638e0057ab150a5f56238960-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -11124,7 +11370,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать журнал",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "638e0057ab150a5f56238960",
+          "name": "Журнал ЖКУ",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/638e0057ab150a5f56238960-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -11739,6 +11991,12 @@
         "description": "Найти Ключ от закрытых помещений Санатория на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5a0448bc86f774736f14efa8",
+          "name": "Ключ от закрытых помещений Санатория",
+          "shortName": "Санаторий",
+          "image512pxLink": "https://assets.tarkov.dev/5a0448bc86f774736f14efa8-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -11753,7 +12011,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать ключ",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5a0448bc86f774736f14efa8",
+          "name": "Ключ от закрытых помещений Санатория",
+          "shortName": "Санаторий",
+          "image512pxLink": "https://assets.tarkov.dev/5a0448bc86f774736f14efa8-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -12053,6 +12317,12 @@
         "description": "Найти записи о грузе в компьютерном зале восточного крыла Санатория на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5a29284f86f77463ef3db363",
+          "name": "Защищенный ноутбук Toughbook",
+          "shortName": "Toughbook",
+          "image512pxLink": "https://assets.tarkov.dev/5a29284f86f77463ef3db363-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -12067,7 +12337,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать полученные данные",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5a29284f86f77463ef3db363",
+          "name": "Защищенный ноутбук Toughbook",
+          "shortName": "Toughbook",
+          "image512pxLink": "https://assets.tarkov.dev/5a29284f86f77463ef3db363-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -12153,6 +12429,12 @@
         "description": "Найти любую информацию о второй части груза",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5939e5a786f77461f11c0098",
+          "name": "Защищенный кейс для документов 0013",
+          "shortName": "0013",
+          "image512pxLink": "https://assets.tarkov.dev/5939e5a786f77461f11c0098-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -12181,7 +12463,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5939e5a786f77461f11c0098",
+          "name": "Защищенный кейс для документов 0013",
+          "shortName": "0013",
+          "image512pxLink": "https://assets.tarkov.dev/5939e5a786f77461f11c0098-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -14092,6 +14380,12 @@
         "description": "Собрать образец химикатов в повреждённой цистерне на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "669fac549b0ce3feae01a137",
+          "name": "Проба из цистерны",
+          "shortName": "Проба",
+          "image512pxLink": "https://assets.tarkov.dev/669fac549b0ce3feae01a137-512.webp"
+        },
         "maps": [
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
@@ -14111,7 +14405,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать пробу химикатов",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "669fac549b0ce3feae01a137",
+          "name": "Проба из цистерны",
+          "shortName": "Проба",
+          "image512pxLink": "https://assets.tarkov.dev/669fac549b0ce3feae01a137-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -14179,6 +14479,12 @@
         "description": "Найти кейс с точными инструментами в лаборатории на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66b22630a6b4e5ec7c02cdb7",
+          "name": "Кейс с точными инструментами",
+          "shortName": "Инструменты",
+          "image512pxLink": "https://assets.tarkov.dev/66b22630a6b4e5ec7c02cdb7-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -14229,16 +14535,22 @@
         "description": "Заложить посылку в подсобке лаборатории на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66b22630a6b4e5ec7c02cdb7",
+          "name": "Кейс с точными инструментами",
+          "shortName": "Инструменты",
+          "image512pxLink": "https://assets.tarkov.dev/66b22630a6b4e5ec7c02cdb7-512.webp"
+        },
         "maps": [
-          {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       }
@@ -14463,6 +14775,12 @@
         "description": "Найти набор модернизированных инструментов в гаражном кооперативе на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "675f80d4fe1b59cf490d3527",
+          "name": "Набор модернированных инструментов",
+          "shortName": "Модерн. набор",
+          "image512pxLink": "https://assets.tarkov.dev/675f80d4fe1b59cf490d3527-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -14477,7 +14795,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный предмет",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "675f80d4fe1b59cf490d3527",
+          "name": "Набор модернированных инструментов",
+          "shortName": "Модерн. набор",
+          "image512pxLink": "https://assets.tarkov.dev/675f80d4fe1b59cf490d3527-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -14891,6 +15215,12 @@
         "description": "Найти Защищенный кейс для документов 0052 на лесопилке в Лесу",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5938878586f7741b797c562f",
+          "name": "Защищенный кейс для документов 0052",
+          "shortName": "0052",
+          "image512pxLink": "https://assets.tarkov.dev/5938878586f7741b797c562f-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -14920,7 +15250,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать кейс",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5938878586f7741b797c562f",
+          "name": "Защищенный кейс для документов 0052",
+          "shortName": "0052",
+          "image512pxLink": "https://assets.tarkov.dev/5938878586f7741b797c562f-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -14987,7 +15323,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать Защищенный кейс для документов 0052",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5938878586f7741b797c562f",
+          "name": "Защищенный кейс для документов 0052",
+          "shortName": "0052",
+          "image512pxLink": "https://assets.tarkov.dev/5938878586f7741b797c562f-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -15592,6 +15934,12 @@
         "description": "Найти груз с видеокартами",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5ac620eb86f7743a8e6e0da0",
+          "name": "Посылка с видеокартами",
+          "shortName": "Посылка",
+          "image512pxLink": "https://assets.tarkov.dev/5ac620eb86f7743a8e6e0da0-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -15620,7 +15968,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать груз с видеокартами",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5ac620eb86f7743a8e6e0da0",
+          "name": "Посылка с видеокартами",
+          "shortName": "Посылка",
+          "image512pxLink": "https://assets.tarkov.dev/5ac620eb86f7743a8e6e0da0-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -15958,6 +16312,12 @@
         "description": "Найти список жильцов Санатория на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5a29357286f77409c705e025",
+          "name": "Защищенный флеш-накопитель Sliderkey",
+          "shortName": "Флешка",
+          "image512pxLink": "https://assets.tarkov.dev/5a29357286f77409c705e025-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -15972,7 +16332,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать список жильцов",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5a29357286f77409c705e025",
+          "name": "Защищенный флеш-накопитель Sliderkey",
+          "shortName": "Флешка",
+          "image512pxLink": "https://assets.tarkov.dev/5a29357286f77409c705e025-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -16040,6 +16406,12 @@
         "description": "Найти информацию о работе Артёма на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5a29276886f77435ed1b117c",
+          "name": "Рабочий жесткий диск",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/5a29276886f77435ed1b117c-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -16054,7 +16426,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5a29276886f77435ed1b117c",
+          "name": "Рабочий жесткий диск",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/5a29276886f77435ed1b117c-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -16592,6 +16970,12 @@
         "description": "Найти коробку с ПУК Т-90М на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "609267a2bb3f46069c3e6c7d",
+          "name": "Пульт управления командира Т-90М",
+          "shortName": "ПУК Т-90М",
+          "image512pxLink": "https://assets.tarkov.dev/609267a2bb3f46069c3e6c7d-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -16606,7 +16990,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать груз",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "609267a2bb3f46069c3e6c7d",
+          "name": "Пульт управления командира Т-90М",
+          "shortName": "ПУК Т-90М",
+          "image512pxLink": "https://assets.tarkov.dev/609267a2bb3f46069c3e6c7d-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -16683,6 +17073,12 @@
         "description": "Найти ГАЛС-Д3 на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "60c080eb991ac167ad1c3ad4",
+          "name": "ГАЛС-Д3",
+          "shortName": "ГАЛС-Д3",
+          "image512pxLink": "https://assets.tarkov.dev/60c080eb991ac167ad1c3ad4-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -16697,7 +17093,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать ГАЛС-ДЗ",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "60c080eb991ac167ad1c3ad4",
+          "name": "ГАЛС-Д3",
+          "shortName": "ГАЛС-Д3",
+          "image512pxLink": "https://assets.tarkov.dev/60c080eb991ac167ad1c3ad4-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -16986,6 +17388,12 @@
         "description": "Найти записную книжку старшего менеджера",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "679b9a1a4e4ed4b3b40ae5c2",
+          "name": "Блокнот старшего менеджера \"ООО КНОССОС\"",
+          "shortName": "Knossos",
+          "image512pxLink": "https://assets.tarkov.dev/679b9a1a4e4ed4b3b40ae5c2-512.webp"
+        },
         "maps": [
           {
             "id": "653e6760052c01c1c805532f",
@@ -17005,7 +17413,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать записную книжку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "679b9a1a4e4ed4b3b40ae5c2",
+          "name": "Блокнот старшего менеджера \"ООО КНОССОС\"",
+          "shortName": "Knossos",
+          "image512pxLink": "https://assets.tarkov.dev/679b9a1a4e4ed4b3b40ae5c2-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -17309,6 +17723,12 @@
         "description": "Найти Медицинский журнал №1 на Резерве",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "608c22a003292f4ba43f8a1a",
+          "name": "Медицинский журнал №1",
+          "shortName": "Журнал №1",
+          "image512pxLink": "https://assets.tarkov.dev/608c22a003292f4ba43f8a1a-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -17324,6 +17744,12 @@
         "description": "Найти Медицинский журнал №2 на Резерве",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "60a3b5b05f84d429b732e934",
+          "name": "Медицинский журнал №2",
+          "shortName": "Журнал №2",
+          "image512pxLink": "https://assets.tarkov.dev/60a3b5b05f84d429b732e934-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -17338,7 +17764,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать первый журнал",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "608c22a003292f4ba43f8a1a",
+          "name": "Медицинский журнал №1",
+          "shortName": "Журнал №1",
+          "image512pxLink": "https://assets.tarkov.dev/608c22a003292f4ba43f8a1a-512.webp"
+        }
       },
       {
         "id": "60ae134cabb9675f0062cf6e",
@@ -17346,7 +17778,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать второй журнал",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "60a3b5b05f84d429b732e934",
+          "name": "Медицинский журнал №2",
+          "shortName": "Журнал №2",
+          "image512pxLink": "https://assets.tarkov.dev/60a3b5b05f84d429b732e934-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -17432,6 +17870,12 @@
         "description": "Найти заказное письмо на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "638cbc68a63f1b49be6a3010",
+          "name": "Заказное письмо",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/638cbc68a63f1b49be6a3010-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -17446,7 +17890,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать заказное письмо",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "638cbc68a63f1b49be6a3010",
+          "name": "Заказное письмо",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/638cbc68a63f1b49be6a3010-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -18492,6 +18942,12 @@
         "description": "Найти документы с маршрутами груза сети OLI на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5ae9a25386f7746dd946e6d9",
+          "name": "Документы с маршрутом груза OLI",
+          "shortName": "OLI груз",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a25386f7746dd946e6d9-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -18506,7 +18962,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать документы",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5ae9a25386f7746dd946e6d9",
+          "name": "Документы с маршрутом груза OLI",
+          "shortName": "OLI груз",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a25386f7746dd946e6d9-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -19449,6 +19911,12 @@
         "description": "Найти информацию в убежище Водохлёба",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "666073159916667083033cb9",
+          "name": "Потрепанный ежедневник",
+          "shortName": "Дневник",
+          "image512pxLink": "https://assets.tarkov.dev/666073159916667083033cb9-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -19463,7 +19931,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "666073159916667083033cb9",
+          "name": "Потрепанный ежедневник",
+          "shortName": "Дневник",
+          "image512pxLink": "https://assets.tarkov.dev/666073159916667083033cb9-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -19635,6 +20109,12 @@
         "description": "Найти Лабораторный журнал на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66c0b39ca1f68fcc1d0c0cc3",
+          "name": "Лабораторный журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/66c0b39ca1f68fcc1d0c0cc3-512.webp"
+        },
         "maps": [
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
@@ -19655,6 +20135,12 @@
         "description": "Спрятать Лабораторный журнал на территории старой лесопилки на локации Лес",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66c0b39ca1f68fcc1d0c0cc3",
+          "name": "Лабораторный журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/66c0b39ca1f68fcc1d0c0cc3-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -19746,7 +20232,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать Лабораторный журнал",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "66c0b39ca1f68fcc1d0c0cc3",
+          "name": "Лабораторный журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/66c0b39ca1f68fcc1d0c0cc3-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -19814,6 +20306,12 @@
         "description": "Найти химический контейнер на складе TerraGroup на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66a0e523e749756c920d02d0",
+          "name": "Химический контейнер",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/66a0e523e749756c920d02d0-512.webp"
+        },
         "maps": [
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
@@ -19833,7 +20331,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать химический контейнер",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "66a0e523e749756c920d02d0",
+          "name": "Химический контейнер",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/66a0e523e749756c920d02d0-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -20699,6 +21203,12 @@
         "description": "Найти особый носитель информации в Лабиринте",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "679b9aa490622daf9708da73",
+          "name": "Твердотельный накопитель VPX Flash Storage Module с пометкой \"группа №3\"",
+          "shortName": "Группа №3",
+          "image512pxLink": "https://assets.tarkov.dev/679b9aa490622daf9708da73-512.webp"
+        },
         "maps": [
           {
             "id": "6733700029c367a3d40b02af",
@@ -20735,7 +21245,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "679b9aa490622daf9708da73",
+          "name": "Твердотельный накопитель VPX Flash Storage Module с пометкой \"группа №3\"",
+          "shortName": "Группа №3",
+          "image512pxLink": "https://assets.tarkov.dev/679b9aa490622daf9708da73-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -20844,6 +21360,12 @@
         "description": "Найти доказательство пыток",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "679b998180a165f7a40b4c2c",
+          "name": "Видеокассета \"На убой\"",
+          "shortName": "\"На убой\"",
+          "image512pxLink": "https://assets.tarkov.dev/679b998180a165f7a40b4c2c-512.webp"
+        },
         "maps": [
           {
             "id": "6733700029c367a3d40b02af",
@@ -20858,7 +21380,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информация",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "679b998180a165f7a40b4c2c",
+          "name": "Видеокассета \"На убой\"",
+          "shortName": "\"На убой\"",
+          "image512pxLink": "https://assets.tarkov.dev/679b998180a165f7a40b4c2c-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -21298,6 +21826,12 @@
         "description": "Найти грузовые ведомости сети Goshan на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5ae9a0dd86f7742e5f454a05",
+          "name": "Грузовые ведомости Гошана",
+          "shortName": "Гошан",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a0dd86f7742e5f454a05-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -21313,6 +21847,12 @@
         "description": "Найти грузовые ведомости сети OLI на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5ae9a18586f7746e381e16a3",
+          "name": "Грузовые ведомости OLI",
+          "shortName": "OLI",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a18586f7746e381e16a3-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -21328,6 +21868,12 @@
         "description": "Найти грузовые ведомости сети IDEA на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5ae9a1b886f77404c8537c62",
+          "name": "Грузовые ведомости IDEA",
+          "shortName": "IDEA",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a1b886f77404c8537c62-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -21342,7 +21888,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать ведомости Goshan",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5ae9a0dd86f7742e5f454a05",
+          "name": "Грузовые ведомости Гошана",
+          "shortName": "Гошан",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a0dd86f7742e5f454a05-512.webp"
+        }
       },
       {
         "id": "5ae9b38a86f77432c81e2ce3",
@@ -21350,7 +21902,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать ведомости OLI",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5ae9a18586f7746e381e16a3",
+          "name": "Грузовые ведомости OLI",
+          "shortName": "OLI",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a18586f7746e381e16a3-512.webp"
+        }
       },
       {
         "id": "5ae9b3c986f77432c81e2ce6",
@@ -21358,7 +21916,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать ведомости IDEA",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5ae9a1b886f77404c8537c62",
+          "name": "Грузовые ведомости IDEA",
+          "shortName": "IDEA",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a1b886f77404c8537c62-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -21885,6 +22449,12 @@
         "description": "Найти контейнер с образцами наркотиков",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "63927b29c115f907b14700b9",
+          "name": "Хим. контейнер с образцами",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/63927b29c115f907b14700b9-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -21899,7 +22469,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать контейнер",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "63927b29c115f907b14700b9",
+          "name": "Хим. контейнер с образцами",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/63927b29c115f907b14700b9-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -21976,6 +22552,12 @@
         "description": "Найти данные о работе насосов на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "619268de2be33f2604340159",
+          "name": "Данные о работе насосов",
+          "shortName": "Данные",
+          "image512pxLink": "https://assets.tarkov.dev/619268de2be33f2604340159-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -21991,6 +22573,12 @@
         "description": "Найти отчёты о работе станции на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "619268ad78f4fa33f173dbe5",
+          "name": "Отчет о работе насосной станции",
+          "shortName": "Отчет",
+          "image512pxLink": "https://assets.tarkov.dev/619268ad78f4fa33f173dbe5-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -22005,7 +22593,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "619268de2be33f2604340159",
+          "name": "Данные о работе насосов",
+          "shortName": "Данные",
+          "image512pxLink": "https://assets.tarkov.dev/619268de2be33f2604340159-512.webp"
+        }
       },
       {
         "id": "61951c3e2e2805073c2d29db",
@@ -22013,7 +22607,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "619268ad78f4fa33f173dbe5",
+          "name": "Отчет о работе насосной станции",
+          "shortName": "Отчет",
+          "image512pxLink": "https://assets.tarkov.dev/619268ad78f4fa33f173dbe5-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -22368,6 +22968,12 @@
         "description": "Найти кейс информатора на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "619252352be33f26043400a7",
+          "name": "Ноутбук с информацией",
+          "shortName": "Toughbook",
+          "image512pxLink": "https://assets.tarkov.dev/619252352be33f26043400a7-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -22382,7 +22988,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный груз",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "619252352be33f26043400a7",
+          "name": "Ноутбук с информацией",
+          "shortName": "Toughbook",
+          "image512pxLink": "https://assets.tarkov.dev/619252352be33f26043400a7-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -22441,6 +23053,12 @@
         "description": "Найти финансовые отчёты на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "63a943cead5cc12f22161ff7",
+          "name": "Бухгалтерские записи",
+          "shortName": "Бух.записи",
+          "image512pxLink": "https://assets.tarkov.dev/63a943cead5cc12f22161ff7-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -22455,7 +23073,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать финансовые отчёты",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "63a943cead5cc12f22161ff7",
+          "name": "Бухгалтерские записи",
+          "shortName": "Бух.записи",
+          "image512pxLink": "https://assets.tarkov.dev/63a943cead5cc12f22161ff7-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -23035,6 +23659,12 @@
         "description": "Найти маршрутные листы TerraGroup на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "675f7acc4076a741a3061566",
+          "name": "Отчёт о транспортировке грузов TerraGroup",
+          "shortName": "Документы",
+          "image512pxLink": "https://assets.tarkov.dev/675f7acc4076a741a3061566-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -23049,7 +23679,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "675f7acc4076a741a3061566",
+          "name": "Отчёт о транспортировке грузов TerraGroup",
+          "shortName": "Документы",
+          "image512pxLink": "https://assets.tarkov.dev/675f7acc4076a741a3061566-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -23117,6 +23753,12 @@
         "description": "Найти записи грузчиков о перемещениях поставки на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "675f7b168d28a25ec7007dbb",
+          "name": "Журнал записей грузчиков",
+          "shortName": "Дневник",
+          "image512pxLink": "https://assets.tarkov.dev/675f7b168d28a25ec7007dbb-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -23131,7 +23773,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "675f7b168d28a25ec7007dbb",
+          "name": "Журнал записей грузчиков",
+          "shortName": "Дневник",
+          "image512pxLink": "https://assets.tarkov.dev/675f7b168d28a25ec7007dbb-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -23339,6 +23987,12 @@
         "description": "Найти смартфон фельдшера скорой помощи на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "64f09c02b63b74469b6c149f",
+          "name": "GPhone X фельдшера",
+          "shortName": "GPX",
+          "image512pxLink": "https://assets.tarkov.dev/64f09c02b63b74469b6c149f-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -23368,7 +24022,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать смартфон",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "64f09c02b63b74469b6c149f",
+          "name": "GPhone X фельдшера",
+          "shortName": "GPX",
+          "image512pxLink": "https://assets.tarkov.dev/64f09c02b63b74469b6c149f-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -24160,6 +24820,12 @@
         "description": "Найти первую папку с военными документами на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "60915994c49cf53e4772cc38",
+          "name": "Военные документы №1",
+          "shortName": "Доки №1",
+          "image512pxLink": "https://assets.tarkov.dev/60915994c49cf53e4772cc38-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -24175,6 +24841,12 @@
         "description": "Найти вторую папку с военными документами на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "60a3b6359c427533db36cf84",
+          "name": "Военные документы №2",
+          "shortName": "Доки №2",
+          "image512pxLink": "https://assets.tarkov.dev/60a3b6359c427533db36cf84-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -24190,6 +24862,12 @@
         "description": "Найти третью папку с военными документами на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "60a3b65c27adf161da7b6e14",
+          "name": "Военные документы №3",
+          "shortName": "Доки №3",
+          "image512pxLink": "https://assets.tarkov.dev/60a3b65c27adf161da7b6e14-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -24204,7 +24882,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать первые документы",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "60915994c49cf53e4772cc38",
+          "name": "Военные документы №1",
+          "shortName": "Доки №1",
+          "image512pxLink": "https://assets.tarkov.dev/60915994c49cf53e4772cc38-512.webp"
+        }
       },
       {
         "id": "60ae0f0586046842a754e21e",
@@ -24212,7 +24896,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать вторые документы",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "60a3b6359c427533db36cf84",
+          "name": "Военные документы №2",
+          "shortName": "Доки №2",
+          "image512pxLink": "https://assets.tarkov.dev/60a3b6359c427533db36cf84-512.webp"
+        }
       },
       {
         "id": "60ae0f17b809a4748759078c",
@@ -24220,7 +24910,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать третьи документы",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "60a3b65c27adf161da7b6e14",
+          "name": "Военные документы №3",
+          "shortName": "Доки №3",
+          "image512pxLink": "https://assets.tarkov.dev/60a3b65c27adf161da7b6e14-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -24779,6 +25475,12 @@
         "description": "Найти послание Егерю",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "61904c9df62c89219a56e034",
+          "name": "Запечатанное послание",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/61904c9df62c89219a56e034-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -24793,7 +25495,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать послание",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "61904c9df62c89219a56e034",
+          "name": "Запечатанное послание",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/61904c9df62c89219a56e034-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -25503,6 +26211,12 @@
         "description": "Найти результаты наблюдений",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "638e9d5536b3b72c944e2fc7",
+          "name": "Цифровой носитель с результатами сьёмок",
+          "shortName": "Флешка",
+          "image512pxLink": "https://assets.tarkov.dev/638e9d5536b3b72c944e2fc7-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -25517,7 +26231,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать данные",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "638e9d5536b3b72c944e2fc7",
+          "name": "Цифровой носитель с результатами сьёмок",
+          "shortName": "Флешка",
+          "image512pxLink": "https://assets.tarkov.dev/638e9d5536b3b72c944e2fc7-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -26277,6 +26997,12 @@
         "description": "Обыскать комнату в Санатории на информацию о судьбе исследований TerraGroup на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5a6860d886f77411cd3a9e47",
+          "name": "Защищенный кейс для документов 0060",
+          "shortName": "0060",
+          "image512pxLink": "https://assets.tarkov.dev/5a6860d886f77411cd3a9e47-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -26291,7 +27017,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5a6860d886f77411cd3a9e47",
+          "name": "Защищенный кейс для документов 0060",
+          "shortName": "0060",
+          "image512pxLink": "https://assets.tarkov.dev/5a6860d886f77411cd3a9e47-512.webp"
+        }
       },
       {
         "id": "5a68764c86f77474c4269f3c",
@@ -26374,6 +27106,12 @@
         "description": "Собрать образец крови",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5a687e7886f7740c4a5133fb",
+          "name": "Проба крови",
+          "shortName": "Кровь",
+          "image512pxLink": "https://assets.tarkov.dev/5a687e7886f7740c4a5133fb-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -26402,7 +27140,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать образец крови",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5a687e7886f7740c4a5133fb",
+          "name": "Проба крови",
+          "shortName": "Кровь",
+          "image512pxLink": "https://assets.tarkov.dev/5a687e7886f7740c4a5133fb-512.webp"
+        }
       },
       {
         "id": "5a68778c86f77423391f38f0",
@@ -27162,6 +27906,12 @@
         "description": "Найти и собрать пробу крови с тела рабочего на локации Завод",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66a0f0926fee20fa70036da6",
+          "name": "Проба крови",
+          "shortName": "Кровь",
+          "image512pxLink": "https://assets.tarkov.dev/66a0f0926fee20fa70036da6-512.webp"
+        },
         "maps": [
           {
             "id": "55f2d3fd4bdc2d5f408b4567",
@@ -27181,7 +27931,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать пробу крови",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "66a0f0926fee20fa70036da6",
+          "name": "Проба крови",
+          "shortName": "Кровь",
+          "image512pxLink": "https://assets.tarkov.dev/66a0f0926fee20fa70036da6-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -27588,6 +28344,12 @@
         "description": "Найти в рейде Помеченный синим символом хирургический набор Санитара на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5efdafc1e70b5e33f86de058",
+          "name": "Помеченный синим символом хирургический набор",
+          "shortName": "Хир набор",
+          "image512pxLink": "https://assets.tarkov.dev/5efdafc1e70b5e33f86de058-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -27602,7 +28364,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать хирургический набор Санитара",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5efdafc1e70b5e33f86de058",
+          "name": "Помеченный синим символом хирургический набор",
+          "shortName": "Хир набор",
+          "image512pxLink": "https://assets.tarkov.dev/5efdafc1e70b5e33f86de058-512.webp"
+        }
       },
       {
         "id": "5edabbff0880da21347b382b",
@@ -27611,6 +28379,12 @@
         "description": "Найти в рейде офтальмоскоп с маркировкой Санитара на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5efdaf6de6a30218ed211a48",
+          "name": "Офтальмоскоп с маркировкой",
+          "shortName": "ОСкоп",
+          "image512pxLink": "https://assets.tarkov.dev/5efdaf6de6a30218ed211a48-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -27625,7 +28399,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать офтальмоскоп Санитара",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5efdaf6de6a30218ed211a48",
+          "name": "Офтальмоскоп с маркировкой",
+          "shortName": "ОСкоп",
+          "image512pxLink": "https://assets.tarkov.dev/5efdaf6de6a30218ed211a48-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -28194,6 +28974,12 @@
         "description": "Найти первый химический контейнер на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5b43237186f7742f3a4ab252",
+          "name": "Химический контейнер №1",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/5b43237186f7742f3a4ab252-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -28208,7 +28994,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать первый контейнер",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5b43237186f7742f3a4ab252",
+          "name": "Химический контейнер №1",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/5b43237186f7742f3a4ab252-512.webp"
+        }
       },
       {
         "id": "5b4c826b86f7743cc87bcee4",
@@ -28217,6 +29009,12 @@
         "description": "Найти второй химический контейнер на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5b4c81a086f77417d26be63f",
+          "name": "Химический контейнер №2",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c81a086f77417d26be63f-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -28231,7 +29029,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать второй контейнер",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5b4c81a086f77417d26be63f",
+          "name": "Химический контейнер №2",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c81a086f77417d26be63f-512.webp"
+        }
       },
       {
         "id": "5b4c82cd86f774170c6e4169",
@@ -28240,6 +29044,12 @@
         "description": "Найти третий химический контейнер на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5b4c81bd86f77418a75ae159",
+          "name": "Химический контейнер №3",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c81bd86f77418a75ae159-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -28254,7 +29064,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать третий контейнер",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5b4c81bd86f77418a75ae159",
+          "name": "Химический контейнер №3",
+          "shortName": "Химконт",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c81bd86f77418a75ae159-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -28352,6 +29168,12 @@
         "description": "Найти информацию о судьбе знакомого Прапора",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "64f07f7726cfa02c506f8ac0",
+          "name": "Журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/64f07f7726cfa02c506f8ac0-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -28366,7 +29188,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "64f07f7726cfa02c506f8ac0",
+          "name": "Журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/64f07f7726cfa02c506f8ac0-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -29037,6 +29865,12 @@
         "description": "Найти информацию о кулинарных секретах в ресторане \"Белуга\" на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "64f69b4267e11a7c6206e010",
+          "name": "Дневник шеф-повара",
+          "shortName": "Дневник",
+          "image512pxLink": "https://assets.tarkov.dev/64f69b4267e11a7c6206e010-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -29051,7 +29885,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденные записи",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "64f69b4267e11a7c6206e010",
+          "name": "Дневник шеф-повара",
+          "shortName": "Дневник",
+          "image512pxLink": "https://assets.tarkov.dev/64f69b4267e11a7c6206e010-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -29137,6 +29977,12 @@
         "description": "Найти секретный компонент в офисе TerraGroup на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "64f5b4f71a5f313cb144c06c",
+          "name": "Красная пробирка",
+          "shortName": "Компонент",
+          "image512pxLink": "https://assets.tarkov.dev/64f5b4f71a5f313cb144c06c-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -29151,7 +29997,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать химдобавку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "64f5b4f71a5f313cb144c06c",
+          "name": "Красная пробирка",
+          "shortName": "Компонент",
+          "image512pxLink": "https://assets.tarkov.dev/64f5b4f71a5f313cb144c06c-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -29251,6 +30103,12 @@
         "description": "Найти базу данных сделок с недвижимостью в Таркове",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "657acb2ac900be5902191ac9",
+          "name": "Записи кадастрового реестра",
+          "shortName": "Реестр",
+          "image512pxLink": "https://assets.tarkov.dev/657acb2ac900be5902191ac9-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -29265,7 +30123,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать базу данных",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "657acb2ac900be5902191ac9",
+          "name": "Записи кадастрового реестра",
+          "shortName": "Реестр",
+          "image512pxLink": "https://assets.tarkov.dev/657acb2ac900be5902191ac9-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -29875,6 +30739,12 @@
         "description": "Найти информацию о деятельности Санитара",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5eff135be0d3331e9d282b7b",
+          "name": "Флеш-накопитель с изолентой",
+          "shortName": "Флешка",
+          "image512pxLink": "https://assets.tarkov.dev/5eff135be0d3331e9d282b7b-512.webp"
+        },
         "maps": [
           {
             "id": "5b0fc42d86f7744a585f9105",
@@ -29903,7 +30773,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать Флеш-накопитель с изолентой",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5eff135be0d3331e9d282b7b",
+          "name": "Флеш-накопитель с изолентой",
+          "shortName": "Флешка",
+          "image512pxLink": "https://assets.tarkov.dev/5eff135be0d3331e9d282b7b-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -30403,6 +31279,12 @@
         "description": "Найти Ложный флеш-накопитель в условленном месте на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5c12301c86f77419522ba7e4",
+          "name": "Ложный флеш-накопитель",
+          "shortName": "Деза",
+          "image512pxLink": "https://assets.tarkov.dev/5c12301c86f77419522ba7e4-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -30462,6 +31344,12 @@
         "description": "Оставить Ложный флеш-накопитель в мусоре напротив лестницы на третьем этаже общежития на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5c12301c86f77419522ba7e4",
+          "name": "Ложный флеш-накопитель",
+          "shortName": "Деза",
+          "image512pxLink": "https://assets.tarkov.dev/5c12301c86f77419522ba7e4-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -30669,14 +31557,14 @@
         "count": 100,
         "maps": [
           {
-            "id": "6a294a5b5eb5f9a1700417b7",
-            "name": "Лаборатория (Dark)",
-            "normalizedName": "the-lab-dark"
-          },
-          {
             "id": "5b0fc42d86f7744a585f9105",
             "name": "Лаборатория",
             "normalizedName": "the-lab"
+          },
+          {
+            "id": "6a294a5b5eb5f9a1700417b7",
+            "name": "Лаборатория (Dark)",
+            "normalizedName": "the-lab-dark"
           },
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -30741,14 +31629,14 @@
         "count": 100,
         "maps": [
           {
-            "id": "6a294a5b5eb5f9a1700417b7",
-            "name": "Лаборатория (Dark)",
-            "normalizedName": "the-lab-dark"
-          },
-          {
             "id": "5b0fc42d86f7744a585f9105",
             "name": "Лаборатория",
             "normalizedName": "the-lab"
+          },
+          {
+            "id": "6a294a5b5eb5f9a1700417b7",
+            "name": "Лаборатория (Dark)",
+            "normalizedName": "the-lab-dark"
           },
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -30811,6 +31699,12 @@
         "description": "Найти бумажник Лыжника на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "675f7f224076a741a3061568",
+          "name": "Бумажник Лыжника",
+          "shortName": "Бумажник",
+          "image512pxLink": "https://assets.tarkov.dev/675f7f224076a741a3061568-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -30825,7 +31719,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный предмет",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "675f7f224076a741a3061568",
+          "name": "Бумажник Лыжника",
+          "shortName": "Бумажник",
+          "image512pxLink": "https://assets.tarkov.dev/675f7f224076a741a3061568-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -31295,14 +32195,14 @@
         },
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -31322,14 +32222,14 @@
         },
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -31349,14 +32249,14 @@
         },
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -31376,14 +32276,14 @@
         },
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -31403,14 +32303,14 @@
         },
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -31430,14 +32330,14 @@
         },
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -31457,14 +32357,14 @@
         },
         "maps": [
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           }
         ]
       },
@@ -31718,6 +32618,12 @@
         "description": "Найти первый контроллер мотора на локации Лес",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5af04c0b86f774138708f78e",
+          "name": "Контроллер мотора №1",
+          "shortName": "Контроллер №1",
+          "image512pxLink": "https://assets.tarkov.dev/5af04c0b86f774138708f78e-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -31732,7 +32638,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать первый контроллер",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5af04c0b86f774138708f78e",
+          "name": "Контроллер мотора №1",
+          "shortName": "Контроллер №1",
+          "image512pxLink": "https://assets.tarkov.dev/5af04c0b86f774138708f78e-512.webp"
+        }
       },
       {
         "id": "5b4c742886f7745cef1d02f5",
@@ -31741,6 +32653,12 @@
         "description": "Найти второй контроллер мотора на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5b4c72b386f7745b453af9c0",
+          "name": "Контроллер мотора №2",
+          "shortName": "Контроллер №2",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c72b386f7745b453af9c0-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -31755,7 +32673,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать второй контроллер",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5b4c72b386f7745b453af9c0",
+          "name": "Контроллер мотора №2",
+          "shortName": "Контроллер №2",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c72b386f7745b453af9c0-512.webp"
+        }
       },
       {
         "id": "5b4c75a786f7747332534b52",
@@ -31764,6 +32688,12 @@
         "description": "Найти третий контроллер мотора на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5b4c72c686f77462ac37e907",
+          "name": "Контроллер мотора №3",
+          "shortName": "Контроллер №3",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c72c686f77462ac37e907-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -31778,7 +32708,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать третий контроллер",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5b4c72c686f77462ac37e907",
+          "name": "Контроллер мотора №3",
+          "shortName": "Контроллер №3",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c72c686f77462ac37e907-512.webp"
+        }
       },
       {
         "id": "5b47958e86f774598100d5e2",
@@ -31787,6 +32723,12 @@
         "description": "Найти первый одноосный волоконно-оптический гироскоп на локации Лес",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5af04e0a86f7743a532b79e2",
+          "name": "Одноосный волоконно-оптический гироскоп №1",
+          "shortName": "ВОГ №1",
+          "image512pxLink": "https://assets.tarkov.dev/5af04e0a86f7743a532b79e2-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -31801,7 +32743,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать первый гироскоп",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5af04e0a86f7743a532b79e2",
+          "name": "Одноосный волоконно-оптический гироскоп №1",
+          "shortName": "ВОГ №1",
+          "image512pxLink": "https://assets.tarkov.dev/5af04e0a86f7743a532b79e2-512.webp"
+        }
       },
       {
         "id": "5b4c8e6586f77474396a5400",
@@ -31810,6 +32758,12 @@
         "description": "Найти второй одноосный волоконно-оптический гироскоп на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5b4c72fb86f7745cef1cffc5",
+          "name": "Одноосный волоконно-оптический гироскоп №2",
+          "shortName": "ВОГ №2",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c72fb86f7745cef1cffc5-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -31824,7 +32778,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать второй гироскоп",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5b4c72fb86f7745cef1cffc5",
+          "name": "Одноосный волоконно-оптический гироскоп №2",
+          "shortName": "ВОГ №2",
+          "image512pxLink": "https://assets.tarkov.dev/5b4c72fb86f7745cef1cffc5-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -33329,6 +34289,12 @@
         "description": "Найти данные о движении транспорта на подземной парковке ЖК Concordia на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "638dfc803083a019d447768e",
+          "name": "Рабочий жесткий диск",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/638dfc803083a019d447768e-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -33343,7 +34309,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать информацию",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "638dfc803083a019d447768e",
+          "name": "Рабочий жесткий диск",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/638dfc803083a019d447768e-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -33661,6 +34633,12 @@
         "description": "Найти медиатор с гравировкой",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "638df4cc7b560b03794a18d2",
+          "name": "Медиатор с символами AG",
+          "shortName": "Медиатор",
+          "image512pxLink": "https://assets.tarkov.dev/638df4cc7b560b03794a18d2-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -33675,7 +34653,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать медиатор",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "638df4cc7b560b03794a18d2",
+          "name": "Медиатор с символами AG",
+          "shortName": "Медиатор",
+          "image512pxLink": "https://assets.tarkov.dev/638df4cc7b560b03794a18d2-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -33831,6 +34815,12 @@
         "description": "Найти первую книгу о технологии изготовления одежды на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5ae9a3f586f7740aab00e4e6",
+          "name": "Книга о технологии изготовления одежды - Часть 1",
+          "shortName": "Книга ч.1",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a3f586f7740aab00e4e6-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -33846,6 +34836,12 @@
         "description": "Найти вторую книгу о технологии изготовления одежды на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5ae9a4fc86f7746e381e1753",
+          "name": "Книга о технологии изготовления одежды - Часть 2",
+          "shortName": "Книга ч.2",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a4fc86f7746e381e1753-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -33860,7 +34856,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать первую книгу",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5ae9a3f586f7740aab00e4e6",
+          "name": "Книга о технологии изготовления одежды - Часть 1",
+          "shortName": "Книга ч.1",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a3f586f7740aab00e4e6-512.webp"
+        }
       },
       {
         "id": "5ae9c10686f774703201f146",
@@ -33868,7 +34870,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать вторую книгу",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5ae9a4fc86f7746e381e1753",
+          "name": "Книга о технологии изготовления одежды - Часть 2",
+          "shortName": "Книга ч.2",
+          "image512pxLink": "https://assets.tarkov.dev/5ae9a4fc86f7746e381e1753-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -34449,9 +35457,9 @@
         "count": 1,
         "maps": [
           {
-            "id": "5704e554d2720bac5b8b456e",
-            "name": "Берег",
-            "normalizedName": "shoreline"
+            "id": "5704e3c2d2720bac5b8b4567",
+            "name": "Лес",
+            "normalizedName": "woods"
           },
           {
             "id": "59fc81d786f774390775787e",
@@ -34459,19 +35467,19 @@
             "normalizedName": "night-factory"
           },
           {
-            "id": "65b8d6f5cdde2479cb2a3125",
-            "name": "Эпицентр 21+",
-            "normalizedName": "ground-zero-21"
-          },
-          {
-            "id": "5704e3c2d2720bac5b8b4567",
-            "name": "Лес",
-            "normalizedName": "woods"
-          },
-          {
             "id": "56f40101d2720b2a4d8b45d6",
             "name": "Таможня",
             "normalizedName": "customs"
+          },
+          {
+            "id": "5704e554d2720bac5b8b456e",
+            "name": "Берег",
+            "normalizedName": "shoreline"
+          },
+          {
+            "id": "65b8d6f5cdde2479cb2a3125",
+            "name": "Эпицентр 21+",
+            "normalizedName": "ground-zero-21"
           }
         ]
       },
@@ -34661,9 +35669,9 @@
         "count": 3,
         "maps": [
           {
-            "id": "5704e554d2720bac5b8b456e",
-            "name": "Берег",
-            "normalizedName": "shoreline"
+            "id": "5704e3c2d2720bac5b8b4567",
+            "name": "Лес",
+            "normalizedName": "woods"
           },
           {
             "id": "59fc81d786f774390775787e",
@@ -34671,19 +35679,19 @@
             "normalizedName": "night-factory"
           },
           {
-            "id": "65b8d6f5cdde2479cb2a3125",
-            "name": "Эпицентр 21+",
-            "normalizedName": "ground-zero-21"
-          },
-          {
-            "id": "5704e3c2d2720bac5b8b4567",
-            "name": "Лес",
-            "normalizedName": "woods"
-          },
-          {
             "id": "56f40101d2720b2a4d8b45d6",
             "name": "Таможня",
             "normalizedName": "customs"
+          },
+          {
+            "id": "5704e554d2720bac5b8b456e",
+            "name": "Берег",
+            "normalizedName": "shoreline"
+          },
+          {
+            "id": "65b8d6f5cdde2479cb2a3125",
+            "name": "Эпицентр 21+",
+            "normalizedName": "ground-zero-21"
           }
         ]
       }
@@ -34771,6 +35779,12 @@
         "description": "Найти особый образец трансиллюминатора кожи LEDX на локации Лаборатория",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "666879d498b97e3a8f09f1ae",
+          "name": "Светодиодный трансиллюминатор кожи LEDX (US Version)",
+          "shortName": "LEDX US",
+          "image512pxLink": "https://assets.tarkov.dev/666879d498b97e3a8f09f1ae-512.webp"
+        },
         "maps": [
           {
             "id": "5b0fc42d86f7744a585f9105",
@@ -34785,7 +35799,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный предмет",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "666879d498b97e3a8f09f1ae",
+          "name": "Светодиодный трансиллюминатор кожи LEDX (US Version)",
+          "shortName": "LEDX US",
+          "image512pxLink": "https://assets.tarkov.dev/666879d498b97e3a8f09f1ae-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -35012,6 +36032,12 @@
         "description": "Найти особый выпуск игрового журнала на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "667a8ef464eea5fdef0db135",
+          "name": "Игровой журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/667a8ef464eea5fdef0db135-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -35026,7 +36052,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный предмет",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "667a8ef464eea5fdef0db135",
+          "name": "Игровой журнал",
+          "shortName": "Журнал",
+          "image512pxLink": "https://assets.tarkov.dev/667a8ef464eea5fdef0db135-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -35246,6 +36278,12 @@
         "description": "Найти жесткий диск в старом доме на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66760b3deb51b08bd40c2b08",
+          "name": "Жесткий диск",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/66760b3deb51b08bd40c2b08-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -35260,7 +36298,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный предмет",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "66760b3deb51b08bd40c2b08",
+          "name": "Жесткий диск",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/66760b3deb51b08bd40c2b08-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -35719,6 +36763,12 @@
         "description": "Найти сувенирный ключ от города на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "66687bc89111279d600b5062",
+          "name": "Сувенирный ключ от города Тарков",
+          "shortName": "Сувенир",
+          "image512pxLink": "https://assets.tarkov.dev/66687bc89111279d600b5062-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -35733,7 +36783,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный предмет",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "66687bc89111279d600b5062",
+          "name": "Сувенирный ключ от города Тарков",
+          "shortName": "Сувенир",
+          "image512pxLink": "https://assets.tarkov.dev/66687bc89111279d600b5062-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -36016,6 +37072,12 @@
         "description": "Найти Фотоальбом Егеря",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "5d357d6b86f7745b606e3508",
+          "name": "Фотоальбом",
+          "shortName": "Альбом",
+          "image512pxLink": "https://assets.tarkov.dev/5d357d6b86f7745b606e3508-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -36044,7 +37106,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать фотоальбом",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "5d357d6b86f7745b606e3508",
+          "name": "Фотоальбом",
+          "shortName": "Альбом",
+          "image512pxLink": "https://assets.tarkov.dev/5d357d6b86f7745b606e3508-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -37550,6 +38618,12 @@
         "description": "Найти папку информатора",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "61a00bcb177fb945751bbe6a",
+          "name": "Украденные военные документы",
+          "shortName": "Военные документы",
+          "image512pxLink": "https://assets.tarkov.dev/61a00bcb177fb945751bbe6a-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -37578,7 +38652,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную папку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "61a00bcb177fb945751bbe6a",
+          "name": "Украденные военные документы",
+          "shortName": "Военные документы",
+          "image512pxLink": "https://assets.tarkov.dev/61a00bcb177fb945751bbe6a-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -37728,14 +38808,14 @@
         "count": 6,
         "maps": [
           {
-            "id": "6a294a5b5eb5f9a1700417b7",
-            "name": "Лаборатория (Dark)",
-            "normalizedName": "the-lab-dark"
-          },
-          {
             "id": "5b0fc42d86f7744a585f9105",
             "name": "Лаборатория",
             "normalizedName": "the-lab"
+          },
+          {
+            "id": "6a294a5b5eb5f9a1700417b7",
+            "name": "Лаборатория (Dark)",
+            "normalizedName": "the-lab-dark"
           },
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -38427,6 +39507,12 @@
         "description": "Найти военный Жёсткий диск",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "628393620d8524273e7eb028",
+          "name": "Рабочий жесткий диск",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/628393620d8524273e7eb028-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -38441,7 +39527,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать военный Жёсткий диск",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "628393620d8524273e7eb028",
+          "name": "Рабочий жесткий диск",
+          "shortName": "HDD",
+          "image512pxLink": "https://assets.tarkov.dev/628393620d8524273e7eb028-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -40097,14 +41189,14 @@
         "count": 100,
         "maps": [
           {
-            "id": "5704e4dad2720bb55b8b4567",
-            "name": "Маяк",
-            "normalizedName": "lighthouse"
-          },
-          {
             "id": "69af492a4819ea4ba10a69c5",
             "name": "Ледокол",
             "normalizedName": "icebreaker"
+          },
+          {
+            "id": "5704e4dad2720bb55b8b4567",
+            "name": "Маяк",
+            "normalizedName": "lighthouse"
           }
         ]
       },
@@ -40164,14 +41256,14 @@
         "count": 100,
         "maps": [
           {
-            "id": "5704e4dad2720bb55b8b4567",
-            "name": "Маяк",
-            "normalizedName": "lighthouse"
-          },
-          {
             "id": "69af492a4819ea4ba10a69c5",
             "name": "Ледокол",
             "normalizedName": "icebreaker"
+          },
+          {
+            "id": "5704e4dad2720bb55b8b4567",
+            "name": "Маяк",
+            "normalizedName": "lighthouse"
           }
         ]
       },
@@ -40596,6 +41688,12 @@
         "description": "Найти компромат на Рефа",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "664fce7a90294949fe2d81cb",
+          "name": "Компромат на Распорядителя",
+          "shortName": "Компромат",
+          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -40611,6 +41709,12 @@
         "description": "Передать найденную информацию",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "664fce7a90294949fe2d81cb",
+          "name": "Компромат на Распорядителя",
+          "shortName": "Компромат",
+          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -40676,6 +41780,12 @@
         "description": "Найти цифровой носитель в кабинете директора автосалона на локации Улицы Таркова",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "638cbb3ba63f1b49be6a300e",
+          "name": "Защищенный флеш-накопитель",
+          "shortName": "Флешка",
+          "image512pxLink": "https://assets.tarkov.dev/638cbb3ba63f1b49be6a300e-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -40690,7 +41800,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать цифровой носитель",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "638cbb3ba63f1b49be6a300e",
+          "name": "Защищенный флеш-накопитель",
+          "shortName": "Флешка",
+          "image512pxLink": "https://assets.tarkov.dev/638cbb3ba63f1b49be6a300e-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -41561,14 +42677,14 @@
             "normalizedName": "shoreline"
           },
           {
-            "id": "59fc81d786f774390775787e",
-            "name": "Ночной Завод",
-            "normalizedName": "night-factory"
-          },
-          {
             "id": "55f2d3fd4bdc2d5f408b4567",
             "name": "Завод",
             "normalizedName": "factory"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
           },
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -41698,6 +42814,12 @@
         "description": "Найти утерянный оружейный ящик на локации Развязка",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "671a406a6d315b526708f103",
+          "name": "Похищенный оружейный кейс",
+          "shortName": "Зап. кейс",
+          "image512pxLink": "https://assets.tarkov.dev/671a406a6d315b526708f103-512.webp"
+        },
         "maps": [
           {
             "id": "5714dbc024597771384a510d",
@@ -41712,7 +42834,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный груз",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "671a406a6d315b526708f103",
+          "name": "Похищенный оружейный кейс",
+          "shortName": "Зап. кейс",
+          "image512pxLink": "https://assets.tarkov.dev/671a406a6d315b526708f103-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -41908,6 +43036,21 @@
         "count": 1,
         "maps": [
           {
+            "id": "5704e3c2d2720bac5b8b4567",
+            "name": "Лес",
+            "normalizedName": "woods"
+          },
+          {
+            "id": "69af492a4819ea4ba10a69c5",
+            "name": "Ледокол",
+            "normalizedName": "icebreaker"
+          },
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          },
+          {
             "id": "5704e4dad2720bb55b8b4567",
             "name": "Маяк",
             "normalizedName": "lighthouse"
@@ -41916,21 +43059,6 @@
             "id": "5704e554d2720bac5b8b456e",
             "name": "Берег",
             "normalizedName": "shoreline"
-          },
-          {
-            "id": "69af492a4819ea4ba10a69c5",
-            "name": "Ледокол",
-            "normalizedName": "icebreaker"
-          },
-          {
-            "id": "5704e3c2d2720bac5b8b4567",
-            "name": "Лес",
-            "normalizedName": "woods"
-          },
-          {
-            "id": "56f40101d2720b2a4d8b45d6",
-            "name": "Таможня",
-            "normalizedName": "customs"
           }
         ]
       },
@@ -41943,16 +43071,6 @@
         "count": 1,
         "maps": [
           {
-            "id": "5704e4dad2720bb55b8b4567",
-            "name": "Маяк",
-            "normalizedName": "lighthouse"
-          },
-          {
-            "id": "5704e554d2720bac5b8b456e",
-            "name": "Берег",
-            "normalizedName": "shoreline"
-          },
-          {
             "id": "5704e3c2d2720bac5b8b4567",
             "name": "Лес",
             "normalizedName": "woods"
@@ -41961,6 +43079,16 @@
             "id": "56f40101d2720b2a4d8b45d6",
             "name": "Таможня",
             "normalizedName": "customs"
+          },
+          {
+            "id": "5704e4dad2720bb55b8b4567",
+            "name": "Маяк",
+            "normalizedName": "lighthouse"
+          },
+          {
+            "id": "5704e554d2720bac5b8b456e",
+            "name": "Берег",
+            "normalizedName": "shoreline"
           }
         ]
       },
@@ -41973,16 +43101,6 @@
         "count": 1,
         "maps": [
           {
-            "id": "5704e4dad2720bb55b8b4567",
-            "name": "Маяк",
-            "normalizedName": "lighthouse"
-          },
-          {
-            "id": "5704e554d2720bac5b8b456e",
-            "name": "Берег",
-            "normalizedName": "shoreline"
-          },
-          {
             "id": "5704e3c2d2720bac5b8b4567",
             "name": "Лес",
             "normalizedName": "woods"
@@ -41991,6 +43109,16 @@
             "id": "56f40101d2720b2a4d8b45d6",
             "name": "Таможня",
             "normalizedName": "customs"
+          },
+          {
+            "id": "5704e4dad2720bb55b8b4567",
+            "name": "Маяк",
+            "normalizedName": "lighthouse"
+          },
+          {
+            "id": "5704e554d2720bac5b8b456e",
+            "name": "Берег",
+            "normalizedName": "shoreline"
           }
         ]
       }
@@ -44212,6 +45340,12 @@
         "description": "Найти запчасть от АК-50 на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "683ed6aed885538c4102d8c8",
+          "name": "Ствол 612мм для AK-50 .50 BMG",
+          "shortName": "AK-50 612мм",
+          "image512pxLink": "https://assets.tarkov.dev/683ed6aed885538c4102d8c8-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -44241,6 +45375,12 @@
         "description": "Найти запчасть от АК-50 на одном из КПП в Таркове",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "683ed6c2e4b1dd7ec4069dc8",
+          "name": "Крышка ствольной коробки для AK-50",
+          "shortName": "AK-50",
+          "image512pxLink": "https://assets.tarkov.dev/683ed6c2e4b1dd7ec4069dc8-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -44307,6 +45447,12 @@
         "description": "Заложить цевье AK-50 в указанном месте на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "683ed6ccd9a096739b0c9228",
+          "name": "Цевье и газовая трубка M-LOK для AK-50",
+          "shortName": "AK-50",
+          "image512pxLink": "https://assets.tarkov.dev/683ed6ccd9a096739b0c9228-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -44322,6 +45468,12 @@
         "description": "Заложить ствол AK-50 в указанном месте на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "683ed6aed885538c4102d8c8",
+          "name": "Ствол 612мм для AK-50 .50 BMG",
+          "shortName": "AK-50 612мм",
+          "image512pxLink": "https://assets.tarkov.dev/683ed6aed885538c4102d8c8-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -44337,6 +45489,12 @@
         "description": "Заложить крышку ствольной коробки AK-50 в указанном месте на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "683ed6c2e4b1dd7ec4069dc8",
+          "name": "Крышка ствольной коробки для AK-50",
+          "shortName": "AK-50",
+          "image512pxLink": "https://assets.tarkov.dev/683ed6c2e4b1dd7ec4069dc8-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -44496,6 +45654,12 @@
         "description": "Найти цевьё АК-50 на заброшенной лесопилке на локации Лес",
         "optional": true,
         "count": 1,
+        "item": {
+          "id": "683ed6ccd9a096739b0c9228",
+          "name": "Цевье и газовая трубка M-LOK для AK-50",
+          "shortName": "AK-50",
+          "image512pxLink": "https://assets.tarkov.dev/683ed6ccd9a096739b0c9228-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -46651,6 +47815,11 @@
         "count": 1,
         "maps": [
           {
+            "id": "55f2d3fd4bdc2d5f408b4567",
+            "name": "Завод",
+            "normalizedName": "factory"
+          },
+          {
             "id": "59fc81d786f774390775787e",
             "name": "Ночной Завод",
             "normalizedName": "night-factory"
@@ -46659,11 +47828,6 @@
             "id": "5714dbc024597771384a510d",
             "name": "Развязка",
             "normalizedName": "interchange"
-          },
-          {
-            "id": "55f2d3fd4bdc2d5f408b4567",
-            "name": "Завод",
-            "normalizedName": "factory"
           }
         ]
       },
@@ -48407,6 +49571,12 @@
         "description": "Раздобыть Корпус от радиопередатчика на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6399f54b0a36db13c823ad21",
+          "name": "Корпус радиопередатчика",
+          "shortName": "Корпус",
+          "image512pxLink": "https://assets.tarkov.dev/6399f54b0a36db13c823ad21-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -48421,7 +49591,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать Корпус от радиопередатчика",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "6399f54b0a36db13c823ad21",
+          "name": "Корпус радиопередатчика",
+          "shortName": "Корпус",
+          "image512pxLink": "https://assets.tarkov.dev/6399f54b0a36db13c823ad21-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -48546,6 +49722,12 @@
         "description": "Раздобыть Флеш-накопитель V3 на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6331bb0d1aa9f42b804997a6",
+          "name": "Флеш-накопитель с наклейкой v3",
+          "shortName": "Флешка v3",
+          "image512pxLink": "https://assets.tarkov.dev/6331bb0d1aa9f42b804997a6-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -48575,7 +49757,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать флешку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "6331bb0d1aa9f42b804997a6",
+          "name": "Флеш-накопитель с наклейкой v3",
+          "shortName": "Флешка v3",
+          "image512pxLink": "https://assets.tarkov.dev/6331bb0d1aa9f42b804997a6-512.webp"
+        }
       },
       {
         "id": "63ab727b1287ef0b827d0c95",
@@ -48759,6 +49947,12 @@
         "description": "Раздобыть Флеш-накопитель V3 на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6331bb0d1aa9f42b804997a6",
+          "name": "Флеш-накопитель с наклейкой v3",
+          "shortName": "Флешка v3",
+          "image512pxLink": "https://assets.tarkov.dev/6331bb0d1aa9f42b804997a6-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -48788,7 +49982,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать флешку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "6331bb0d1aa9f42b804997a6",
+          "name": "Флеш-накопитель с наклейкой v3",
+          "shortName": "Флешка v3",
+          "image512pxLink": "https://assets.tarkov.dev/6331bb0d1aa9f42b804997a6-512.webp"
+        }
       },
       {
         "id": "63ab6a89e842787ad2135719",
@@ -49032,6 +50232,12 @@
         "description": "Раздобыть дневник информатора",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "63989ced706b793c7d60cfef",
+          "name": "Дневник информатора",
+          "shortName": "Дневник",
+          "image512pxLink": "https://assets.tarkov.dev/63989ced706b793c7d60cfef-512.webp"
+        },
         "maps": [
           {
             "id": "5714dc692459777137212e12",
@@ -49047,6 +50253,12 @@
         "description": "Передать данные Смотрителю",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "63989ced706b793c7d60cfef",
+          "name": "Дневник информатора",
+          "shortName": "Дневник",
+          "image512pxLink": "https://assets.tarkov.dev/63989ced706b793c7d60cfef-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -49127,6 +50339,12 @@
         "description": "Найти сфабрикованный компромат на базе Отступников на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6398a0861c712b1e1d4dadf1",
+          "name": "Сфабрикованный компромат на Смотрителя",
+          "shortName": "Компр.",
+          "image512pxLink": "https://assets.tarkov.dev/6398a0861c712b1e1d4dadf1-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -49142,6 +50360,12 @@
         "description": "Найти оригинальный компромат на станции ремонта техники на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6398a072e301557ae24cec92",
+          "name": "Компромат на Смотрителя",
+          "shortName": "Компр.",
+          "image512pxLink": "https://assets.tarkov.dev/6398a072e301557ae24cec92-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -49157,6 +50381,12 @@
         "description": "Оставить сфабрикованный компромат на месте оригинала под БМП-2",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6398a0861c712b1e1d4dadf1",
+          "name": "Сфабрикованный компромат на Смотрителя",
+          "shortName": "Компр.",
+          "image512pxLink": "https://assets.tarkov.dev/6398a0861c712b1e1d4dadf1-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -49172,6 +50402,12 @@
         "description": "Передать оригинальный компромат Смотрителю",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6398a072e301557ae24cec92",
+          "name": "Компромат на Смотрителя",
+          "shortName": "Компр.",
+          "image512pxLink": "https://assets.tarkov.dev/6398a072e301557ae24cec92-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -49658,14 +50894,14 @@
         "count": 20,
         "maps": [
           {
-            "id": "6a294a5b5eb5f9a1700417b7",
-            "name": "Лаборатория (Dark)",
-            "normalizedName": "the-lab-dark"
-          },
-          {
             "id": "5b0fc42d86f7744a585f9105",
             "name": "Лаборатория",
             "normalizedName": "the-lab"
+          },
+          {
+            "id": "6a294a5b5eb5f9a1700417b7",
+            "name": "Лаборатория (Dark)",
+            "normalizedName": "the-lab-dark"
           },
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -49709,6 +50945,12 @@
         "description": "Найти магнитную кассету в комнате управляющего в Лаборатории",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6398a4cfb5992f573c6562b3",
+          "name": "Магнитная кассета",
+          "shortName": "Кассета",
+          "image512pxLink": "https://assets.tarkov.dev/6398a4cfb5992f573c6562b3-512.webp"
+        },
         "maps": [
           {
             "id": "5b0fc42d86f7744a585f9105",
@@ -49724,6 +50966,12 @@
         "description": "Передать ленту Смотрителю",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6398a4cfb5992f573c6562b3",
+          "name": "Магнитная кассета",
+          "shortName": "Кассета",
+          "image512pxLink": "https://assets.tarkov.dev/6398a4cfb5992f573c6562b3-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -51018,7 +52266,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Найти и передать посылку с депо на локации Лес",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "67499a9669a58fceba104a41",
+          "name": "Посылка для Прапора",
+          "shortName": "Посылка",
+          "image512pxLink": "https://assets.tarkov.dev/67499a9669a58fceba104a41-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -51370,6 +52624,12 @@
         "description": "Найти РЭБ на складе электромеханизмов на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499b9b909d2013670a5029",
+          "name": "Устройство радиоэлектронного подавления БПЛА КОСА",
+          "shortName": "КОСА",
+          "image512pxLink": "https://assets.tarkov.dev/67499b9b909d2013670a5029-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -51385,6 +52645,12 @@
         "description": "Заложить РЭБ в точке передачи на локации Лес",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499b9b909d2013670a5029",
+          "name": "Устройство радиоэлектронного подавления БПЛА КОСА",
+          "shortName": "КОСА",
+          "image512pxLink": "https://assets.tarkov.dev/67499b9b909d2013670a5029-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -51690,6 +52956,12 @@
         "description": "Найти посылку для Прапора на локации Берег",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499adbeca8acb2d2061634",
+          "name": "Груз для Прапора",
+          "shortName": "Груз",
+          "image512pxLink": "https://assets.tarkov.dev/67499adbeca8acb2d2061634-512.webp"
+        },
         "maps": [
           {
             "id": "5704e554d2720bac5b8b456e",
@@ -51704,7 +52976,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный груз",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "67499adbeca8acb2d2061634",
+          "name": "Груз для Прапора",
+          "shortName": "Груз",
+          "image512pxLink": "https://assets.tarkov.dev/67499adbeca8acb2d2061634-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -52496,6 +53774,12 @@
         "description": "Найти посылку в условленном месте на локации Лес",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499d4deca8acb2d206163b",
+          "name": "Устройство радиоэлектронного подавления БПЛА КОСА",
+          "shortName": "КОСА",
+          "image512pxLink": "https://assets.tarkov.dev/67499d4deca8acb2d206163b-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -52510,7 +53794,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать посылку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "67499d4deca8acb2d206163b",
+          "name": "Устройство радиоэлектронного подавления БПЛА КОСА",
+          "shortName": "КОСА",
+          "image512pxLink": "https://assets.tarkov.dev/67499d4deca8acb2d206163b-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -52727,6 +54017,12 @@
         "description": "Найти письмо с компроматом на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499d0eeca8acb2d2061639",
+          "name": "Письмо с компроматом",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/67499d0eeca8acb2d2061639-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -52757,6 +54053,12 @@
         "description": "Заложить письмо на третьем этаже штаба на локации Резерв\n",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499d0eeca8acb2d2061639",
+          "name": "Письмо с компроматом",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/67499d0eeca8acb2d2061639-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -52926,6 +54228,12 @@
         "description": "Найти письмо с компроматом на локации Таможня",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499d0eeca8acb2d2061639",
+          "name": "Письмо с компроматом",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/67499d0eeca8acb2d2061639-512.webp"
+        },
         "maps": [
           {
             "id": "56f40101d2720b2a4d8b45d6",
@@ -52956,6 +54264,12 @@
         "description": "Заложить письмо на третьем этаже штаба на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499d0eeca8acb2d2061639",
+          "name": "Письмо с компроматом",
+          "shortName": "Письмо",
+          "image512pxLink": "https://assets.tarkov.dev/67499d0eeca8acb2d2061639-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -53276,6 +54590,12 @@
         "description": "Найти ящик с товаром Смотрителя на крыше госпиталя на локации Резерв",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499b3eeca8acb2d2061636",
+          "name": "Кейс Смотрителя",
+          "shortName": "Кейс",
+          "image512pxLink": "https://assets.tarkov.dev/67499b3eeca8acb2d2061636-512.webp"
+        },
         "maps": [
           {
             "id": "5704e5fad2720bc05b8b4567",
@@ -53291,6 +54611,12 @@
         "description": "Заложить ящик в избу Диких на локации Лес",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499b3eeca8acb2d2061636",
+          "name": "Кейс Смотрителя",
+          "shortName": "Кейс",
+          "image512pxLink": "https://assets.tarkov.dev/67499b3eeca8acb2d2061636-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -53799,6 +55125,12 @@
         "description": "Найти ящик со снарядами для РПГ на локации Лес",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499d2c69a58fceba104a43",
+          "name": "Кейс Смотрителя",
+          "shortName": "Кейс",
+          "image512pxLink": "https://assets.tarkov.dev/67499d2c69a58fceba104a43-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -53813,7 +55145,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденный груз",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "67499d2c69a58fceba104a43",
+          "name": "Кейс Смотрителя",
+          "shortName": "Кейс",
+          "image512pxLink": "https://assets.tarkov.dev/67499d2c69a58fceba104a43-512.webp"
+        }
       }
     ],
     "finishRewards": {
@@ -54025,6 +55363,12 @@
         "description": "Найти посылку Прапора на локации Лес",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "67499a9669a58fceba104a41",
+          "name": "Посылка для Прапора",
+          "shortName": "Посылка",
+          "image512pxLink": "https://assets.tarkov.dev/67499a9669a58fceba104a41-512.webp"
+        },
         "maps": [
           {
             "id": "5704e3c2d2720bac5b8b4567",
@@ -54191,16 +55535,6 @@
         "count": 30,
         "maps": [
           {
-            "id": "5704e4dad2720bb55b8b4567",
-            "name": "Маяк",
-            "normalizedName": "lighthouse"
-          },
-          {
-            "id": "5704e554d2720bac5b8b456e",
-            "name": "Берег",
-            "normalizedName": "shoreline"
-          },
-          {
             "id": "5704e3c2d2720bac5b8b4567",
             "name": "Лес",
             "normalizedName": "woods"
@@ -54209,6 +55543,16 @@
             "id": "56f40101d2720b2a4d8b45d6",
             "name": "Таможня",
             "normalizedName": "customs"
+          },
+          {
+            "id": "5704e4dad2720bb55b8b4567",
+            "name": "Маяк",
+            "normalizedName": "lighthouse"
+          },
+          {
+            "id": "5704e554d2720bac5b8b456e",
+            "name": "Берег",
+            "normalizedName": "shoreline"
           },
           {
             "id": "69af492a4819ea4ba10a69c5",
@@ -55056,6 +56400,12 @@
         "description": "Раздобыть Флеш-накопитель V3 на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6331bb0d1aa9f42b804997a6",
+          "name": "Флеш-накопитель с наклейкой v3",
+          "shortName": "Флешка v3",
+          "image512pxLink": "https://assets.tarkov.dev/6331bb0d1aa9f42b804997a6-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -55085,7 +56435,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать флешку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "6331bb0d1aa9f42b804997a6",
+          "name": "Флеш-накопитель с наклейкой v3",
+          "shortName": "Флешка v3",
+          "image512pxLink": "https://assets.tarkov.dev/6331bb0d1aa9f42b804997a6-512.webp"
+        }
       },
       {
         "id": "63ab6a89e842787ad2135719",
@@ -55283,6 +56639,12 @@
         "description": "Раздобыть Флеш-накопитель V3 на локации Маяк",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "6331bb0d1aa9f42b804997a6",
+          "name": "Флеш-накопитель с наклейкой v3",
+          "shortName": "Флешка v3",
+          "image512pxLink": "https://assets.tarkov.dev/6331bb0d1aa9f42b804997a6-512.webp"
+        },
         "maps": [
           {
             "id": "5704e4dad2720bb55b8b4567",
@@ -55312,7 +56674,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Передать флешку",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "6331bb0d1aa9f42b804997a6",
+          "name": "Флеш-накопитель с наклейкой v3",
+          "shortName": "Флешка v3",
+          "image512pxLink": "https://assets.tarkov.dev/6331bb0d1aa9f42b804997a6-512.webp"
+        }
       },
       {
         "id": "63ab6a89e842787ad2135719",
@@ -55439,6 +56807,12 @@
         "description": "Locate and obtain the nuclear power unit control log on Icebreaker",
         "optional": false,
         "count": 1,
+        "item": {
+          "id": "69bb42b9ce2b96840302b92b",
+          "name": "Журнал контроля ядерной энергетической установки",
+          "shortName": "ЯЭУ",
+          "image512pxLink": "https://assets.tarkov.dev/69bb42b9ce2b96840302b92b-512.webp"
+        },
         "maps": [
           {
             "id": "69af492a4819ea4ba10a69c5",
@@ -55453,7 +56827,13 @@
         "__typename": "TaskObjectiveItem",
         "description": "Hand over the found item",
         "optional": false,
-        "count": 1
+        "count": 1,
+        "item": {
+          "id": "69bb42b9ce2b96840302b92b",
+          "name": "Журнал контроля ядерной энергетической установки",
+          "shortName": "ЯЭУ",
+          "image512pxLink": "https://assets.tarkov.dev/69bb42b9ce2b96840302b92b-512.webp"
+        }
       }
     ],
     "finishRewards": {

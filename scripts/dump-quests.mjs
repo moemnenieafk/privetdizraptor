@@ -97,6 +97,15 @@ async function main() {
     shortName: itemsRu[`${id} ShortName`] ?? id,
     image512pxLink: `https://assets.tarkov.dev/${id}-512.webp`,
   };
+  // Quest-item цели (findQuestItem/giveQuestItem/plantQuestItem): предмет лежит в o.questItem
+  // (id из коллекции questItems), а имена — в tasks_ru (НЕ items_ru!). Без этого item был null →
+  // 230 целей выпадали из «Важных предметов»/трекера и роняли прод-билд (§4.4-гочи).
+  const questItemObj = (id) => id && {
+    id,
+    name: T(`${id} Name`),
+    shortName: T(`${id} ShortName`),
+    image512pxLink: `https://assets.tarkov.dev/${id}-512.webp`,
+  };
   const tradersById = tradersData; // dict по id
   const traderObj = (id) => {
     const nn = tradersById[id]?.normalizedName ?? id;
@@ -138,6 +147,7 @@ async function main() {
     // предмет(ы): JSON даёт items:[id]; старый файл ждал item:{...} (первый допустимый)
     const itemId = o.item ?? (Array.isArray(o.items) ? o.items[0] : undefined);
     if (itemId) out.item = itemObj(itemId);
+    else if (o.questItem) out.item = questItemObj(o.questItem);
     if (o.markerItem) out.markerItem = itemObj(o.markerItem);
     // карты: JSON — [id]; разворачиваем в {id,name,normalizedName}
     if (Array.isArray(o.maps) && o.maps.length) {
