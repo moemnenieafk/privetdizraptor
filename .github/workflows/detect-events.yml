@@ -1,0 +1,47 @@
+# Еженедельно проверяет, не вышло ли новое внутриигровое событие EFT: дёргает наш
+# detect-события эндпоинт, который сверяет новости BSG (Steam News + офиц. Telegram-канал)
+# с разделом «События». Если BSG постил что-то новее последнего записанного события —
+# эндпоинт шлёт пинг в Telegram (env TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID на Vercel;
+# без них просто вернёт JSON). Источник TG-канала переопределяется env BSG_TG_CHANNEL
+# (по умолчанию escapefromtarkovRU).
+#
+# Бесплатная замена Vercel Cron (на Hobby лимит крон-джоб уже занят). Нужны в репозитории
+# (Settings → Secrets and variables → Actions) — те же, что у sync-prices:
+#   • Secret   CRON_SECRET    — то же значение, что в Vercel env
+#   • Variable PROD_BASE_URL  — прод-домен, напр. https://privetdizraptor.vercel.app (без /api)
+name: detect-events
+
+on:
+  schedule:
+    - cron: "0 8 * * 1" # понедельник 08:00 UTC — еженедельный дайджест
+  workflow_dispatch: {} # + ручной запуск из вкладки Actions
+
+concurrency:
+  group: detect-events
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger event detection
+        env:
+          BASE_URL: ${{ vars.PROD_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Задай Variable PROD_BASE_URL и Secret CRON_SECRET в Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          url="${BASE_URL%/}/api/cron/detect-events"
+          echo "GET $url"
+          code=$(curl -sS -m 60 -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer $CRON_SECRET" "$url")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Детект событий не удался (HTTP $code)"
+            exit 1
+          fi
