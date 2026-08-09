@@ -276,6 +276,9 @@ export function MapViewerClient({
   // Вектор-оверлей поверх тайлов (гибрид «тайлы+вектор»): резкие контуры на любом зуме.
   const vectorOverlayRef = useRef<L.SVGOverlay | null>(null);
   const vectorTokenRef = useRef(0); // гонка: быстрый свап этажей отменяет устаревший fetch
+  // Слой маркеров поверх тайлов (поэтажный SVG из /markers): выходы/спавны/замки и т.п.
+  const markerSvgOverlayRef = useRef<L.SVGOverlay | null>(null);
+  const markerTokenRef = useRef(0);
   const setTileFloorRef = useRef<((idx: number) => void) | null>(null);
 
   // Слой редакторских маркеров (editorial_markers) — изолированный эффект (не трогает init).
@@ -1186,28 +1189,41 @@ export function MapViewerClient({
         keepBuffer: 4,
         className: 'cta-map-tiles',
       }).addTo(map);
-      // 2) Вектор-слой поверх (гибрид), только если cfg.tileVector. Сейчас у factory-hd ВЫКЛ:
-      // JPG-тайлы должны быть максимально видимы, а вектор заливками их перекрывает.
-      // Вернём как strokes-only (без заливок) — тогда тайлы видны + резкие контуры сверху.
-      const token = ++vectorTokenRef.current;
-      if (vectorOverlayRef.current) {
-        vectorOverlayRef.current.remove();
-        vectorOverlayRef.current = null;
-      }
-      if (!cfg.tileVector) return;
-      fetch(`/maps/${cfg.tileBase}/vector/${folder}.svg`)
-        .then((r) => (r.ok ? r.text() : Promise.reject(new Error('нет вектора'))))
-        .then((txt) => {
-          if (token !== vectorTokenRef.current || !mapRef.current) return; // этаж сменился — бросаем
-          const doc = new DOMParser().parseFromString(txt, 'image/svg+xml');
-          const svgEl = doc.documentElement as unknown as SVGSVGElement;
-          if (svgEl.nodeName.toLowerCase() !== 'svg') return;
-          vectorOverlayRef.current = L.svgOverlay(svgEl, imgBounds, {
-            interactive: false,
-            className: 'cta-map-tiles-vec',
-          }).addTo(map);
-        })
-        .catch(() => {}); // вектор опционален — без него остаётся чистый растр
+      // 2) SVG-оверлеи поверх тайлов (вектор-геометрия и/или слой маркеров) — каждый по флагу.
+      // Тот же холст 16384² → ложатся 1:1. Снимаем непрозрачный фон #141416 у оверлея,
+      // иначе он перекроет тайлы. Гонка async-fetch закрыта токеном на слой.
+      const loadOverlay = (
+        url: string,
+        ref: React.MutableRefObject<L.SVGOverlay | null>,
+        tokenRef: React.MutableRefObject<number>,
+        className: string,
+      ) => {
+        const token = ++tokenRef.current;
+        if (ref.current) {
+          ref.current.remove();
+          ref.current = null;
+        }
+        fetch(url)
+          .then((r) => (r.ok ? r.text() : Promise.reject(new Error('нет ' + url))))
+          .then((txt) => {
+            if (token !== tokenRef.current || !mapRef.current) return; // этаж сменился — бросаем
+            const doc = new DOMParser().parseFromString(txt, 'image/svg+xml');
+            const svgEl = doc.documentElement as unknown as SVGSVGElement;
+            if (svgEl.nodeName.toLowerCase() !== 'svg') return;
+            // Снять фон-подложку (#141416) — иначе перекроет тайлы.
+            svgEl.querySelectorAll('rect').forEach((rc) => {
+              if ((rc.getAttribute('fill') || '').toLowerCase() === '#141416') rc.remove();
+            });
+            ref.current = L.svgOverlay(svgEl, imgBounds, { interactive: false, className }).addTo(map);
+          })
+          .catch(() => {}); // оверлей опционален — без него остаётся чистый растр
+      };
+
+      if (cfg.tileVector) loadOverlay(`/maps/${cfg.tileBase}/vector/${folder}.svg`, vectorOverlayRef, vectorTokenRef, 'cta-map-tiles-vec');
+      else if (vectorOverlayRef.current) { vectorOverlayRef.current.remove(); vectorOverlayRef.current = null; }
+
+      if (cfg.tileMarkers) loadOverlay(`/maps/${cfg.tileBase}/markers/${folder}-markers.svg`, markerSvgOverlayRef, markerTokenRef, 'cta-map-markers');
+      else if (markerSvgOverlayRef.current) { markerSvgOverlayRef.current.remove(); markerSvgOverlayRef.current = null; }
     };
     setTileFloorRef.current = setTileFloor;
 
@@ -1550,6 +1566,7 @@ export function MapViewerClient({
       staticLayerRef.current = null;
       tileLayerRef.current = null;
       vectorOverlayRef.current = null;
+      markerSvgOverlayRef.current = null;
       setTileFloorRef.current = null;
       setMapInst(null);
     };
