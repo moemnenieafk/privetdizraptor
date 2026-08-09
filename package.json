@@ -10,6 +10,7 @@
     "tiles:factory": "node scripts/build-map-tiles.mjs factory",
     "markers:factory": "node scripts/export-map-markers.mjs factory",
     "markers:parse:factory": "node scripts/parse-map-markers.mjs factory",
+    "seed:factory-hd": "tsx scripts/seed-map-hd.ts && tsx scripts/seed-markers-hd.ts",
     "sync-docs": "node scripts/sync-docs.mjs",
     "debt:sync": "node scripts/sync-style-debt.mjs",
     "debt:check": "node scripts/sync-style-debt.mjs --check",

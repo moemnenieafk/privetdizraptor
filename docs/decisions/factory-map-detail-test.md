@@ -38,6 +38,11 @@ date: 2026-08-08
 ### ⚠️ Гочи
 CRS.Simple пиксель (`x=px/S, z=-py/S`, `S=2^maxZoom=64`) · тайлы `{z}/{y}/{x}` · cache-bust `?v=` (бампать при перенарезке) · editorial prop-driven (не гейтится `isStatic`) · всё в `.gitignore` (`/public/maps/` — тайлы/арт/JSON локально) · прод-хостинг тайлов R2 = позже · маркеры сейчас = editorial (БД) источник правды, НЕ перезапускать seed-markers.
 
+### ⚠️ ГОЧА: `db:push` сносит factory-hd (каскад FK)
+Строки `maps` синк НЕ прюнит, `source='user'` маркеры синк НЕ трогает (`maps.ts:695`) — но **`db:push` (пересборка таблиц) удаляет строку `maps(factory-hd)`**, а FK `markers_map_id_fkey ON DELETE CASCADE` каскадом сносит ВСЕ маркеры карты (включая wizard-правки). Симптом: маркеры пропали, `getEditorialMarkers('factory-hd')=0`, вставка падает `FK ... (map_id)=(factory-hd) not present in maps`.
+- **Восстановление одной командой:** `npm run seed:factory-hd` (вернёт строку maps + базовые 343 метки). ⚠️ wizard-правки при этом теряются (сид = стартовый набор).
+- **Причина фрагильности** — slug-id `factory-hd` (не BSG-id) не в источнике tarkov.dev. Уйдёт при промоуте HD в боевой Factory (BSG-id, синканная строка не сносится). До промоута — после любого `db:push` прогонять `seed:factory-hd`.
+
 ### ▶️ Возобновить
 `npm run dev` → `/eft/maps/factory-hd` (админ-сессия для кнопок). Ветка `feat/factory-hd-tiles`. Начать с A (drawer'ы) или B (батч-правка).
 
