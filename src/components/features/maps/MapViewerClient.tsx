@@ -69,6 +69,18 @@ const bb = (b: [[number, number], [number, number]]): L.LatLngBounds =>
 
 const ll = (p: { x: number; z: number }): [number, number] => [p.z, p.x];
 
+// Тайловая карта: тип метки (из ручной разметки, ключ = цвет) → цвет + RU-подпись.
+// Совпадает с палитрой сайта; keydoor — жёлтая дверь-ключ V4DYA (ключ привяжем позже).
+const HD_MARKER_STYLE: Record<string, { color: string; label: string }> = {
+  extract: { color: '#5FB85B', label: 'Выход' },
+  transit: { color: '#FF7724', label: 'Переход' },
+  spawn: { color: '#E6A23C', label: 'Спавн' },
+  loot: { color: '#E68E25', label: 'Лут' },
+  container: { color: '#9A8866', label: 'Контейнер' },
+  lock: { color: '#BDA550', label: 'Замок' },
+  keydoor: { color: '#FFCF00', label: 'Дверь-ключ' },
+};
+
 /* ───────────────── маркеры ───────────────── */
 const esc = (s: string): string =>
   s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
@@ -277,8 +289,9 @@ export function MapViewerClient({
   const vectorOverlayRef = useRef<L.SVGOverlay | null>(null);
   const vectorTokenRef = useRef(0); // гонка: быстрый свап этажей отменяет устаревший fetch
   // Слой маркеров поверх тайлов (поэтажный SVG из /markers): выходы/спавны/замки и т.п.
-  const markerSvgOverlayRef = useRef<L.SVGOverlay | null>(null);
-  const markerTokenRef = useRef(0);
+  // Интерактивные метки HD-карты (из распарсенной разметки): слой + датасет по этажам.
+  const hdMarkerLayerRef = useRef<L.LayerGroup | null>(null);
+  const hdMarkerDataRef = useRef<Record<string, { type: string; x: number; y: number }[]> | null>(null);
   const setTileFloorRef = useRef<((idx: number) => void) | null>(null);
 
   // Слой редакторских маркеров (editorial_markers) — изолированный эффект (не трогает init).
@@ -1222,10 +1235,47 @@ export function MapViewerClient({
       if (cfg.tileVector) loadOverlay(`/maps/${cfg.tileBase}/vector/${folder}.svg`, vectorOverlayRef, vectorTokenRef, 'cta-map-tiles-vec');
       else if (vectorOverlayRef.current) { vectorOverlayRef.current.remove(); vectorOverlayRef.current = null; }
 
-      if (cfg.tileMarkers) loadOverlay(`/maps/${cfg.tileBase}/markers/${folder}-markers.svg`, markerSvgOverlayRef, markerTokenRef, 'cta-map-markers');
-      else if (markerSvgOverlayRef.current) { markerSvgOverlayRef.current.remove(); markerSvgOverlayRef.current = null; }
+      // 3) Интерактивные метки из распарсенной разметки (цвет по типу, тултип, клик).
+      if (cfg.tileMarkers) renderHdMarkers(idx);
     };
     setTileFloorRef.current = setTileFloor;
+
+    // Рендер интерактивных меток HD-карты для этажа: circleMarker по пиксель-позиции
+    // (unproject на native-макс-зуме), цвет/подпись по типу. Данные — из hdMarkerDataRef.
+    const renderHdMarkers = (idx: number) => {
+      if (!imgBounds || !mapRef.current) return;
+      if (!hdMarkerLayerRef.current) hdMarkerLayerRef.current = L.layerGroup().addTo(map);
+      const grp = hdMarkerLayerRef.current;
+      grp.clearLayers();
+      const folder = floors[idx]?.tile ?? floors[0]?.tile;
+      const data = (folder && hdMarkerDataRef.current?.[folder]) || [];
+      for (const m of data) {
+        const st = HD_MARKER_STYLE[m.type];
+        if (!st) continue;
+        const cm = L.circleMarker(map.unproject([m.x, m.y], cfg.maxZoom), {
+          radius: 7,
+          fillColor: st.color,
+          fillOpacity: 0.9,
+          color: '#0D0D0F',
+          weight: 2,
+          className: 'cta-hd-marker',
+        });
+        cm.bindTooltip(st.label, { direction: 'top', offset: [0, -6], className: 'cta-tip', opacity: 1 });
+        grp.addLayer(cm);
+      }
+    };
+
+    // Датасет меток грузим один раз (fetch), затем рисуем активный этаж.
+    if (isTiled && cfg.tileMarkers) {
+      fetch(`/maps/${cfg.tileBase}/markers/${cfg.tileBase}-markers.json`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error('нет датасета маркеров'))))
+        .then((d) => {
+          if (!mapRef.current) return;
+          hdMarkerDataRef.current = d;
+          renderHdMarkers(activeFloorRef.current);
+        })
+        .catch(() => {});
+    }
 
     // Без maxBounds — карту можно свободно увести в сторону (не «отпружинивает» к центру).
     if (isTiled && imgBounds) {
@@ -1566,7 +1616,8 @@ export function MapViewerClient({
       staticLayerRef.current = null;
       tileLayerRef.current = null;
       vectorOverlayRef.current = null;
-      markerSvgOverlayRef.current = null;
+      hdMarkerLayerRef.current = null;
+      hdMarkerDataRef.current = null;
       setTileFloorRef.current = null;
       setMapInst(null);
     };
