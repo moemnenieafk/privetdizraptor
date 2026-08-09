@@ -5,6 +5,44 @@ date: 2026-08-08
 ---
 # ЗАВОД — тест детализированной подложки интерактивных карт
 
+> Заметка выросла из теста детализации в **рабочий эпик «HD-карта Завода»** (тайлы + editorial-маркеры + визард). Ниже — чекпойнт сессии; исторические замеры детализации/тайлов — в конце.
+
+## ⏸️ КОНТЕКСТ СЕССИИ — где остановились (2026-08-09)
+
+**Ветка `feat/factory-hd-tiles` (в main НЕ пушено). Превью-маршрут `/eft/maps/factory-hd`. Dev поднят.**
+
+### ✅ Готово
+- **HD-тайлы:** мастер-JPG 16384² (пол+объекты вместе) → `npm run tiles:factory` (sharp, google-layout, cache-bust `?v`). Гоча: libvips пишет `{z}/{y}/{x}` (не XYZ) → шаблон Leaflet `/{z}/{y}/{x}`.
+- **factory-hd config** (`eft-map-config.ts`): `staticMap:true, tileBase:"factory", tileExt:"jpg", tilePixelSize:[16384,16384], tileVersion:5, editorial:true`, CRS.Simple, bounds через `unproject`.
+- **Маркеры-инструменты:** `npm run markers:factory` (экспорт в SVG для Figma), `markers:parse:factory` (SVG-разметка → `factory-markers.json`).
+- **БД:** строка `maps(id='factory-hd')` — `scripts/seed-map-hd.ts`. Маркеры V4DYA (**343**) засеяны в `editorial_markers` — `scripts/seed-markers-hd.ts` (пиксель→CRS: `x=px/64, z=-py/64`, scale 2⁶). ⚠️ повторный запуск затрёт wizard-правки.
+- **Визард включён на factory-hd:** `page.tsx` статик-ветка при `config.editorial` фетчит `getCmsUser`+`getEditorialMarkers` → `canEditMarkers/editorialMarkers/mapId/quest+storyIndex` в MapFrame. Вьюер НЕ трогали — editorial-слой/клик prop-driven. Клик по метке → карточка «Редактировать/Переместить». Проверено end-to-end.
+- **Убрано** на editorial-картах: старая кнопка «ПРАВКА» + `MapMarkerEditor` (копировать позиции/сброс) — гейт `!config.editorial`.
+
+### ⏭️ Следующее (НЕ начато) — с разведкой готовой
+**A. Drawer'ы «как у всех» на factory-hd:**
+- Построить `editorialBridge` (`buildEditorialBridge`, editorial→MapViewMarker) в статик-ветке `page.tsx` (сейчас пропущен, коммент на ~строке 134).
+- Включить `MapSearchDrawer` (`MapFrame.tsx:238`, гейт `!staticMap`) + `MapLayersDrawer` (`MapViewerClient.tsx:~1872`, ветка `isStatic?…:<MapLayersDrawer>`) на editorial → гейт `!staticMap || editorial`. Кнопку поиска в `MapTopBar.tsx:61`.
+- `counts`/фильтр (`useMapViewStore`) должны учитывать editorial-метки (через bridge).
+
+**B. Батч-правка на кнопке `square-pen`** (сейчас это override, `MapTopBar.tsx:114-123`; на editorial синканных нет → перепривязать под батч). Образец — **батч-удаление**:
+- store `useMapUiStore`: `deleteMarks/deleteOpen/toggleDeleteMark/clearDeleteMarks/toggleDelete` → сделать близнецов `editMarks/editOpen/toggleEditMark/clearEditMarks/toggleEdit` (+ shared draft).
+- Выбор: в режиме edit клик по метке → `toggleEditMark(key)` (ключ: editorial=`id`, синканый=`src:<id>`), подсветка классом (ср. `.cta-mk-del`, MapViewerClient ~593).
+- Нижняя кнопка «Редактировать (N)» (ср. `MarkerDeletionDrawer.tsx`) → открывает визард (`EditorialMarkerCard`).
+- Визард → на последнем шаге «Сохранить» → **цикл upsert по id** (POST `/api/admin/editorial-markers`, как `confirmDeleteMarks` MapViewerClient:357-405).
+- **РЕШЕНИЕ V4DYA:** батч применяет **ВСЕ поля визарда, включая заголовок/описание** ко всем выбранным (перезапись). Позиция у каждого своя.
+
+### 🔑 Файлы/точки (из разведки)
+`useMapUiStore.ts` (delete-состояние 84-96) · `MapTopBar.tsx` (кнопки 69-153, canEdit 54) · `MapViewerClient.tsx` (editorial-слой 556-591, addMode-клик 652, confirmDeleteMarks 357-405, marker-click 1365, MapMarkerEditor 1984, SquarePen-override 114-123) · `EditorialMarkerCard.tsx` (визард+save 415-451) · `MapSearchDrawer.tsx`/`MapLayersDrawer.tsx` · `editorial-bridge.ts` · `route.ts` `/api/admin/editorial-markers` (upsert по id) · `page.tsx` статик-ветка.
+
+### ⚠️ Гочи
+CRS.Simple пиксель (`x=px/S, z=-py/S`, `S=2^maxZoom=64`) · тайлы `{z}/{y}/{x}` · cache-bust `?v=` (бампать при перенарезке) · editorial prop-driven (не гейтится `isStatic`) · всё в `.gitignore` (`/public/maps/` — тайлы/арт/JSON локально) · прод-хостинг тайлов R2 = позже · маркеры сейчас = editorial (БД) источник правды, НЕ перезапускать seed-markers.
+
+### ▶️ Возобновить
+`npm run dev` → `/eft/maps/factory-hd` (админ-сессия для кнопок). Ветка `feat/factory-hd-tiles`. Начать с A (drawer'ы) или B (батч-правка).
+
+---
+
 ## Цель
 Понять на примере Завода, **какой уровень детализации SVG-подложки карта тянет без лагов** при открытии/пане/зуме — и подтвердить, что маркеры ложатся на любую подложку. Играем **от обратного**: не «сколько деталей добавить», а «сколько деталей убрать, чтобы не грузило». Результат — «бюджет детализации» как норма для остальных карт.
 
