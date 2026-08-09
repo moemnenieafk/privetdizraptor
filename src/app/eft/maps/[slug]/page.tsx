@@ -107,9 +107,56 @@ export default async function MapPage({ params, searchParams }: Props) {
       markers,
     };
     const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
+
+    // Редактор editorial-маркеров на статик/тайл-карте (флаг config.editorial): визард ставит
+    // метки в editorial_markers по пиксель-холсту (клик x=lng,z=lat, CRS.Simple round-trip).
+    // Требует строку maps(id)=slug (scripts/seed-map-hd.ts). Обвязка — минимальная версия
+    // интерактивной ветки (без enrichment linkedQuest/Story/Item — подтянем позже).
+    let editorialMarkers: EditorialMarkerData[] | undefined;
+    let editorialBridge: MapViewMarker[] | undefined;
+    let canEditMarkers = false;
+    let questIndex: { id: string; name: string; trader: string }[] | undefined;
+    let storyIndex: { slug: string; title: string }[] | undefined;
+    if (config.editorial) {
+      const cms = await getCmsUser();
+      canEditMarkers = cms !== null;
+      const rows = await getEditorialMarkers(slug);
+      editorialMarkers = rows
+        .filter((r) => !r.hidden)
+        .map((r) => ({
+          id: r.id, mapId: r.mapId, x: r.x, z: r.z, y: r.y, floor: r.floor,
+          type: r.type, category: r.category, faction: r.faction, title: r.title,
+          description: r.description, screenshots: r.screenshots ?? [],
+          linkKind: r.linkKind, linkId: r.linkId, linkStep: r.linkStep,
+          polygon: r.polygon ?? null, sourceMarkerId: r.sourceMarkerId, hidden: r.hidden,
+          linkedQuest: null, linkedStory: null, linkedItem: null,
+        }));
+      // editorialBridge (drawer/фильтр) в статик-превью пока не строим — слой editorial
+      // рендерится напрямую из editorialMarkers; bridge подключим при полном drawer.
+      if (canEditMarkers) {
+        questIndex = EFT_QUESTS.map((t) => ({ id: t.id, name: t.name, trader: t.trader.normalizedName }));
+        storyIndex = Object.values(STORY_WALKTHROUGHS).map((s) => ({ slug: s.slug, title: s.title }));
+      }
+    }
+
     return (
       <main className="w-full">
-        <MapFrame data={view} navMaps={navMaps} quests={[]} questTasks={[]} bosses={[]} questZones={questZones} focusQuestId={focusQuestId} objectivePoints={objectivePoints} />
+        <MapFrame
+          data={view}
+          navMaps={navMaps}
+          quests={[]}
+          questTasks={[]}
+          bosses={[]}
+          questZones={questZones}
+          editorialMarkers={editorialMarkers}
+          editorialBridge={editorialBridge}
+          canEditMarkers={canEditMarkers}
+          mapId={config.editorial ? slug : undefined}
+          questIndex={questIndex}
+          storyIndex={storyIndex}
+          focusQuestId={focusQuestId}
+          objectivePoints={objectivePoints}
+        />
       </main>
     );
   }

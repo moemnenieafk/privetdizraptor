@@ -58,6 +58,8 @@ export interface EftMapConfig {
   tileMarkers?: boolean;
   /** Тайловая карта: версия для cache-busting (?v=). Бампать при перенарезке тех же URL, чтобы обойти кэш браузера. */
   tileVersion?: number;
+  /** Статик/тайл-карта: включить редактор editorial-маркеров (визард). Требует строку в maps(id) + права. */
+  editorial?: boolean;
   /** Показывать ТОЛЬКО активную палубу: соседние <g>-этажи полностью скрыты (Ледокол — палубы стопкой, иначе сливаются). */
   soloFloors?: boolean;
   /** Отображаемое имя (для статичных карт — их нет в БД, имя берём отсюда). */
@@ -254,7 +256,7 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64 без добивки; bounds через unproject во вьюере
     tileExt: "jpg", // непрозрачные JPG (цветной фон #141416) — тайлы сплошные, без «пустых» прозрачных
     tileVersion: 5, // cache-bust: бампать при каждой перенарезке тех же URL (v3 = перенарезаны все 4 этажа)
-    tileMarkers: true, // слой маркеров V4DYA поверх тайлов (/markers/{этаж}-markers.svg), поэтажно
+    editorial: true, // визард editorial-маркеров: V4DYA ставит метки на живой карте → editorial_markers
     displayName: "Завод — HD (тайлы)",
     groundName: "1-й этаж (земля)",
     author: "V4DYA",

@@ -49,7 +49,9 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
   const squadRoom = useSquadStore((s) => s.roomCode);
 
   const hasLayers = !data.config.staticMap;
-  const canEdit = !!canEditMarkers && hasLayers;
+  // Редактор editorial-маркеров доступен на интерактивных картах И на статик-картах с флагом
+  // editorial (HD-тайлы factory-hd: визард ставит метки в editorial_markers по пиксель-холсту).
+  const canEdit = !!canEditMarkers && (hasLayers || !!data.config.editorial);
   const hasSquad = !!data.config.transform; // отряд только на картах с проекцией координат
 
   return (
