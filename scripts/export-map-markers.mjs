@@ -19,6 +19,13 @@ const SPECS = {
     bounds: [[77, -64.5], [-65.5, 67.4]],     // [[y1,x1],[y2,x2]] CRS.Simple
     width: 4096,
     out: 'public/maps/factory/markers-factory.svg',
+    // Классификация этажа по game-Y (диапазоны из eft-map-config). Порядок = порядок вывода групп.
+    floors: [
+      { name: '1-й этаж (земля)', min: -1, max: 3 },
+      { name: '2-й этаж', min: 3, max: 6 },
+      { name: '3-й этаж', min: 6, max: 100000 },
+      { name: 'Тоннели', min: -100000, max: -1 },
+    ],
   },
 };
 
@@ -79,24 +86,57 @@ async function main() {
   });
 
   const R = 18; // радиус метки (мелкая на 4096)
-  const groups = [];
+  const floorOf = (y) => {
+    if (typeof y !== 'number') return spec.floors[0].name;
+    for (const f of spec.floors) if (y >= f.min && y < f.max) return f.name;
+    return 'Этаж —';
+  };
+
+  // Корзина: этаж → тип → { color, dots[] }. Группируем по этажу, внутри — по типу.
+  const bucket = new Map();
+  const typeCount = new Map();
   let total = 0;
-  console.log('  тип'.padEnd(20) + 'кол-во');
   for (const t of TYPES) {
     const arr = Array.isArray(fact[t.key]) ? fact[t.key] : [];
-    if (!arr.length) { console.log(`  ${t.ru.padEnd(18)}0`); continue; }
-    const dots = [];
     for (const e of arr) {
       const pos = e.position;
       if (!pos || typeof pos.x !== 'number') continue;
       const s = toSvg(project(pos.z, pos.x)); // marker latLng = [z, x]
-      const y = typeof pos.y === 'number' ? ` y=${pos.y.toFixed(1)}` : '';
-      dots.push(`    <circle cx="${s.x}" cy="${s.y}" r="${R}" fill="${t.color}" stroke="#0D0D0F" stroke-width="3" data-name="${esc(t.label(e) + y)}"/>`);
+      const hasY = typeof pos.y === 'number';
+      const fl = floorOf(hasY ? pos.y : undefined) + (hasY ? '' : ' (?)');
+      const yTxt = hasY ? ` y=${pos.y.toFixed(1)}` : ' y=?';
+      const dot = `      <circle cx="${s.x}" cy="${s.y}" r="${R}" fill="${t.color}" stroke="#0D0D0F" stroke-width="3" data-name="${esc(`${t.label(e)} · ${fl}${yTxt}`)}"/>`;
+      if (!bucket.has(fl)) bucket.set(fl, new Map());
+      const byType = bucket.get(fl);
+      if (!byType.has(t.ru)) byType.set(t.ru, { color: t.color, dots: [] });
+      byType.get(t.ru).dots.push(dot);
+      typeCount.set(t.ru, (typeCount.get(t.ru) || 0) + 1);
+      total++;
     }
-    total += dots.length;
-    console.log(`  ${t.ru.padEnd(18)}${dots.length}`);
-    groups.push(`  <g id="${esc(t.ru)}" data-name="${esc(t.ru)}" fill="${t.color}">\n${dots.join('\n')}\n  </g>`);
   }
+
+  // Порядок этажей: как в spec.floors, затем нестандартные (с «(?)» / «Этаж —»).
+  const orderedFloors = [
+    ...spec.floors.map((f) => f.name),
+    ...[...bucket.keys()].filter((k) => !spec.floors.some((f) => f.name === k)),
+  ];
+  const groups = [];
+  console.log('  этаж: кол-во');
+  for (const fl of orderedFloors) {
+    const byType = bucket.get(fl);
+    if (!byType) continue;
+    const inner = [];
+    let flTotal = 0;
+    for (const t of TYPES) {
+      const g = byType.get(t.ru);
+      if (!g) continue;
+      flTotal += g.dots.length;
+      inner.push(`    <g id="${esc(t.ru)}" data-name="${esc(t.ru)}" fill="${g.color}">\n${g.dots.join('\n')}\n    </g>`);
+    }
+    console.log(`  ${fl}: ${flTotal}`);
+    groups.push(`  <g id="${esc(fl)}" data-name="${esc(fl)}">\n${inner.join('\n')}\n  </g>`);
+  }
+  console.log('  по типам: ' + [...typeCount.entries()].map(([k, v]) => `${k} ${v}`).join(', '));
 
   const svg =
 `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
