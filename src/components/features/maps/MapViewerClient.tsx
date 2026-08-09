@@ -271,6 +271,12 @@ export function MapViewerClient({
   );
   const [mapInst, setMapInst] = useState<L.Map | null>(null);
   const staticLayerRef = useRef<L.LayerGroup | null>(null);
+  // Активный тайл-слой подложки (тайловая карта); свап при смене этажа.
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  // Вектор-оверлей поверх тайлов (гибрид «тайлы+вектор»): резкие контуры на любом зуме.
+  const vectorOverlayRef = useRef<L.SVGOverlay | null>(null);
+  const vectorTokenRef = useRef(0); // гонка: быстрый свап этажей отменяет устаревший fetch
+  const setTileFloorRef = useRef<((idx: number) => void) | null>(null);
 
   // Слой редакторских маркеров (editorial_markers) — изолированный эффект (не трогает init).
   // Всегда виден (кураторские точки, их мало); клик открывает карточку-popup НАД каплей.
@@ -789,6 +795,8 @@ export function MapViewerClient({
 
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
   const isStatic = !!data.config.staticMap;
+  // Тайловая подложка (нарезка sharp'ом, см. skill map-stitch): рисуем L.tileLayer вместо SVG-оверлея.
+  const isTiled = !!data.config.tileBase;
 
   // Открытость панели слоёв поднята в стор (§E11 каркас #1): десктоп-триггер живёт в верхнем
   // баре (MapTopBar), мобильный — в нижнем доке (MapMobileDock); оба пишут в один useMapUiStore.
@@ -1096,7 +1104,8 @@ export function MapViewerClient({
 
     const cfg = data.config;
     const map = L.map(el, {
-      crs: makeCRS(cfg),
+      // Тайловая карта — чистый CRS.Simple (пиксельный холст, маркеров нет); иначе — проекция с transform.
+      crs: isTiled ? L.CRS.Simple : makeCRS(cfg),
       zoomSnap: 0.1,
       zoomControl: false,
       attributionControl: false,
@@ -1148,9 +1157,49 @@ export function MapViewerClient({
     };
     loadImageRef.current = loadImage;
 
+    // Тайловая подложка: пирамида 256px google-layout (tile-z == map-zoom при нашей калибровке bounds).
+    // maxNativeZoom = cfg.maxZoom (native max нарезки); выше — Leaflet масштабирует последний уровень (over-zoom).
+    const setTileFloor = (idx: number) => {
+      if (!imgBounds || !mapRef.current) return;
+      const folder = floors[idx]?.tile ?? floors[0]?.tile;
+      if (!folder) return;
+      // 1) Растровая пирамида этажа.
+      if (tileLayerRef.current) tileLayerRef.current.remove();
+      tileLayerRef.current = L.tileLayer(`/maps/${cfg.tileBase}/tiles/${folder}/{z}/{x}/{y}.webp`, {
+        tileSize: 256,
+        minNativeZoom: 0,
+        maxNativeZoom: cfg.maxZoom,
+        noWrap: true,
+        bounds: imgBounds,
+        keepBuffer: 4,
+        className: 'cta-map-tiles',
+      }).addTo(map);
+      // 2) Вектор-слой поверх (гибрид): резкие контуры/двери на любом зуме. Тот же холст → 1:1.
+      const token = ++vectorTokenRef.current;
+      if (vectorOverlayRef.current) {
+        vectorOverlayRef.current.remove();
+        vectorOverlayRef.current = null;
+      }
+      fetch(`/maps/${cfg.tileBase}/vector/${folder}.svg`)
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error('нет вектора'))))
+        .then((txt) => {
+          if (token !== vectorTokenRef.current || !mapRef.current) return; // этаж сменился — бросаем
+          const doc = new DOMParser().parseFromString(txt, 'image/svg+xml');
+          const svgEl = doc.documentElement as unknown as SVGSVGElement;
+          if (svgEl.nodeName.toLowerCase() !== 'svg') return;
+          vectorOverlayRef.current = L.svgOverlay(svgEl, imgBounds, {
+            interactive: false,
+            className: 'cta-map-tiles-vec',
+          }).addTo(map);
+        })
+        .catch(() => {}); // вектор опционален — без него остаётся чистый растр
+    };
+    setTileFloorRef.current = setTileFloor;
+
     if (cfg.bounds) {
       // Без maxBounds — карту можно свободно увести в сторону (не «отпружинивает» к центру).
-      if (!isStatic) loadImage(data.imageUrl);
+      if (isTiled) setTileFloor(activeFloorRef.current);
+      else if (!isStatic) loadImage(data.imageUrl);
       map.fitBounds(bb(cfg.bounds));
     }
 
@@ -1482,16 +1531,23 @@ export function MapViewerClient({
       map.remove();
       mapRef.current = null;
       staticLayerRef.current = null;
+      tileLayerRef.current = null;
+      vectorOverlayRef.current = null;
+      setTileFloorRef.current = null;
       setMapInst(null);
     };
   }, [data, onReady, floors, isStatic, router]);
 
-  // Статичная мульти-этажная карта: подгрузка SVG-подложки текущего этажа.
+  // Статичная мульти-этажная карта: смена подложки текущего этажа (тайл-слой или SVG).
   useEffect(() => {
     if (!isStatic) return;
+    if (isTiled) {
+      setTileFloorRef.current?.(activeFloor);
+      return;
+    }
     const img = floors[activeFloor]?.image;
     if (img) loadImageRef.current?.(img);
-  }, [activeFloor, isStatic, floors]);
+  }, [activeFloor, isStatic, isTiled, floors]);
 
   // «Правка» (только статик): прячем боевой слой маркеров — его заменяет редактор.
   useEffect(() => {

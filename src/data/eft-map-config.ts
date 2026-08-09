@@ -25,6 +25,8 @@ export interface MapLayerConfig {
   height?: [number, number];
   /** Статичная карта: basename SVG этого этажа в /public/images/maps/eft (без .svg). */
   image?: string;
+  /** Тайловая карта: имя папки-пирамиды этого этажа в /public/maps/{tileBase}/tiles/{tile}/{z}/{x}/{y}.webp. */
+  tile?: string;
 }
 
 export interface EftMapConfig {
@@ -38,6 +40,14 @@ export interface EftMapConfig {
    * напрямую (Next), без Storage/CDN и без записи в map_assets (синк её пропускает).
    */
   staticMap?: boolean;
+  /**
+   * Тайловая подложка (наш большой арт, нарезанный sharp'ом на пирамиду 256px google-layout).
+   * Наличие ⇒ вьюер рисует L.tileLayer вместо imageOverlay, CRS.Simple. Путь:
+   * /public/maps/{tileBase}/tiles/{floor.tile}/{z}/{x}/{y}.webp (см. скилл map-stitch). Требует staticMap.
+   */
+  tileBase?: string;
+  /** Тайловая карта: папка-пирамида наземного этажа (index 0). */
+  groundTile?: string;
   /** Показывать ТОЛЬКО активную палубу: соседние <g>-этажи полностью скрыты (Ледокол — палубы стопкой, иначе сливаются). */
   soloFloors?: boolean;
   /** Отображаемое имя (для статичных карт — их нет в БД, имя берём отсюда). */
@@ -221,6 +231,36 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       { name: "Тоннели", svgLayer: "Basement", show: false, height: [-10000, -1] },
     ],
   },
+  "factory-hd": {
+    // ПРЕВЬЮ (локальный тест, A: подложка+этажи+зум, маркеры off): HD-арт V4DYA, нарезан на тайлы
+    // (см. skill map-stitch). Тайлы в /public/maps/factory/tiles/{этаж}/{z}/{x}/{y}.webp (в .gitignore).
+    // CRS.Simple: bounds подобраны так, что на zoom=6 (scale 64) холст = 16384×16152 (W/64=256, H/64=252.375),
+    // → tile-z совпадает с map-zoom. Боевой интерактивный `factory` не трогаем; калибровка маркеров — этап B.
+    slug: "factory-hd",
+    svgFile: "factory", // dummy-truthy: роутит через статик-ветку page.tsx; реальная подложка — тайлы
+    staticMap: true,
+    tileBase: "factory",
+    groundTile: "ground",
+    displayName: "Завод — HD (тайлы)",
+    groundName: "1-й этаж (земля)",
+    author: "V4DYA",
+    authorLink: null,
+    minZoom: 0,
+    maxZoom: 6,
+    transform: [1, 0, 1, 0],
+    coordinateRotation: 0,
+    bounds: [
+      [0, 0],
+      [256, 252.375],
+    ],
+    heightRange: null,
+    svgLayer: null,
+    layers: [
+      { name: "2-й этаж", show: false, tile: "second" },
+      { name: "3-й этаж", show: false, tile: "third" },
+      { name: "Тоннели", show: false, tile: "basement" },
+    ],
+  },
   "streets-of-tarkov": {
     slug: "streets-of-tarkov",
     svgFile: "StreetsOfTarkov.svg",
@@ -397,6 +437,8 @@ export interface MapFloor {
   height: [number, number] | null;
   /** Статичная карта: URL подложки этого этажа в /public; null — общая подложка карты. */
   image: string | null;
+  /** Тайловая карта: папка-пирамида этого этажа (folder в /maps/{tileBase}/tiles/{tile}); null — не тайловый. */
+  tile: string | null;
 }
 
 /**
@@ -409,13 +451,15 @@ export function buildMapFloors(cfg: EftMapConfig): MapFloor[] {
     name: cfg.groundName ?? 'Поверхность',
     svgLayer: cfg.svgLayer,
     height: cfg.heightRange,
-    image: cfg.staticMap ? img(cfg.slug) : null,
+    image: cfg.staticMap && !cfg.tileBase ? img(cfg.slug) : null,
+    tile: cfg.tileBase ? (cfg.groundTile ?? null) : null,
   };
   const extra: MapFloor[] = cfg.layers.map((l) => ({
     name: l.name,
     svgLayer: l.svgLayer ?? null,
     height: l.height ?? null,
-    image: cfg.staticMap && l.image ? img(l.image) : null,
+    image: cfg.staticMap && !cfg.tileBase && l.image ? img(l.image) : null,
+    tile: cfg.tileBase ? (l.tile ?? null) : null,
   }));
   return [ground, ...extra];
 }
