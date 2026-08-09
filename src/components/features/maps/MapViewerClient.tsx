@@ -1176,7 +1176,8 @@ export function MapViewerClient({
       if (tileLayerRef.current) tileLayerRef.current.remove();
       // ⚠️ sharp/libvips google-layout пишет {z}/{y}/{x} (строка/столбец), а НЕ XYZ {z}/{x}/{y}.
       // Поэтому в шаблоне Leaflet порядок y/x — иначе тайлы транспонируются и стены не сходятся.
-      tileLayerRef.current = L.tileLayer(`/maps/${cfg.tileBase}/tiles/${folder}/{z}/{y}/{x}.${cfg.tileExt ?? 'webp'}`, {
+      const tileVer = cfg.tileVersion ? `?v=${cfg.tileVersion}` : '';
+      tileLayerRef.current = L.tileLayer(`/maps/${cfg.tileBase}/tiles/${folder}/{z}/{y}/{x}.${cfg.tileExt ?? 'webp'}${tileVer}`, {
         tileSize: 256,
         minNativeZoom: 0,
         maxNativeZoom: cfg.maxZoom,
