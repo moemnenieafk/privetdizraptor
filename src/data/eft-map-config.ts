@@ -251,7 +251,7 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     groundTile: "ground",
     tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64 без добивки; bounds через unproject во вьюере
     tileExt: "jpg", // непрозрачные JPG (цветной фон #141416) — тайлы сплошные, без «пустых» прозрачных
-    tileVersion: 3, // cache-bust: бампать при каждой перенарезке тех же URL (v3 = перенарезаны все 4 этажа)
+    tileVersion: 4, // cache-bust: бампать при каждой перенарезке тех же URL (v3 = перенарезаны все 4 этажа)
     displayName: "Завод — HD (тайлы)",
     groundName: "1-й этаж (земля)",
     author: "V4DYA",
