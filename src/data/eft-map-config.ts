@@ -50,6 +50,10 @@ export interface EftMapConfig {
   groundTile?: string;
   /** Тайловая карта: пиксельный размер мастер-холста [W,H] на native-макс-зуме (для bounds через unproject). */
   tilePixelSize?: [number, number];
+  /** Тайловая карта: расширение тайлов ('webp' | 'jpg' | 'png'). JPG — непрозрачные (цветной фон, нет «пустых»). По умолчанию 'webp'. */
+  tileExt?: string;
+  /** Тайловая карта: рисовать ли вектор-оверлей поверх тайлов (гибрид). Выкл — чистые тайлы. По умолчанию выкл. */
+  tileVector?: boolean;
   /** Показывать ТОЛЬКО активную палубу: соседние <g>-этажи полностью скрыты (Ледокол — палубы стопкой, иначе сливаются). */
   soloFloors?: boolean;
   /** Отображаемое имя (для статичных карт — их нет в БД, имя берём отсюда). */
@@ -244,6 +248,7 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     tileBase: "factory",
     groundTile: "ground",
     tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64 без добивки; bounds через unproject во вьюере
+    tileExt: "jpg", // непрозрачные JPG (цветной фон #141416) — тайлы сплошные, без «пустых» прозрачных
     displayName: "Завод — HD (тайлы)",
     groundName: "1-й этаж (земля)",
     author: "V4DYA",

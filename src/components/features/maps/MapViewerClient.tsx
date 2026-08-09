@@ -1174,7 +1174,7 @@ export function MapViewerClient({
       if (!folder) return;
       // 1) Растровая пирамида этажа.
       if (tileLayerRef.current) tileLayerRef.current.remove();
-      tileLayerRef.current = L.tileLayer(`/maps/${cfg.tileBase}/tiles/${folder}/{z}/{x}/{y}.webp`, {
+      tileLayerRef.current = L.tileLayer(`/maps/${cfg.tileBase}/tiles/${folder}/{z}/{x}/{y}.${cfg.tileExt ?? 'webp'}`, {
         tileSize: 256,
         minNativeZoom: 0,
         maxNativeZoom: cfg.maxZoom,
@@ -1183,12 +1183,15 @@ export function MapViewerClient({
         keepBuffer: 4,
         className: 'cta-map-tiles',
       }).addTo(map);
-      // 2) Вектор-слой поверх (гибрид): резкие контуры/двери на любом зуме. Тот же холст → 1:1.
+      // 2) Вектор-слой поверх (гибрид), только если cfg.tileVector. Сейчас у factory-hd ВЫКЛ:
+      // JPG-тайлы должны быть максимально видимы, а вектор заливками их перекрывает.
+      // Вернём как strokes-only (без заливок) — тогда тайлы видны + резкие контуры сверху.
       const token = ++vectorTokenRef.current;
       if (vectorOverlayRef.current) {
         vectorOverlayRef.current.remove();
         vectorOverlayRef.current = null;
       }
+      if (!cfg.tileVector) return;
       fetch(`/maps/${cfg.tileBase}/vector/${folder}.svg`)
         .then((r) => (r.ok ? r.text() : Promise.reject(new Error('нет вектора'))))
         .then((txt) => {
@@ -1199,7 +1202,6 @@ export function MapViewerClient({
           vectorOverlayRef.current = L.svgOverlay(svgEl, imgBounds, {
             interactive: false,
             className: 'cta-map-tiles-vec',
-            opacity: 0.6, // гибрид: вектор приглушён → детальный растр просвечивает сквозь заливки (тюнится)
           }).addTo(map);
         })
         .catch(() => {}); // вектор опционален — без него остаётся чистый растр
