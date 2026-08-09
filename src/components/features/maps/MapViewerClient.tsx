@@ -1981,7 +1981,7 @@ export function MapViewerClient({
         )}
       </div>
 
-      {isStatic && mapInst ? (
+      {isStatic && mapInst && !data.config.editorial ? (
         <MapMarkerEditor
           map={mapInst}
           activeFloor={activeFloor}
