@@ -129,6 +129,13 @@ Illustrator. На Заводе:
 Выше 8K или ради сверхкачества (12–16K+) — только тайлы. Эталон: Завод 16384×16152 =
 264 Мпикс, одним WebP не кодируется вовсе.
 
+### Готовый скрипт: `npm run tiles:<карта>`
+`scripts/build-map-tiles.mjs <map>` делает всё: валидирует мастера (квадрат 16384², иначе
+падает — см. добивку белым), чистит, режет все этажи в `{z}/{y}/{x}.jpg`, авто-бампает
+`tileVersion` (cache-bust). Реестр карт — объект `SPECS` в скрипте (файл-мастер → папка-этаж).
+Новая карта: блок в `SPECS` + шорткат `tiles:<map>` в package.json + entry в `EFT_MAP_CONFIG`
+(`tileBase`/`groundTile`/`layers[].tile`/`tilePixelSize`/`tileExt`/`tileVersion`). Эталон: `factory`.
+
 ### Инструмент — sharp, не vips-cli
 В системе (Windows-станция V4DYA) **нет** `vips`, `gdal2tiles`, ImageMagick. `convert`
 в PATH — это виндовый системный конвертер разделов, **НЕ ImageMagick, не запускать**.
