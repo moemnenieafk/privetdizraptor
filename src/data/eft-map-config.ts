@@ -48,6 +48,8 @@ export interface EftMapConfig {
   tileBase?: string;
   /** Тайловая карта: папка-пирамида наземного этажа (index 0). */
   groundTile?: string;
+  /** Тайловая карта: пиксельный размер мастер-холста [W,H] на native-макс-зуме (для bounds через unproject). */
+  tilePixelSize?: [number, number];
   /** Показывать ТОЛЬКО активную палубу: соседние <g>-этажи полностью скрыты (Ледокол — палубы стопкой, иначе сливаются). */
   soloFloors?: boolean;
   /** Отображаемое имя (для статичных карт — их нет в БД, имя берём отсюда). */
@@ -241,6 +243,7 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     staticMap: true,
     tileBase: "factory",
     groundTile: "ground",
+    tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64 без добивки; bounds через unproject во вьюере
     displayName: "Завод — HD (тайлы)",
     groundName: "1-й этаж (земля)",
     author: "V4DYA",

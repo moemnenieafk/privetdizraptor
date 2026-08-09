@@ -1120,11 +1120,20 @@ export function MapViewerClient({
 
     let cancelledSvg = false;
     let overlay: L.Layer | null = null;
-    const imgBounds: L.LatLngBounds | null = cfg.bounds
-      ? cfg.svgBounds
-        ? bb(cfg.svgBounds)
-        : bb(cfg.bounds)
-      : null;
+    // Тайловая карта: bounds через unproject (CRS.Simple transformation (1,0,-1,0) → pixelY=-lat*scale;
+    // ручная арифметика знака ломается — unproject считает верно). Холст на native-макс-зуме.
+    const imgBounds: L.LatLngBounds | null = isTiled
+      ? (() => {
+          const pw = cfg.tilePixelSize?.[0];
+          const ph = cfg.tilePixelSize?.[1];
+          if (!pw || !ph) return null;
+          return new L.LatLngBounds(map.unproject([0, ph], cfg.maxZoom), map.unproject([pw, 0], cfg.maxZoom));
+        })()
+      : cfg.bounds
+        ? cfg.svgBounds
+          ? bb(cfg.svgBounds)
+          : bb(cfg.bounds)
+        : null;
 
     const loadImage = (url: string) => {
       if (!imgBounds || !mapRef.current) return;
@@ -1190,16 +1199,19 @@ export function MapViewerClient({
           vectorOverlayRef.current = L.svgOverlay(svgEl, imgBounds, {
             interactive: false,
             className: 'cta-map-tiles-vec',
+            opacity: 0.6, // гибрид: вектор приглушён → детальный растр просвечивает сквозь заливки (тюнится)
           }).addTo(map);
         })
         .catch(() => {}); // вектор опционален — без него остаётся чистый растр
     };
     setTileFloorRef.current = setTileFloor;
 
-    if (cfg.bounds) {
-      // Без maxBounds — карту можно свободно увести в сторону (не «отпружинивает» к центру).
-      if (isTiled) setTileFloor(activeFloorRef.current);
-      else if (!isStatic) loadImage(data.imageUrl);
+    // Без maxBounds — карту можно свободно увести в сторону (не «отпружинивает» к центру).
+    if (isTiled && imgBounds) {
+      setTileFloor(activeFloorRef.current);
+      map.fitBounds(imgBounds);
+    } else if (cfg.bounds) {
+      if (!isStatic) loadImage(data.imageUrl);
       map.fitBounds(bb(cfg.bounds));
     }
 
