@@ -1174,7 +1174,9 @@ export function MapViewerClient({
       if (!folder) return;
       // 1) Растровая пирамида этажа.
       if (tileLayerRef.current) tileLayerRef.current.remove();
-      tileLayerRef.current = L.tileLayer(`/maps/${cfg.tileBase}/tiles/${folder}/{z}/{x}/{y}.${cfg.tileExt ?? 'webp'}`, {
+      // ⚠️ sharp/libvips google-layout пишет {z}/{y}/{x} (строка/столбец), а НЕ XYZ {z}/{x}/{y}.
+      // Поэтому в шаблоне Leaflet порядок y/x — иначе тайлы транспонируются и стены не сходятся.
+      tileLayerRef.current = L.tileLayer(`/maps/${cfg.tileBase}/tiles/${folder}/{z}/{y}/{x}.${cfg.tileExt ?? 'webp'}`, {
         tileSize: 256,
         minNativeZoom: 0,
         maxNativeZoom: cfg.maxZoom,
