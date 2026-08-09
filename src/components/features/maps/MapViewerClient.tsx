@@ -1852,17 +1852,21 @@ export function MapViewerClient({
       )}
 
       {isStatic ? (
-        <button
-          type="button"
-          onClick={() => setEditing((v) => !v)}
-          className={`absolute top-3 right-3 z-[550] flex items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors ${
-            editing
-              ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-              : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
-          }`}
-        >
-          <Pencil className="h-3.5 w-3.5" /> Правка
-        </button>
+        // Старый статик-редактор ручных маркеров (git-данные). На editorial-картах (factory-hd)
+        // скрыт — там маркеры правит визард через тулбар, а «Правка» дублировала и путала.
+        data.config.editorial ? null : (
+          <button
+            type="button"
+            onClick={() => setEditing((v) => !v)}
+            className={`absolute top-3 right-3 z-[550] flex items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors ${
+              editing
+                ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+                : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
+            }`}
+          >
+            <Pencil className="h-3.5 w-3.5" /> Правка
+          </button>
+        )
       ) : (
         <MapLayersDrawer
           vis={vis}
