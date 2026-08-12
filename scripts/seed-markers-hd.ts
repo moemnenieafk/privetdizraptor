@@ -52,6 +52,32 @@ async function main() {
     }
   }
   console.log(`засеяно editorial: ${n} · по типам: ${Object.entries(byType).map(([k, v]) => `${k} ${v}`).join(", ")}`);
+
+  // Квест-метки — авто-импорт из quest_zone Завода (калибровка world→пиксель, project-factory-quests.mjs).
+  // Отдельный файл, регенерируемый; НЕ смешан с ручной разметкой. Тип quest_zone + привязка к квесту.
+  let q = 0;
+  try {
+    const quests: Record<string, { type: string; x: number; y: number; linkId: string | null; label: string | null }[]> =
+      JSON.parse(await readFile(`public/maps/${MAP_ID.replace("-hd", "")}/markers/${MAP_ID}-quests.json`, "utf8"));
+    for (const [floor, arr] of Object.entries(quests)) {
+      for (const m of arr) {
+        if (m.type !== "quest" || !m.linkId) continue;
+        await upsertEditorialMarker({
+          gameId, mapId: MAP_ID,
+          x: +(m.x / S).toFixed(4), z: +(-m.y / S).toFixed(4), y: null,
+          floor: FLOOR[floor] ?? 0,
+          type: "quest_zone", category: null, faction: null,
+          title: m.label || "Задание", description: null, screenshots: [],
+          linkKind: "quest", linkId: m.linkId, linkStep: null,
+          polygon: null, sourceMarkerId: null, hidden: false, authorId: null,
+        });
+        q++;
+      }
+    }
+    console.log(`засеяно quest-меток: ${q}`);
+  } catch (e) {
+    console.log(`quest-метки пропущены (нет файла ${MAP_ID}-quests.json?): ${(e as Error).message}`);
+  }
   process.exit(0);
 }
 
