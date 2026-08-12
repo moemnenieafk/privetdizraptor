@@ -179,6 +179,10 @@ export interface EditorialMarkerView {
   sourceMarkerId?: string | null;
   /** Оверрайд «скрыть» — подавляет синканный маркер (сам не рендерится). */
   hidden?: boolean;
+  /** Лут-пул: id предметов, которые могут заспавниться на споте (>1 = пул). category = первый. */
+  lootItems?: string[] | null;
+  /** Лут-пул: id→короткое имя (BSG shortName) для показа в карточке/заголовке. Резолвится серверно. */
+  lootItemLabels?: Record<string, string> | null;
 }
 
 /** Разрешённая привязка к квесту — для верхнего ряда (трейдер/уровень/каппа). */
@@ -224,8 +228,13 @@ interface Draft {
   linkId: string | null;
   linkStep: number | null;
   polygon: { x: number; z: number }[] | null;
+  /** Лут-пул: id предметов спота (>1 = несколько возможных). category = lootItems[0]. */
+  lootItems: string[];
 }
 function makeDraft(m: EditorialMarkerView): Draft {
+  // Пул лута: из lootItems, иначе из одиночного category (обратная совместимость со старыми метками).
+  const lootItems =
+    m.lootItems && m.lootItems.length > 0 ? [...m.lootItems] : isItemId(m.category) ? [m.category as string] : [];
   return {
     title: m.title,
     description: m.description ?? '',
@@ -237,11 +246,12 @@ function makeDraft(m: EditorialMarkerView): Draft {
     linkId: m.linkId ?? null,
     linkStep: m.linkStep ?? null,
     polygon: m.polygon ?? null,
+    lootItems,
   };
 }
 
 // Подпись категории маркера для строки показа/объекта (перекрывает локальные наборы + categoryLabel).
-function markerCategoryLabel(m: CatShape): string {
+function markerCategoryLabel(m: CatShape, lootName?: (id: string) => string): string {
   if (m.type === 'poi') return POI_KINDS.find((k) => k.key === (m.category ?? 'simple'))?.label ?? 'Метка';
   if (m.type === 'transit') return 'Переход';
   if (m.type === 'extract') {
@@ -254,6 +264,8 @@ function markerCategoryLabel(m: CatShape): string {
     const boss = BOSS_ROSTER.find((b) => b.key === m.category);
     if (boss) return boss.label;
   }
+  // Лут: category = itemId → показываем короткое имя предмета (BSG shortName), а не сырой id.
+  if (m.type === 'loot' && m.category && isItemId(m.category)) return lootName?.(m.category) ?? 'Лут';
   if (m.category) return categoryLabel(m.category) ?? m.category;
   return WIZARD_TYPE_LABEL[m.type] ?? MARKER_TYPES.find((t) => t.key === m.type)?.label ?? 'Маркер';
 }
@@ -299,6 +311,10 @@ interface Props {
   onMove?: () => void;
   /** Показ, admin (оверрайд синканного): «Скрыть» — parent прячет синканный маркер (hidden=true). */
   onHide?: () => void;
+  /** Батч-режим: применить поля черновика КО ВСЕМ выбранным (перезапись). Заменяет одиночный save. */
+  onBatchSave?: (draft: Draft) => Promise<void> | void;
+  /** Число выбранных для батча — для лейбла кнопки «Применить (N)». */
+  batchCount?: number;
 }
 
 export function EditorialMarkerCard({
@@ -317,6 +333,8 @@ export function EditorialMarkerCard({
   lootIndex,
   onMove,
   onHide,
+  onBatchSave,
+  batchCount,
 }: Props) {
   const [sel, setSel] = useState(0);
   const [editing, setEditing] = useState(defaultEditing);
@@ -401,20 +419,55 @@ export function EditorialMarkerCard({
     draft.linkKind === 'item' && draft.linkId
       ? (pickedItem?.id === draft.linkId ? pickedItem.name : (linkedItem?.name ?? draft.linkId))
       : null;
-  // Поиск предмета (Лут шаг 2) — по индексу лута карты (loose loot, без контейнеров).
+  // Поиск предмета для ЛУТА (шаг 2) — по ПОЛНОМУ каталогу (5044) через серверный action, как связь-предмет.
+  // Раньше искал только по синканному луту карты (`lootIndex`) — на editorial-картах (factory-hd) его нет,
+  // и выбрать было нечего. Теперь куратор привязывает любой предмет игры.
   const [lootQ, setLootQ] = useState('');
-  const lq = lootQ.trim().toLowerCase();
-  const lootHits =
-    catKey === 'loot' && lq.length >= 2 && lootIndex ? lootIndex.filter((i) => i.label.toLowerCase().includes(lq)).slice(0, 30) : [];
-  const selLootLabel = isItemId(draft.category)
-    ? (lootIndex?.find((i) => i.id === draft.category)?.label ?? (draft.title || 'Предмет'))
-    : null;
+  const [lootHits, setLootHits] = useState<SearchItemResult[]>([]);
+  const [lootNames, setLootNames] = useState<Record<string, string>>({}); // id→имя для чипов пула (из поиска)
+  useEffect(() => {
+    if (catKey !== 'loot') return;
+    const q = lootQ.trim();
+    let alive = true;
+    const t = setTimeout(async () => {
+      const res = q.length < 2 ? [] : await searchEftItemsAction(q);
+      if (alive) setLootHits(res);
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [lootQ, catKey]);
+  // Имя предмета в чипе: из поиска (lootNames), иначе из синканного индекса карты, иначе плейсхолдер.
+  const lootLabel = (id: string): string =>
+    lootNames[id] ?? marker.lootItemLabels?.[id] ?? lootIndex?.find((i) => i.id === id)?.label ?? 'Предмет';
+  // Лут-ПУЛ: несколько предметов на спот. category = первый (иконка/back-compat). Заголовок префилл первым.
+  const addLootItem = (id: string, name: string) => {
+    setLootNames((n) => ({ ...n, [id]: name }));
+    setDraft((d) => {
+      const items = d.lootItems.includes(id) ? d.lootItems : [...d.lootItems, id];
+      return { ...d, lootItems: items, category: items[0] ?? null, title: d.title.trim() || name };
+    });
+    setLootQ('');
+    setLootHits([]);
+  };
+  const removeLootItem = (id: string) => {
+    setDraft((d) => {
+      const items = d.lootItems.filter((x) => x !== id);
+      return { ...d, lootItems: items, category: items[0] ?? null };
+    });
+  };
 
   // Сохранение/удаление через API (запись защищена canEditContent на сервере).
   const [busy, setBusy] = useState(false);
   const save = async () => {
     setBusy(true);
     try {
+      // Батч-режим: не пишем один маркер, а отдаём черновик родителю — он применит поля ко всем выбранным.
+      if (onBatchSave) {
+        await onBatchSave(draft);
+        return;
+      }
       const res = await fetch('/api/admin/editorial-markers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -438,6 +491,7 @@ export function EditorialMarkerCard({
           polygon: draft.polygon,
           sourceMarkerId: marker.sourceMarkerId,
           hidden: marker.hidden,
+          lootItems: draft.lootItems,
         }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? `HTTP ${res.status}`);
@@ -590,7 +644,7 @@ export function EditorialMarkerCard({
             {si >= 1 && (
               <div className="flex w-full items-center gap-2">
                 <GlyphFor shape={draft} size={24} />
-                <span className="min-w-0 truncate font-blender-medium text-xs text-text-primary">{markerCategoryLabel(draft)}</span>
+                <span className="min-w-0 truncate font-blender-medium text-xs text-text-primary">{markerCategoryLabel(draft, lootLabel)}</span>
               </div>
             )}
 
@@ -660,7 +714,7 @@ export function EditorialMarkerCard({
                     ))}
                   </div>
                 )}
-                {/* Лут → ПОИСК ПРЕДМЕТА (лут этой карты, без контейнеров; как в drawer «Поиск на локации») */}
+                {/* Лут → ПОИСК ПРЕДМЕТА (полный каталог 5044 через searchEftItemsAction; курируем сами) */}
                 {catKey === 'loot' && (
                   <div className="flex w-full flex-col gap-1.5">
                     <div className="flex h-9 items-center gap-2 rounded-xs border border-lines-hover bg-(--color-base) px-2.5">
@@ -677,31 +731,45 @@ export function EditorialMarkerCard({
                         </button>
                       )}
                     </div>
-                    {selLootLabel ? (
-                      <div className="flex items-center gap-2 rounded-xs border border-lines-hover px-2 py-1.5">
-                        <img src={itemIconUrl(draft.category as string)} alt="" className="size-7 shrink-0 rounded-xs object-contain" />
-                        <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{selLootLabel}</span>
-                        <button type="button" onClick={() => setDraft((d) => ({ ...d, category: null }))} title="Сменить предмет" className="shrink-0 text-text-muted transition-colors hover:text-danger">
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ) : lootHits.length > 0 ? (
-                      <div className="scrollbar-hidden flex max-h-48 flex-col overflow-y-auto rounded-xs border border-lines-hover">
-                        {lootHits.map((it) => (
-                          <button
-                            key={it.id}
-                            type="button"
-                            onClick={() => setDraft((d) => ({ ...d, category: it.id, title: d.title.trim() || it.label }))}
-                            className="flex items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-card-menu"
-                          >
-                            <img src={itemIconUrl(it.id)} alt="" className="size-7 shrink-0 rounded-xs object-contain" />
-                            <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{it.label}</span>
-                          </button>
+                    {/* Выбранный ПУЛ предметов спота (чипы: иконка + имя + убрать). >1 = несколько возможных. */}
+                    {draft.lootItems.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {draft.lootItems.map((id) => (
+                          <span key={id} title={lootLabel(id)} className="flex items-center gap-1 rounded-xs border border-lines-hover bg-card-menu py-1 pr-1 pl-1.5">
+                            <img src={itemIconUrl(id)} alt="" className="size-5 shrink-0 rounded-xs object-contain" />
+                            <span className="max-w-28 truncate font-blender-book text-[11px] text-text-primary">{lootLabel(id)}</span>
+                            <button type="button" onClick={() => removeLootItem(id)} title="Убрать предмет из пула" className="shrink-0 text-text-muted transition-colors hover:text-danger">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
                         ))}
                       </div>
+                    )}
+                    {/* Результаты поиска → ДОБАВИТЬ в пул (уже выбранные скрыты). Можно добавить несколько. */}
+                    {lootHits.filter((it) => !draft.lootItems.includes(it.id)).length > 0 ? (
+                      <div className="scrollbar-hidden flex max-h-40 flex-col overflow-y-auto rounded-xs border border-lines-hover">
+                        {lootHits
+                          .filter((it) => !draft.lootItems.includes(it.id))
+                          .map((it) => (
+                            <button
+                              key={it.id}
+                              type="button"
+                              onClick={() => addLootItem(it.id, it.name)}
+                              className="flex items-center gap-2 px-2 py-1.5 text-left transition-colors hover:bg-card-menu"
+                            >
+                              <img src={itemIconUrl(it.id)} alt="" className="size-7 shrink-0 rounded-xs object-contain" />
+                              <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{it.name}</span>
+                              <Plus className="h-3.5 w-3.5 shrink-0 text-text-muted" />
+                            </button>
+                          ))}
+                      </div>
                     ) : (
-                      <p className="px-1 py-2 font-blender-book text-[10px] text-text-muted">
-                        {lq.length >= 2 ? 'Ничего не найдено на этой карте' : lootIndex?.length ? 'Введите название предмета (по луту этой карты)' : 'На карте нет синканного лута'}
+                      <p className="px-1 py-1.5 font-blender-book text-[10px] text-text-muted">
+                        {lootQ.trim().length >= 2
+                          ? 'Ничего не найдено'
+                          : draft.lootItems.length
+                            ? 'Добавьте ещё предметы в пул или идите дальше'
+                            : 'Найдите и добавьте предметы (можно несколько — пул спота)'}
                       </p>
                     )}
                   </div>
@@ -920,7 +988,11 @@ export function EditorialMarkerCard({
                 title={(curStep === 'details' || isLast) && !titleOk ? 'Введите название' : undefined}
                 className="flex h-9 min-w-px flex-1 items-center justify-center gap-1.5 rounded-xs bg-(--primary) font-blender-medium text-type-micro uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                {isLast ? <><Save className="h-3.5 w-3.5" /> Сохранить</> : <>Далее <ArrowRight className="h-3.5 w-3.5" /></>}
+                {isLast ? (
+                  <><Save className="h-3.5 w-3.5" /> {onBatchSave ? `Применить (${batchCount ?? 0})` : 'Сохранить'}</>
+                ) : (
+                  <>Далее <ArrowRight className="h-3.5 w-3.5" /></>
+                )}
               </button>
             </div>
             {marker.id && (
@@ -943,7 +1015,7 @@ export function EditorialMarkerCard({
               <div className="flex min-w-0 items-center gap-2">
                 <GlyphFor shape={marker} size={28} />
                 <span className="min-w-0 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
-                  {markerCategoryLabel(marker)}
+                  {markerCategoryLabel(marker, lootLabel)}
                 </span>
               </div>
               {marker.linkKind !== 'none' && (
@@ -973,6 +1045,23 @@ export function EditorialMarkerCard({
 
             {/* Описание */}
             {marker.description && <p className="w-full font-blender-book text-xs leading-none text-text-secondary">{marker.description}</p>}
+
+            {/* Лут-пул: список возможных предметов спота (иконки — визуально видно, что может выпасть). */}
+            {marker.type === 'loot' && marker.lootItems && marker.lootItems.length > 1 && (
+              <div className="flex w-full flex-col gap-1">
+                <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+                  Возможные предметы ({marker.lootItems.length})
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {marker.lootItems.map((id) => (
+                    <span key={id} title={lootLabel(id)} className="flex items-center gap-1 rounded-xs border-[0.5px] border-lines-hover bg-card-menu py-1 pr-1.5 pl-1">
+                      <img src={itemIconUrl(id)} alt="" className="size-7 shrink-0 rounded-xs object-contain" />
+                      <span className="max-w-24 truncate font-blender-book text-[11px] text-text-secondary">{lootLabel(id)}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Чип связи (сюжет/событие): рамка + иконка-маска + имя + опц. шаг */}
             {(marker.linkKind === 'story' || marker.linkKind === 'event') && (

@@ -235,7 +235,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
 
       {/* Левый drawer «ПОИСК НА ЛОКАЦИИ» (десктоп) — оверлей поверх карты, карту не двигает.
           Только интерактивные карты (у статик-карт нет слоёв/таксономии добычи). */}
-      {!data.config.staticMap && <MapSearchDrawer slug={data.slug} markers={data.markers} quests={quests} questTasks={questTasks} editorialMarkers={editorialMarkers} editorialBridge={editorialBridge} apiRef={apiRef} />}
+      {(!data.config.staticMap || data.config.editorial) && <MapSearchDrawer slug={data.slug} markers={data.markers} quests={quests} questTasks={questTasks} editorialMarkers={editorialMarkers} editorialBridge={editorialBridge} apiRef={apiRef} />}
 
       {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) / нижнего бара */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />

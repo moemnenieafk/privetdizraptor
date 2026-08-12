@@ -2,6 +2,18 @@ import { create } from 'zustand';
 
 export type MapSheet = 'maps' | 'quests' | 'search' | 'layers' | 'raid' | 'tools' | 'questDetail';
 
+/**
+ * Оверлей «пересборки слоя» поверх карты. Прячет транзиентный сбой Leaflet-перемонтажа
+ * после мутации метки (router.refresh роняет useEffect карты → 500): вместо этого показываем
+ * фирменный пиксель-лоадер и делаем чистый full-reload (гонки appendChild у него нет).
+ * `tone:'busy'` — идёт перезагрузка (без кнопок); `tone:'error'` — реальный сбой записи (кнопка «Закрыть»).
+ */
+export interface ReloadOverlay {
+  title: string;
+  sub?: string;
+  tone: 'busy' | 'error';
+}
+
 interface MapUiState {
   activeSheet: MapSheet | null;
   /** Выбранный квест для мобильного drawer'а деталей (sheet 'questDetail'). */
@@ -19,6 +31,10 @@ interface MapUiState {
   deleteOpen: boolean;
   /** Открыт ли правый drawer «Сквад» (шаринг позиции). */
   squadOpen: boolean;
+  /** id editorial-маркеров, выбранных для БАТЧ-ПРАВКИ (drawer «Батч-правка», editorial-карты). */
+  editMarks: string[];
+  /** Открыт ли правый drawer «Батч-правка» (admin, editorial). Он же — режим выбора кликом по метке. */
+  editOpen: boolean;
   openSheet: (sheet: MapSheet) => void;
   closeSheet: () => void;
   toggleSheet: (sheet: MapSheet) => void;
@@ -37,6 +53,10 @@ interface MapUiState {
   toggleDelete: () => void;
   setSquadOpen: (v: boolean) => void;
   toggleSquad: () => void;
+  toggleEditMark: (id: string) => void;
+  clearEditMarks: () => void;
+  setEditOpen: (v: boolean) => void;
+  toggleEdit: () => void;
   /** Режим постановки маркера (admin): следующий клик по карте → черновик. */
   addMode: boolean;
   /** Режим правки синканных маркеров (admin): клик по маркеру → карточка-оверрайд. */
@@ -45,6 +65,9 @@ interface MapUiState {
   setOverrideMode: (v: boolean) => void;
   toggleAddMode: () => void;
   toggleOverrideMode: () => void;
+  /** Оверлей «пересборки слоя» поверх карты (см. ReloadOverlay). null = скрыт. */
+  reloadOverlay: ReloadOverlay | null;
+  setReloadOverlay: (o: ReloadOverlay | null) => void;
 }
 
 // На узких экранах (<1440) два drawer'а налезают друг на друга → открытие одного
@@ -66,11 +89,11 @@ export const useMapUiStore = create<MapUiState>((set) => ({
   openQuestDetail: (questId) => set({ activeSheet: 'questDetail', selectedQuestId: questId }),
   toggleChrome: () => set((s) => ({ chromeCollapsed: !s.chromeCollapsed })),
   setLayersOpen: (layersOpen) =>
-    set((s) => ({ layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, squadOpen: layersOpen ? false : s.squadOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen })),
+    set((s) => ({ layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, squadOpen: layersOpen ? false : s.squadOpen, editOpen: layersOpen ? false : s.editOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen })),
   toggleLayers: () =>
     set((s) => {
       const layersOpen = !s.layersOpen;
-      return { layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, squadOpen: layersOpen ? false : s.squadOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen };
+      return { layersOpen, deleteOpen: layersOpen ? false : s.deleteOpen, squadOpen: layersOpen ? false : s.squadOpen, editOpen: layersOpen ? false : s.editOpen, searchOpen: layersOpen && narrow() ? false : s.searchOpen };
     }),
   setSearchOpen: (searchOpen) =>
     set((s) => ({ searchOpen, layersOpen: searchOpen && narrow() ? false : s.layersOpen })),
@@ -84,22 +107,34 @@ export const useMapUiStore = create<MapUiState>((set) => ({
   deleteMarks: [],
   deleteOpen: false,
   squadOpen: false,
+  editMarks: [],
+  editOpen: false,
+  toggleEditMark: (id) =>
+    set((s) => ({ editMarks: s.editMarks.includes(id) ? s.editMarks.filter((x) => x !== id) : [...s.editMarks, id] })),
+  clearEditMarks: () => set({ editMarks: [] }),
+  setEditOpen: (editOpen) =>
+    set((s) => ({ editOpen, layersOpen: editOpen ? false : s.layersOpen, deleteOpen: editOpen ? false : s.deleteOpen, squadOpen: editOpen ? false : s.squadOpen, searchOpen: editOpen && narrow() ? false : s.searchOpen })),
+  toggleEdit: () =>
+    set((s) => {
+      const editOpen = !s.editOpen;
+      return { editOpen, layersOpen: editOpen ? false : s.layersOpen, deleteOpen: editOpen ? false : s.deleteOpen, squadOpen: editOpen ? false : s.squadOpen, searchOpen: editOpen && narrow() ? false : s.searchOpen };
+    }),
   toggleDeleteMark: (id) =>
     set((s) => ({ deleteMarks: s.deleteMarks.includes(id) ? s.deleteMarks.filter((x) => x !== id) : [...s.deleteMarks, id] })),
   clearDeleteMarks: () => set({ deleteMarks: [] }),
   setDeleteOpen: (deleteOpen) =>
-    set((s) => ({ deleteOpen, layersOpen: deleteOpen ? false : s.layersOpen, squadOpen: deleteOpen ? false : s.squadOpen, searchOpen: deleteOpen && narrow() ? false : s.searchOpen })),
+    set((s) => ({ deleteOpen, layersOpen: deleteOpen ? false : s.layersOpen, squadOpen: deleteOpen ? false : s.squadOpen, editOpen: deleteOpen ? false : s.editOpen, searchOpen: deleteOpen && narrow() ? false : s.searchOpen })),
   toggleDelete: () =>
     set((s) => {
       const deleteOpen = !s.deleteOpen;
-      return { deleteOpen, layersOpen: deleteOpen ? false : s.layersOpen, squadOpen: deleteOpen ? false : s.squadOpen, searchOpen: deleteOpen && narrow() ? false : s.searchOpen };
+      return { deleteOpen, layersOpen: deleteOpen ? false : s.layersOpen, squadOpen: deleteOpen ? false : s.squadOpen, editOpen: deleteOpen ? false : s.editOpen, searchOpen: deleteOpen && narrow() ? false : s.searchOpen };
     }),
   setSquadOpen: (squadOpen) =>
-    set((s) => ({ squadOpen, layersOpen: squadOpen ? false : s.layersOpen, deleteOpen: squadOpen ? false : s.deleteOpen, searchOpen: squadOpen && narrow() ? false : s.searchOpen })),
+    set((s) => ({ squadOpen, layersOpen: squadOpen ? false : s.layersOpen, deleteOpen: squadOpen ? false : s.deleteOpen, editOpen: squadOpen ? false : s.editOpen, searchOpen: squadOpen && narrow() ? false : s.searchOpen })),
   toggleSquad: () =>
     set((s) => {
       const squadOpen = !s.squadOpen;
-      return { squadOpen, layersOpen: squadOpen ? false : s.layersOpen, deleteOpen: squadOpen ? false : s.deleteOpen, searchOpen: squadOpen && narrow() ? false : s.searchOpen };
+      return { squadOpen, layersOpen: squadOpen ? false : s.layersOpen, deleteOpen: squadOpen ? false : s.deleteOpen, editOpen: squadOpen ? false : s.editOpen, searchOpen: squadOpen && narrow() ? false : s.searchOpen };
     }),
   // addMode/overrideMode — взаимоисключающие режимы клика по карте (постановка ↔ правка синканных).
   addMode: false,
@@ -116,4 +151,6 @@ export const useMapUiStore = create<MapUiState>((set) => ({
       const overrideMode = !s.overrideMode;
       return { overrideMode, addMode: overrideMode ? false : s.addMode };
     }),
+  reloadOverlay: null,
+  setReloadOverlay: (reloadOverlay) => set({ reloadOverlay }),
 }));

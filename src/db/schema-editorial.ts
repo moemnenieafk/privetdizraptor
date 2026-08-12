@@ -55,5 +55,8 @@ export const editorialMarkers = pgTable(
   ],
 );
 
-export type EditorialMarkerRow = typeof editorialMarkers.$inferSelect;
-export type NewEditorialMarker = typeof editorialMarkers.$inferInsert;
+// lootItems — пул предметов лут-спота (несколько возможных предметов на один спот, напр. разные
+// плакаты). Хранится в `markers.meta.lootItems` (колонка meta уже есть → без db:push); editorial_markers
+// (заморожена) этого поля не имеет, поэтому расширяем тип, а не таблицу. category = lootItems[0] (иконка).
+export type EditorialMarkerRow = typeof editorialMarkers.$inferSelect & { lootItems?: string[] | null };
+export type NewEditorialMarker = typeof editorialMarkers.$inferInsert & { lootItems?: string[] | null };

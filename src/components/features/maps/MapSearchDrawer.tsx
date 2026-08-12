@@ -70,6 +70,8 @@ interface LabelGroup {
   count: number;
   positions: { x: number; z: number }[];
   itemSlug: string | null;
+  /** Лут-пул: имена всех возможных предметов спота — поиск матчит по ним тоже (не только по label). */
+  poolNames: string[];
 }
 
 interface Props {
@@ -99,13 +101,13 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   const markedRoomsList = useMemo(() => {
     const seen = new Set<string>();
     const out: { href: string; name: string; keyId: string | null; bg: string | null }[] = [];
-    for (const m of markers) {
+    for (const m of allMarkers) {
       if (m.type !== 'lock' || !m.roomHref || seen.has(m.roomHref)) continue;
       seen.add(m.roomHref);
       out.push({ href: m.roomHref, name: markedRoomName(m.label ?? null), keyId: m.linkedItemId ?? null, bg: m.itemBg ?? null });
     }
     return out;
-  }, [markers]);
+  }, [allMarkers]);
   // Контейнеры ЭТОЙ карты — из РЕАЛЬНЫХ маркеров (не статик-список): ТАЙЛ НА КАЖДЫЙ ТИП (по containerFile).
   // Оруж.ящики разных размеров — РАЗНЫМИ тайлами (иконки/вместимость различаются). key=file: и иконка
   // (container-<file>.webp), и ключ слоя карты (container-<file>) для фильтра (ЛКМ) и ПКМ-цикла.
@@ -151,7 +153,9 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   // Группировка маркеров по label (поиск по предмету): дедуп + позиции для подлёта.
   const groups = useMemo(() => {
     const byLabel = new Map<string, LabelGroup>();
-    for (const m of markers) {
+    // allMarkers (не markers): на editorial-картах синканных нет, метки-пулы приходят из editorialBridge —
+    // иначе текстовый поиск по предмету/пулу их не видит (секции-тайлы выше уже деривируются из allMarkers).
+    for (const m of allMarkers) {
       if (!m.position) continue;
       const label = m.label?.trim();
       if (!label) continue;
@@ -161,15 +165,20 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
         g.count++;
         g.positions.push(p);
         if (!g.itemSlug && m.itemSlug) g.itemSlug = m.itemSlug;
+        if (m.lootItemNames) for (const n of m.lootItemNames) if (!g.poolNames.includes(n)) g.poolNames.push(n);
       } else {
-        byLabel.set(label, { label, type: m.type, count: 1, positions: [p], itemSlug: m.itemSlug ?? null });
+        byLabel.set(label, { label, type: m.type, count: 1, positions: [p], itemSlug: m.itemSlug ?? null, poolNames: m.lootItemNames ? [...m.lootItemNames] : [] });
       }
     }
     return [...byLabel.values()].sort((a, b) => b.count - a.count);
-  }, [markers]);
+  }, [allMarkers]);
 
   const iq = qItems.trim().toLowerCase();
-  const itemHits = iq.length >= 2 ? groups.filter((g) => g.label.toLowerCase().includes(iq)).slice(0, 40) : [];
+  // Матч по заголовку маркера ИЛИ по любому предмету лут-пула (напр. ищешь конкретный плакат из пула).
+  const itemHits =
+    iq.length >= 2
+      ? groups.filter((g) => g.label.toLowerCase().includes(iq) || g.poolNames.some((n) => n.toLowerCase().includes(iq))).slice(0, 40)
+      : [];
   // Лут-фильтр: подсвеченные label'ы предметов (постоянный оверлей на карте).
   const lootLabels = useLootFilterStore((s) => s.labels);
   const toggleLoot = useLootFilterStore((s) => s.toggle);
@@ -185,7 +194,7 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   const [qKeys, setQKeys] = useState('');
   const keysOnMap = useMemo(() => {
     const byKey = new Map<string, { keyId: string; name: string; slug: string | null; itemBg: string | undefined; doors: { x: number; z: number }[]; count: number }>();
-    for (const m of markers) {
+    for (const m of allMarkers) {
       if (m.type !== 'lock' || !m.linkedItemId || !m.position) continue;
       const p = { x: m.position.x, z: m.position.z };
       const g = byKey.get(m.linkedItemId);
@@ -197,7 +206,7 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
       }
     }
     return [...byKey.values()].sort((a, b) => b.count - a.count);
-  }, [markers]);
+  }, [allMarkers]);
   const kq = qKeys.trim().toLowerCase();
   const keyHits = kq ? keysOnMap.filter((k) => k.name.toLowerCase().includes(kq)) : keysOnMap;
 

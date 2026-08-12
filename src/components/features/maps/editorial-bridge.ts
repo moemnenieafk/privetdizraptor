@@ -32,9 +32,16 @@ const avg = (nums: number[]): number => nums.reduce((s, n) => s + n, 0) / nums.l
 export function buildEditorialBridge(
   markers: EditorialMarkerData[],
   lootCatFor: (itemId: string) => string,
+  /** Резолвер имени предмета (itemId → ru-имя) для поиска по лут-пулу. Инъекция из каталога. */
+  lootNameFor?: (itemId: string) => string | undefined,
 ): MapViewMarker[] {
   return markers.map((e, i) => {
     const type = EDITORIAL_TYPE_TO_VIEW[e.type] ?? e.type;
+    // Лут-пул: имена всех возможных предметов спота — чтобы поиск на локации находил по любому из них.
+    const lootItemNames =
+      e.lootItems && e.lootItems.length > 0
+        ? e.lootItems.map((id) => lootNameFor?.(id)).filter((n): n is string => !!n)
+        : null;
 
     // Область-лассо (polygon) — точки нет, берём центроид (как editorial-рендер для капли зоны).
     const position =
@@ -42,8 +49,14 @@ export function buildEditorialBridge(
         ? { x: avg(e.polygon.map((p) => p.x)), y: e.y ?? 0, z: avg(e.polygon.map((p) => p.z)) }
         : { x: e.x, y: e.y ?? 0, z: e.z };
 
-    // Editorial loose хранит предмет в `category` (id 24-hex) — как в syncedToEditorial.
-    const linkedItemId = type === 'loot_loose' && isItemId(e.category) ? (e.category ?? null) : null;
+    // Editorial loose хранит предмет в `category` (id 24-hex); замок — ключ в `linkId` (linkKind='item')
+    // → чтобы секция «Ключи» (реверс Ключ→Двери) видела editorial-замки наравне с синканными.
+    const linkedItemId =
+      type === 'loot_loose' && isItemId(e.category)
+        ? (e.category ?? null)
+        : type === 'lock' && e.linkKind === 'item' && e.linkId
+          ? e.linkId
+          : null;
     const lootCat =
       type === 'loot_loose' ? (linkedItemId ? lootCatFor(linkedItemId) : 'others') : null;
 
@@ -62,6 +75,7 @@ export function buildEditorialBridge(
       // Editorial container: `category` = ключ категории (weapon-box/jacket/…) → `containerFile`.
       category: e.category ?? null,
       lootCat,
+      lootItemNames,
       meta: null,
       floor: e.floor ?? null,
     } satisfies MapViewMarker;

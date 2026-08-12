@@ -38,6 +38,8 @@ export interface ManualMarkerLike {
   meta?: Record<string, unknown> | null;
   /** editorial: тип связи (story|event|…) — морфит quest-иконку в резолвере (Ф4). */
   linkKind?: string | null;
+  /** лут-пул: сколько ДОП. предметов сверх первого (>0 → бейдж «+N» в углу капли). */
+  badge?: number | null;
 }
 
 export function manualMarkerIcon(m: ManualMarkerLike, del = false, showLabel = false): L.DivIcon {
@@ -92,9 +94,18 @@ export function manualMarkerIcon(m: ManualMarkerLike, del = false, showLabel = f
       ? `<span style="position:absolute;left:${box / 2 + 12}px;top:50%;transform:translateY(-50%);font-size:10px;color:#F2F2F2;text-shadow:0 1px 3px #000;white-space:nowrap">${esc(m.label)}</span>`
       : '';
 
+  // Лут-пул: бейдж «+N» (доп. предметов сверх первого) в правом-верхнем углу капли.
+  const badgeHtml =
+    m.badge && m.badge > 0
+      ? `<span style="position:absolute;top:-5px;right:-5px;min-width:14px;height:14px;padding:0 3px;` +
+        `display:flex;align-items:center;justify-content:center;border-radius:9999px;` +
+        `background:var(--primary,#C7A24A);color:#0D0D0F;font-size:9px;font-weight:600;line-height:1;` +
+        `border:1px solid #0D0D0F;box-shadow:0 1px 2px rgba(0,0,0,.6)">+${m.badge}</span>`
+      : '';
+
   return L.divIcon({
     className: 'cta-edit-di',
-    html: `<span class="cta-mk-scale" style="position:relative;display:block">${inner}${labelHtml}</span>`,
+    html: `<span class="cta-mk-scale" style="position:relative;display:block">${inner}${labelHtml}${badgeHtml}</span>`,
     iconSize: [box, box],
     iconAnchor: [box / 2, box / 2],
   });

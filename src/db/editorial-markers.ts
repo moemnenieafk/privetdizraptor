@@ -35,6 +35,10 @@ function toEditorialRow(m: MarkerRow): EditorialMarkerRow {
     authorId: m.authorId,
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
+    // Лут-пул: несколько предметов на один спот. Хранится в meta.lootItems (jsonb) таблицы markers.
+    lootItems: Array.isArray((m.meta as { lootItems?: unknown } | null)?.lootItems)
+      ? ((m.meta as { lootItems: unknown[] }).lootItems.filter((x): x is string => typeof x === "string"))
+      : null,
   };
 }
 
@@ -61,6 +65,8 @@ function toUserMarker(row: NewEditorialMarker): NewMarker {
     sourceMarkerId: row.sourceMarkerId ?? null,
     hidden: row.hidden ?? false,
     authorId: row.authorId ?? null,
+    // Лут-пул → meta.lootItems (jsonb). Пусто → null, чтобы не плодить {} в meta.
+    meta: row.lootItems?.length ? { lootItems: row.lootItems } : null,
   };
 }
 

@@ -34,6 +34,13 @@ const shots = (v: unknown): string[] =>
     ? v.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim().slice(0, MAX_KEY)).slice(0, MAX_SHOTS)
     : [];
 const linkKind = (v: unknown): EditorialLinkKind => (v === "story" || v === "quest" || v === "event" || v === "item" ? v : "none");
+// Лут-пул: массив BSG item id (24-hex). Мусор/дубли отсекаем, кап 30. Пусто → null.
+const ITEM_ID_RE = /^[0-9a-f]{24}$/i;
+const lootItemIds = (v: unknown): string[] | null => {
+  if (!Array.isArray(v)) return null;
+  const ids = [...new Set(v.filter((x): x is string => typeof x === "string" && ITEM_ID_RE.test(x)))].slice(0, 30);
+  return ids.length ? ids : null;
+};
 // Полигон-область: массив игровых точек {x,z}. < 3 точек или мусор → null (обычная точка-маркер).
 const polygon = (v: unknown): { x: number; z: number }[] | null => {
   if (!Array.isArray(v)) return null;
@@ -100,6 +107,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     sourceMarkerId: str(body.sourceMarkerId, 80) || null,
     hidden: body.hidden === true,
     authorId: me.id,
+    lootItems: lootItemIds(body.lootItems),
   };
 
   let saved;

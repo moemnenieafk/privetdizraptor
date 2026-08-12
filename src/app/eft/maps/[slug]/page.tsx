@@ -121,31 +121,66 @@ export default async function MapPage({ params, searchParams }: Props) {
       const cms = await getCmsUser();
       canEditMarkers = cms !== null;
       const rows = await getEditorialMarkers(slug);
+      // Резолв привязки к квесту/истории для карточки метки (как в интерактивной ветке): квест-метки
+      // factory-hd (linkKind='quest') → трейдер/уровень/каппа/лайткипер в карточке.
+      const questById = new Map(EFT_QUESTS.map((t) => [t.id, t]));
+      const storyTitle = new Map(Object.values(STORY_WALKTHROUGHS).map((s) => [s.slug, s.title]));
+      // Каталог для имён лут-пулов (id→{name,shortName}) — лениво, только если на карте есть пул.
+      // shortName для показа в карточке/заголовке (компактно), name — для поиска по спискам (bridge).
+      const hasLootPool = rows.some((r) => !r.hidden && r.lootItems && r.lootItems.length > 0);
+      const catById = hasLootPool ? new Map((await getEftCatalog()).map((i) => [i.id, i])) : null;
       editorialMarkers = rows
         .filter((r) => !r.hidden)
-        .map((r) => ({
-          id: r.id, mapId: r.mapId, x: r.x, z: r.z, y: r.y, floor: r.floor,
-          type: r.type, category: r.category, faction: r.faction, title: r.title,
-          description: r.description, screenshots: r.screenshots ?? [],
-          linkKind: r.linkKind, linkId: r.linkId, linkStep: r.linkStep,
-          polygon: r.polygon ?? null, sourceMarkerId: r.sourceMarkerId, hidden: r.hidden,
-          linkedQuest: null, linkedStory: null, linkedItem: null,
-        }));
-      // editorialBridge (drawer/фильтр) в статик-превью пока не строим — слой editorial
-      // рендерится напрямую из editorialMarkers; bridge подключим при полном drawer.
+        .map((r) => {
+          const q = r.linkKind === 'quest' && r.linkId ? questById.get(r.linkId) : undefined;
+          return {
+            id: r.id, mapId: r.mapId, x: r.x, z: r.z, y: r.y, floor: r.floor,
+            type: r.type, category: r.category, faction: r.faction, title: r.title,
+            description: r.description, screenshots: r.screenshots ?? [],
+            linkKind: r.linkKind, linkId: r.linkId, linkStep: r.linkStep,
+            polygon: r.polygon ?? null, sourceMarkerId: r.sourceMarkerId, hidden: r.hidden,
+            lootItems: r.lootItems ?? null,
+            lootItemLabels:
+              r.lootItems && r.lootItems.length > 0 && catById
+                ? Object.fromEntries(r.lootItems.map((id) => [id, catById.get(id)?.shortName || catById.get(id)?.name || '']))
+                : null,
+            linkedQuest: q
+              ? {
+                  name: q.name,
+                  traderNn: q.trader.normalizedName,
+                  minPlayerLevel: q.minPlayerLevel,
+                  kappaRequired: q.kappaRequired,
+                  lightkeeperRequired: q.lightkeeperRequired,
+                }
+              : null,
+            linkedStory: r.linkKind === 'story' && r.linkId ? { title: storyTitle.get(r.linkId) ?? r.linkId } : null,
+            linkedItem: null,
+          };
+        });
+      // Мост editorial→MapViewMarker для drawer'ов поиска/легенды и счётчиков фильтра.
+      // Классификатор лута — 'others' (у factory-hd лут пока без item-линков; точная loot-15
+      // не нужна). Рендер меток — свой editorial-слой, тут только нормализация для чтения.
+      // Мост editorial→MapViewMarker: поиск на локации находит спот по ЛЮБОМУ предмету пула (полное имя).
+      editorialBridge = buildEditorialBridge(editorialMarkers, () => 'others', (id) => catById?.get(id)?.name);
       if (canEditMarkers) {
         questIndex = EFT_QUESTS.map((t) => ({ id: t.id, name: t.name, trader: t.trader.normalizedName }));
         storyIndex = Object.values(STORY_WALKTHROUGHS).map((s) => ({ slug: s.slug, title: s.title }));
       }
     }
 
+    // Квесты карты (секция «Задания» в поиске) — по БАЗОВОМУ slug: у HD-варианта (factory-hd) квесты
+    // те же, что у боевой карты (factory), поэтому срезаем -hd. У статик-карт без квестов вернётся пусто.
+    const questSlug = slug.replace(/-hd$/, '');
+    const mapQuests = questsForMap(questSlug);
+    const mapQuestTasks = questTasksForMap(questSlug);
+
     return (
       <main className="w-full">
         <MapFrame
           data={view}
           navMaps={navMaps}
-          quests={[]}
-          questTasks={[]}
+          quests={mapQuests}
+          questTasks={mapQuestTasks}
           bosses={[]}
           questZones={questZones}
           editorialMarkers={editorialMarkers}

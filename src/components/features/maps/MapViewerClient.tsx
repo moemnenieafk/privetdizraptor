@@ -8,6 +8,8 @@ import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
 import { MarkerDeletionDrawer } from './MarkerDeletionDrawer';
+import { MarkerEditDrawer } from './MarkerEditDrawer';
+import { MapReloadOverlay, LOADER_MIN_MS } from './MapReloadOverlay';
 import { useEftTracker } from './PlayerTracker';
 import { MapToolsSheet } from './MapToolsSheet';
 import { useMapUiStore } from '@/store/useMapUiStore';
@@ -113,6 +115,8 @@ function editorialIcon(m: EditorialMarkerData): L.DivIcon {
     meta,
     linkKind: m.linkKind,
     linkedItemId: m.type === 'loot' && isItemId(m.category) ? m.category ?? undefined : undefined,
+    // Лут-пул: >1 предмета на споте → бейдж «+N» (доп. сверх первого).
+    badge: m.type === 'loot' && m.lootItems && m.lootItems.length > 1 ? m.lootItems.length - 1 : undefined,
   });
 }
 
@@ -253,7 +257,7 @@ export function MapViewerClient({
   const sourceMarkerElsRef = useRef<Map<string, L.Marker>>(new Map());
   // Editorial-маркеры по id → тоже императивная пометка (капля/центроид + приглушение полигона),
   // БЕЗ пересборки слоя: rebuild на каждую пометку ронял Leaflet (_initIcon→appendChild) при гонке с refresh.
-  const editorialElsRef = useRef<Map<string, { mk: L.Marker; poly?: L.Polygon }>>(new Map());
+  const editorialElsRef = useRef<Map<string, { mk: L.Marker; poly?: L.Polygon; floor?: number | null }>>(new Map());
   const svgGroupsRef = useRef<Map<string, SVGGElement> | null>(null);
   const activeFloorRef = useRef(activeFloor);
   const loadImageRef = useRef<((url: string) => void) | null>(null);
@@ -297,6 +301,40 @@ export function MapViewerClient({
   // Слой редакторских маркеров (editorial_markers) — изолированный эффект (не трогает init).
   // Всегда виден (кураторские точки, их мало); клик открывает карточку-popup НАД каплей.
   const router = useRouter();
+  const setReloadOverlay = useMapUiStore((s) => s.setReloadOverlay);
+  // Мутация метки → чистый full-reload под фирменным оверлеем «пересборки слоя».
+  // router.refresh() роняет Leaflet-перемонтаж (appendChild на undefined → 500-boundary);
+  // полная перезагрузка этой гонки не имеет. Перед ней пишем вид карты (zoom/center) в URL —
+  // после reload вернёмся ровно сюда (floor уже синкает useMapViewUrlSync).
+  const reloadWithOverlay = useCallback(
+    (title: string, sub?: string) => {
+      const map = mapRef.current;
+      if (map) {
+        try {
+          const c = map.getCenter();
+          const sp = new URLSearchParams(window.location.search);
+          sp.set('z', String(map.getZoom()));
+          sp.set('cx', c.lng.toFixed(2));
+          sp.set('cy', c.lat.toFixed(2));
+          window.history.replaceState(null, '', `?${sp.toString()}`);
+        } catch {
+          /* карта не готова — переживём без сохранения вида */
+        }
+      }
+      setReloadOverlay({ title, sub, tone: 'busy' });
+      // Держим оверлей LOADER_MIN_MS — чтобы морф-анимация проигралась и показала монограмму ЦТА,
+      // затем чистый reload (гонки appendChild у него нет). 2×rAF — отрисовать оверлей до отсчёта.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => setTimeout(() => window.location.reload(), LOADER_MIN_MS)),
+      );
+    },
+    [setReloadOverlay],
+  );
+  // Реальный сбой записи (fetch упал) — не перезагружаем, показываем стоп-кадр в том же языке.
+  const failOverlay = useCallback(
+    (title: string, sub?: string) => setReloadOverlay({ title, sub, tone: 'error' }),
+    [setReloadOverlay],
+  );
   const editorialLayerRef = useRef<L.LayerGroup | null>(null);
   const [openEditorialId, setOpenEditorialId] = useState<string | null>(null);
   const openEditorial = editorialMarkers?.find((m) => m.id === openEditorialId) ?? null;
@@ -327,6 +365,20 @@ export function MapViewerClient({
     deleteOpenRef.current = deleteOpen;
     deleteMarksRef.current = deleteMarks;
   });
+  // Батч-правка (editorial): editOpen = режим выбора кликом + drawer; editMarks = выбранные id.
+  const editMarks = useMapUiStore((s) => s.editMarks);
+  const editOpen = useMapUiStore((s) => s.editOpen);
+  const setEditOpen = useMapUiStore((s) => s.setEditOpen);
+  const toggleEditMark = useMapUiStore((s) => s.toggleEditMark);
+  const clearEditMarks = useMapUiStore((s) => s.clearEditMarks);
+  const [editBusy, setEditBusy] = useState(false);
+  const [batchWizard, setBatchWizard] = useState(false); // открыт ли батч-визард (после «Редактировать (N)»)
+  const editOpenRef = useRef(false);
+  const editMarksRef = useRef<string[]>(editMarks);
+  useEffect(() => {
+    editOpenRef.current = editOpen;
+    editMarksRef.current = editMarks;
+  });
   // Индексы id→маркер: строятся раз на смену данных, чтобы пометка была O(помеченных), а НЕ
   // O(всех маркеров карты). Лут — тысячи точек, скан на каждый клик пометки подвешивал UI.
   const syncedById = useMemo(() => {
@@ -354,6 +406,15 @@ export function MapViewerClient({
     }
     return out;
   }, [deleteMarks, syncedById, editorialById, mapId]);
+  // Выбранные для батч-правки (editorial-карты → ключ всегда id, без синканых `src:`).
+  const markedForEdit = useMemo(() => {
+    const out: EditorialMarkerData[] = [];
+    for (const key of editMarks) {
+      const em = editorialById.get(key);
+      if (em) out.push(em);
+    }
+    return out;
+  }, [editMarks, editorialById]);
   const confirmDeleteMarks = async () => {
     if (markedForDelete.length === 0) return;
     setDeleteBusy(true);
@@ -395,12 +456,64 @@ export function MapViewerClient({
       clearDeleteMarks();
       setDeleteOpen(false);
       closeCard();
-      router.refresh();
+      reloadWithOverlay('Метки стёрты', 'Пересборка слоя…');
     } catch (e) {
       console.error('[marker batch delete/hide]', e);
-      alert('Не удалось удалить/скрыть помеченные маркеры');
+      failOverlay('Сбой удаления', 'Телеметрия записана. Повторите операцию.');
     } finally {
       setDeleteBusy(false);
+    }
+  };
+  // Батч-правка: поля из визарда (префилл от первой выбранной) применяются КО ВСЕМ выбранным
+  // (перезапись, решение V4DYA). Позиция/этаж/id у каждой метки СВОИ — берём из самой метки.
+  const confirmEditMarks = async (
+    fields: Pick<
+      EditorialMarkerData,
+      'type' | 'category' | 'faction' | 'title' | 'description' | 'screenshots' | 'linkKind' | 'linkId' | 'linkStep' | 'polygon' | 'lootItems'
+    >,
+  ) => {
+    if (markedForEdit.length === 0) return;
+    setEditBusy(true);
+    try {
+      for (const m of markedForEdit) {
+        const res = await fetch('/api/admin/editorial-markers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: m.id,
+            mapId: m.mapId,
+            slug: data.slug,
+            x: m.x,
+            z: m.z,
+            y: m.y,
+            floor: m.floor,
+            type: fields.type,
+            category: fields.category,
+            faction: fields.faction,
+            title: fields.title,
+            description: fields.description,
+            screenshots: fields.screenshots,
+            linkKind: fields.linkKind,
+            linkId: fields.linkId,
+            linkStep: fields.linkStep,
+            polygon: fields.polygon,
+            sourceMarkerId: m.sourceMarkerId,
+            hidden: m.hidden,
+            lootItems: fields.lootItems ?? null,
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }
+      setBatchWizard(false);
+      clearEditMarks();
+      setEditOpen(false);
+      closeCard();
+      reloadWithOverlay('Правки приняты', 'Синхронизация слоя…');
+    } catch (e) {
+      console.error('[marker batch edit]', e);
+      failOverlay('Сбой записи', 'Телеметрия записана. Повторите операцию.');
+    } finally {
+      setEditBusy(false);
     }
   };
 
@@ -488,15 +601,97 @@ export function MapViewerClient({
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       cancelMove();
       closeCard();
-      router.refresh();
+      reloadWithOverlay('Позиция зафиксирована', 'Пересборка слоя…');
     } catch (e) {
       console.error('[editorial-marker move]', e);
-      alert('Не удалось переместить маркер');
+      failOverlay('Сбой записи', 'Телеметрия записана. Повторите операцию.');
     } finally {
       setMoveBusy(false);
     }
   };
   const moveIconHtml = moveMarker ? String(editorialIcon(moveMarker).options.html ?? '') : '';
+
+  // ── Батч-перемещение группы (правка систематического сдвига калибровки): выбрал метки (editMarks) →
+  // «Переместить (N)» → клик «откуда» (anchor) → клик «куда» → Δ. Превью призраков → применить Δ ко ВСЕМ.
+  const [batchMove, setBatchMove] = useState(false);
+  const [batchAnchor, setBatchAnchor] = useState<{ x: number; z: number } | null>(null);
+  const [batchDelta, setBatchDelta] = useState<{ x: number; z: number } | null>(null);
+  const [batchMoveBusy, setBatchMoveBusy] = useState(false);
+  const batchMoveRef = useRef(false);
+  useEffect(() => {
+    batchMoveRef.current = batchMove;
+  }, [batchMove]);
+  // Клик по метке в батч-move ставит точку по ЕЁ позиции (снап к маркеру-ориентиру) — чтобы «откуда/
+  // куда» можно было кликать прямо по меткам, а не только по пустому полу. Ref, чтобы marker-click в
+  // статичном слое читал актуальные anchor/setters без пересоздания слоя.
+  const batchClickRef = useRef<(p: { x: number; z: number }) => void>(() => {});
+  useEffect(() => {
+    batchClickRef.current = (p) => {
+      if (!batchMove || batchDelta) return;
+      if (!batchAnchor) setBatchAnchor(p);
+      else setBatchDelta({ x: p.x - batchAnchor.x, z: p.z - batchAnchor.z });
+    };
+  }, [batchMove, batchAnchor, batchDelta]);
+  const startBatchMove = () => {
+    if (markedForEdit.length === 0) return;
+    setAddMode(false); // не смешивать с постановкой (клик-хендлеры конфликтуют)
+    setBatchMove(true);
+    setBatchAnchor(null);
+    setBatchDelta(null);
+  };
+  const cancelBatchMove = () => {
+    setBatchMove(false);
+    setBatchAnchor(null);
+    setBatchDelta(null);
+  };
+  const confirmBatchMove = async () => {
+    if (!batchDelta || markedForEdit.length === 0) return;
+    setBatchMoveBusy(true);
+    const dx = batchDelta.x;
+    const dz = batchDelta.z;
+    try {
+      for (const m of markedForEdit) {
+        const res = await fetch('/api/admin/editorial-markers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: m.id,
+            mapId: m.mapId,
+            slug: data.slug,
+            x: +(m.x + dx).toFixed(4),
+            z: +(m.z + dz).toFixed(4),
+            y: m.y,
+            floor: m.floor,
+            type: m.type,
+            category: m.category,
+            faction: m.faction,
+            title: m.title,
+            description: m.description,
+            screenshots: m.screenshots,
+            linkKind: m.linkKind,
+            linkId: m.linkId,
+            linkStep: m.linkStep,
+            // полигон (зоны выходов) сдвигаем на тот же вектор — иначе зона отвяжется от метки.
+            polygon: m.polygon ? m.polygon.map((p) => ({ x: +(p.x + dx).toFixed(4), z: +(p.z + dz).toFixed(4) })) : null,
+            sourceMarkerId: m.sourceMarkerId,
+            hidden: m.hidden,
+            lootItems: m.lootItems,
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }
+      cancelBatchMove();
+      clearEditMarks();
+      setEditOpen(false);
+      closeCard();
+      reloadWithOverlay(`Группа перемещена (${markedForEdit.length})`, 'Пересборка слоя…');
+    } catch (e) {
+      console.error('[batch move]', e);
+      failOverlay('Сбой записи', 'Телеметрия записана. Повторите операцию.');
+    } finally {
+      setBatchMoveBusy(false);
+    }
+  };
 
   // Режим оверрайда синканных маркеров (admin): клик по чужому tarkov.dev-маркеру → карточка-оверрайд
   // (source_marker_id). Ref — чтобы клик-хендлеры в рендер-эффекте не пересоздавались при смене режима.
@@ -542,10 +737,10 @@ export function MapViewerClient({
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       closeCard();
-      router.refresh();
+      reloadWithOverlay('Маркер скрыт', 'Пересборка слоя…');
     } catch (e) {
       console.error('[editorial-marker hide]', e);
-      alert('Не удалось скрыть маркер');
+      failOverlay('Сбой записи', 'Телеметрия записана. Повторите операцию.');
     }
   };
 
@@ -554,7 +749,7 @@ export function MapViewerClient({
     if (!map) return;
     const group = L.layerGroup().addTo(map);
     editorialLayerRef.current = group;
-    const els = new Map<string, { mk: L.Marker; poly?: L.Polygon }>();
+    const els = new Map<string, { mk: L.Marker; poly?: L.Polygon; floor?: number | null }>();
     for (const m of editorialMarkers ?? []) {
       if (!m.id) continue;
       const id = m.id;
@@ -565,22 +760,30 @@ export function MapViewerClient({
         const color = markerColor(m.type);
         const poly = L.polygon(m.polygon.map(ll), { color, weight: 2, dashArray: '6 5', fillColor: color, fillOpacity: marked ? 0.05 : 0.18, opacity: marked ? 0.35 : 1 });
         if (m.title) poly.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', opacity: 1 });
-        poly.on('click', () => setOpenEditorialId(id));
+        poly.on('click', () => {
+          if (batchMoveRef.current) { batchClickRef.current({ x: m.x, z: m.z }); return; } // батч-move: точка по позиции метки
+          if (editOpenRef.current) return useMapUiStore.getState().toggleEditMark(id);
+          setOpenEditorialId(id);
+        });
         poly.addTo(group);
         const cx = m.polygon.reduce((s, p) => s + p.x, 0) / m.polygon.length;
         const cz = m.polygon.reduce((s, p) => s + p.z, 0) / m.polygon.length;
         const cm = L.marker(ll({ x: cx, z: cz }), { icon, interactive: false });
         cm.addTo(group);
         if (marked) cm.getElement()?.classList.add('cta-mk-del');
-        els.set(id, { mk: cm, poly });
+        els.set(id, { mk: cm, poly, floor: m.floor });
         continue;
       }
       const mk = L.marker(ll({ x: m.x, z: m.z }), { icon, riseOnHover: true });
       if (m.title) mk.bindTooltip(m.title, { className: 'cta-tip', direction: 'top', offset: [0, -18], opacity: 1 });
-      mk.on('click', () => setOpenEditorialId(id));
+      mk.on('click', () => {
+        if (batchMoveRef.current) { batchClickRef.current({ x: m.x, z: m.z }); return; } // батч-move: точка по позиции метки
+        if (editOpenRef.current) return useMapUiStore.getState().toggleEditMark(id);
+        setOpenEditorialId(id);
+      });
       mk.addTo(group);
       if (marked) mk.getElement()?.classList.add('cta-mk-del');
-      els.set(id, { mk });
+      els.set(id, { mk, floor: m.floor });
     }
     editorialElsRef.current = els;
     return () => {
@@ -595,13 +798,61 @@ export function MapViewerClient({
   useEffect(() => {
     for (const [id, { mk, poly }] of editorialElsRef.current) {
       const marked = deleteMarks.includes(id);
+      const picked = editMarks.includes(id); // выбран для батч-правки
       mk.getElement()?.classList.toggle('cta-mk-del', marked);
+      mk.getElement()?.classList.toggle('cta-mk-edit', picked);
       poly?.setStyle({ fillOpacity: marked ? 0.05 : 0.18, opacity: marked ? 0.35 : 1 });
     }
     for (const [sid, mk] of sourceMarkerElsRef.current) {
       mk.getElement()?.classList.toggle('cta-mk-del', deleteMarks.includes(`src:${sid}`));
     }
-  }, [deleteMarks, mapInst, editorialMarkers]);
+  }, [deleteMarks, editMarks, mapInst, editorialMarkers]);
+
+  // Editorial-карта (factory-hd): её метки — курируемый контент, а не тысячи синканных точек.
+  // Дефолт стора (DEFAULT_ON = только ЧВК-выход/платка/спавн + hazard) спрятал бы почти всё, и
+  // карта открылась бы «без маркеров». Разово включаем все слои, реально присутствующие в мосте,
+  // — так метки видны сразу, а легенда консистентна (галка = видимость). Гард ref → не затираем
+  // пользовательские тумблеры на ре-рендерах; keys.size → ждём непустой мост.
+  const seededEditorialVisRef = useRef(false);
+  useEffect(() => {
+    if (!data.config.editorial || seededEditorialVisRef.current) return;
+    const keys = new Set<string>();
+    for (const bm of editorialBridge ?? []) {
+      const k = layerKeyForMarker(bm);
+      if (k) keys.add(k);
+    }
+    if (keys.size) {
+      useMapViewStore.getState().setGroupFilters([...keys], true);
+      seededEditorialVisRef.current = true;
+    }
+  }, [data.config.editorial, editorialBridge]);
+
+  // Легенда (activeFilters) + активный этаж управляют editorial-слоем: на factory-hd интерактивного
+  // applyLayerVis нет (он в ветке hasLayers), поэтому фильтруем метки тут. show = слой включён И этаж
+  // совпадает (floor==null → видна на всех этажах). Ключ слоя — из моста (классификация как в counts).
+  useEffect(() => {
+    const group = editorialLayerRef.current;
+    if (!group) return;
+    const keyById = new Map<string, string>();
+    for (const bm of editorialBridge ?? []) {
+      const k = layerKeyForMarker(bm);
+      if (k && bm.id) keyById.set(bm.id, k);
+    }
+    for (const [id, { mk, poly, floor }] of editorialElsRef.current) {
+      const key = keyById.get(id);
+      const layerOn = !key || vis[key] !== false;
+      const floorOn = floor == null || floor === activeFloor;
+      const on = layerOn && floorOn;
+      for (const el of [mk, poly]) {
+        if (!el) continue;
+        if (on) {
+          if (!group.hasLayer(el)) group.addLayer(el);
+        } else if (group.hasLayer(el)) {
+          group.removeLayer(el);
+        }
+      }
+    }
+  }, [vis, activeFloor, mapInst, editorialMarkers, editorialBridge]);
 
   // Карточка-popup держится НАД каплей: пересчёт экранной точки при пане/зуме; клик по карте — закрыть.
   useEffect(() => {
@@ -798,16 +1049,89 @@ export function MapViewerClient({
     };
   }, [mapInst, moveMarker, movePos]);
 
+  // Батч-move фаза выбора вектора: клик 1 = anchor («откуда»), клик 2 = Δ («куда»). СКМ — pan, Esc — отмена.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !batchMove || batchDelta) return;
+    const el = map.getContainer();
+    el.style.cursor = 'crosshair';
+    map.dragging.disable();
+    let panning = false;
+    let last: { x: number; y: number } | null = null;
+    const onMouseMove = (e: MouseEvent) => {
+      if (panning && last) {
+        map.panBy([last.x - e.clientX, last.y - e.clientY], { animate: false });
+        last = { x: e.clientX, y: e.clientY };
+      }
+    };
+    const onDown = (e: MouseEvent) => {
+      if (e.button === 1) {
+        e.preventDefault();
+        panning = true;
+        last = { x: e.clientX, y: e.clientY };
+      }
+    };
+    const onUp = (e: MouseEvent) => {
+      if (e.button === 1) panning = false;
+    };
+    const onClick = (e: L.LeafletMouseEvent) => {
+      const p = { x: e.latlng.lng, z: e.latlng.lat };
+      if (!batchAnchor) setBatchAnchor(p);
+      else setBatchDelta({ x: p.x - batchAnchor.x, z: p.z - batchAnchor.z });
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') cancelBatchMove();
+    };
+    el.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('keydown', onKey);
+    map.on('click', onClick);
+    return () => {
+      el.style.cursor = '';
+      map.dragging.enable();
+      el.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('keydown', onKey);
+      map.off('click', onClick);
+    };
+  }, [mapInst, batchMove, batchAnchor, batchDelta]);
+
+  // Батч-move превью: призраки ВСЕХ выбранных на позиция+Δ. До 2-го клика Δ следит за мышью, после — застывает.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !batchMove || !batchAnchor) return;
+    const group = L.layerGroup().addTo(map);
+    const draw = (dx: number, dz: number) => {
+      group.clearLayers();
+      for (const m of markedForEdit) {
+        L.marker(ll({ x: m.x + dx, z: m.z + dz }), { icon: editorialIcon(m), opacity: 0.55, interactive: false, keyboard: false }).addTo(group);
+      }
+    };
+    if (batchDelta) {
+      draw(batchDelta.x, batchDelta.z);
+      return () => void group.remove();
+    }
+    const onMove = (e: L.LeafletMouseEvent) => draw(e.latlng.lng - batchAnchor.x, e.latlng.lat - batchAnchor.z);
+    map.on('mousemove', onMove);
+    return () => {
+      map.off('mousemove', onMove);
+      group.remove();
+    };
+  }, [mapInst, batchMove, batchAnchor, batchDelta, markedForEdit]);
+
   // Число маркеров на под-слой (для drawer'а + скрытия пустых слоёв).
   const counts = useMemo(() => {
     const c: Record<string, number> = Object.fromEntries(ALL_LAYER_ITEMS.map((i) => [i.key, 0]));
-    for (const m of data.markers) {
+    // Синканые + editorial (через bridge) — чтобы легенда/фильтр видели ручные метки factory-hd.
+    for (const m of [...data.markers, ...(editorialBridge ?? [])]) {
       if (!m.position) continue;
       const key = layerKeyForMarker(m);
       if (key && key in c) c[key]++;
     }
     return c;
-  }, [data.markers]);
+  }, [data.markers, editorialBridge]);
 
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
   const isStatic = !!data.config.staticMap;
@@ -1277,13 +1601,22 @@ export function MapViewerClient({
         .catch(() => {});
     }
 
+    // permalink вида (после нашего full-reload при мутации метки): ?z&cx&cy → вернуть карту
+    // ровно туда, где юзер редактировал (иначе fitBounds сбросил бы зум/центр в общий вид).
+    const vp = new URLSearchParams(window.location.search);
+    const pz = Number(vp.get('z'));
+    const pcx = Number(vp.get('cx'));
+    const pcy = Number(vp.get('cy'));
+    const restoreView = vp.has('z') && vp.has('cx') && vp.has('cy') && [pz, pcx, pcy].every((n) => !Number.isNaN(n));
     // Без maxBounds — карту можно свободно увести в сторону (не «отпружинивает» к центру).
     if (isTiled && imgBounds) {
       setTileFloor(activeFloorRef.current);
-      map.fitBounds(imgBounds);
+      if (restoreView) map.setView([pcy, pcx], pz);
+      else map.fitBounds(imgBounds);
     } else if (cfg.bounds) {
       if (!isStatic) loadImage(data.imageUrl);
-      map.fitBounds(bb(cfg.bounds));
+      if (restoreView) map.setView([pcy, pcx], pz);
+      else map.fitBounds(bb(cfg.bounds));
     }
 
     // Оверлей МЕЧЕНЫХ КОМНАТ: тонкий SVG (тот же viewBox/bounds арта → ложится пиксель-в-пиксель),
@@ -1755,7 +2088,7 @@ export function MapViewerClient({
             onHide={hideMarker}
             onMutated={() => {
               closeCard();
-              router.refresh();
+              reloadWithOverlay('Маркер сохранён', 'Синхронизация слоя…');
             }}
           />
         </div>
@@ -1851,23 +2184,51 @@ export function MapViewerClient({
         </div>
       )}
 
-      {isStatic ? (
-        // Старый статик-редактор ручных маркеров (git-данные). На editorial-картах (factory-hd)
-        // скрыт — там маркеры правит визард через тулбар, а «Правка» дублировала и путала.
-        data.config.editorial ? null : (
-          <button
-            type="button"
-            onClick={() => setEditing((v) => !v)}
-            className={`absolute top-3 right-3 z-[550] flex items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors ${
-              editing
-                ? 'border-(--primary) bg-(--primary) text-(--color-base)'
-                : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
-            }`}
-          >
-            <Pencil className="h-3.5 w-3.5" /> Правка
-          </button>
-        )
-      ) : (
+      {/* Батч-move: подсказка фазы выбора вектора (клик откуда → куда) */}
+      {batchMove && !batchDelta && (
+        <div className="absolute bottom-16 left-1/2 z-[560] flex -translate-x-1/2 items-center gap-2 rounded-sm border border-(--primary)/50 bg-card-menu px-4 py-2 backdrop-blur-md">
+          <span className="font-blender-medium text-xs text-text-secondary">
+            Сдвиг группы ({markedForEdit.length}): <span className="text-(--primary)">{batchAnchor ? 'клик — КУДА' : 'клик — ОТКУДА'}</span> · <span className="text-text-primary">СКМ</span> — двигать карту · <span className="text-text-primary">Esc</span> — отмена
+          </span>
+        </div>
+      )}
+      {/* Батч-move: подтверждение сдвига (призраки уже показывают новые позиции) */}
+      {batchMove && batchDelta && (
+        <div className="absolute inset-0 z-[600] flex items-center justify-center bg-black/40">
+          <div className="flex flex-col items-center gap-3 rounded-sm border border-lines-hover bg-card-menu px-6 py-4 backdrop-blur-md">
+            <span className="font-blender-medium text-sm text-text-primary">Сдвинуть {markedForEdit.length} меток на этот вектор?</span>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={confirmBatchMove}
+                disabled={batchMoveBusy}
+                className="flex h-8 items-center gap-1.5 rounded-xs bg-(--primary) px-4 font-blender-medium text-type-micro uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                <Check className="h-3.5 w-3.5" /> Применить
+              </button>
+              <button
+                type="button"
+                onClick={() => { setBatchDelta(null); setBatchAnchor(null); }}
+                disabled={batchMoveBusy}
+                className="flex h-8 items-center rounded-xs border border-lines-hover px-4 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:text-(--primary) disabled:opacity-50"
+              >
+                Заново
+              </button>
+              <button
+                type="button"
+                onClick={cancelBatchMove}
+                disabled={batchMoveBusy}
+                className="flex h-8 items-center rounded-xs border border-lines-hover px-4 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:text-danger disabled:opacity-50"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isStatic || data.config.editorial ? (
+        // Легенда/фильтр — на интерактивных И на editorial-статик-картах (factory-hd).
         <MapLayersDrawer
           vis={vis}
           counts={counts}
@@ -1878,9 +2239,22 @@ export function MapViewerClient({
           onOpenChange={setLayersOpen}
           hasHeat={!!heatPoints?.length}
         />
+      ) : (
+        // Старый статик-редактор ручных маркеров (git-данные) — только на НЕ-editorial статике.
+        <button
+          type="button"
+          onClick={() => setEditing((v) => !v)}
+          className={`absolute top-3 right-3 z-[550] flex items-center gap-1.5 rounded-sm border px-3 py-1.5 font-blender-medium text-type-caption uppercase tracking-widest backdrop-blur-md transition-colors ${
+            editing
+              ? 'border-(--primary) bg-(--primary) text-(--color-base)'
+              : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
+          }`}
+        >
+          <Pencil className="h-3.5 w-3.5" /> Правка
+        </button>
       )}
 
-      {!isStatic && canEditMarkers && (
+      {(!isStatic || data.config.editorial) && canEditMarkers && (
         <MarkerDeletionDrawer
           marked={markedForDelete}
           open={deleteOpen}
@@ -1889,6 +2263,45 @@ export function MapViewerClient({
           onConfirm={confirmDeleteMarks}
           busy={deleteBusy}
         />
+      )}
+
+      {/* Батч-правка (editorial): drawer выбранных + «Редактировать (N)» → центрированный визард. */}
+      {data.config.editorial && canEditMarkers && (
+        <MarkerEditDrawer
+          marked={markedForEdit}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          onUnmark={toggleEditMark}
+          onEdit={() => {
+            if (markedForEdit.length) setBatchWizard(true);
+          }}
+          onMove={startBatchMove}
+        />
+      )}
+      {batchWizard && markedForEdit.length > 0 && (
+        <div
+          className="absolute inset-0 z-[560] flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !editBusy && setBatchWizard(false)}
+        >
+          <div className="w-87" onClick={(e) => e.stopPropagation()}>
+            <EditorialMarkerCard
+              key={`batch-${markedForEdit[0].id}`}
+              marker={markedForEdit[0]}
+              linkedQuest={markedForEdit[0].linkedQuest}
+              linkedStory={markedForEdit[0].linkedStory}
+              linkedItem={markedForEdit[0].linkedItem}
+              canEdit={canEditMarkers}
+              defaultEditing
+              questIndex={questIndex}
+              storyIndex={storyIndex}
+              mapSlug={data.slug}
+              lootIndex={lootIndex}
+              onCancel={() => setBatchWizard(false)}
+              onBatchSave={confirmEditMarks}
+              batchCount={markedForEdit.length}
+            />
+          </div>
+        </div>
       )}
 
       {/* Сквад — шаринг позиции (только карты с проекцией координат). */}
@@ -1992,6 +2405,9 @@ export function MapViewerClient({
           onClose={() => setEditing(false)}
         />
       ) : null}
+
+      {/* Оверлей «пересборки слоя»: прячет транзиентный сбой full-reload после мутации метки. */}
+      <MapReloadOverlay />
     </div>
   );
 }

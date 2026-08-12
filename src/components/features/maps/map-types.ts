@@ -31,6 +31,8 @@ export interface MapViewMarker {
   roomHref?: string | null;
   /** loose loot: slug категории предмета (barter/provisions/injectors/keys/poster/container/other) — для под-слоя. */
   lootCat?: string | null;
+  /** Лут-пул (editorial): имена ВСЕХ возможных предметов спота — для поиска на локации по любому из них. */
+  lootItemNames?: string[] | null;
   meta: Record<string, unknown> | null;
   /** Статик-карты (ручные маркеры): индекс этажа для фильтра вместо game-Y top/bottom. */
   floor?: number | null;

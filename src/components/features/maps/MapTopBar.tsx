@@ -40,6 +40,9 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
   const toggleAddMode = useMapUiStore((s) => s.toggleAddMode);
   const overrideMode = useMapUiStore((s) => s.overrideMode);
   const toggleOverrideMode = useMapUiStore((s) => s.toggleOverrideMode);
+  const editOpen = useMapUiStore((s) => s.editOpen);
+  const toggleEdit = useMapUiStore((s) => s.toggleEdit);
+  const editCount = useMapUiStore((s) => s.editMarks.length);
   const deleteOpen = useMapUiStore((s) => s.deleteOpen);
   const toggleDelete = useMapUiStore((s) => s.toggleDelete);
   const deleteCount = useMapUiStore((s) => s.deleteMarks.length);
@@ -58,7 +61,7 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
     <div className="relative flex h-14 items-center px-3.5 border-t border-lines-hover shrink-0 overflow-x-auto scrollbar-hidden">
       {/* Слева — поиск 36×36 (открывает левый drawer «ПОИСК НА ЛОКАЦИИ») */}
       <div className="flex flex-1 items-center">
-        {!data.config.staticMap && (
+        {(!data.config.staticMap || data.config.editorial) && (
           <button type="button" onClick={toggleSearch} title="Поиск (Ctrl+F)" aria-label="Поиск" className={toggleCls(searchOpen)}>
             <span className="icon-mask icon-eft-search-icon h-5.5 w-5.5" />
           </button>
@@ -110,18 +113,36 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
           activeRaidDuration={data.raidDuration}
         />
 
-        {canEdit && (
-          <button
-            type="button"
-            onClick={toggleOverrideMode}
-            aria-pressed={overrideMode}
-            title={overrideMode ? 'Выключить правку синканных (клик по маркеру = ссылка)' : 'Править синканные маркеры: клик → карточка-оверрайд'}
-            aria-label="Править синканные маркеры"
-            className={toggleCls(overrideMode)}
-          >
-            <SquarePen className="h-5.5 w-5.5" />
-          </button>
-        )}
+        {canEdit &&
+          (data.config.editorial ? (
+            // Editorial-карты (factory-hd): синканных нет → square-pen = БАТЧ-ПРАВКА (выбор кликом + drawer).
+            <button
+              type="button"
+              onClick={toggleEdit}
+              aria-pressed={editOpen}
+              title="Батч-правка: выбери метки кликом → «Редактировать (N)»"
+              aria-label="Батч-правка маркеров"
+              className={`${toggleCls(editOpen)} relative`}
+            >
+              <SquarePen className="h-5.5 w-5.5" />
+              {editCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--primary) px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
+                  {editCount}
+                </span>
+              )}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={toggleOverrideMode}
+              aria-pressed={overrideMode}
+              title={overrideMode ? 'Выключить правку синканных (клик по маркеру = ссылка)' : 'Править синканные маркеры: клик → карточка-оверрайд'}
+              aria-label="Править синканные маркеры"
+              className={toggleCls(overrideMode)}
+            >
+              <SquarePen className="h-5.5 w-5.5" />
+            </button>
+          ))}
         {canEdit && (
           <button
             type="button"
@@ -152,9 +173,9 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
         </button>
       </div>
 
-      {/* Справа — слои 36×36 у правого края */}
+      {/* Справа — слои 36×36 у правого края (легенда/фильтр: интерактивные + editorial-статик) */}
       <div className="flex flex-1 items-center justify-end">
-        {hasLayers && (
+        {(hasLayers || !!data.config.editorial) && (
           <button type="button" onClick={toggleLayers} title="Слои и фильтры" aria-label="Слои и фильтры" className={toggleCls(layersOpen)}>
             <Layers className="h-5.5 w-5.5" />
           </button>

@@ -194,8 +194,12 @@ export async function syncEftLandingData(): Promise<SyncLandingResult> {
   }
 
   // Чистим стейл-строки (achievements/maps/traders, исчезнувшие из источника при вайпе).
+  // ⚠️ maps: НАШИ кастомные карты (HD-тайлы, id-слаг, НЕ из tarkov.dev) держим в keep — иначе прюн
+  // снёс бы их строку, а FK `markers.map_id ON DELETE CASCADE` вычистил бы ВСЕ их editorial-метки
+  // (инцидент factory-hd: метки исчезали после каждого landing-синка). Новую HD-карту дописывать сюда.
+  const CUSTOM_MAP_IDS = ["factory-hd"];
   const aP = await pruneStale(achievements, achievements.id, achievements.gameId, gameId, a.map((x) => x.id), "achievements");
-  const mP = await pruneStale(maps, maps.id, maps.gameId, gameId, m.map((x) => x.id), "maps");
+  const mP = await pruneStale(maps, maps.id, maps.gameId, gameId, [...m.map((x) => x.id), ...CUSTOM_MAP_IDS], "maps");
   const tP = await pruneStale(traders, traders.normalizedName, traders.gameId, gameId, t.map((x) => x.normalizedName), "traders");
 
   return {
