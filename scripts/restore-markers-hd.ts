@@ -9,7 +9,9 @@
 import { config } from "dotenv"; config({ path: ".env.local" });
 import { readFile } from "node:fs/promises";
 
-const MAP_ID = "factory-hd";
+// ПОСЛЕ ПРОМОУТА (2026-08-13): восстанавливаем боевой slug 'factory' из factory-markers.snapshot.json.
+// Историч. factory-hd-markers.snapshot.json (446, до промоута) — для аварийного отката промоута вручную.
+const MAP_ID = "factory";
 const SNAP = `scripts/data/${MAP_ID}-markers.snapshot.json`;
 
 type SnapMarker = {

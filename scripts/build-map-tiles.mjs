@@ -20,7 +20,7 @@ sharp.cache(false);
 // Реестр карт: файл-мастер → папка-этаж. Новую карту заводим одним блоком здесь + npm-шорткатом.
 const SPECS = {
   factory: {
-    configSlug: 'factory-hd',                 // ключ в EFT_MAP_CONFIG, где бампать tileVersion
+    configSlug: 'factory',                    // ключ в EFT_MAP_CONFIG, где бампать tileVersion (промоут 2026-08-13)
     src: 'public/maps/factory/16384px/jpg',   // папка JPG-мастеров
     out: 'public/maps/factory/tiles',         // корень пирамиды (folder на этаж)
     tileSize: 256,
@@ -54,8 +54,11 @@ async function countTiles(dir) {
 // Бампнуть tileVersion у нужной карты в eft-map-config.ts (cache-bust ?v=). Возвращает [old,new].
 async function bumpVersion(configSlug) {
   let cfg = await readFile(CONFIG_PATH, 'utf8');
-  const keyAt = cfg.indexOf(`"${configSlug}":`);
-  if (keyAt < 0) return null; // карты нет в конфиге — не критично
+  // Ключ карты бывает в кавычках ("factory-hd":) и без (factory:, валидный идентификатор) — ловим оба.
+  const esc = configSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const km = cfg.match(new RegExp(`["']?${esc}["']?\\s*:\\s*\\{`));
+  if (!km) return null; // карты нет в конфиге — не критично
+  const keyAt = km.index;
   const head = cfg.slice(0, keyAt);
   const tail = cfg.slice(keyAt);
   const m = tail.match(/tileVersion:\s*(\d+)/);

@@ -10,7 +10,7 @@ returns trigger
 language plpgsql
 as $$
 begin
-  if old.id in ('factory-hd') then
+  if old.id in ('factory-hd', 'factory') then
     return null; -- отмена удаления защищённой карты
   end if;
   return old;

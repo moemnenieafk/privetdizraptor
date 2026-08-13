@@ -106,7 +106,10 @@ export default async function MapPage({ params, searchParams }: Props) {
       config,
       markers,
     };
-    const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
+    // Дедуп навигации: промоутнутый в staticMap `factory` есть и в БД (интерактивная строка),
+    // и в конфиге → БД выигрывает, иначе дубль slug в дропдауне (тот же приём, что на /eft/maps).
+    const dbNav = await getEftInteractiveMapsWithNames();
+    const navMaps = [...dbNav, ...getStaticMaps().filter((s) => !dbNav.some((m) => m.slug === s.slug))];
 
     // Редактор editorial-маркеров на статик/тайл-карте (флаг config.editorial): визард ставит
     // метки в editorial_markers по пиксель-холсту (клик x=lng,z=lat, CRS.Simple round-trip).
@@ -353,7 +356,9 @@ export default async function MapPage({ params, searchParams }: Props) {
         markers,
       };
 
-      const navMaps = [...(await getEftInteractiveMapsWithNames()), ...getStaticMaps()];
+      // Дедуп навигации (см. статик-ветку выше): БД-карта выигрывает над одноимённой статик-конфиг.
+      const dbNav = await getEftInteractiveMapsWithNames();
+      const navMaps = [...dbNav, ...getStaticMaps().filter((s) => !dbNav.some((m) => m.slug === s.slug))];
       const quests = questsForMap(slug);
       const questTasks = questTasksForMap(slug);
 

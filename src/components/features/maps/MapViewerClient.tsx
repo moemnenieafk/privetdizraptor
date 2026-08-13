@@ -5,6 +5,7 @@ import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Crosshair, Flame, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
+import { mapAssetBase } from '@/lib/map-image';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
 import { MarkerDeletionDrawer } from './MarkerDeletionDrawer';
@@ -1517,7 +1518,8 @@ export function MapViewerClient({
       // ⚠️ sharp/libvips google-layout пишет {z}/{y}/{x} (строка/столбец), а НЕ XYZ {z}/{x}/{y}.
       // Поэтому в шаблоне Leaflet порядок y/x — иначе тайлы транспонируются и стены не сходятся.
       const tileVer = cfg.tileVersion ? `?v=${cfg.tileVersion}` : '';
-      tileLayerRef.current = L.tileLayer(`/maps/${cfg.tileBase}/tiles/${folder}/{z}/{y}/{x}.${cfg.tileExt ?? 'webp'}${tileVer}`, {
+      // mapAssetBase: '' локально (тайлы из /public), R2-база в проде (тайлы в .gitignore, см. map-image.ts).
+      tileLayerRef.current = L.tileLayer(`${mapAssetBase}/maps/${cfg.tileBase}/tiles/${folder}/{z}/{y}/{x}.${cfg.tileExt ?? 'webp'}${tileVer}`, {
         tileSize: 256,
         minNativeZoom: 0,
         maxNativeZoom: cfg.maxZoom,

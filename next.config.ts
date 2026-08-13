@@ -30,6 +30,9 @@ const nextConfig: NextConfig = {
       // (обе страницы — инструменты прогресса, а не каталог; URL приведён к разделу).
       { source: '/eft/items/loot-rate', destination: '/eft/progress/loot-rate', permanent: true },
       { source: '/eft/items/price-slot', destination: '/eft/progress/price-slot', permanent: true },
+      // HD-Завод промоутнут в боевую карту `factory` (docs/decisions/factory-hd-promote.md,
+      // 2026-08-13): старый превью-slug factory-hd ведёт на неё, чтобы ссылки/закладки не 404-или.
+      { source: '/eft/maps/factory-hd', destination: '/eft/maps/factory', permanent: true },
     ];
   },
 

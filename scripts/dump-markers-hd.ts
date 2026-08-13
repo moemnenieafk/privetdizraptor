@@ -13,7 +13,10 @@ import { config } from "dotenv"; config({ path: ".env.local" });
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 
-const MAP_ID = "factory-hd";
+// ПОСЛЕ ПРОМОУТА (2026-08-13, docs/decisions/factory-hd-promote.md): editorial-метки живут под боевым
+// slug 'factory' → бэкапим ЕГО. Старый scripts/data/factory-hd-markers.snapshot.json (446, до промоута)
+// оставлен как историч. бэкап; новый OUT — factory-markers.snapshot.json (не затирает старый).
+const MAP_ID = "factory";
 const OUT = `scripts/data/${MAP_ID}-markers.snapshot.json`;
 
 async function main() {
@@ -38,7 +41,7 @@ async function main() {
 
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(OUT, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
-  console.log(`💾 снапшот factory-hd: ${markers.length} меток → ${OUT}`);
+  console.log(`💾 снапшот ${MAP_ID}: ${markers.length} меток → ${OUT}`);
   console.log(`   по типам: ${Object.entries(byType).map(([k, v]) => `${k} ${v}`).join(", ")}`);
   console.log(`   закоммить файл, чтобы выверка была защищена от вайпа.`);
   process.exit(0);

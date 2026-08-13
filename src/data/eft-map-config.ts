@@ -223,41 +223,23 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     layers: [],
   },
   factory: {
+    // ПРОМОУТ HD-Завода (docs/decisions/factory-hd-promote.md, V4DYA 2026-08-13): боевая карта
+    // Завод = наш HD-арт (16384², 4 этажа), нарезанный на тайлы (skill map-stitch), а не Shebuka-SVG.
+    // Тайлы: /public/maps/factory/tiles/{этаж}/{z}/{y}/{x}.jpg (вся /public/maps в .gitignore → на
+    // проде отдаются с R2, префикс NEXT_PUBLIC_MAP_TILE_BASE_URL, см. src/lib/map-image.ts).
+    // CRS.Simple: bounds так, что на zoom=6 холст = 16384×16152 → tile-z == map-zoom.
+    // Старые интерактивные поля (svgFile:"Factory.svg", transform, coordinateRotation, svgLayer)
+    // сняты; Shebuka-подложку удаляет Шаг 6. Editorial-метки переезжают с 'factory-hd' в Шаге 3 (SQL).
     slug: "factory",
-    svgFile: "Factory.svg",
-    author: SHEBUKA,
-    authorLink: SHEBUKA_LINK,
-    minZoom: 1,
-    maxZoom: 6,
-    transform: [1.629, 119.9, 1.629, 139.3],
-    coordinateRotation: 90,
-    bounds: [
-      [77, -64.5],
-      [-65.5, 67.4],
-    ],
-    heightRange: [-1, 3],
-    svgLayer: "Ground_Floor",
-    layers: [
-      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [3, 6] },
-      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [6, 10000] },
-      { name: "Тоннели", svgLayer: "Basement", show: false, height: [-10000, -1] },
-    ],
-  },
-  "factory-hd": {
-    // ПРЕВЬЮ (локальный тест, A: подложка+этажи+зум, маркеры off): HD-арт V4DYA, нарезан на тайлы
-    // (см. skill map-stitch). Тайлы в /public/maps/factory/tiles/{этаж}/{z}/{x}/{y}.webp (в .gitignore).
-    // CRS.Simple: bounds подобраны так, что на zoom=6 (scale 64) холст = 16384×16152 (W/64=256, H/64=252.375),
-    // → tile-z совпадает с map-zoom. Боевой интерактивный `factory` не трогаем; калибровка маркеров — этап B.
-    slug: "factory-hd",
     svgFile: "factory", // dummy-truthy: роутит через статик-ветку page.tsx; реальная подложка — тайлы
     staticMap: true,
     tileBase: "factory",
     groundTile: "ground",
     tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64 без добивки; bounds через unproject во вьюере
     tileExt: "jpg", // непрозрачные JPG (цветной фон #141416) — тайлы сплошные, без «пустых» прозрачных
-    tileVersion: 5, // cache-bust: бампать при каждой перенарезке тех же URL (v3 = перенарезаны все 4 этажа)
+    tileVersion: 6, // cache-bust: бампать при каждой перенарезке тех же URL
     editorial: true, // визард editorial-маркеров: V4DYA ставит метки на живой карте → editorial_markers
-    displayName: "Завод — HD (тайлы)",
+    displayName: "Завод",
     groundName: "1-й этаж (земля)",
     author: "V4DYA",
     authorLink: null,
@@ -277,6 +259,9 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       { name: "Тоннели", show: false, tile: "basement" },
     ],
   },
+  // Блок `factory-hd` удалён при промоуте в боевой `factory` (docs/decisions/factory-hd-promote.md,
+  // 2026-08-13): его поля перенесены в `factory` выше, старый slug редиректит на /eft/maps/factory
+  // (next.config.ts). Строка maps(id='factory-hd') пока живёт (защищена триггером), уборка — Шаг 6.
   "streets-of-tarkov": {
     slug: "streets-of-tarkov",
     svgFile: "StreetsOfTarkov.svg",
