@@ -78,6 +78,10 @@ const nextConfig: NextConfig = {
     viewTransition: true,
   },
   reactCompiler: true,
+
+  // cta-mapper (dev-only тул, src/app/(tools)/mapper): нативные пакеты не бандлить.
+  // vtracer — wasm, sharp — бинарники libvips; в бандле роут-хендлера они падают.
+  serverExternalPackages: ['@visioncortex/vtracer', 'sharp'],
 };
 
 export default nextConfig;
