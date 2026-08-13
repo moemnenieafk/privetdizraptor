@@ -5,6 +5,8 @@ import { create } from 'zustand';
 interface LootFilterState {
   labels: string[];
   toggle: (label: string) => void;
+  /** Задать набор разом — гидрация deep-link ?item=<id> с карточки предмета. */
+  setLabels: (labels: string[]) => void;
   clear: () => void;
 }
 
@@ -12,5 +14,6 @@ export const useLootFilterStore = create<LootFilterState>((set) => ({
   labels: [],
   toggle: (label) =>
     set((s) => ({ labels: s.labels.includes(label) ? s.labels.filter((l) => l !== label) : [...s.labels, label] })),
+  setLabels: (labels) => set({ labels }),
   clear: () => set({ labels: [] }),
 }));

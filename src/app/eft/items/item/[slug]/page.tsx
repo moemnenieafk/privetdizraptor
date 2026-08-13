@@ -17,6 +17,7 @@ import type {
   CraftRecipe,
 } from './ItemModules';
 import { ItemDetailLayout } from './ItemDetailLayout';
+import { getItemLocations, type ItemLocations } from '@/db/item-locations';
 import { getDynamicTopIndicator } from '@/lib/item-indicators.util';
 import { readdirSync } from 'fs';
 import { join } from 'path';
@@ -268,6 +269,7 @@ function toSimilarEftItem(it: SimItemRaw): EftItemData {
 interface DetailData {
   item: TarkovItem;
   similar: EftItemData[];
+  locations: ItemLocations;
 }
 
 async function getEftItemDetail(slug: string): Promise<DetailData | null> {
@@ -496,7 +498,10 @@ async function getEftItemDetail(slug: string): Promise<DetailData | null> {
     }
   }
 
-  return { item, similar };
+  // «Где найти»: реверс live-`markers` (loose-точки + позиции контейнеров) + container-loot.json.
+  const locations = await getItemLocations({ tpl: mainId, types: px.types, bsgCategoryId: px.bsgCategoryId });
+
+  return { item, similar, locations };
 }
 
 // === СТРАНИЦА ===
@@ -506,7 +511,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
   const data = await getEftItemDetail(slug);
   if (!data) notFound();
 
-  const { item, similar } = data;
+  const { item, similar, locations } = data;
   // Уровень доступа предмета на барахолке: в Tarkov 1.0 поверх общего порога 15
   // навешены блокировки по категориям. Гексагон рисуется только если ЧВК не дорос —
   // сравнение живёт в LevelHex на клиенте, сюда приходит только сам порог.
@@ -545,6 +550,7 @@ export default async function ItemDetailsPage({ params }: { params: Promise<{ sl
         <ItemDetailLayout
           item={item}
           similar={similar}
+          locations={locations}
           buyLevelRequired={buyLevelRequired}
           rates={rates}
           pricesAgeHours={pricesAgeHours}

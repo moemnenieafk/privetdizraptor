@@ -1304,6 +1304,36 @@ export function MapViewerClient({
     };
   }, [mapInst, lootPositions]);
 
+  // ── Deep-link ?item=<id> с карточки предмета → подсветить ВСЕ его loose-точки и КАДРИРОВАТЬ их
+  //    ОДНИМ подлётом (fit bounds), а НЕ облётом по одному. Раз, когда карта и маркеры готовы. ──
+  const itemDeepLinkDone = useRef(false);
+  useEffect(() => {
+    if (itemDeepLinkDone.current) return;
+    const id = new URLSearchParams(window.location.search).get('item');
+    if (!id) {
+      itemDeepLinkDone.current = true;
+      return;
+    }
+    const map = mapInst;
+    if (!map || data.markers.length === 0) return; // ждём карту и маркеры, не выжигаем guard на пустом
+    const labels = new Set<string>();
+    const pts: { x: number; z: number }[] = [];
+    for (const m of data.markers) {
+      if (m.type !== 'loot_loose' && m.type !== 'loot') continue; // только случайная добыча (не замки/контейнеры)
+      if (m.label && (m.linkedItemId === id || m.category === id)) {
+        labels.add(m.label);
+        if (m.position) pts.push({ x: m.position.x, z: m.position.z });
+      }
+    }
+    if (labels.size) useLootFilterStore.getState().setLabels([...labels]);
+    // Все точки предмета в кадр разом, МГНОВЕННО (animate:false). Зум-анимация flyTo/flyToBounds
+    // падала `appendChild of undefined` на ещё-не-готовой/пере-монтируемой карте; instant fitBounds —
+    // ровно как начальный вид карты (строка ниже с data.config.bounds), он безопасен.
+    if (pts.length === 1) map.setView(ll(pts[0]), Math.min(data.config.maxZoom, 4), { animate: false });
+    else if (pts.length > 1) map.fitBounds(L.latLngBounds(pts.map((p) => ll(p))), { padding: [80, 80], maxZoom: data.config.maxZoom, animate: false });
+    itemDeepLinkDone.current = true;
+  }, [data.markers, mapInst, data.config.maxZoom]);
+
   // ── Story/lore-слой: маршрут выбранной истории (кольца-номера + пунктирная линия) из editorial linkKind='story'. ──
   const storySlug = useStoryFilterStore((s) => s.slug);
   const storyCheckpoints = useMemo(() => {

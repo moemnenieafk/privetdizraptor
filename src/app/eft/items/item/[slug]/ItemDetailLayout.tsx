@@ -22,6 +22,8 @@ import { ItemStoryTours } from './ItemStoryTours';
 import { ContainerContents } from './ContainerContents';
 import { SimilarItems } from './SimilarItems';
 import { LootSources } from './LootSources';
+import { ItemSpawnLocations } from './ItemSpawnLocations';
+import type { ItemLocations } from '@/db/item-locations';
 import { getItemStoryTours } from '@/lib/item-story-tours';
 import type { EftItemData } from '@/components/features/items/EftItemTile';
 import { getItemCategory, getItemHeadline } from './item-identity.util';
@@ -30,6 +32,7 @@ import type { TarkovItem } from './page';
 interface ItemDetailLayoutProps {
   item: TarkovItem;
   similar: EftItemData[];
+  locations: ItemLocations;
   buyLevelRequired?: number | null;
   rates?: { usd: number | null; eur: number | null };
   pricesAgeHours?: number | null;
@@ -68,7 +71,7 @@ function StatusBadge({ label, variant, iconClass }: StatusBadgeData) {
   );
 }
 
-export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, pricesAgeHours, latestBasePrice }: ItemDetailLayoutProps) {
+export function ItemDetailLayout({ item, similar, locations, buyLevelRequired, rates, pricesAgeHours, latestBasePrice }: ItemDetailLayoutProps) {
   const hasBarter = item.barters.length > 0;
   const hasCraft = item.crafts.length > 0;
   const hasQuest = (item.usedInTasks?.length ?? 0) > 0;
@@ -199,6 +202,7 @@ export function ItemDetailLayout({ item, similar, buyLevelRequired, rates, price
 
       {/* ── СЕКЦИИ НИЖЕ (full-width) ───────────────────── */}
       <div className="flex w-full flex-col gap-6 lg:w-full lg:basis-full">
+        {locations.hasData && <ItemSpawnLocations locations={locations} itemId={item.id} itemName={item.name} />}
         <SimilarItems items={similar} />
 
         {item.description && (
