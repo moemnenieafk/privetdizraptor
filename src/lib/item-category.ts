@@ -2,6 +2,7 @@
 // (используется детальной страницей предмета и карточкой глобального поиска).
 // iconClass = CSS-маска класс из src/styles/icons.css.
 // Порядок важен: более специфичные типы раньше (helmet до wearable и т.д.).
+import { BP_SEASON_1_DOC_IDS } from '@/data/eft-season-items';
 
 export interface CategoryInfo {
   label: string;
@@ -30,7 +31,15 @@ const CATEGORY_BY_TYPE: Array<[type: string, info: CategoryInfo]> = [
   ['barter',     { label: 'Предметы для бартера', iconClass: 'icon-eft-items-equipment', href: '/eft/items/barter' }],
 ];
 
-export function getItemCategory(types: string[]): CategoryInfo | null {
+// Сезонная категория БП — оверрайд по id: документы имеют types=['noFlea'], по типу не отличить.
+const BATTLEPASS_S1_CATEGORY: CategoryInfo = {
+  label: 'BATTLEPASS - S1',
+  iconClass: 'icon-eft-seasons',
+  href: '/eft/items/battle-pass',
+};
+
+export function getItemCategory(types: string[], id?: string): CategoryInfo | null {
+  if (id && BP_SEASON_1_DOC_IDS.has(id)) return BATTLEPASS_S1_CATEGORY;
   for (const [type, info] of CATEGORY_BY_TYPE) {
     if (types.includes(type)) return info;
   }
@@ -66,8 +75,8 @@ export interface CategoryIcon {
   iconUrl?: string;
 }
 
-export function getCategoryIcon(types: string[], bsgCategoryId?: string): CategoryIcon | null {
-  const cat = getItemCategory(types);
+export function getCategoryIcon(types: string[], bsgCategoryId?: string, id?: string): CategoryIcon | null {
+  const cat = getItemCategory(types, id);
   if (!cat) return null;
 
   // Барахолка: уточняем подкатегорию по bsgCategoryId, фоллбэк — общая иконка бартера.

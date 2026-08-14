@@ -84,7 +84,7 @@ export function ItemDetailLayout({ item, similar, locations, buyLevelRequired, r
     item.properties && 'grids' in item.properties ? item.properties.grids : undefined;
 
   // Идентификация: категория + ключевой стат под названием
-  const category = getItemCategory(item.types);
+  const category = getItemCategory(item.types, item.id);
   const headline = getItemHeadline(item);
 
   // Сюжетные истории, где нужен предмет (блок ТУР) — считаем на сервере, тяжёлые

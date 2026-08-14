@@ -91,3 +91,17 @@ export const SEASON_ITEM_BUNDLES: Readonly<Record<SeasonItemCategory, readonly s
   'battle-pass': BATTLE_PASS_BUNDLES,
   'kord-breach': KORD_BREACH_BUNDLES,
 };
+
+// ─── Looted-документы прогрессии БП Сезона 1 (8) — ЕДИНЫЙ источник правды ───────────────
+// Один набор питает ОБЕ фичи синхронно: фильтр каталога (/eft/items/battle-pass, selectForSlug)
+// И слой карты (bp-season-1-docs, layerKeyForMarker). id — из канон json.tarkov.dev (§4.12).
+export const BP_SEASON_1_DOC_IDS: ReadonlySet<string> = new Set([
+  '6a31807f17005505b70d5827', // Финансовая документация
+  '6a3182dc6cd8de21cf0a3a7d', // Медицинская документация
+  '6a31830dde69ceafd805afa0', // Эксплуатационная документация
+  '6a317b9692cfdcddcb02a58e', // Личные данные ЧВК
+  '6a3181f178450ec91c0ea1aa', // Проектная документация
+  '6a31824878450ec91c0ea1ae', // Чертежи и тех. документация
+  '6a31828557705071410ca00e', // Тестовая документация
+  '6a3182b72fd891345e047eef', // Пользовательская документация
+]);

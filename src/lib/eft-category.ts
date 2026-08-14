@@ -14,6 +14,7 @@ import type { CategoryItem } from "@/app/eft/items/[...category]/ItemsCategoryCl
 import { EFT_QUESTS } from "@/data/quests";
 import { memoTTL } from "@/lib/server-cache";
 import fleaLevelsRaw from "@/data/eft-flea-levels.json";
+import { BP_SEASON_1_DOC_IDS } from "@/data/eft-season-items";
 
 /* ─── Ручной оверрайд minLevelForFlea (пока tarkov.dev не отдаёт поле) ─────────
  * Мержится на чтении поверх БД. Приоритет: БД → byItem(normalizedName) → byBsgCategory. */
@@ -204,6 +205,11 @@ function selectForSlug(slug: string, all: EnrichedItem[]): EnrichedItem[] {
       }
     }
     return all.filter((e) => ids.has(e.id));
+  }
+
+  // Сезонная категория БП — 8 looted-документов (единый набор, синхрон с картой).
+  if (slug === "battle-pass") {
+    return all.filter((e) => BP_SEASON_1_DOC_IDS.has(e.id));
   }
 
   if (slug === "carbine") {

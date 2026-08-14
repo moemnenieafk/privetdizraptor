@@ -57,7 +57,7 @@ export const SearchItemCard = ({ item, onSelect }: SearchItemCardProps) => {
     ? getTraderPortraitPath(item.traderSell.vendorNormalizedName)
     : null;
   // Иконка категории из раздела «Предметы» (бартер уточняется по bsgCategoryId).
-  const category = getCategoryIcon(item.types, item.bsgCategoryId);
+  const category = getCategoryIcon(item.types, item.bsgCategoryId, item.id);
 
   // Выгодная цена: подсвечиваем барахолку, когда она выгоднее лучшего торговца
   // (логика идентична EftItemTile/Pricing).

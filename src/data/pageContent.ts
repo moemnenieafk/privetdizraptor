@@ -15,6 +15,11 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     description: 'Единая база данных снаряжения зоны. Всё найденное, захваченное и применимое — в одном реестре.',
     iconClass: 'icon-eft-items-loot-tier',
   },
+  'eft-items-battle-pass': {
+    title: 'Предметы для Батлпасса — Сезон 1',
+    description: 'Документация TerraGroup — прогрессия Боевого пропуска KORD BREACH. Лутается в рейде; смотри «Где найти» на карточке и слой «Документы БП — Сезон 1» на карте.',
+    iconClass: 'icon-eft-seasons',
+  },
   'eft-quests': {
     title: 'Задания',
     description: 'Все сюжетные и побочные задания от торговцев. Прохождения, награды и необходимые предметы.',

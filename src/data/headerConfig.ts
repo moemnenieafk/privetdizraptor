@@ -170,7 +170,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       secure: 'Защищенные',
       food: 'Еда',
       drinks: 'Напитки',
-      specialequipment: 'Спецоборудование', 
+      'battle-pass': 'Предметы для Батлпасса — Сезон 1',
+      specialequipment: 'Спецоборудование',
       valuables: 'Ценности',
       electronics: 'Электроника',
       tools: 'Инструменты',
@@ -334,6 +335,14 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/items',
         iconUrl: '/icons/eft/03-items/loot-tier.svg',
         children: [
+          // 0. БОЕВОЙ ПРОПУСК — СЕЗОН 1 (сезонная категория, синхрон со слоем карты)
+          {
+            id: 'i-battlepass-s1',
+            label: 'BATTLEPASS - S1',
+            menuTitle: 'BATTLEPASS - S1',
+            path: '/eft/items/battle-pass',
+            iconUrl: '/icons/eft/04-progression/seasons/seasons-icon.svg',
+          },
           // 1. БАРТЕР
           {
             id: 'i-barter',

@@ -29,6 +29,8 @@ export function useMapViewUrlSync() {
     if (loot) setGroupFilters([`loose-${loot}`], true);
     const container = sp.get('container');
     if (container) setGroupFilters([`container-${container}`], true);
+    // Сезонный deep-link с каталога: все документы БП Сезона 1 разом (?season=bp-s1).
+    if (sp.get('season') === 'bp-s1') setGroupFilters(['bp-season-1-docs'], true);
     hydrated.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
