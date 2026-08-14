@@ -179,11 +179,11 @@ export const BP_PAGES: readonly BpPage[] = [
   {
     page: 1,
     rewards: [
-      { id: 'p1-dogtag-1', name: 'Армейский жетон с отметками (1 уровень)', page: 1, kind: 'dogtag', cost: { finance: 1 } },
-      { id: 'p1-tarcoin-50', name: 'Tarcoin (x50)', page: 1, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { project: 2, scheme: 1 } },
+      { id: 'p1-dogtag-1', name: 'Армейский жетон с отметками 1 уровень', page: 1, kind: 'dogtag', cost: { finance: 1 } },
+      { id: 'p1-tarcoin-50', name: 'Tarcoin - 50 шт.', page: 1, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { project: 2, scheme: 1 } },
       { id: 'p1-poster-burn', name: 'Плакат BURN', page: 1, kind: 'poster', cost: { testing: 2, user: 1 } },
-      { id: 'p1-bd-crate', name: 'Ящик со снаряжением Black Division', page: 1, kind: 'container', cost: { scheme: 2, finance: 1 } },
-      { id: 'p1-hideout-ceiling', name: 'Стиль убежища «Потолок „Чёрное дерево"»', page: 1, kind: 'hideout', cost: { user: 2, project: 2, medicine: 1 } },
+      { id: 'p1-bd-crate', name: 'Ящик со снаряжением\nBlack Division', page: 1, kind: 'container', cost: { scheme: 2, finance: 1 } },
+      { id: 'p1-hideout-ceiling', name: 'Потолок «Чёрное дерево»', page: 1, kind: 'hideout', cost: { user: 2, project: 2, medicine: 1 } },
     ],
   },
   {
@@ -192,9 +192,9 @@ export const BP_PAGES: readonly BpPage[] = [
     rewards: [
       { id: 'p2-sotr', name: 'Респиратор Gentex Ops-Core «SOTR»', page: 2, kind: 'gear', itemId: '689b404db49f27df1c0873f6', cost: { medicine: 2, scheme: 2 } },
       { id: 'p2-shirt-red', name: 'Красная гавайская рубашка', page: 2, kind: 'clothing', cost: { project: 3, finance: 3, medicine: 1 } },
-      { id: 'p2-bd-crate', name: 'Ящик со снаряжением Black Division', page: 2, kind: 'container', cost: { testing: 3 } },
-      { id: 'p2-target-scorpion', name: 'Охотничья мишень со скорпионом', page: 2, kind: 'decor', cost: { user: 1, personal: 1, operating: 1 } },
-      { id: 'p2-tarcoin-50', name: 'Tarcoin (x50)', page: 2, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { testing: 2, project: 1 } },
+      { id: 'p2-bd-crate', name: 'Ящик со снаряжением\nBlack Division', page: 2, kind: 'container', cost: { testing: 3 } },
+      { id: 'p2-target-scorpion', name: 'Охотничья мишень\nсо скорпионом', page: 2, kind: 'decor', cost: { user: 1, personal: 1, operating: 1 } },
+      { id: 'p2-tarcoin-50', name: 'Tarcoin - 50 шт.', page: 2, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { testing: 2, project: 1 } },
     ],
   },
   {
@@ -202,9 +202,9 @@ export const BP_PAGES: readonly BpPage[] = [
     requires: { fromPage: 2, count: 4 },
     rewards: [
       { id: 'p3-nice-frame', name: 'Грузовая рама Mystery Ranch «NICE Frame Load Sling» с защитным кейсом', page: 3, kind: 'gear', itemId: '68947ad3e4bf255d1b0ca75c', cost: { user: 2, personal: 1, operating: 1 } },
-      { id: 'p3-bd-crate', name: 'Ящик со снаряжением Black Division', page: 3, kind: 'container', cost: { personal: 2, testing: 2, user: 1 } },
-      { id: 'p3-hideout-floor', name: 'Стиль убежища «Пол „Чёрная ёлочка"»', page: 3, kind: 'hideout', cost: { user: 2, scheme: 2, testing: 2, operating: 1 } },
-      { id: 'p3-tarcoin-50', name: 'Tarcoin (x50)', page: 3, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { project: 2, finance: 2, testing: 1 } },
+      { id: 'p3-bd-crate', name: 'Ящик со снаряжением\nBlack Division', page: 3, kind: 'container', cost: { personal: 2, testing: 2, user: 1 } },
+      { id: 'p3-hideout-floor', name: 'Пол «Чёрная ёлочка»', page: 3, kind: 'hideout', cost: { user: 2, scheme: 2, testing: 2, operating: 1 } },
+      { id: 'p3-tarcoin-50', name: 'Tarcoin - 50 шт.', page: 3, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { project: 2, finance: 2, testing: 1 } },
       { id: 'p3-pose-heart', name: 'Поза манекена «<3»', page: 3, kind: 'pose', cost: { medicine: 2, finance: 1, personal: 1 } },
     ],
   },
@@ -212,11 +212,11 @@ export const BP_PAGES: readonly BpPage[] = [
     page: 4,
     requires: { fromPage: 3, count: 4 },
     rewards: [
-      { id: 'p4-dogtag-2', name: 'Армейский жетон с отметками (2 уровень)', page: 4, kind: 'dogtag', cost: { project: 2, scheme: 2, testing: 1 } },
+      { id: 'p4-dogtag-2', name: 'Армейский жетон с отметками 2 уровень', page: 4, kind: 'dogtag', cost: { project: 2, scheme: 2, testing: 1 } },
       { id: 'p4-jagdkommando', name: 'Нож Microtech Jagdkommando', page: 4, kind: 'weapon', itemId: '6a39358c658f5889ba050ef3', cost: { user: 4, scheme: 3, finance: 2, personal: 1 } },
-      { id: 'p4-tarcoin-50', name: 'Tarcoin (x50)', page: 4, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { operating: 3, scheme: 2 } },
+      { id: 'p4-tarcoin-50', name: 'Tarcoin - 50 шт.', page: 4, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { operating: 3, scheme: 2 } },
       { id: 'p4-poster-bear', name: 'Плакат Beware the Bear', page: 4, kind: 'poster', cost: { testing: 2, scheme: 2, project: 1 } },
-      { id: 'p4-bd-crate', name: 'Ящик со снаряжением Black Division', page: 4, kind: 'container', cost: { project: 2, medicine: 2, personal: 1 } },
+      { id: 'p4-bd-crate', name: 'Ящик со снаряжением\nBlack Division', page: 4, kind: 'container', cost: { project: 2, medicine: 2, personal: 1 } },
     ],
   },
   {
@@ -224,9 +224,9 @@ export const BP_PAGES: readonly BpPage[] = [
     requires: { fromPage: 4, count: 4 },
     rewards: [
       { id: 'p5-shirt-orange', name: 'Оранжевая гавайская рубашка', page: 5, kind: 'clothing', cost: { finance: 3, operating: 2, medicine: 2, project: 2, testing: 1 } },
-      { id: 'p5-tarcoin-50', name: 'Tarcoin (x50)', page: 5, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { scheme: 4, finance: 1, user: 1, medicine: 1 } },
-      { id: 'p5-target-bd', name: 'Охотничья мишень с Black Division', page: 5, kind: 'decor', cost: { personal: 2, medicine: 2, user: 1 } },
-      { id: 'p5-bd-crate', name: 'Ящик со снаряжением Black Division', page: 5, kind: 'container', cost: { testing: 3, operating: 2, medicine: 1 } },
+      { id: 'p5-tarcoin-50', name: 'Tarcoin - 50 шт.', page: 5, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { scheme: 4, finance: 1, user: 1, medicine: 1 } },
+      { id: 'p5-target-bd', name: 'Охотничья мишень\nс Black Division', page: 5, kind: 'decor', cost: { personal: 2, medicine: 2, user: 1 } },
+      { id: 'p5-bd-crate', name: 'Ящик со снаряжением\nBlack Division', page: 5, kind: 'container', cost: { testing: 3, operating: 2, medicine: 1 } },
       { id: 'p5-fcpc-v5', name: 'Чехол для бронеплит Ferro Concepts «FCPC V5» (Black Division)', page: 5, kind: 'gear', itemId: '689479cb47e5acd1e10be986', cost: { project: 3, scheme: 2, user: 2 } },
     ],
   },
@@ -244,8 +244,8 @@ export const BP_PAGES: readonly BpPage[] = [
     page: 7,
     requires: { fromPage: 6, count: 2 },
     rewards: [
-      { id: 'p7-dogtag-3', name: 'Армейский жетон с отметками (3 уровень)', page: 7, kind: 'dogtag', cost: { personal: 5, testing: 3, medicine: 2 } },
-      { id: 'p7-tarcoin-50', name: 'Tarcoin (x50)', page: 7, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { project: 4, testing: 3, medicine: 2 } },
+      { id: 'p7-dogtag-3', name: 'Армейский жетон с отметками 3 уровень', page: 7, kind: 'dogtag', cost: { personal: 5, testing: 3, medicine: 2 } },
+      { id: 'p7-tarcoin-50', name: 'Tarcoin - 50 шт.', page: 7, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { project: 4, testing: 3, medicine: 2 } },
       { id: 'p7-top-scorpion', name: 'Верх «Scorpion»', page: 7, kind: 'clothing', cost: { medicine: 5, finance: 3, scheme: 3, operating: 2 } },
       { id: 'p7-bottom-scorpion', name: 'Низ «Scorpion»', page: 7, kind: 'clothing', cost: { scheme: 5, personal: 3, user: 3, project: 2 } },
     ],
@@ -254,8 +254,8 @@ export const BP_PAGES: readonly BpPage[] = [
     page: 8,
     requires: { fromPage: 7, count: 3 },
     rewards: [
-      { id: 'p8-bd-crate', name: 'Ящик со снаряжением Black Division', page: 8, kind: 'container', cost: { operating: 2, testing: 2, scheme: 2 } },
-      { id: 'p8-tarcoin-50', name: 'Tarcoin (x50)', page: 8, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { medicine: 5, finance: 4, scheme: 4, operating: 1 } },
+      { id: 'p8-bd-crate', name: 'Ящик со снаряжением\nBlack Division', page: 8, kind: 'container', cost: { operating: 2, testing: 2, scheme: 2 } },
+      { id: 'p8-tarcoin-50', name: 'Tarcoin - 50 шт.', page: 8, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { medicine: 5, finance: 4, scheme: 4, operating: 1 } },
       { id: 'p8-hideout-walls', name: 'Стены с белым акцентом', page: 8, kind: 'hideout', cost: { medicine: 6, personal: 3, operating: 2, user: 2 } },
       { id: 'p8-pose-arch', name: 'Поза манекена «Арка»', page: 8, kind: 'pose', cost: { personal: 3, medicine: 2, testing: 1 } },
       { id: 'p8-pose-dome', name: 'Поза манекена «Купол»', page: 8, kind: 'pose', cost: { personal: 1, scheme: 2, project: 1 } },
@@ -266,10 +266,10 @@ export const BP_PAGES: readonly BpPage[] = [
     requires: { fromPage: 8, count: 4 },
     rewards: [
       { id: 'p9-lv119', name: 'Чехол для бронеплит Spiritus Systems «LV-119» (Black Division, Снаряженный)', page: 9, kind: 'gear', itemId: '689479eb30cc5ba7be00f5ff', cost: { medicine: 4, project: 4, scheme: 2, testing: 2 } },
-      { id: 'p9-tarcoin-50', name: 'Tarcoin (x50)', page: 9, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { user: 3, medicine: 2, personal: 1 } },
+      { id: 'p9-tarcoin-50', name: 'Tarcoin - 50 шт.', page: 9, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { user: 3, medicine: 2, personal: 1 } },
       { id: 'p9-tt-pack', name: 'Рюкзак Tasmanian Tiger «Modular Pack 45 Plus» (MultiCam Black)', page: 9, kind: 'gear', itemId: '68947a8ce4bf255d1b0ca759', cost: { operating: 5, finance: 2, project: 2 } },
-      { id: 'p9-bd-crate', name: 'Ящик со снаряжением Black Division', page: 9, kind: 'container', cost: { project: 2, scheme: 2, personal: 1 } },
-      { id: 'p9-hideout-server', name: 'Стиль убежища «Серверная»', page: 9, kind: 'hideout', cost: { operating: 6, personal: 4, testing: 4, user: 2, finance: 2 } },
+      { id: 'p9-bd-crate', name: 'Ящик со снаряжением\nBlack Division', page: 9, kind: 'container', cost: { project: 2, scheme: 2, personal: 1 } },
+      { id: 'p9-hideout-server', name: 'Серверная', page: 9, kind: 'hideout', cost: { operating: 6, personal: 4, testing: 4, user: 2, finance: 2 } },
     ],
   },
   {
@@ -278,16 +278,16 @@ export const BP_PAGES: readonly BpPage[] = [
     rewards: [
       { id: 'p10-voice-bear-anton', name: 'Голос BEAR «Антон»', page: 10, kind: 'voice', cost: { project: 6, user: 5, personal: 5, medicine: 2, finance: 2 } },
       { id: 'p10-voice-usec-garret', name: 'Голос USEC «Гаррет»', page: 10, kind: 'voice', cost: { testing: 6, finance: 5, operating: 5, user: 2, project: 2 } },
-      { id: 'p10-bd-crate', name: 'Ящик со снаряжением Black Division', page: 10, kind: 'container', cost: { finance: 3, user: 3, operating: 1 } },
-      { id: 'p10-tarcoin-100', name: 'Tarcoin (x100)', page: 10, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { project: 5, finance: 4, scheme: 2, testing: 2 } },
+      { id: 'p10-bd-crate', name: 'Ящик со снаряжением\nBlack Division', page: 10, kind: 'container', cost: { finance: 3, user: 3, operating: 1 } },
+      { id: 'p10-tarcoin-100', name: 'Tarcoin - 100 шт.', page: 10, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { project: 5, finance: 4, scheme: 2, testing: 2 } },
     ],
   },
   {
     page: 11,
     requires: { fromPage: 10, count: 4 },
     rewards: [
-      { id: 'p11-dogtag-4', name: 'Армейский жетон с отметками (4 уровень)', page: 11, kind: 'dogtag', cost: { project: 4, personal: 3, scheme: 2, finance: 2 } },
-      { id: 'p11-tarcoin-150', name: 'Tarcoin (x150)', page: 11, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { scheme: 5, user: 5, operating: 3, finance: 3 } },
+      { id: 'p11-dogtag-4', name: 'Армейский жетон с отметками 4 уровень', page: 11, kind: 'dogtag', cost: { project: 4, personal: 3, scheme: 2, finance: 2 } },
+      { id: 'p11-tarcoin-150', name: 'Tarcoin - 150 шт.', page: 11, kind: 'currency', itemId: '69dd0de23dfe95d9e70b5ebb', cost: { scheme: 5, user: 5, operating: 3, finance: 3 } },
       { id: 'p11-knyazev-after', name: 'КНЯЗЕВ ПОСЛЕ БОЯ', page: 11, kind: 'decor', cost: { project: 5, medicine: 5, finance: 3, personal: 3, operating: 3 } },
       { id: 'p11-oconnor-after', name: 'О.КОННОР ПОСЛЕ БОЯ', page: 11, kind: 'decor', cost: { user: 5, testing: 5, finance: 3, operating: 3, personal: 3 } },
     ],

@@ -194,11 +194,17 @@ function RewardCard({
           </span>
         </div>
 
-        <span className="line-clamp-2 min-h-[2lh] font-blender-medium text-sm uppercase leading-tight text-text-primary">
+        <span className="line-clamp-2 min-h-[2lh] whitespace-pre-line font-blender-medium text-sm uppercase leading-tight text-text-primary">
           {reward.name}
         </span>
 
-        <DocCostCells cost={reward.cost} collected={collected} claimed={claimed} onInc={onIncDoc} />
+        {/* На заблокированной награде (прогрессия/дневной лимит) набор документов кликом отключён (V4DYA). */}
+        <DocCostCells
+          cost={reward.cost}
+          collected={collected}
+          claimed={claimed}
+          onInc={anyLocked ? undefined : onIncDoc}
+        />
 
         {/* Кнопка — единственный контрол получения */}
         <button
