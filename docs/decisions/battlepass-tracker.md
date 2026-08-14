@@ -77,6 +77,17 @@ source: docs/eft/Награды_Батлпасс_KORD_BREACH_для_трекер
   BattlePassRewards,BattlePassDocsSummary,battlepassVisual}.tsx`. Правка: хаб-страница сезонов (кнопка).
 - **Не пушено в main** (§5): ветка ждёт ревью. Мердж — по команде V4DYA.
 
+## Догон 2026-08-14 — реальные иконки наград из файлов игры (по просьбе V4DYA)
+V4DYA: достать картинки наград из клиента (скилл `/game-asset-extraction`). Источник — **2D UI
+download-кэш** клиента `…/Temp/Battlestate Games/EscapeFromTarkov/files/{battle-pass,seasonal}/` (не
+рендер бандлов, а готовые PNG по BSG reward-slot id — тот же путь, что ачивки). Извлечено 59 шт →
+`public/images/battlepass/eft/{id}.webp` (sharp, ~2 МБ). `BP_REWARD_IMG` (в `eft-battlepass.ts`) маппит
+**50/53** награды на реальный арт; `RewardMedia` каскадит игровой-арт → каталог → глиф. Пушки/броня (FCPC,
+LV-119, Howa) оставлены на каталоге (точный инвентарный рендер). **⚠ ~10 best-guess привязок** (уровни
+жетонов, КНЯЗЕВ↔О.КОННОР, Стены, Scorpion↔Ночь, QBZ) — verify-sheet сохранён в
+`…/KORD BREACH/battlepass-tracker-icon-mapping.png` для сверки V4DYA. Гоча: смоук-404 был из-за stale
+`next start` на порту (EADDRINUSE) — киллить сервер по порту, не по job-PID.
+
 ## Догон 2026-08-14 — навигация (по просьбе V4DYA)
 Трекер должен быть в **главном меню** и **навигации по разделу**, не только кнопкой на хабе. Всё меню
 data-driven из `src/data/headerConfig.ts` → добавлен один узел `p-seasons-tracker` (дитя `p-seasons`,
