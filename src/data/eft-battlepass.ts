@@ -309,3 +309,70 @@ export const BP_SECRET_DATA_NOTE =
 
 /** Все награды одним списком (для расчётов). */
 export const BP_ALL_REWARDS: readonly BpReward[] = BP_PAGES.flatMap((p) => p.rewards);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Иконки наград ИЗ ФАЙЛОВ ИГРЫ (download-кэш клиента `files/battle-pass/`, извлечено
+// в public/images/battlepass/eft/{id}.webp — /game-asset-extraction, 2D UI-путь).
+// Ключ — id награды, значение — id картинки (имя файла = BSG reward-slot id). Приоритет
+// над иконкой каталога. Часть оставлена на каталоге (пушки/броня — там точный инвентарный
+// рендер). ⚠ Спорные привязки (дожетоны по уровню, КНЯЗЕВ↔О.КОННОР, Scorpion↔Ночь,
+// Стены, QBZ) помечены — свериться глазами с игрой (см. verify-sheet).
+// ─────────────────────────────────────────────────────────────────────────────
+export const BP_REWARD_IMG: Readonly<Record<string, string>> = {
+  // — Уверенно (уникальный арт) —
+  'p1-poster-burn': '6a5e66a03d0e6b95910b85fe', // постер BURN
+  'p1-bd-crate': '6a5e66573f7a5533040ca2df', // ящик Black Division (все 8 ящиков)
+  'p2-bd-crate': '6a5e66573f7a5533040ca2df',
+  'p3-bd-crate': '6a5e66573f7a5533040ca2df',
+  'p4-bd-crate': '6a5e66573f7a5533040ca2df',
+  'p5-bd-crate': '6a5e66573f7a5533040ca2df',
+  'p8-bd-crate': '6a5e66573f7a5533040ca2df',
+  'p9-bd-crate': '6a5e66573f7a5533040ca2df',
+  'p10-bd-crate': '6a5e66573f7a5533040ca2df',
+  'p10-voice-bear-anton': '6a5e672fac605a08520e2a52', // мегафон BEAR VOICE
+  'p10-voice-usec-garret': '6a5e6734b793ab50a2074170', // мегафон USEC VOICE
+  'p2-target-scorpion': '6a5e6704438217c0b20b65b7', // мишень со скорпионом (красный)
+  'p5-target-bd': '6a5e66ff3d0e6b95910b8600', // мишень Black Division (чёрная)
+  'p2-shirt-red': '6a5e6725c6956153430432c1', // красная гавайская
+  'p5-shirt-orange': '6a5e67295a56a948810bb5bf', // оранжевая гавайская
+  'p3-pose-heart': '6a5e66cadffe83817c03096c', // поза «<3»
+  'p8-pose-arch': '6a5e66d086013ce1c70df992', // поза «Арка»
+  'p8-pose-dome': '6a5e66d9ae0ff1630b08d1c1', // поза «Купол»
+  'p3-hideout-floor': '6a5e66c2ac605a08520e2a50', // пол «ёлочка» (herringbone)
+  'p9-hideout-server': '6a5e66c6b793ab50a207416e', // «Серверная»
+  'p1-hideout-ceiling': '6a5e66bc5a56a948810bb5bd', // «Потолок»
+  'p2-sotr': '6a5e66863f7a5533040ca2e0', // респиратор SOTR
+  'p4-jagdkommando': '6a5e6652ae0ff1630b08d1be', // нож Jagdkommando
+  'p3-nice-frame': '6a5e668acd043de3220f199d', // рама Mystery Ranch NICE (оранжевые акценты)
+  'p9-tt-pack': '6a5e668fe2d6c908db0d5d51', // рюкзак TT (мультикам)
+  // — Валюта (арт монеты из БП) —
+  'p1-tarcoin-50': '6a5e66fbc0e52002fd09d8ad',
+  'p2-tarcoin-50': '6a5e66fbc0e52002fd09d8ad',
+  'p3-tarcoin-50': '6a5e66fbc0e52002fd09d8ad',
+  'p4-tarcoin-50': '6a5e66fbc0e52002fd09d8ad',
+  'p5-tarcoin-50': '6a5e66fbc0e52002fd09d8ad',
+  'p7-tarcoin-50': '6a5e66fbc0e52002fd09d8ad',
+  'p8-tarcoin-50': '6a5e66fbc0e52002fd09d8ad',
+  'p9-tarcoin-50': '6a5e66fbc0e52002fd09d8ad',
+  'p10-tarcoin-100': '6a5e66fbc0e52002fd09d8ad',
+  'p11-tarcoin-150': '6a5e66fbc0e52002fd09d8ad',
+  // — Best-guess (⚠ свериться) —
+  'p1-dogtag-1': '6a5e665f5a56a948810bb5bb', // жетон уровень 1 (серый)
+  'p4-dogtag-2': '6a5e666dac605a08520e2a4e', // уровень 2 (зелёный)
+  'p7-dogtag-3': '6a5e6673b793ab50a207416c', // уровень 3 (красный)
+  'p11-dogtag-4': '6a5e6678dffe83817c03096a', // уровень 4 (красный, надлом)
+  'p6-oconnor': '6a5e66a6438217c0b20b65b5', // портрет A (чистый)
+  'p11-oconnor-after': '6a5e66abbf561127450b27c1', // портрет A (в крови)
+  'p6-knyazev': '6a5e66b1905106a6860e004b', // портрет B (чистый)
+  'p11-knyazev-after': '6a5e66b6c6956153430432bf', // портрет B (в крови)
+  'p4-poster-bear': '6a5e6696c0e52002fd09d8ab', // постер (персонаж с пистолетом)
+  'p8-hideout-walls': '6a5e66e63f7a5533040ca2e2', // экран TARKOV (по остатку → «Стены»)
+  'p7-top-scorpion': '6a5e6709bf561127450b27c3',
+  'p7-bottom-scorpion': '6a5e66f4e2d6c908db0d5d53', // камуфляжные штаны
+  'p12-top-night': '6a5e671a905106a6860e004d',
+  'p12-bottom-night': '6a5e66eecd043de3220f199f', // джинсы
+  'p12-qbz-191': '6a5e674586013ce1c70df994', // винтовка (⚠ Howa/QBZ на глаз не различить)
+};
+
+/** URL извлечённой иконки награды. */
+export const bpRewardImageUrl = (imgId: string): string => `/images/battlepass/eft/${imgId}.webp`;

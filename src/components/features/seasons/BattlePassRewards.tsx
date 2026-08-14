@@ -4,7 +4,7 @@
 // Разблокировки страниц показываем информативно (как свободный выбор в конструкторе перков),
 // но тоглы не блокируем — это трекер, а не симулятор гейтинга.
 import { Check } from 'lucide-react';
-import { BP_PAGES, type BpReward } from '@/data/eft-battlepass';
+import { BP_PAGES, BP_REWARD_IMG, type BpReward } from '@/data/eft-battlepass';
 import type { PageProgress } from '@/lib/battlepass';
 import { rewardDocCount } from '@/lib/battlepass';
 import { DocCostChips, KIND_META, RewardMedia } from './battlepassVisual';
@@ -47,7 +47,13 @@ function RewardCard({
       <div className="flex items-start gap-3">
         {/* Иконка награды */}
         <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xs border border-lines-hover bg-(--color-darkbase) p-1.5">
-          <RewardMedia itemId={reward.itemId} kind={reward.kind} name={reward.name} className="h-full w-full" />
+          <RewardMedia
+            img={BP_REWARD_IMG[reward.id]}
+            itemId={reward.itemId}
+            kind={reward.kind}
+            name={reward.name}
+            className="h-full w-full"
+          />
         </span>
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">

@@ -23,6 +23,7 @@ import { itemIconUrl } from '@/lib/item-icon';
 import {
   BP_DOC_ORDER,
   BP_DOCS,
+  bpRewardImageUrl,
   type BpCost,
   type BpDoc,
   type BpRewardKind,
@@ -42,29 +43,40 @@ export const KIND_META: Record<BpRewardKind, { icon: LucideIcon; label: string }
   decor: { icon: Sparkles, label: 'Косметика' },
 };
 
-/** Иконка награды: реальная (если есть itemId), иначе глиф категории. */
+/**
+ * Иконка награды с каскадом источников: арт из файлов игры (`img`, кэш БП) → инвентарная
+ * иконка каталога (`itemId`) → глиф категории. onError сдвигает на следующий источник,
+ * так что отсутствующая картинка не бьёт битым изображением.
+ */
 export function RewardMedia({
+  img,
   itemId,
   kind,
   name,
   className = 'h-14 w-14',
 }: {
+  img?: string;
   itemId?: string;
   kind: BpRewardKind;
   name: string;
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
+  const sources: string[] = [];
+  if (img) sources.push(bpRewardImageUrl(img));
+  if (itemId) sources.push(itemIconUrl(itemId));
+
+  const [idx, setIdx] = useState(0);
   const Glyph = KIND_META[kind].icon;
 
-  if (itemId && !failed) {
+  if (idx < sources.length) {
     return (
       <img
-        src={itemIconUrl(itemId)}
+        key={sources[idx]}
+        src={sources[idx]}
         alt={name}
         loading="lazy"
         decoding="async"
-        onError={() => setFailed(true)}
+        onError={() => setIdx((i) => i + 1)}
         className={`object-contain ${className}`}
       />
     );
