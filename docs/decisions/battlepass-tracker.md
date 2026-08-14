@@ -77,6 +77,20 @@ source: docs/eft/Награды_Батлпасс_KORD_BREACH_для_трекер
   BattlePassRewards,BattlePassDocsSummary,battlepassVisual}.tsx`. Правка: хаб-страница сезонов (кнопка).
 - **Не пушено в main** (§5): ветка ждёт ревью. Мердж — по команде V4DYA.
 
+## Догон 2026-08-14 — игровой облик (табы страниц, ячейки-документы, арт-фон)
+V4DYA: сделать «как в игре» (скрины `…/Documents/Escape from Tarkov/Screenshots`). Реализовано:
+- **Страницы БП — табы 1–12** (одна за раз + prev/next, лок-бейджи «стр. N») вместо длинного стека.
+- **Документы — игровые ячейки** (>56px, `FillMedia` с `bgColor`=`getTarkovCellColor(rarity)` + `sizeClass`)
+  с **фоном редкости** (у каждого дока назначен `rarity` — в каталоге редкости нет, `properties:null`;
+  8 цветов тематически, V4DYA может перекрасить одним полем) и **счётчиками −/+ собранного**
+  (`docCounts` в сторе, localStorage). Заливка-бак = собрано/нужно (нужно = needed−spent).
+- **Карточки наград**: видимая подложка `BattlePass_Reward_Background` (opacity-70 + нижний градиент),
+  рамка-свечение `SeasonWidget_Border_Glow` на полученной, заливка «хватает ли документов»
+  (`affordProgress`), чипы стоимости «собрано/нужно» (зеленеют при наборе — как игровые 0/4).
+- Ассеты → `public/images/battlepass/ui/*.webp`. `FillMedia` расширен обратносовместимо (убежище цело).
+- Верификация Playwright-скриншотами (превью у V4DYA: `…/KORD BREACH/battlepass-tracker-preview-*.png`).
+- Данные сверены по скринам: КНЯЗЕВ = старшее лицо ✓, косты p6 (0/4 0/4 0/3 0/2) = наши данные ✓.
+
 ## Догон 2026-08-14 — реальные иконки наград из файлов игры (по просьбе V4DYA)
 V4DYA: достать картинки наград из клиента (скилл `/game-asset-extraction`). Источник — **2D UI
 download-кэш** клиента `…/Temp/Battlestate Games/EscapeFromTarkov/files/{battle-pass,seasonal}/` (не
