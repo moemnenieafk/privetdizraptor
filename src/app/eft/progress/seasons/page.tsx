@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ListChecks } from 'lucide-react';
 import { CURRENT_SEASON } from '@/data/eft-seasons';
 import { seasonPerks, personalPerks } from '@/lib/season-points';
 import { SeasonLogo } from '@/components/features/seasons/SeasonLogo';
@@ -83,14 +84,23 @@ export default function SeasonsHubPage() {
               основного персонажа.
             </p>
 
-            {/* Кнопка конструктора билдов */}
-            <Link
-              href={`/eft/progress/seasons/perks?s=${active.slug}`}
-              className="relative mt-auto flex h-12 items-center justify-center gap-2.5 rounded-xs border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]"
-            >
-              <span aria-hidden className="icon-mask icon-eft-build-constructor h-5 w-5" />
-              Конструктор билдов
-            </Link>
+            {/* Кнопки сезона: конструктор билдов + трекер боевого пропуска */}
+            <div className="relative mt-auto flex flex-col gap-2">
+              <Link
+                href={`/eft/progress/seasons/perks?s=${active.slug}`}
+                className="flex h-12 items-center justify-center gap-2.5 rounded-xs border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)]"
+              >
+                <span aria-hidden className="icon-mask icon-eft-build-constructor h-5 w-5" />
+                Конструктор билдов
+              </Link>
+              <Link
+                href={`/eft/progress/seasons/tracker?s=${active.slug}`}
+                className="flex h-12 items-center justify-center gap-2.5 rounded-xs border border-lines-hover bg-(--color-base) font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+              >
+                <ListChecks className="h-5 w-5" aria-hidden />
+                BATTLEPASS Трекер
+              </Link>
+            </div>
           </article>
 
           {/* ── Следующий сезон: в разработке ──────────────────────────── */}
