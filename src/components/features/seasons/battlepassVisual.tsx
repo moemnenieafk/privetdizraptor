@@ -103,21 +103,37 @@ export function DocIcon({ doc, className = 'h-5 w-5' }: { doc: BpDoc; className?
   );
 }
 
-/** Чипы стоимости награды: иконка документа + количество, в каноническом порядке типов. */
-export function DocCostChips({ cost }: { cost: BpCost }) {
+/**
+ * Чипы стоимости награды: иконка документа + количество, в каноническом порядке типов.
+ * Если передан `collected` — показывает «собрано/нужно» (как в игре 0/4) и зеленеет при наборе.
+ */
+export function DocCostChips({
+  cost,
+  collected,
+}: {
+  cost: BpCost;
+  collected?: Partial<Record<string, number>>;
+}) {
   const types = BP_DOC_ORDER.filter((t) => (cost[t] ?? 0) > 0);
   return (
     <div className="flex flex-wrap items-center gap-1">
       {types.map((t) => {
         const doc = BP_DOCS[t];
+        const need = cost[t] ?? 0;
+        const have = collected ? Math.min(collected[t] ?? 0, need) : undefined;
+        const met = have !== undefined && have >= need;
         return (
           <span
             key={t}
-            title={`${doc.name} ×${cost[t]}`}
-            className="inline-flex items-center gap-1 rounded-xs border border-lines-hover bg-(--color-base) px-1.5 py-0.5"
+            title={`${doc.name} ${have !== undefined ? `${have}/${need}` : `×${need}`}`}
+            className={`inline-flex items-center gap-1 rounded-xs border px-1.5 py-0.5 ${
+              met ? 'border-nvg-green/50 bg-nvg-green/10' : 'border-lines-hover bg-(--color-base)'
+            }`}
           >
             <DocIcon doc={doc} className="h-4 w-4" />
-            <span className="font-blender-medium text-type-micro text-text-secondary">×{cost[t]}</span>
+            <span className={`font-blender-medium text-type-micro ${met ? 'text-nvg-green' : 'text-text-secondary'}`}>
+              {have !== undefined ? `${have}/${need}` : `×${need}`}
+            </span>
           </span>
         );
       })}

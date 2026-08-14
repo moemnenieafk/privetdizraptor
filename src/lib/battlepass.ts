@@ -132,3 +132,33 @@ export function etaDays(remainingTotal: number, limit: number): number {
   if (remainingTotal <= 0 || limit <= 0) return 0;
   return Math.ceil(remainingTotal / limit);
 }
+
+export interface AffordProgress {
+  /** Сколько нужных документов уже собрано (капнуто по стоимости награды). */
+  have: number;
+  /** Полная стоимость награды в документах. */
+  need: number;
+  /** 0..100 — прогресс «хватает ли на награду». */
+  pct: number;
+  /** Собрано ≥ стоимости по каждому типу — награду можно получить. */
+  affordable: boolean;
+}
+
+/** Хватает ли собранной документации на награду (по общему пулу собранного). */
+export function affordProgress(
+  cost: Partial<Record<BpDocType, number>>,
+  collected: Partial<Record<BpDocType, number>>,
+): AffordProgress {
+  let have = 0;
+  let need = 0;
+  let affordable = true;
+  for (const t of BP_DOC_ORDER) {
+    const c = cost[t] ?? 0;
+    if (c <= 0) continue;
+    need += c;
+    const got = Math.min(collected[t] ?? 0, c);
+    have += got;
+    if (got < c) affordable = false;
+  }
+  return { have, need, pct: need > 0 ? Math.round((have / need) * 100) : 0, affordable: need > 0 && affordable };
+}

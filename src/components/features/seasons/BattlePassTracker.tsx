@@ -7,12 +7,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import type { Season } from '@/data/eft-seasons';
+import type { BpDocType } from '@/data/eft-battlepass';
 import { computePageProgress, computeSummary } from '@/lib/battlepass';
 import { useBattlePassStore } from '@/store/useBattlePassStore';
 import { BattlePassRewards } from './BattlePassRewards';
-import { BattlePassDocsSummary } from './BattlePassDocsSummary';
+import { BattlePassDocuments } from './BattlePassDocuments';
 
 const EMPTY: string[] = [];
+const EMPTY_DOCS: Partial<Record<BpDocType, number>> = {};
 const MICRO = 'font-blender-medium text-type-micro uppercase tracking-widest text-text-muted';
 
 type Tab = 'rewards' | 'docs';
@@ -46,11 +48,14 @@ function TabButton({
 export function BattlePassTracker({ season }: { season: Season }) {
   const slug = season.slug;
   const claimedMap = useBattlePassStore((s) => s.claimed);
+  const docCountsMap = useBattlePassStore((s) => s.docCounts);
   const toggle = useBattlePassStore((s) => s.toggle);
   const setMany = useBattlePassStore((s) => s.setMany);
+  const incDoc = useBattlePassStore((s) => s.incDoc);
   const resetSeason = useBattlePassStore((s) => s.resetSeason);
 
   const claimedArr = claimedMap[slug] ?? EMPTY;
+  const docCountsRaw = docCountsMap[slug] ?? EMPTY_DOCS;
 
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<Tab>('rewards');
@@ -61,6 +66,7 @@ export function BattlePassTracker({ season }: { season: Season }) {
     () => new Set<string>(mounted ? claimedArr : []),
     [mounted, claimedArr],
   );
+  const collected = mounted ? docCountsRaw : EMPTY_DOCS;
   const summary = useMemo(() => computeSummary(claimedSet), [claimedSet]);
   const progressByPage = useMemo(() => {
     const list = computePageProgress(claimedSet);
@@ -153,12 +159,13 @@ export function BattlePassTracker({ season }: { season: Season }) {
       {tab === 'rewards' ? (
         <BattlePassRewards
           claimed={claimedSet}
+          collected={collected}
           progressByPage={progressByPage}
           onToggle={(id) => toggle(slug, id)}
           onSetPage={(ids, on) => setMany(slug, ids, on)}
         />
       ) : (
-        <BattlePassDocsSummary summary={summary} />
+        <BattlePassDocuments summary={summary} collected={collected} onInc={(t, d) => incDoc(slug, t, d)} />
       )}
     </div>
   );

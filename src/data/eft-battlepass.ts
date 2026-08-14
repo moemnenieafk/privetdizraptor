@@ -42,6 +42,12 @@ export interface BpDoc {
   itemId: string;
   /** Карты, где документ лутается (RU-имена, из MD-спеки). */
   maps: readonly string[];
+  /**
+   * Цвет-редкости ячейки (имена нашей системы: getTarkovCellColor/…BackgroundColor).
+   * В каталоге у документов редкости нет → назначаем тематически, чтобы ячейки читались
+   * и различались. V4DYA может перекрасить — это одно поле.
+   */
+  rarity: string;
 }
 
 /** Словарь документов. id — из BP_SEASON_1_DOC_IDS (eft-season-items.ts). */
@@ -52,6 +58,7 @@ export const BP_DOCS: Readonly<Record<BpDocType, BpDoc>> = {
     short: 'Финансовая',
     itemId: '6a31807f17005505b70d5827',
     maps: ['Таможня', 'Улицы Таркова', 'Развязка'],
+    rarity: 'yellow',
   },
   personal: {
     type: 'personal',
@@ -59,6 +66,7 @@ export const BP_DOCS: Readonly<Record<BpDocType, BpDoc>> = {
     short: 'Личные ЧВК',
     itemId: '6a317b9692cfdcddcb02a58e',
     maps: ['Резерв', 'Маяк', 'Ледокол'],
+    rarity: 'red',
   },
   project: {
     type: 'project',
@@ -66,6 +74,7 @@ export const BP_DOCS: Readonly<Record<BpDocType, BpDoc>> = {
     short: 'Проектная',
     itemId: '6a3181f178450ec91c0ea1aa',
     maps: ['Завод', 'Резерв', 'Таможня'],
+    rarity: 'violet',
   },
   scheme: {
     type: 'scheme',
@@ -73,6 +82,7 @@ export const BP_DOCS: Readonly<Record<BpDocType, BpDoc>> = {
     short: 'Чертежи',
     itemId: '6a31824878450ec91c0ea1ae',
     maps: ['Развязка', 'Завод', 'Лабиринт'],
+    rarity: 'blue',
   },
   testing: {
     type: 'testing',
@@ -80,6 +90,7 @@ export const BP_DOCS: Readonly<Record<BpDocType, BpDoc>> = {
     short: 'Тестовая',
     itemId: '6a31828557705071410ca00e',
     maps: ['Берег', 'Лес', 'Ледокол'],
+    rarity: 'green',
   },
   user: {
     type: 'user',
@@ -87,6 +98,7 @@ export const BP_DOCS: Readonly<Record<BpDocType, BpDoc>> = {
     short: 'Пользоват.',
     itemId: '6a3182b72fd891345e047eef',
     maps: ['Эпицентр', 'Улицы Таркова', 'Лаборатория'],
+    rarity: 'orange',
   },
   medicine: {
     type: 'medicine',
@@ -94,6 +106,7 @@ export const BP_DOCS: Readonly<Record<BpDocType, BpDoc>> = {
     short: 'Медицинская',
     itemId: '6a3182dc6cd8de21cf0a3a7d',
     maps: ['Лаборатория', 'Эпицентр', 'Лабиринт'],
+    rarity: 'grey',
   },
   operating: {
     type: 'operating',
@@ -101,6 +114,7 @@ export const BP_DOCS: Readonly<Record<BpDocType, BpDoc>> = {
     short: 'Эксплуат.',
     itemId: '6a31830dde69ceafd805afa0',
     maps: ['Берег', 'Лес', 'Маяк'],
+    rarity: 'black',
   },
 };
 

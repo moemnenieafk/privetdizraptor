@@ -19,6 +19,10 @@ interface FillMediaProps {
   tapTitle?: string;
   /** Доп. классы внешнего контейнера (напр. mx-auto). */
   className?: string;
+  /** Размер ячейки (по умолчанию h-13.25 w-13.25). Для крупных ячеек-документов — своё. */
+  sizeClass?: string;
+  /** Фон ячейки под иконкой (цвет редкости). По умолчанию — darkbase. */
+  bgColor?: string;
   /** Доп. классы <img> (напр. hover-scale). */
   imgClassName?: string;
   imgLoading?: 'lazy' | 'eager';
@@ -34,6 +38,8 @@ export function FillMedia({
   onTap,
   tapTitle,
   className,
+  sizeClass = 'h-13.25 w-13.25',
+  bgColor,
   imgClassName,
   imgLoading,
   children,
@@ -54,14 +60,17 @@ export function FillMedia({
     : {};
 
   return (
-    <div className={`relative h-13.25 w-13.25 shrink-0 ${className ?? ''}`}>
+    <div className={`relative shrink-0 ${sizeClass} ${className ?? ''}`}>
       <div
         {...tapProps}
         className={`absolute inset-0 select-none overflow-hidden rounded-sm border border-lines-hover ${
           onTap ? 'cursor-pointer transition-colors hover:border-(--primary) focus:border-(--primary) focus:outline-none' : ''
         }`}
       >
-        <div className="absolute inset-0 bg-(--color-darkbase)" />
+        <div
+          className={`absolute inset-0 ${bgColor ? '' : 'bg-(--color-darkbase)'}`}
+          style={bgColor ? { backgroundColor: bgColor } : undefined}
+        />
         <div
           className={`absolute inset-x-0 bottom-0 transition-[height] duration-300 ease-out ${done ? 'bg-success/35' : 'bg-(--primary)/30'}`}
           style={{ height: `${pct}%` }}
