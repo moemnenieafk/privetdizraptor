@@ -1,4 +1,12 @@
 {
+  "6a31807f17005505b70d5827": "assets/content/items/barter/item_barter_info_finance/item_barter_info_finance.bundle",
+  "6a3182dc6cd8de21cf0a3a7d": "assets/content/items/barter/item_barter_info_medicine/item_barter_info_medicine.bundle",
+  "6a31830dde69ceafd805afa0": "assets/content/items/barter/item_barter_info_operating/item_barter_info_operating.bundle",
+  "6a317b9692cfdcddcb02a58e": "assets/content/items/barter/item_barter_info_personal/item_barter_info_personal.bundle",
+  "6a3181f178450ec91c0ea1aa": "assets/content/items/barter/item_barter_info_project/item_barter_info_project.bundle",
+  "6a31824878450ec91c0ea1ae": "assets/content/items/barter/item_barter_info_scheme/item_barter_info_scheme.bundle",
+  "6a31828557705071410ca00e": "assets/content/items/barter/item_barter_info_testing/item_barter_info_testing.bundle",
+  "6a3182b72fd891345e047eef": "assets/content/items/barter/item_barter_info_user/item_barter_info_user.bundle",
   "67bdf0e67c1ef7a648043531": "assets/content/items/spec/item_keycard_lab/item_keycard_quest_rfid_kruglov.bundle",
   "68d2f85af63f06b7590ce310": "assets/content/items/infosubject/item_info_note/item_info_note_toden_from_strelets.bundle",
   "68f213f8ea61d1803707cf7a": "assets/content/items/infosubject/item_info_survived_letter_prapor/item_info_survived_letter_prapor.bundle",

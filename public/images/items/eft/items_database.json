@@ -174355,11 +174355,11 @@
       "noFlea"
     ],
     "names": {
-      "ru": "PMC Personnel Files",
+      "ru": "Личные данные ЧВК",
       "en": "PMC Personnel Files"
     },
     "shortNames": {
-      "ru": "PMC Personnel",
+      "ru": "Данные",
       "en": "PMC Personnel"
     },
     "descriptions": {
@@ -174379,11 +174379,11 @@
       "noFlea"
     ],
     "names": {
-      "ru": "Financial Documents",
+      "ru": "Финансовая документация",
       "en": "Financial Documents"
     },
     "shortNames": {
-      "ru": "Financial Documents",
+      "ru": "Фин.Док.",
       "en": "Financial Documents"
     },
     "descriptions": {
@@ -174403,11 +174403,11 @@
       "noFlea"
     ],
     "names": {
-      "ru": "Project Documentation",
+      "ru": "Проектная документация",
       "en": "Project Documentation"
     },
     "shortNames": {
-      "ru": "Project Documentation",
+      "ru": "Проект. Док.",
       "en": "Project Documentation"
     },
     "descriptions": {
@@ -174427,11 +174427,11 @@
       "noFlea"
     ],
     "names": {
-      "ru": "Blueprints AND Technical Documentation",
+      "ru": "Чертежи и тех. документация",
       "en": "Blueprints AND Technical Documentation"
     },
     "shortNames": {
-      "ru": "Blueprints AND",
+      "ru": "Тех. Док.",
       "en": "Blueprints AND"
     },
     "descriptions": {
@@ -174451,11 +174451,11 @@
       "noFlea"
     ],
     "names": {
-      "ru": "Test Documentation",
+      "ru": "Тестовая документация",
       "en": "Test Documentation"
     },
     "shortNames": {
-      "ru": "Test Documentation",
+      "ru": "Тест. Док.",
       "en": "Test Documentation"
     },
     "descriptions": {
@@ -174475,11 +174475,11 @@
       "noFlea"
     ],
     "names": {
-      "ru": "User Documentation",
+      "ru": "Пользовательская документация",
       "en": "User Documentation"
     },
     "shortNames": {
-      "ru": "User Documentation",
+      "ru": "Пол. Док",
       "en": "User Documentation"
     },
     "descriptions": {
@@ -174499,11 +174499,11 @@
       "noFlea"
     ],
     "names": {
-      "ru": "Medical Documents",
+      "ru": "Медицинская документация",
       "en": "Medical Documents"
     },
     "shortNames": {
-      "ru": "Medical Documents",
+      "ru": "Мед. Док.",
       "en": "Medical Documents"
     },
     "descriptions": {
@@ -174523,11 +174523,11 @@
       "noFlea"
     ],
     "names": {
-      "ru": "Technical Documentation",
+      "ru": "Эксплуатационная документация",
       "en": "Technical Documentation"
     },
     "shortNames": {
-      "ru": "Technical Documentation",
+      "ru": "Экспл. Док.",
       "en": "Technical Documentation"
     },
     "descriptions": {
