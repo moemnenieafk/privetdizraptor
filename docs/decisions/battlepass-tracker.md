@@ -1,5 +1,5 @@
 ---
-status: ✅ готово — ночная autopilot-сборка 2026-08-14, ветка feat/battlepass-tracker (в main НЕ пушено, ждёт ревью V4DYA)
+status: ✅ ГОТОВО И В MAIN — 2026-08-14 (autopilot + итерации V4DYA), запушено в origin/main (408631fe, fast-forward 15 коммитов)
 affects: seasons, eft-progress, ui
 date: 2026-08-14
 epic: Сезоны и Боевой Пропуск
