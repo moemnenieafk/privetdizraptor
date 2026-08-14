@@ -303,18 +303,29 @@ export const BP_PAGES: readonly BpPage[] = [
   },
 ] as const;
 
+/** Стабильный ключ режима дневного лимита (адрес в сторе/трекере, не зависит от подписи). */
+export type BpDailyMode = 'season' | 'pvp' | 'pve';
+
 /** Дневной лимит добычи документов по режимам (патч 14.08.2026). Свой таймер-сутки на режим. */
 export interface BpDailyLimit {
+  key: BpDailyMode;
   mode: string;
   limit: number;
   hint: string;
 }
 
 export const BP_DAILY_LIMITS: readonly BpDailyLimit[] = [
-  { mode: 'Season PvP', limit: 30, hint: 'Сезонный PvP — самый щедрый режим добычи.' },
-  { mode: 'PvP', limit: 20, hint: 'Обычный PvP.' },
-  { mode: 'PvE', limit: 15, hint: 'PvE-режим.' },
+  { key: 'season', mode: 'Season PvP', limit: 30, hint: 'Сезонный PvP — самый щедрый режим добычи.' },
+  { key: 'pvp', mode: 'PvP', limit: 20, hint: 'Обычный PvP.' },
+  { key: 'pve', mode: 'PvE', limit: 15, hint: 'PvE-режим.' },
 ] as const;
+
+/** Быстрый доступ к лимиту по ключу режима (cap для трекинга). */
+export const BP_LIMIT_BY_MODE: Record<BpDailyMode, number> = {
+  season: 30,
+  pvp: 20,
+  pve: 15,
+};
 
 /** Справочно: «Секретные данные» — донатный джокер, заменяет любой документ. Не лутается → вне трекера. */
 export const BP_SECRET_DATA_NOTE =

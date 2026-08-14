@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ProgressSync } from "@/components/providers/ProgressSync";
 import { AchievementSync } from "@/components/providers/AchievementSync";
 import { PlayerProfileSync } from "@/components/providers/PlayerProfileSync";
+import { BattlePassSync } from "@/components/providers/BattlePassSync";
 import { RoleAutoWire } from "@/components/providers/RoleAutoWire";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
@@ -86,6 +87,7 @@ export default function RootLayout({
             <ProgressSync />
             <AchievementSync />
             <PlayerProfileSync />
+            <BattlePassSync />
             <RoleAutoWire />
             <FeedbackProvider>
               <ConditionalLayout>

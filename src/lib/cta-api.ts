@@ -211,6 +211,31 @@ export async function saveCtaBarterProgress(p: BarterProgressPayload): Promise<b
   return res.ok;
 }
 
+/* ───────────────── прогресс battlepass-трекера (слой 4e) ───────────────── */
+// Форма 1:1 повторяет persisted-поля useBattlePassStore (ключ верхнего уровня = slug сезона).
+export interface BattlePassProgressPayload {
+  claimed: Record<string, string[]>;
+  docCounts: Record<string, Record<string, number>>;
+}
+
+// Прогресс battlepass-трекера текущего пользователя из сессии. null — не авторизован.
+export async function getCtaBattlePassProgress(): Promise<BattlePassProgressPayload | null> {
+  const res = await fetch(`${baseUrl()}/api/eft/battlepass-progress`, { cache: "no-store" });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`CTA API /eft/battlepass-progress → ${res.status}`);
+  return res.json() as Promise<BattlePassProgressPayload>;
+}
+
+// Сохранить прогресс battlepass-трекера. false — не авторизован/ошибка.
+export async function saveCtaBattlePassProgress(p: BattlePassProgressPayload): Promise<boolean> {
+  const res = await fetch(`${baseUrl()}/api/eft/battlepass-progress`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(p),
+  });
+  return res.ok;
+}
+
 /* ───────────────── игровые профили (слой 4d) ───────────────── */
 // Форма 1:1 повторяет persisted-поля usePlayerStore.
 export interface PlayerProfilePayload {

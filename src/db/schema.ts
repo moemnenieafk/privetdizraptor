@@ -692,6 +692,31 @@ export const barterProgress = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
 );
 
+/* ─────────────────────── battlepass_progress ─────────────────────── */
+/**
+ * Слой 4e — облачный прогресс трекера Боевого Пропуска (паттерн ProgressSync, дополнение
+ * localStorage useBattlePassStore). Одна строка на пользователя+игру; JSONB-блобы 1:1 повторяют
+ * persisted-форму стора (ключ верхнего уровня = slug сезона → { награды, документы }). RLS
+ * owner-only (supabase/battlepass-progress.sql — additive через db:sql, БЕЗ db:push). user_id → profiles.id с каскадом.
+ */
+export const battlePassProgress = pgTable(
+  "battlepass_progress",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    // slug сезона → id полученных наград
+    claimed: jsonb("claimed").$type<Record<string, string[]>>().notNull(),
+    // slug сезона → тип документа → собрано «в руках»
+    docCounts: jsonb("doc_counts").$type<Record<string, Record<string, number>>>().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.gameId] })],
+);
+
 /* ─────────────────────── player_profiles ─────────────────────── */
 /**
  * Слой 4d — облачные ИГРОВЫЕ профили (ник/уровень/prestige/edition/фракция/режим/
@@ -784,6 +809,8 @@ export type PlayerProfileRow = typeof playerProfiles.$inferSelect;
 export type NewPlayerProfileRow = typeof playerProfiles.$inferInsert;
 export type BarterProgressRow = typeof barterProgress.$inferSelect;
 export type NewBarterProgressRow = typeof barterProgress.$inferInsert;
+export type BattlePassProgressRow = typeof battlePassProgress.$inferSelect;
+export type NewBattlePassProgressRow = typeof battlePassProgress.$inferInsert;
 export type QuestProgress = typeof questProgress.$inferSelect;
 export type NewQuestProgress = typeof questProgress.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;

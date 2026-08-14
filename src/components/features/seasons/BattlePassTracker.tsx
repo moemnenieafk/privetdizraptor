@@ -1,13 +1,12 @@
 'use client';
 
-// Оркестратор трекера БП: владеет набором полученных наград (localStorage через стор), считает
-// сводку и прогресс страниц, разводит по вкладкам «Награды» / «Документы». Гидратация из
-// localStorage — под mounted-гейтом со скелетоном (§4.8), чтобы SSR и первый клиентский рендер
-// совпадали (оба пустые), а реальные данные применялись после mount.
+// Оркестратор трекера БП. Владеет набором полученных наград и счётчиками документов (localStorage
+// через стор), считает сводку и прогресс страниц. Раскладка (редизайн V4DYA 2026-08-14): ДВЕ КОЛОНКИ —
+// награды слева + рейл документации справа (на <lg складываются в одну колонку). Гидратация из
+// localStorage под mounted-гейтом со скелетоном (§4.8), чтобы SSR и первый клиентский рендер совпали.
 import { useEffect, useMemo, useState } from 'react';
-import { RotateCcw } from 'lucide-react';
 import type { Season } from '@/data/eft-seasons';
-import type { BpDocType } from '@/data/eft-battlepass';
+import { BP_DOC_ORDER, BP_LIMIT_BY_MODE, BP_PAGES, type BpDocType, type BpReward } from '@/data/eft-battlepass';
 import { computePageProgress, computeSummary } from '@/lib/battlepass';
 import { useBattlePassStore } from '@/store/useBattlePassStore';
 import { BattlePassRewards } from './BattlePassRewards';
@@ -15,58 +14,39 @@ import { BattlePassDocuments } from './BattlePassDocuments';
 
 const EMPTY: string[] = [];
 const EMPTY_DOCS: Partial<Record<BpDocType, number>> = {};
-const MICRO = 'font-blender-medium text-type-micro uppercase tracking-widest text-text-muted';
-
-type Tab = 'rewards' | 'docs';
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={[
-        'flex h-10 items-center rounded-xs border px-4 font-blender-medium text-xs uppercase tracking-widest transition-colors',
-        active
-          ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] text-(--primary)'
-          : 'border-lines-hover text-text-secondary hover:border-(--primary)/60 hover:text-text-primary',
-      ].join(' ')}
-    >
-      {children}
-    </button>
-  );
-}
 
 export function BattlePassTracker({ season }: { season: Season }) {
   const slug = season.slug;
   const claimedMap = useBattlePassStore((s) => s.claimed);
   const docCountsMap = useBattlePassStore((s) => s.docCounts);
   const toggle = useBattlePassStore((s) => s.toggle);
-  const setMany = useBattlePassStore((s) => s.setMany);
   const incDoc = useBattlePassStore((s) => s.incDoc);
+  const bumpDaily = useBattlePassStore((s) => s.bumpDaily);
+  const rolloverDaily = useBattlePassStore((s) => s.rolloverDaily);
+  const dailyRaw = useBattlePassStore((s) => s.daily[slug]);
   const resetSeason = useBattlePassStore((s) => s.resetSeason);
 
   const claimedArr = claimedMap[slug] ?? EMPTY;
   const docCountsRaw = docCountsMap[slug] ?? EMPTY_DOCS;
 
   const [mounted, setMounted] = useState(false);
-  const [tab, setTab] = useState<Tab>('rewards');
   const [confirmReset, setConfirmReset] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const claimedSet = useMemo<Set<string>>(
-    () => new Set<string>(mounted ? claimedArr : []),
-    [mounted, claimedArr],
-  );
+  const claimedSet = useMemo<Set<string>>(() => new Set<string>(mounted ? claimedArr : []), [mounted, claimedArr]);
   const collected = mounted ? docCountsRaw : EMPTY_DOCS;
+
+  // Дневной лимит исчерпан + игрок подтвердил «Да» (идёт таймер отката) → замок на доступные награды.
+  // Пока таймер тикает, получение наград заблокировано; снять — 7-сек удержанием карточки → модалка
+  // «Уже прошёл день?» → rolloverDaily (правка V4DYA 2026-08-15). Ролловер по истечении 24ч делает
+  // DailyModeBlock — он всегда смонтирован, поэтому замок снимается сам, когда окно закрывается.
+  const dCap = dailyRaw?.mode ? BP_LIMIT_BY_MODE[dailyRaw.mode] : null;
+  const dailyLocked =
+    mounted &&
+    dCap != null &&
+    (dailyRaw?.count ?? 0) >= dCap &&
+    (dailyRaw?.continued ?? false) &&
+    dailyRaw?.ackCap === dCap;
   const summary = useMemo(() => computeSummary(claimedSet), [claimedSet]);
   const progressByPage = useMemo(() => {
     const list = computePageProgress(claimedSet);
@@ -75,18 +55,19 @@ export function BattlePassTracker({ season }: { season: Season }) {
 
   if (!mounted) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="h-14 animate-pulse rounded-sm bg-(--color-darkbase)" />
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-44 animate-pulse rounded-sm bg-(--color-darkbase)" />
-          ))}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-7">
+        <div className="flex min-w-0 flex-1 flex-col gap-5">
+          <div className="h-12 animate-pulse rounded-sm bg-(--color-darkbase)" />
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-72 animate-pulse rounded-sm bg-(--color-darkbase)" />
+            ))}
+          </div>
         </div>
+        <div className="h-96 w-full shrink-0 animate-pulse rounded-sm bg-(--color-darkbase) lg:w-87" />
       </div>
     );
   }
-
-  const pct = Math.round((summary.rewardsClaimed / summary.rewardsTotal) * 100);
 
   const onReset = () => {
     if (!confirmReset) {
@@ -98,76 +79,71 @@ export function BattlePassTracker({ season }: { season: Season }) {
     setConfirmReset(false);
   };
 
+  // Получение награды потребляет её документы «из рук» (или, если их нет, растит потраченное);
+  // снятие — возвращает. Отсюда рост «найдено в рейде» и заполнение строк-типов (grill V4DYA 2026-08-14).
+  const onToggleReward = (reward: BpReward) => {
+    const isClaimed = claimedSet.has(reward.id);
+    // Клик «Отметить получение» тоже засчитывается в дневной лимит (правка V4DYA 2026-08-15):
+    // считаем ТОЛЬКО документы, которых ещё не было в руках (max(0, need−have)) — набранные ранее
+    // через ячейку/рейл уже посчитаны, иначе задвоение. На снятии дневной счётчик не уменьшаем (Q1).
+    if (!isClaimed) {
+      let newlyFound = 0;
+      for (const t of BP_DOC_ORDER) {
+        const need = reward.cost[t] ?? 0;
+        if (need) newlyFound += Math.max(0, need - (collected[t] ?? 0));
+      }
+      if (newlyFound > 0) bumpDaily(slug, newlyFound);
+    }
+    toggle(slug, reward.id);
+    for (const t of BP_DOC_ORDER) {
+      const n = reward.cost[t] ?? 0;
+      if (n) incDoc(slug, t, isClaimed ? n : -n);
+    }
+  };
+
+  // Явный набор документа игроком (клик по ячейке карточки ИЛИ рейл) — растит счётчик документа
+  // И, при выбранном режиме, дневной счётчик лимита (только +1; «−»/ПКМ его не трогают, Q1).
+  // Получение награды (onToggleReward) идёт мимо — там свой incDoc, в дневной лимит не попадает.
+  const onDocCollect = (t: BpDocType, d: number) => {
+    incDoc(slug, t, d);
+    if (d > 0) bumpDaily(slug, d);
+  };
+
+  // Hold-to-unlock: «догнать» до страницы — отметить все неполученные награды предыдущих страниц
+  // (снимает гейт прогрессии + пересчитывает документы слева и справа). Grill V4DYA.
+  const onCatchUp = (uptoPage: number) => {
+    for (const p of BP_PAGES) {
+      if (p.page >= uptoPage) break;
+      for (const r of p.rewards) {
+        if (!claimedSet.has(r.id)) onToggleReward(r);
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* ── Липкая полоса общего прогресса ──────────────────────────── */}
-      <div className="sticky top-18 z-30 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-sm border border-lines-hover bg-[color-mix(in_srgb,var(--color-base)_88%,transparent)] p-3 backdrop-blur-md">
-        <div className="flex min-w-56 flex-1 flex-col gap-2">
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <span className="flex items-baseline gap-1.5">
-              <span className={MICRO}>Награды</span>
-              <span className="font-blender-medium text-base text-(--primary)">
-                {summary.rewardsClaimed} / {summary.rewardsTotal}
-              </span>
-            </span>
-            <span className="flex items-baseline gap-1.5">
-              <span className={MICRO}>Осталось документов</span>
-              <span className="font-blender-medium text-base text-text-primary">
-                {summary.remainingTotal}
-              </span>
-            </span>
-            <span className="flex items-baseline gap-1.5">
-              <span className={MICRO}>Собрано</span>
-              <span className="font-blender-medium text-base text-nvg-green">
-                {summary.spentTotal} / {summary.neededTotal}
-              </span>
-            </span>
-          </div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-(--color-darkbase)">
-            <div
-              className="h-full rounded-full bg-(--primary) transition-[width] duration-300"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onReset}
-          className={[
-            'flex h-9 items-center gap-1.5 rounded-xs border px-2.5 font-blender-medium text-type-micro uppercase tracking-widest transition-colors',
-            confirmReset
-              ? 'border-danger text-danger'
-              : 'border-lines-hover text-text-secondary hover:border-danger hover:text-danger',
-          ].join(' ')}
-        >
-          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-          {confirmReset ? 'Точно? Сбросить' : 'Сброс'}
-        </button>
-      </div>
-
-      {/* ── Вкладки ─────────────────────────────────────────────────── */}
-      <div className="flex gap-2">
-        <TabButton active={tab === 'rewards'} onClick={() => setTab('rewards')}>
-          Награды
-        </TabButton>
-        <TabButton active={tab === 'docs'} onClick={() => setTab('docs')}>
-          Документы
-        </TabButton>
-      </div>
-
-      {tab === 'rewards' ? (
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-7">
+      <div className="min-w-0 flex-1">
         <BattlePassRewards
           claimed={claimedSet}
           collected={collected}
           progressByPage={progressByPage}
-          onToggle={(id) => toggle(slug, id)}
-          onSetPage={(ids, on) => setMany(slug, ids, on)}
-          onIncDoc={(t, d) => incDoc(slug, t, d)}
+          onToggleReward={onToggleReward}
+          onIncDoc={onDocCollect}
+          onCatchUp={onCatchUp}
+          dailyLocked={dailyLocked}
+          onDailyReset={() => rolloverDaily(slug)}
         />
-      ) : (
-        <BattlePassDocuments summary={summary} collected={collected} onInc={(t, d) => incDoc(slug, t, d)} />
-      )}
+      </div>
+      <aside className="w-full shrink-0 lg:w-87">
+        <BattlePassDocuments
+          slug={slug}
+          summary={summary}
+          collected={collected}
+          onInc={onDocCollect}
+          onReset={onReset}
+          confirmReset={confirmReset}
+        />
+      </aside>
     </div>
   );
 }

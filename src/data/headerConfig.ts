@@ -558,7 +558,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             iconClass: 'icon-eft-seasons',
             children: [
               { id: 'p-seasons-perks', label: 'Конструктор перков', path: '/eft/progress/seasons/perks', iconUrl: '/icons/eft/04-progression/seasons/build-constructor.svg' },
-              { id: 'p-seasons-tracker', label: 'BATTLEPASS Трекер', description: 'Отмечайте полученные награды Боевого Пропуска — трекер посчитает, сколько документации ещё нужно и на каких картах её искать.', path: '/eft/progress/seasons/tracker', iconUrl: '/icons/eft/04-progression/seasons/season01/season1-badge-icon.svg' },
+              { id: 'p-seasons-tracker', label: 'BATTLEPASS Трекер', description: 'Отмечайте полученные награды Боевого Пропуска — трекер посчитает, сколько документации ещё нужно и на каких картах её искать.', path: '/eft/progress/seasons/tracker', iconUrl: '/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg' },
             ],
           },
           {

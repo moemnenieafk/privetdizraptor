@@ -309,6 +309,13 @@
   .icon-eft-season1-badge { mask-image: url('/icons/eft/04-progression/seasons/season01/season1-badge-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/season01/season1-badge-icon.svg'); }
   .icon-eft-kord-breach-logo-short { mask-image: url('/icons/eft/04-progression/seasons/season01/kord-breach-logo-short-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/season01/kord-breach-logo-short-icon.svg'); }
   .icon-eft-build-constructor { mask-image: url('/icons/eft/04-progression/seasons/build-constructor.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/build-constructor.svg'); }
+  /* — BATTLEPASS трекер (редизайн 2026-08-14): глифы наград/документов — */
+  .icon-eft-battlepass-docs-tracker { mask-image: url('/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg'); }
+  .icon-eft-battlepass-docs-coin { mask-image: url('/icons/eft/04-progression/seasons/battlepass-docs-coin.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/battlepass-docs-coin.svg'); }
+  .icon-eft-reward { mask-image: url('/icons/eft/04-progression/seasons/reward-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/reward-icon.svg'); }
+  .icon-eft-reward-lock { mask-image: url('/icons/eft/04-progression/seasons/reward-lock.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/reward-lock.svg'); }
+  .icon-eft-pve-mode { mask-image: url('/icons/eft/04-progression/seasons/pve-mode-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/pve-mode-icon.svg'); }
+  .icon-eft-pvp-mode { mask-image: url('/icons/eft/04-progression/seasons/pvp-mode-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/pvp-mode-icon.svg'); }
   .icon-eft-global-perk-armor-deficit { mask-image: url('/icons/eft/04-progression/seasons/season01/perks/global/global-perk-armor-deficit.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/season01/perks/global/global-perk-armor-deficit.svg'); }
   .icon-eft-global-perk-black-division { mask-image: url('/icons/eft/04-progression/seasons/season01/perks/global/global-perk-black-division.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/season01/perks/global/global-perk-black-division.svg'); }
   .icon-eft-global-perk-broken-ensurance { mask-image: url('/icons/eft/04-progression/seasons/season01/perks/global/global-perk-broken-ensurance.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/season01/perks/global/global-perk-broken-ensurance.svg'); }
