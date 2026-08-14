@@ -2,7 +2,7 @@ import * as L from 'leaflet';
 import { markerIconUrl, markerColor, GOONS_FILES } from '@/data/map-marker-icons';
 import { LOOT_CATEGORIES } from '@/data/map-markers/categories';
 import { itemIconUrl } from '@/lib/item-icon';
-import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { getTarkovCellColor } from '@/lib/tarkov-colors';
 
 /**
  * Иконка маркера статик-карты (общая для редактора «Правка» и боевого рендера).
@@ -62,14 +62,17 @@ export function manualMarkerIcon(m: ManualMarkerLike, del = false, showLabel = f
     ).join('');
     inner = `<span style="display:flex;align-items:center;justify-content:center">${imgs}</span>`;
   } else if (isLooseItem) {
-    // Плитка предмета: иконка из нашей базы на тарковском цвет-фоне слота.
-    box = 30;
-    const bg = getTarkovBackgroundColor(m.itemBg ?? undefined);
+    // Плитка предмета «как ячейка инвентаря»: НЕПРОЗРАЧНЫЙ фон редкости + тёмная рамка + внутренняя
+    // светлая грань и тень + иконка с падингом. 30%-тинт на тёмной карте был почти невидим — теперь
+    // сплошной цвет редкости, размер чуть крупнее (30→34), чтобы спот сразу читался и опознавался.
+    box = 34;
+    const bg = getTarkovCellColor(m.itemBg ?? undefined);
     inner =
-      `<span style="display:block;width:${box}px;height:${box}px;border-radius:3px;overflow:hidden;` +
-      `background:${bg};border:1px solid rgba(255,255,255,.14);box-shadow:0 1px 3px rgba(0,0,0,.7)${glow}">` +
+      `<span style="position:relative;display:block;width:${box}px;height:${box}px;border-radius:4px;overflow:hidden;` +
+      `background:${bg};border:1px solid rgba(0,0,0,.85);` +
+      `box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 0 7px rgba(0,0,0,.65),0 1px 3px rgba(0,0,0,.9)${glow}">` +
       `<img src="${itemIconUrl(m.linkedItemId!)}" width="${box}" height="${box}" alt="" ` +
-      `style="display:block;width:100%;height:100%;object-fit:contain" ` +
+      `style="display:block;width:100%;height:100%;object-fit:contain;padding:2px;box-sizing:border-box;filter:drop-shadow(0 1px 2px rgba(0,0,0,.95))" ` +
       `onerror="this.style.display='none'" /></span>`;
   } else if (lootIcon) {
     box = 24;

@@ -28,3 +28,32 @@ export const getTarkovBackgroundColor = (color: string | undefined): string => {
       return "rgba(127, 127, 127, 0.3)";
   }
 };
+
+/**
+ * НЕПРОЗРАЧНЫЙ фон ячейки по редкости — для маркеров на тёмной карте, где 30%-тинт
+ * `getTarkovBackgroundColor` почти невидим. Те же оттенки EFT, но сплошные и чуть светлее,
+ * чтобы плитка читалась как ячейка инвентаря и предмет было видно поверх.
+ */
+export const getTarkovCellColor = (color: string | undefined): string => {
+  switch (color?.toLowerCase()) {
+    case "orange":
+      return "#63421f";
+    case "yellow":
+      return "#5f5a2e";
+    case "violet":
+    case "purple":
+      return "#4d3b56";
+    case "blue":
+      return "#2c4859";
+    case "green":
+      return "#2e4327";
+    case "black":
+      return "#2b2b2b";
+    case "red":
+      return "#5c2e2e";
+    case "grey":
+    case "default":
+    default:
+      return "#3d3d3a";
+  }
+};

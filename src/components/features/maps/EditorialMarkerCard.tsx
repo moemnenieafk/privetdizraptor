@@ -19,6 +19,7 @@ import { SPAWN_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/ma
 import { markerIconUrl, markerColor, BOSS_ROSTER, isItemId, LINK_KIND_COLOR, type MarkerIconInput } from '@/data/map-marker-icons';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { EFT_SEASONS } from '@/data/eft-seasons';
 import { searchEftItemsAction } from '@/actions/search-actions';
 import type { SearchItemResult } from '@/types/search';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
@@ -70,6 +71,16 @@ const QUESTZONE_KINDS: { key: string; label: string }[] = [
   { key: 'target', label: 'Цель' },
   { key: 'item', label: 'Предмет' },
 ];
+
+// События для привязки маркера (linkKind='event'). Источник — сезоны портала (Season 1 = Kord Breach):
+// добавится сезон в EFT_SEASONS — опция появится сама, без правки карточки. linkId = `season-<slug>`.
+const MARKER_EVENTS: { id: string; label: string }[] = EFT_SEASONS.map((s) => ({
+  id: `season-${s.slug}`,
+  label: `Сезон ${s.number} - ${s.name.toUpperCase()}`,
+}));
+// linkId события → человекочитаемая метка (для чипа в показе). Неизвестный id — сам id (легаси-свобода).
+const markerEventLabel = (id: string | null | undefined): string | null =>
+  id ? (MARKER_EVENTS.find((e) => e.id === id)?.label ?? id) : null;
 
 // ─── Визард ─────────────────────────────────────────────────────────────────
 type WizardStep = 'category' | 'object' | 'details' | 'link';
@@ -183,6 +194,8 @@ export interface EditorialMarkerView {
   lootItems?: string[] | null;
   /** Лут-пул: id→короткое имя (BSG shortName) для показа в карточке/заголовке. Резолвится серверно. */
   lootItemLabels?: Record<string, string> | null;
+  /** Лут-пул: id→backgroundColor (редкость) для ячейки-иконки предмета. Резолвится серверно из priceIndex. */
+  lootItemBg?: Record<string, string> | null;
 }
 
 /** Разрешённая привязка к квесту — для верхнего ряда (трейдер/уровень/каппа). */
@@ -565,7 +578,10 @@ export function EditorialMarkerCard({
           background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${tintVar} 18%, var(--color-base)), var(--color-base))`,
         }}
       >
-        {/* ── Галерея: миниатюры 49×28 + большой скрин (общая для показа и визарда) ── */}
+        {/* ── Галерея: миниатюры 49×28 + большой скрин (общая для показа и визарда) ──
+            В ПОКАЗЕ без скринов блок скрыт целиком (только иконка/текст ниже); в ПРАВКЕ виден всегда
+            (кнопка «+» для добавления). */}
+        {(editing || shots.length > 0) && (
         <div className="flex w-full flex-col gap-1">
           <div className="flex items-center gap-1 overflow-hidden">
             {shots.map((src, i) => (
@@ -620,11 +636,12 @@ export function EditorialMarkerCard({
               </button>
             ) : (
               <div className="flex size-full items-center justify-center font-blender-book text-xs text-text-muted">
-                {editing ? 'Нет изображения. Добавьте скрин через «+».' : 'Нет скриншота'}
+                Нет изображения. Добавьте скрин через «+».
               </div>
             )}
           </div>
         </div>
+        )}
 
         {editing ? (
           /* ═════════════════ ВИЗАРД (правка) ═════════════════ */
@@ -851,6 +868,32 @@ export function EditorialMarkerCard({
                   <LinkKindButton on={draft.linkKind === 'item'} onClick={() => { setDraft((d) => ({ ...d, linkKind: 'item', linkId: null, linkStep: null })); setItemQ(''); setPickedItem(null); }} label="Предмет" color={LINK_KIND_COLOR.item} iconClass="icon-eft-items-loot-tier" />
                 </div>
 
+                {/* Событие — выбор из списка (сезоны портала: «Сезон 1 - KORD BREACH» и далее) */}
+                {draft.linkKind === 'event' && (
+                  <div className="flex flex-wrap gap-1">
+                    {MARKER_EVENTS.map((ev) => {
+                      const on = draft.linkId === ev.id;
+                      return (
+                        <button
+                          key={ev.id}
+                          type="button"
+                          onClick={() => setDraft((d) => ({ ...d, linkId: ev.id }))}
+                          aria-pressed={on}
+                          className="flex items-center gap-1.5 rounded-xs border-[0.5px] px-2.5 py-1.5 font-blender-medium text-[11px] uppercase tracking-wide transition-colors"
+                          style={
+                            on
+                              ? { borderColor: LINK_KIND_COLOR.event, backgroundColor: `color-mix(in srgb, ${LINK_KIND_COLOR.event} 15%, transparent)`, color: LINK_KIND_COLOR.event }
+                              : { borderColor: 'var(--color-lines-hover)', color: 'var(--color-text-secondary)' }
+                          }
+                        >
+                          <span className="icon-mask icon-eft-quests-events size-3.5 shrink-0" />
+                          <span className="truncate">{ev.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* Квест — автокомплит */}
                 {draft.linkKind === 'quest' && questIndex && (
                   selName ? (
@@ -1010,10 +1053,15 @@ export function EditorialMarkerCard({
         ) : (
           /* ═════════════════ ПОКАЗ (Marker - On Click) ═════════════════ */
           <>
-            {/* Строка категории: иконка + подпись слева · закладка связи справа */}
+            {/* Строка категории: иконка + подпись слева · закладка связи справа.
+                Лут-предмет → крупная ячейка 56×56 (фон редкости + тень), как настоящая иконка ячейки. */}
             <div className="flex w-full items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-2">
-                <GlyphFor shape={marker} size={28} />
+                {marker.type === 'loot' && isItemId(marker.category) ? (
+                  <ItemCell id={marker.category as string} bg={marker.lootItemBg?.[marker.category as string]} size={56} />
+                ) : (
+                  <GlyphFor shape={marker} size={28} />
+                )}
                 <span className="min-w-0 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
                   {markerCategoryLabel(marker, lootLabel)}
                 </span>
@@ -1077,7 +1125,7 @@ export function EditorialMarkerCard({
                   style={{ backgroundColor: LINK_KIND_COLOR[marker.linkKind] }}
                 />
                 <span className="min-w-0 flex-1 truncate font-blender-medium text-xs" style={{ color: LINK_KIND_COLOR[marker.linkKind] }}>
-                  {marker.linkKind === 'story' ? (linkedStory?.title ?? marker.linkId) : (marker.linkId ?? 'Событие')}
+                  {marker.linkKind === 'story' ? (linkedStory?.title ?? marker.linkId) : (markerEventLabel(marker.linkId) ?? 'Событие')}
                 </span>
                 {marker.linkKind === 'story' && marker.linkStep != null && (
                   <span className="shrink-0 font-blender-medium text-[10px] uppercase text-text-secondary">шаг {marker.linkStep}</span>
@@ -1354,6 +1402,23 @@ function GlyphFor({ shape, size }: { shape: CatShape; size: number }) {
     return <img src={itemIconUrl(shape.category as string)} alt="" className="shrink-0 rounded-xs object-contain" style={{ width: size, height: size }} />;
   }
   return <MarkerGlyph input={glyphInputFor(shape)} size={size} />;
+}
+
+// Ячейка предмета «как в инвентаре»: фон редкости + внутренняя тень + иконка с drop-shadow.
+// Паттерн 1:1 с каталожной EftItemTile/Media. bg = backgroundColor предмета (редкость) из priceIndex;
+// нет bg — нейтральный тёмный фон (getTarkovBackgroundColor(undefined)).
+function ItemCell({ id, bg, size }: { id: string; bg?: string | null; size: number }) {
+  return (
+    <span
+      className="relative shrink-0 overflow-hidden rounded-xs border-[0.5px] border-lines-hover"
+      style={{ width: size, height: size }}
+    >
+      <span className="absolute inset-0 bg-(--color-darkbase)" />
+      <span className="absolute inset-0" style={{ backgroundColor: getTarkovBackgroundColor(bg ?? undefined) }} />
+      <span className="pointer-events-none absolute inset-0 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]" />
+      <img src={itemIconUrl(id)} alt="" className="absolute inset-0 size-full object-contain p-1 drop-shadow-lg" />
+    </span>
+  );
 }
 
 // Иконка категории шага 1 — цветной img (у всех marker-svg свой градиент+обводка).

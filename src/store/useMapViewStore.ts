@@ -27,6 +27,8 @@ interface MapViewState {
   toggleFilter: (key: string) => void;
   /** Задать видимость группы слоёв разом (чекбокс группы/узла в легенде). */
   setGroupFilters: (keys: string[], on: boolean) => void;
+  /** Соло: включить ТОЛЬКО эти слои, все остальные выключить (Alt+клик по категории). */
+  soloFilters: (keys: string[]) => void;
   setPreset: (id: string | null) => void;
   /** Гидрация из URL при маунте (только присутствующие ключи). */
   hydrate: (partial: Partial<MapViewState>) => void;
@@ -48,6 +50,13 @@ export const useMapViewStore = create<MapViewState>((set) => ({
   toggleFilter: (key) => set((s) => ({ activeFilters: { ...s.activeFilters, [key]: !s.activeFilters[key] } })),
   setGroupFilters: (keys, on) =>
     set((s) => ({ activeFilters: { ...s.activeFilters, ...Object.fromEntries(keys.map((k) => [k, on])) } })),
+  soloFilters: (keys) =>
+    set((s) => {
+      const next: Record<string, boolean> = {};
+      for (const k of Object.keys(s.activeFilters)) next[k] = false;
+      for (const k of keys) next[k] = true;
+      return { activeFilters: next };
+    }),
   setPreset: (activePresetId) => set({ activePresetId }),
   hydrate: (partial) => set(partial),
 }));

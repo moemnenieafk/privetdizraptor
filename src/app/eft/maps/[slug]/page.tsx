@@ -132,6 +132,8 @@ export default async function MapPage({ params, searchParams }: Props) {
       // shortName для показа в карточке/заголовке (компактно), name — для поиска по спискам (bridge).
       const hasLootPool = rows.some((r) => !r.hidden && r.lootItems && r.lootItems.length > 0);
       const catById = hasLootPool ? new Map((await getEftCatalog()).map((i) => [i.id, i])) : null;
+      // Цвет редкости (backgroundColor) лут-предметов — из зеркала цен, для ячейки-иконки 56×56 в карточке.
+      const priceIndex = hasLootPool ? await getEftPriceIndex() : null;
       editorialMarkers = rows
         .filter((r) => !r.hidden)
         .map((r) => {
@@ -146,6 +148,10 @@ export default async function MapPage({ params, searchParams }: Props) {
             lootItemLabels:
               r.lootItems && r.lootItems.length > 0 && catById
                 ? Object.fromEntries(r.lootItems.map((id) => [id, catById.get(id)?.shortName || catById.get(id)?.name || '']))
+                : null,
+            lootItemBg:
+              r.lootItems && r.lootItems.length > 0 && priceIndex
+                ? Object.fromEntries(r.lootItems.map((id) => [id, priceIndex.get(id)?.backgroundColor ?? '']))
                 : null,
             linkedQuest: q
               ? {

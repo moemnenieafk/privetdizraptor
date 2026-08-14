@@ -116,6 +116,8 @@ function editorialIcon(m: EditorialMarkerData): L.DivIcon {
     meta,
     linkKind: m.linkKind,
     linkedItemId: m.type === 'loot' && isItemId(m.category) ? m.category ?? undefined : undefined,
+    // Фон редкости для плитки-ячейки (та же непрозрачная ячейка, что у синканного loose loot).
+    itemBg: m.type === 'loot' && isItemId(m.category) ? m.lootItemBg?.[m.category as string] ?? undefined : undefined,
     // Лут-пул: >1 предмета на споте → бейдж «+N» (доп. сверх первого).
     badge: m.type === 'loot' && m.lootItems && m.lootItems.length > 1 ? m.lootItems.length - 1 : undefined,
   });
@@ -2266,6 +2268,7 @@ export function MapViewerClient({
           counts={counts}
           onToggle={(k) => useMapViewStore.getState().toggleFilter(k)}
           onSetGroup={setGroup}
+          onSolo={(keys) => useMapViewStore.getState().soloFilters(keys)}
           onCycle={cycleToLayer}
           open={layersOpen}
           onOpenChange={setLayersOpen}

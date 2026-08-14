@@ -66,6 +66,7 @@ export function MapLayersDrawer({
   counts,
   onToggle,
   onSetGroup,
+  onSolo,
   onCycle,
   open: openProp,
   onOpenChange,
@@ -75,6 +76,8 @@ export function MapLayersDrawer({
   counts: Record<string, number>;
   onToggle: (key: string) => void;
   onSetGroup: (keys: string[], value: boolean) => void;
+  /** Соло: включить только эту категорию (Alt+клик по галочке), остальные выключить. */
+  onSolo: (keys: string[]) => void;
   /** ПКМ по строке слоя: подлёт к ближайшему объекту, повтор — к следующему по циклу. */
   onCycle: (keys: string[]) => void;
   /** Управляемое открытие (мобильная панель). Без пропа — внутренний стейт (десктоп). */
@@ -125,9 +128,9 @@ export function MapLayersDrawer({
       <button
         key={i.key}
         type="button"
-        onClick={() => onToggle(i.key)}
+        onClick={(e) => (e.altKey ? onSolo([i.key]) : onToggle(i.key))}
         onContextMenu={(e) => cycle(e, [i.key])}
-        title="ПКМ — подлёт к объекту (повтор — к следующему)"
+        title="Alt+клик — показать только эту категорию · ПКМ — подлёт к объекту"
         className={`flex w-full items-center gap-2 rounded-xs py-1.5 pr-2 text-left transition-colors hover:bg-card-menu ${
           deep ? 'pl-14' : 'pl-8'
         } ${active ? 'text-text-secondary' : 'text-text-muted/60'}`}
@@ -151,7 +154,7 @@ export function MapLayersDrawer({
           title="ПКМ — подлёт к объекту (повтор — к следующему)"
           className="flex items-center gap-2 rounded-xs py-1.5 pr-2 pl-8 hover:bg-card-menu"
         >
-          <button type="button" onClick={() => onSetGroup(keys, st !== 'on')} aria-label={`Переключить ${i.label}`}>
+          <button type="button" onClick={(e) => (e.altKey ? onSolo(keys) : onSetGroup(keys, st !== 'on'))} title="Alt+клик — показать только эту категорию" aria-label={`Переключить ${i.label}`}>
             <Box state={st} />
           </button>
           <button
@@ -215,7 +218,7 @@ export function MapLayersDrawer({
             )}
           </div>
           <p className="font-blender-medium text-[10px] text-text-secondary">
-            Доступна мульти-фильтрация, например: Платный, Босс, Опасности
+            Доступна мульти-фильтрация, например: Платный, Босс, Опасности · <span className="text-(--primary)">Alt+клик</span> по категории — показать только её
           </p>
         </div>
 
@@ -251,7 +254,7 @@ export function MapLayersDrawer({
                   title="ПКМ — подлёт к объекту (повтор — к следующему)"
                   className="flex items-center gap-2 rounded-xs px-2 py-1.5 hover:bg-card-menu"
                 >
-                  <button type="button" onClick={() => onSetGroup(keys, st !== 'on')} aria-label={`Переключить группу ${g.group}`}>
+                  <button type="button" onClick={(e) => (e.altKey ? onSolo(keys) : onSetGroup(keys, st !== 'on'))} title="Alt+клик — показать только эту группу" aria-label={`Переключить группу ${g.group}`}>
                     <Box state={st} />
                   </button>
                   <button
