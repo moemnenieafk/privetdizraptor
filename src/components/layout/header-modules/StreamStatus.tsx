@@ -60,16 +60,23 @@ export default function StreamStatus({ mapVariant = false }: { mapVariant?: bool
   const s = isLive ? liveS : offlineS;
 
   return (
-    // Плавающий оверлей: блок сидит в боковом гуттере ЗА кромкой 1100px-контента (сдвиг на
-    // ширину блока = w-40 = 10rem), на узких — фолбэк к 1rem. Обёртка кликопрозрачна.
-    // mapVariant: левый гуттер + высота хедера (top-6, зеркало «Завоза»); иначе правый низ.
+    // Плавающий оверлей: блок сидит в боковом гуттере ЗА кромкой 1100px-контента. Обёртка кликопрозрачна.
+    // mapVariant: ЛЕВЫЙ гуттер, по центру пробела (0..кромка-контента) и на уровне логотипа хедера.
+    //   • top = паддинг ROW1 (тот же clamp) + половина h-14 логотипа (28px) − половина h-10 кнопки (20px)
+    //     ⇒ центр кнопки совпадает с центром логотипа на любом разрешении;
+    //   • left = центр гуттера ((100vw−1100)/4) − половина ширины кнопки (5rem) − доп-сдвиг влево 2rem
+    //     (визуальный центр блока, дальше от логотипа); фолбэк 1.5rem держит гекс-скобку в кадре.
+    // Иначе (не Карты) — прежний правый низ.
     <div
       className={`fixed hidden xl:flex flex-col gap-2 pointer-events-none ${
-        mapVariant ? 'top-6 items-start z-40' : 'bottom-4 items-end z-70'
+        mapVariant ? 'items-start z-40' : 'bottom-4 items-end z-70'
       }`}
       style={
         mapVariant
-          ? { left: 'max(1rem, calc((100vw - 1100px) / 2 - 10rem - 56px))' }
+          ? {
+              top: 'calc(clamp(12px, 1.09vw, 21px) + 8px)',
+              left: 'max(1.5rem, calc((100vw - 1100px) / 4 - 7rem))',
+            }
           : { right: 'max(1rem, calc((100vw - 1100px) / 2 - 10rem - 56px))' }
       }
     >
