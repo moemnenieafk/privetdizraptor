@@ -163,6 +163,7 @@ export function BattlePassTracker({ season }: { season: Season }) {
           progressByPage={progressByPage}
           onToggle={(id) => toggle(slug, id)}
           onSetPage={(ids, on) => setMany(slug, ids, on)}
+          onIncDoc={(t, d) => incDoc(slug, t, d)}
         />
       ) : (
         <BattlePassDocuments summary={summary} collected={collected} onInc={(t, d) => incDoc(slug, t, d)} />

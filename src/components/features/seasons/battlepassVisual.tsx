@@ -26,6 +26,7 @@ import {
   bpRewardImageUrl,
   type BpCost,
   type BpDoc,
+  type BpDocType,
   type BpRewardKind,
 } from '@/data/eft-battlepass';
 
@@ -105,36 +106,75 @@ export function DocIcon({ doc, className = 'h-5 w-5' }: { doc: BpDoc; className?
 
 /**
  * Чипы стоимости награды: иконка документа + количество, в каноническом порядке типов.
- * Если передан `collected` — показывает «собрано/нужно» (как в игре 0/4) и зеленеет при наборе.
+ * • `collected` — показывает «собрано/нужно» (как в игре 0/4) и зеленеет при наборе.
+ * • `onInc` — делает чип КЛИКАБЕЛЬНЫМ трекером набора: ЛКМ +1, ПКМ −1 (без кнопок),
+ *   фон-заливка по собрано/нужно. Клик гасит всплытие (карточка-родитель не тогглит получение).
  */
 export function DocCostChips({
   cost,
   collected,
+  onInc,
 }: {
   cost: BpCost;
   collected?: Partial<Record<string, number>>;
+  onInc?: (type: BpDocType, delta: number) => void;
 }) {
   const types = BP_DOC_ORDER.filter((t) => (cost[t] ?? 0) > 0);
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <div className="flex flex-wrap items-center gap-1.5">
       {types.map((t) => {
         const doc = BP_DOCS[t];
         const need = cost[t] ?? 0;
         const have = collected ? Math.min(collected[t] ?? 0, need) : undefined;
         const met = have !== undefined && have >= need;
-        return (
-          <span
-            key={t}
-            title={`${doc.name} ${have !== undefined ? `${have}/${need}` : `×${need}`}`}
-            className={`inline-flex items-center gap-1 rounded-xs border px-1.5 py-0.5 ${
-              met ? 'border-nvg-green/50 bg-nvg-green/10' : 'border-lines-hover bg-(--color-base)'
-            }`}
-          >
-            <DocIcon doc={doc} className="h-4 w-4" />
-            <span className={`font-blender-medium text-type-micro ${met ? 'text-nvg-green' : 'text-text-secondary'}`}>
-              {have !== undefined ? `${have}/${need}` : `×${need}`}
+        const label = have !== undefined ? `${have}/${need}` : `×${need}`;
+        const pct = have !== undefined && need > 0 ? Math.round((have / need) * 100) : 0;
+
+        const inner = (
+          <>
+            {onInc && (
+              <span
+                aria-hidden
+                className={`absolute inset-y-0 left-0 transition-[width] duration-200 ${met ? 'bg-nvg-green/25' : 'bg-(--primary)/25'}`}
+                style={{ width: `${pct}%` }}
+              />
+            )}
+            <DocIcon doc={doc} className={`relative ${onInc ? 'h-6 w-6' : 'h-4 w-4'}`} />
+            <span className={`relative font-blender-medium ${onInc ? 'text-type-caption' : 'text-type-micro'} ${met ? 'text-nvg-green' : 'text-text-secondary'}`}>
+              {label}
             </span>
-          </span>
+          </>
+        );
+
+        const cls = `relative inline-flex items-center gap-1 overflow-hidden rounded-xs border ${onInc ? 'px-2 py-1' : 'px-1.5 py-0.5'} ${
+          met ? 'border-nvg-green/60 bg-nvg-green/10' : 'border-lines-hover bg-(--color-base)'
+        }`;
+
+        if (!onInc) {
+          return (
+            <span key={t} title={`${doc.name} ${label}`} className={cls}>
+              {inner}
+            </span>
+          );
+        }
+        return (
+          <button
+            key={t}
+            type="button"
+            title={`${doc.name} — ЛКМ +1 · ПКМ −1  (${label})`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onInc(t, 1);
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onInc(t, -1);
+            }}
+            className={`${cls} cursor-pointer select-none transition-colors hover:border-(--primary)`}
+          >
+            {inner}
+          </button>
         );
       })}
     </div>

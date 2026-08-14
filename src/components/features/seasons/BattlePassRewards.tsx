@@ -18,6 +18,7 @@ interface Props {
   progressByPage: Map<number, PageProgress>;
   onToggle: (rewardId: string) => void;
   onSetPage: (rewardIds: string[], on: boolean) => void;
+  onIncDoc: (type: BpDocType, delta: number) => void;
 }
 
 function RewardCard({
@@ -27,6 +28,7 @@ function RewardCard({
   locked,
   requiresPage,
   onToggle,
+  onIncDoc,
 }: {
   reward: BpReward;
   claimed: boolean;
@@ -34,18 +36,28 @@ function RewardCard({
   locked: boolean;
   requiresPage?: number;
   onToggle: () => void;
+  onIncDoc: (type: BpDocType, delta: number) => void;
 }) {
   const meta = KIND_META[reward.kind];
   const total = rewardDocCount(reward);
   const afford = affordProgress(reward.cost, collected);
 
+  // Карточка — интерактивный div (внутри — кликабельные чипы-документы, вложенные <button>
+  // в <button> запрещены). Клик по карточке (кроме чипов) тогглит получение.
   return (
-    <button
-      type="button"
-      onClick={onToggle}
+    <div
+      role="button"
+      tabIndex={0}
       aria-pressed={claimed}
+      onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
       className={[
-        'group relative flex flex-col overflow-hidden rounded-sm border text-left transition-colors',
+        'group relative flex cursor-pointer flex-col overflow-hidden rounded-sm border text-left transition-colors focus:outline-none focus-visible:border-(--primary)',
         claimed ? 'border-(--primary)' : afford.affordable ? 'border-nvg-green/60' : 'border-lines-hover hover:border-(--primary)/60',
       ].join(' ')}
     >
@@ -109,7 +121,7 @@ function RewardCard({
         <span className="line-clamp-2 min-h-[2lh] font-blender-medium text-sm leading-tight text-text-primary">
           {reward.name}
         </span>
-        <DocCostChips cost={reward.cost} collected={collected} />
+        <DocCostChips cost={reward.cost} collected={collected} onInc={onIncDoc} />
         <span
           className={`mt-auto font-blender-medium text-type-micro uppercase tracking-widest ${
             claimed ? 'text-(--primary)' : afford.affordable ? 'text-nvg-green' : 'text-text-secondary'
@@ -118,7 +130,7 @@ function RewardCard({
           {claimed ? '✓ Получено' : afford.affordable ? 'Хватает — отметить' : 'Отметить получение'}
         </span>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -170,7 +182,7 @@ function PageTab({
   );
 }
 
-export function BattlePassRewards({ claimed, collected, progressByPage, onToggle, onSetPage }: Props) {
+export function BattlePassRewards({ claimed, collected, progressByPage, onToggle, onSetPage, onIncDoc }: Props) {
   const [activePage, setActivePage] = useState(1);
   const page = BP_PAGES.find((p) => p.page === activePage) ?? BP_PAGES[0];
   const pp = progressByPage.get(page.page);
@@ -254,6 +266,7 @@ export function BattlePassRewards({ claimed, collected, progressByPage, onToggle
             locked={locked}
             requiresPage={page.requires?.fromPage}
             onToggle={() => onToggle(reward.id)}
+            onIncDoc={onIncDoc}
           />
         ))}
       </div>
