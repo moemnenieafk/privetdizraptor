@@ -75,7 +75,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
   const toggleSearch = useMapUiStore((s) => s.toggleSearch);
   const layersOpen = useMapUiStore((s) => s.layersOpen);
   // Этаж живёт в useMapViewStore (§18.1) — эфемерный вид + синк с URL (permalink).
-  const activeFloor = useMapViewStore((s) => s.floor);
+  const rawFloor = useMapViewStore((s) => s.floor);
   const setActiveFloor = useMapViewStore((s) => s.setFloor);
   useMapViewUrlSync();
   const [ready, setReady] = useState(false);
@@ -116,6 +116,9 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
 
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
   const floorOrder = useMemo(() => orderFloorsByLevel(floors), [floors]);
+  // URL может нести ?floor=N от ДРУГОЙ карты (напр. floor=1 на одноэтажном Лесу/Маяке) — индекс вне
+  // диапазона активирует несуществующий этаж, и Поверхность гаснет до 20%. Клампим в валидный диапазон.
+  const activeFloor = Math.min(Math.max(rawFloor, 0), Math.max(0, floors.length - 1));
 
   const mobileMaps = useMemo(
     () =>
