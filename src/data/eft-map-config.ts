@@ -58,6 +58,12 @@ export interface EftMapConfig {
   tileMarkers?: boolean;
   /** Тайловая карта: версия для cache-busting (?v=). Бампать при перенарезке тех же URL, чтобы обойти кэш браузера. */
   tileVersion?: number;
+  /**
+   * Тайловая карта: аффин game→canvas [a,b,c,d,e,f] (canvasX=a·x+b·z+c, canvasY=d·x+e·z+f) —
+   * калибровка для «Позиция по Скриншоту» (метки тайловых в canvas-space 0–256, скрин даёт игровые).
+   * Считается из опорных точек (src/lib/map-calibration.solveAffine). SVG-картам не нужен (CRS проецирует сам).
+   */
+  worldTransform?: [number, number, number, number, number, number];
   /** Статик/тайл-карта: включить редактор editorial-маркеров (визард). Требует строку в maps(id) + права. */
   editorial?: boolean;
   /** Показывать ТОЛЬКО активную палубу: соседние <g>-этажи полностью скрыты (Ледокол — палубы стопкой, иначе сливаются). */
@@ -238,6 +244,9 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64 без добивки; bounds через unproject во вьюере
     tileExt: "jpg", // непрозрачные JPG (цветной фон #141416) — тайлы сплошные, без «пустых» прозрачных
     tileVersion: 9, // cache-bust: бампать при каждой перенарезке тех же URL (v7: перерезка ground 2026-08-15)
+    // game→canvas для «Позиция по Скриншоту» (scripts/calibrate-factory.ts, 11 опор, макс. невязка 1.13 ед ≈ 0.7 м,
+    // 2026-08-15). Почти поворот 90° + масштаб ~1.70: canvasX≈−1.704·gameZ+125.18, canvasY≈1.705·gameX−135.21.
+    worldTransform: [0.004147, -1.704051, 125.176689, 1.704821, -0.002845, -135.213025],
     editorial: true, // визард editorial-маркеров: V4DYA ставит метки на живой карте → editorial_markers
     displayName: "Завод",
     groundName: "1-й этаж (земля)",

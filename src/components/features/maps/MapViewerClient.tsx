@@ -26,7 +26,8 @@ import { useSquad } from './useSquad';
 import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
 import { ExtractCard } from './ExtractCard';
-import { floorIndexForHeight } from '@/lib/eft-screenshot';
+import { floorIndexForHeight, parseScreenshotName } from '@/lib/eft-screenshot';
+import { applyAffine } from '@/lib/map-calibration';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
 import { markerColor, isItemId, LINK_KIND_COLOR } from '@/data/map-marker-icons';
@@ -615,6 +616,7 @@ export function MapViewerClient({
   const coordBoxRef = useRef<HTMLDivElement | null>(null);
   const coordXRef = useRef<HTMLSpanElement | null>(null);
   const coordYRef = useRef<HTMLSpanElement | null>(null);
+  const screenshotInputRef = useRef<HTMLInputElement | null>(null); // скрытый пикер PNG для «Позиция по Скриншоту»
   const startMove = () => {
     if (activeMarker?.id || activeMarker?.sourceMarkerId) {
       setAddMode(false); // не смешивать с постановкой (её клик-хендлер конфликтует с move)
@@ -2057,6 +2059,7 @@ export function MapViewerClient({
         if (b) map.fitBounds(b);
       },
       toggleLayer: (key) => useMapViewStore.getState().toggleFilter(key),
+      pickScreenshotMarker: () => screenshotInputRef.current?.click(),
     };
     onReady?.(api);
 
@@ -2136,6 +2139,71 @@ export function MapViewerClient({
     // Фолбэк на bb(cfg.bounds), если карта ещё не смонтирована.
     const b = imgBoundsRef.current ?? (data.config.bounds ? bb(data.config.bounds) : null);
     if (b) mapRef.current?.fitBounds(b);
+  };
+
+  // «Позиция по Скриншоту»: PNG из рейда → поза из имени → позиция на ТЕКУЩЕЙ карте → черновик+визард.
+  // Резолвер: тайл+worldTransform → аффин game→canvas; SVG (transform, не тайл) → игровые напрямую.
+  const onScreenshotFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // сброс — чтобы повторный выбор того же файла тоже стрелял onChange
+    if (!file || !mapId) return;
+    const cfg = data.config;
+    const pose = parseScreenshotName(file.name);
+    if (!pose) {
+      failOverlay('Координаты не распознаны', 'В имени файла нет позиции. Это скриншот из рейда EFT (не из меню)?');
+      return;
+    }
+    // Позиция в системе координат меток текущей карты.
+    let pos: { x: number; z: number } | null = null;
+    if (cfg.tileBase) {
+      if (cfg.worldTransform) pos = applyAffine(cfg.worldTransform, pose.x, pose.z);
+      else { failOverlay('Нет калибровки', 'Для этой карты ещё не задан worldTransform (game→холст).'); return; }
+    } else if (cfg.transform) {
+      pos = { x: pose.x, z: pose.z }; // SVG: метки в игровых координатах, CRS проецирует сам
+    } else {
+      failOverlay('Карта без проекции', 'Здесь нельзя вычислить позицию по координатам.');
+      return;
+    }
+    // Валидация «тот ли это скрин»: позиция в РЕАЛЬНЫХ границах карты (imgBounds — то же пространство,
+    // где рисуются метки; cfg.bounds у тайловых приблизительны и с др. знаком по Y). +10% допуск.
+    const mapBounds = imgBoundsRef.current;
+    if (mapBounds && !mapBounds.pad(0.1).contains(L.latLng(pos.z, pos.x))) {
+      failOverlay('Скрин не с этой локации', 'Координаты вне границ карты. Открой карту, где сделан скрин.');
+      return;
+    }
+    const floor = floorIndexForHeight(floors, pose.y);
+    // Скрин заливаем в медиатеку (webp на сервере) и прикрепляем первым фото. Промах заливки не блокирует метку.
+    let shotUrl: string | null = null;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('alt', `Позиция по скриншоту — ${cfg.displayName ?? data.slug}`);
+      const res = await fetch('/api/admin/media', { method: 'POST', body: fd });
+      if (res.ok) shotUrl = (await res.json())?.item?.url ?? null;
+    } catch {
+      /* заливка не удалась — ставим метку без фото, куратор добавит вручную */
+    }
+    onRequestFloor?.(floor); // показать нужный этаж, чтобы черновик был в контексте
+    setAddMode(false);
+    setOpenEditorialId(null);
+    setPendingMarker({
+      mapId,
+      x: pos.x,
+      z: pos.z,
+      y: pose.y,
+      floor,
+      type: 'poi',
+      category: null,
+      title: '',
+      description: null,
+      screenshots: shotUrl ? [shotUrl] : [],
+      linkKind: 'none',
+      linkId: null,
+      linkStep: null,
+      linkedQuest: null,
+    });
+    // Подлёт камеры к распознанной позиции — куратор сразу видит, куда встала метка.
+    mapRef.current?.flyTo(ll(pos), Math.min(cfg.maxZoom, 5), { duration: 0.6 });
   };
 
   const setGroup = (keys: string[], value: boolean) =>
@@ -2451,6 +2519,9 @@ export function MapViewerClient({
       )}
 
       {/* Мобильный шит «Инструменты» (M2) — режимы правки/линейка/GPS из useMapUiStore + трекер. */}
+      {/* Скрытый пикер PNG для «Позиция по Скриншоту» (кнопка — в MapTopBar, дёргает api.pickScreenshotMarker). */}
+      <input ref={screenshotInputRef} type="file" accept="image/png" className="hidden" onChange={onScreenshotFile} />
+
       <MapToolsSheet canEditMarkers={!isStatic && canEditMarkers} tracker={tracker} />
 
       {/* Зум — левый край по центру (десктоп-only: на мобилке зум пинчем, по макету кнопок нет). */}

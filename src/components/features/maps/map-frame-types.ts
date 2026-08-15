@@ -15,6 +15,8 @@ export interface MapViewerApi {
   focusPoints(points: { x: number; z: number }[]): void;
   /** ПКМ по типу/слою: подлёт к ближайшему объекту, повтор — к следующему по циклу (как в Легенде). */
   cycleToLayer(keys: string[]): void;
+  /** «Позиция по Скриншоту»: открыть файл-пикер PNG → поза из имени → черновик метки + визард. */
+  pickScreenshotMarker(): void;
 }
 
 /** Статистика босса для BottomBar. */

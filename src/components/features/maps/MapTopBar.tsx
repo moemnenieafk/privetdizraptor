@@ -1,6 +1,6 @@
 'use client';
 
-import { Layers, MapPin, Maximize, Minimize, Ruler, SquarePen, Trash2, Users } from 'lucide-react';
+import { Layers, MapPin, MapPinned, Maximize, Minimize, Ruler, SquarePen, Trash2, Users } from 'lucide-react';
 import { MapNavDropdown, type NavMapItem } from './MapNavDropdown';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useSquadStore } from '@/store/useSquadStore';
@@ -13,6 +13,10 @@ interface Props {
   onToggleFullscreen: () => void;
   /** admin/editor — показывать инструменты правки маркеров (постановка/оверрайд/удаление). */
   canEditMarkers?: boolean;
+  /** «Позиция по Скриншоту»: открыть файл-пикер (дёргает api.pickScreenshotMarker во вьюере). */
+  onPickScreenshot?: () => void;
+  /** Возможна ли постановка по координатам на этой карте (SVG с transform или тайл с worldTransform). */
+  screenshotSupported?: boolean;
 }
 
 /** Кнопка-тоггл бара — 36×36 (h-9 w-9), иконка 22px, фон #242426 (card-menu), обводка #313135. */
@@ -28,7 +32,7 @@ const toggleCls = (active: boolean): string =>
  * [линейка · плашка-выпадашка 536×56 · фуллскрин] с гэпами 14px · слои (право, 36×36).
  * flex-1 по краям центрируют группу; поиск липнет к левому краю, слои — к правому.
  */
-export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, canEditMarkers }: Props) {
+export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, canEditMarkers, onPickScreenshot, screenshotSupported }: Props) {
   const layersOpen = useMapUiStore((s) => s.layersOpen);
   const toggleLayers = useMapUiStore((s) => s.toggleLayers);
   const searchOpen = useMapUiStore((s) => s.searchOpen);
@@ -73,6 +77,22 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
         {hasLayers && (
           <button type="button" onClick={toggleRuler} title="Линейка — замер расстояния (ЛКМ точки, ПКМ сброс)" aria-label="Линейка" className={toggleCls(rulerActive)}>
             <Ruler className="h-5.5 w-5.5" />
+          </button>
+        )}
+        {canEdit && (
+          <button
+            type="button"
+            onClick={onPickScreenshot}
+            disabled={!screenshotSupported}
+            title={
+              screenshotSupported
+                ? 'Позиция по скриншоту — выбрать PNG из рейда, координаты из имени файла'
+                : 'Позиция по скриншоту недоступна: нет калибровки координат этой карты'
+            }
+            aria-label="Позиция по скриншоту"
+            className={`${toggleCls(false)} disabled:cursor-not-allowed disabled:opacity-40`}
+          >
+            <MapPinned className="h-5.5 w-5.5" />
           </button>
         )}
         {canEdit && (

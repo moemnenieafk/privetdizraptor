@@ -230,7 +230,15 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
       {/* Десктопный тулбар — плавающий оверлей поверх карты (край-в-край): бар прозрачный,
           сквозь него видно карту. Прячем на мобилке (там своя лента в MobileMapBar). */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-30 hidden lg:block">
-        <MapTopBar data={data} navMaps={navMaps} isFullscreen={isFullscreen} onToggleFullscreen={toggle} canEditMarkers={canEditMarkers} />
+        <MapTopBar
+          data={data}
+          navMaps={navMaps}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggle}
+          canEditMarkers={canEditMarkers}
+          onPickScreenshot={() => apiRef.current?.pickScreenshotMarker()}
+          screenshotSupported={data.config.tileBase ? !!data.config.worldTransform : !!data.config.transform}
+        />
       </div>
 
       {/* Левый drawer «ПОИСК НА ЛОКАЦИИ» (десктоп) — оверлей поверх карты, карту не двигает.
