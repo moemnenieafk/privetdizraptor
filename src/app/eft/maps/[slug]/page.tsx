@@ -46,6 +46,11 @@ const RENDER_TYPES = new Set([
 // Порог прореживания: макс. обычных PMC/Scav-спавнов на зону (боссы/свита/снайпер/rogue не режутся).
 const SPAWN_CAP_PER_ZONE = 2;
 
+// id-предметы editorial-loot-метки для цвета редкости/имени: пул lootItems + сам category-предмет
+// (loot с item-id). Без category у loose-loot без пула фон/имя не резолвились → «пропадал фон при правке».
+const lootIdsOf = (type: string, category: string | null, lootItems: string[] | null): string[] =>
+  [...new Set([...(lootItems ?? []), ...(type === 'loot' && isItemId(category) ? [category as string] : [])])];
+
 // Детальная карта локации. Есть интерактивные данные + конфиг проекции → Leaflet-фрейм,
 // иначе — умная заглушка (карты без SVG-подложки / не интерактивные).
 export default async function MapPage({ params, searchParams }: Props) {
@@ -130,11 +135,6 @@ export default async function MapPage({ params, searchParams }: Props) {
       const storyTitle = new Map(Object.values(STORY_WALKTHROUGHS).map((s) => [s.slug, s.title]));
       // Каталог для имён лут-пулов (id→{name,shortName}) — лениво, только если на карте есть пул.
       // shortName для показа в карточке/заголовке (компактно), name — для поиска по спискам (bridge).
-      // id-предметы для цвета редкости/имени: пул lootItems + сам category-предмет (loot с item-id).
-      // Раньше строили ТОЛЬКО из lootItems, поэтому у loose-loot метки без пула (напр. синканная,
-      // переведённая в editorial через syncedToEditorial) фон/имя не резолвились → «пропадал фон при правке».
-      const lootIdsOf = (type: string, category: string | null, lootItems: string[] | null): string[] =>
-        [...new Set([...(lootItems ?? []), ...(type === 'loot' && isItemId(category) ? [category as string] : [])])];
       const hasLootItem = rows.some((r) => !r.hidden && lootIdsOf(r.type, r.category, r.lootItems ?? null).length > 0);
       const catById = hasLootItem ? new Map((await getEftCatalog()).map((i) => [i.id, i])) : null;
       // Цвет редкости (backgroundColor) лут-предметов — из зеркала цен, для ячейки-иконки 56×56 в карточке.
@@ -392,6 +392,8 @@ export default async function MapPage({ params, searchParams }: Props) {
       const itemNameById = new Map(catalog.map((i) => [i.id, i.name]));
       const editorialMarkers: EditorialMarkerData[] = editorialRows.filter((r) => !r.hidden).map((r) => {
         const q = r.linkKind === 'quest' && r.linkId ? questById.get(r.linkId) : undefined;
+        // Фон редкости/имена для loose-loot ячейки: пул lootItems + сам category-предмет (см. lootIdsOf).
+        const lootIds = lootIdsOf(r.type, r.category, r.lootItems ?? null);
         return {
           id: r.id,
           mapId: r.mapId,
@@ -411,6 +413,13 @@ export default async function MapPage({ params, searchParams }: Props) {
           polygon: r.polygon ?? null,
           sourceMarkerId: r.sourceMarkerId,
           hidden: r.hidden,
+          lootItems: r.lootItems ?? null,
+          lootItemLabels: lootIds.length
+            ? Object.fromEntries(lootIds.map((id) => [id, itemNameById.get(id) ?? '']))
+            : null,
+          lootItemBg: lootIds.length
+            ? Object.fromEntries(lootIds.map((id) => [id, priceIndex.get(id)?.backgroundColor ?? '']))
+            : null,
           linkedQuest: q
             ? {
                 name: q.name,
