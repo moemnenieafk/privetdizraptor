@@ -5,7 +5,7 @@ import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
 import { getMarkedRoomsForMap } from '@/db/marked-rooms';
 import { getEftPriceIndex } from '@/db/prices';
 import { getEftCatalog } from '@/lib/eft-catalog';
-import { bossIconUrl, bossPortraitKey, GOONS_FILES } from '@/data/map-marker-icons';
+import { bossIconUrl, bossPortraitKey, GOONS_FILES, isItemId } from '@/data/map-marker-icons';
 import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
 import { getManualMarkers } from '@/data/map-markers';
 import { classifyLoot15 } from '@/data/map-markers/loot-15';
@@ -130,14 +130,20 @@ export default async function MapPage({ params, searchParams }: Props) {
       const storyTitle = new Map(Object.values(STORY_WALKTHROUGHS).map((s) => [s.slug, s.title]));
       // Каталог для имён лут-пулов (id→{name,shortName}) — лениво, только если на карте есть пул.
       // shortName для показа в карточке/заголовке (компактно), name — для поиска по спискам (bridge).
-      const hasLootPool = rows.some((r) => !r.hidden && r.lootItems && r.lootItems.length > 0);
-      const catById = hasLootPool ? new Map((await getEftCatalog()).map((i) => [i.id, i])) : null;
+      // id-предметы для цвета редкости/имени: пул lootItems + сам category-предмет (loot с item-id).
+      // Раньше строили ТОЛЬКО из lootItems, поэтому у loose-loot метки без пула (напр. синканная,
+      // переведённая в editorial через syncedToEditorial) фон/имя не резолвились → «пропадал фон при правке».
+      const lootIdsOf = (type: string, category: string | null, lootItems: string[] | null): string[] =>
+        [...new Set([...(lootItems ?? []), ...(type === 'loot' && isItemId(category) ? [category as string] : [])])];
+      const hasLootItem = rows.some((r) => !r.hidden && lootIdsOf(r.type, r.category, r.lootItems ?? null).length > 0);
+      const catById = hasLootItem ? new Map((await getEftCatalog()).map((i) => [i.id, i])) : null;
       // Цвет редкости (backgroundColor) лут-предметов — из зеркала цен, для ячейки-иконки 56×56 в карточке.
-      const priceIndex = hasLootPool ? await getEftPriceIndex() : null;
+      const priceIndex = hasLootItem ? await getEftPriceIndex() : null;
       editorialMarkers = rows
         .filter((r) => !r.hidden)
         .map((r) => {
           const q = r.linkKind === 'quest' && r.linkId ? questById.get(r.linkId) : undefined;
+          const lootIds = lootIdsOf(r.type, r.category, r.lootItems ?? null);
           return {
             id: r.id, mapId: r.mapId, x: r.x, z: r.z, y: r.y, floor: r.floor,
             type: r.type, category: r.category, faction: r.faction, title: r.title,
@@ -146,12 +152,12 @@ export default async function MapPage({ params, searchParams }: Props) {
             polygon: r.polygon ?? null, sourceMarkerId: r.sourceMarkerId, hidden: r.hidden,
             lootItems: r.lootItems ?? null,
             lootItemLabels:
-              r.lootItems && r.lootItems.length > 0 && catById
-                ? Object.fromEntries(r.lootItems.map((id) => [id, catById.get(id)?.shortName || catById.get(id)?.name || '']))
+              lootIds.length && catById
+                ? Object.fromEntries(lootIds.map((id) => [id, catById.get(id)?.shortName || catById.get(id)?.name || '']))
                 : null,
             lootItemBg:
-              r.lootItems && r.lootItems.length > 0 && priceIndex
-                ? Object.fromEntries(r.lootItems.map((id) => [id, priceIndex.get(id)?.backgroundColor ?? '']))
+              lootIds.length && priceIndex
+                ? Object.fromEntries(lootIds.map((id) => [id, priceIndex.get(id)?.backgroundColor ?? '']))
                 : null,
             linkedQuest: q
               ? {
