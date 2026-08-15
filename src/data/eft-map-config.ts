@@ -237,7 +237,7 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     groundTile: "ground",
     tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64 без добивки; bounds через unproject во вьюере
     tileExt: "jpg", // непрозрачные JPG (цветной фон #141416) — тайлы сплошные, без «пустых» прозрачных
-    tileVersion: 6, // cache-bust: бампать при каждой перенарезке тех же URL
+    tileVersion: 8, // cache-bust: бампать при каждой перенарезке тех же URL (v7: перерезка ground 2026-08-15)
     editorial: true, // визард editorial-маркеров: V4DYA ставит метки на живой карте → editorial_markers
     displayName: "Завод",
     groundName: "1-й этаж (земля)",

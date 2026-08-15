@@ -27,10 +27,10 @@ const SPECS = {
     quality: 88,
     expect: 16384,                            // ожидаемая сторона мастера (квадрат)
     floors: [
-      { file: '00-Factory-Basement_minus1lvl.jpg', folder: 'basement' },
-      { file: '01-Factory-GroundFloor_1lvl.jpg', folder: 'ground' },
-      { file: '02-Factory-SecondFloor_2lvl.jpg', folder: 'second' },
-      { file: '03-Factory-ThirdFloor_3lvl.jpg', folder: 'third' },
+      { file: 'basement.jpg', folder: 'basement' },
+      { file: 'ground.jpg', folder: 'ground' },
+      { file: '2nd-floor.jpg', folder: 'second' },
+      { file: '3rd-floor.jpg', folder: 'third' },
     ],
   },
 };
