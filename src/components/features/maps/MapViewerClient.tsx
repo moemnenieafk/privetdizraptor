@@ -101,6 +101,24 @@ const spawnKind = (m: MapViewMarker): string => {
 /** Иконка маркера вьюера — через общий резолвер (webp/svg/плейсхолдер), без подписи (она в тултипе). */
 const markerDivIcon = (m: MapViewMarker): L.DivIcon => manualMarkerIcon(m, false, false);
 
+/**
+ * Гейт видимости меченых комнат по этажу (многоэтажные/тайловые карты).
+ * Каждая группа `[data-room]` в SVG-оверлее несёт `data-floor` (индекс этажа). Показываем группу
+ * только на своём этаже; группу без `data-floor` считаем всеэтажной. Возвращает true, если на
+ * `floor` есть хоть одна видимая комната — по этому флагу решаем, крепить ли сам оверлей к карте.
+ */
+function roomOverlayHasFloor(svgEl: SVGSVGElement, floor: number): boolean {
+  const groups = svgEl.querySelectorAll<SVGGElement>('[data-room]');
+  let anyVisible = false;
+  groups.forEach((g) => {
+    const raw = g.getAttribute('data-floor');
+    const on = raw == null || raw === '' || Number(raw) === floor;
+    g.style.display = on ? '' : 'none';
+    if (on) anyVisible = true;
+  });
+  return anyVisible;
+}
+
 /** Иконка editorial-маркера — единая для слоя карты и курсора move-режима. */
 // Бейдж-подсказка «метка на другом этаже»: 16×16 иконка лестницы рядом с полупрозрачной каплей.
 const UPSTAIRS_ICON = '/icons/eft/01-maps/markers/upstairs-icon.svg';
@@ -346,6 +364,11 @@ export function MapViewerClient({
   // Вектор-оверлей поверх тайлов (гибрид «тайлы+вектор»): резкие контуры на любом зуме.
   const vectorOverlayRef = useRef<L.SVGOverlay | null>(null);
   const vectorTokenRef = useRef(0); // гонка: быстрый свап этажей отменяет устаревший fetch
+  // Оверлей меченых комнат (SVG-контуры, кликабельны → страница комнаты). Гейт по этажу: для
+  // многоэтажных/тайловых карт каждая комната знает свой этаж (data-floor на группе) и видна
+  // только на нём; для одноэтажных SVG-карт слой виден всегда (roomOverlayMultiFloorRef=false).
+  const roomOverlayRef = useRef<L.SVGOverlay | null>(null);
+  const roomOverlayMultiFloorRef = useRef(false);
   // Слой маркеров поверх тайлов (поэтажный SVG из /markers): выходы/спавны/замки и т.п.
   // Интерактивные метки HD-карты (из распарсенной разметки): слой + датасет по этажам.
   const hdMarkerLayerRef = useRef<L.LayerGroup | null>(null);
@@ -1784,7 +1807,12 @@ export function MapViewerClient({
 
     // Оверлей МЕЧЕНЫХ КОМНАТ: тонкий SVG (тот же viewBox/bounds арта → ложится пиксель-в-пиксель),
     // кликабельный → страница комнаты. 404 для карт без меченок — просто пропускаем. Слой снимет map.remove().
-    if (!isStatic && imgBounds) {
+    // Грузим для обычных SVG-карт (!isStatic) И для тайловых/editorial-статик-карт (Завод и пр.),
+    // у которых imgBounds уже посчитан выше. Многоэтажность → гейт по data-floor группы (см. эффект ниже).
+    const wantsRoomOverlay = (!isStatic || isTiled || data.config.editorial) && !!imgBounds;
+    const multiFloorMap = isTiled || floors.length > 1;
+    roomOverlayMultiFloorRef.current = multiFloorMap;
+    if (wantsRoomOverlay && imgBounds) {
       fetch(`/images/maps/eft/marked-rooms/${data.slug}.svg`)
         .then((r) => (r.ok ? r.text() : Promise.reject(new Error('нет меченок'))))
         .then((txt) => {
@@ -1792,7 +1820,10 @@ export function MapViewerClient({
           const doc = new DOMParser().parseFromString(txt, 'image/svg+xml');
           const svgEl = doc.documentElement as unknown as SVGSVGElement;
           if (svgEl.nodeName.toLowerCase() !== 'svg') return;
-          L.svgOverlay(svgEl, imgBounds, { interactive: false, className: 'cta-marked-rooms' }).addTo(map);
+          const overlay = L.svgOverlay(svgEl, imgBounds, { interactive: false, className: 'cta-marked-rooms' });
+          roomOverlayRef.current = overlay;
+          // Многоэтажная карта: показать оверлей только если на активном этаже есть комната этого этажа.
+          if (!multiFloorMap || roomOverlayHasFloor(svgEl, activeFloorRef.current)) overlay.addTo(map);
           svgEl.addEventListener('click', (e) => {
             const room = (e.target as Element | null)?.closest?.('[data-room]')?.getAttribute('data-room');
             if (room) router.push(`/eft/maps/${data.slug}/rooms/${room}`);
@@ -2125,6 +2156,7 @@ export function MapViewerClient({
       hdMarkerLayerRef.current = null;
       hdMarkerDataRef.current = null;
       setTileFloorRef.current = null;
+      roomOverlayRef.current = null;
       setMapInst(null);
     };
   }, [data, onReady, floors, isStatic, router]);
@@ -2139,6 +2171,22 @@ export function MapViewerClient({
     const img = floors[activeFloor]?.image;
     if (img) loadImageRef.current?.(img);
   }, [activeFloor, isStatic, isTiled, floors]);
+
+  // Оверлей меченых комнат на многоэтажной/тайловой карте: показываем только комнаты активного этажа
+  // (data-floor группы). Одноэтажные SVG-меченки (roomOverlayMultiFloorRef=false) не трогаем — видны всегда.
+  useEffect(() => {
+    const map = mapRef.current;
+    const overlay = roomOverlayRef.current;
+    if (!map || !overlay || !roomOverlayMultiFloorRef.current) return;
+    const svgEl = overlay.getElement() as SVGSVGElement | null;
+    if (!svgEl) return;
+    const anyVisible = roomOverlayHasFloor(svgEl, activeFloor);
+    if (anyVisible) {
+      if (!map.hasLayer(overlay)) overlay.addTo(map);
+    } else if (map.hasLayer(overlay)) {
+      map.removeLayer(overlay);
+    }
+  }, [activeFloor, mapInst]);
 
   // «Правка» (только статик): прячем боевой слой маркеров — его заменяет редактор.
   useEffect(() => {
