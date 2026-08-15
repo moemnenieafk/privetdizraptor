@@ -83,10 +83,12 @@ interface Props {
   /** ФАЗА 0 единой системы (unified-markers.md): editorial на языке MapViewMarker — подмешиваем
    *  в деривации секций «Контейнеры»/«Случайная добыча», чтобы Wizard-маркеры давали свои тайлы. */
   editorialBridge?: MapViewMarker[];
+  /** Меченые комнаты, переданные напрямую (статик/тайл-карты без lock-маркеров с roomHref). */
+  markedRooms?: { href: string; name: string; keyId: string | null; bg: string | null }[];
   apiRef: React.RefObject<MapViewerApi | null>;
 }
 
-export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMarkers, editorialBridge, apiRef }: Props) {
+export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMarkers, editorialBridge, markedRooms, apiRef }: Props) {
   const open = useMapUiStore((s) => s.searchOpen);
   const setOpen = useMapUiStore((s) => s.setSearchOpen);
   // Видимость слоёв — общий стор: тогглы фильтруют карту и синхронны с правой легендой (GRILL-2 §3).
@@ -106,8 +108,14 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
       seen.add(m.roomHref);
       out.push({ href: m.roomHref, name: markedRoomName(m.label ?? null), keyId: m.linkedItemId ?? null, bg: m.itemBg ?? null });
     }
+    // Прямо переданные комнаты (статик/тайл-карты без lock-маркеров с roomHref, напр. Завод).
+    for (const r of markedRooms ?? []) {
+      if (seen.has(r.href)) continue;
+      seen.add(r.href);
+      out.push(r);
+    }
     return out;
-  }, [allMarkers]);
+  }, [allMarkers, markedRooms]);
   // Контейнеры ЭТОЙ карты — из РЕАЛЬНЫХ маркеров (не статик-список): ТАЙЛ НА КАЖДЫЙ ТИП (по containerFile).
   // Оруж.ящики разных размеров — РАЗНЫМИ тайлами (иконки/вместимость различаются). key=file: и иконка
   // (container-<file>.webp), и ключ слоя карты (container-<file>) для фильтра (ЛКМ) и ПКМ-цикла.

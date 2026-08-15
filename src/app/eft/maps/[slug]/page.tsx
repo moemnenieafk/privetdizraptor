@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
 import { getEftMapData, getEftInteractiveMapsWithNames } from '@/db/maps';
-import { getMarkedRoomsForMap } from '@/db/marked-rooms';
+import { getMarkedRoomsForMap, getMarkedRoomsForMapSlug } from '@/db/marked-rooms';
 import { getEftPriceIndex } from '@/db/prices';
 import { getEftCatalog } from '@/lib/eft-catalog';
 import { bossIconUrl, bossPortraitKey, GOONS_FILES, isItemId } from '@/data/map-marker-icons';
@@ -111,6 +111,19 @@ export default async function MapPage({ params, searchParams }: Props) {
       config,
       markers,
     };
+    // Меченые комнаты карты → секция «Поиск на локации» (статик/тайл-карты без lock-маркеров с
+    // roomHref; синканные карты вешают комнаты через сами маркеры в data.asset-ветке). Резолвер
+    // разводит дубль-map-id Завода (комнаты на синканной карте, маршрут — на тайловой).
+    const roomRows = await getMarkedRoomsForMapSlug(slug);
+    if (roomRows.length) {
+      const pi = priceIndex ?? (await getEftPriceIndex());
+      view.markedRooms = roomRows.map((r) => ({
+        href: `/eft/maps/${slug}/rooms/${r.slug}`,
+        name: r.title,
+        keyId: r.keyItemId ?? null,
+        bg: r.keyItemId ? (pi.get(r.keyItemId)?.backgroundColor ?? null) : null,
+      }));
+    }
     // Дедуп навигации: промоутнутый в staticMap `factory` есть и в БД (интерактивная строка),
     // и в конфиге → БД выигрывает, иначе дубль slug в дропдауне (тот же приём, что на /eft/maps).
     const dbNav = await getEftInteractiveMapsWithNames();

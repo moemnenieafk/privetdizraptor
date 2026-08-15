@@ -60,4 +60,7 @@ export interface MapView {
   spawns?: string | null;
   config: EftMapConfig;
   markers: MapViewMarker[];
+  /** Меченые комнаты карты для секции в «Поиск на локации» (статик/тайл-карты, где нет lock-маркеров
+   *  с roomHref; синканные карты вешают комнаты через сами маркеры). null/пусто — секции нет. */
+  markedRooms?: { href: string; name: string; keyId: string | null; bg: string | null }[];
 }

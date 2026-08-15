@@ -271,6 +271,25 @@ export async function getMarkedRoomsForMap(mapId: string): Promise<MarkedRoomRow
     .where(and(eq(markedRooms.gameId, eft.id), eq(markedRooms.mapId, mapId)));
 }
 
+/**
+ * Меченые комнаты по slug карты (для секции в «Поиск на локации» на статик/тайл-картах).
+ * Разводит дубль normalizedName (Завод: тайловая `factory` + синканная `55f2…`) — берёт комнаты
+ * со ВСЕХ одноимённых карт (сид может лежать на синканной, а маршрут — на тайловой).
+ */
+export async function getMarkedRoomsForMapSlug(mapSlug: string): Promise<MarkedRoomRow[]> {
+  const [eft] = await db.select().from(games).where(eq(games.code, "eft"));
+  if (!eft) return [];
+  const mapRows = await db
+    .select()
+    .from(maps)
+    .where(and(eq(maps.gameId, eft.id), eq(maps.normalizedName, mapSlug)));
+  if (mapRows.length === 0) return [];
+  return db
+    .select()
+    .from(markedRooms)
+    .where(and(eq(markedRooms.gameId, eft.id), inArray(markedRooms.mapId, mapRows.map((m) => m.id))));
+}
+
 /** Полное представление комнаты по slug карты + slug комнаты. null — не найдена. */
 export async function getMarkedRoomBySlug(mapSlug: string, roomSlug: string): Promise<MarkedRoomView | null> {
   const [eft] = await db.select().from(games).where(eq(games.code, "eft"));
