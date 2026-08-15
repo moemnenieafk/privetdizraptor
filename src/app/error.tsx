@@ -21,7 +21,7 @@ export default function Error({
       <div className="flex w-full max-w-[800px] flex-col items-center px-4 text-center">
 
         <div className="relative mb-8 flex w-full items-center justify-center">
-          <span className="select-none font-blender-medium text-[120px] leading-none text-lines-hover opacity-50 md:text-[200px]">
+          <span className="select-none font-blender-medium text-[7.5rem] leading-none text-lines-hover opacity-50 md:text-[12.5rem]">
             500
           </span>
           <div className="absolute inset-0 flex flex-col items-center justify-center">

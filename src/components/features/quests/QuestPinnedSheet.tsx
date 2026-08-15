@@ -37,7 +37,7 @@ export function QuestPinnedSheet({ tasks, onFocus }: Props) {
 
   return (
     <BottomSheet open={open} title="Отслеживание прогресса" onClose={close}>
-      <p className="mb-2 text-center font-blender-medium text-[10px] uppercase tracking-widest text-tactical-amber">
+      <p className="mb-2 text-center font-blender-medium text-[0.625rem] uppercase tracking-widest text-tactical-amber">
         Список заданий для отслеживания прогресса
       </p>
 

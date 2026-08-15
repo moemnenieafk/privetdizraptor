@@ -118,7 +118,7 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
           >
             <Users className="h-5.5 w-5.5" />
             {squadRoom && squadCount > 1 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-nvg-green px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-nvg-green px-1 font-blender-medium text-[0.5625rem] text-(--color-base) tabular-nums">
                 {squadCount}
               </span>
             )}
@@ -146,7 +146,7 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
             >
               <SquarePen className="h-5.5 w-5.5" />
               {editCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--primary) px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--primary) px-1 font-blender-medium text-[0.5625rem] text-(--color-base) tabular-nums">
                   {editCount}
                 </span>
               )}
@@ -176,7 +176,7 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
           >
             <Trash2 className="h-5.5 w-5.5" />
             {deleteCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-blender-medium text-[9px] text-(--color-base) tabular-nums">
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 font-blender-medium text-[0.5625rem] text-(--color-base) tabular-nums">
                 {deleteCount}
               </span>
             )}

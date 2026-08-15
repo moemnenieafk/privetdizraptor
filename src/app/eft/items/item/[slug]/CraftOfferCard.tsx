@@ -57,7 +57,7 @@ export function CraftOfferCard({
           <span className="truncate font-blender-medium text-xs uppercase tracking-widest" style={{ color: accent }}>
             {recipe.station.name}
           </span>
-          <span className="font-blender-medium text-[10px] uppercase tracking-widest" style={{ color: accent }}>
+          <span className="font-blender-medium text-[0.625rem] uppercase tracking-widest" style={{ color: accent }}>
             Ур. {String(recipe.level).padStart(2, '0')}
           </span>
         </span>

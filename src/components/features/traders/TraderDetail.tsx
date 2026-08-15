@@ -24,7 +24,7 @@ export function TraderDetail({ trader }: { trader: Trader }) {
           ← Все торговцы
         </Link>
 
-        <div className="grid gap-6 md:grid-cols-[240px_1fr]">
+        <div className="grid gap-6 md:grid-cols-[15rem_1fr]">
           <div className="relative aspect-[3/4] w-full overflow-hidden rounded-md border border-lines-hover bg-(--color-darkbase)">
             <Image src={trader.image} alt={trader.nameRu} fill className="object-cover object-top" sizes="240px" priority />
           </div>
@@ -34,7 +34,7 @@ export function TraderDetail({ trader }: { trader: Trader }) {
               <h1 className="text-3xl md:text-4xl font-blender-medium uppercase tracking-widest text-text-primary">{trader.nameRu}</h1>
               <p className="text-sm uppercase tracking-widest text-text-muted">{trader.nameEn}</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-[15rem_1fr] gap-4">
               <Info label="Локация" value={trader.location} />
               <Info label="Валюта" value={trader.currency} />
               <Info label="Специализация" value={trader.specializes} />

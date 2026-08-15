@@ -83,7 +83,7 @@ export function RoomOpenSubmit({ roomId, mapSlug, roomSlug, lootItems }: Props) 
       >
         {busy ? 'Отправка…' : `[ Отправить на модерацию · ${ids.length} предм. ]`}
       </button>
-      <p className="mt-2 text-[10px] leading-relaxed text-text-muted">
+      <p className="mt-2 text-[0.625rem] leading-relaxed text-text-muted">
         На видео: ключ до отпирания, подбор предметов, FIR-галка в инвентаре, версия игры и дата. На слово не верим.
       </p>
     </div>

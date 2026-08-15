@@ -11,7 +11,17 @@ import { useStreamLive } from '@/hooks/useStreamLive';
 export default function StreamStatus({ mapVariant = false }: { mapVariant?: boolean }) {
   const { isLive, isLoading } = useStreamLive();
   const [isQuestFullscreen, setIsQuestFullscreen] = useState(false);
+  // Кнопка «Наверх» (ScrollToTop) появляется при scrollY>350 на bottom-18 в том же углу.
+  // Ловим тот же порог → уводим стрим-кнопку выше неё, чтобы в углу ничего не перекрывалось.
+  const [scrolled, setScrolled] = useState(false);
   const expandDock = useStreamDockStore((s) => s.expand);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 350);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const check = () =>
@@ -66,12 +76,11 @@ export default function StreamStatus({ mapVariant = false }: { mapVariant?: bool
     //     ⇒ центр кнопки совпадает с центром логотипа на любом разрешении;
     //   • left = центр гуттера ((100vw−1100)/4) − половина ширины кнопки (5rem) − доп-сдвиг влево 2rem
     //     (визуальный центр блока, дальше от логотипа); фолбэк 1.5rem держит гекс-скобку в кадре.
-    // Иначе (не Карты) — правый низ. Авто-центр в ПРАВОМ гуттере без магических констант:
-    //   обёртка разворачивается ровно на пустой блок (width = гуттер, right:0), items-center
-    //   центрирует кнопку внутри. Само подстраивается под любую ширину экрана.
+    // Иначе (не Карты) — магнитим в правый нижний угол, отступ 28px со всех сторон.
+    //   Когда виден «Наверх» (scrolled) — поднимаем над ним (bottom 120px), чтобы не перекрывались.
     <div
       className={`fixed hidden xl:flex flex-col gap-2 pointer-events-none ${
-        mapVariant ? 'items-start z-40' : 'bottom-4 items-center z-70'
+        mapVariant ? 'items-start z-40' : 'items-end z-70 transition-[bottom] duration-300'
       }`}
       style={
         mapVariant
@@ -79,7 +88,7 @@ export default function StreamStatus({ mapVariant = false }: { mapVariant?: bool
               top: 'calc(clamp(12px, 1.09vw, 21px) + 8px)',
               left: 'max(1.5rem, calc((100vw - 1100px) / 4 - 7rem))',
             }
-          : { right: 0, width: 'max(10rem, calc((100vw - 1100px) / 2))' }
+          : { right: '28px', bottom: scrolled ? '120px' : '28px' }
       }
     >
       {/* ═══ Кнопка-индикатор стрима ═══ */}

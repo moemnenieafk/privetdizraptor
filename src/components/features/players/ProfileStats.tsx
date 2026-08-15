@@ -148,7 +148,7 @@ export function ProfileStats({ view }: { view: PlayerView }) {
                 <span className="text-xl font-blender-medium leading-none text-(--primary)">
                   {total.survivalRate.toFixed(0)}%
                 </span>
-                <span className="mt-1 font-blender-book text-[10px] uppercase tracking-widest text-text-muted">Выжил</span>
+                <span className="mt-1 font-blender-book text-[0.625rem] uppercase tracking-widest text-text-muted">Выжил</span>
               </ProgressRing>
             </div>
             <div className="grid flex-1 grid-cols-3 gap-3">

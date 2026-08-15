@@ -20,13 +20,13 @@ export function ContainerContents({ grids }: { grids?: GridInfo[] }) {
   if (categories.size === 0 && items.size === 0) return null;
 
   return (
-    <section className="flex w-full max-w-[724px] flex-col gap-3.5">
+    <section className="flex w-full max-w-[45.25rem] flex-col gap-3.5">
       <SectionRule title="Вмещает" icon={<Boxes className="h-4 w-4" />} />
       <div className="flex flex-wrap items-center gap-2">
         {[...categories].map(([id, name]) => (
           <span
             key={`cat-${id}`}
-            className="inline-flex h-7 items-center rounded-sm border border-lines-hover bg-card-menu px-2 font-blender-medium text-[10px] uppercase tracking-widest text-text-secondary"
+            className="inline-flex h-7 items-center rounded-sm border border-lines-hover bg-card-menu px-2 font-blender-medium text-[0.625rem] uppercase tracking-widest text-text-secondary"
           >
             {name}
           </span>
@@ -34,7 +34,7 @@ export function ContainerContents({ grids }: { grids?: GridInfo[] }) {
         {[...items].map(([id, label]) => (
           <span
             key={`item-${id}`}
-            className="inline-flex h-7 items-center gap-1.5 rounded-sm border border-lines-hover bg-card-menu px-1.5 font-blender-medium text-[10px] uppercase tracking-widest text-text-secondary"
+            className="inline-flex h-7 items-center gap-1.5 rounded-sm border border-lines-hover bg-card-menu px-1.5 font-blender-medium text-[0.625rem] uppercase tracking-widest text-text-secondary"
           >
             <img src={itemIconUrl(id)} alt="" className="h-4 w-4 shrink-0 rounded-xs object-contain" />
             {label}

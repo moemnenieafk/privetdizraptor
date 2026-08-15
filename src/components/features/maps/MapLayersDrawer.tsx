@@ -217,7 +217,7 @@ export function MapLayersDrawer({
               </button>
             )}
           </div>
-          <p className="font-blender-medium text-[10px] text-text-secondary">
+          <p className="font-blender-medium text-[0.625rem] text-text-secondary">
             Доступна мульти-фильтрация, например: Платный, Босс, Опасности · <span className="text-(--primary)">Alt+клик</span> по категории — показать только её
           </p>
         </div>

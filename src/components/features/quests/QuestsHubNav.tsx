@@ -44,11 +44,11 @@ export function QuestsHubNav({
   activeHref,
 }: QuestsHubNavProps) {
   return (
-    <div className="w-full max-w-275 mx-auto flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-[28px] mb-8 lg:mb-12">
+    <div className="w-full max-w-275 mx-auto flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-7 mb-8 lg:mb-12">
 
       {/* Left Block: кастомный слот (трейдер+фильтры) или дефолтный заголовок */}
       {leftSlot ?? (
-      <div className="flex items-center gap-4 lg:gap-7 lg:w-[522px] lg:shrink-0">
+      <div className="flex items-center gap-4 lg:gap-7 lg:w-[32.625rem] lg:shrink-0">
         <div className="w-21 h-21 shrink-0 bg-(--color-darkbase) rounded-md flex items-center justify-center">
           <div className="text-(--primary) [&>svg]:fill-current [&>path]:fill-current">
             {iconUrl ? (
@@ -68,7 +68,7 @@ export function QuestsHubNav({
 
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
+            <h1 className="text-[1.75rem] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
               {title}
             </h1>
             {count != null && count > 0 && (
@@ -87,21 +87,21 @@ export function QuestsHubNav({
       )}
 
       {/* Right Block: фикс ширина = навигация при 6 иконках в ряд (эталон — торговцы, 404px), чтобы не прыгала */}
-      <div className="flex w-full flex-col gap-4 lg:w-[522px] lg:shrink-0">
+      <div className="flex w-full flex-col gap-4 lg:w-[32.625rem] lg:shrink-0">
         <div className="flex items-center gap-3">
           <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
             Навигация по разделу
           </span>
           <div className="flex-1 h-px bg-lines-hover" />
         </div>
-        <div className="flex flex-wrap lg:flex-nowrap gap-3.5 lg:gap-2">
+        <div className="flex flex-wrap lg:flex-nowrap gap-3.5 lg:gap-7">
           <div className="grid w-max grid-cols-6 gap-2">
             {tabs.map((tab) => (
               <QuestNavTab key={tab.id} tab={tab} activeHref={activeHref} />
             ))}
           </div>
           {subTabs && subTabs.length > 0 && (
-            <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-2">
+            <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-7">
               {subTabs.map((tab) => (
                 <QuestNavTab key={tab.id} tab={tab} activeHref={activeHref} />
               ))}

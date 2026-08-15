@@ -615,7 +615,7 @@ export function StoryWalkthroughView({
         <div className="flex min-w-0 flex-col gap-7">
           {/* Медиа: постер/карточка истории + галерея (у каждого шага) */}
           <div className="flex flex-col gap-3.5 sm:flex-row">
-            <div className="relative h-64 w-full overflow-hidden rounded border border-lines-hover bg-(--color-base) sm:h-[302px] sm:flex-1">
+            <div className="relative h-64 w-full overflow-hidden rounded border border-lines-hover bg-(--color-base) sm:h-[18.875rem] sm:flex-1">
               {mediaSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={mediaSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -693,7 +693,7 @@ export function StoryWalkthroughView({
 
             {/* Миниатюры */}
             {media.screenshots.length > 0 && (
-              <div className="flex h-24 gap-2 overflow-x-auto sm:h-[302px] sm:w-44 sm:flex-wrap sm:content-start sm:overflow-y-auto sm:overflow-x-hidden sm:pr-1 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--color-lines-hover)_55%,transparent)_transparent]">
+              <div className="flex h-24 gap-2 overflow-x-auto sm:h-[18.875rem] sm:w-44 sm:flex-wrap sm:content-start sm:overflow-y-auto sm:overflow-x-hidden sm:pr-1 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--color-lines-hover)_55%,transparent)_transparent]">
                 <button
                   type="button"
                   onClick={() => setShot(null)}
@@ -717,7 +717,7 @@ export function StoryWalkthroughView({
             )}
             {/* Заглушка «скриншоты скоро» — плитки-плейсхолдеры, пока галереи нет */}
             {media.screenshots.length === 0 && media.screenshotsSoon && (
-              <div className="flex h-24 flex-col gap-2 sm:h-[302px] sm:w-44">
+              <div className="flex h-24 flex-col gap-2 sm:h-[18.875rem] sm:w-44">
                 <div className="flex flex-1 flex-wrap content-start gap-2 overflow-hidden">
                   {[0, 1, 2, 3].map((i) => (
                     <div

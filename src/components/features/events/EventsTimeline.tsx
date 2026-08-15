@@ -167,7 +167,7 @@ export function EventsTimeline({ events, content = {}, statuses = {} }: EventsTi
           {groups.map((group) => (
             <section key={group.year}>
               <div className="mb-5 flex items-center gap-3">
-                <h2 className="shrink-0 font-blender-medium text-[28px] uppercase leading-none tracking-tighter text-text-primary">
+                <h2 className="shrink-0 font-blender-medium text-[1.75rem] uppercase leading-none tracking-tighter text-text-primary">
                   {group.year}
                 </h2>
                 <span className="shrink-0 font-blender-medium text-xs uppercase tracking-widest text-text-muted">

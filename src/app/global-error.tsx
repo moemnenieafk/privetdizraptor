@@ -15,7 +15,7 @@ export default function GlobalError({
     <html lang="ru">
       <body className="flex min-h-screen items-center justify-center bg-base antialiased">
         <main className="flex w-full max-w-lg flex-col items-center px-4 text-center">
-          <span className="select-none font-blender-medium text-[120px] leading-none text-lines-hover opacity-50">
+          <span className="select-none font-blender-medium text-[7.5rem] leading-none text-lines-hover opacity-50">
             500
           </span>
           <h1 className="font-blender-medium text-3xl uppercase tracking-widest text-danger">

@@ -55,7 +55,7 @@ export default async function LootContainerPage({ params }: { params: Promise<{ 
             <img src={containerImage(container.file)} alt="" className="h-16 w-16 object-contain" />
           </div>
           <div>
-            <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
+            <h1 className="text-[1.75rem] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
               {container.nameRu}
             </h1>
             <p className="mt-2 font-blender-book text-sm text-text-secondary">

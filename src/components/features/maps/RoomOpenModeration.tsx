@@ -74,8 +74,8 @@ export function RoomOpenModeration({ pending, mapSlug, roomSlug, lootItems }: Pr
                         <span className="text-xs text-text-secondary">{it.shortName || it.name}</span>
                       </span>
                     ))}
-                    {edits[o.id] && <span className="text-[10px] text-moderate">правлено: {edits[o.id].length}</span>}
-                    {o.gameVersion && <span className="text-[10px] text-text-muted">v{o.gameVersion}</span>}
+                    {edits[o.id] && <span className="text-[0.625rem] text-moderate">правлено: {edits[o.id].length}</span>}
+                    {o.gameVersion && <span className="text-[0.625rem] text-text-muted">v{o.gameVersion}</span>}
                   </div>
                 )}
                 {o.proofYoutubeUrl && (

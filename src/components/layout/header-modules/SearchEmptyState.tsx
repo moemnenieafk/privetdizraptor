@@ -2,7 +2,7 @@
 
 export function SearchEmptyState() {
   return (
-    <div className="relative flex w-full h-[240px] flex-col items-center justify-center overflow-hidden rounded border border-lines-hover bg-card-menu/30 shadow-inner animate-[fade-in-up_0.3s_ease-out]">
+    <div className="relative flex w-full h-[15rem] flex-col items-center justify-center overflow-hidden rounded border border-lines-hover bg-card-menu/30 shadow-inner animate-[fade-in-up_0.3s_ease-out]">
       <div className="pointer-events-none absolute inset-0 opacity-10 bg-hazard-pattern animate-hazard" />
       <div className="relative z-10 flex flex-col items-center text-center px-4">
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-lines-hover bg-(--color-base) shadow-[0_0_15px_rgba(0,0,0,0.5)]">

@@ -18,7 +18,7 @@ export default function FirStagePage() {
           <div className="text-type-label font-blender-medium uppercase tracking-widest text-text-secondary">
             Этап 04
           </div>
-          <h1 className="mt-1 text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">
+          <h1 className="mt-1 text-[1.75rem] font-blender-medium uppercase tracking-widest text-text-primary">
             Найдено в рейде
           </h1>
           <p className="mt-2 text-sm font-blender-book text-text-secondary">

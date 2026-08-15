@@ -23,7 +23,7 @@ export default async function ArcadePage() {
           <div className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
             Мини-игры
           </div>
-          <h1 className="mt-1 text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">
+          <h1 className="mt-1 text-[1.75rem] font-blender-medium uppercase tracking-widest text-text-primary">
             Зал автоматов
           </h1>
           <p className="mt-2 text-sm font-blender-book text-text-secondary">

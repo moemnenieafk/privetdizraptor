@@ -18,7 +18,7 @@ export default function SecureStagePage() {
           <div className="text-type-label font-blender-medium uppercase tracking-widest text-text-secondary">
             Этап 03
           </div>
-          <h1 className="mt-1 text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">
+          <h1 className="mt-1 text-[1.75rem] font-blender-medium uppercase tracking-widest text-text-primary">
             Не потеряй всё
           </h1>
           <p className="mt-2 text-sm font-blender-book text-text-secondary">
