@@ -21,6 +21,18 @@ const cleanName = (label: string): string =>
   label.replace(/\s*\(Мечен[^)]*\)\s*$/i, "").replace(/^Ключ(-карта)?\s+(от\s+)?/i, "").trim();
 const cap = (s: string): string => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
+// Явные override'ы по keyItemId — где авто-классификация/slug/title из label выходят кривыми.
+// «Ключ-карта от склада TerraGroup»: содержит «карт» → lockKind='keycard', в marked-набор НЕ попадает,
+// а у ключа-карты 2 лока (Завод 55f2… + Лаба 59fc…). Override и force-включает лок нужной карты,
+// и задаёт человеческие slug/title. mapId фиксирует, какой из локов сеем комнатой.
+const ROOM_OVERRIDES: Record<string, { slug: string; title: string; mapId: string }> = {
+  "66acd6702b17692df20144c0": {
+    slug: "sklad-terragroup",
+    title: "Склад Terragroup",
+    mapId: "55f2d3fd4bdc2d5f408b4567",
+  },
+};
+
 async function main() {
   const dry = process.argv.includes("--dry");
   const { db } = await import("../src/db/index.ts");
@@ -38,18 +50,23 @@ async function main() {
     .select()
     .from(markers)
     .where(and(eq(markers.source, "sync"), eq(markers.type, "lock")));
-  const marked = locks.filter(
-    (m) => lockKind({ category: m.category ?? undefined, label: m.label ?? undefined } as never) === "marked",
-  );
+  // Лок сеем комнатой, если lockKind='marked' ИЛИ он назван в override'е (тогда пиннится по mapId,
+  // чтобы из нескольких локов одного ключа взять именно нужную карту).
+  const marked = locks.filter((m) => {
+    const ov = m.linkedItemId ? ROOM_OVERRIDES[m.linkedItemId] : undefined;
+    if (ov) return m.mapId === ov.mapId;
+    return lockKind({ category: m.category ?? undefined, label: m.label ?? undefined } as never) === "marked";
+  });
 
   const seen = new Set<string>();
   const rows: (typeof markedRooms.$inferInsert)[] = [];
   const skipped: string[] = [];
   for (const m of marked) {
     if (!m.mapId || !mapIds.has(m.mapId)) { skipped.push(`${m.label} — нет карты ${m.mapId}`); continue; }
+    const override = m.linkedItemId ? ROOM_OVERRIDES[m.linkedItemId] : undefined;
     const base = cleanName(m.label ?? "");
-    const title = cap(base) || (m.label ?? "Меченая комната");
-    let slug = slugify(base) || `marked-${(m.linkedItemId ?? m.id).slice(-6)}`;
+    const title = override?.title ?? (cap(base) || (m.label ?? "Меченая комната"));
+    let slug = override?.slug ?? (slugify(base) || `marked-${(m.linkedItemId ?? m.id).slice(-6)}`);
     if (seen.has(`${m.mapId}::${slug}`)) slug = `${slug}-${(m.linkedItemId ?? m.id).slice(-4)}`;
     seen.add(`${m.mapId}::${slug}`);
     rows.push({

@@ -276,17 +276,29 @@ export async function getMarkedRoomBySlug(mapSlug: string, roomSlug: string): Pr
   const [eft] = await db.select().from(games).where(eq(games.code, "eft"));
   if (!eft) return null;
 
-  const [mapRow] = await db
+  // normalizedName может дублироваться (Завод: тайловая `factory` + синканная `55f2…` с локами/лутом).
+  // Резолвим комнату детерминированно: (gameId, slug) среди ВСЕХ карт игры с этим normalizedName,
+  // затем берём room.mapId для якоря/лута. Для однокарточных slug поведение прежнее.
+  const mapRows = await db
     .select()
     .from(maps)
     .where(and(eq(maps.gameId, eft.id), eq(maps.normalizedName, mapSlug)));
-  if (!mapRow) return null;
+  if (mapRows.length === 0) return null;
+  const mapById = new Map(mapRows.map((m) => [m.id, m]));
 
-  const [room] = await db
+  const roomCandidates = await db
     .select()
     .from(markedRooms)
-    .where(and(eq(markedRooms.gameId, eft.id), eq(markedRooms.mapId, mapRow.id), eq(markedRooms.slug, roomSlug)));
+    .where(
+      and(
+        eq(markedRooms.gameId, eft.id),
+        eq(markedRooms.slug, roomSlug),
+        inArray(markedRooms.mapId, mapRows.map((m) => m.id)),
+      ),
+    );
+  const room = roomCandidates[0];
   if (!room) return null;
+  const mapRow = mapById.get(room.mapId) ?? mapRows[0];
 
   // Якорь: синканный lock-маркер по (mapId, linkedItemId == keyItemId).
   let anchor: { x: number; z: number } | null = null;
