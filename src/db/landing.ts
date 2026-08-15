@@ -199,7 +199,7 @@ export async function syncEftLandingData(): Promise<SyncLandingResult> {
   // (инцидент factory-hd: метки исчезали после каждого landing-синка). Новую HD-карту дописывать сюда.
   // factory-hd — исходная HD-превью-строка; factory — боевая (промоут 2026-08-13, editorial-метки
   // переехали на неё, docs/decisions/factory-hd-promote.md). Обе защищены и триггером protect-custom-maps.sql.
-  const CUSTOM_MAP_IDS = ["factory-hd", "factory"];
+  const CUSTOM_MAP_IDS = ["factory-hd", "factory", "the-lab", "icebreaker", "labyrinth"];
   const aP = await pruneStale(achievements, achievements.id, achievements.gameId, gameId, a.map((x) => x.id), "achievements");
   const mP = await pruneStale(maps, maps.id, maps.gameId, gameId, [...m.map((x) => x.id), ...CUSTOM_MAP_IDS], "maps");
   const tP = await pruneStale(traders, traders.normalizedName, traders.gameId, gameId, t.map((x) => x.normalizedName), "traders");

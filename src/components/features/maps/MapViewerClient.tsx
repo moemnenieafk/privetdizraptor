@@ -27,7 +27,7 @@ import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
 import { ExtractCard } from './ExtractCard';
 import { floorIndexForHeight, parseScreenshotName } from '@/lib/eft-screenshot';
-import { applyAffine } from '@/lib/map-calibration';
+import { applyAffine, invertAffine } from '@/lib/map-calibration';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
 import { markerColor, isItemId, LINK_KIND_COLOR } from '@/data/map-marker-icons';
@@ -1657,6 +1657,10 @@ export function MapViewerClient({
         noWrap: true,
         bounds: imgBounds,
         keepBuffer: 4,
+        // Не дёргать тайлы во время зум-анимации и панорамы — грузим по остановке. На rate-limited
+        // r2.dev это убирает шквал промежуточных запросов, которые всё равно тут же отбрасываются.
+        updateWhenZooming: false,
+        updateWhenIdle: true,
         className: 'cta-map-tiles',
       }).addTo(map);
       // 2) SVG-оверлеи поверх тайлов (вектор-геометрия и/или слой маркеров) — каждый по флагу.
@@ -1983,8 +1987,16 @@ export function MapViewerClient({
         }).addTo(g);
       });
       if (hasLabel) {
+        // Метраж — в ИГРОВЫХ метрах. На SVG-картах точки уже в игровых координатах; на ТАЙЛОВОЙ
+        // (Завод) клик даёт canvas-координаты (CRS.Simple) → инвертируем worldTransform в игровые.
+        const wt = data.config.worldTransform;
+        const toGame = (p: { x: number; z: number }) => (wt ? (invertAffine(wt, p.x, p.z) ?? p) : p);
         let d = 0;
-        for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z);
+        for (let i = 1; i < pts.length; i++) {
+          const A = toGame(pts[i - 1]);
+          const B = toGame(pts[i]);
+          d += Math.hypot(B.x - A.x, B.z - A.z);
+        }
         L.marker(ll(pts[pts.length - 1]), {
           icon: L.divIcon({ className: 'cta-di', html: `<div class="cta-ruler-label">${Math.round(d)} м</div>`, iconSize: [0, 0], iconAnchor: [0, 0] }),
           interactive: false,

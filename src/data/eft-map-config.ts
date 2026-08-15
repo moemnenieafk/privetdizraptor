@@ -109,6 +109,10 @@ const SHEBUKA_LINK = "https://github.com/the-hideout/tarkov-dev-svg-maps/";
 export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
   customs: {
     slug: "customs",
+    // Подложка kord-map (Metadvij) — тот же the-hideout-арт (viewBox идентичен → transform/bounds
+    // не меняются, метки на местах 1:1), но с дробной нарезкой этажей Склада 17 (floor-1/2/3).
+    // Слои — числовые группы kord (floor-0 земля, floor--1 тоннели, floor-1..3 этажи здания).
+    // ⚠️ НЕ гнать `npm run db:upload-maps` по customs — перезатрёт CDN-версией без этих этажей.
     svgFile: "Customs.svg",
     author: SHEBUKA,
     authorLink: SHEBUKA_LINK,
@@ -121,11 +125,12 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       [-372, 237],
     ],
     heightRange: [-1000, 1000],
-    svgLayer: "Ground_Level",
+    svgLayer: "floor-0",
     layers: [
-      { name: "Подземелье", svgLayer: "Underground_Level", show: false, height: [-1000, 0.5] },
-      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [2.7, 6.5] },
-      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [5.7, 1000] },
+      { name: "Подземелье", svgLayer: "floor--1", show: false, height: [-1000, 0.5] },
+      { name: "2-й этаж", svgLayer: "floor-1", show: false, height: [2.7, 5.5] },
+      { name: "3-й этаж", svgLayer: "floor-2", show: false, height: [5.5, 8.5] },
+      { name: "4-й этаж", svgLayer: "floor-3", show: false, height: [8.5, 1000] },
     ],
   },
   woods: {
@@ -168,6 +173,9 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
   },
   reserve: {
     slug: "reserve",
+    // kord-подложка (тот же the-hideout, viewBox 1:1 → метки на местах). У kord всего 2 группы:
+    // floor-1 — основной арт, floor--1 — бункеры. Верхние 2 этажа арта не имеют (как и раньше) —
+    // остаются чистыми height-фильтрами меток. ⚠️ не гнать db:upload-maps по reserve.
     svgFile: "Reserve.svg",
     author: SHEBUKA,
     authorLink: SHEBUKA_LINK,
@@ -184,15 +192,18 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       [-303, 272],
     ],
     heightRange: [-7, 10000],
-    svgLayer: "Ground_Level",
+    svgLayer: "floor-1",
     layers: [
-      { name: "Бункеры", svgLayer: "Bunkers", show: false, height: [-10000, -7.27] },
+      { name: "Бункеры", svgLayer: "floor--1", show: false, height: [-10000, -7.27] },
       { name: "2-й этаж", show: false, height: [22.1, 25.7] },
       { name: "3-й этаж", show: false, height: [25.7, 29.3] },
     ],
   },
   interchange: {
     slug: "interchange",
+    // kord-подложка (тот же the-hideout, viewBox 1:1 → метки на местах). База — floor--1 (в их
+    // разметке основной арт ТЦ лежит там, 237 путей), верхние этажи — Floor-1/Floor-2 (капсом,
+    // вложены в floor-1/floor-2). ⚠️ не гнать db:upload-maps по interchange.
     svgFile: "Interchange.svg",
     author: SHEBUKA,
     authorLink: SHEBUKA_LINK,
@@ -205,10 +216,10 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       [-433, 426],
     ],
     heightRange: null,
-    svgLayer: "Ground_Level",
+    svgLayer: "floor--1",
     layers: [
-      { name: "2-й этаж", svgLayer: "First_Floor", show: true, height: [25, 34] },
-      { name: "3-й этаж", svgLayer: "Second_Floor", show: false, height: [34, 1000] },
+      { name: "2-й этаж", svgLayer: "Floor-1", show: true, height: [25, 34] },
+      { name: "3-й этаж", svgLayer: "Floor-2", show: false, height: [34, 1000] },
     ],
   },
   lighthouse: {
@@ -297,6 +308,9 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
   },
   "ground-zero": {
     slug: "ground-zero",
+    // kord-подложка (тот же the-hideout, viewBox 1:1 → метки на местах). База — floor-0 (223 пути),
+    // гараж — floor--1, верхние этажи — Floor-1/Floor-2/Floor-3 (капсом, вложены в shadow-обёртки
+    // floor-1/2/3). ⚠️ не гнать db:upload-maps по ground-zero.
     svgFile: "GroundZero.svg",
     author: SHEBUKA,
     authorLink: SHEBUKA_LINK,
@@ -309,11 +323,12 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       [-99, 364],
     ],
     heightRange: [-1000, 28],
-    svgLayer: "Ground_Level",
+    svgLayer: "floor-0",
     layers: [
-      { name: "Гараж", svgLayer: "Underground_Level", show: false, height: [-1000, 21] },
-      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [28, 32.3] },
-      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [32.3, 1000] },
+      { name: "Гараж", svgLayer: "floor--1", show: false, height: [-1000, 21] },
+      { name: "2-й этаж", svgLayer: "Floor-1", show: false, height: [28, 31] },
+      { name: "3-й этаж", svgLayer: "Floor-2", show: false, height: [31, 34] },
+      { name: "4-й этаж", svgLayer: "Floor-3", show: false, height: [34, 1000] },
     ],
   },
   terminal: {
@@ -337,12 +352,17 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     layers: [],
   },
   "the-lab": {
-    // Наш собственный трёхуровневый план Лаборатории (арт V4DYA, NIGHTFALL-перекраска).
-    // Статичная карта: подложки из /public, без маркеров tarkov.dev (рисунок не геопривязан).
-    // Каждый этаж — отдельный SVG; переключатель меняет подложку (см. MapViewerClient).
+    // Подложка kord-map (Metadvij) — the-hideout-план Лаборатории. Заменил прежний арт V4DYA
+    // (5500×4200, NIGHTFALL) — бэкап в kord-import/_backup/the-lab*.CURRENT.svg. Модель как у Ледокола:
+    // один SVG (/public/images/maps/eft/the-lab.svg), 3 этажа = <g>-группы floor--1/floor-1/floor-2,
+    // soloFloors (виден только активный). Меток нет → координатная привязка не нужна.
     slug: "the-lab",
     svgFile: "the-lab.svg",
     staticMap: true,
+    soloFloors: true,
+    editorial: true, // Заводской набор UI (поиск/слои/визард меток); метки в editorial_markers по
+    // пиксель-холсту viewBox (identity-transform). Требует строку maps(id='the-lab') — сид
+    // scripts/seed-map-editorial-static.ts, защита — CUSTOM_MAP_IDS (landing.ts) + protect-custom-maps.sql.
     displayName: "Лаборатория",
     groundName: "1-й уровень",
     raid: {
@@ -351,22 +371,22 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       entryCost: "Ключ-карта TerraGroup Labs (~130 000 ₽)",
       spawns: "35-45% — Рейдеры (2-4)",
     },
-    author: "V4DYA",
-    authorLink: null,
-    // CRS.Simple по viewBox 5500×4200; transform-identity (маркеров нет → калибровка не нужна).
-    minZoom: -4,
-    maxZoom: 2,
+    author: SHEBUKA,
+    authorLink: SHEBUKA_LINK,
+    // CRS.Simple по viewBox 720×586; transform-identity (маркеров нет → калибровка не нужна).
+    minZoom: -1,
+    maxZoom: 5,
     transform: [1, 0, 1, 0],
     coordinateRotation: 0,
     bounds: [
       [0, 0],
-      [5500, 4200],
+      [720, 586],
     ],
     heightRange: null,
-    svgLayer: null,
+    svgLayer: "floor-1",
     layers: [
-      { name: "Подземелье", show: false, image: "the-lab-m1" },
-      { name: "2-й уровень", show: false, image: "the-lab-2" },
+      { name: "Подземелье", svgLayer: "floor--1", show: false },
+      { name: "2-й уровень", svgLayer: "floor-2", show: false },
     ],
   },
   icebreaker: {
@@ -378,6 +398,9 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     svgFile: "icebreaker.svg",
     staticMap: true,
     soloFloors: true,
+    editorial: true, // Заводской набор UI + визард меток (маркеры в editorial_markers по viewBox-холсту).
+    // Сосуществует с 53 ручными маркерами (getManualMarkers) — это разные массивы. Требует maps(id='icebreaker')
+    // + защита (CUSTOM_MAP_IDS + protect-custom-maps.sql), сид scripts/seed-map-editorial-static.ts.
     displayName: "Ледокол",
     groundName: "Главный / Лазарет",
     raid: {
@@ -422,6 +445,8 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     slug: "labyrinth",
     svgFile: "labyrinth.svg",
     staticMap: true,
+    editorial: true, // Заводской набор UI + визард меток (editorial_markers по viewBox-холсту).
+    // Требует maps(id='labyrinth') + защита (CUSTOM_MAP_IDS + protect-custom-maps.sql).
     displayName: "Лабиринт",
     author: "tarkov-market",
     authorLink: null,

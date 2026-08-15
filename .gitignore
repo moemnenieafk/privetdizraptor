@@ -126,3 +126,6 @@ map-exports/
 # Сессии и настройки плагина Claudian (Claude Code внутри Obsidian) — локальное.
 /.claudian/
 .figma-tmp/
+
+# Скачанное сырьё с kord-map-mtdv.ru (CC BY-NC-SA), не коммитим
+kord-import/

@@ -56,6 +56,9 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
   const squadRoom = useSquadStore((s) => s.roomCode);
 
   const hasLayers = !data.config.staticMap;
+  // Линейка — на картах с системой координат: интерактивные SVG И тайловые (Завод: worldTransform
+  // даёт метраж в метрах). Пустые статик-SVG (Ледокол/Лабиринт/Лаба, без tileBase) — без линейки.
+  const hasRuler = hasLayers || !!data.config.tileBase;
   // Редактор editorial-маркеров доступен на интерактивных картах И на статик-картах с флагом
   // editorial (HD-тайлы factory-hd: визард ставит метки в editorial_markers по пиксель-холсту).
   const canEdit = !!canEditMarkers && (hasLayers || !!data.config.editorial);
@@ -74,7 +77,7 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
 
       {/* Центр-группа: [линейка · постановка] · плашка · [оверрайд · удаление · отряд · фуллскрин] */}
       <div className="flex shrink-0 items-center gap-3.5">
-        {hasLayers && (
+        {hasRuler && (
           <button type="button" onClick={toggleRuler} title="Линейка — замер расстояния (ЛКМ точки, ПКМ сброс)" aria-label="Линейка" className={toggleCls(rulerActive)}>
             <Ruler className="h-5.5 w-5.5" />
           </button>

@@ -21,6 +21,20 @@ export function applyAffine(t: WorldTransform, gameX: number, gameZ: number): { 
   return { x: a * gameX + b * gameZ + c, z: d * gameX + e * gameZ + f };
 }
 
+/**
+ * Обратный аффин: canvas (x,y) → игровые (x,z). Нужен, напр., линейке на ТАЙЛОВОЙ карте:
+ * клик даёт canvas-координаты (CRS.Simple), а метраж считаем в игровых метрах.
+ * null — вырожденная матрица (det≈0, точки калибровки коллинеарны).
+ */
+export function invertAffine(t: WorldTransform, canvasX: number, canvasY: number): { x: number; z: number } | null {
+  const [a, b, c, d, e, f] = t;
+  const det = a * e - b * d;
+  if (Math.abs(det) < 1e-12) return null;
+  const px = canvasX - c;
+  const py = canvasY - f;
+  return { x: (e * px - b * py) / det, z: (-d * px + a * py) / det };
+}
+
 // Решить 3×3 систему методом Гаусса (частичный выбор ведущего). null — вырожденная (точки коллинеарны).
 function solve3(m: number[][], v: number[]): [number, number, number] | null {
   const A = m.map((r, i) => [...r, v[i]]);
