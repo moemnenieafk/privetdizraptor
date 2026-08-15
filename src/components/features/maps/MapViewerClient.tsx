@@ -3,7 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Crosshair, Flame, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
+import { Check, Flame, Locate, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
 import { buildMapFloors, floorLevel, type EftMapConfig } from '@/data/eft-map-config';
 import { mapAssetBase } from '@/lib/map-image';
 import { MapMarkerEditor } from './MapMarkerEditor';
@@ -257,6 +257,10 @@ export function MapViewerClient({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+  // Истинные границы холста карты (тайл: unproject пиксельного размера; SVG: svgBounds/bounds) — тот же
+  // фрейм, что и стартовый вид. Кнопка «Сбросить вид» центрирует ПО НИМ, а не по прибл. bb(cfg.bounds),
+  // иначе центр тайловых карт (и SVG со svgBounds) уезжает мимо реального центра арта.
+  const imgBoundsRef = useRef<L.LatLngBounds | null>(null);
   const highlightRef = useRef<L.Polygon | null>(null);
   const objectivePinsRef = useRef<L.LayerGroup | null>(null);
   const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null }[]>([]);
@@ -294,6 +298,39 @@ export function MapViewerClient({
   useEffect(() => {
     visRef.current = vis;
   });
+
+  // Персист настроенной легенды (видимость слоёв) ПО-КАРТНО в localStorage. Стор эфемерный (синк с
+  // URL), поэтому переживание reload/навигаций делаем здесь: ключ cta-map-vis:<slug>.
+  const seededEditorialVisRef = useRef(false); // гард seed editorial-легенды (выставляется и при restore)
+  const legendHydratedRef = useRef(false);
+  const legendSaveReadyRef = useRef(false);
+  // Restore на маунте: поднять сохранённую легенду и заглушить seed (иначе дефолт + все группы вкл).
+  useEffect(() => {
+    if (legendHydratedRef.current) return;
+    legendHydratedRef.current = true;
+    try {
+      const raw = localStorage.getItem(`cta-map-vis:${data.slug}`);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as Record<string, boolean>;
+      if (saved && typeof saved === 'object') {
+        useMapViewStore.getState().hydrate({ activeFilters: saved });
+        seededEditorialVisRef.current = true; // не пере-сидить дефолтом поверх восстановленного
+      }
+    } catch {
+      /* нет localStorage / битый JSON — дефолтная легенда */
+    }
+  }, [data.slug]);
+  // Save при изменении легенды. Первый (маунтовый) прогон пропускаем — иначе дефолт затрёт сохранённое
+  // до применения restore. Не пишем во время квест-изоляции (?quest — все слои гасятся программно).
+  useEffect(() => {
+    if (!legendSaveReadyRef.current) { legendSaveReadyRef.current = true; return; }
+    if (typeof window !== 'undefined' && window.location.search.includes('quest=')) return;
+    try {
+      localStorage.setItem(`cta-map-vis:${data.slug}`, JSON.stringify(vis));
+    } catch {
+      /* приватный режим/переполнение — переживём без персиста */
+    }
+  }, [vis, data.slug]);
 
   const [editing, setEditing] = useState(
     () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('edit') === '1',
@@ -334,6 +371,8 @@ export function MapViewerClient({
           /* карта не готова — переживём без сохранения вида */
         }
       }
+      // Легенду (видимость слоёв) сохранять тут не надо: она персистится по-картно в localStorage
+      // на каждое изменение (эффект ниже) → после reload restore-эффект поднимет её сам.
       setReloadOverlay({ title, sub, tone: 'busy' });
       // Держим оверлей LOADER_MIN_MS — чтобы морф-анимация проигралась и показала монограмму ЦТА,
       // затем чистый reload (гонки appendChild у него нет). 2×rAF — отрисовать оверлей до отсчёта.
@@ -571,6 +610,11 @@ export function MapViewerClient({
   const [movePos, setMovePos] = useState<{ x: number; z: number } | null>(null);
   const [moveBusy, setMoveBusy] = useState(false);
   const moveCursorRef = useRef<HTMLDivElement | null>(null);
+  // Координаты под курсором (низ-право): императивный апдейт textContent на mousemove — без ре-рендеров
+  // тяжёлого компонента. X = latlng.lng, Y = latlng.lat (та же ось, что при постановке метки: x/z).
+  const coordBoxRef = useRef<HTMLDivElement | null>(null);
+  const coordXRef = useRef<HTMLSpanElement | null>(null);
+  const coordYRef = useRef<HTMLSpanElement | null>(null);
   const startMove = () => {
     if (activeMarker?.id || activeMarker?.sourceMarkerId) {
       setAddMode(false); // не смешивать с постановкой (её клик-хендлер конфликтует с move)
@@ -596,7 +640,7 @@ export function MapViewerClient({
           x: movePos.x,
           z: movePos.z,
           y: moveMarker.y,
-          floor: moveMarker.floor,
+          floor: activeFloorRef.current, // привязка к этажу размещения: перенос на другой этаж переносит метку
           type: moveMarker.type,
           category: moveMarker.category,
           faction: moveMarker.faction,
@@ -609,6 +653,7 @@ export function MapViewerClient({
           polygon: moveMarker.polygon,
           sourceMarkerId: moveMarker.sourceMarkerId,
           hidden: moveMarker.hidden,
+          lootItems: moveMarker.lootItems, // без этого поля API затрёт пул → пропадёт фон редкости
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -828,7 +873,6 @@ export function MapViewerClient({
   // карта открылась бы «без маркеров». Разово включаем все слои, реально присутствующие в мосте,
   // — так метки видны сразу, а легенда консистентна (галка = видимость). Гард ref → не затираем
   // пользовательские тумблеры на ре-рендерах; keys.size → ждём непустой мост.
-  const seededEditorialVisRef = useRef(false);
   useEffect(() => {
     if (!data.config.editorial || seededEditorialVisRef.current) return;
     const keys = new Set<string>();
@@ -1086,6 +1130,22 @@ export function MapViewerClient({
       map.off('click', onClick);
     };
   }, [mapInst, moveMarker, movePos]);
+
+  // Живые координаты под курсором (низ-право). Императивно, чтобы не ре-рендерить компонент на каждый
+  // пиксель мыши. Появляются при входе на карту, гаснут при выходе.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map) return;
+    const onMove = (e: L.LeafletMouseEvent) => {
+      if (coordXRef.current) coordXRef.current.textContent = e.latlng.lng.toFixed(2);
+      if (coordYRef.current) coordYRef.current.textContent = e.latlng.lat.toFixed(2);
+      if (coordBoxRef.current) coordBoxRef.current.style.opacity = '1';
+    };
+    const onOut = () => { if (coordBoxRef.current) coordBoxRef.current.style.opacity = '0'; };
+    map.on('mousemove', onMove);
+    map.on('mouseout', onOut);
+    return () => { map.off('mousemove', onMove); map.off('mouseout', onOut); };
+  }, [mapInst]);
 
   // Батч-move фаза выбора вектора: клик 1 = anchor («откуда»), клик 2 = Δ («куда»). СКМ — pan, Esc — отмена.
   useEffect(() => {
@@ -1543,6 +1603,7 @@ export function MapViewerClient({
           ? bb(cfg.svgBounds)
           : bb(cfg.bounds)
         : null;
+    imgBoundsRef.current = imgBounds; // для resetView: центрируем по реальному фрейму, не по bb(cfg.bounds)
 
     const loadImage = (url: string) => {
       if (!imgBounds || !mapRef.current) return;
@@ -1992,7 +2053,8 @@ export function MapViewerClient({
         else map.flyToBounds(L.latLngBounds(lls), { padding: [80, 80], maxZoom: cfg.maxZoom, duration: 0.6 });
       },
       fitView: () => {
-        if (cfg.bounds) map.fitBounds(bb(cfg.bounds));
+        const b = imgBoundsRef.current ?? (cfg.bounds ? bb(cfg.bounds) : null);
+        if (b) map.fitBounds(b);
       },
       toggleLayer: (key) => useMapViewStore.getState().toggleFilter(key),
     };
@@ -2070,7 +2132,10 @@ export function MapViewerClient({
   const zoomIn = () => mapRef.current?.zoomIn();
   const zoomOut = () => mapRef.current?.zoomOut();
   const resetView = () => {
-    if (data.config.bounds) mapRef.current?.fitBounds(bb(data.config.bounds));
+    // Тот же фрейм, что при старте (imgBounds): тайл → пиксельный холст, SVG → svgBounds/bounds.
+    // Фолбэк на bb(cfg.bounds), если карта ещё не смонтирована.
+    const b = imgBoundsRef.current ?? (data.config.bounds ? bb(data.config.bounds) : null);
+    if (b) mapRef.current?.fitBounds(b);
   };
 
   const setGroup = (keys: string[], value: boolean) =>
@@ -2424,7 +2489,17 @@ export function MapViewerClient({
                 X {Math.round(pose.x)} · Y {Math.round(pose.z)}
               </span>
             )}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              {/* Живые координаты под курсором (Figma 2807-4955): две строки X/Y, апдейт императивно. */}
+              <div
+                ref={coordBoxRef}
+                style={{ opacity: 0 }}
+                aria-hidden
+                className="flex flex-col items-end leading-tight font-blender-medium text-xs tabular-nums text-text-secondary transition-opacity duration-150"
+              >
+                <span>X: <span ref={coordXRef}>0.00</span></span>
+                <span>Y: <span ref={coordYRef}>0.00</span></span>
+              </div>
               {tracker.active && (
                 <button
                   type="button"
@@ -2458,7 +2533,11 @@ export function MapViewerClient({
                     : 'border-lines-hover bg-card-menu text-text-secondary hover:text-(--primary)'
                 }`}
               >
-                <Crosshair className={`h-5.5 w-5.5 ${tracker.requesting ? 'animate-pulse' : ''}`} />
+                {tracker.active ? (
+                  <LocateFixed className={`h-5.5 w-5.5 ${tracker.requesting ? 'animate-pulse' : ''}`} />
+                ) : (
+                  <Locate className={`h-5.5 w-5.5 ${tracker.requesting ? 'animate-pulse' : ''}`} />
+                )}
               </button>
             </div>
           </div>
