@@ -125,12 +125,13 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       [-372, 237],
     ],
     heightRange: [-1000, 1000],
+    // Поверхность = floor-0 + floor-1 (уличная земля + 1-й этаж зданий) — floor-1 сведён в floor-0
+    // в SVG (см. kord-import/_recolor). Выше — floor-2/floor-3 (2-й/3-й этаж, вкл. верх Склада 17).
     svgLayer: "floor-0",
     layers: [
       { name: "Подземелье", svgLayer: "floor--1", show: false, height: [-1000, 0.5] },
-      { name: "2-й этаж", svgLayer: "floor-1", show: false, height: [2.7, 5.5] },
-      { name: "3-й этаж", svgLayer: "floor-2", show: false, height: [5.5, 8.5] },
-      { name: "4-й этаж", svgLayer: "floor-3", show: false, height: [8.5, 1000] },
+      { name: "2-й этаж", svgLayer: "floor-2", show: false, height: [4, 7] },
+      { name: "3-й этаж", svgLayer: "floor-3", show: false, height: [7, 1000] },
     ],
   },
   woods: {
@@ -173,9 +174,9 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
   },
   reserve: {
     slug: "reserve",
-    // kord-подложка (тот же the-hideout, viewBox 1:1 → метки на местах). У kord всего 2 группы:
-    // floor-1 — основной арт, floor--1 — бункеры. Верхние 2 этажа арта не имеют (как и раньше) —
-    // остаются чистыми height-фильтрами меток. ⚠️ не гнать db:upload-maps по reserve.
+    // Подложка — the-hideout-оригинал (слои Ground_Level/Bunkers; kord бил этажи неверно, откатили).
+    // Верхние 2 этажа арта не имеют — чистые height-фильтры меток. Перекрашена под палитру (по HEX).
+    // ⚠️ не гнать db:upload-maps по reserve — перезатрёт CDN-версией без рекраски.
     svgFile: "Reserve.svg",
     author: SHEBUKA,
     authorLink: SHEBUKA_LINK,
@@ -192,18 +193,18 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       [-303, 272],
     ],
     heightRange: [-7, 10000],
-    svgLayer: "floor-1",
+    svgLayer: "Ground_Level",
     layers: [
-      { name: "Бункеры", svgLayer: "floor--1", show: false, height: [-10000, -7.27] },
+      { name: "Бункеры", svgLayer: "Bunkers", show: false, height: [-10000, -7.27] },
       { name: "2-й этаж", show: false, height: [22.1, 25.7] },
       { name: "3-й этаж", show: false, height: [25.7, 29.3] },
     ],
   },
   interchange: {
     slug: "interchange",
-    // kord-подложка (тот же the-hideout, viewBox 1:1 → метки на местах). База — floor--1 (в их
-    // разметке основной арт ТЦ лежит там, 237 путей), верхние этажи — Floor-1/Floor-2 (капсом,
-    // вложены в floor-1/floor-2). ⚠️ не гнать db:upload-maps по interchange.
+    // Подложка — the-hideout-оригинал с чистыми слоями Ground_Level/First_Floor/Second_Floor
+    // (kord-вариант бил этажи неверно, откатили). Перекрашена под палитру (по HEX).
+    // ⚠️ не гнать db:upload-maps по interchange — перезатрёт CDN-версией без рекраски.
     svgFile: "Interchange.svg",
     author: SHEBUKA,
     authorLink: SHEBUKA_LINK,
@@ -216,10 +217,10 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       [-433, 426],
     ],
     heightRange: null,
-    svgLayer: "floor--1",
+    svgLayer: "Ground_Level",
     layers: [
-      { name: "2-й этаж", svgLayer: "Floor-1", show: true, height: [25, 34] },
-      { name: "3-й этаж", svgLayer: "Floor-2", show: false, height: [34, 1000] },
+      { name: "2-й этаж", svgLayer: "First_Floor", show: true, height: [25, 34] },
+      { name: "3-й этаж", svgLayer: "Second_Floor", show: false, height: [34, 1000] },
     ],
   },
   lighthouse: {
@@ -308,9 +309,9 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
   },
   "ground-zero": {
     slug: "ground-zero",
-    // kord-подложка (тот же the-hideout, viewBox 1:1 → метки на местах). База — floor-0 (223 пути),
-    // гараж — floor--1, верхние этажи — Floor-1/Floor-2/Floor-3 (капсом, вложены в shadow-обёртки
-    // floor-1/2/3). ⚠️ не гнать db:upload-maps по ground-zero.
+    // Подложка — the-hideout-оригинал (слои Ground_Level/Underground_Level/First_Floor/Second_Floor/
+    // Third_Floor; kord бил этажи неверно, откатили). Перекрашена под палитру (по HEX).
+    // ⚠️ не гнать db:upload-maps по ground-zero — перезатрёт CDN-версией без рекраски.
     svgFile: "GroundZero.svg",
     author: SHEBUKA,
     authorLink: SHEBUKA_LINK,
@@ -323,12 +324,13 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       [-99, 364],
     ],
     heightRange: [-1000, 28],
-    svgLayer: "floor-0",
+    // Поверхность = Ground_Level (+ тень зданий First_Floor, помечена data-keep-with-group="Ground_Level"
+    // в SVG → держится с Поверхностью автоматически, см. svgKeepWithRef). Выше — Second/Third_Floor.
+    svgLayer: "Ground_Level",
     layers: [
-      { name: "Гараж", svgLayer: "floor--1", show: false, height: [-1000, 21] },
-      { name: "2-й этаж", svgLayer: "Floor-1", show: false, height: [28, 31] },
-      { name: "3-й этаж", svgLayer: "Floor-2", show: false, height: [31, 34] },
-      { name: "4-й этаж", svgLayer: "Floor-3", show: false, height: [34, 1000] },
+      { name: "Гараж", svgLayer: "Underground_Level", show: false, height: [-1000, 21] },
+      { name: "2-й этаж", svgLayer: "Second_Floor", show: false, height: [28, 32.3] },
+      { name: "3-й этаж", svgLayer: "Third_Floor", show: false, height: [32.3, 1000] },
     ],
   },
   terminal: {

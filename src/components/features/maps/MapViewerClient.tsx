@@ -271,6 +271,9 @@ export function MapViewerClient({
   // БЕЗ пересборки слоя: rebuild на каждую пометку ронял Leaflet (_initIcon→appendChild) при гонке с refresh.
   const editorialElsRef = useRef<Map<string, { mk: L.Marker; poly?: L.Polygon; floor?: number | null }>>(new Map());
   const svgGroupsRef = useRef<Map<string, SVGGElement> | null>(null);
+  // data-keep-with-group: слои SVG, которые всегда держатся со своей целевой группой (напр. тень
+  // зданий First_Floor с Ground_Level у the-hideout). Ключ = id целевой группы → список таких элементов.
+  const svgKeepWithRef = useRef<Map<string, SVGGraphicsElement[]>>(new Map());
   const activeFloorRef = useRef(activeFloor);
   const loadImageRef = useRef<((url: string) => void) | null>(null);
   // Физический уровень каждого этажа (floorLevel: ground=1, «2-й»=2, «Тоннели»=−1) — для направления
@@ -1536,9 +1539,21 @@ export function MapViewerClient({
       const fl = floors[idx] ?? floors[0];
       const groups = svgGroupsRef.current;
       if (groups) {
-        groups.forEach((g, id) => {
-          if (fl?.svgLayer && id !== fl.svgLayer) g.classList.add('is-dimmed');
-          else g.classList.remove('is-dimmed');
+        // Наслоение: активный этаж — ПОВЕРХ Поверхности (перенос его <g> в конец SVG = верхний z).
+        // Поверхность (i=0) как база: полная под верхними этажами, 20% под подземельем; прочие скрыты.
+        const setFloorState = (node: SVGGraphicsElement, i: number) => {
+          node.classList.remove('is-dimmed', 'cta-floor-base-dim');
+          if (i === idx) node.parentNode?.appendChild(node); // активный — поверх (верхний z)
+          else if (i === 0) node.classList.add('cta-floor-base-dim'); // Поверхность-база всегда 20% под активным этажом
+          else node.classList.add('is-dimmed'); // прочие этажи скрыты
+        };
+        floors.forEach((f, i) => {
+          if (!f.svgLayer) return;
+          const g = groups.get(f.svgLayer);
+          if (!g) return;
+          setFloorState(g, i);
+          // keep-with-слои (тень First_Floor и т.п.) держатся с этой группой
+          for (const partner of svgKeepWithRef.current.get(f.svgLayer) ?? []) setFloorState(partner, i);
         });
       }
       const range = fl?.height ?? null;
@@ -1628,6 +1643,17 @@ export function MapViewerClient({
             }
           }
           svgGroupsRef.current = gmap;
+          // Слои с data-keep-with-group="X" держатся вместе с группой X (показ/затемнение/скрытие).
+          const keepWith = new Map<string, SVGGraphicsElement[]>();
+          svgEl.querySelectorAll<SVGGraphicsElement>('[data-keep-with-group]').forEach((el) => {
+            const target = el.getAttribute('data-keep-with-group');
+            if (!target) return;
+            el.dataset.floor = target; // чтобы CSS [data-floor].is-dimmed/base-dim применялся
+            const arr = keepWith.get(target) ?? [];
+            arr.push(el);
+            keepWith.set(target, arr);
+          });
+          svgKeepWithRef.current = keepWith;
           applyFloorRef.current(activeFloorRef.current);
         })
         .catch(() => {

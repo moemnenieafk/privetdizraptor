@@ -756,19 +756,16 @@ html {
 .cta-marked-rooms [data-room]:hover > path,
 .cta-marked-rooms [data-room]:hover > rect { fill-opacity: 0.55; }
 
-/* этажи: соседние <g>-слои затемнены+блюр (контекст). Карты с soloFloors (.solo-floors, Ледокол) — соседние скрыты полностью. */
-.cta-map-svg [data-floor] { transition: opacity 0.25s ease, filter 0.25s ease; }
-.cta-map-svg [data-floor].is-dimmed { opacity: 0.28; filter: blur(2px) saturate(0.6); }
-.solo-floors .cta-map-svg [data-floor].is-dimmed { display: none; }
+/* этажи: активный слой наслаивается ПОВЕРХ Поверхности (переносом в конец SVG → верхний z).
+   Верхние этажи (2,3…) — Поверхность полная + этаж сверху; подземные (−1,−2…) — Поверхность 20%
+   + этаж сверху; прочие неактивные этажи скрыты. Классы вешает applyFloor. */
+.cta-map-svg [data-floor] { transition: opacity 0.2s ease; }
+.cta-map-svg [data-floor].is-dimmed { display: none; }
+.cta-map-svg [data-floor].cta-floor-base-dim { opacity: 0.2; }
 
-/* §8: маркер чужого этажа — гаснет до пространственного контекста, некликабелен (не исчезает).
-   soloFloors (Ледокол) — этажи изолированы, чужие маркеры прячем совсем, как и подложку. */
-.cta-mk-offfloor { opacity: 0.2; pointer-events: none; transition: opacity 0.2s ease; }
-.solo-floors .cta-mk-offfloor { display: none; }
-
-/* editorial-метка чужого этажа: КАПЛЯ гаснет, но остаётся кликабельной (клик → прыжок на этаж);
-   прозрачность вешаем на .cta-mk-scale (пин), а не на корень — чтобы бейдж-подсказка не блёк. */
-.cta-editorial-offfloor .cta-mk-scale { opacity: 0.35; transition: opacity 0.2s ease; }
+/* Маркеры/editorial-метки чужого этажа — скрыты (метки только активного этажа). */
+.cta-mk-offfloor { display: none; }
+.cta-editorial-offfloor { display: none; }
 /* бейдж up/down (16×16) ВСЕГДА справа от капли (корень divIcon позиционирован → absolute от него).
    По вертикали направление кодирует этаж: метка выше → сверху-справа, ниже → снизу-справа. */
 .cta-floor-hint {
