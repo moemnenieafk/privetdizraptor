@@ -26,6 +26,12 @@ export default async function QuestTaskPage({ params }: Props) {
   const task = EFT_QUESTS.find((t) => t.id === id);
   if (!task) notFound();
 
+  // Инверсия taskRequirements: какие квесты открывает этот (связи «после», ревизия 28.07).
+  const unlocks = EFT_QUESTS
+    .filter((q) => q.taskRequirements.some((r) => r.task.id === task.id))
+    .map((q) => ({ id: q.id, name: q.name, trader: { name: q.trader.name, normalizedName: q.trader.normalizedName } }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+
   const bartersByQuest = await getBartersByQuest();
 
   // Метка ивента: квест пришёл вместе с внутриигровым событием и остался в игре.
@@ -64,7 +70,7 @@ export default async function QuestTaskPage({ params }: Props) {
           </Link>
         )}
 
-        <QuestDetail task={normalizeTrader(task)} variant="page" barters={bartersByQuest[task.id]} />
+        <QuestDetail task={normalizeTrader(task)} variant="page" barters={bartersByQuest[task.id]} unlocks={unlocks} />
       </div>
     </main>
   );

@@ -133,6 +133,8 @@ interface Props {
   onClose?: () => void;
   /** Бартеры, которые открывает этот квест (кросс-линк Quest→Barter→Item). */
   barters?: QuestBarterLite[];
+  /** Квесты, которые открывает этот (инверсия taskRequirements) — блок «Открывает задания». Обычно со страницы. */
+  unlocks?: Array<{ id: string; name: string; trader: { name: string; normalizedName: string } }>;
   /**
    * Только drawer карты (M6): у объектов появляется map-пин, тап зовёт этот колбэк
    * (перелёт к зоне квеста + сворачивание шита). Не передан — пины не рисуются.
@@ -146,7 +148,7 @@ interface Props {
  * Детальный разбор квеста: цели+чекбоксы, hero, трекер предметов, видео-гайд,
  * награды, toggle «выполнено» / pin. Общий рендер для дровера карты и полноэкранной страницы.
  */
-export function QuestDetail({ task, variant = 'drawer', onClose, barters, onLocate }: Props) {
+export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlocks, onLocate }: Props) {
   const isPage = variant === 'page';
 
   const [heroFailed, setHeroFailed] = useState(false);
@@ -422,6 +424,35 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, onLoca
     </div>
   );
 
+  // ── Открывает задания (инверсия taskRequirements: какие квесты открывает этот) ──
+  const unlocksBlock = unlocks && unlocks.length > 0 && (
+    <div className={isPage ? 'px-6 py-6' : 'px-5 py-5'}>
+      <div className="mb-3 flex items-center gap-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary">
+        <ChevronRight className="h-3.5 w-3.5" />
+        Открывает задания
+        <span className="text-text-muted">· {unlocks.length}</span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {unlocks.map((q) => (
+          <Link
+            key={q.id}
+            href={`/eft/quests/task/${q.id}`}
+            title={q.name}
+            className="group flex items-center gap-2 rounded-xs border border-lines-hover bg-(--color-darkbase) p-2 transition-colors hover:border-(--primary)/50"
+          >
+            <img src={traderImg(q.trader.normalizedName)} alt={q.trader.name} width={18} height={18} className="shrink-0 rounded-xs" />
+            <span className="min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-secondary group-hover:text-text-primary">
+              {q.name}
+            </span>
+            <span className="shrink-0 font-blender-medium text-type-caption uppercase tracking-wide text-text-muted">
+              {q.trader.name}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+
   // ── Footer ──────────────────────────────────────────────────────────────
   const footer = (
     <div className={`shrink-0 border-t border-lines-hover flex items-center gap-2 ${isPage ? 'px-6 py-4' : 'px-5 h-14'}`}>
@@ -458,6 +489,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, onLoca
         {videoBlock}
         {rewardsBlock}
         {bartersBlock}
+        {unlocksBlock}
         {footer}
       </div>
     );
@@ -473,6 +505,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, onLoca
         {videoBlock}
         {rewardsBlock}
         {bartersBlock}
+        {unlocksBlock}
       </div>
       {footer}
     </>
