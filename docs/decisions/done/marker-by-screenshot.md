@@ -1,5 +1,5 @@
 ---
-status: 🔵 спека
+status: ✅ реализовано — код в проде (commit 456675ab); map-calibration.ts + worldTransform Завода. Заархивировано 2026-08-16
 affects: src/components/features/maps/MapViewerClient.tsx, src/components/features/maps/EditorialMarkerCard.tsx, src/data/eft-map-config.ts, src/lib/eft-screenshot.ts, src/lib/map-calibration.ts (new)
 date: 2026-08-15
 ---

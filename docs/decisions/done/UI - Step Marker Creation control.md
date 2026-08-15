@@ -1,5 +1,5 @@
 ---
-status: 🎨 design-spec — принято V4DYA (Figma 2026-07-31), к реализации
+status: ✅ реализовано (Ф1–Ф5, дизайн проведён в код); Ф6 полиш опц. Заархивировано 2026-08-16
 affects: maps, editorial-markers, marker-creation, cms, ux
 date: 2026-07-31
 figma: секция «UI - Step Marker Creation control» — визард node 2374-2468 · карточка по клику (Move/Edit) node 2374-2492
