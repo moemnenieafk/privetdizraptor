@@ -57,3 +57,33 @@ export const getTarkovCellColor = (color: string | undefined): string => {
       return "#3d3d3a";
   }
 };
+
+/**
+ * ЯРКИЙ фон редкости для маркеров loose loot НА КАРТЕ — насыщённее и светлее инвентарного
+ * `getTarkovCellColor`, чтобы плитка мгновенно опознавалась по редкости среди сотен точек на
+ * тёмной подложке. Те же тарковские хью (orange/violet/blue/…), но подняты по яркости/сатурации.
+ * Только для карты — инвентарные ячейки и battlepass остаются на приглушённом getTarkovCellColor.
+ */
+export const getTarkovLootMarkerColor = (color: string | undefined): string => {
+  switch (color?.toLowerCase()) {
+    case "orange":
+      return "#b86e1e";
+    case "yellow":
+      return "#a79a2c";
+    case "violet":
+    case "purple":
+      return "#6f4e80";
+    case "blue":
+      return "#2e6a8c";
+    case "green":
+      return "#3c7132";
+    case "black":
+      return "#454545";
+    case "red":
+      return "#9c3838";
+    case "grey":
+    case "default":
+    default:
+      return "#61615a";
+  }
+};

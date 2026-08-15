@@ -2,7 +2,7 @@ import * as L from 'leaflet';
 import { markerIconUrl, markerColor, GOONS_FILES } from '@/data/map-marker-icons';
 import { LOOT_CATEGORIES } from '@/data/map-markers/categories';
 import { itemIconUrl } from '@/lib/item-icon';
-import { getTarkovCellColor } from '@/lib/tarkov-colors';
+import { getTarkovLootMarkerColor } from '@/lib/tarkov-colors';
 
 /**
  * Иконка маркера статик-карты (общая для редактора «Правка» и боевого рендера).
@@ -66,11 +66,11 @@ export function manualMarkerIcon(m: ManualMarkerLike, del = false, showLabel = f
     // светлая грань и тень + иконка с падингом. 30%-тинт на тёмной карте был почти невидим — теперь
     // сплошной цвет редкости, размер чуть крупнее (30→34), чтобы спот сразу читался и опознавался.
     box = 34;
-    const bg = getTarkovCellColor(m.itemBg ?? undefined);
+    const bg = getTarkovLootMarkerColor(m.itemBg ?? undefined);
     inner =
       `<span style="position:relative;display:block;width:${box}px;height:${box}px;border-radius:4px;overflow:hidden;` +
-      `background:${bg};border:1px solid rgba(0,0,0,.85);` +
-      `box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 0 7px rgba(0,0,0,.65),0 1px 3px rgba(0,0,0,.9)${glow}">` +
+      `background:${bg};border:1px solid rgba(0,0,0,.9);` +
+      `box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 0 8px rgba(0,0,0,.5),0 0 0 1px ${bg},0 1px 3px rgba(0,0,0,.9)${glow}">` +
       `<img src="${itemIconUrl(m.linkedItemId!)}" width="${box}" height="${box}" alt="" ` +
       `style="display:block;width:100%;height:100%;object-fit:contain;padding:2px;box-sizing:border-box;filter:drop-shadow(0 1px 2px rgba(0,0,0,.95))" ` +
       `onerror="this.style.display='none'" /></span>`;
