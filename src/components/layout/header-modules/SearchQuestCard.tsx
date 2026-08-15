@@ -14,11 +14,12 @@ interface SearchQuestCardProps {
   onItemClick: (shortName: string) => void;
 }
 
-/** Куда ведёт результат-задание: стори-квесты не на карте → в лор; остальные → FlyTo на карту. */
+/** Куда ведёт результат-задание: стори-квесты не на карте → в лор; остальные → детальная карточка квеста
+ *  (`/eft/quests/task/[id]`). С карточки уже есть переход «Открыть в графе». */
 export const questResultHref = (item: Pick<QuestSearchResult, "id">) =>
   item.id.startsWith("story-")
     ? "/eft/quests/lore-quests"
-    : `/eft/questmap?quest=${item.id}`;
+    : `/eft/quests/task/${item.id}`;
 
 export const SearchQuestCard = ({ item, isSelected, onSelect, onItemClick }: SearchQuestCardProps) => {
   const nn = item.trader.normalizedName;
