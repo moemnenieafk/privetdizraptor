@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Crosshair, Flame, LocateFixed, Minus, Navigation, Pencil, Plus } from 'lucide-react';
-import { buildMapFloors, type EftMapConfig } from '@/data/eft-map-config';
+import { buildMapFloors, floorLevel, type EftMapConfig } from '@/data/eft-map-config';
 import { mapAssetBase } from '@/lib/map-image';
 import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
@@ -101,6 +101,10 @@ const spawnKind = (m: MapViewMarker): string => {
 const markerDivIcon = (m: MapViewMarker): L.DivIcon => manualMarkerIcon(m, false, false);
 
 /** Иконка editorial-маркера — единая для слоя карты и курсора move-режима. */
+// Бейдж-подсказка «метка на другом этаже»: 16×16 иконка лестницы рядом с полупрозрачной каплей.
+const UPSTAIRS_ICON = '/icons/eft/01-maps/markers/upstairs-icon.svg';
+const DOWNSTAIRS_ICON = '/icons/eft/01-maps/markers/downstairs-icon.svg';
+
 function editorialIcon(m: EditorialMarkerData): L.DivIcon {
   const meta =
     m.type === 'hazard' && m.category
@@ -264,6 +268,12 @@ export function MapViewerClient({
   const svgGroupsRef = useRef<Map<string, SVGGElement> | null>(null);
   const activeFloorRef = useRef(activeFloor);
   const loadImageRef = useRef<((url: string) => void) | null>(null);
+  // Физический уровень каждого этажа (floorLevel: ground=1, «2-й»=2, «Тоннели»=−1) — для направления
+  // бейджа up/down у editorial-меток чужого этажа. Индекс массива = индекс этажа (floor маркера).
+  const floorLevels = useMemo(() => buildMapFloors(data.config).map((f, i) => floorLevel(f, i)), [data.config]);
+  // Актуальный onRequestFloor для клик-хэндлеров, созданных при постройке слоя (замыкание было бы stale).
+  // Синкается в эффекте рядом с activeFloorRef (мутация рефа в теле рендера запрещена react-compiler).
+  const onRequestFloorRef = useRef(onRequestFloor);
 
   // Слои маркеров: L.LayerGroup на под-слой; loose loot (loose-*) — кластер на категорию.
   const layerGroupsRef = useRef<Record<string, L.LayerGroup>>({});
@@ -766,6 +776,7 @@ export function MapViewerClient({
         poly.on('click', () => {
           if (batchMoveRef.current) { batchClickRef.current({ x: m.x, z: m.z }); return; } // батч-move: точка по позиции метки
           if (editOpenRef.current) return useMapUiStore.getState().toggleEditMark(id);
+          if (m.floor != null && m.floor !== activeFloorRef.current) onRequestFloorRef.current?.(m.floor); // прыжок на этаж метки
           setOpenEditorialId(id);
         });
         poly.addTo(group);
@@ -782,6 +793,7 @@ export function MapViewerClient({
       mk.on('click', () => {
         if (batchMoveRef.current) { batchClickRef.current({ x: m.x, z: m.z }); return; } // батч-move: точка по позиции метки
         if (editOpenRef.current) return useMapUiStore.getState().toggleEditMark(id);
+        if (m.floor != null && m.floor !== activeFloorRef.current) onRequestFloorRef.current?.(m.floor); // прыжок на этаж метки
         setOpenEditorialId(id);
       });
       mk.addTo(group);
@@ -841,21 +853,44 @@ export function MapViewerClient({
       const k = layerKeyForMarker(bm);
       if (k && bm.id) keyById.set(bm.id, k);
     }
+    const activeLvl = floorLevels[activeFloor] ?? 0;
     for (const [id, { mk, poly, floor }] of editorialElsRef.current) {
       const key = keyById.get(id);
       const layerOn = !key || vis[key] !== false;
-      const floorOn = floor == null || floor === activeFloor;
-      const on = layerOn && floorOn;
+      const offFloor = floor != null && floor !== activeFloor;
+      // Слой выключен в легенде → прячем совсем. Иначе метка видна ВСЕГДА: на своём этаже — полная,
+      // на чужом — полупрозрачная (класс cta-editorial-offfloor) + бейдж up/down (клик → прыжок на этаж).
       for (const el of [mk, poly]) {
         if (!el) continue;
-        if (on) {
+        if (layerOn) {
           if (!group.hasLayer(el)) group.addLayer(el);
         } else if (group.hasLayer(el)) {
           group.removeLayer(el);
         }
       }
+      if (poly) poly.setStyle({ opacity: offFloor ? 0.3 : 1, fillOpacity: offFloor ? 0.05 : 0.18 });
+      const elDom = mk.getElement();
+      if (!elDom) continue;
+      elDom.classList.toggle('cta-editorial-offfloor', layerOn && offFloor);
+      let hint = elDom.querySelector('img.cta-floor-hint') as HTMLImageElement | null;
+      if (layerOn && offFloor && floor != null) {
+        const up = (floorLevels[floor] ?? 0) > activeLvl;
+        const src = up ? UPSTAIRS_ICON : DOWNSTAIRS_ICON;
+        if (!hint) {
+          hint = document.createElement('img');
+          hint.className = 'cta-floor-hint';
+          elDom.appendChild(hint);
+        }
+        if (hint.getAttribute('src') !== src) hint.setAttribute('src', src);
+        hint.classList.toggle('is-up', up);   // выше → сверху-справа
+        hint.classList.toggle('is-down', !up); // ниже → снизу-справа
+        hint.alt = up ? 'этажом выше' : 'этажом ниже';
+        hint.title = up ? 'Метка этажом выше — клик, чтобы перейти' : 'Метка этажом ниже — клик, чтобы перейти';
+      } else if (hint) {
+        hint.remove();
+      }
     }
-  }, [vis, activeFloor, mapInst, editorialMarkers, editorialBridge]);
+  }, [vis, activeFloor, floorLevels, mapInst, editorialMarkers, editorialBridge]);
 
   // Карточка-popup держится НАД каплей: пересчёт экранной точки при пане/зуме; клик по карте — закрыть.
   useEffect(() => {
@@ -916,7 +951,7 @@ export function MapViewerClient({
         x: e.latlng.lng,
         z: e.latlng.lat,
         y: null,
-        floor: null,
+        floor: activeFloorRef.current, // привязка к активному этажу (мультиэтаж); null = «на всех этажах»
         type: 'poi',
         category: null,
         title: '',
@@ -1465,6 +1500,7 @@ export function MapViewerClient({
   useEffect(() => {
     applyFloorRef.current = applyFloor;
     activeFloorRef.current = activeFloor;
+    onRequestFloorRef.current = onRequestFloor;
   });
 
   useEffect(() => {

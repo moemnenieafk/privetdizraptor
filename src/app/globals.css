@@ -760,6 +760,19 @@ html {
 .cta-mk-offfloor { opacity: 0.2; pointer-events: none; transition: opacity 0.2s ease; }
 .solo-floors .cta-mk-offfloor { display: none; }
 
+/* editorial-метка чужого этажа: КАПЛЯ гаснет, но остаётся кликабельной (клик → прыжок на этаж);
+   прозрачность вешаем на .cta-mk-scale (пин), а не на корень — чтобы бейдж-подсказка не блёк. */
+.cta-editorial-offfloor .cta-mk-scale { opacity: 0.35; transition: opacity 0.2s ease; }
+/* бейдж up/down (16×16) ВСЕГДА справа от капли (корень divIcon позиционирован → absolute от него).
+   По вертикали направление кодирует этаж: метка выше → сверху-справа, ниже → снизу-справа. */
+.cta-floor-hint {
+  position: absolute; left: 100%; margin-left: 2px;
+  width: 16px; height: 16px; pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
+}
+.cta-floor-hint.is-up { bottom: 50%; margin-bottom: 2px; }
+.cta-floor-hint.is-down { top: 50%; margin-top: 2px; }
+
 /* цвет маркера по фракции/типу */
 .ef-pmc, .ss-pmc, .lg-spawn { --mk: #5FB85B; }
 .ef-scav, .ss-scav { --mk: #E6A23C; }
