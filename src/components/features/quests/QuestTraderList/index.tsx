@@ -94,10 +94,10 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
       <div className="w-full max-w-275 px-4 xl:px-0">
 
         {/* Шапка: [левая 522: фото + трейдер/фильтры] + gap 28 + [правая 522: навигация]. Мобилка — вертикальный стек. */}
-        <header className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-[28px]">
+        <header className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-7">
 
           {/* Левая колонка 522 */}
-          <div className="flex items-end gap-4 lg:gap-7 w-full lg:w-[522px] lg:shrink-0">
+          <div className="flex items-end gap-4 lg:gap-7 w-full lg:w-[32.625rem] lg:shrink-0">
             <div className="relative h-21 w-21 shrink-0 overflow-hidden rounded-md border border-lines-hover bg-(--color-darkbase)">
               <Image src={traderImg(traderNormalized)} alt={title} fill className="object-cover" sizes="84px" />
             </div>
@@ -105,7 +105,7 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
             {/* Текст: ряд 1 (имя + всего + Каппа/Смотритель) / ряд 2 (статус-фильтры) */}
             <div className="flex flex-1 flex-col gap-2 lg:min-w-0">
               <div className="flex h-9 items-center gap-3">
-                <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
+                <h1 className="text-[1.75rem] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
                   {title}
                 </h1>
                 <span className="px-2 py-0.5 bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] border border-(--primary)/40 rounded font-blender-medium text-sm text-(--primary) leading-snug">
@@ -133,7 +133,7 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3.5 lg:h-9 lg:grid-cols-3 lg:gap-2 lg:items-center">
+              <div className="grid grid-cols-1 gap-3.5 lg:h-9 lg:grid-cols-3 lg:gap-7 lg:items-center">
                 {FILTERS.map((f) => {
                   const isOn = filter === f.key;
                   return (
@@ -155,21 +155,21 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
 
           {/* Правая колонка 522: навигация (метка + 2 дива 6×2) */}
           {hasNav && (
-            <div className="flex w-full flex-col gap-2 lg:w-[522px] lg:shrink-0">
+            <div className="flex w-full flex-col gap-2 lg:w-[32.625rem] lg:shrink-0">
                 <div className="flex items-center gap-3">
                   <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
                     Навигация по разделу
                   </span>
                   <div className="h-px flex-1 bg-lines-hover" />
                 </div>
-                <div className="flex flex-wrap lg:flex-nowrap gap-3.5 lg:gap-2">
+                <div className="flex flex-wrap lg:flex-nowrap gap-3.5 lg:gap-7">
                   {navSections && navSections.length > 0 && (
-                    <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-2">
+                    <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-7">
                       {navSections.map((t) => <QuestNavTab key={t.id} tab={t} />)}
                     </div>
                   )}
                   {navTraders && navTraders.length > 0 && (
-                    <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-2">
+                    <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-7">
                       {navTraders.map((t) => <QuestNavTab key={t.id} tab={t} />)}
                     </div>
                   )}

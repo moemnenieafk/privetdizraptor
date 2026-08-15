@@ -148,7 +148,7 @@ export function PlayerTelemetry() {
                           <div className={`h-3.5 w-3.5 icon-mask ${profEd.icon} ${profEd.color}`} />
                         </div>
                         {/* Никнейм */}
-                        <div className={`flex-1 text-[15px] font-blender-medium leading-none ${profEd.color} truncate pr-1`}>{profile.nickname}</div>
+                        <div className={`flex-1 text-[0.9375rem] font-blender-medium leading-none ${profEd.color} truncate pr-1`}>{profile.nickname}</div>
                         {/* Престиж и Уровень */}
                         <div className="flex h-9 w-19 shrink-0 items-center justify-center gap-1.5 pr-2 pl-1">
                           <div className="relative flex h-7 w-7 shrink-0 items-center justify-center">

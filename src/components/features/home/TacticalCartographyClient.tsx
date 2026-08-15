@@ -22,7 +22,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
         {/* Section heading */}
         <div className="flex items-center justify-center w-full gap-4 md:gap-7 mb-2">
           <div className="hidden md:block h-px flex-1 bg-linear-to-l from-lines-hover to-transparent" />
-          <h3 className="font-blender-medium uppercase tracking-widest text-text-primary shrink-0 text-xl sm:text-2xl md:text-3xl lg:text-[32px]">
+          <h3 className="font-blender-medium uppercase tracking-widest text-text-primary shrink-0 text-xl sm:text-2xl md:text-3xl lg:text-[2rem]">
             ТАКТИЧЕСКАЯ КАРТОГРАФИЯ
           </h3>
           <div className="hidden md:block h-px flex-1 bg-linear-to-r from-lines-hover to-transparent" />

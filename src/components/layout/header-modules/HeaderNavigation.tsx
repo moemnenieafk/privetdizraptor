@@ -156,7 +156,7 @@ function NavItem({ item, pathname, faction }: { item: MenuItem; pathname: string
       <Link 
         href={item.path || '#'} 
         onClick={handleInteraction}
-        className="tactical-menu-item group/main flex cursor-pointer items-center justify-start gap-1.5 rounded px-2 py-1.5 font-blender-medium text-[15px] uppercase tracking-wide leading-none"
+        className="tactical-menu-item group/main flex cursor-pointer items-center justify-start gap-1.5 rounded px-2 py-1.5 font-blender-medium text-[0.9375rem] uppercase tracking-wide leading-none"
       >
         <span className="pt-0.5">{item.label}</span>
         {item.children && (

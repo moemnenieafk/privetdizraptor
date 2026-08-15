@@ -493,7 +493,7 @@ export function BarterModule({ barters }: { barters: BarterOffer[] }) {
   if (barters.length === 0) return null;
 
   return (
-    <section className="flex w-full max-w-[724px] flex-col gap-3.5">
+    <section className="flex w-full max-w-[45.25rem] flex-col gap-3.5">
       <SectionRule title="Бартер" icon={<span className="icon-eft-prog-barter h-4 w-4 bg-text-muted mask-contain mask-center mask-no-repeat" />} />
       <div className="flex flex-col gap-3.5">
         {barters.map((offer) => (
@@ -533,7 +533,7 @@ export function CraftModule({ crafts }: { crafts: CraftRecipe[] }) {
   if (crafts.length === 0) return null;
 
   return (
-    <section className="flex w-full max-w-[724px] flex-col gap-3.5">
+    <section className="flex w-full max-w-[45.25rem] flex-col gap-3.5">
       <SectionRule title="Производство" icon={<span className="icon-eft-prog-craft h-4 w-4 bg-text-muted mask-contain mask-center mask-no-repeat" />} />
       <div className="flex flex-col gap-3.5">
         {crafts.map((recipe) => (
@@ -550,7 +550,7 @@ export function UsedInBarterModule({ usedIn, itemId }: { usedIn: BarterOffer[]; 
   if (usedIn.length === 0) return null;
 
   return (
-    <section className="flex w-full max-w-[724px] flex-col gap-3.5">
+    <section className="flex w-full max-w-[45.25rem] flex-col gap-3.5">
       <SectionRule title="Используется в бартере" icon={<span className="icon-eft-prog-barter h-4 w-4 bg-text-muted mask-contain mask-center mask-no-repeat" />} />
       <div className="flex flex-col gap-3.5">
         {usedIn.map((offer) => (
@@ -567,7 +567,7 @@ export function UsedInCraftModule({ usedIn, itemId }: { usedIn: CraftRecipe[]; i
   if (usedIn.length === 0) return null;
 
   return (
-    <section className="flex w-full max-w-[724px] flex-col gap-3.5">
+    <section className="flex w-full max-w-[45.25rem] flex-col gap-3.5">
       <SectionRule title="Используется в производстве" icon={<span className="icon-eft-prog-craft h-4 w-4 bg-text-muted mask-contain mask-center mask-no-repeat" />} />
       <div className="flex flex-col gap-3.5">
         {usedIn.map((recipe) => (

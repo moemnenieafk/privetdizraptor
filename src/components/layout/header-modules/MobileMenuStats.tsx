@@ -66,7 +66,7 @@ export function MobileMenuStats() {
       {/* Ряд авторизации (только для залогиненных): имя · настройки · выход */}
       {isAuthenticated && (
         <div className="flex h-9 items-center justify-between rounded-sm border border-lines-hover bg-(--color-base) px-3">
-          <span className="truncate text-[15px] font-blender-medium leading-none text-(--primary)">
+          <span className="truncate text-[0.9375rem] font-blender-medium leading-none text-(--primary)">
             {activeProfile?.nickname || 'НЕТ ИМЕНИ'}
           </span>
           <div className="flex items-center gap-3">

@@ -54,7 +54,7 @@ export function SectionPlaceholder({ title, description, iconUrl, iconClass, tab
               )}
             </div>
             <div>
-              <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
+              <h1 className="text-[1.75rem] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
                 {title}
               </h1>
               {description && (

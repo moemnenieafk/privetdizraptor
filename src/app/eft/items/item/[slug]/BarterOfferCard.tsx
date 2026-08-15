@@ -61,7 +61,7 @@ export function SlotDivider({ label }: { label: string }) {
   return (
     <div className="flex h-7 items-center gap-2.5">
       <span className="h-px min-w-0 flex-1 bg-linear-to-r from-transparent to-lines-hover" />
-      <span className="shrink-0 font-blender-medium text-[10px] uppercase leading-none text-text-primary">
+      <span className="shrink-0 font-blender-medium text-[0.625rem] uppercase leading-none text-text-primary">
         {label}
       </span>
       <span className="h-px min-w-0 flex-1 bg-linear-to-l from-transparent to-lines-hover" />
@@ -115,7 +115,7 @@ export function BarterSlot({
         {/* Внутренняя тень как в предметах нод карты заданий (QuestNode). */}
         <span className="pointer-events-none absolute inset-0 rounded shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
         {qty > 1 && (
-          <span className="relative z-10 self-end font-blender-medium text-[10px] leading-none text-tactical-amber [paint-order:stroke] [-webkit-text-stroke:2px_#000]">
+          <span className="relative z-10 self-end font-blender-medium text-[0.625rem] leading-none text-tactical-amber [paint-order:stroke] [-webkit-text-stroke:2px_#000]">
             x{qty}
           </span>
         )}
@@ -137,7 +137,7 @@ export function BarterSlot({
           {/* Разбивка «цена × количество» — только когда предметов больше одного:
               при одном она дублирует итог. */}
           {qty > 1 && (
-            <span className="w-full truncate text-center font-blender-medium text-[10px] leading-none text-text-muted">
+            <span className="w-full truncate text-center font-blender-medium text-[0.625rem] leading-none text-text-muted">
               {Math.round(unit).toLocaleString('ru-RU')} × {qty}
             </span>
           )}
@@ -171,7 +171,7 @@ export function Metric({ icon, label, value }: { icon: string; label: string; va
       <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded ${mark.frame}`}>
         <span className={`${icon} h-6 w-6 ${mark.icon} mask-contain mask-center mask-no-repeat`} />
       </span>
-      <span className={`shrink-0 font-blender-medium text-[10px] uppercase tracking-widest ${mark.label}`}>
+      <span className={`shrink-0 font-blender-medium text-[0.625rem] uppercase tracking-widest ${mark.label}`}>
         {label}
       </span>
       <span className={`ml-auto truncate font-blender-medium text-xl leading-none ${gainClass(value)}`}>
@@ -202,7 +202,7 @@ function Breakdown({
   // линию, значения — на одну нижнюю, даже когда «Продажа» набрана крупнее (big).
   return (
     <span className={`flex h-9 shrink-0 flex-col items-end justify-between text-right ${width}`}>
-      <span className={`font-blender-medium text-[10px] uppercase tracking-widest ${labelTone}`}>
+      <span className={`font-blender-medium text-[0.625rem] uppercase tracking-widest ${labelTone}`}>
         {label}
       </span>
       <span className={`font-blender-medium leading-none ${big ? 'text-2xl' : 'text-xl'} ${tone}`}>
@@ -244,7 +244,7 @@ export function RewardRow({
             value={output}
             tone="text-text-primary"
             labelTone="text-tactical-amber"
-            width="lg:w-[170px]"
+            width="lg:w-[10.625rem]"
             big
           />
         </>
@@ -327,7 +327,7 @@ export function BarterOfferCard({
                   href="/eft/questmap"
                   className="flex min-w-0 flex-col gap-1 transition-colors hover:text-(--primary)"
                 >
-                  <span className="w-fit rounded-xs border border-tactical-amber/40 px-2 py-0.5 font-blender-medium text-[10px] uppercase tracking-widest text-tactical-amber">
+                  <span className="w-fit rounded-xs border border-tactical-amber/40 px-2 py-0.5 font-blender-medium text-[0.625rem] uppercase tracking-widest text-tactical-amber">
                     Задание
                   </span>
                   <span className="truncate font-blender-medium text-xs uppercase text-text-primary">

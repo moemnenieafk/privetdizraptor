@@ -28,7 +28,7 @@ export function CodexArticle({ article }: { article: CodexArticleType }) {
             />
           )}
           <div className="min-w-0">
-            <h1 className="text-[28px] font-blender-medium uppercase leading-none tracking-widest text-text-primary">{title}</h1>
+            <h1 className="text-[1.75rem] font-blender-medium uppercase leading-none tracking-widest text-text-primary">{title}</h1>
             {subtitle && <p className="mt-2 text-sm uppercase tracking-widest text-text-muted font-blender-medium">{subtitle}</p>}
           </div>
         </header>

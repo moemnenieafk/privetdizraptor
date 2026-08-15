@@ -80,7 +80,7 @@ export function Breadcrumbs() {
 
   return (
     <nav aria-label="Breadcrumb" className="flex w-full items-center">
-      <ol className="flex flex-wrap items-center gap-2 text-[10px] font-blender-medium uppercase tracking-wider">
+      <ol className="flex flex-wrap items-center gap-2 text-[0.625rem] font-blender-medium uppercase tracking-wider">
         {allCrumbs.map((crumb, index) => {
           const isLast = index === allCrumbs.length - 1;
           return (

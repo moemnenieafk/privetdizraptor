@@ -55,7 +55,7 @@ export function SectionHubNav({
     return (
       <div className={`w-full ${widthClass} mx-auto flex flex-col gap-6 px-4 mb-8 lg:mb-12 lg:flex-row lg:items-center lg:gap-7 xl:px-0`}>
         {/* Левый блок: иконка + заголовок + описание */}
-        <div className="flex items-center gap-4 lg:w-[522px] lg:shrink-0 lg:gap-7">
+        <div className="flex items-center gap-4 lg:w-[32.625rem] lg:shrink-0 lg:gap-7">
           <div className="w-21 h-21 shrink-0 flex items-center justify-center rounded-md bg-(--color-darkbase)">
             {iconUrl ? (
               <div
@@ -68,7 +68,7 @@ export function SectionHubNav({
             )}
           </div>
           <div>
-            <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
+            <h1 className="text-[1.75rem] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
               {title}
             </h1>
             {description && (
@@ -78,7 +78,7 @@ export function SectionHubNav({
         </div>
 
         {/* Правый блок: навигация по разделу (ряд разделов + подраздел/соседи) */}
-        <div className="flex w-full flex-col gap-4 lg:w-[522px] lg:shrink-0">
+        <div className="flex w-full flex-col gap-4 lg:w-[32.625rem] lg:shrink-0">
           <div className="flex items-center gap-3">
             <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
               Навигация по разделу

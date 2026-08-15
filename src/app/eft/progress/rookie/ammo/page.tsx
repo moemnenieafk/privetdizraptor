@@ -18,7 +18,7 @@ export default function AmmoStagePage() {
           <div className="text-type-label font-blender-medium uppercase tracking-widest text-text-secondary">
             Этап 09
           </div>
-          <h1 className="mt-1 text-[28px] font-blender-medium uppercase tracking-widest text-text-primary">
+          <h1 className="mt-1 text-[1.75rem] font-blender-medium uppercase tracking-widest text-text-primary">
             Патрон решает
           </h1>
           <p className="mt-2 text-sm font-blender-book text-text-secondary">

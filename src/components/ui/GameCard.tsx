@@ -66,7 +66,7 @@ export function GameCard({ game, index }: GameCardProps) {
       onClick={(e) => {
         if (game.isInactive) e.preventDefault();
       }}
-      className={`w-full aspect-[348/564] max-w-[348px] shrink-0 relative overflow-hidden group tactical-card-base game-card ${game.hoverClass} ${game.themeClass} ${game.isInactive ? "is-inactive cursor-not-allowed" : ""} motion-safe:animate-[fade-in-up_0.5s_ease-out_both]`}
+      className={`w-full aspect-[348/564] max-w-[21.75rem] shrink-0 relative overflow-hidden group tactical-card-base game-card ${game.hoverClass} ${game.themeClass} ${game.isInactive ? "is-inactive cursor-not-allowed" : ""} motion-safe:animate-[fade-in-up_0.5s_ease-out_both]`}
       style={{
         // Волновое появление карточек: стагер по индексу (motion-safe — уважает reduce-motion)
         animationDelay: `${index * 100}ms`,
@@ -125,7 +125,7 @@ export function GameCard({ game, index }: GameCardProps) {
       {/* Слой 3.5: Неоновая подсветка при наведении */}
       {!game.isInactive && (
         <div
-          className="absolute bottom-0 left-0 w-full h-[28px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out bg-[radial-gradient(ellipse_at_bottom,var(--primary)_0%,transparent_70%)] z-25"
+          className="absolute bottom-0 left-0 w-full h-7 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out bg-[radial-gradient(ellipse_at_bottom,var(--primary)_0%,transparent_70%)] z-25"
         />
       )}
 
@@ -196,7 +196,7 @@ export function GameCard({ game, index }: GameCardProps) {
             </div>
           )}
         </div>
-        <div className={`absolute left-0 w-full text-center top-[524px] font-blender-medium text-type-caption xl:text-type-label tracking-wider uppercase ${
+        <div className={`absolute left-0 w-full text-center top-[92.91%] font-blender-medium text-type-caption xl:text-type-label tracking-wider uppercase ${
           game.isInactive ? "text-text-muted" : "text-text-secondary group-hover:text-(--primary) transition-colors duration-300"
         }`}>
           {game.isInactive ? "ТЕХНИЧЕСКИЕ РАБОТЫ" : game.subtitle}

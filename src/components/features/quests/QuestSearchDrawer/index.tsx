@@ -104,7 +104,7 @@ export function QuestSearchDrawer({ open, onClose, tasks, bartersByQuest, onSele
               className="w-full bg-transparent font-blender-medium text-type-caption uppercase tracking-wide text-text-primary outline-none placeholder:text-text-muted"
             />
           </div>
-          <p className="font-blender-medium text-[10px] text-text-secondary">
+          <p className="font-blender-medium text-[0.625rem] text-text-secondary">
             Мульти-поиск: 5.56, LEDX, Bitcoin. Ищет по названию, целям и наградам квеста.
           </p>
         </div>
@@ -146,7 +146,7 @@ export function QuestSearchDrawer({ open, onClose, tasks, bartersByQuest, onSele
                 <QuestRow key={task.id} task={task} query={hlQuery} onSelect={onSelectResult} />
               ))}
               {total > MAX_RESULTS && (
-                <p className="px-1 py-2 text-center font-blender-medium text-[10px] uppercase tracking-widest text-text-muted">
+                <p className="px-1 py-2 text-center font-blender-medium text-[0.625rem] uppercase tracking-widest text-text-muted">
                   Показаны первые {MAX_RESULTS} из {total} — уточни запрос
                 </p>
               )}
@@ -164,7 +164,7 @@ function FilterChip({ active, color, label, maskIcon, onClick }: { active: boole
       type="button"
       onClick={onClick}
       style={active ? { backgroundColor: color, color: 'var(--color-base)' } : { borderColor: color, color }}
-      className={`flex h-6 flex-1 items-center justify-center gap-1.5 rounded border-[0.5px] font-blender-medium text-[10px] uppercase transition-colors ${active ? 'border-transparent' : ''}`}
+      className={`flex h-6 flex-1 items-center justify-center gap-1.5 rounded border-[0.5px] font-blender-medium text-[0.625rem] uppercase transition-colors ${active ? 'border-transparent' : ''}`}
     >
       <span className={`icon-mask ${maskIcon} h-4 w-4`} style={{ backgroundColor: active ? 'var(--color-base)' : color }} />
       {label}
@@ -192,7 +192,7 @@ function QuestRow({ task, query, onSelect }: { task: TaskRaw; query: string; onS
         </span>
       </span>
       <span className="flex shrink-0 items-center gap-2">
-        <span className="font-blender-medium text-[10px] uppercase text-text-secondary">ур. {task.minPlayerLevel}+</span>
+        <span className="font-blender-medium text-[0.625rem] uppercase text-text-secondary">ур. {task.minPlayerLevel}+</span>
         {task.lightkeeperRequired && (
           <span className="flex size-4 items-center justify-center rounded-xs" style={{ backgroundColor: 'color-mix(in srgb, var(--color-lightkeeper) 12%, transparent)' }}>
             <span className="icon-mask icon-eft-profile-lightkeeper h-3 w-3" />

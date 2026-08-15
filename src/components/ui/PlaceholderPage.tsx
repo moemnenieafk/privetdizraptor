@@ -40,11 +40,11 @@ export function PlaceholderPage({ themeClass, logoSrc, logoAlt, description, bgI
       <div className="absolute inset-0 bg-linear-to-b from-base/50 via-base/80 to-base z-0 pointer-events-none" />
 
       {/* Фоновое свечение в акцентном цвете темы */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[400px] md:h-[400px] bg-primary/15 rounded-full blur-[80px] md:blur-[100px] pointer-events-none transition-all duration-700 z-0"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[18.75rem] h-[18.75rem] md:w-[25rem] md:h-[25rem] bg-primary/15 rounded-full blur-[80px] md:blur-[100px] pointer-events-none transition-all duration-700 z-0"></div>
       
       <div className="relative z-10 flex flex-col items-center p-6 text-center">
         {/* Логотип игры */}
-        <div className="w-[160px] h-[48px] md:w-[200px] md:h-[60px] relative mb-6 md:mb-8 animate-[fade-in-up_1s_both]">
+        <div className="w-[10rem] h-[3rem] md:w-[12.5rem] md:h-[3.75rem] relative mb-6 md:mb-8 animate-[fade-in-up_1s_both]">
           <Image 
             src={logoSrc} 
             alt={logoAlt} 

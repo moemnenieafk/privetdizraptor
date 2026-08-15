@@ -28,7 +28,7 @@ export default async function StoryQuestMapPage({ params }: { params: Promise<{ 
 
         <header className="mb-7 flex items-center gap-3">
           <span className={`h-10 w-10 shrink-0 icon-mask icon-eft-quests-story-${map.slug} bg-text-primary`} />
-          <h1 className="font-blender-medium text-[28px] uppercase tracking-widest text-text-primary">
+          <h1 className="font-blender-medium text-[1.75rem] uppercase tracking-widest text-text-primary">
             {map.title} — карта квеста
           </h1>
           {steps != null && (

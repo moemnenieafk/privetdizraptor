@@ -24,7 +24,7 @@ export function PageHeader({ pageId, title, description, iconClass, count }: Pag
       </div>
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">{finalTitle}</h1>
+          <h1 className="text-[1.75rem] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">{finalTitle}</h1>
           {count != null && count > 0 && (
             <span className="px-2 py-0.5 bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] border border-(--primary)/40 rounded font-blender-medium text-sm text-(--primary) leading-snug">
               {count}

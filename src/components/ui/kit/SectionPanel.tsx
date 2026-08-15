@@ -17,7 +17,7 @@ export function SectionPanel({ title, icon, action, children, className = '', no
       <div className={`flex items-center justify-between ${noDivider ? 'mb-4' : 'mb-5 border-b border-lines-hover pb-3'}`}>
         <div className="flex items-center gap-2 text-text-primary">
           {icon && <span className="text-text-muted flex-shrink-0">{icon}</span>}
-          <h2 className={`font-blender-medium ${smallTitle ? 'text-xs' : 'text-[16px] md:text-[18px]'} uppercase tracking-widest m-0 leading-none`}>
+          <h2 className={`font-blender-medium ${smallTitle ? 'text-xs' : 'text-[1rem] md:text-[1.125rem]'} uppercase tracking-widest m-0 leading-none`}>
             {title}
           </h2>
         </div>

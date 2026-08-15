@@ -160,7 +160,7 @@ export function QuestCard({
               {itemShortName ?? countLabel}
             </span>
             {foundInRaid && (
-              <span className="inline-flex h-5 w-fit items-center gap-1 rounded-sm border border-tactical-amber/40 bg-tactical-amber/10 px-1.5 font-blender-medium text-[10px] uppercase tracking-widest text-tactical-amber">
+              <span className="inline-flex h-5 w-fit items-center gap-1 rounded-sm border border-tactical-amber/40 bg-tactical-amber/10 px-1.5 font-blender-medium text-[0.625rem] uppercase tracking-widest text-tactical-amber">
                 найдено в рейде
               </span>
             )}

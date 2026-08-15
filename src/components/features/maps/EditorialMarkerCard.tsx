@@ -680,7 +680,7 @@ export function EditorialMarkerCard({
                       }`}
                     >
                       <CatIcon cat={c} size={18} />
-                      <span className={`truncate font-blender-medium text-[10px] uppercase tracking-tight ${on ? 'text-(--primary)' : 'text-text-secondary'}`}>
+                      <span className={`truncate font-blender-medium text-[0.625rem] uppercase tracking-tight ${on ? 'text-(--primary)' : 'text-text-secondary'}`}>
                         {c.label}
                       </span>
                     </button>
@@ -754,7 +754,7 @@ export function EditorialMarkerCard({
                         {draft.lootItems.map((id) => (
                           <span key={id} title={lootLabel(id)} className="flex items-center gap-1 rounded-xs border border-lines-hover bg-card-menu py-1 pr-1 pl-1.5">
                             <img src={itemIconUrl(id)} alt="" className="size-5 shrink-0 rounded-xs object-contain" />
-                            <span className="max-w-28 truncate font-blender-book text-[11px] text-text-primary">{lootLabel(id)}</span>
+                            <span className="max-w-28 truncate font-blender-book text-[0.6875rem] text-text-primary">{lootLabel(id)}</span>
                             <button type="button" onClick={() => removeLootItem(id)} title="Убрать предмет из пула" className="shrink-0 text-text-muted transition-colors hover:text-danger">
                               <X className="h-3 w-3" />
                             </button>
@@ -781,7 +781,7 @@ export function EditorialMarkerCard({
                           ))}
                       </div>
                     ) : (
-                      <p className="px-1 py-1.5 font-blender-book text-[10px] text-text-muted">
+                      <p className="px-1 py-1.5 font-blender-book text-[0.625rem] text-text-muted">
                         {lootQ.trim().length >= 2
                           ? 'Ничего не найдено'
                           : draft.lootItems.length
@@ -796,7 +796,7 @@ export function EditorialMarkerCard({
                   <div className="scrollbar-hidden flex max-h-56 flex-col gap-1.5 overflow-y-auto">
                     {CONTAINER_CATEGORIES.map((g) => (
                       <div key={g.group} className="flex flex-col gap-1">
-                        <span className="font-blender-medium text-[9px] uppercase tracking-wide text-text-muted">{g.group}</span>
+                        <span className="font-blender-medium text-[0.5625rem] uppercase tracking-wide text-text-muted">{g.group}</span>
                         <div className="flex flex-wrap gap-1">
                           {g.items.map((it) => (
                             <SubCell key={it.key} on={draft.category === it.key} onClick={() => setDraft((d) => ({ ...d, category: it.key }))} label={it.label}>
@@ -879,7 +879,7 @@ export function EditorialMarkerCard({
                           type="button"
                           onClick={() => setDraft((d) => ({ ...d, linkId: ev.id }))}
                           aria-pressed={on}
-                          className="flex items-center gap-1.5 rounded-xs border-[0.5px] px-2.5 py-1.5 font-blender-medium text-[11px] uppercase tracking-wide transition-colors"
+                          className="flex items-center gap-1.5 rounded-xs border-[0.5px] px-2.5 py-1.5 font-blender-medium text-[0.6875rem] uppercase tracking-wide transition-colors"
                           style={
                             on
                               ? { borderColor: LINK_KIND_COLOR.event, backgroundColor: `color-mix(in srgb, ${LINK_KIND_COLOR.event} 15%, transparent)`, color: LINK_KIND_COLOR.event }
@@ -1080,7 +1080,7 @@ export function EditorialMarkerCard({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {linkedQuest.minPlayerLevel != null && (
-                    <span className="font-blender-medium text-[10px] uppercase text-text-secondary">ур. {linkedQuest.minPlayerLevel}+</span>
+                    <span className="font-blender-medium text-[0.625rem] uppercase text-text-secondary">ур. {linkedQuest.minPlayerLevel}+</span>
                   )}
                   {linkedQuest.lightkeeperRequired && <span className="icon-mask icon-eft-profile-lightkeeper size-4 text-(--color-lightkeeper)" />}
                   {linkedQuest.kappaRequired && <span className="icon-mask icon-eft-profile-kappa size-4 text-(--color-kappa)" />}
@@ -1104,7 +1104,7 @@ export function EditorialMarkerCard({
                   {marker.lootItems.map((id) => (
                     <span key={id} title={lootLabel(id)} className="flex items-center gap-1 rounded-xs border-[0.5px] border-lines-hover bg-card-menu py-1 pr-1.5 pl-1">
                       <img src={itemIconUrl(id)} alt="" className="size-7 shrink-0 rounded-xs object-contain" />
-                      <span className="max-w-24 truncate font-blender-book text-[11px] text-text-secondary">{lootLabel(id)}</span>
+                      <span className="max-w-24 truncate font-blender-book text-[0.6875rem] text-text-secondary">{lootLabel(id)}</span>
                     </span>
                   ))}
                 </div>
@@ -1128,7 +1128,7 @@ export function EditorialMarkerCard({
                   {marker.linkKind === 'story' ? (linkedStory?.title ?? marker.linkId) : (markerEventLabel(marker.linkId) ?? 'Событие')}
                 </span>
                 {marker.linkKind === 'story' && marker.linkStep != null && (
-                  <span className="shrink-0 font-blender-medium text-[10px] uppercase text-text-secondary">шаг {marker.linkStep}</span>
+                  <span className="shrink-0 font-blender-medium text-[0.625rem] uppercase text-text-secondary">шаг {marker.linkStep}</span>
                 )}
                 {marker.linkKind === 'story' && marker.linkId && (
                   <a
@@ -1359,7 +1359,7 @@ function LinkKindButton({
       disabled={disabled}
       title={title}
       aria-pressed={on}
-      className="flex h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-xs border-[0.5px] px-0.5 font-blender-medium text-[9px] uppercase tracking-tight transition-colors disabled:opacity-40"
+      className="flex h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-xs border-[0.5px] px-0.5 font-blender-medium text-[0.5625rem] uppercase tracking-tight transition-colors disabled:opacity-40"
       style={
         on
           ? { borderColor: color, backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)`, color }

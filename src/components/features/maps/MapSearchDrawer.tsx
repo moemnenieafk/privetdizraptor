@@ -302,7 +302,7 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
                 </button>
               )}
             </div>
-            <p className="font-blender-medium text-[10px] text-text-secondary">
+            <p className="font-blender-medium text-[0.625rem] text-text-secondary">
               Поддерживается мульти поиск, например: LEDX, Bitcoin, Ключ-карта
             </p>
           </div>
@@ -460,7 +460,7 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
                 </button>
               )}
             </div>
-            <p className="font-blender-medium text-[10px] text-text-secondary">
+            <p className="font-blender-medium text-[0.625rem] text-text-secondary">
               Отметь «есть» — двери ключа подсветятся на карте. Клик по строке — подлёт к дверям.
             </p>
             {keyHits.length === 0 ? (
@@ -521,7 +521,7 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
                 </button>
               )}
             </div>
-            <p className="font-blender-medium text-[10px] text-text-secondary">
+            <p className="font-blender-medium text-[0.625rem] text-text-secondary">
               Поддерживается мульти поиск, например: LEDX, Bitcoin, Ключ-карта
             </p>
           </div>
@@ -626,7 +626,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       style={active ? { backgroundColor: color, color: 'var(--color-base)' } : { borderColor: color, color }}
-      className={`flex h-6 flex-1 items-center justify-center gap-1.5 rounded border-[0.5px] font-blender-medium text-[10px] uppercase transition-colors ${
+      className={`flex h-6 flex-1 items-center justify-center gap-1.5 rounded border-[0.5px] font-blender-medium text-[0.625rem] uppercase transition-colors ${
         active ? 'border-transparent' : ''
       }`}
     >
@@ -660,7 +660,7 @@ function QuestRow({ q, query, active, onSelect }: { q: MapQuestLite; query: stri
         </span>
       </span>
       <span className="flex shrink-0 items-center gap-2">
-        <span className="font-blender-medium text-[10px] uppercase text-text-secondary">ур. {q.minPlayerLevel}+</span>
+        <span className="font-blender-medium text-[0.625rem] uppercase text-text-secondary">ур. {q.minPlayerLevel}+</span>
         {q.lightkeeperRequired && (
           <span className="flex size-4 items-center justify-center rounded-xs" style={{ backgroundColor: 'color-mix(in srgb, var(--color-lightkeeper) 12%, transparent)' }}>
             <span className="icon-mask icon-eft-profile-lightkeeper h-3 w-3" />
@@ -695,16 +695,16 @@ function StoryRow({ s, query, pins, active, onFocus }: { s: StoryOnMap; query: s
       </span>
       <span className="flex shrink-0 items-center gap-2">
         {hasPins && (
-          <span className="flex items-center gap-0.5 font-blender-medium text-[10px] tabular-nums text-(--primary)">
+          <span className="flex items-center gap-0.5 font-blender-medium text-[0.625rem] tabular-nums text-(--primary)">
             <MapPin className="h-3 w-3" />
             {pins.length}
           </span>
         )}
-        <span className="flex items-center gap-0.5 font-blender-medium text-[10px] tabular-nums" style={{ color: skullColor }}>
+        <span className="flex items-center gap-0.5 font-blender-medium text-[0.625rem] tabular-nums" style={{ color: skullColor }}>
           <span className="icon-mask icon-eft-difficulty-skull h-3 w-3" style={{ backgroundColor: skullColor }} />
           {s.difficulty.skulls}
         </span>
-        <span className="font-blender-medium text-[10px] uppercase text-text-secondary">{s.stepHits} эт.</span>
+        <span className="font-blender-medium text-[0.625rem] uppercase text-text-secondary">{s.stepHits} эт.</span>
         <ChevronRight className="h-4 w-4 text-text-muted" />
       </span>
     </>

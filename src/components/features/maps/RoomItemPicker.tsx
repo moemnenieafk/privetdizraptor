@@ -144,7 +144,7 @@ export function RoomItemPicker({ lootItems, onChange, initial }: Props) {
                     <img src={itemIconUrl(it.id)} alt="" className="absolute inset-0 size-full object-contain p-0.5" />
                   </span>
                   <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">{it.name}</span>
-                  {on && <span className="shrink-0 font-blender-medium text-[10px] uppercase text-(--primary)">выбрано</span>}
+                  {on && <span className="shrink-0 font-blender-medium text-[0.625rem] uppercase text-(--primary)">выбрано</span>}
                 </button>
               );
             })}

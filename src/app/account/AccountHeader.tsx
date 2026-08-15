@@ -15,7 +15,7 @@ export function AccountHeader() {
   const isPro = tier !== 'free';
 
   return (
-    <header className="sticky top-0 z-50 flex h-[60px] w-full shrink-0 items-center justify-between border-b border-lines-hover bg-base px-4 lg:px-8">
+    <header className="sticky top-0 z-50 flex h-15 w-full shrink-0 items-center justify-between border-b border-lines-hover bg-base px-4 lg:px-8">
 
       {/* Left: Logo */}
       <Link href="/" className="shrink-0 transition-all hover:brightness-125 focus-visible:outline-none">

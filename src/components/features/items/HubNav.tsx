@@ -89,7 +89,7 @@ export function HubNav({ tabs, iconClass, iconUrl, title, description, count, ac
 
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-[28px] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
+            <h1 className="text-[1.75rem] font-blender-medium leading-none tracking-tighter uppercase text-text-primary">
               {title}
             </h1>
             {count != null && count > 0 && (

@@ -107,7 +107,7 @@ export function QuestSearchSheet({ tasks, onFocus }: Props) {
           className="w-full bg-transparent font-blender-medium text-type-caption uppercase tracking-wide text-text-primary outline-none placeholder:text-text-muted"
         />
       </div>
-      <p className="mb-3 font-blender-medium text-[10px] text-text-secondary">
+      <p className="mb-3 font-blender-medium text-[0.625rem] text-text-secondary">
         Поддерживается мульти-поиск, например: LEDX, Bitcoin, Ключ-карта
       </p>
 
@@ -138,7 +138,7 @@ export function QuestSearchSheet({ tasks, onFocus }: Props) {
                   <span className="min-w-0 truncate font-blender-medium text-xs text-text-primary">{t.name}</span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
-                  <span className="font-blender-medium text-[10px] uppercase text-text-secondary">ур. {t.minPlayerLevel}+</span>
+                  <span className="font-blender-medium text-[0.625rem] uppercase text-text-secondary">ур. {t.minPlayerLevel}+</span>
                   {t.lightkeeperRequired && (
                     <span className="flex size-4 items-center justify-center rounded-xs" style={{ backgroundColor: 'color-mix(in srgb, var(--color-lightkeeper) 12%, transparent)' }}>
                       <span className="icon-mask icon-eft-profile-lightkeeper h-3 w-3" />
@@ -170,7 +170,7 @@ function FilterChip({ active, color, label, maskIcon, onClick }: { active: boole
       type="button"
       onClick={onClick}
       style={active ? { backgroundColor: color, color: 'var(--color-base)' } : { borderColor: color, color }}
-      className={`flex h-6 flex-1 items-center justify-center gap-1.5 rounded border-[0.5px] font-blender-medium text-[10px] uppercase transition-colors ${active ? 'border-transparent' : ''}`}
+      className={`flex h-6 flex-1 items-center justify-center gap-1.5 rounded border-[0.5px] font-blender-medium text-[0.625rem] uppercase transition-colors ${active ? 'border-transparent' : ''}`}
     >
       <span className={`icon-mask ${maskIcon} h-4 w-4`} style={{ backgroundColor: active ? 'var(--color-base)' : color }} />
       {label}

@@ -8,7 +8,7 @@ export default function NotFound() {
         
         {/* Декоративный 404 на заднем плане с наложением заголовка */}
         <div className="relative w-full flex items-center justify-center mb-8">
-          <span className="text-[120px] md:text-[200px] font-blender-medium leading-none text-lines-hover opacity-50 select-none">
+          <span className="text-[7.5rem] md:text-[12.5rem] font-blender-medium leading-none text-lines-hover opacity-50 select-none">
             404
           </span>
           <div className="absolute inset-0 flex flex-col items-center justify-center">

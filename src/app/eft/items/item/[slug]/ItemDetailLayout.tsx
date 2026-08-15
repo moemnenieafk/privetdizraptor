@@ -62,7 +62,7 @@ const BADGE_STYLES: Record<BadgeVariant, { box: string; icon: string }> = {
 function StatusBadge({ label, variant, iconClass }: StatusBadgeData) {
   const s = BADGE_STYLES[variant];
   return (
-    <span className={`inline-flex h-5 items-center gap-1 rounded-sm border px-1.5 font-blender-medium text-[10px] uppercase tracking-widest ${s.box}`}>
+    <span className={`inline-flex h-5 items-center gap-1 rounded-sm border px-1.5 font-blender-medium text-[0.625rem] uppercase tracking-widest ${s.box}`}>
       {iconClass && (
         <span className={`${iconClass} h-3 w-3 shrink-0 ${s.icon} mask-contain mask-center mask-no-repeat`} />
       )}
@@ -133,7 +133,7 @@ export function ItemDetailLayout({ item, similar, locations, buyLevelRequired, r
       {/* ── ПРАВАЯ КОЛОНКА ────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <div>
-          <h1 className="mb-2 line-clamp-2 text-3xl leading-tight font-blender-medium text-text-primary lg:text-[42px]">
+          <h1 className="mb-2 line-clamp-2 text-3xl leading-tight font-blender-medium text-text-primary lg:text-[2.625rem]">
             {item.name}
           </h1>
 

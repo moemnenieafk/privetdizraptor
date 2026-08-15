@@ -137,7 +137,7 @@ function ToolRow({
             {label}
           </span>
           {hint && (
-            <span className="font-blender-book text-[8px] uppercase tracking-widest text-danger">{hint}</span>
+            <span className="font-blender-book text-[0.5rem] uppercase tracking-widest text-danger">{hint}</span>
           )}
         </span>
       </button>

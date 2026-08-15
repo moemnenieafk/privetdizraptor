@@ -103,7 +103,7 @@ export function BurgerMenu({ menuItems = [], onOpenNewbie, newbieLabel }: Burger
             <Link
               href="/account"
               onClick={() => setIsOpen(false)}
-              className="tactical-menu-item flex items-center justify-center gap-2.5 rounded border border-(--primary) py-3.5 font-blender-medium text-[15px] uppercase tracking-widest text-(--primary) hover:scale-[1.02]"
+              className="tactical-menu-item flex items-center justify-center gap-2.5 rounded border border-(--primary) py-3.5 font-blender-medium text-[0.9375rem] uppercase tracking-widest text-(--primary) hover:scale-[1.02]"
             >
               <span className="h-4 w-4 icon-mask icon-account_profile_icon bg-(--primary)" />
               Аккаунт Центр
@@ -112,7 +112,7 @@ export function BurgerMenu({ menuItems = [], onOpenNewbie, newbieLabel }: Burger
             <Link
               href="/login"
               onClick={() => setIsOpen(false)}
-              className="tactical-menu-item flex items-center justify-center gap-2.5 rounded border border-(--primary) py-3.5 font-blender-medium text-[15px] uppercase tracking-widest text-(--primary) hover:scale-[1.02]"
+              className="tactical-menu-item flex items-center justify-center gap-2.5 rounded border border-(--primary) py-3.5 font-blender-medium text-[0.9375rem] uppercase tracking-widest text-(--primary) hover:scale-[1.02]"
             >
               <span className="h-4 w-4 icon-mask icon-eft-profile-login bg-(--primary)" />
               Войти
@@ -124,7 +124,7 @@ export function BurgerMenu({ menuItems = [], onOpenNewbie, newbieLabel }: Burger
               <Link
                 key={item.id || idx}
                 href={item.path || "#"}
-                className="tactical-menu-item flex items-center justify-center rounded border border-lines-hover py-3.5 font-blender-medium text-[15px] uppercase tracking-widest hover:scale-[1.02]"
+                className="tactical-menu-item flex items-center justify-center rounded border border-lines-hover py-3.5 font-blender-medium text-[0.9375rem] uppercase tracking-widest hover:scale-[1.02]"
               >
                 {item.label}
               </Link>
