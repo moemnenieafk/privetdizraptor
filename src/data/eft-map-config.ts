@@ -258,6 +258,7 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
       { name: "3-й этаж", show: false, tile: "third" },
       { name: "Тоннели", show: false, tile: "basement" },
     ],
+    raid: { players: "7-8", duration: 20 }, // Завод: 7-8 игроков, 20-мин рейд — для дропдауна выбора карты
   },
   // Блок `factory-hd` удалён при промоуте в боевой `factory` (docs/decisions/factory-hd-promote.md,
   // 2026-08-13): его поля перенесены в `factory` выше, старый slug редиректит на /eft/maps/factory
