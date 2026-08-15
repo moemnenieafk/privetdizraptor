@@ -66,10 +66,12 @@ export default function StreamStatus({ mapVariant = false }: { mapVariant?: bool
     //     ⇒ центр кнопки совпадает с центром логотипа на любом разрешении;
     //   • left = центр гуттера ((100vw−1100)/4) − половина ширины кнопки (5rem) − доп-сдвиг влево 2rem
     //     (визуальный центр блока, дальше от логотипа); фолбэк 1.5rem держит гекс-скобку в кадре.
-    // Иначе (не Карты) — прежний правый низ.
+    // Иначе (не Карты) — правый низ. Авто-центр в ПРАВОМ гуттере без магических констант:
+    //   обёртка разворачивается ровно на пустой блок (width = гуттер, right:0), items-center
+    //   центрирует кнопку внутри. Само подстраивается под любую ширину экрана.
     <div
       className={`fixed hidden xl:flex flex-col gap-2 pointer-events-none ${
-        mapVariant ? 'items-start z-40' : 'bottom-4 items-end z-70'
+        mapVariant ? 'items-start z-40' : 'bottom-4 items-center z-70'
       }`}
       style={
         mapVariant
@@ -77,7 +79,7 @@ export default function StreamStatus({ mapVariant = false }: { mapVariant?: bool
               top: 'calc(clamp(12px, 1.09vw, 21px) + 8px)',
               left: 'max(1.5rem, calc((100vw - 1100px) / 4 - 7rem))',
             }
-          : { right: 'max(1rem, calc((100vw - 1100px) / 2 - 10rem - 56px))' }
+          : { right: 0, width: 'max(10rem, calc((100vw - 1100px) / 2))' }
       }
     >
       {/* ═══ Кнопка-индикатор стрима ═══ */}
