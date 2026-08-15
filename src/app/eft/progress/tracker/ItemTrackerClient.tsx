@@ -19,7 +19,8 @@ interface GroupedItem {
   quests: Array<{
     questId: string;
     questName: string;
-    objectiveId: string;
+    /** Один квест может требовать предмет двумя целями (найти в рейде + сдать) — держим обе. */
+    objectiveIds: string[];
     needed: number;
     found: number;
     traderNormalizedName: string;
@@ -52,26 +53,43 @@ export function ItemTrackerClient({ initialTasks }: Props) {
 
   const grouped = useMemo<GroupedItem[]>(() => {
     const map = new Map<string, GroupedItem>();
+    // item.id → questId → строка квеста: чтобы схлопнуть цели «найти в рейде» + «сдать»
+    // одного квеста на один предмет в ОДИН ряд (иначе ×2 строки и удвоенное «нужно»).
+    const byQuest = new Map<string, Map<string, GroupedItem['quests'][number]>>();
     for (const entry of activeItems) {
       const { item, questId, questName, objectiveId, needed, found, foundInRaid } = entry;
       const task = taskMap.get(questId);
       const traderNormalizedName = task?.trader.normalizedName ?? '';
       if (!map.has(item.id)) {
         map.set(item.id, { item, foundInRaid, totalNeeded: 0, totalFound: 0, quests: [] });
+        byQuest.set(item.id, new Map());
       }
       const g = map.get(item.id)!;
-      g.totalNeeded += needed;
-      g.totalFound  += found;
       if (foundInRaid) g.foundInRaid = true;
-      g.quests.push({ questId, questName, objectiveId, needed, found, traderNormalizedName });
+      const rows = byQuest.get(item.id)!;
+      const existing = rows.get(questId);
+      if (existing) {
+        // Второй раз тот же квест+предмет → та же цель: нужно = max (не сумма),
+        // прогресс = min (готово только когда закрыты обе половины: найти И сдать).
+        existing.objectiveIds.push(objectiveId);
+        existing.needed = Math.max(existing.needed, needed);
+        existing.found  = Math.min(existing.found, found);
+      } else {
+        const row = { questId, questName, objectiveIds: [objectiveId], needed, found, traderNormalizedName };
+        rows.set(questId, row);
+        g.quests.push(row);
+      }
     }
-    // Порядок строк заданий фиксируем детерминированно — чтобы строки не
-    // менялись местами между рендерами (у квестов бывают одинаковые названия).
     for (const g of map.values()) {
+      // Тоталы считаем ПОСЛЕ схлопывания — по одному ряду на квест.
+      g.totalNeeded = g.quests.reduce((s, q) => s + q.needed, 0);
+      g.totalFound  = g.quests.reduce((s, q) => s + q.found, 0);
+      // Порядок строк заданий фиксируем детерминированно — чтобы строки не
+      // менялись местами между рендерами (у квестов бывают одинаковые названия).
       g.quests.sort(
         (a, b) =>
           a.questName.localeCompare(b.questName, 'ru') ||
-          a.objectiveId.localeCompare(b.objectiveId),
+          a.objectiveIds[0].localeCompare(b.objectiveIds[0]),
       );
     }
     return [...map.values()];
@@ -240,8 +258,8 @@ export function ItemTrackerClient({ initialTasks }: Props) {
             const done = group.totalFound >= group.totalNeeded;
             const single = group.quests.length === 1;
 
-            const fillAll  = () => group.quests.forEach((q) => setItemCount(q.questId, q.objectiveId, q.needed));
-            const clearAll = () => group.quests.forEach((q) => setItemCount(q.questId, q.objectiveId, 0));
+            const fillAll  = () => group.quests.forEach((q) => q.objectiveIds.forEach((oid) => setItemCount(q.questId, oid, q.needed)));
+            const clearAll = () => group.quests.forEach((q) => q.objectiveIds.forEach((oid) => setItemCount(q.questId, oid, 0)));
 
             return (
               <div
@@ -301,7 +319,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                     <QtyControl
                       value={group.quests[0].found}
                       max={group.quests[0].needed}
-                      onChange={(n) => setItemCount(group.quests[0].questId, group.quests[0].objectiveId, n)}
+                      onChange={(n) => group.quests[0].objectiveIds.forEach((oid) => setItemCount(group.quests[0].questId, oid, n))}
                       size="md"
                       showMax
                       showClear
@@ -333,7 +351,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                       {group.quests.map((quest) => {
                         const questDone = quest.found >= quest.needed;
                         return (
-                          <div key={`${quest.questId}-${quest.objectiveId}`} className="flex items-center gap-2">
+                          <div key={quest.questId} className="flex items-center gap-2">
                             <img
                               src={traderImg(quest.traderNormalizedName)}
                               alt={quest.traderNormalizedName}
@@ -350,7 +368,7 @@ export function ItemTrackerClient({ initialTasks }: Props) {
                             <QtyControl
                               value={quest.found}
                               max={quest.needed}
-                              onChange={(n) => setItemCount(quest.questId, quest.objectiveId, n)}
+                              onChange={(n) => quest.objectiveIds.forEach((oid) => setItemCount(quest.questId, oid, n))}
                               size="sm"
                             />
                           </div>
