@@ -27,7 +27,7 @@ function hrefFor(feature: PortalFeature): string {
 /** Ячейка грида: квадрат 64px с иконкой-маской 22px по центру. Избранная — амбер.
  *  feedback-фича открывает модалку (button), остальные — навигация (Link). */
 function FeatureCell({ feature, active, onFeedback, onUse }: { feature: PortalFeature; active: boolean; onFeedback: () => void; onUse: () => void }) {
-  const cls = `group flex aspect-square size-16 items-center justify-center rounded-lg border transition-colors ${
+  const cls = `group flex aspect-square size-18 items-center justify-center rounded-lg border transition-colors ${
     active
       ? 'border-tactical-amber bg-tactical-amber/10 hover:bg-tactical-amber/20'
       : 'border-lines-hover bg-card-menu hover:border-text-muted'
@@ -103,6 +103,13 @@ export function ArchetypeFeatureGrid({ featureIds }: ArchetypeFeatureGridProps) 
   const active = new Set(featureIds);
   const count = featureIds.length;
 
+  // Порядок ТЕКСТА: избранные (активные) поднимаются наверх, остальные — ниже (в порядке каталога).
+  // Грид иконок остаётся в порядке каталога — переставляем только список названий.
+  const orderedRows = [
+    ...FEATURE_CATALOG.filter((f) => active.has(f.id)),
+    ...FEATURE_CATALOG.filter((f) => !active.has(f.id)),
+  ];
+
   // Запись XP клика по фиче: role — активный архетип профиля, множитель ×2 льётся в его под-трек.
   const activeId = usePlayerStore((s) => s.activeProfileId);
   const role = useRoleStore((s) => effectiveRoleFor(s, activeId));
@@ -123,14 +130,16 @@ export function ArchetypeFeatureGrid({ featureIds }: ArchetypeFeatureGridProps) 
       </div>
 
       {/* Слева грид иконок, справа список названий. На узких — список уходит под грид. */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-        <div className="grid shrink-0 self-start grid-cols-4 gap-2.5 sm:grid-cols-6">
+      <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
+        <div className="grid shrink-0 self-start grid-cols-4 gap-3.5 sm:grid-cols-7">
           {FEATURE_CATALOG.map((feature) => (
             <FeatureCell key={feature.id} feature={feature} active={active.has(feature.id)} onFeedback={onFeedback} onUse={onUse(feature.id)} />
           ))}
         </div>
-        <div className="flex min-w-0 flex-1 flex-col justify-between gap-0.5">
-          {FEATURE_CATALOG.map((feature) => (
+        {/* Текст: избранные наверху, остальные ниже; на десктопе не выше грида (overflow скрыт,
+            per-line truncate у длинных названий). Высота грида 5×72+4×14=416px > высоты списка. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5 lg:min-h-0 lg:overflow-hidden">
+          {orderedRows.map((feature) => (
             <FeatureRow key={feature.id} feature={feature} active={active.has(feature.id)} onFeedback={onFeedback} onUse={onUse(feature.id)} />
           ))}
         </div>

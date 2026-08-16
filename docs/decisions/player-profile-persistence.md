@@ -1,0 +1,81 @@
+---
+status: 🟢 Слои A+B в проде (2026-08-17); Слой C (ручной редактор) — ждёт
+affects: dossier, profile, supabase-schema, parser, manual-entry
+date: 2026-08-17
+---
+
+# Профиль игрока — серверная точка истины + ручной ввод
+
+## Проблема (диагноз)
+Профиль сейчас живёт **только в localStorage** двумя сторами (`player-profile-storage` +
+`pmc-rich-stats-storage`). Серверной персистенции нет. Отсюда «сброс»: другой браузер/устройство,
+чистка кэша, инкогнито → пусто; повторная загрузка перезаписывает единственный слот. Оттолкнуться
+не от чего — все калькуляции (архетип, под-треки, EXP+) висят на эфемерном localStorage.
+
+## Ключевая находка про источник данных
+Кнопка «Скачай свой профиль» ведёт на **tarkov.dev/players**. Его экспорт (проверено на
+`docs/15045.json`) — **тонкий**: `aid · info · pmcStats · scavStats · skills`. **Ни Hideout, ни
+TradersInfo, ни Quests в нём нет.** Уровень убежища есть только в **полном игровом/SPT-профиле**
+(`Hideout.Areas[]`, `TradersInfo`, `Quests[]`), который live-игрок штатно не выгружает.
+
+Следствие:
+- парсер поддерживает **обе формы**: тонкую (tarkov.dev) и полную (SPT/игра). Hideout/трейдеры/
+  квесты извлекаются **если присутствуют**, иначе `null` — не выдумываем.
+- для большинства (tarkov.dev) **ручной ввод убежища — основной источник**, не запасной.
+
+## Решения V4DYA (2026-08-17)
+1. **Аноним** — работает как сейчас (localStorage), но видит мягкий призыв «войди, чтобы сохранить
+   профиль навсегда». Залогинился → снапшот уезжает на сервер и становится точкой истины.
+2. **Ручной ввод** — полный, но группами: все ~30 Common-скиллов (сворачиваемо по категориям, как в
+   `DossierPmcStats`) + все станции убежища + трейдеры. Уровень/престиж/фракция — там же.
+
+## Архитектура
+
+### Хранение
+- **Залогинен** → Supabase-таблица `cta_player_profiles` (owner = `profiles.id`), запись/чтение через
+  **server-action на Drizzle owner-role** (мимо RLS — иначе ES256-гоча юзер-JWT, см. memory
+  `supabase-jwt-es256-dataplane`; тот же путь, что `getKarmaMap`/чекпоинты).
+- **Аноним** → localStorage (как сейчас). При логине — one-shot миграция localStorage → сервер.
+- Форма записи: **JSONB-снапшот** нормализованной вью (`PlayerView` + hideout/traders) +
+  индекс-колонки `level`, `experience`, `updated_at`. JSONB = «все нюансы без потери» и
+  forward-compat (§4.4: тип повторяет форму данных).
+
+### Источники правки (сосуществуют)
+- **JSON-загрузка** — массовое заполнение снапшота (тонкий или полный профиль).
+- **Ручной редактор** — патч отдельных полей (скилл, станция, трейдер).
+- Семантика: **last-write-wins по полю**. Один редактируемый снапшот; загрузка bulk-fill, ручные
+  правки — patch. Загрузка тонкого профиля **не затирает** вручную введённое убежище (мержим по
+  ключам, не заменяем целиком).
+
+### Схема (черновик, ждёт «добро» — §5 необратимо)
+```
+cta_player_profiles
+  id           uuid pk default random
+  user_id      uuid → profiles.id  (on delete cascade)
+  game_id      uuid → games.id     (on delete cascade)
+  snapshot     jsonb   -- PlayerView + hideout[] + traders[] (+ manual overrides)
+  level        int
+  experience   bigint
+  source       text    -- 'tarkov.dev' | 'game-profile' | 'manual' | 'mixed'
+  updated_at   timestamptz default now()
+  unique (user_id, game_id)   -- один профиль на игру (upsert)
+```
+DDL применяется **прямым SQL** (db:push требует TTY — memory `maps-drawer-unify`), не `push --force`.
+
+## План (слоями)
+- **A. Парсер+типы** ✅ (2026-08-17): `RawPlayerProfile.Hideout?`/`TradersInfo?`; `PlayerView` +
+  `hideout[]`/`traders[]`; `normalizeProfile` извлекает if-present (defensive). `SKILL_CATALOG`
+  (skill-icons.ts) — канон-список навыков без алиасов, база для ручного редактора.
+- **B. Серверная персистенция** ✅ (2026-08-17, в проде): `schema-player-profile.ts` +
+  `player-profile-ddl.ts` (накат `db:migrate-all` — таблица `cta_player_profiles`, unique
+  `(user_id,game_id)`, RLS read); `db/player-profile.ts` (get/upsert owner-role); server-actions
+  `save/loadPlayerProfileAction`; `lib/player-profile-sync.ts` (buildSnapshot/applySnapshot);
+  hub/page.tsx грузит снапшот → `AdaptiveHubClient` применяет (сервер = точка истины) + one-shot
+  миграция localStorage→сервер при первом логине; `DossierUploadBlock` сохраняет на сервер
+  (залогинен) / призыв войти (аноним).
+- **C. Ручной редактор** ⏳ (полный, группами): скиллы по категориям (`SKILL_CATALOG`) + станции
+  убежища + трейдеры; пишет `manual`-оверрайды в снапшот → сервер (залогинен) / localStorage (аноним).
+
+## Открытые вопросы
+- Полный игровой/SPT-профиль — поддержать импорт сразу (Hideout оттуда) или ручной ввод как единственный путь к убежищу на старте?
+- Мультипрофиль (сейчас до 5 локальных) — на сервере один на игру или тоже слоты?

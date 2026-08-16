@@ -13,6 +13,9 @@ import { ArchetypeFeatureGrid } from '@/components/features/adaptive/ArchetypeFe
 import { DossierHubNav } from '@/components/features/adaptive/DossierHubNav';
 import { DogTagProfileCard } from '@/components/features/adaptive/DogTagProfileCard';
 import { DossierUploadBlock } from '@/components/features/adaptive/DossierUploadBlock';
+import { applySnapshot, buildSnapshot, hasLocalProfile } from '@/lib/player-profile-sync';
+import { savePlayerProfileAction } from '@/actions/player-profile';
+import type { PlayerProfileSnapshot } from '@/types/eft-player';
 import { DossierPmcStats } from '@/components/features/adaptive/DossierPmcStats';
 import { HexRingProgress } from '@/components/features/adaptive/HexRingProgress';
 import { useIsPve } from '@/hooks/useGameMode';
@@ -57,6 +60,8 @@ export interface HubServerProps {
   karmaCompanion: number | null;
   /** Серверные читалки упали (Supabase недоступен) — карма в «—», но досье живёт. */
   serverError?: boolean;
+  /** Снапшот профиля с сервера (точка истины). null — аноним/нет сохранённого профиля. */
+  profileSnapshot?: PlayerProfileSnapshot | null;
 }
 
 /** Формат значения стат-ячейки: целое с разделителями либо коэффициент (K/O 0.71). */
@@ -165,7 +170,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
   karmaComlinkTier: null,
   karmaCompanion: null,
 }) {
-  const { isAuthed, karmaComlink, karmaComlinkTier, karmaCompanion, serverError } = props;
+  const { isAuthed, karmaComlink, karmaComlinkTier, karmaCompanion, serverError, profileSnapshot } = props;
 
   useEffect(() => {
     void useRoleStore.persist.rehydrate();
@@ -173,6 +178,20 @@ export function AdaptiveHubClient(props: HubServerProps = {
     void useFirstVisitStore.persist.rehydrate();
     void useXpStore.persist.rehydrate();
   }, []);
+
+  // Синхронизация профиля с сервером (Слой B, спека player-profile-persistence):
+  // — есть серверный снапшот → он ТОЧКА ИСТИНЫ, применяем в сторы (лечит «сброс» между девайсами);
+  // — залогинен, но на сервере пусто, а локально профиль есть → one-shot миграция localStorage→сервер.
+  // Аноним не трогаем: у него localStorage как раньше (+ призыв войти в блоке загрузки).
+  useEffect(() => {
+    if (!isAuthed) return;
+    if (profileSnapshot) {
+      applySnapshot(profileSnapshot);
+    } else if (hasLocalProfile()) {
+      void savePlayerProfileAction(buildSnapshot('mixed'));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthed]);
 
   const hydrated = useRoleStore((s) => s._hasHydrated);
   const activeId = usePlayerStore((s) => s.activeProfileId);
@@ -250,7 +269,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
   const isPro = tier !== 'free';
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-7">
       {/* ── ШАПКА: HubNav досье ───────────────────────────────────────── */}
       <DossierHubNav
         title="Досье игрока"
@@ -328,7 +347,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
             />
 
             {/* Блок загрузки статистики (208×160) — точка входа для profile.json */}
-            <DossierUploadBlock />
+            <DossierUploadBlock isAuthed={isAuthed} />
           </div>
 
           {/* ── СТАТ-БЛОК: две колонки (раскладка V4DYA), без фона/обводки.
@@ -375,7 +394,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
               iconClass={visual.iconClass}
               size={56}
             />
-            <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="flex min-w-0 flex-col items-start gap-0.5">
               <img
                 src="/icons/eft/04-progression/cta-profile/title_archetype.svg"
                 alt="ЦТА · Архетип"

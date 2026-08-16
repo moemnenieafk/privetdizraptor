@@ -137,3 +137,23 @@ export const SKILL_RU: Record<string, string> = {
   LightVests: 'Лёгкие бронежилеты',
   Lockpicking: 'Взлом замков',
 };
+
+/**
+ * Канонический список навыков для РУЧНОГО редактора (Слой C): все известные навыки по категориям,
+ * БЕЗ алиасов-дублей (Launcher, не GrenadeLauncher; UGL, не AttachedLauncher; TroubleShooting).
+ * Только id с иконкой (SKILL_ICONS) и RU-именем (SKILL_RU) — гарантия рендера. Порядок категорий —
+ * SKILL_CAT_ORDER; уровни оверлеятся из профиля, отсутствующие = 0.
+ * ⚠ Выверить против реального полного профиля на Слое C (живого сэмпла с полным набором пока нет).
+ */
+export const SKILL_CATALOG: Readonly<Record<SkillCat, readonly string[]>> = {
+  physical: ['Endurance', 'Strength', 'Vitality', 'Health', 'Immunity', 'Metabolism', 'StressResistance'],
+  mental: ['Perception', 'Intellect', 'Attention', 'Charisma', 'Memory'],
+  practical: [
+    'Search', 'MagDrills', 'Crafting', 'Surgery', 'HideoutManagement', 'CovertMovement',
+    'WeaponTreatment', 'LightVests', 'HeavyVests', 'FirstAid', 'FieldMedicine', 'Auctions', 'Lockpicking',
+  ],
+  combat: [
+    'Assault', 'Sniper', 'Pistol', 'Revolver', 'SMG', 'Shotgun', 'DMR', 'LMG', 'HMG',
+    'Launcher', 'UGL', 'Throwing', 'Melee', 'WeaponDrawing', 'WeaponSwitch', 'TroubleShooting',
+  ],
+};

@@ -36,6 +36,22 @@ export interface RawSkills {
   Points?: number;
 }
 
+// ── Убежище/трейдеры: ЕСТЬ только в ПОЛНОМ игровом/SPT-профиле, НЕ в тонком экспорте
+//    tarkov.dev/players (там лишь aid/info/pmcStats/scavStats/skills). Парсим if-present. ──
+export interface RawHideoutArea {
+  /** Числовой enum станции убежища. */
+  type: number;
+  /** Текущий уровень станции (0 = не построена). */
+  level: number;
+}
+
+export interface RawTraderInfo {
+  unlocked?: boolean;
+  loyaltyLevel?: number;
+  standing?: number;
+  salesSum?: number;
+}
+
 export interface RawPlayerInfo {
   nickname: string;
   side: string;
@@ -55,6 +71,10 @@ export interface RawPlayerProfile {
   pmcStats?: RawSideStats;
   scavStats?: RawSideStats;
   updated?: number;
+  /** Убежище — только в полном игровом/SPT-профиле (у тонкого tarkov.dev-экспорта нет). */
+  Hideout?: { Areas?: RawHideoutArea[] };
+  /** Трейдеры (лояльность/репутация) — тоже только в полном профиле. Ключ — traderId. */
+  TradersInfo?: Record<string, RawTraderInfo>;
 }
 
 export const GAME_MODES = ["regular", "pve"] as const;
@@ -95,6 +115,18 @@ export interface PlayerMasteringView {
   progress: number;
 }
 
+export interface PlayerHideoutView {
+  /** Числовой enum станции (маппинг type→имя/иконка — на стороне UI). */
+  type: number;
+  level: number;
+}
+
+export interface PlayerTraderView {
+  id: string;
+  loyaltyLevel: number;
+  standing: number | null;
+}
+
 export type ProfileEdition = "Standard" | "LB" | "PFE" | "EOD" | "TUE";
 
 /** Вью-модель для рендера загруженного профиля. */
@@ -112,6 +144,49 @@ export interface PlayerView {
   raidStats: RaidStatLine[];
   skills: PlayerSkillView[];
   mastering: PlayerMasteringView[];
+  /** Убежище (станция→уровень). Пусто для тонкого профиля — источник только полный/ручной ввод. */
+  hideout: PlayerHideoutView[];
+  /** Трейдеры (лояльность). Пусто для тонкого профиля. */
+  traders: PlayerTraderView[];
   achievementsCount: number;
   updatedAt: number | null;
+}
+
+// ── Серверный снапшот профиля (Слой B): JSONB в cta_player_profiles. Достаточен, чтобы
+//    регидрировать оба клиентских стора (идентичность usePlayerStore + рич-вью usePmcStatsStore). ──
+export type ProfileSource = "tarkov.dev" | "game-profile" | "manual" | "mixed";
+
+/** Плоская идентичность (подмножество usePlayerStore.PlayerProfile без локального id/mode). */
+export interface PlayerIdentitySnapshot {
+  nickname?: string;
+  faction?: "USEC" | "BEAR";
+  edition?: string;
+  level?: string;
+  prestige?: string;
+  experience?: number | null;
+  memberCategory?: number | null;
+  raids?: number | null;
+  survivalRate?: number | null;
+  hoursPlayed?: number | null;
+  kills?: number | null;
+  deaths?: number | null;
+  killed?: number | null;
+  survived?: number | null;
+  kd?: number | null;
+  traderLevels?: Record<string, number>;
+}
+
+/** Ручные оверрайды (Слой C): уровни, введённые без JSON. Ключи — id навыка / type станции / traderId. */
+export interface PlayerManualOverrides {
+  skills?: Record<string, number>;
+  hideout?: Record<string, number>;
+  traders?: Record<string, number>;
+}
+
+/** Полный снапшот профиля — точка истины на сервере (или localStorage у анонима). */
+export interface PlayerProfileSnapshot {
+  view: PlayerView | null;
+  identity: PlayerIdentitySnapshot | null;
+  manual?: PlayerManualOverrides;
+  source: ProfileSource;
 }
