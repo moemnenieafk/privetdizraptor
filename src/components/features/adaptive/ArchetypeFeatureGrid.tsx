@@ -93,7 +93,7 @@ export function ArchetypeFeatureGrid({ featureIds }: ArchetypeFeatureGridProps) 
 
       {/* Слева грид иконок, справа список названий. На узких — список уходит под грид. */}
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-        <div className="grid shrink-0 grid-cols-4 gap-2.5 sm:grid-cols-6">
+        <div className="grid shrink-0 self-start grid-cols-4 gap-2.5 sm:grid-cols-6">
           {FEATURE_CATALOG.map((feature) => (
             <FeatureCell key={feature.id} feature={feature} active={active.has(feature.id)} />
           ))}
