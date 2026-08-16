@@ -1,12 +1,26 @@
 import type { RoleAxes } from '@/lib/role-inference';
 
-// Радар компетенций — SVG-полигон по 4 осям RoleAxes (§3.1, п.2). НЕ Canvas (§6/anti).
-// Каждая ось биполярна (−1..+1): радиус спицы = (value+1)/2, поэтому нейтраль (всё 0) даёт
-// ровный «seed»-полигон посередине — это и есть пустое состояние (§4.5): подпись «собираем
-// профиль», без обмана «нулём». Геометрия считается вне JSX (§4.7).
+// Радар компетенций — SVG-полигон (§3.1, п.2). НЕ Canvas (§6/anti). Геометрия — вне JSX (§4.7).
+//
+// Два режима:
+//  • Классический (по умолчанию): 4 биполярные оси RoleAxes (−1..+1), радиус спицы = (v+1)/2.
+//    Нейтраль (всё 0) даёт ровный «seed»-полигон посередине — пустое состояние (§4.5).
+//  • Явный (проп `spokes`): произвольное число осей с УЖЕ нормализованными значениями 0..1
+//    и своими подписями. Досье (Figma) даёт 5 осей — БОЙ/АГРЕССИЯ/ДОБЫЧА/ВЫЖИВАНИЕ/ОТРЯД.
+//  Оба режима считают геометрию одним и тем же движком — форк не нужен, только вход другой.
+
+/** Одна ось явного режима: подпись + нормализованное значение 0..1. */
+export interface RadarSpoke {
+  label: string;
+  /** 0..1 — доля радиуса (уже нормализовано вызывающим). */
+  value: number;
+}
 
 interface CompetencyRadarProps {
-  axes: RoleAxes;
+  /** Классический режим: 4 биполярные оси RoleAxes. Игнорируется, если задан `spokes`. */
+  axes?: RoleAxes;
+  /** Явный режим: N осей с нормализованными значениями 0..1 (напр. 5-осевой радар досье). */
+  spokes?: RadarSpoke[];
   /** Пиксельный размер квадрата SVG. */
   size?: number;
   /** Акцент полигона — токен var(--color-…). */
@@ -14,8 +28,8 @@ interface CompetencyRadarProps {
   className?: string;
 }
 
-// 4 спицы. label — имя «+1»-полюса (то, к чему тянется значение).
-const SPOKES: { key: keyof RoleAxes; label: string }[] = [
+// Классические 4 спицы. label — имя «+1»-полюса (то, к чему тянется значение).
+const AXIS_SPOKES: { key: keyof RoleAxes; label: string }[] = [
   { key: 'cautionAggression', label: 'АГР' }, // агрессия
   { key: 'economyCombat', label: 'БОЙ' }, // боевой
   { key: 'sprintCollect', label: 'ЛУТ' }, // коллекционер
@@ -27,10 +41,10 @@ interface Pt {
   y: number;
 }
 
-/** Точка на луче i (из 4) при радиусе r (0..1) в координатах вокруг центра c. */
-function pointAt(i: number, r: number, c: number, maxR: number): Pt {
+/** Точка на луче i (из n) при радиусе r (0..1) в координатах вокруг центра c. */
+function pointAt(i: number, n: number, r: number, c: number, maxR: number): Pt {
   // Старт сверху (−90°), по часовой.
-  const angle = -Math.PI / 2 + (i / SPOKES.length) * Math.PI * 2;
+  const angle = -Math.PI / 2 + (i / n) * Math.PI * 2;
   return { x: c + Math.cos(angle) * r * maxR, y: c + Math.sin(angle) * r * maxR };
 }
 
@@ -38,32 +52,43 @@ function toPath(pts: Pt[]): string {
   return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
 }
 
+function clamp(v: number, min: number, max: number): number {
+  return v < min ? min : v > max ? max : v;
+}
+
 export function CompetencyRadar({
   axes,
+  spokes,
   size = 200,
   accent = 'var(--primary)',
   className = '',
 }: CompetencyRadarProps) {
   const c = size / 2;
-  const maxR = c - 22; // поля под подписи спиц
+  const maxR = c - 28; // поля под подписи спиц (5 осей длиннее — «ВЫЖИВАНИЕ»)
   const rings = [0.33, 0.66, 1];
 
-  // Радиус каждой спицы из биполярного значения.
-  const spokeR = SPOKES.map((s) => (clamp(axes[s.key], -1, 1) + 1) / 2);
-  const dataPts = spokeR.map((r, i) => pointAt(i, r, c, maxR));
+  // Нормализуем оба режима к общему списку {label, r(0..1)}.
+  const resolved: { label: string; r: number }[] = spokes
+    ? spokes.map((s) => ({ label: s.label, r: clamp(s.value, 0, 1) }))
+    : AXIS_SPOKES.map((s) => ({ label: s.label, r: (clamp(axes?.[s.key] ?? 0, -1, 1) + 1) / 2 }));
 
-  // «Пусто», если все оси ~ нейтральны (полигон вырождается в ровный seed).
-  const isSeed = SPOKES.every((s) => Math.abs(axes[s.key]) < 0.06);
+  const n = resolved.length;
+  const dataPts = resolved.map((s, i) => pointAt(i, n, s.r, c, maxR));
+
+  // «Пусто», если все спицы близки к нейтрали (классика: 0 → r≈0.5; явный: value≈0 → r≈0).
+  const isSeed = spokes
+    ? spokes.every((s) => clamp(s.value, 0, 1) < 0.04)
+    : AXIS_SPOKES.every((s) => Math.abs(axes?.[s.key] ?? 0) < 0.06);
 
   return (
     <div className={`flex flex-col items-center gap-2 ${className}`}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Радар компетенций">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Радар эффективности">
         {/* Кольца-сетка */}
         {rings.map((r) => (
           <polygon
             key={r}
-            points={SPOKES.map((_, i) => {
-              const p = pointAt(i, r, c, maxR);
+            points={resolved.map((_, i) => {
+              const p = pointAt(i, n, r, c, maxR);
               return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
             }).join(' ')}
             fill="none"
@@ -72,8 +97,8 @@ export function CompetencyRadar({
           />
         ))}
         {/* Спицы */}
-        {SPOKES.map((_, i) => {
-          const p = pointAt(i, 1, c, maxR);
+        {resolved.map((_, i) => {
+          const p = pointAt(i, n, 1, c, maxR);
           return (
             <line key={i} x1={c} y1={c} x2={p.x} y2={p.y} stroke="var(--color-lines-hover)" strokeWidth={1} />
           );
@@ -93,11 +118,11 @@ export function CompetencyRadar({
             <circle key={i} cx={p.x} cy={p.y} r={2.5} fill={accent} />
           ))}
         {/* Подписи спиц */}
-        {SPOKES.map((s, i) => {
-          const p = pointAt(i, 1.16, c, maxR);
+        {resolved.map((s, i) => {
+          const p = pointAt(i, n, 1.18, c, maxR);
           return (
             <text
-              key={s.key}
+              key={`${s.label}-${i}`}
               x={p.x}
               y={p.y}
               textAnchor="middle"
@@ -115,8 +140,4 @@ export function CompetencyRadar({
       )}
     </div>
   );
-}
-
-function clamp(v: number, min: number, max: number): number {
-  return v < min ? min : v > max ? max : v;
 }

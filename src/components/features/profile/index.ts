@@ -7,7 +7,7 @@ export { DogTag, serviceNumberFrom } from './DogTag';
 export { RankChevron } from './RankChevron';
 export { ArchetypeBadge } from './ArchetypeBadge';
 export { XpNotchBar } from './XpNotchBar';
-export { CompetencyRadar } from './CompetencyRadar';
+export { CompetencyRadar, type RadarSpoke } from './CompetencyRadar';
 export { RollUpCounter } from './RollUpCounter';
 export { StatusLed, type OperatorStatus } from './StatusLed';
 export { StandingPanel } from './StandingPanel';
