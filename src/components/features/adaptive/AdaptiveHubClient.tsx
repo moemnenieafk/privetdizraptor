@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ScanLine } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRoleStore, effectiveRoleFor } from '@/store/useRoleStore';
 import { ROLE_LABELS } from '@/lib/role-inference';
@@ -11,6 +11,8 @@ import { ARCHETYPE_VISUALS } from '@/data/archetype-visuals';
 import { RolePicker } from '@/components/features/adaptive/RolePicker';
 import { DossierHubNav } from '@/components/features/adaptive/DossierHubNav';
 import { DogTagProfileCard } from '@/components/features/adaptive/DogTagProfileCard';
+import { DossierUploadBlock } from '@/components/features/adaptive/DossierUploadBlock';
+import { DossierPmcStats } from '@/components/features/adaptive/DossierPmcStats';
 import { useIsPve } from '@/hooks/useGameMode';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAchievementStore } from '@/store/useAchievementStore';
@@ -28,7 +30,6 @@ import { getCurrentTier, getNextTier } from '@/types/gamification';
 import { useGamificationStore } from '@/store/useGamificationStore';
 import { HubCard } from '@/components/ui/HubCard';
 import {
-  profileHasFacts,
   dossierUnlocks,
   DOSSIER_SECTIONS,
   statGrid,
@@ -69,7 +70,7 @@ function formatStat(cell: StatCell): (n: number) => string {
 function StatCellView({ cell }: { cell: StatCell }) {
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
-      <span className={`icon-mask size-6 bg-text-secondary ${cell.iconClass}`} aria-hidden />
+      <span className={`icon-mask size-7 bg-text-secondary ${cell.iconClass}`} aria-hidden />
       <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
         {cell.label}
       </span>
@@ -213,7 +214,6 @@ export function AdaptiveHubClient(props: HubServerProps = {
 
   const visual = ARCHETYPE_VISUALS[effectiveRole];
   const roleLabel = ROLE_LABELS[effectiveRole];
-  const hasFacts = profileHasFacts(profile);
   const level = profile ? Number.parseInt(profile.level, 10) : NaN;
   const prestige = profile ? Number.parseInt(profile.prestige, 10) : 0;
 
@@ -276,46 +276,46 @@ export function AdaptiveHubClient(props: HubServerProps = {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* ЛЕВО+ЦЕНТР */}
         <div className="flex flex-col gap-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[160px_minmax(0,1fr)]">
+          {/* Верхний ряд: [портрет 160 · жетон 288 · блок загрузки 208] — все 160px, переносятся на узких. */}
+          <div className="flex flex-wrap items-start gap-6">
             {/* Портрет ЧВК (плейсхолдер: у профиля нет поля портрета — фракц-силуэт архетипа). */}
-            <div className="flex flex-col gap-4">
-              <div
-                className="relative flex size-40 items-center justify-center overflow-hidden rounded-xs border border-lines-hover bg-(--color-darkbase)"
-              >
-                <span
-                  className="icon-mask size-24 opacity-30"
-                  style={{
-                    backgroundColor: visual.accent,
-                    WebkitMaskImage: `url(${visual.iconClass})`,
-                    maskImage: `url(${visual.iconClass})`,
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                  }}
-                  aria-hidden
-                />
-                {profile?.faction && (
-                  <span className="absolute bottom-2 left-2 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-                    {profile.faction}
-                  </span>
-                )}
-              </div>
+            <div
+              className="relative flex size-40 shrink-0 items-center justify-center overflow-hidden rounded-xs border border-lines-hover bg-(--color-darkbase)"
+            >
+              <span
+                className="icon-mask size-24 opacity-30"
+                style={{
+                  backgroundColor: visual.accent,
+                  WebkitMaskImage: `url(${visual.iconClass})`,
+                  maskImage: `url(${visual.iconClass})`,
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center',
+                }}
+                aria-hidden
+              />
+              {profile?.faction && (
+                <span className="absolute bottom-2 left-2 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                  {profile.faction}
+                </span>
+              )}
             </div>
 
-            {/* Центр-верх: карточка-жетон идентичности (1:1 Figma) + кольцо + стат-грид */}
-            <div className="flex flex-col gap-6">
-              <DogTagProfileCard
-                nickname={profile?.nickname ?? null}
-                faction={profile?.faction ?? null}
-                edition={profile?.edition ?? 'Standard'}
-                level={Number.isFinite(level) ? level : null}
-                prestige={Number.isFinite(prestige) ? prestige : 0}
-                pve={pve}
-              />
-            </div>
+            {/* Карточка-жетон идентичности (1:1 Figma, 288×160) */}
+            <DogTagProfileCard
+              nickname={profile?.nickname ?? null}
+              faction={profile?.faction ?? null}
+              edition={profile?.edition ?? 'Standard'}
+              level={Number.isFinite(level) ? level : null}
+              prestige={Number.isFinite(prestige) ? prestige : 0}
+              pve={pve}
+            />
+
+            {/* Блок загрузки статистики (208×160) — точка входа для profile.json */}
+            <DossierUploadBlock />
           </div>
 
           {/* ── СТАТ-БЛОК: две колонки (раскладка V4DYA), без фона/обводки.
@@ -343,16 +343,6 @@ export function AdaptiveHubClient(props: HubServerProps = {
                 ))}
               </div>
             </div>
-
-            {/* CTA «нет фактов» */}
-            {!hasFacts && (
-              <Link
-                href="/eft/comlink/players"
-                className="inline-flex w-fit items-center gap-1.5 text-type-micro font-blender-medium uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
-              >
-                <ScanLine className="size-3.5" /> Добавить профиль / OCR
-              </Link>
-            )}
           </div>
 
           {/* РАЗДЕЛЫ АРХЕТИПА (2-колоночная сетка карточек) */}
@@ -383,6 +373,9 @@ export function AdaptiveHubClient(props: HubServerProps = {
               ))}
             </div>
           </section>
+
+          {/* ── ДЕТАЛЬНАЯ СТАТА ЧВК: навыки / мастерство / рейды (профиль-гейт: пусто → нет секции) ── */}
+          <DossierPmcStats />
         </div>
 
         {/* ── ПРАВАЯ ПАНЕЛЬ: прокачка ──────────────────────────────────── */}
