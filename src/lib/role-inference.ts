@@ -33,13 +33,13 @@ export const PLAYER_ROLES: readonly PlayerRole[] = [
 /** Русские подписи и текст адаптивной кнопки «Ульты». */
 export const ROLE_LABELS: Record<PlayerRole, { name: string; button: string }> = {
   rookie: { name: 'Новобранец', button: 'Я новичок' },
-  progressor: { name: 'Прогрессор', button: 'Я по квестам' },
+  progressor: { name: 'Прогрессор', button: 'Я Квестовичок' },
   trader: { name: 'Барыга', button: 'Я барыга' },
   gunsmith: { name: 'Оружейник', button: 'Я оружейник' },
   engineer: { name: 'Инженер базы', button: 'Я строю базу' },
   raider: { name: 'Рейдер', button: 'Я бывалый' },
   viewer: { name: 'Зритель', button: 'Я за контентом' },
-  rat: { name: 'Крыса', button: 'Я крыса' },
+  rat: { name: 'Посижуркин', button: 'Я посижуркин' },
   sherpa: { name: 'Шерп', button: 'Я шерп' },
   lore: { name: 'Лорник', button: 'Я лорник' },
   squad: { name: 'Сокланы', button: 'Я в отряде' },

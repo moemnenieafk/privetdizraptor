@@ -6,9 +6,10 @@ import { ArrowRight } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRoleStore, effectiveRoleFor } from '@/store/useRoleStore';
 import { ROLE_LABELS } from '@/lib/role-inference';
-import { orderCardsByRole } from '@/data/role-hubs';
 import { ARCHETYPE_VISUALS } from '@/data/archetype-visuals';
+import { ARCHETYPE_FEATURES } from '@/data/feature-catalog';
 import { RolePicker } from '@/components/features/adaptive/RolePicker';
+import { ArchetypeFeatureGrid } from '@/components/features/adaptive/ArchetypeFeatureGrid';
 import { DossierHubNav } from '@/components/features/adaptive/DossierHubNav';
 import { DogTagProfileCard } from '@/components/features/adaptive/DogTagProfileCard';
 import { DossierUploadBlock } from '@/components/features/adaptive/DossierUploadBlock';
@@ -29,10 +30,8 @@ import {
 import { TIERS } from '@/data/subscription-tiers';
 import { getCurrentTier, getNextTier } from '@/types/gamification';
 import { useGamificationStore } from '@/store/useGamificationStore';
-import { HubCard } from '@/components/ui/HubCard';
 import {
   dossierUnlocks,
-  DOSSIER_SECTIONS,
   statGrid,
   survivalRingPercent,
   experienceValue,
@@ -231,9 +230,6 @@ export function AdaptiveHubClient(props: HubServerProps = {
     arcade: 'Аркада',
   };
 
-  // Разделы архетипа: те же карточки, переупорядоченные под роль (R05, порядок в данных §4.7).
-  const sections = orderCardsByRole(DOSSIER_SECTIONS, effectiveRole);
-
   // Тир подписки: платный (operative/veteran) = PRO-статус (корона на макете).
   const isPro = tier !== 'free';
 
@@ -346,34 +342,8 @@ export function AdaptiveHubClient(props: HubServerProps = {
             </div>
           </div>
 
-          {/* РАЗДЕЛЫ АРХЕТИПА (2-колоночная сетка карточек) */}
-          <section className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <h2 className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-                Разделы архетипа
-              </h2>
-              <div className="h-px flex-1 bg-lines-hover" />
-              <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-secondary">
-                {manualOverride ? 'Выбрано вручную' : 'Авто-подбор'}
-              </span>
-            </div>
-            {/* col-span-2 у rectangle-карточки → parent grid-cols-4 = 2 карточки в ряд. */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-              {sections.map((s, i) => (
-                <HubCard
-                  key={s.id}
-                  gameId="eft"
-                  id={s.id}
-                  title={s.title}
-                  description={s.description}
-                  href={s.href}
-                  iconPath={s.iconPath}
-                  variant="rectangle"
-                  index={i}
-                />
-              ))}
-            </div>
-          </section>
+          {/* ИЗБРАННЫЕ РАЗДЕЛЫ АРХЕТИПА: грид иконок + список названий (Figma 2868-5301). */}
+          <ArchetypeFeatureGrid featureIds={ARCHETYPE_FEATURES[effectiveRole]} />
 
           {/* ── ДЕТАЛЬНАЯ СТАТА ЧВК: навыки / мастерство / рейды (профиль-гейт: пусто → нет секции) ── */}
           <DossierPmcStats />

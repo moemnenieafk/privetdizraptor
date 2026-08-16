@@ -19,16 +19,6 @@ export interface KeyReadout {
   kind?: 'int' | 'percent' | 'hours';
 }
 
-/** Тактическая карточка-раздел прогресса. */
-export interface SectionCard {
-  id: string;
-  title: string;
-  description: string;
-  href: string;
-  /** Явный путь к иконке (реальные ассеты из headerConfig — не полагаемся на {id}-icon). */
-  iconPath: string;
-}
-
 /**
  * Статус-LED оперативника из режима активного профиля. Нет профиля → offline
  * (пустое состояние: «добавь профиль»). PvE/PvP из поля mode профиля ЧВК.
@@ -64,22 +54,6 @@ export function profileHasFacts(profile: PlayerProfile | null): boolean {
     profile.hoursPlayed != null
   );
 }
-
-/**
- * Разделы прогресса для сетки тактических карточек (§3.1 п.4). Ссылки — существующие
- * маршруты EFT (сверено с headerConfig). Порядок фиксированный: трекеры → убежище →
- * сезоны → сборки → аркада → туториал → квесты → престиж (surface прогресса, R16i).
- */
-export const DOSSIER_SECTIONS: readonly SectionCard[] = [
-  { id: 'tracker', title: 'Трекер предметов', description: 'Что найдено под квесты, убежище и бартеры.', href: '/eft/progress/tracker', iconPath: '/icons/eft/04-progression/items-tracker.svg' },
-  { id: 'hideout', title: 'Убежище ЧВК', description: 'Модули, апгрейды и пассивные бонусы базы.', href: '/eft/progress/hideout', iconPath: '/icons/eft/04-progression/hideout-modules.svg' },
-  { id: 'seasons', title: 'Сезоны и Батлпасс', description: 'Конструктор перков и трекер наград сезона.', href: '/eft/progress/seasons', iconPath: '/icons/eft/04-progression/seasons/seasons-icon.svg' },
-  { id: 'loadouts', title: 'Сборки оружия', description: 'Конструктор со стат-движком и мета-сборки.', href: '/eft/progress/loadouts', iconPath: '/icons/eft/04-progression/gun-loadouts.svg' },
-  { id: 'arcade', title: 'Зал автоматов', description: 'Аркады на время ожидания — рекорды идут в ранг.', href: '/eft/progress/rookie/arcade', iconPath: '/icons/eft/04-progression/utarkov.svg' },
-  { id: 'rookie', title: 'Путь Новобранца', description: 'Курс из 10 этапов — осваиваем мир игры по шагам.', href: '/eft/progress/rookie/path', iconPath: '/icons/eft/04-progression/utarkov.svg' },
-  { id: 'quests', title: 'Карта заданий', description: 'Граф квестов, зависимости и прогресс.', href: '/eft/questmap', iconPath: '/icons/eft/04-progression/quest-map.svg' },
-  { id: 'prestige', title: 'Престиж', description: 'Сброс прогресса ради статуса и эксклюзивов.', href: '/eft/progress/prestige', iconPath: '/icons/eft/04-progression/prestige.svg' },
-] as const;
 
 /** Одна ячейка стат-грида ЧВК (левый блок досье, макет 2×4). */
 export interface StatCell {
