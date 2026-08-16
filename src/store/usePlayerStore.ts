@@ -20,6 +20,8 @@ export interface PlayerProfile {
   // по умолчанию null. Досье-визуал (позже, по Figma) читает K/D и pmc-показатели отсюда.
   /** Битфлаги memberCategory игры (издание/статусы: EOD/Unheard/Sherpa…). */
   memberCategory?: number | null;
+  /** Игровой опыт ЧВК (info.experience — очки уровня, для EXP+ в Досье). */
+  experience?: number | null;
   /** Убийств всего (PMC-сторона). */
   kills?: number | null;
   /** Смертей всего (PMC-сторона). */
@@ -62,6 +64,7 @@ export const usePlayerStore = create<PlayerStore>()(
           survivalRate: null,
           traderLevels: defaultTraderLevels,
           memberCategory: null,
+          experience: null,
           kills: null,
           deaths: null,
           killed: null,
@@ -89,6 +92,7 @@ export const usePlayerStore = create<PlayerStore>()(
           survivalRate: null,
           traderLevels: { ...defaultTraderLevels },
           memberCategory: null,
+          experience: null,
           kills: null,
           deaths: null,
           killed: null,

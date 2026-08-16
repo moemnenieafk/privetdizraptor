@@ -58,6 +58,7 @@ export function ProfileUpload() {
         updateProfile(active.id, {
           nickname: parsed.nickname,
           faction,
+          ...(parsed.experience != null ? { experience: parsed.experience } : {}),
           ...(parsed.level != null ? { level: String(parsed.level) } : {}),
           ...(parsed.prestige != null ? { prestige: String(parsed.prestige) } : {}),
           ...(parsed.memberCategory != null ? { memberCategory: parsed.memberCategory } : {}),

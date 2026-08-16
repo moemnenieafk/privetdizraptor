@@ -124,12 +124,13 @@ export function survivalRingPercent(profile: PlayerProfile | null): number | nul
 }
 
 /**
- * Значение опыта под кольцом («EXP+ 9 165 146»). У профиля нет отдельного поля XP игры —
- * оцениваем очками боевой эффективности портала (standing.total). Это НАШ опыт (участие на
- * портале), не игровой — честнее показать заработанное, чем выдумать чужое число.
+ * Значение опыта под кольцом («EXP+ 9 165 146») — ИГРОВОЙ опыт ЧВК из профиля
+ * (info.experience, поле experience из parse-profile). Нет профиля / поле не прочитано →
+ * null (Досье покажет «—», §4.5). Standing.total сюда больше НЕ подмешивается — это очки
+ * портала, отдельная система (боевая эффективность в правой панели).
  */
-export function experienceValue(standing: PlayerStanding): number {
-  return standing.total;
+export function experienceValue(profile: PlayerProfile | null): number | null {
+  return profile?.experience ?? null;
 }
 
 /**

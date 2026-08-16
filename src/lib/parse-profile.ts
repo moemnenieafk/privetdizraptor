@@ -44,6 +44,8 @@ export interface ParsedGameProfile {
   nickname: string;
   /** Сырая сторона из файла ('Bear'/'Usec'/'Savage'…), не нормализованная. */
   side: string;
+  /** Игровой опыт ЧВК (info.experience — накопленные очки уровня). null — не прочитан. */
+  experience: number | null;
   /** Уровень ЧВК (из накопленного опыта). null — опыт не прочитан. */
   level: number | null;
   /** Престиж. null — поля нет. */
@@ -115,6 +117,7 @@ export function parseGameProfile(json: unknown): ParsedGameProfile | null {
   return {
     nickname: view.nickname,
     side: view.side,
+    experience: num(view.experience),
     level: num(view.level),
     prestige: num(view.prestige),
     memberCategory: readMemberCategory(json),

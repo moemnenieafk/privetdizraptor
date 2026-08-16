@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ScanLine, Crown } from 'lucide-react';
+import { ArrowRight, ScanLine } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRoleStore, effectiveRoleFor } from '@/store/useRoleStore';
 import { ROLE_LABELS } from '@/lib/role-inference';
@@ -67,55 +67,16 @@ function formatStat(cell: StatCell): (n: number) => string {
     : (n) => Math.round(n).toLocaleString('ru-RU');
 }
 
-/** Ячейка стат-грида: иконка cta-profile + значение (roll-up) + подпись. */
+/** Ячейка стата: вертикальный стек [иконка → лейбл → число] (раскладка V4DYA) —
+ *  живёт в 4-колоночной стат-сетке досье, ширину задаёт grid-ячейка. */
 function StatCellView({ cell }: { cell: StatCell }) {
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
       <span className={`icon-mask size-6 bg-text-secondary ${cell.iconClass}`} aria-hidden />
-      <RollUpCounter value={cell.value} format={formatStat(cell)} className="text-lg text-text-primary" />
       <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
         {cell.label}
       </span>
-    </div>
-  );
-}
-
-/** Кольцо выживаемости (донат-progress) + подпись в центре. null → пустое кольцо. */
-function SurvivalRing({ percent, accent }: { percent: number | null; accent: string }) {
-  const size = 168;
-  const stroke = 10;
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const pct = percent == null ? 0 : Math.max(0, Math.min(100, percent));
-  const dash = (pct / 100) * circ;
-
-  return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Выживаемость">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-lines-hover)" strokeWidth={stroke} />
-        {percent != null && (
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke={accent}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={`${dash} ${circ}`}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
-            style={{ transition: 'stroke-dasharray 0.8s ease-out' }}
-          />
-        )}
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        <span className="text-2xl font-blender-medium tabular-nums" style={{ color: accent }}>
-          {percent == null ? '—' : `${Math.round(pct)}%`}
-        </span>
-        <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-          Выживаний
-        </span>
-      </div>
+      <RollUpCounter value={cell.value} format={formatStat(cell)} className="text-lg text-text-primary" />
     </div>
   );
 }
@@ -222,7 +183,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
 
   const cells = statGrid(profile, achievements);
   const survival = survivalRingPercent(profile);
-  const expValue = experienceValue(standing);
+  const expValue = experienceValue(profile);
   const radarSpokes = radarAxes5(derived?.axes ?? null, profile);
   const earned = earnedContributions(standing);
   // Карта лейблов earned-вкладов под макет (XP-ТИР (БАРТЕР) / ДОСТИЖЕНИЯ / ПУТЬ НОВОБРАНЦА / АРКАДА).
@@ -355,34 +316,52 @@ export function AdaptiveHubClient(props: HubServerProps = {
                   </span>
                 </div>
               </div>
-
-              {/* Кольцо выживаемости + EXP */}
-              <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-6">
-                <SurvivalRing percent={survival} accent={visual.accent} />
-                <div className="flex flex-col gap-2">
-                  <span className="inline-flex w-fit items-center gap-2 rounded-xs px-2 py-1" style={{ background: 'color-mix(in srgb, var(--primary) 12%, transparent)' }}>
-                    <span className="icon-mask icon-eft-stat-experienceplus size-4 bg-(--primary)" aria-hidden />
-                    <span className="text-type-micro font-blender-medium uppercase tracking-widest text-(--primary)">EXP+</span>
-                  </span>
-                  <RollUpCounter value={expValue} className="text-2xl text-text-primary" />
-                  {!hasFacts && (
-                    <Link
-                      href="/eft/comlink/players"
-                      className="inline-flex w-fit items-center gap-1.5 text-type-micro font-blender-medium uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
-                    >
-                      <ScanLine className="size-3.5" /> Добавить профиль / OCR
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {/* Стат-грид 2×4 */}
-              <div className="grid grid-cols-4 gap-x-3 gap-y-5 border-t border-lines-hover pt-5">
-                {cells.map((cell) => (
-                  <StatCellView key={cell.key} cell={cell} />
-                ))}
-              </div>
             </div>
+          </div>
+
+          {/* ── СТАТ-СЕТКА: выживание (ведущий) + EXP+ + 8 ячеек — 4 в ряд (раскладка V4DYA).
+              Каждая ячейка — вертикальный стек [иконка → лейбл → число]. Полная ширина блока. */}
+          <div className="rounded-xs border border-lines-hover bg-card-menu p-5">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
+              {/* Ведущий: выживаемость [иконка → «ВЫЖИВАНИЙ» → 52%] в акцент-цвете архетипа */}
+              <div className="flex flex-col items-center gap-1.5 text-center">
+                <span
+                  className="icon-mask icon-eft-stat-survives size-6"
+                  style={{ backgroundColor: visual.accent }}
+                  aria-hidden
+                />
+                <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                  Выживаний
+                </span>
+                <span className="text-lg font-blender-medium tabular-nums tracking-wider" style={{ color: visual.accent }}>
+                  {survival == null ? '—' : `${Math.round(Math.max(0, Math.min(100, survival)))}%`}
+                </span>
+              </div>
+
+              {/* EXP+ [иконка → «EXP+» → игровой опыт] в primary-акценте */}
+              <div className="flex flex-col items-center gap-1.5 text-center">
+                <span className="icon-mask icon-eft-stat-experienceplus size-6 bg-(--primary)" aria-hidden />
+                <span className="text-type-micro font-blender-medium uppercase tracking-widest text-(--primary)">
+                  EXP+
+                </span>
+                <RollUpCounter value={expValue} className="text-lg text-text-primary" />
+              </div>
+
+              {/* 8 стат-ячеек ЧВК — тот же стек [иконка → лейбл → число] */}
+              {cells.map((cell) => (
+                <StatCellView key={cell.key} cell={cell} />
+              ))}
+            </div>
+
+            {/* CTA «нет фактов» — под рядом, чтобы не ломать выравнивание ячеек */}
+            {!hasFacts && (
+              <Link
+                href="/eft/comlink/players"
+                className="mt-4 inline-flex w-fit items-center gap-1.5 text-type-micro font-blender-medium uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
+              >
+                <ScanLine className="size-3.5" /> Добавить профиль / OCR
+              </Link>
+            )}
           </div>
 
           {/* РАЗДЕЛЫ АРХЕТИПА (2-колоночная сетка карточек) */}
@@ -444,7 +423,8 @@ export function AdaptiveHubClient(props: HubServerProps = {
               />
             </span>
             <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+              <span className="inline-flex items-center gap-1.5 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                <span className="icon-mask icon-eft-title-archetype size-3.5 bg-text-muted" aria-hidden />
                 ЦТА · Архетип
               </span>
               <span className="truncate text-lg font-blender-medium uppercase tracking-widest" style={{ color: visual.accent }}>
@@ -462,7 +442,13 @@ export function AdaptiveHubClient(props: HubServerProps = {
               <span className="text-sm font-blender-medium uppercase tracking-widest text-(--primary)">
                 {TIERS[tier].name}
               </span>
-              {isPro && <Crown className="size-4 text-tactical-amber" aria-label="PRO" />}
+              {isPro && (
+                <span
+                  className="icon-mask icon-account_prostatus_icon size-4 bg-tactical-amber"
+                  role="img"
+                  aria-label="PRO"
+                />
+              )}
             </span>
           </div>
 
