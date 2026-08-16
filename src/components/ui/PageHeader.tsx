@@ -9,9 +9,11 @@ interface PageHeaderProps {
   count?: number;
   /** Опциональный слот справа (кнопки/CTA) — выравнивается по центру строки шапки. */
   action?: ReactNode;
+  /** Плотный режим: меньший нижний отступ (первый экран — напр. главная). */
+  dense?: boolean;
 }
 
-export function PageHeader({ pageId, title, description, iconClass, count, action }: PageHeaderProps) {
+export function PageHeader({ pageId, title, description, iconClass, count, action, dense }: PageHeaderProps) {
   const content = pageId ? PAGE_CONTENT_DICTIONARY[pageId] : null;
 
   // Приоритет: Данные из словаря -> Явно переданные пропсы -> Дефолтные значения
@@ -20,7 +22,7 @@ export function PageHeader({ pageId, title, description, iconClass, count, actio
   const finalIcon = content?.iconClass || iconClass || 'icon-eft-items-loot-tier';
 
   return (
-    <div className="flex items-center gap-5 mb-12">
+    <div className={`flex items-center gap-5 ${dense ? 'mb-6' : 'mb-12'}`}>
       {/* Добавлен text-(--color-base) для инверсии цвета иконки */}
       <div className="shrink-0 flex items-center justify-center w-13.25 h-13.25 rounded bg-(--primary) text-(--color-base)">
         <div className={`w-7 h-7 icon-mask ${finalIcon}`}></div>

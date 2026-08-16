@@ -83,7 +83,7 @@ export function EftHomeHubClient() {
   if (!hydrated) {
     return (
       <>
-        <PageHeader pageId="eft" />
+        <PageHeader pageId="eft" dense />
         <div className="home-grid">
           {items.map(({ feature, size }) => (
             <div
@@ -160,7 +160,7 @@ export function EftHomeHubClient() {
 
   return (
     <>
-      <PageHeader pageId="eft" action={headerAction} />
+      <PageHeader pageId="eft" action={headerAction} dense />
 
       {/* Панель «Добавить раздел» — скрытые + каталог не в наборе (транзиентно, под шапкой) */}
       {editing && showAdd && (
@@ -261,44 +261,26 @@ export function EftHomeHubClient() {
       {/* Подсказки «Крутые фичи для тебя» — нетронутые фичи по релевантности архетипу.
           §4.5: пусто (всё открыто) → не рендерим. В режиме правки прячем (не мешать конструктору). */}
       {!editing && suggestions.length > 0 && (
-        <section className="mt-8 flex flex-col gap-4">
+        <section className="mt-6 flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <h2 className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
               Крутые фичи для тебя
             </h2>
             <div className="h-px flex-1 bg-lines-hover" />
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="home-grid">
             {suggestions.map((feature) => (
-              <Link
+              <HubCard
                 key={feature.id}
+                gameId="eft"
+                id={feature.id}
+                title={feature.name}
+                description={feature.description}
                 href={feature.href}
-                onClick={() => recordFeatureUse(feature.id, role)}
-                className="group flex items-center gap-3 rounded-lg border border-lines-hover bg-card-menu p-3 transition-colors hover:border-tactical-amber"
-              >
-                <span
-                  className="icon-mask size-6 shrink-0 bg-text-muted transition-colors group-hover:bg-tactical-amber"
-                  style={{
-                    WebkitMaskImage: `url(${feature.iconPath})`,
-                    maskImage: `url(${feature.iconPath})`,
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                  }}
-                  aria-hidden
-                />
-                <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="truncate text-type-label font-blender-medium uppercase tracking-wide text-text-primary transition-colors group-hover:text-tactical-amber">
-                    {feature.name}
-                  </span>
-                  <span className="truncate text-type-caption font-blender-book text-text-secondary">
-                    {feature.description}
-                  </span>
-                </span>
-              </Link>
+                iconPath={feature.iconPath}
+                variant="mini"
+                onSelect={() => recordFeatureUse(feature.id, role)}
+              />
             ))}
           </div>
         </section>
