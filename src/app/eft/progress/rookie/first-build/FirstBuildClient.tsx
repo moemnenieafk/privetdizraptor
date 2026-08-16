@@ -165,7 +165,7 @@ export function FirstBuildClient() {
               В конструктор сборок
             </Link>
             <Link
-              href="/eft/progress/rookie"
+              href="/eft/progress/rookie/path"
               className="flex h-11 items-center rounded-xs border border-lines-hover px-4 font-blender-medium text-xs uppercase tracking-wide text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
             >
               К Пути Новобранца

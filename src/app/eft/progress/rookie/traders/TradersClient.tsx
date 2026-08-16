@@ -114,7 +114,7 @@ export function TradersClient() {
             трейдеры экономят миллионы и дают то, чего нет на барахолке.
           </p>
           <Link
-            href="/eft/progress/rookie"
+            href="/eft/progress/rookie/path"
             className="flex h-11 items-center justify-center rounded-xs border border-(--primary) px-4 font-blender-medium text-xs uppercase tracking-wide text-(--primary) transition-opacity hover:opacity-80"
           >
             К Пути Новобранца

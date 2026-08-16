@@ -8,6 +8,14 @@
 @source inline("icon-eft-favourite-default");
 @source inline("icon-eft-favourite-active");
 
+/* Анимируемый угол conic-маски гекс-кольца прогресса (HexRingProgress).
+   Регистрация @property делает custom-property интерполируемым → плавная заливка. */
+@property --hex-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 @font-face {
     font-family: 'BlenderPro-Book';
     src: local('Blender Pro Book'), local('BlenderPro-Book'),
@@ -317,6 +325,17 @@ html {
 
   @media (min-width: 1280px) {
     .tactical-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+
+  /* Сетка конструктора главной EFT: фикс-колонки 160px, центрованы, ряды по 160px.
+     big=2col×2row (348²), middle=2col×1row (348×160), mini=1col×1row (160²). */
+  .home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 160px);
+    grid-auto-rows: 160px;
+    gap: 28px;
+    width: 100%;
+    justify-content: center;
   }
 
   .tactical-card-base {

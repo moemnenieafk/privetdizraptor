@@ -85,8 +85,9 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       'ref-quest': 'Реф',
       'lightkeeper-quest': 'Смотритель Маяка',
       questmap: 'Карта Заданий',
-      hub: 'Мой хаб',
-      rookie: 'Кто ты в Игре',
+      hub: 'Досье оперативника',
+      rookie: 'Аркады',
+      path: 'Путь Новобранца',
       arcade: 'Зал автоматов',
       progress: 'Прогресс',
       seasons: 'Сезоны',
@@ -529,7 +530,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/progress',
         iconUrl: '/icons/eft/progress-icon.svg',
         children: [
-          { id: 'p-rookie', label: 'Кто ты в Игре', description: 'Не понимаешь Tarkov? Выбери свою роль и пройди Путь Новобранца — учим мир игры по шагам.', path: '/eft/progress/rookie', iconUrl: '/icons/eft/04-progression/utarkov.svg' },
+          { id: 'p-hub', label: 'Досье оперативника', description: 'Твой тактический профиль: архетип, боевая эффективность, карма и весь прогресс в одном экране.', path: '/eft/hub', iconUrl: '/icons/eft/04-progression/utarkov.svg' },
+          { id: 'p-rookie', label: 'Аркады', description: 'Зал автоматов: аркадные мини-игры по вселенной Таркова. Новичку — подраздел «Путь Новобранца», курс из 10 этапов.', path: '/eft/progress/rookie', iconUrl: '/icons/eft/04-progression/eft-arcade-icon.svg', iconClass: 'icon-eft-arcade' },
           {
             id: 'p-hideout',
             label: 'Убежище ЧВК',

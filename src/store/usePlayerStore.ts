@@ -14,6 +14,24 @@ export interface PlayerProfile {
   raids: number | null;
   survivalRate: number | null;
   traderLevels: Record<string, number>;
+  // ── EFT-идентичность из личного profile.json (аддитивно, T-plumbing) ──
+  // Заполняется загрузкой профиля (parseGameProfile → updateProfile). Существующие
+  // читатели (шапка/модалка/Досье hero) на эти поля не завязаны — все опциональны и
+  // по умолчанию null. Досье-визуал (позже, по Figma) читает K/D и pmc-показатели отсюда.
+  /** Битфлаги memberCategory игры (издание/статусы: EOD/Unheard/Sherpa…). */
+  memberCategory?: number | null;
+  /** Игровой опыт ЧВК (info.experience — очки уровня, для EXP+ в Досье). */
+  experience?: number | null;
+  /** Убийств всего (PMC-сторона). */
+  kills?: number | null;
+  /** Смертей всего (PMC-сторона). */
+  deaths?: number | null;
+  /** Погиб в рейде — вынесен из игры (ExitStatus/Killed, PMC). */
+  killed?: number | null;
+  /** Выжил в рейде (ExitStatus/Survived, PMC). */
+  survived?: number | null;
+  /** K/D = kills/deaths. */
+  kd?: number | null;
 }
 
 const defaultTraderLevels = {
@@ -45,6 +63,13 @@ export const usePlayerStore = create<PlayerStore>()(
           raids: null,
           survivalRate: null,
           traderLevels: defaultTraderLevels,
+          memberCategory: null,
+          experience: null,
+          kills: null,
+          deaths: null,
+          killed: null,
+          survived: null,
+          kd: null,
         }
       ],
       activeProfileId: '1',
@@ -66,6 +91,13 @@ export const usePlayerStore = create<PlayerStore>()(
           raids: null,
           survivalRate: null,
           traderLevels: { ...defaultTraderLevels },
+          memberCategory: null,
+          experience: null,
+          kills: null,
+          deaths: null,
+          killed: null,
+          survived: null,
+          kd: null,
         };
         return {
           profiles: [...state.profiles, newProfile],

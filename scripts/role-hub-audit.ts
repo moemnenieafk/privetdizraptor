@@ -115,6 +115,11 @@ const scenarios: Record<PlayerRole, [ProfileFacts, BehaviorSignals]> = {
   sherpa: [mid, { comlink: 10 }],
   lore: [mid, { lore: 10 }],
   squad: [mid, { partner: 10 }],
+  // Расширенные (факт-ведомые): доменных сигналов у них нет/мало — тянут факты профиля.
+  seasonal: [mid, {}], // не-timmy без фокуса → сезонный нудж +0.5 лидирует
+  collector: [F({ level: 30, prestige: 1 }), { quests: 8, questmap: 6 }], // prestige>0 (+1.5) + квесты
+  tryhard: [F({ level: 30, survivalRate: 70 }), { loadouts: 6, bosses: 5 }], // выживаемость≥55 (+1.5) + бой
+  casual: [mid, { videos: 3 }], // малый объём (1<vol<6), не-эндгейм (+1) + видео
 };
 
 let unreachable = 0;

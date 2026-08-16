@@ -28,6 +28,7 @@ export function SyncPmcButton({ view }: { view: PlayerView }) {
     if (!active || !pmc) return;
     updateProfile(active.id, {
       nickname: view.nickname,
+      experience: view.experience,
       level: String(view.level),
       edition: view.edition,
       faction,

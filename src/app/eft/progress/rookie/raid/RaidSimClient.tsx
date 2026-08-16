@@ -146,7 +146,7 @@ export function RaidSimClient() {
             Пройти заново
           </button>
           <Link
-            href="/eft/progress/rookie"
+            href="/eft/progress/rookie/path"
             className="flex h-11 items-center rounded-xs border border-(--primary) px-4 font-blender-medium text-xs uppercase tracking-wide text-(--primary) transition-opacity hover:opacity-80"
           >
             {node.kind === 'win' ? 'К Пути Новобранца' : 'Назад к Пути'}

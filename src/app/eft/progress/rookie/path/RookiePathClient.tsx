@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { Gamepad2 } from 'lucide-react';
 import { useRoleStore } from '@/store/useRoleStore';
 import { useRookieStore } from '@/store/useRookieStore';
+import { useCosmeticStore, COSMETIC_BADGES } from '@/store/useCosmeticStore';
 import { RolePicker } from '@/components/features/adaptive/RolePicker';
 
 // Этапы «Пути Новобранца» — 10 столпов мира игры (см. docs: positioning-rookie-section).
@@ -63,14 +63,29 @@ function StageRow({ stage, index, done }: { stage: RookieStage; index: number; d
   return <div className={`${base} opacity-70`}>{inner}</div>;
 }
 
-export function RookieHubClient() {
+export function RookiePathClient() {
   useEffect(() => {
     void useRoleStore.persist.rehydrate();
     void useRookieStore.persist.rehydrate();
+    void useCosmeticStore.persist.rehydrate();
   }, []);
 
   const hydrated = useRoleStore((s) => s._hasHydrated);
   const completed = useRookieStore((s) => s.completed);
+  const cosmeticsHydrated = useCosmeticStore((s) => s._hasHydrated);
+  const hasAdaptedBadge = useCosmeticStore((s) => s.earned.includes('adapted'));
+
+  const doneCount = ROOKIE_PATH.filter((s) => completed.includes(s.id)).length;
+  const pathComplete = doneCount === ROOKIE_PATH.length;
+
+  // R12: пройден весь «Путь Новобранца» → выдать косметик-бейдж «Адаптирован». Идемпотентно —
+  // award() дедупит по id, повторный заход/ре-рендер не дублирует награду и не создаёт фарм
+  // (§2/A6). Standing уже растёт от сигнала tutorialDone — бейдж лишь отмечает веху.
+  useEffect(() => {
+    if (pathComplete && cosmeticsHydrated && !hasAdaptedBadge) {
+      useCosmeticStore.getState().award('adapted');
+    }
+  }, [pathComplete, cosmeticsHydrated, hasAdaptedBadge]);
 
   if (!hydrated) {
     return (
@@ -81,16 +96,60 @@ export function RookieHubClient() {
     );
   }
 
-  const doneCount = ROOKIE_PATH.filter((s) => completed.includes(s.id)).length;
+  const adaptedBadge = COSMETIC_BADGES.adapted;
 
   return (
     <div className="flex flex-col gap-8">
-      {doneCount === ROOKIE_PATH.length && (
-        <div className="flex flex-col gap-1 rounded-xs border border-(--primary) bg-(--color-base) p-4">
-          <span className="text-sm font-blender-medium uppercase tracking-widest text-(--primary)">Ты адаптирован</span>
-          <span className="text-type-label font-blender-book text-text-secondary">
-            Путь Новобранца пройден. Добро пожаловать в Тарков — теперь ты знаешь, как он устроен.
-          </span>
+      <Link
+        href="/eft/progress/rookie"
+        className="text-type-label font-blender-medium uppercase tracking-wide text-text-secondary transition-colors hover:text-(--primary)"
+      >
+        ← Аркады
+      </Link>
+
+      <header>
+        <div className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+          Обучение
+        </div>
+        <h1 className="mt-1 text-[1.75rem] font-blender-medium uppercase tracking-widest text-text-primary">
+          Путь Новобранца
+        </h1>
+        <p className="mt-2 text-sm font-blender-book text-text-secondary">
+          Не понимаешь Тарков? Выбери свою роль и пройди курс из 10 этапов — учим мир игры по шагам.
+        </p>
+      </header>
+
+      {pathComplete && (
+        <div className="flex items-center gap-4 rounded-xs border border-(--primary) bg-(--color-base) p-4 animate-[fresh-unlock_1.3s_ease-out]">
+          <span
+            className="icon-mask size-10 shrink-0"
+            style={{
+              backgroundColor: adaptedBadge.accent,
+              WebkitMaskImage: `url(${adaptedBadge.iconClass})`,
+              maskImage: `url(${adaptedBadge.iconClass})`,
+            }}
+            aria-hidden
+          />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-blender-medium uppercase tracking-widest text-(--primary)">
+                Ты адаптирован
+              </span>
+              <span
+                className="shrink-0 rounded-xs px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-widest"
+                style={{
+                  color: adaptedBadge.accent,
+                  backgroundColor: `color-mix(in srgb, ${adaptedBadge.accent} 12%, transparent)`,
+                }}
+              >
+                Бейдж · {adaptedBadge.label}
+              </span>
+            </div>
+            <span className="text-type-label font-blender-book text-text-secondary">
+              Путь Новобранца пройден. Добро пожаловать в Тарков — теперь ты знаешь, как он устроен. Регалия
+              «{adaptedBadge.label}» закреплена в досье оперативника.
+            </span>
+          </div>
         </div>
       )}
 
@@ -108,29 +167,6 @@ export function RookieHubClient() {
             <StageRow key={stage.id} stage={stage} index={i} done={completed.includes(stage.id)} />
           ))}
         </div>
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-blender-medium uppercase tracking-widest text-text-primary">Перерыв</h2>
-        <Link
-          href="/eft/progress/rookie/arcade"
-          className="group flex items-center gap-4 rounded-xs border border-lines-hover bg-(--color-base) p-4 transition-colors hover:border-(--primary)"
-        >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xs bg-lines-hover text-text-secondary transition-colors group-hover:bg-(--primary) group-hover:text-(--color-base)">
-            <Gamepad2 size={20} strokeWidth={1.75} />
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate font-blender-medium text-xs uppercase tracking-wide text-text-primary">
-              Зал автоматов
-            </span>
-            <span className="truncate text-type-label font-blender-book text-text-secondary">
-              Аркадные мини-игры на олдовом автомате — размяться, пока ждёшь рейд.
-            </span>
-          </div>
-          <span className="shrink-0 font-blender-medium text-type-label uppercase tracking-wide text-(--primary) opacity-70 transition-opacity group-hover:opacity-100">
-            Играть
-          </span>
-        </Link>
       </section>
     </div>
   );
