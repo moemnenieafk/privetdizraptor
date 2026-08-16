@@ -254,6 +254,7 @@
 
 /* ═══ EFT Прогрессия (04-progression) ═══ */
   .icon-eft-air_filtering_unit { mask-image: url('/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg'); }
+  .icon-eft-arcade { mask-image: url('/icons/eft/04-progression/eft-arcade-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/eft-arcade-icon.svg'); }
   .icon-eft-barter-electronics { mask-image: url('/icons/eft/04-progression/barter-profit/electronics.svg'); -webkit-mask-image: url('/icons/eft/04-progression/barter-profit/electronics.svg'); }
   .icon-eft-barter-energy { mask-image: url('/icons/eft/04-progression/barter-profit/energy-elements.svg'); -webkit-mask-image: url('/icons/eft/04-progression/barter-profit/energy-elements.svg'); }
   .icon-eft-barter-flammable { mask-image: url('/icons/eft/04-progression/barter-profit/flammable-materials.svg'); -webkit-mask-image: url('/icons/eft/04-progression/barter-profit/flammable-materials.svg'); }

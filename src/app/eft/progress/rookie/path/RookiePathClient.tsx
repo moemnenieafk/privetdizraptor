@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { Gamepad2 } from 'lucide-react';
 import { useRoleStore } from '@/store/useRoleStore';
 import { useRookieStore } from '@/store/useRookieStore';
 import { useCosmeticStore, COSMETIC_BADGES } from '@/store/useCosmeticStore';
@@ -64,7 +63,7 @@ function StageRow({ stage, index, done }: { stage: RookieStage; index: number; d
   return <div className={`${base} opacity-70`}>{inner}</div>;
 }
 
-export function RookieHubClient() {
+export function RookiePathClient() {
   useEffect(() => {
     void useRoleStore.persist.rehydrate();
     void useRookieStore.persist.rehydrate();
@@ -101,6 +100,25 @@ export function RookieHubClient() {
 
   return (
     <div className="flex flex-col gap-8">
+      <Link
+        href="/eft/progress/rookie"
+        className="text-type-label font-blender-medium uppercase tracking-wide text-text-secondary transition-colors hover:text-(--primary)"
+      >
+        ← Аркады
+      </Link>
+
+      <header>
+        <div className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+          Обучение
+        </div>
+        <h1 className="mt-1 text-[1.75rem] font-blender-medium uppercase tracking-widest text-text-primary">
+          Путь Новобранца
+        </h1>
+        <p className="mt-2 text-sm font-blender-book text-text-secondary">
+          Не понимаешь Тарков? Выбери свою роль и пройди курс из 10 этапов — учим мир игры по шагам.
+        </p>
+      </header>
+
       {pathComplete && (
         <div className="flex items-center gap-4 rounded-xs border border-(--primary) bg-(--color-base) p-4 animate-[fresh-unlock_1.3s_ease-out]">
           <span
@@ -149,29 +167,6 @@ export function RookieHubClient() {
             <StageRow key={stage.id} stage={stage} index={i} done={completed.includes(stage.id)} />
           ))}
         </div>
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-blender-medium uppercase tracking-widest text-text-primary">Перерыв</h2>
-        <Link
-          href="/eft/progress/rookie/arcade"
-          className="group flex items-center gap-4 rounded-xs border border-lines-hover bg-(--color-base) p-4 transition-colors hover:border-(--primary)"
-        >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xs bg-lines-hover text-text-secondary transition-colors group-hover:bg-(--primary) group-hover:text-(--color-base)">
-            <Gamepad2 size={20} strokeWidth={1.75} />
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate font-blender-medium text-xs uppercase tracking-wide text-text-primary">
-              Зал автоматов
-            </span>
-            <span className="truncate text-type-label font-blender-book text-text-secondary">
-              Аркадные мини-игры на олдовом автомате — размяться, пока ждёшь рейд.
-            </span>
-          </div>
-          <span className="shrink-0 font-blender-medium text-type-label uppercase tracking-wide text-(--primary) opacity-70 transition-opacity group-hover:opacity-100">
-            Играть
-          </span>
-        </Link>
       </section>
     </div>
   );

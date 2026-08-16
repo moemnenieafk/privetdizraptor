@@ -2,14 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SecureClient } from './SecureClient';
 
-export const metadata: Metadata = { title: 'Не потеряй всё | Кто ты в Игре | ЦТА' };
+export const metadata: Metadata = { title: 'Не потеряй всё | Путь Новобранца | ЦТА' };
 
 export default function SecureStagePage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-150 px-4 xl:px-0">
         <Link
-          href="/eft/progress/rookie"
+          href="/eft/progress/rookie/path"
           className="text-type-label font-blender-medium uppercase tracking-wide text-text-secondary transition-colors hover:text-(--primary)"
         >
           ← Путь Новобранца

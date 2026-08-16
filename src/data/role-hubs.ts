@@ -24,7 +24,7 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
   rookie: {
     intro: 'Не понимаешь Тарков? Начни отсюда — адаптируем по шагам.',
     links: [
-      { id: 'rookie-path', title: 'Путь Новобранца', description: 'Интерактивный курс из 10 этапов — учим мир игры руками.', href: '/eft/progress/rookie', iconPath: '/icons/eft/04-progression/utarkov.svg' },
+      { id: 'rookie-path', title: 'Путь Новобранца', description: 'Интерактивный курс из 10 этапов — учим мир игры руками.', href: '/eft/progress/rookie/path', iconPath: '/icons/eft/04-progression/utarkov.svg' },
       { id: 'rookie-lore', title: 'Кодекс: история мира', description: 'Что это за место и почему все стреляют.', href: '/eft/gamesetting/lore', iconPath: '/icons/eft/05-gamesetting/tarkov-lore.svg' },
       { id: 'rookie-prapor', title: 'Первые квесты Прапора', description: 'С чего начать прогресс.', href: '/eft/quests/prapor', iconPath: '/images/traders/eft/prapor.webp' },
       { id: 'rookie-ammo', title: 'Боеприпасы', description: 'Какой патрон брать на старте.', href: '/eft/items/ammo', iconPath: '/icons/eft/03-items/guns/cat-ammo.svg' },
