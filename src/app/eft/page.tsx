@@ -68,7 +68,7 @@ export default function EftHubPage() {
       <div className="w-full max-w-275 px-4 xl:px-0">
         <PageHeader pageId="eft" />
 
-        {/* Адаптивная секция (R05): роль-блок сверху + каталог, переупорядоченный под архетип.
+        {/* Адаптивная сетка (R05): единый каталог, переупорядоченный под архетип.
             Данные каталога — серверные; переупорядочивание клиентское (роль в localStorage). */}
         <EftHomeHubClient catalog={EFT_HUB_CARDS} />
 
