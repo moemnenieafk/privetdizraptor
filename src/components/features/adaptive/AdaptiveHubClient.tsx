@@ -29,6 +29,8 @@ import {
 import { TIERS } from '@/data/subscription-tiers';
 import { getCurrentTier, getNextTier } from '@/types/gamification';
 import { useGamificationStore } from '@/store/useGamificationStore';
+import { useXpStore } from '@/store/useXpStore';
+import { subTrackLevel } from '@/lib/xp';
 import {
   dossierUnlocks,
   statGrid,
@@ -169,6 +171,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
     void useRoleStore.persist.rehydrate();
     void useGamificationStore.persist.rehydrate();
     void useFirstVisitStore.persist.rehydrate();
+    void useXpStore.persist.rehydrate();
   }, []);
 
   const hydrated = useRoleStore((s) => s._hasHydrated);
@@ -180,6 +183,11 @@ export function AdaptiveHubClient(props: HubServerProps = {
   const pve = useIsPve();
   const { tier } = useSubscription();
   const achievements = useAchievementStore((s) => s.completedIds.length);
+
+  // Под-трек архетипа (XP-слой): mount-гейт своего persist-стора — до регидрации чип не рендерим.
+  const xpHydrated = useXpStore((s) => s._hasHydrated);
+  const subTrackXp = useXpStore((s) => s.subTracks[effectiveRole] ?? 0);
+  const subTrack = subTrackLevel(subTrackXp);
 
   // Онбординг-момент первого входа (не блокирующий, §4 R01/R18i).
   const firstVisitHydrated = useFirstVisitStore((s) => s._hasHydrated);
@@ -377,6 +385,21 @@ export function AdaptiveHubClient(props: HubServerProps = {
               <span className="truncate text-lg font-blender-medium uppercase tracking-widest" style={{ color: visual.accent }}>
                 «{roleLabel.name}»
               </span>
+
+              {/* Уровень под-трека архетипа (глубина XP-слоя) + тонкий прогресс-бар. */}
+              {xpHydrated && (
+                <div className="mt-1 flex flex-col gap-1">
+                  <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                    {roleLabel.name} · ур. {subTrack.level}
+                  </span>
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-lines-hover">
+                    <div
+                      className="h-full rounded-full transition-[width] duration-500"
+                      style={{ width: `${Math.round(subTrack.progress * 100)}%`, backgroundColor: visual.accent }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Триггер пикера архетипа (Figma 2861-1952): угол панели у гекс-кольца */}

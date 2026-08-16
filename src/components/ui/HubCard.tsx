@@ -14,6 +14,7 @@ interface HubCardProps {
   iconPath?: string;      // Явный путь к иконке (опционально)
   iconTooltip?: string;   // Текст тултипа для иконки
   isActive?: boolean;     // Активное состояние (для табов)
+  onSelect?: () => void;  // Побочный эффект при клике (напр. запись XP) — не мешает навигации
 }
 
 export function HubCard({
@@ -28,6 +29,7 @@ export function HubCard({
   iconPath,
   iconTooltip,
   isActive = false,
+  onSelect,
 }: HubCardProps) {
   const isSquare = variant === 'square';
   const isMini = variant === 'mini';
@@ -58,6 +60,7 @@ export function HubCard({
     return (
       <Link
         href={href}
+        onClick={onSelect}
         className={`group relative flex flex-col items-center justify-center gap-4 bg-card-menu border border-lines-hover rounded-lg p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all duration-300 hover:border-primary/50 hover:shadow-[0_8px_30px_color-mix(in_srgb,var(--primary)_15%,transparent)] hover:-translate-y-1 animate-[fade-in-up_0.6s_ease-out_both] ${dimensions}`}
         style={{ animationDelay: `${index * 100}ms` }}
       >
@@ -135,6 +138,7 @@ export function HubCard({
   return (
     <Link
       href={href}
+      onClick={onSelect}
       className={`group relative flex flex-col bg-card-menu border border-lines-hover rounded-lg overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-primary transition-all duration-300 hover:border-primary/50 hover:shadow-[0_8px_30px_color-mix(in_srgb,var(--primary)_15%,transparent)] hover:-translate-y-1 animate-[fade-in-up_0.6s_ease-out_both] ${dimensions}`}
       style={{ animationDelay: `${index * 100}ms` }}
     >
