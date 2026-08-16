@@ -11,12 +11,16 @@ export interface PortalFeature {
   id: string;
   /** RU-название (из спеки). */
   name: string;
+  /** Краткое описание (≤70 симв., тактический тон) — подпись под HubCard на главной. */
+  description: string;
   /** Реальный ассет иконки (сверено с headerConfig/role-hubs/public/icons). */
   iconPath: string;
   /** Реальный маршрут EFT. Для ready:false клик всё равно ведёт на /eft/soon. */
   href: string;
   /** Построена ли фича. false → грид ведёт на заглушку /eft/soon. */
   ready: boolean;
+  /** Крупная плитка HubCard (variant 'square', 2×2) на главной. Только у 'maps'. */
+  big?: boolean;
   /** Спец-действие вместо навигации: 'feedback' — открыть глобальную модалку «Сообщить об ошибке». */
   action?: 'feedback';
 }
@@ -28,38 +32,38 @@ export interface PortalFeature {
  * барахолки» (ready:false) → клик из грида ведёт на /eft/soon (см. ArchetypeFeatureGrid).
  */
 export const FEATURE_CATALOG: readonly PortalFeature[] = [
-  { id: 'maps', name: 'Карты локаций', iconPath: '/icons/eft/maps-icon.svg', href: '/eft/maps', ready: true },
-  { id: 'questmap', name: 'Карта заданий', iconPath: '/icons/eft/04-progression/quest-map.svg', href: '/eft/questmap', ready: true },
-  { id: 'items', name: 'Предметы', iconPath: '/icons/eft/03-items/loot-tier.svg', href: '/eft/items', ready: true },
-  { id: 'story', name: 'Сюжетные', iconPath: '/icons/eft/02-quests/lore-quests.svg', href: '/eft/quests/lore-quests', ready: true },
-  { id: 'side', name: 'Побочные', iconPath: '/icons/eft/02-quests/side-quests.svg', href: '/eft/quests/side-quests', ready: true },
-  { id: 'events', name: 'События', iconPath: '/icons/eft/02-quests/ingame-events.svg', href: '/eft/quests/events', ready: true },
-  { id: 'progress', name: 'Прогресс', iconPath: '/icons/eft/progress-icon.svg', href: '/eft/progress', ready: true },
-  { id: 'arcade', name: 'Аркады', iconPath: '/icons/eft/04-progression/eft-arcade-icon.svg', href: '/eft/progress/rookie/arcade', ready: true },
-  { id: 'hideout', name: 'Убежище ЧВК', iconPath: '/icons/eft/04-progression/hideout-modules.svg', href: '/eft/progress/hideout', ready: true },
-  { id: 'craft-profit', name: 'Прибыль убежища', iconPath: '/icons/eft/04-progression/craft-profit.svg', href: '/eft/progress/hideout/craft-profit', ready: true },
-  { id: 'seasons', name: 'Сезоны', iconPath: '/icons/eft/04-progression/seasons/seasons-icon.svg', href: '/eft/progress/seasons', ready: true },
-  { id: 'battlepass', name: 'Battlepass-трекер', iconPath: '/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg', href: '/eft/progress/seasons/tracker', ready: true },
-  { id: 'loadouts', name: 'Сборки оружия', iconPath: '/icons/eft/04-progression/gun-loadouts.svg', href: '/eft/progress/loadouts', ready: true },
-  { id: 'tracker', name: 'Трекер предметов', iconPath: '/icons/eft/04-progression/items-tracker.svg', href: '/eft/progress/tracker', ready: true },
-  { id: 'needed', name: 'Важные предметы', iconPath: '/icons/eft/04-progression/items-needed.svg', href: '/eft/progress/needed', ready: true },
-  { id: 'codex', name: 'Кодекс', iconPath: '/icons/eft/codex-icon.svg', href: '/eft/gamesetting', ready: true },
-  { id: 'game-updates', name: 'Обновления игры', iconPath: '/icons/eft/05-gamesetting/game-updates.svg', href: '/eft/gamesetting/game-updates', ready: true },
-  { id: 'achievements', name: 'Достижения', iconPath: '/icons/eft/04-progression/achievments.svg', href: '/eft/progress/achievements', ready: true },
-  { id: 'prestige', name: 'Престиж', iconPath: '/icons/eft/04-progression/prestige.svg', href: '/eft/progress/prestige', ready: true },
-  { id: 'guides', name: 'Гайды', iconPath: '/icons/eft/06-videos/video-guides.svg', href: '/eft/videos/guides', ready: true },
-  { id: 'streams', name: 'Стримы', iconPath: '/icons/eft/06-videos/live-streams.svg', href: '/eft/videos/streams', ready: true },
-  { id: 'advices', name: 'Советы', iconPath: '/icons/eft/06-videos/video-advices.svg', href: '/eft/videos/advices', ready: true },
-  { id: 'news', name: 'Новости', iconPath: '/icons/eft/06-videos/video-news.svg', href: '/eft/videos/news', ready: true },
+  { id: 'maps', name: 'Карты локаций', description: 'Интерактивные топографические данные', iconPath: '/icons/eft/maps-icon.svg', href: '/eft/maps', ready: true, big: true },
+  { id: 'questmap', name: 'Карта заданий', description: 'Интерактивный прогресс выполнения заданий', iconPath: '/icons/eft/04-progression/quest-map.svg', href: '/eft/questmap', ready: true },
+  { id: 'items', name: 'Предметы', description: 'База предметов: цены, тиры лута, характеристики', iconPath: '/icons/eft/03-items/loot-tier.svg', href: '/eft/items', ready: true },
+  { id: 'story', name: 'Сюжетные', description: 'Сюжетные квесты и прохождение по шагам', iconPath: '/icons/eft/02-quests/lore-quests.svg', href: '/eft/quests/lore-quests', ready: true },
+  { id: 'side', name: 'Побочные', description: 'Побочные задания торговцев', iconPath: '/icons/eft/02-quests/side-quests.svg', href: '/eft/quests/side-quests', ready: true },
+  { id: 'events', name: 'События', description: 'Уникальные внутриигровые события', iconPath: '/icons/eft/02-quests/ingame-events.svg', href: '/eft/quests/events', ready: true },
+  { id: 'progress', name: 'Прогресс', description: 'Твой прогресс по всем разделам портала', iconPath: '/icons/eft/progress-icon.svg', href: '/eft/progress', ready: true },
+  { id: 'arcade', name: 'Аркады', description: 'Мини-игры в ожидании рейда — рекорды идут в ранг', iconPath: '/icons/eft/04-progression/eft-arcade-icon.svg', href: '/eft/progress/rookie/arcade', ready: true },
+  { id: 'hideout', name: 'Убежище ЧВК', description: 'Станции убежища и порядок апгрейдов', iconPath: '/icons/eft/04-progression/hideout-modules.svg', href: '/eft/progress/hideout', ready: true },
+  { id: 'craft-profit', name: 'Прибыль убежища', description: 'Крафты, что приносят профит', iconPath: '/icons/eft/04-progression/craft-profit.svg', href: '/eft/progress/hideout/craft-profit', ready: true },
+  { id: 'seasons', name: 'Сезоны', description: 'Что даёт текущий сезон и как его пройти', iconPath: '/icons/eft/04-progression/seasons/seasons-icon.svg', href: '/eft/progress/seasons', ready: true },
+  { id: 'battlepass', name: 'Battlepass-трекер', description: 'Прогресс наград боевого пропуска', iconPath: '/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg', href: '/eft/progress/seasons/tracker', ready: true },
+  { id: 'loadouts', name: 'Сборки оружия', description: 'Конструктор сборок со стат-движком', iconPath: '/icons/eft/04-progression/gun-loadouts.svg', href: '/eft/progress/loadouts', ready: true },
+  { id: 'tracker', name: 'Трекер предметов', description: 'Интерактивное отслеживание предметов', iconPath: '/icons/eft/04-progression/items-tracker.svg', href: '/eft/progress/tracker', ready: true },
+  { id: 'needed', name: 'Важные предметы', description: 'Предметы необходимые в заданиях', iconPath: '/icons/eft/04-progression/items-needed.svg', href: '/eft/progress/needed', ready: true },
+  { id: 'codex', name: 'Кодекс', description: 'Информация о мире Таркова', iconPath: '/icons/eft/codex-icon.svg', href: '/eft/gamesetting', ready: true },
+  { id: 'game-updates', name: 'Обновления игры', description: 'Патчи и изменения по версиям', iconPath: '/icons/eft/05-gamesetting/game-updates.svg', href: '/eft/gamesetting/game-updates', ready: true },
+  { id: 'achievements', name: 'Достижения', description: 'Все ачивки и что нужно для Каппы', iconPath: '/icons/eft/04-progression/achievments.svg', href: '/eft/progress/achievements', ready: true },
+  { id: 'prestige', name: 'Престиж', description: 'Что даёт престиж и как к нему готовиться', iconPath: '/icons/eft/04-progression/prestige.svg', href: '/eft/progress/prestige', ready: true },
+  { id: 'guides', name: 'Гайды', description: 'Обучающие разборы и прохождения', iconPath: '/icons/eft/06-videos/video-guides.svg', href: '/eft/videos/guides', ready: true },
+  { id: 'streams', name: 'Стримы', description: 'Записи эфиров и статус трансляции', iconPath: '/icons/eft/06-videos/live-streams.svg', href: '/eft/videos/streams', ready: true },
+  { id: 'advices', name: 'Советы', description: 'Короткие полезные советы по игре', iconPath: '/icons/eft/06-videos/video-advices.svg', href: '/eft/videos/advices', ready: true },
+  { id: 'news', name: 'Новости', description: 'Свежак по игре без погружения', iconPath: '/icons/eft/06-videos/video-news.svg', href: '/eft/videos/news', ready: true },
   // ── Раздел «Связь» (/eft/comlink) реализован (база) → ready:true ──
-  { id: 'find-partner', name: 'Поиск напарника', iconPath: '/icons/eft/07-comlink/find-partner.svg', href: '/eft/comlink/find-partner', ready: true },
-  { id: 'candidates', name: 'Кандидаты', iconPath: '/icons/eft/07-comlink/candidates.svg', href: '/eft/comlink/candidates', ready: true },
-  { id: 'sherpa-exchange', name: 'Биржа шерпов', iconPath: '/icons/eft/07-comlink/sherpa.svg', href: '/eft/comlink/sherpa-exchange', ready: true },
-  { id: 'discussions', name: 'Обсуждения', iconPath: '/icons/eft/07-comlink/discussions.svg', href: '/eft/comlink/discussions', ready: true },
-  { id: 'masterclass', name: 'Мастер-классы', iconPath: '/icons/eft/07-comlink/masterclasses.svg', href: '/eft/comlink/masterclasses', ready: true },
-  { id: 'blog', name: 'Блог ЦТА', iconPath: '/icons/eft/07-comlink/blog.svg', href: '/eft/comlink/blog', ready: true },
-  { id: 'feedback', name: 'Сообщения об ошибках', iconPath: '/icons/eft/00-nav/comlink-icon.svg', href: '#', ready: true, action: 'feedback' },
-  { id: 'flea-companion', name: 'Компаньон барахолки', iconPath: '/icons/eft/07-comlink/fleamarker-companion.svg', href: '/eft/companion', ready: true },
+  { id: 'find-partner', name: 'Поиск напарника', description: 'Найти людей под рейд', iconPath: '/icons/eft/07-comlink/find-partner.svg', href: '/eft/comlink/find-partner', ready: true },
+  { id: 'candidates', name: 'Кандидаты', description: 'Кто ищет группу прямо сейчас', iconPath: '/icons/eft/07-comlink/candidates.svg', href: '/eft/comlink/candidates', ready: true },
+  { id: 'sherpa-exchange', name: 'Биржа шерпов', description: 'Найти учеников и наставников', iconPath: '/icons/eft/07-comlink/sherpa.svg', href: '/eft/comlink/sherpa-exchange', ready: true },
+  { id: 'discussions', name: 'Обсуждения', description: 'Комьюнити и тактики', iconPath: '/icons/eft/07-comlink/discussions.svg', href: '/eft/comlink/discussions', ready: true },
+  { id: 'masterclass', name: 'Мастер-классы', description: 'Разборы и обучение от комьюнити', iconPath: '/icons/eft/07-comlink/masterclasses.svg', href: '/eft/comlink/masterclasses', ready: true },
+  { id: 'blog', name: 'Блог ЦТА', description: 'Статьи и заметки редакции портала', iconPath: '/icons/eft/07-comlink/blog.svg', href: '/eft/comlink/blog', ready: true },
+  { id: 'feedback', name: 'Сообщения об ошибках', description: 'Сообщить об ошибке на портале', iconPath: '/icons/eft/00-nav/comlink-icon.svg', href: '#', ready: true, action: 'feedback' },
+  { id: 'flea-companion', name: 'Компаньон барахолки', description: 'Помощник по ценам и сделкам барахолки', iconPath: '/icons/eft/07-comlink/fleamarker-companion.svg', href: '/eft/companion', ready: true },
 ] as const;
 
 /** Быстрый доступ к фиче по id (грид собирает набор архетипа в порядке каталога). */

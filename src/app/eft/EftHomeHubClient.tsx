@@ -3,45 +3,41 @@
 import { useEffect } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRoleStore, effectiveRoleFor } from '@/store/useRoleStore';
-import { orderCardsByRole } from '@/data/role-hubs';
+import { FEATURE_BY_ID, ARCHETYPE_FEATURES } from '@/data/feature-catalog';
 import { HubCard } from '@/components/ui/HubCard';
 
-// Адаптивная сетка главной EFT (R05): архетип задаёт порядок карточек единого каталога —
-// релевантные роли идут первыми. Порядок диктуют данные (orderCardsByRole), не JSX (§4.7).
-// Server-обёртка /eft/page.tsx владеет литералом каталога и передаёт его сюда пропом.
+// Главная EFT (R05): рендерит ИЗБРАННЫЙ НАБОР активного архетипа как HubCard'ы.
+// Набор и его порядок — данные (ARCHETYPE_FEATURES + FEATURE_CATALOG), не JSX (§4.7).
+// Карты (maps) идут первыми крупной плиткой (feature.big → variant 'square'), прочие — 'rectangle'.
 // Роль живёт в localStorage → регидрация skipHydration-стора как у AdaptiveHubClient.
 
-/** Карточка каталога главной EFT (форма — забота страницы, тип общий с сервером). */
-export interface HubCatalogCard {
-  id: string;
-  title: string;
-  description: string;
-  href: string;
-  iconPath: string;
-  variant: 'square' | 'rectangle';
-}
-
-export function EftHomeHubClient({ catalog }: { catalog: readonly HubCatalogCard[] }) {
+export function EftHomeHubClient() {
   useEffect(() => {
     void useRoleStore.persist.rehydrate();
   }, []);
 
   const hydrated = useRoleStore((s) => s._hasHydrated);
   const activeId = usePlayerStore((s) => s.activeProfileId);
-  // Дефолт rookie зашит в effectiveRoleFor: аноним/нет данных → осмысленный порядок новичка, не пусто.
+  // Дефолт rookie зашит в effectiveRoleFor: аноним/нет данных → осмысленный набор новичка, не пусто.
   const role = useRoleStore((s) => effectiveRoleFor(s, activeId));
 
-  // До регидрации порядок каталога ещё не известен → скелетон формы сетки (§8: форма
-  // будущего контента, animate-pulse, не спиннер). Число ячеек = размеру каталога.
+  // Набор активного архетипа: id → фича каталога (порядок значим, Карты первыми).
+  const features = ARCHETYPE_FEATURES[role]
+    .map((id) => FEATURE_BY_ID[id])
+    .filter((f) => f !== undefined);
+
+  // До регидрации роль ещё не известна → скелетон формы будущей сетки (§8: форма контента,
+  // animate-pulse, не спиннер). Число и форма ячеек = набору активного архетипа
+  // (big-square для maps, rectangle для прочих).
   if (!hydrated) {
     return (
       <div className="tactical-grid">
-        {catalog.map((card) => (
+        {features.map((feature) => (
           <div
-            key={card.id}
+            key={feature.id}
             className={
-              card.variant === 'square'
-                ? 'aspect-square w-full animate-pulse rounded-lg bg-lines-hover'
+              feature.big
+                ? 'aspect-square w-full animate-pulse rounded-lg bg-lines-hover md:col-span-2 md:row-span-2'
                 : 'aspect-[348/160] w-full animate-pulse rounded-lg bg-lines-hover md:col-span-2'
             }
           />
@@ -50,23 +46,18 @@ export function EftHomeHubClient({ catalog }: { catalog: readonly HubCatalogCard
     );
   }
 
-  // Единая сетка каталога, переупорядоченная под архетип (R05): релевантные роли первыми.
-  return <CatalogGrid cards={orderCardsByRole(catalog, role)} />;
-}
-
-function CatalogGrid({ cards }: { cards: readonly HubCatalogCard[] }) {
   return (
     <div className="tactical-grid">
-      {cards.map((card, index) => (
+      {features.map((feature, index) => (
         <HubCard
-          key={card.id}
+          key={feature.id}
           gameId="eft"
-          id={card.id}
-          title={card.title}
-          description={card.description}
-          href={card.href}
-          iconPath={card.iconPath}
-          variant={card.variant}
+          id={feature.id}
+          title={feature.name}
+          description={feature.description}
+          href={feature.href}
+          iconPath={feature.iconPath}
+          variant={feature.big ? 'square' : 'rectangle'}
           index={index}
         />
       ))}
