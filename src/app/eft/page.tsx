@@ -1,10 +1,9 @@
 ﻿import { PageHeader } from '@/components/ui/PageHeader';
 import React from 'react';
-import { HubCard } from '@/components/ui/HubCard';
-import { EftHomeHubClient } from '@/app/eft/EftHomeHubClient';
+import { EftHomeHubClient, type HubCatalogCard } from '@/app/eft/EftHomeHubClient';
 
-// Данные для карточек навигации хаба EFT
-const EFT_HUB_CARDS = [
+// Данные для карточек навигации хаба EFT (серверный литерал; клиент переупорядочивает под роль).
+const EFT_HUB_CARDS: HubCatalogCard[] = [
   {
     id: 'maps',
     title: 'Карты локаций',
@@ -69,31 +68,9 @@ export default function EftHubPage() {
       <div className="w-full max-w-275 px-4 xl:px-0">
         <PageHeader pageId="eft" />
 
-        {/* Персональный блок по архетипу (R05) — клиентская адаптивная секция сверху. */}
-        <EftHomeHubClient />
-
-        {/* Полный каталог разделов — фолбэк ниже персонального блока. */}
-        <div className="mb-3 flex items-baseline">
-          <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-            Все разделы
-          </span>
-        </div>
-        {/* Сетка карточек (3 колонки на десктопе) */}
-        <div className="tactical-grid">
-          {EFT_HUB_CARDS.map((card, index) => (
-            <HubCard
-              key={card.id}
-              gameId="eft"
-              id={card.id}
-              title={card.title}
-              description={card.description}
-              href={card.href}
-              iconPath={card.iconPath}
-              variant={card.variant}
-              index={index}
-            />
-          ))}
-        </div>
+        {/* Адаптивная секция (R05): роль-блок сверху + каталог, переупорядоченный под архетип.
+            Данные каталога — серверные; переупорядочивание клиентское (роль в localStorage). */}
+        <EftHomeHubClient catalog={EFT_HUB_CARDS} />
 
       </div>
     </main>

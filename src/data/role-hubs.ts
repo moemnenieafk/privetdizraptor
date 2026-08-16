@@ -119,3 +119,21 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
     ],
   },
 };
+
+/** Множество href, релевантных роли (из её кураторского хаб-набора). */
+export function relevantHrefsForRole(role: PlayerRole): Set<string> {
+  return new Set(ROLE_HUBS[role].links.map((l) => l.href));
+}
+
+/**
+ * Переупорядочить каталог под архетип, НЕ удаляя карточки (R05): элементы, чей href
+ * есть в хаб-наборе роли, идут первыми, остальные держат исходный порядок.
+ * Стабильная частичная сортировка — детерминированная, порядок в данных, не в JSX (§4.7).
+ */
+export function orderCardsByRole<T extends { href: string }>(cards: readonly T[], role: PlayerRole): T[] {
+  const relevant = relevantHrefsForRole(role);
+  const primary: T[] = [];
+  const rest: T[] = [];
+  for (const card of cards) (relevant.has(card.href) ? primary : rest).push(card);
+  return [...primary, ...rest];
+}
