@@ -8,7 +8,7 @@ import { useRoleStore, effectiveRoleFor } from '@/store/useRoleStore';
 import { ROLE_LABELS } from '@/lib/role-inference';
 import { ARCHETYPE_VISUALS } from '@/data/archetype-visuals';
 import { ARCHETYPE_FEATURES } from '@/data/feature-catalog';
-import { RolePicker } from '@/components/features/adaptive/RolePicker';
+import { ArchetypePicker } from '@/components/features/adaptive/ArchetypePicker';
 import { ArchetypeFeatureGrid } from '@/components/features/adaptive/ArchetypeFeatureGrid';
 import { DossierHubNav } from '@/components/features/adaptive/DossierHubNav';
 import { DogTagProfileCard } from '@/components/features/adaptive/DogTagProfileCard';
@@ -21,7 +21,6 @@ import { useAchievementStore } from '@/store/useAchievementStore';
 import { useFirstVisitStore } from '@/store/useFirstVisitStore';
 import { computeStanding } from '@/lib/player-standing';
 import {
-  ArchetypeBadge,
   XpNotchBar,
   CompetencyRadar,
   RollUpCounter,
@@ -178,6 +177,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
   const isFirstVisit = useFirstVisitStore((s) => s.isFirstVisit);
   const markVisited = useFirstVisitStore((s) => s.markVisited);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const showOnboarding = firstVisitHydrated && isFirstVisit && !onboardingDismissed;
   const dismissOnboarding = () => {
     setOnboardingDismissed(true);
@@ -350,7 +350,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
         </div>
 
         {/* ── ПРАВАЯ ПАНЕЛЬ: прокачка ──────────────────────────────────── */}
-        <aside className="flex flex-col gap-5 rounded-xs border border-lines-hover bg-card-menu p-5">
+        <aside className="relative flex flex-col gap-5 rounded-xs border border-lines-hover bg-card-menu p-5">
           {/* Бейдж архетипа: гекс-иконка + «ЦТА АРХЕТИП» + имя роли */}
           <div className="flex items-center gap-3">
             <HexRingProgress
@@ -369,6 +369,23 @@ export function AdaptiveHubClient(props: HubServerProps = {
                 «{roleLabel.name}»
               </span>
             </div>
+
+            {/* Триггер пикера архетипа (Figma 2861-1952): угол панели у гекс-кольца */}
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              aria-label="Выбрать архетип"
+              className="ml-auto shrink-0"
+            >
+              <span
+                className="icon-mask size-5 bg-text-muted transition-colors hover:bg-tactical-amber"
+                style={{
+                  WebkitMaskImage: 'url(/icons/eft/04-progression/cta-profile/select-archetype-icon.svg)',
+                  maskImage: 'url(/icons/eft/04-progression/cta-profile/select-archetype-icon.svg)',
+                }}
+                aria-hidden
+              />
+            </button>
           </div>
 
           {/* Тир подписки */}
@@ -459,19 +476,15 @@ export function AdaptiveHubClient(props: HubServerProps = {
               nextLabel={nextTier ? `След. тир: ${nextTier.label}` : 'Максимальный тир'}
             />
           </div>
+
+          {/* Пикер архетипа — оверлей «в том же фрейме» поверх панели прогрессии */}
+          {pickerOpen && (
+            <div className="absolute inset-0 z-20 overflow-y-auto">
+              <ArchetypePicker onClose={() => setPickerOpen(false)} />
+            </div>
+          )}
         </aside>
       </div>
-
-      {/* ── АРХЕТИП: пояснение инференса + ручной подбор ─────────────────── */}
-      <section className="flex flex-col gap-4 border-t border-lines-hover pt-6">
-        <ArchetypeBadge
-          primary={effectiveRole}
-          secondary={derived?.secondary ?? null}
-          confidence={manualOverride ? undefined : derived?.confidence}
-          reasons={manualOverride ? ['выбрано вручную'] : (derived?.reasons ?? [])}
-        />
-        <RolePicker />
-      </section>
     </div>
   );
 }
