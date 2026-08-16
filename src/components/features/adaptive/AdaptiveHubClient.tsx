@@ -148,6 +148,15 @@ function PanelLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Разъяснение осей радара эффективности (что значит каждая ось, под графиком). */
+const RADAR_AXIS_LEGEND: ReadonlyArray<{ label: string; desc: string }> = [
+  { label: 'Бой', desc: 'Уклон в бой и стрельбу против экономики и торговли.' },
+  { label: 'Агрессия', desc: 'Игра на контакт и напор против осторожной, выжидательной.' },
+  { label: 'Добыча', desc: 'Вдумчивый сбор лута против скоростного пробега рейда.' },
+  { label: 'Выживание', desc: 'Доля выживших рейдов из профиля ЧВК (нет данных — из K/D).' },
+  { label: 'Отряд', desc: 'Командная игра в отряде против соло.' },
+];
+
 export function AdaptiveHubClient(props: HubServerProps = {
   isAuthed: false,
   karmaComlink: null,
@@ -465,6 +474,27 @@ export function AdaptiveHubClient(props: HubServerProps = {
             <PanelLabel>Радар эффективности</PanelLabel>
             <div className="flex justify-center">
               <CompetencyRadar spokes={radarSpokes} accent={visual.accent} size={240} />
+            </div>
+
+            {/* Разъяснение: как считается радар + что значит каждая ось */}
+            <div className="mt-4 flex flex-col gap-2.5 border-t border-lines-hover pt-4">
+              <p className="text-type-caption font-blender-book leading-4 text-text-secondary">
+                Оси Бой · Агрессия · Добыча · Отряд считаются из твоего поведения на портале
+                (какие разделы смотришь — те же сигналы, что определяют архетип), приведённого
+                к шкале 0–100%. Выживание берётся из загруженного профиля ЧВК.
+              </p>
+              <dl className="flex flex-col gap-1.5">
+                {RADAR_AXIS_LEGEND.map((a) => (
+                  <div key={a.label} className="flex gap-2.5">
+                    <dt className="w-20 shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-primary">
+                      {a.label}
+                    </dt>
+                    <dd className="min-w-0 flex-1 text-type-caption font-blender-book leading-4 text-text-secondary">
+                      {a.desc}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
 
