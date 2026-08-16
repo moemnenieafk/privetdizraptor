@@ -52,3 +52,24 @@ date: 2026-08-16
    **заменяет** секцию «Разделы архетипа» в `AdaptiveHubClient`. Готовые → ссылка, будущие → «скоро».
 4. Правка `ROLE_LABELS`: `progressor.button`, `rat.name`+`rat.button`.
 5. Заглушка «скоро» — общий роут/страница для `ready:false`.
+
+## Расширение: +4 архетипа (11 → 15) + пикер
+Имена рабочие (V4DYA причешет). Наборы по правилам (Карты+Предметы первыми, Аркады-филлер).
+
+| id | Имя (раб.) | Кнопка | Фичи (id) | Инференс-лин |
+|---|---|---|---|---|
+| `seasonal` | Сезонник | «Я за сезоном» | maps, items, seasons, battlepass, events, achievements, progress, arcade | визиты seasons/battlepass/events |
+| `collector` | Каппавод | «Я за каппой» | maps, items, achievements, questmap, side, tracker, needed, prestige | достижения+квесты, факт prestige>0 |
+| `tryhard` | Тащер | «Я тащу» | maps, items, loadouts, streams, achievements, events, arcade | loadouts/items(бой) + высокий K/D |
+| `casual` | Чилловый | «Я чиллю» | maps, items, arcade, events, streams, news, codex | низкий объём поведения + аркады |
+
+Каждый требует: `PlayerRole`+`PLAYER_ROLES`+`ROLE_LABELS`+инференс-правило в `inferRole`,
+`ARCHETYPE_VISUALS` (акцент + иконка-заглушка → V4DYA дорисует), `ROLE_HUBS`, `ARCHETYPE_FEATURES`.
+
+## Пикер архетипа (Figma 2861-1952 триггер + 2869-5533 список)
+- **Триггер** — иконка `select-archetype-icon.svg` в правом-верхнем углу правой панели Досье (у гекс-кольца архетипа). Клик → открыть пикер.
+- **Пикер** (оверлей «в том же фрейме», ~348px): вертикальный список ВСЕХ архетипов. Строка 108px =
+  `HexRingProgress` (80px, иконка архетипа) + кнопка-лейбл (`ROLE_LABELS[role].button`, uppercase).
+  Текущий (`effectiveRole`) помечен «ВАШ» + `title_archetype`-бейдж + амбер-подсветка строки.
+  Клик по строке → `setManualOverride(role)`; повторный клик по текущему — сброс. Разделители-линии.
+- **Заменяет** плоский `RolePicker` (обёртка текст-кнопок «Кто ты в Таркове»).

@@ -118,6 +118,42 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
       { id: 'squad-masterclasses', title: 'Мастер-классы', description: 'Учиться играть вместе.', href: '/eft/comlink/masterclasses', iconPath: '/icons/eft/07-comlink/masterclasses.svg' },
     ],
   },
+  seasonal: {
+    intro: 'Гонишь сезон? Держи прогресс боевого пропуска и ивенты под рукой.',
+    links: [
+      { id: 'seasonal-seasons', title: 'Сезоны', description: 'Что даёт текущий сезон и как его пройти.', href: '/eft/progress/seasons', iconPath: '/icons/eft/04-progression/seasons/seasons-icon.svg' },
+      { id: 'seasonal-battlepass', title: 'Battlepass-трекер', description: 'Прогресс наград боевого пропуска.', href: '/eft/progress/seasons/tracker', iconPath: '/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg' },
+      { id: 'seasonal-events', title: 'События', description: 'Игровые ивенты и их окна.', href: '/eft/quests/events', iconPath: '/icons/eft/02-quests/ingame-events.svg' },
+      { id: 'seasonal-achievements', title: 'Достижения', description: 'Сезонные и постоянные ачивки.', href: '/eft/progress/achievements', iconPath: '/icons/eft/04-progression/achievments.svg' },
+    ],
+  },
+  collector: {
+    intro: 'Идёшь на Каппу? Собери достижения и закрой квесты подчистую.',
+    links: [
+      { id: 'collector-achievements', title: 'Достижения', description: 'Все ачивки и что нужно для Каппы.', href: '/eft/progress/achievements', iconPath: '/icons/eft/04-progression/achievments.svg' },
+      { id: 'collector-questmap', title: 'Карта заданий', description: 'Граф квестов и зависимости.', href: '/eft/questmap', iconPath: '/icons/eft/04-progression/quest-map.svg' },
+      { id: 'collector-tracker', title: 'Трекер предметов', description: 'Что нужно сдать и куда.', href: '/eft/progress/tracker', iconPath: '/icons/eft/04-progression/items-tracker.svg' },
+      { id: 'collector-prestige', title: 'Престиж', description: 'Что даёт и как готовиться.', href: '/eft/progress/prestige', iconPath: '/icons/eft/04-progression/prestige.svg' },
+    ],
+  },
+  tryhard: {
+    intro: 'Тащишь рейды? Мета-сборки, ачивки и свежак по бою — быстро.',
+    links: [
+      { id: 'tryhard-loadouts', title: 'Сборки оружия', description: 'Мета-сборки со стат-движком.', href: '/eft/progress/loadouts', iconPath: '/icons/eft/04-progression/gun-loadouts.svg' },
+      { id: 'tryhard-achievements', title: 'Достижения', description: 'Боевые ачивки и K/D-вехи.', href: '/eft/progress/achievements', iconPath: '/icons/eft/04-progression/achievments.svg' },
+      { id: 'tryhard-streams', title: 'Стримы', description: 'Мета из эфиров и разборов.', href: '/eft/videos/streams', iconPath: '/icons/eft/06-videos/live-streams.svg' },
+      { id: 'tryhard-events', title: 'События', description: 'Ивенты с боевыми наградами.', href: '/eft/quests/events', iconPath: '/icons/eft/02-quests/ingame-events.svg' },
+    ],
+  },
+  casual: {
+    intro: 'Играешь для чилла? Лёгкий вход — аркады, ивенты и свежак.',
+    links: [
+      { id: 'casual-arcade', title: 'Аркады', description: 'Мини-игры между рейдами.', href: '/eft/progress/rookie/arcade', iconPath: '/icons/eft/04-progression/eft-arcade-icon.svg' },
+      { id: 'casual-events', title: 'События', description: 'Что происходит в игре прямо сейчас.', href: '/eft/quests/events', iconPath: '/icons/eft/02-quests/ingame-events.svg' },
+      { id: 'casual-streams', title: 'Стримы', description: 'Смотреть, пока отдыхаешь.', href: '/eft/videos/streams', iconPath: '/icons/eft/06-videos/live-streams.svg' },
+      { id: 'casual-news', title: 'Новости', description: 'Свежак по игре без погружения.', href: '/eft/videos/news', iconPath: '/icons/eft/06-videos/video-news.svg' },
+    ],
+  },
 };
 
 /** Множество href, релевантных роли (из её кураторского хаб-набора). */

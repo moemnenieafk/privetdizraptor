@@ -14,7 +14,11 @@ export type PlayerRole =
   | 'rat' // Крыса (тихий соло-лутер/кемпер)
   | 'sherpa' // Шерп (наставник)
   | 'lore' // Лорник (фанат вселенной)
-  | 'squad'; // Сокланы (групповой игрок)
+  | 'squad' // Сокланы (групповой игрок)
+  | 'seasonal' // Сезонник (гонит сезон/боевой пропуск)
+  | 'collector' // Каппавод (достижения + квесты ради Каппы)
+  | 'tryhard' // Тащер (бой/эндгейм-перформанс)
+  | 'casual'; // Чилловый (лёгкий вход, аркады между рейдами)
 
 export const PLAYER_ROLES: readonly PlayerRole[] = [
   'rookie',
@@ -28,6 +32,10 @@ export const PLAYER_ROLES: readonly PlayerRole[] = [
   'sherpa',
   'lore',
   'squad',
+  'seasonal',
+  'collector',
+  'tryhard',
+  'casual',
 ] as const;
 
 /** Русские подписи и текст адаптивной кнопки «Ульты». */
@@ -43,6 +51,10 @@ export const ROLE_LABELS: Record<PlayerRole, { name: string; button: string }> =
   sherpa: { name: 'Шерп', button: 'Я шерп' },
   lore: { name: 'Лорник', button: 'Я лорник' },
   squad: { name: 'Сокланы', button: 'Я в отряде' },
+  seasonal: { name: 'Сезонник', button: 'Я за сезоном' },
+  collector: { name: 'Каппавод', button: 'Я за каппой' },
+  tryhard: { name: 'Тащер', button: 'Я тащу' },
+  casual: { name: 'Чилловый', button: 'Я чиллю' },
 };
 
 /** Стадия прогресса — грубый детерминированный слой по фактам профиля. */
@@ -111,15 +123,15 @@ export interface RoleInference {
 const DOMAIN_TO_ROLES: Record<BehaviorDomain, PlayerRole[]> = {
   barters: ['trader'],
   prices: ['trader', 'rat'],
-  loadouts: ['gunsmith'],
-  gunsmith: ['gunsmith'],
-  quests: ['progressor'],
-  questmap: ['progressor'],
+  loadouts: ['gunsmith', 'tryhard'],
+  gunsmith: ['gunsmith', 'tryhard'],
+  quests: ['progressor', 'collector'],
+  questmap: ['progressor', 'collector'],
   needed: ['progressor', 'engineer'],
-  bosses: ['raider'],
+  bosses: ['raider', 'tryhard'],
   maps: ['raider', 'rat'],
   loot: ['raider', 'trader', 'rat'],
-  videos: ['viewer'],
+  videos: ['viewer', 'casual'],
   codex: ['rookie'],
   rookie: ['rookie'],
   hideout: ['engineer'],
@@ -129,7 +141,7 @@ const DOMAIN_TO_ROLES: Record<BehaviorDomain, PlayerRole[]> = {
 };
 
 function emptyScores(): Record<PlayerRole, number> {
-  return { rookie: 0, progressor: 0, trader: 0, gunsmith: 0, engineer: 0, raider: 0, viewer: 0, rat: 0, sherpa: 0, lore: 0, squad: 0 };
+  return { rookie: 0, progressor: 0, trader: 0, gunsmith: 0, engineer: 0, raider: 0, viewer: 0, rat: 0, sherpa: 0, lore: 0, squad: 0, seasonal: 0, collector: 0, tryhard: 0, casual: 0 };
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -219,6 +231,28 @@ export function computeRole(facts: ProfileFacts, signals: BehaviorSignals = {}):
     scores.raider += 0.5;
     scores.gunsmith += 0.5;
     reasons.push(facts.prestige && facts.prestige > 0 ? `престиж ${facts.prestige}` : 'высокий прогресс');
+  }
+
+  // 3.5. Факт-бонусы для расширенных архетипов (скромные веса — V4DYA тюнит позже).
+  //      Не крадут очки у базовых 11: начисляются поверх, по фактам профиля, а не по домену.
+  // Каппавод: гриндит достижения+квесты; факт prestige>0 — сильный сигнал «идёт на Каппу».
+  if ((facts.prestige ?? 0) > 0) {
+    scores.collector += 1.5;
+    reasons.push('престиж пройден — гонит достижения/каппу');
+  }
+  // Тащер: высокая выживаемость как прокси «тащит рейды» (K/D в фактах нет — берём survivalRate).
+  if (facts.survivalRate != null && facts.survivalRate >= 55) {
+    scores.tryhard += 1.5;
+    reasons.push(`высокая выживаемость (${facts.survivalRate}%)`);
+  }
+  // Сезонник: активный не-новичок без явного фокуса — слабый нейтральный нудж под сезон/БП.
+  if (stage !== 'timmy') {
+    scores.seasonal += 0.5;
+  }
+  // Чилловый: мало поведения (но не пусто) и не боевой эндгейм → лёгкий вход, аркады между рейдами.
+  if (behaviorVolume > 0 && behaviorVolume < 6 && stage !== 'endgame') {
+    scores.casual += 1;
+    reasons.push('лёгкий, нечастый ритм — чилл между рейдами');
   }
 
   // 4. Ранжирование.

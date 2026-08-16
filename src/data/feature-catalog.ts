@@ -82,4 +82,8 @@ export const ARCHETYPE_FEATURES: Record<PlayerRole, readonly string[]> = {
   sherpa: ['maps', 'items', 'codex', 'guides', 'advices', 'masterclass', 'sherpa-exchange', 'find-partner', 'discussions'],
   lore: ['maps', 'items', 'codex', 'story', 'events', 'game-updates', 'news', 'blog'],
   squad: ['maps', 'items', 'find-partner', 'candidates', 'discussions', 'streams', 'events', 'arcade'],
+  seasonal: ['maps', 'items', 'seasons', 'battlepass', 'events', 'achievements', 'progress', 'arcade'],
+  collector: ['maps', 'items', 'achievements', 'questmap', 'side', 'tracker', 'needed', 'prestige'],
+  tryhard: ['maps', 'items', 'loadouts', 'streams', 'achievements', 'events', 'arcade'],
+  casual: ['maps', 'items', 'arcade', 'events', 'streams', 'news', 'codex'],
 };

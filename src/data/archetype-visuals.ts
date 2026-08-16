@@ -21,6 +21,11 @@ export interface ArchetypeVisual {
 //   rat → серый (text-muted) · gunsmith → янтарь (tactical-amber) ·
 //   sherpa/squad → голубой (edition-tue / mode-pve) · progressor → success ·
 //   viewer → twitch · lore → kappa · rookie → нейтральный muted.
+// Расширенные архетипы (4) — свои неповторяющиеся токены:
+//   seasonal → золото (edition-eod) · collector → фиолет (rarity-rare-badge) ·
+//   tryhard → красный-failure (отличен от danger рейдера) · casual → бирюза (accent-frago).
+// ⚠️ iconClass у 4 расширенных — ЗАГЛУШКИ (тематически близкая существующая иконка);
+//   V4DYA дорисует свои. См. CONCERNS в отчёте.
 export const ARCHETYPE_VISUALS: Record<PlayerRole, ArchetypeVisual> = {
   rookie: {
     iconClass: '/icons/eft/00-nav/codex.svg',
@@ -76,5 +81,26 @@ export const ARCHETYPE_VISUALS: Record<PlayerRole, ArchetypeVisual> = {
     iconClass: '/icons/eft/02-quests/quest-trader-reputation.svg',
     accent: 'var(--color-mode-pve)',
     tag: 'FIRETEAM',
+  },
+  // ── Расширенные архетипы: iconClass — ЗАГЛУШКИ (V4DYA дорисует) ──
+  seasonal: {
+    iconClass: '/icons/eft/04-progression/seasons/seasons-icon.svg', // заглушка
+    accent: 'var(--color-edition-eod)',
+    tag: 'SEASON',
+  },
+  collector: {
+    iconClass: '/icons/eft/04-progression/achievments.svg', // заглушка
+    accent: 'var(--color-rarity-rare-badge)',
+    tag: 'KAPPA',
+  },
+  tryhard: {
+    iconClass: '/icons/eft/04-progression/gun-loadouts.svg', // заглушка
+    accent: 'var(--color-failure)',
+    tag: 'CARRY',
+  },
+  casual: {
+    iconClass: '/icons/eft/04-progression/eft-arcade-icon.svg', // заглушка
+    accent: 'var(--color-accent-frago)',
+    tag: 'CHILL',
   },
 };
