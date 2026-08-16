@@ -55,7 +55,7 @@ function FeatureRow({ feature, active }: { feature: PortalFeature; active: boole
   return (
     <Link
       href={hrefFor(feature)}
-      className={`flex items-center gap-2 text-type-caption font-blender-medium uppercase tracking-wide transition-colors ${
+      className={`flex items-center gap-2 text-type-micro font-blender-medium uppercase leading-none tracking-wide transition-colors ${
         active
           ? 'text-tactical-amber hover:opacity-80'
           : 'text-text-secondary hover:text-text-primary'
@@ -98,7 +98,7 @@ export function ArchetypeFeatureGrid({ featureIds }: ArchetypeFeatureGridProps) 
             <FeatureCell key={feature.id} feature={feature} active={active.has(feature.id)} />
           ))}
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        <div className="flex min-w-0 flex-1 flex-col justify-between gap-0.5">
           {FEATURE_CATALOG.map((feature) => (
             <FeatureRow key={feature.id} feature={feature} active={active.has(feature.id)} />
           ))}
