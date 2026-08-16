@@ -178,7 +178,7 @@ export function DossierUploadBlock() {
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="flex h-9 w-full items-center justify-center gap-2 rounded-xs border border-lines-hover bg-card-menu px-3 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-tactical-amber hover:text-tactical-amber"
+        className="flex h-9 w-full items-center justify-center gap-2 rounded-sm border border-lines-hover bg-card-menu px-3 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-tactical-amber hover:text-tactical-amber"
       >
         <FileUp className="size-4 shrink-0" />
         <span className="truncate">Загрузить статистику</span>
