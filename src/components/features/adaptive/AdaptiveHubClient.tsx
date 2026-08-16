@@ -276,11 +276,11 @@ export function AdaptiveHubClient(props: HubServerProps = {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* ЛЕВО+ЦЕНТР */}
         <div className="flex flex-col gap-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[160px_minmax(0,1fr)]">
             {/* Портрет ЧВК (плейсхолдер: у профиля нет поля портрета — фракц-силуэт архетипа). */}
             <div className="flex flex-col gap-4">
               <div
-                className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xs border border-lines-hover bg-(--color-darkbase)"
+                className="relative flex size-40 items-center justify-center overflow-hidden rounded-xs border border-lines-hover bg-(--color-darkbase)"
               >
                 <span
                   className="icon-mask size-24 opacity-30"
