@@ -26,7 +26,7 @@ function FeatureCell({ feature, active }: { feature: PortalFeature; active: bool
     <Link
       href={hrefFor(feature)}
       title={feature.name}
-      className={`group flex aspect-square size-16 items-center justify-center rounded-xs border transition-colors ${
+      className={`group flex aspect-square size-16 items-center justify-center rounded-lg border transition-colors ${
         active
           ? 'border-tactical-amber bg-tactical-amber/10 hover:bg-tactical-amber/20'
           : 'border-lines-hover bg-card-menu hover:border-text-muted'
