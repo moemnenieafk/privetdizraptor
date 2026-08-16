@@ -85,7 +85,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       'ref-quest': 'Реф',
       'lightkeeper-quest': 'Смотритель Маяка',
       questmap: 'Карта Заданий',
-      hub: 'Мой хаб',
+      hub: 'Досье оперативника',
       rookie: 'Кто ты в Игре',
       arcade: 'Зал автоматов',
       progress: 'Прогресс',
@@ -529,6 +529,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/progress',
         iconUrl: '/icons/eft/progress-icon.svg',
         children: [
+          { id: 'p-hub', label: 'Досье оперативника', description: 'Твой тактический профиль: архетип, боевая эффективность, карма и весь прогресс в одном экране.', path: '/eft/hub', iconUrl: '/icons/eft/04-progression/utarkov.svg' },
           { id: 'p-rookie', label: 'Кто ты в Игре', description: 'Не понимаешь Tarkov? Выбери свою роль и пройди Путь Новобранца — учим мир игры по шагам.', path: '/eft/progress/rookie', iconUrl: '/icons/eft/04-progression/utarkov.svg' },
           {
             id: 'p-hideout',
