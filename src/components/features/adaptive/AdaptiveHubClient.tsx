@@ -80,8 +80,8 @@ function StatCellView({ cell }: { cell: StatCell }) {
 
 /** Кольцо выживаемости (донат-progress) + подпись в центре. null → пустое кольцо. */
 function SurvivalRing({ percent, accent }: { percent: number | null; accent: string }) {
-  const size = 168;
-  const stroke = 10;
+  const size = 128;
+  const stroke = 8;
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const pct = percent == null ? 0 : Math.max(0, Math.min(100, percent));
@@ -326,15 +326,12 @@ export function AdaptiveHubClient(props: HubServerProps = {
               {/* Колонка 1: кольцо выживаемости + игровой опыт под ним */}
               <div className="flex shrink-0 flex-col items-center gap-4">
                 <SurvivalRing percent={survival} accent={visual.accent} />
-                {/* Опыт ЧВК: EXP+ (иконка experienceplus) для PRO-тира, EXP (иконка experience) для обычного */}
-                <div className="flex flex-col items-center gap-1.5 text-center">
+                {/* Индикатор опыта: иконка (exp+ для PRO / exp для обычного) + кол-во опыта */}
+                <div className="flex items-center justify-center gap-2">
                   <span
-                    className={`icon-mask size-6 bg-(--primary) ${isPro ? 'icon-eft-stat-experienceplus' : 'icon-eft-stat-experience'}`}
+                    className={`icon-mask size-6 shrink-0 bg-(--primary) ${isPro ? 'icon-eft-stat-experienceplus' : 'icon-eft-stat-experience'}`}
                     aria-hidden
                   />
-                  <span className="text-type-micro font-blender-medium uppercase tracking-widest text-(--primary)">
-                    {isPro ? 'EXP+' : 'EXP'}
-                  </span>
                   <RollUpCounter value={expValue} className="text-lg text-text-primary" />
                 </div>
               </div>
