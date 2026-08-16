@@ -208,7 +208,7 @@ export function DossierPmcStats() {
   if (!mounted || !view) return null;
 
   return (
-    <section className="flex flex-col gap-8 border-t border-lines-hover pt-6">
+    <section className="flex flex-col gap-8">
       <SkillsSection skills={view.skills} />
       <MasterySection mastering={view.mastering} />
       <RaidsSection rows={view.raidStats} />
