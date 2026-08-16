@@ -1,4 +1,5 @@
-﻿import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
+﻿import type { ReactNode } from 'react';
+import { PAGE_CONTENT_DICTIONARY } from '@/data/pageContent';
 
 interface PageHeaderProps {
   pageId?: string;
@@ -6,9 +7,11 @@ interface PageHeaderProps {
   description?: string;
   iconClass?: string;
   count?: number;
+  /** Опциональный слот справа (кнопки/CTA) — выравнивается по центру строки шапки. */
+  action?: ReactNode;
 }
 
-export function PageHeader({ pageId, title, description, iconClass, count }: PageHeaderProps) {
+export function PageHeader({ pageId, title, description, iconClass, count, action }: PageHeaderProps) {
   const content = pageId ? PAGE_CONTENT_DICTIONARY[pageId] : null;
 
   // Приоритет: Данные из словаря -> Явно переданные пропсы -> Дефолтные значения
@@ -33,6 +36,7 @@ export function PageHeader({ pageId, title, description, iconClass, count }: Pag
         </div>
         {finalDesc && <p className="mt-2 text-sm text-text-secondary max-w-2xl">{finalDesc}</p>}
       </div>
+      {action && <div className="ml-auto shrink-0">{action}</div>}
     </div>
   );
 }

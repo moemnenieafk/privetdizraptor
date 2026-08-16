@@ -1,4 +1,5 @@
 import type { PlayerRole } from '@/lib/role-inference';
+import type { HomeLayoutOverride, HomeCardSize } from '@/store/useHomeLayoutStore';
 
 // Каталог фич портала для грида «Избранные разделы архетипа» в Досье (/eft/hub).
 // Источник правды раскладки — docs/decisions/archetype-feature-map.md (31 фича, порядок из макета).
@@ -93,3 +94,48 @@ export const ARCHETYPE_FEATURES: Record<PlayerRole, readonly string[]> = {
   tryhard: ['maps', 'items', 'loadouts', 'streams', 'achievements', 'events', 'arcade'],
   casual: ['maps', 'items', 'arcade', 'events', 'streams', 'news', 'codex'],
 };
+
+/** Одна плитка главной после применения override: фича + итоговый размер. */
+export interface HomeFeature {
+  feature: PortalFeature;
+  size: HomeCardSize;
+}
+
+/**
+ * Вычисление показа главной (Слой 1, §4.7 — чистая функция, без стора/JSX).
+ * 1. База = набор архетипа + `added` (уникально, через FEATURE_BY_ID; невалидные id и
+ *    action-фичи типа feedback отфильтровываются — на главную не попадают).
+ * 2. Минус `hidden`.
+ * 3. Порядок: `pinned` первыми (в их порядке), затем остальное в порядке базы.
+ * 4. Размер по умолчанию: `maps` → 'big', остальные → 'middle'; `sizes[id]` переопределяет.
+ * Пустой override → чистая авто-база (Слой 0).
+ */
+export function computeHomeFeatures(role: PlayerRole, override: HomeLayoutOverride): HomeFeature[] {
+  // База: набор архетипа + добавленные, уникально, порядок базы сохраняем.
+  const baseIds: string[] = [];
+  const seen = new Set<string>();
+  for (const id of [...ARCHETYPE_FEATURES[role], ...override.added]) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    baseIds.push(id);
+  }
+
+  const hidden = new Set(override.hidden);
+  const isEligible = (id: string): boolean => {
+    if (hidden.has(id)) return false;
+    const f = FEATURE_BY_ID[id];
+    // Невалидный id или спец-действие (feedback) — не плитка главной.
+    return f !== undefined && f.action === undefined;
+  };
+
+  // Закреплённые — первыми, в порядке pinned; затем остальные в порядке базы.
+  const pinned = override.pinned.filter((id) => baseIds.includes(id) && isEligible(id));
+  const pinnedSet = new Set(pinned);
+  const rest = baseIds.filter((id) => !pinnedSet.has(id) && isEligible(id));
+
+  return [...pinned, ...rest].map((id) => {
+    const feature = FEATURE_BY_ID[id];
+    const size: HomeCardSize = override.sizes[id] ?? (feature.big ? 'big' : 'middle');
+    return { feature, size };
+  });
+}
