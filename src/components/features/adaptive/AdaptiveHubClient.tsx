@@ -81,6 +81,46 @@ function StatCellView({ cell }: { cell: StatCell }) {
   );
 }
 
+/** Кольцо выживаемости (донат-progress) + подпись в центре. null → пустое кольцо. */
+function SurvivalRing({ percent, accent }: { percent: number | null; accent: string }) {
+  const size = 168;
+  const stroke = 10;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = percent == null ? 0 : Math.max(0, Math.min(100, percent));
+  const dash = (pct / 100) * circ;
+
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Выживаемость">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-lines-hover)" strokeWidth={stroke} />
+        {percent != null && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={accent}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${circ}`}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            style={{ transition: 'stroke-dasharray 0.8s ease-out' }}
+          />
+        )}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+        <span className="text-2xl font-blender-medium tabular-nums" style={{ color: accent }}>
+          {percent == null ? '—' : `${Math.round(pct)}%`}
+        </span>
+        <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+          Выживаний
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /** Строка вклада боевой эффективности (лейбл слева, +значение справа). */
 function ContribRow({ label, value }: { label: string; value: number }) {
   return (
@@ -319,45 +359,40 @@ export function AdaptiveHubClient(props: HubServerProps = {
             </div>
           </div>
 
-          {/* ── СТАТ-СЕТКА: выживание (ведущий) + EXP+ + 8 ячеек — 4 в ряд (раскладка V4DYA).
-              Каждая ячейка — вертикальный стек [иконка → лейбл → число]. Полная ширина блока. */}
-          <div className="rounded-xs border border-lines-hover bg-card-menu p-5">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
-              {/* Ведущий: выживаемость [иконка → «ВЫЖИВАНИЙ» → 52%] в акцент-цвете архетипа */}
-              <div className="flex flex-col items-center gap-1.5 text-center">
-                <span
-                  className="icon-mask icon-eft-stat-survives size-6"
-                  style={{ backgroundColor: visual.accent }}
-                  aria-hidden
-                />
-                <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-                  Выживаний
-                </span>
-                <span className="text-lg font-blender-medium tabular-nums tracking-wider" style={{ color: visual.accent }}>
-                  {survival == null ? '—' : `${Math.round(Math.max(0, Math.min(100, survival)))}%`}
-                </span>
+          {/* ── СТАТ-БЛОК: две колонки (раскладка V4DYA), без фона/обводки.
+              Колонка 1 — кольцо выживаемости + ячейка игрового опыта (EXP+ для PRO / EXP для обычного издания).
+              Колонка 2 — 8 стат-ячеек ЧВК сеткой 2 ряда × 4; каждая ячейка — стек [иконка → лейбл → число]. */}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-8">
+              {/* Колонка 1: кольцо выживаемости + игровой опыт под ним */}
+              <div className="flex shrink-0 flex-col items-center gap-4">
+                <SurvivalRing percent={survival} accent={visual.accent} />
+                {/* Опыт ЧВК: EXP+ (иконка experienceplus) для PRO-тира, EXP (иконка experience) для обычного */}
+                <div className="flex flex-col items-center gap-1.5 text-center">
+                  <span
+                    className={`icon-mask size-6 bg-(--primary) ${isPro ? 'icon-eft-stat-experienceplus' : 'icon-eft-stat-experience'}`}
+                    aria-hidden
+                  />
+                  <span className="text-type-micro font-blender-medium uppercase tracking-widest text-(--primary)">
+                    {isPro ? 'EXP+' : 'EXP'}
+                  </span>
+                  <RollUpCounter value={expValue} className="text-lg text-text-primary" />
+                </div>
               </div>
 
-              {/* EXP+ [иконка → «EXP+» → игровой опыт] в primary-акценте */}
-              <div className="flex flex-col items-center gap-1.5 text-center">
-                <span className="icon-mask icon-eft-stat-experienceplus size-6 bg-(--primary)" aria-hidden />
-                <span className="text-type-micro font-blender-medium uppercase tracking-widest text-(--primary)">
-                  EXP+
-                </span>
-                <RollUpCounter value={expValue} className="text-lg text-text-primary" />
+              {/* Колонка 2: 8 стат-ячеек — 2 ряда по 4 */}
+              <div className="grid flex-1 grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-4">
+                {cells.map((cell) => (
+                  <StatCellView key={cell.key} cell={cell} />
+                ))}
               </div>
-
-              {/* 8 стат-ячеек ЧВК — тот же стек [иконка → лейбл → число] */}
-              {cells.map((cell) => (
-                <StatCellView key={cell.key} cell={cell} />
-              ))}
             </div>
 
-            {/* CTA «нет фактов» — под рядом, чтобы не ломать выравнивание ячеек */}
+            {/* CTA «нет фактов» */}
             {!hasFacts && (
               <Link
                 href="/eft/comlink/players"
-                className="mt-4 inline-flex w-fit items-center gap-1.5 text-type-micro font-blender-medium uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
+                className="inline-flex w-fit items-center gap-1.5 text-type-micro font-blender-medium uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
               >
                 <ScanLine className="size-3.5" /> Добавить профиль / OCR
               </Link>
