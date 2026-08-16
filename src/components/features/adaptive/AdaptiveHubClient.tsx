@@ -10,19 +10,17 @@ import { orderCardsByRole } from '@/data/role-hubs';
 import { ARCHETYPE_VISUALS } from '@/data/archetype-visuals';
 import { RolePicker } from '@/components/features/adaptive/RolePicker';
 import { DossierHubNav } from '@/components/features/adaptive/DossierHubNav';
+import { DogTagProfileCard } from '@/components/features/adaptive/DogTagProfileCard';
 import { useIsPve } from '@/hooks/useGameMode';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAchievementStore } from '@/store/useAchievementStore';
 import { useFirstVisitStore } from '@/store/useFirstVisitStore';
 import { computeStanding } from '@/lib/player-standing';
 import {
-  DogTag,
-  serviceNumberFrom,
   ArchetypeBadge,
   XpNotchBar,
   CompetencyRadar,
   RollUpCounter,
-  StatusLed,
   usePlayerStandingSignals,
 } from '@/components/features/profile';
 import { TIERS } from '@/data/subscription-tiers';
@@ -30,7 +28,6 @@ import { getCurrentTier, getNextTier } from '@/types/gamification';
 import { useGamificationStore } from '@/store/useGamificationStore';
 import { HubCard } from '@/components/ui/HubCard';
 import {
-  operatorStatus,
   profileHasFacts,
   dossierUnlocks,
   DOSSIER_SECTIONS,
@@ -217,7 +214,6 @@ export function AdaptiveHubClient(props: HubServerProps = {
   const visual = ARCHETYPE_VISUALS[effectiveRole];
   const roleLabel = ROLE_LABELS[effectiveRole];
   const hasFacts = profileHasFacts(profile);
-  const status = operatorStatus(profile);
   const level = profile ? Number.parseInt(profile.level, 10) : NaN;
   const prestige = profile ? Number.parseInt(profile.prestige, 10) : 0;
 
@@ -284,7 +280,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
             {/* Портрет ЧВК (плейсхолдер: у профиля нет поля портрета — фракц-силуэт архетипа). */}
             <div className="flex flex-col gap-4">
               <div
-                className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-xs border border-lines-hover bg-(--color-darkbase)"
+                className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xs border border-lines-hover bg-(--color-darkbase)"
               >
                 <span
                   className="icon-mask size-24 opacity-30"
@@ -309,53 +305,16 @@ export function AdaptiveHubClient(props: HubServerProps = {
               </div>
             </div>
 
-            {/* Центр-верх: карточка идентичности + кольцо + стат-грид */}
+            {/* Центр-верх: карточка-жетон идентичности (1:1 Figma) + кольцо + стат-грид */}
             <div className="flex flex-col gap-6">
-              {/* Идентификационная карточка: режим-бейдж, ник+LED, чипы уровень/престиж */}
-              <div className="flex flex-col gap-4 rounded-xs border border-lines-hover bg-card-menu p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span
-                    className="inline-flex items-center gap-2 rounded-xs px-2 py-1 text-type-micro font-blender-medium uppercase tracking-widest"
-                    style={{
-                      color: pve ? 'var(--color-mode-pve)' : 'var(--color-mode-pvp)',
-                      background: `color-mix(in srgb, ${pve ? 'var(--color-mode-pve)' : 'var(--color-mode-pvp)'} 12%, transparent)`,
-                    }}
-                  >
-                    <span
-                      className="icon-mask size-3.5"
-                      style={{
-                        backgroundColor: pve ? 'var(--color-mode-pve)' : 'var(--color-mode-pvp)',
-                        WebkitMaskImage: `url(/icons/eft/04-progression/seasons/${pve ? 'pve' : 'pvp'}-mode-icon.svg)`,
-                        maskImage: `url(/icons/eft/04-progression/seasons/${pve ? 'pve' : 'pvp'}-mode-icon.svg)`,
-                        WebkitMaskSize: 'contain',
-                        maskSize: 'contain',
-                        WebkitMaskRepeat: 'no-repeat',
-                        maskRepeat: 'no-repeat',
-                      }}
-                      aria-hidden
-                    />
-                    {pve ? 'PvE-режим' : 'PvP-режим'}
-                  </span>
-                  <StatusLed status={status} />
-                </div>
-
-                <DogTag nickname={profile?.nickname} serviceNo={serviceNumberFrom(activeId)} faction={profile?.faction ?? null} />
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-xs border border-lines-hover bg-(--color-base) px-2.5 py-1">
-                    <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">Ур.</span>
-                    <span className="text-sm font-blender-medium tabular-nums text-text-primary">
-                      {Number.isFinite(level) ? level : '—'}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-xs border border-lines-hover bg-(--color-base) px-2.5 py-1">
-                    <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">Престиж</span>
-                    <span className="text-sm font-blender-medium tabular-nums text-(--primary)">
-                      {Number.isFinite(prestige) ? prestige : 0}
-                    </span>
-                  </span>
-                </div>
-              </div>
+              <DogTagProfileCard
+                nickname={profile?.nickname ?? null}
+                faction={profile?.faction ?? null}
+                edition={profile?.edition ?? 'Standard'}
+                level={Number.isFinite(level) ? level : null}
+                prestige={Number.isFinite(prestige) ? prestige : 0}
+                pve={pve}
+              />
             </div>
           </div>
 
@@ -458,10 +417,11 @@ export function AdaptiveHubClient(props: HubServerProps = {
               />
             </span>
             <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="inline-flex items-center gap-1.5 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-                <span className="icon-mask icon-eft-title-archetype size-3.5 bg-text-muted" aria-hidden />
-                ЦТА · Архетип
-              </span>
+              <img
+                src="/icons/eft/04-progression/cta-profile/title_archetype.svg"
+                alt="ЦТА · Архетип"
+                className="h-4 w-auto"
+              />
               <span className="truncate text-lg font-blender-medium uppercase tracking-widest" style={{ color: visual.accent }}>
                 «{roleLabel.name}»
               </span>
