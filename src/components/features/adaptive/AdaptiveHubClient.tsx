@@ -255,7 +255,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
                 Профиль ЧВК не заполнен — покажем уровень, рейды и выживаемость, как только добавишь данные.
               </p>
               <Link
-                href="/eft/progress/rookie"
+                href="/eft/comlink/players"
                 className="inline-flex w-fit items-center gap-1.5 text-type-caption font-blender-medium uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
               >
                 <ScanLine className="size-3.5" /> Добавить профиль / OCR скрина

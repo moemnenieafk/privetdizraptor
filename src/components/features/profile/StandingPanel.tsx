@@ -46,7 +46,7 @@ export function StandingPanel({ standing, className = '' }: StandingPanelProps) 
             сигналов сложится твой ранг оперативника.
           </p>
           <Link
-            href="/eft/progress/rookie"
+            href="/eft/progress/rookie/path"
             className="mt-1 inline-flex w-fit items-center gap-1.5 text-type-caption font-blender-medium uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
           >
             Начать <ArrowRight className="size-3.5" />

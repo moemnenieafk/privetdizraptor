@@ -75,7 +75,7 @@ export const DOSSIER_SECTIONS: readonly SectionCard[] = [
   { id: 'seasons', title: 'Сезоны и Батлпасс', description: 'Конструктор перков и трекер наград сезона.', href: '/eft/progress/seasons', iconPath: '/icons/eft/04-progression/seasons/seasons-icon.svg' },
   { id: 'loadouts', title: 'Сборки оружия', description: 'Конструктор со стат-движком и мета-сборки.', href: '/eft/progress/loadouts', iconPath: '/icons/eft/04-progression/gun-loadouts.svg' },
   { id: 'arcade', title: 'Зал автоматов', description: 'Аркады на время ожидания — рекорды идут в ранг.', href: '/eft/progress/rookie/arcade', iconPath: '/icons/eft/04-progression/utarkov.svg' },
-  { id: 'rookie', title: 'Путь Новобранца', description: 'Курс из 10 этапов — осваиваем мир игры по шагам.', href: '/eft/progress/rookie', iconPath: '/icons/eft/04-progression/utarkov.svg' },
+  { id: 'rookie', title: 'Путь Новобранца', description: 'Курс из 10 этапов — осваиваем мир игры по шагам.', href: '/eft/progress/rookie/path', iconPath: '/icons/eft/04-progression/utarkov.svg' },
   { id: 'quests', title: 'Карта заданий', description: 'Граф квестов, зависимости и прогресс.', href: '/eft/questmap', iconPath: '/icons/eft/04-progression/quest-map.svg' },
   { id: 'prestige', title: 'Престиж', description: 'Сброс прогресса ради статуса и эксклюзивов.', href: '/eft/progress/prestige', iconPath: '/icons/eft/04-progression/prestige.svg' },
 ] as const;
