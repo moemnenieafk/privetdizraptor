@@ -7,6 +7,7 @@ import { useSaveTheServersStore } from '@/store/useSaveTheServersStore';
 import { useArcadeStore } from '@/store/useArcadeStore';
 import { playSfx } from '@/lib/sfx';
 import { ArcadeCanvas } from './ArcadeCanvas';
+import { StandingPulse } from './StandingPulse';
 import { GameSelector } from './GameSelector';
 import { SkinShop } from './SkinShop';
 import { RotateScreen } from './RotateScreen';
@@ -141,13 +142,17 @@ export function ArcadeHost({ initialBarters }: ArcadeHostProps) {
     screenContent = <div className="h-full w-full animate-pulse bg-black" />;
   } else if (runCanvas && load) {
     screenContent = (
-      <ArcadeCanvas
-        load={load}
-        preset={immersive ? 'fullscreen' : 'site'}
-        lockTouch={immersive}
-        gameData={{ barterDeck: initialBarters }}
-        ariaLabel={`Мини-игра: ${meta?.title ?? ''}`}
-      />
+      <>
+        <ArcadeCanvas
+          load={load}
+          preset={immersive ? 'fullscreen' : 'site'}
+          lockTouch={immersive}
+          gameData={{ barterDeck: initialBarters }}
+          ariaLabel={`Мини-игра: ${meta?.title ?? ''}`}
+        />
+        {/* R09/R10: лёгкий «standing вырос» при новом аркада-рекорде (поверх экрана). */}
+        <StandingPulse />
+      </>
     );
   } else if (isTouch && immersive && !isLandscape) {
     screenContent = <RotateScreen />;

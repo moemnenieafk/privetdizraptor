@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Gamepad2 } from 'lucide-react';
 import { useRoleStore } from '@/store/useRoleStore';
 import { useRookieStore } from '@/store/useRookieStore';
+import { useCosmeticStore, COSMETIC_BADGES } from '@/store/useCosmeticStore';
 import { RolePicker } from '@/components/features/adaptive/RolePicker';
 
 // Этапы «Пути Новобранца» — 10 столпов мира игры (см. docs: positioning-rookie-section).
@@ -67,10 +68,25 @@ export function RookieHubClient() {
   useEffect(() => {
     void useRoleStore.persist.rehydrate();
     void useRookieStore.persist.rehydrate();
+    void useCosmeticStore.persist.rehydrate();
   }, []);
 
   const hydrated = useRoleStore((s) => s._hasHydrated);
   const completed = useRookieStore((s) => s.completed);
+  const cosmeticsHydrated = useCosmeticStore((s) => s._hasHydrated);
+  const hasAdaptedBadge = useCosmeticStore((s) => s.earned.includes('adapted'));
+
+  const doneCount = ROOKIE_PATH.filter((s) => completed.includes(s.id)).length;
+  const pathComplete = doneCount === ROOKIE_PATH.length;
+
+  // R12: пройден весь «Путь Новобранца» → выдать косметик-бейдж «Адаптирован». Идемпотентно —
+  // award() дедупит по id, повторный заход/ре-рендер не дублирует награду и не создаёт фарм
+  // (§2/A6). Standing уже растёт от сигнала tutorialDone — бейдж лишь отмечает веху.
+  useEffect(() => {
+    if (pathComplete && cosmeticsHydrated && !hasAdaptedBadge) {
+      useCosmeticStore.getState().award('adapted');
+    }
+  }, [pathComplete, cosmeticsHydrated, hasAdaptedBadge]);
 
   if (!hydrated) {
     return (
@@ -81,16 +97,41 @@ export function RookieHubClient() {
     );
   }
 
-  const doneCount = ROOKIE_PATH.filter((s) => completed.includes(s.id)).length;
+  const adaptedBadge = COSMETIC_BADGES.adapted;
 
   return (
     <div className="flex flex-col gap-8">
-      {doneCount === ROOKIE_PATH.length && (
-        <div className="flex flex-col gap-1 rounded-xs border border-(--primary) bg-(--color-base) p-4">
-          <span className="text-sm font-blender-medium uppercase tracking-widest text-(--primary)">Ты адаптирован</span>
-          <span className="text-type-label font-blender-book text-text-secondary">
-            Путь Новобранца пройден. Добро пожаловать в Тарков — теперь ты знаешь, как он устроен.
-          </span>
+      {pathComplete && (
+        <div className="flex items-center gap-4 rounded-xs border border-(--primary) bg-(--color-base) p-4 animate-[fresh-unlock_1.3s_ease-out]">
+          <span
+            className="icon-mask size-10 shrink-0"
+            style={{
+              backgroundColor: adaptedBadge.accent,
+              WebkitMaskImage: `url(${adaptedBadge.iconClass})`,
+              maskImage: `url(${adaptedBadge.iconClass})`,
+            }}
+            aria-hidden
+          />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-blender-medium uppercase tracking-widest text-(--primary)">
+                Ты адаптирован
+              </span>
+              <span
+                className="shrink-0 rounded-xs px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-widest"
+                style={{
+                  color: adaptedBadge.accent,
+                  backgroundColor: `color-mix(in srgb, ${adaptedBadge.accent} 12%, transparent)`,
+                }}
+              >
+                Бейдж · {adaptedBadge.label}
+              </span>
+            </div>
+            <span className="text-type-label font-blender-book text-text-secondary">
+              Путь Новобранца пройден. Добро пожаловать в Тарков — теперь ты знаешь, как он устроен. Регалия
+              «{adaptedBadge.label}» закреплена в досье оперативника.
+            </span>
+          </div>
         </div>
       )}
 
