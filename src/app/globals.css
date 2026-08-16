@@ -8,6 +8,14 @@
 @source inline("icon-eft-favourite-default");
 @source inline("icon-eft-favourite-active");
 
+/* Анимируемый угол conic-маски гекс-кольца прогресса (HexRingProgress).
+   Регистрация @property делает custom-property интерполируемым → плавная заливка. */
+@property --hex-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 @font-face {
     font-family: 'BlenderPro-Book';
     src: local('Blender Pro Book'), local('BlenderPro-Book'),

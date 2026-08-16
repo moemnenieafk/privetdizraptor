@@ -13,6 +13,7 @@ import { DossierHubNav } from '@/components/features/adaptive/DossierHubNav';
 import { DogTagProfileCard } from '@/components/features/adaptive/DogTagProfileCard';
 import { DossierUploadBlock } from '@/components/features/adaptive/DossierUploadBlock';
 import { DossierPmcStats } from '@/components/features/adaptive/DossierPmcStats';
+import { HexRingProgress } from '@/components/features/adaptive/HexRingProgress';
 import { useIsPve } from '@/hooks/useGameMode';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAchievementStore } from '@/store/useAchievementStore';
@@ -382,30 +383,12 @@ export function AdaptiveHubClient(props: HubServerProps = {
         <aside className="flex flex-col gap-5 rounded-xs border border-lines-hover bg-card-menu p-5">
           {/* Бейдж архетипа: гекс-иконка + «ЦТА АРХЕТИП» + имя роли */}
           <div className="flex items-center gap-3">
-            <span
-              className="relative flex size-14 shrink-0 items-center justify-center"
-              style={{
-                clipPath: 'polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)',
-                background: `color-mix(in srgb, ${visual.accent} 16%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${visual.accent} 55%, transparent)`,
-              }}
-            >
-              <span
-                className="icon-mask size-7"
-                style={{
-                  backgroundColor: visual.accent,
-                  WebkitMaskImage: `url(${visual.iconClass})`,
-                  maskImage: `url(${visual.iconClass})`,
-                  WebkitMaskSize: 'contain',
-                  maskSize: 'contain',
-                  WebkitMaskRepeat: 'no-repeat',
-                  maskRepeat: 'no-repeat',
-                  WebkitMaskPosition: 'center',
-                  maskPosition: 'center',
-                }}
-                aria-hidden
-              />
-            </span>
+            <HexRingProgress
+              progress={manualOverride ? 1 : (derived?.confidence ?? 0)}
+              accent={visual.accent}
+              iconClass={visual.iconClass}
+              size={56}
+            />
             <div className="flex min-w-0 flex-col gap-0.5">
               <img
                 src="/icons/eft/04-progression/cta-profile/title_archetype.svg"
