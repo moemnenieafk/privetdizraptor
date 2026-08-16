@@ -1,7 +1,9 @@
 // Чистые хелперы разбора личного профиля (без серверных импортов, безопасны на клиенте).
 import type {
+  PlayerHideoutView,
   PlayerMasteringView,
   PlayerSkillView,
+  PlayerTraderView,
   PlayerView,
   ProfileEdition,
   RaidSide,
@@ -167,6 +169,36 @@ function mastering(profile: RawPlayerProfile): PlayerMasteringView[] {
     .sort((a, b) => b.progress - a.progress);
 }
 
+// Убежище: есть только в полном игровом/SPT-профиле. Defensive-разбор (форму гарантировать нельзя,
+// живого сэмпла с Hideout нет) — жёсткие typeof-проверки, мусор молча отсекается. Показываем
+// построенные (level>0); station type→имя маппит UI.
+function hideout(profile: RawPlayerProfile): PlayerHideoutView[] {
+  const areas = profile.Hideout?.Areas;
+  if (!Array.isArray(areas)) return [];
+  return areas
+    .filter(
+      (a): a is { type: number; level: number } =>
+        a != null && typeof a.type === "number" && typeof a.level === "number",
+    )
+    .map((a) => ({ type: a.type, level: a.level }))
+    .filter((a) => a.level > 0)
+    .sort((a, b) => b.level - a.level || a.type - b.type);
+}
+
+// Трейдеры: тоже только в полном профиле. TradersInfo — объект traderId→{loyaltyLevel,standing,…}.
+function traders(profile: RawPlayerProfile): PlayerTraderView[] {
+  const info = profile.TradersInfo;
+  if (info == null || typeof info !== "object") return [];
+  return Object.entries(info)
+    .filter(([, t]) => t != null && typeof t.loyaltyLevel === "number")
+    .map(([id, t]) => ({
+      id,
+      loyaltyLevel: t.loyaltyLevel ?? 0,
+      standing: typeof t.standing === "number" ? t.standing : null,
+    }))
+    .sort((a, b) => b.loyaltyLevel - a.loyaltyLevel);
+}
+
 /** Проверка/типизация произвольного JSON как профиля. null — если это не профиль. */
 export function parseProfile(data: unknown): RawPlayerProfile | null {
   if (typeof data !== "object" || data === null) return null;
@@ -197,6 +229,8 @@ export function normalizeProfile(profile: RawPlayerProfile): PlayerView {
     raidStats: buildRaidStats(profile),
     skills: skills(profile),
     mastering: mastering(profile),
+    hideout: hideout(profile),
+    traders: traders(profile),
     achievementsCount: profile.achievements ? Object.keys(profile.achievements).length : 0,
     updatedAt: profile.updated ?? null,
   };

@@ -7,6 +7,9 @@ import { parseGameProfile } from '@/lib/parse-profile';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
 import { useIsPve } from '@/hooks/useGameMode';
+import { buildSnapshot } from '@/lib/player-profile-sync';
+import { savePlayerProfileAction } from '@/actions/player-profile';
+import type { ProfileSource } from '@/types/eft-player';
 
 const MAX_BYTES = 5 * 1024 * 1024; // профиль ~30–100 КБ; 5 МБ с запасом (как в ProfileUpload)
 
@@ -27,7 +30,7 @@ const MODE_ICON_BASE = '/icons/eft/04-progression/seasons';
  * (parseProfile → normalizeProfile → setView в usePmcStatsStore + флэт-апсерт в usePlayerStore).
  * Файл читается локально в браузере, наружу ничего не уходит (§4.11).
  */
-export function DossierUploadBlock() {
+export function DossierUploadBlock({ isAuthed = false }: { isAuthed?: boolean }) {
   const pve = useIsPve();
   const setView = usePmcStatsStore((s) => s.setView);
   const profiles = usePlayerStore((s) => s.profiles);
@@ -62,8 +65,9 @@ export function DossierUploadBlock() {
         setStatus({ kind: 'err', text: 'Не похоже на profile.json (нет aid/info/nickname).' });
         return;
       }
-      // Рич-стата → отдельный стор (навыки/мастерство/рейды для секции досье).
-      setView(normalizeProfile(profile));
+      // Рич-стата → отдельный стор (навыки/мастерство/рейды/убежище/трейдеры для секции досье).
+      const richView = normalizeProfile(profile);
+      setView(richView);
 
       // Плуминг: плоский разбор → апсерт EFT-идентичности в активный профиль ЧВК
       // (пишем только достоверно прочитанное; null/отсутствующее не затирает — как в ProfileUpload).
@@ -87,12 +91,26 @@ export function DossierUploadBlock() {
           ...(parsed.pmcStats.survived != null ? { survived: parsed.pmcStats.survived } : {}),
           ...(parsed.pmcStats.kd != null ? { kd: parsed.pmcStats.kd } : {}),
         });
-        setStatus({ kind: 'ok', text: `Загружено: «${parsed.nickname}»` });
+      }
+
+      // Источник: полный игровой/SPT-профиль отличаем по наличию убежища/трейдеров (у тонкого
+      // tarkov.dev-экспорта их нет). Сохраняем: залогинен → сервер (точка истины), аноним → только
+      // localStorage (уже записан сторами выше) + призыв войти.
+      const source: ProfileSource =
+        richView.hideout.length > 0 || richView.traders.length > 0 ? 'game-profile' : 'tarkov.dev';
+      const baseText = parsed ? `Загружено: «${parsed.nickname}»` : 'Статистика загружена.';
+
+      if (isAuthed) {
+        const res = await savePlayerProfileAction(buildSnapshot(source));
+        setStatus({
+          kind: 'ok',
+          text: res.ok ? `${baseText} Сохранено в профиль.` : `${baseText} (сервер недоступен — сохранено локально)`,
+        });
       } else {
-        setStatus({ kind: 'ok', text: 'Статистика загружена.' });
+        setStatus({ kind: 'ok', text: `${baseText} Войди, чтобы сохранить навсегда.` });
       }
     },
-    [profiles, activeProfileId, updateProfile, setView],
+    [profiles, activeProfileId, updateProfile, setView, isAuthed],
   );
 
   return (

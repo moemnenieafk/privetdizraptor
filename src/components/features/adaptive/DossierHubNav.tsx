@@ -35,7 +35,7 @@ export function DossierHubNav({ title, description, iconUrl, rootPath = '/eft/pr
   if (sections.length === 0) return null;
 
   return (
-    <div className="flex w-full flex-col gap-6 mb-8 lg:mb-12 lg:flex-row lg:items-center lg:gap-7">
+    <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-center lg:gap-7">
       {/* Левая половина: иконка + заголовок + описание */}
       <div className="flex items-center gap-4 lg:w-[32.625rem] lg:shrink-0 lg:gap-7">
         <div className="w-21 h-21 shrink-0 flex items-center justify-center rounded-md bg-(--color-darkbase)">
