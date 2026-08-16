@@ -21,9 +21,9 @@ export interface PortalFeature {
 
 /**
  * 31 фича, порядок 1..31 = порядок из макета (значим — грид и список рендерят в нём).
- * Маршруты и иконки — реальные (headerConfig.ts, role-hubs.ts, public/icons). Фичи 24–31
- * ещё не построены (ready:false): маршруты comlink существуют как смарт-заглушки, но клик
- * из грида уводит на общий /eft/soon (см. ArchetypeFeatureGrid).
+ * Маршруты и иконки — реальные (headerConfig.ts, role-hubs.ts, public/icons). Раздел «Связь»
+ * (/eft/comlink) реализован (база) → его фичи ready:true. Не построен только «Компаньон
+ * барахолки» (ready:false) → клик из грида ведёт на /eft/soon (см. ArchetypeFeatureGrid).
  */
 export const FEATURE_CATALOG: readonly PortalFeature[] = [
   { id: 'maps', name: 'Карты локаций', iconPath: '/icons/eft/maps-icon.svg', href: '/eft/maps', ready: true },
@@ -49,14 +49,15 @@ export const FEATURE_CATALOG: readonly PortalFeature[] = [
   { id: 'streams', name: 'Стримы', iconPath: '/icons/eft/06-videos/live-streams.svg', href: '/eft/videos/streams', ready: true },
   { id: 'advices', name: 'Советы', iconPath: '/icons/eft/06-videos/video-advices.svg', href: '/eft/videos/advices', ready: true },
   { id: 'news', name: 'Новости', iconPath: '/icons/eft/06-videos/video-news.svg', href: '/eft/videos/news', ready: true },
-  // ── Ещё не построены (ready:false) → клик из грида ведёт на /eft/soon ──
-  { id: 'find-partner', name: 'Поиск напарника', iconPath: '/icons/eft/07-comlink/find-partner.svg', href: '/eft/comlink/find-partner', ready: false },
-  { id: 'candidates', name: 'Кандидаты', iconPath: '/icons/eft/07-comlink/candidates.svg', href: '/eft/comlink/candidates', ready: false },
-  { id: 'sherpa-exchange', name: 'Биржа шерпов', iconPath: '/icons/eft/07-comlink/sherpa.svg', href: '/eft/comlink/sherpa-exchange', ready: false },
-  { id: 'discussions', name: 'Обсуждения', iconPath: '/icons/eft/07-comlink/discussions.svg', href: '/eft/comlink/discussions', ready: false },
-  { id: 'masterclass', name: 'Мастер-классы', iconPath: '/icons/eft/07-comlink/masterclasses.svg', href: '/eft/comlink/masterclasses', ready: false },
-  { id: 'blog', name: 'Блог ЦТА', iconPath: '/icons/eft/07-comlink/blog.svg', href: '/eft/comlink/blog', ready: false },
-  { id: 'feedback', name: 'Сообщения об ошибках', iconPath: '/icons/eft/00-nav/comlink-icon.svg', href: '#', ready: false },
+  // ── Раздел «Связь» (/eft/comlink) реализован (база) → ready:true ──
+  { id: 'find-partner', name: 'Поиск напарника', iconPath: '/icons/eft/07-comlink/find-partner.svg', href: '/eft/comlink/find-partner', ready: true },
+  { id: 'candidates', name: 'Кандидаты', iconPath: '/icons/eft/07-comlink/candidates.svg', href: '/eft/comlink/candidates', ready: true },
+  { id: 'sherpa-exchange', name: 'Биржа шерпов', iconPath: '/icons/eft/07-comlink/sherpa.svg', href: '/eft/comlink/sherpa-exchange', ready: true },
+  { id: 'discussions', name: 'Обсуждения', iconPath: '/icons/eft/07-comlink/discussions.svg', href: '/eft/comlink/discussions', ready: true },
+  { id: 'masterclass', name: 'Мастер-классы', iconPath: '/icons/eft/07-comlink/masterclasses.svg', href: '/eft/comlink/masterclasses', ready: true },
+  { id: 'blog', name: 'Блог ЦТА', iconPath: '/icons/eft/07-comlink/blog.svg', href: '/eft/comlink/blog', ready: true },
+  { id: 'feedback', name: 'Сообщения об ошибках', iconPath: '/icons/eft/00-nav/comlink-icon.svg', href: '/eft/comlink/reports', ready: true },
+  // Компаньон барахолки — отдельной страницы ещё нет → остаётся «скоро»
   { id: 'flea-companion', name: 'Компаньон барахолки', iconPath: '/icons/eft/07-comlink/fleamarker-companion.svg', href: '#', ready: false },
 ] as const;
 
