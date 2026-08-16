@@ -103,17 +103,17 @@ export function DogTagProfileCard({ nickname, faction, edition, level, prestige,
             {level == null || Number.isNaN(level) ? '—' : level}
           </span>
         </div>
-        <div className="flex h-9 flex-1 items-center gap-2 rounded-md bg-(--color-base) px-3">
+        <div className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md bg-(--color-base) px-3">
           {prestige > 0 ? (
             <img
               src={`/icons/eft/prestige/prestige-${prestige}.webp`}
               alt={`Престиж ${prestige}`}
-              className="size-7 object-contain"
+              className="size-7 shrink-0 object-contain"
             />
           ) : (
-            <span className="icon-mask icon-eft-prog-prestige size-4 bg-lines-hover" aria-hidden />
+            <span className="icon-mask icon-eft-prog-prestige size-4 shrink-0 bg-lines-hover" aria-hidden />
           )}
-          <span className="text-sm font-blender-medium uppercase tracking-widest text-text-secondary">
+          <span className="min-w-0 truncate text-xs font-blender-medium uppercase tracking-tight text-text-secondary">
             Престиж {prestige > 0 ? prestige : 0}
           </span>
         </div>

@@ -27,11 +27,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function SkillCard({ skill }: { skill: PlayerSkillView }) {
   const icon = SKILL_ICONS[skill.id];
   return (
-    <div className="flex items-center gap-2.5 border border-lines-hover bg-card-menu px-3 py-2">
+    <div className="flex items-center gap-2.5 rounded-md bg-(--color-darkbase) px-3 py-2">
       {icon && (
-        <img src={icon.src} alt="" aria-hidden className="size-8 shrink-0 object-contain" />
+        <img src={icon.src} alt="" aria-hidden className="size-14 shrink-0 object-contain" />
       )}
-      <span className="min-w-0 flex-1 truncate font-blender-book text-sm text-text-primary">
+      <span className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-primary">
         {SKILL_RU[skill.id] ?? skill.id}
       </span>
       <span className="shrink-0 font-blender-medium text-xs text-(--primary) tabular-nums">{skill.level}</span>
@@ -42,7 +42,7 @@ function SkillCard({ skill }: { skill: PlayerSkillView }) {
 /** Строка «прочего» навыка без иконки: имя + уровень. */
 function OtherSkillRow({ skill }: { skill: PlayerSkillView }) {
   return (
-    <div className="flex items-center justify-between border border-lines-hover bg-card-menu px-3 py-1.5">
+    <div className="flex items-center justify-between rounded-md bg-(--color-darkbase) px-3 py-1.5">
       <span className="min-w-0 flex-1 truncate font-blender-book text-sm text-text-secondary">
         {SKILL_RU[skill.id] ?? skill.id}
       </span>
@@ -119,7 +119,7 @@ function MasterySection({ mastering }: { mastering: PlayerMasteringView[] }) {
         {shown.map((m) => (
           <div
             key={m.id}
-            className="flex items-center justify-between border border-lines-hover bg-card-menu px-3 py-2"
+            className="flex items-center justify-between rounded-md bg-(--color-darkbase) px-3 py-2"
           >
             <span className="min-w-0 flex-1 truncate font-blender-book text-sm text-text-primary">{m.id}</span>
             <span className="ml-2 shrink-0 font-blender-medium text-xs text-text-secondary tabular-nums">
