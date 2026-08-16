@@ -17,6 +17,8 @@ export interface PortalFeature {
   href: string;
   /** Построена ли фича. false → грид ведёт на заглушку /eft/soon. */
   ready: boolean;
+  /** Спец-действие вместо навигации: 'feedback' — открыть глобальную модалку «Сообщить об ошибке». */
+  action?: 'feedback';
 }
 
 /**
@@ -56,9 +58,8 @@ export const FEATURE_CATALOG: readonly PortalFeature[] = [
   { id: 'discussions', name: 'Обсуждения', iconPath: '/icons/eft/07-comlink/discussions.svg', href: '/eft/comlink/discussions', ready: true },
   { id: 'masterclass', name: 'Мастер-классы', iconPath: '/icons/eft/07-comlink/masterclasses.svg', href: '/eft/comlink/masterclasses', ready: true },
   { id: 'blog', name: 'Блог ЦТА', iconPath: '/icons/eft/07-comlink/blog.svg', href: '/eft/comlink/blog', ready: true },
-  { id: 'feedback', name: 'Сообщения об ошибках', iconPath: '/icons/eft/00-nav/comlink-icon.svg', href: '/eft/comlink/reports', ready: true },
-  // Компаньон барахолки — отдельной страницы ещё нет → остаётся «скоро»
-  { id: 'flea-companion', name: 'Компаньон барахолки', iconPath: '/icons/eft/07-comlink/fleamarker-companion.svg', href: '#', ready: false },
+  { id: 'feedback', name: 'Сообщения об ошибках', iconPath: '/icons/eft/00-nav/comlink-icon.svg', href: '#', ready: true, action: 'feedback' },
+  { id: 'flea-companion', name: 'Компаньон барахолки', iconPath: '/icons/eft/07-comlink/fleamarker-companion.svg', href: '/eft/companion', ready: true },
 ] as const;
 
 /** Быстрый доступ к фиче по id (грид собирает набор архетипа в порядке каталога). */

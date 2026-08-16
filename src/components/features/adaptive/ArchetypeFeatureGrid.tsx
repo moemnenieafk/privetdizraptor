@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FEATURE_CATALOG, type PortalFeature } from '@/data/feature-catalog';
+import { useFeedback } from '@/components/providers/FeedbackProvider';
 
 // «Избранные разделы архетипа» (Figma 2868-5301): грид иконок слева + список названий справа.
 // Заменяет карточки «Разделы архетипа» в Досье. Порядок ячеек И строк — из FEATURE_CATALOG;
@@ -20,51 +21,70 @@ function hrefFor(feature: PortalFeature): string {
   return feature.ready ? feature.href : SOON_HREF;
 }
 
-/** Ячейка грида: квадрат 64px с иконкой-маской 28px по центру. Избранная — амбер. */
-function FeatureCell({ feature, active }: { feature: PortalFeature; active: boolean }) {
+/** Ячейка грида: квадрат 64px с иконкой-маской 22px по центру. Избранная — амбер.
+ *  feedback-фича открывает модалку (button), остальные — навигация (Link). */
+function FeatureCell({ feature, active, onFeedback }: { feature: PortalFeature; active: boolean; onFeedback: () => void }) {
+  const cls = `group flex aspect-square size-16 items-center justify-center rounded-lg border transition-colors ${
+    active
+      ? 'border-tactical-amber bg-tactical-amber/10 hover:bg-tactical-amber/20'
+      : 'border-lines-hover bg-card-menu hover:border-text-muted'
+  }`;
+  const icon = (
+    <span
+      className={`icon-mask size-5.5 transition-colors ${active ? 'bg-tactical-amber' : 'bg-text-muted group-hover:bg-text-secondary'}`}
+      style={{
+        WebkitMaskImage: `url(${feature.iconPath})`,
+        maskImage: `url(${feature.iconPath})`,
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+      }}
+      aria-hidden
+    />
+  );
+
+  if (feature.action === 'feedback') {
+    return (
+      <button type="button" onClick={onFeedback} title={feature.name} className={cls}>
+        {icon}
+      </button>
+    );
+  }
   return (
-    <Link
-      href={hrefFor(feature)}
-      title={feature.name}
-      className={`group flex aspect-square size-16 items-center justify-center rounded-lg border transition-colors ${
-        active
-          ? 'border-tactical-amber bg-tactical-amber/10 hover:bg-tactical-amber/20'
-          : 'border-lines-hover bg-card-menu hover:border-text-muted'
-      }`}
-    >
-      <span
-        className={`icon-mask size-5.5 transition-colors ${active ? 'bg-tactical-amber' : 'bg-text-muted group-hover:bg-text-secondary'}`}
-        style={{
-          WebkitMaskImage: `url(${feature.iconPath})`,
-          maskImage: `url(${feature.iconPath})`,
-          WebkitMaskSize: 'contain',
-          maskSize: 'contain',
-          WebkitMaskRepeat: 'no-repeat',
-          maskRepeat: 'no-repeat',
-          WebkitMaskPosition: 'center',
-          maskPosition: 'center',
-        }}
-        aria-hidden
-      />
+    <Link href={hrefFor(feature)} title={feature.name} className={cls}>
+      {icon}
     </Link>
   );
 }
 
-/** Строка списка названий: избранная — амбер, прочая — вторичный текст. */
-function FeatureRow({ feature, active }: { feature: PortalFeature; active: boolean }) {
-  return (
-    <Link
-      href={hrefFor(feature)}
-      className={`flex items-center gap-2 text-type-micro font-blender-medium uppercase leading-none tracking-wide transition-colors ${
-        active
-          ? 'text-tactical-amber hover:opacity-80'
-          : 'text-text-secondary hover:text-text-primary'
-      }`}
-    >
+/** Строка списка названий: избранная — амбер, прочая — вторичный текст.
+ *  feedback-фича открывает модалку (button), остальные — навигация (Link). */
+function FeatureRow({ feature, active, onFeedback }: { feature: PortalFeature; active: boolean; onFeedback: () => void }) {
+  const cls = `flex items-center gap-2 text-type-micro font-blender-medium uppercase leading-none tracking-wide transition-colors ${
+    active ? 'text-tactical-amber hover:opacity-80' : 'text-text-secondary hover:text-text-primary'
+  }`;
+  const inner = (
+    <>
       <span className="truncate">{feature.name}</span>
       {!feature.ready && (
         <span className="shrink-0 text-type-micro tracking-widest text-text-muted">Скоро</span>
       )}
+    </>
+  );
+
+  if (feature.action === 'feedback') {
+    return (
+      <button type="button" onClick={onFeedback} className={`${cls} text-left`}>
+        {inner}
+      </button>
+    );
+  }
+  return (
+    <Link href={hrefFor(feature)} className={cls}>
+      {inner}
     </Link>
   );
 }
@@ -75,6 +95,8 @@ function FeatureRow({ feature, active }: { feature: PortalFeature; active: boole
  * страница (Link), будущее → /eft/soon.
  */
 export function ArchetypeFeatureGrid({ featureIds }: ArchetypeFeatureGridProps) {
+  const { openFeedback } = useFeedback();
+  const onFeedback = () => openFeedback();
   const active = new Set(featureIds);
   const count = featureIds.length;
 
@@ -95,12 +117,12 @@ export function ArchetypeFeatureGrid({ featureIds }: ArchetypeFeatureGridProps) 
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
         <div className="grid shrink-0 self-start grid-cols-4 gap-2.5 sm:grid-cols-6">
           {FEATURE_CATALOG.map((feature) => (
-            <FeatureCell key={feature.id} feature={feature} active={active.has(feature.id)} />
+            <FeatureCell key={feature.id} feature={feature} active={active.has(feature.id)} onFeedback={onFeedback} />
           ))}
         </div>
         <div className="flex min-w-0 flex-1 flex-col justify-between gap-0.5">
           {FEATURE_CATALOG.map((feature) => (
-            <FeatureRow key={feature.id} feature={feature} active={active.has(feature.id)} />
+            <FeatureRow key={feature.id} feature={feature} active={active.has(feature.id)} onFeedback={onFeedback} />
           ))}
         </div>
       </div>
