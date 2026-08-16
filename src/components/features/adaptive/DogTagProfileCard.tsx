@@ -35,11 +35,11 @@ export function DogTagProfileCard({ nickname, faction, edition, level, prestige,
   const group = level == null || Number.isNaN(level) ? 1 : levelGroup(level);
 
   return (
-    <div className="relative flex flex-col gap-3 rounded-2xl border border-lines-hover bg-card-menu p-5">
+    <div className="relative flex h-40 w-72 flex-col justify-between rounded-2xl border border-lines-hover bg-card-menu py-4 pr-5 pl-10">
       {/* Вырез-отверстие жетона на левой кромке (читается как дырка) */}
       <span
         aria-hidden
-        className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 rounded-full border border-lines-hover bg-(--color-darkbase) shadow-[inset_0_1px_2px_rgba(0,0,0,0.9)]"
+        className="absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 rounded-full border border-lines-hover bg-(--color-darkbase) shadow-[inset_0_1px_2px_rgba(0,0,0,0.9)]"
       />
 
       {/* Верхний ряд: бейдж режима · эмблема фракции */}
@@ -79,16 +79,16 @@ export function DogTagProfileCard({ nickname, faction, edition, level, prestige,
       </div>
 
       {/* Строка ника: edition-эмблема · ник (recessed-панель) */}
-      <div className="flex items-center gap-3 rounded-md bg-(--color-base) px-3 py-2">
+      <div className="flex h-9 items-center gap-3 rounded-md bg-(--color-base) px-3">
         <span className={`icon-mask ${EDITION_ICON[edition]} size-7 shrink-0 bg-(--primary)`} aria-hidden />
-        <span className="truncate text-2xl font-blender-medium tracking-wide text-(--primary)">
+        <span className="truncate text-xl font-blender-medium tracking-wide text-(--primary)">
           {nickname ?? '—'}
         </span>
       </div>
 
       {/* Нижний ряд: уровень · престиж */}
       <div className="flex gap-3">
-        <div className="flex flex-1 items-center gap-2 rounded-md bg-(--color-base) px-3 py-2">
+        <div className="flex h-9 shrink-0 items-center gap-2 rounded-md bg-(--color-base) px-3">
           <img
             src={`/icons/eft/lvl-icons/player-level-group-${group}.webp`}
             alt={level == null || Number.isNaN(level) ? 'Уровень' : `Уровень ${level}`}
@@ -98,7 +98,7 @@ export function DogTagProfileCard({ nickname, faction, edition, level, prestige,
             {level == null || Number.isNaN(level) ? '—' : level}
           </span>
         </div>
-        <div className="flex flex-1 items-center gap-2 rounded-md bg-(--color-base) px-3 py-2">
+        <div className="flex h-9 flex-1 items-center gap-2 rounded-md bg-(--color-base) px-3">
           {prestige > 0 ? (
             <img
               src={`/icons/eft/prestige/prestige-${prestige}.webp`}
