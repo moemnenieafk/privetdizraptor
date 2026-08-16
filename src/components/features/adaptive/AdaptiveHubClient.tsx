@@ -382,7 +382,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
                 className="h-4 w-auto"
               />
               <span className="truncate text-lg font-blender-medium uppercase tracking-widest" style={{ color: visual.accent }}>
-                «{roleLabel.name}»
+                {roleLabel.name}
               </span>
 
               {/* Уровень под-трека архетипа — ПРОГРЕСС показывает гекс-кольцо вокруг иконки,
