@@ -43,6 +43,13 @@ export const SKILL_ICONS: Record<string, SkillIcon> = {
   CovertMovement: { cat: 'practical', src: `${P}/practical/covet-movement.webp` },
   // Обслуживание оружия — практический навык (файл weapon-maintenance.webp).
   WeaponTreatment: { cat: 'practical', src: `${P}/practical/weapon-maintenance.webp` },
+  // Новые PNG-иконки V4DYA (practical). Броня/медицина/аукционы/взлом.
+  HeavyVests: { cat: 'practical', src: `${P}/practical/skill_practical_heavyarmor.png` },
+  LightVests: { cat: 'practical', src: `${P}/practical/skill_practical_lightarmor.png` },
+  FirstAid: { cat: 'practical', src: `${P}/practical/skill_practical_basicmedical.png` },
+  FieldMedicine: { cat: 'practical', src: `${P}/practical/skill_practical_fieldmedical.png` },
+  Auctions: { cat: 'practical', src: `${P}/practical/skill_practical_auctions.png` },
+  Lockpicking: { cat: 'practical', src: `${P}/practical/skill_practical_lockpicking.png` },
 
   // ── Боевые (combat/*.png провизорные) ──────────────────────
   Sniper: { cat: 'combat', src: `${P}/combat/skill_combat_sniperrifles.png` },
@@ -62,6 +69,9 @@ export const SKILL_ICONS: Record<string, SkillIcon> = {
   WeaponDrawing: { cat: 'combat', src: `${P}/combat/skill_combat_weapondrawing.png` },
   WeaponSwitch: { cat: 'combat', src: `${P}/combat/skill_combat_weaponswitch.png` },
   UGL: { cat: 'combat', src: `${P}/combat/skill_combat_ugls.png` },
+  // Реальные Id из профиля (фикс регистра/имён): подствольник + устранение неполадок.
+  AttachedLauncher: { cat: 'combat', src: `${P}/combat/skill_combat_ugls.png` },
+  TroubleShooting: { cat: 'combat', src: `${P}/combat/skill_combat_troubleshooting.png` },
 };
 
 /** Порядок и RU-заголовки категорий (для микро-подзаголовков секции). */
@@ -121,4 +131,9 @@ export const SKILL_RU: Record<string, string> = {
   Troubleshooting: 'Ремонт оружия',
   WeaponDrawing: 'Извлечение оружия',
   WeaponSwitch: 'Смена оружия',
+  TroubleShooting: 'Устранение неполадок',
+  AttachedLauncher: 'Подствольные гранатомёты',
+  HeavyVests: 'Тяжёлые бронежилеты',
+  LightVests: 'Лёгкие бронежилеты',
+  Lockpicking: 'Взлом замков',
 };
