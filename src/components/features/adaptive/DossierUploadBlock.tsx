@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { Upload, ExternalLink, Check, FileWarning } from 'lucide-react';
+import { FileUp, Check, FileWarning } from 'lucide-react';
 import { parseProfile, normalizeProfile } from '@/lib/tarkov/player-stats';
 import { parseGameProfile } from '@/lib/parse-profile';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -13,11 +13,13 @@ const MAX_BYTES = 5 * 1024 * 1024; // профиль ~30–100 КБ; 5 МБ с �
 // Табы режима. В волне 1 — ВИЗУАЛЬНЫЕ: активный по useIsPve, Season неактивен, клик лишь
 // подсвечивает (стату НЕ переключает). Волна 2 сделает их настоящим per-mode-селектором.
 type ModeTab = 'season' | 'pvp' | 'pve';
-const MODE_TABS: ReadonlyArray<{ id: ModeTab; label: string; enabled: boolean }> = [
-  { id: 'season', label: 'Season', enabled: false },
-  { id: 'pvp', label: 'PVP', enabled: true },
-  { id: 'pve', label: 'PVE', enabled: true },
+const MODE_TABS: ReadonlyArray<{ id: ModeTab; label: string; icon: string; enabled: boolean }> = [
+  { id: 'season', label: 'Season', icon: 'seasons-icon', enabled: false },
+  { id: 'pvp', label: 'PVP', icon: 'pvp-mode-icon', enabled: true },
+  { id: 'pve', label: 'PVE', icon: 'pve-mode-icon', enabled: true },
 ];
+
+const MODE_ICON_BASE = '/icons/eft/04-progression/seasons';
 
 /**
  * Блок загрузки статистики (Figma 2865-2139, 208×160) — третий в верхнем ряду досье.
@@ -94,78 +96,92 @@ export function DossierUploadBlock() {
   );
 
   return (
-    <div className="flex h-40 w-52 shrink-0 flex-col gap-2 rounded-xs border border-lines-hover bg-card-menu p-3">
-      {/* Лейбл «ВЫБОР РЕЖИМА» + линия */}
-      <div className="flex items-center gap-2">
-        <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-          Выбор режима
-        </span>
-        <div className="h-px flex-1 bg-lines-hover" />
+    <div className="flex h-40 w-52 shrink-0 flex-col items-start justify-between">
+      {/* Верхняя группа: лейбл + табы режима */}
+      <div className="flex w-full flex-col gap-2">
+        {/* Лейбл «ВЫБОР РЕЖИМА» + линия */}
+        <div className="flex w-full items-center gap-1.5">
+          <span className="shrink-0 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+            Выбор режима
+          </span>
+          <div className="h-px flex-1 bg-lines-hover" />
+        </div>
+
+        {/* Табы Season / PVP / PVE (визуальные; волна 2 — рабочий per-mode) */}
+        <div className="flex w-full gap-2">
+          {MODE_TABS.map((t) => {
+            const active = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                disabled={!t.enabled}
+                onClick={() => t.enabled && setActiveTab(t.id)}
+                className={`flex h-5 flex-1 items-center justify-center gap-1 rounded-xs border text-type-micro font-blender-medium uppercase transition-colors ${
+                  active
+                    ? 'border-tactical-amber bg-tactical-amber/10 text-tactical-amber'
+                    : `border-lines-hover bg-card-menu text-text-secondary opacity-50 ${t.enabled ? 'hover:opacity-100' : 'cursor-not-allowed'}`
+                }`}
+              >
+                <span
+                  className={`icon-mask size-3 shrink-0 ${active ? 'bg-tactical-amber' : 'bg-text-secondary'}`}
+                  style={{
+                    WebkitMaskImage: `url(${MODE_ICON_BASE}/${t.icon}.svg)`,
+                    maskImage: `url(${MODE_ICON_BASE}/${t.icon}.svg)`,
+                    WebkitMaskSize: 'contain',
+                    maskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    maskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskPosition: 'center',
+                  }}
+                  aria-hidden
+                />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Табы Season / PVP / PVE (визуальные) */}
-      <div className="flex gap-1">
-        {MODE_TABS.map((t) => {
-          const active = activeTab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              disabled={!t.enabled}
-              onClick={() => t.enabled && setActiveTab(t.id)}
-              className={`flex-1 rounded-xs border px-1.5 py-1 text-type-micro font-blender-medium uppercase tracking-widest transition-colors ${
-                active
-                  ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] text-(--primary)'
-                  : t.enabled
-                    ? 'border-lines-hover text-text-secondary hover:border-(--primary)'
-                    : 'cursor-not-allowed border-lines-hover text-text-muted opacity-50'
-              }`}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Ссылка «где взять файл» */}
-      <a
-        href="https://tarkov.dev/players"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex w-fit items-center gap-1 text-type-micro font-blender-medium uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
-      >
-        Скачай свой профиль тут
-        <ExternalLink className="size-3" />
-      </a>
-
-      {/* Описание / статус (компактная строка): пока нет статуса — подсказка; после — итог */}
-      {status ? (
-        <p
-          className={`flex items-start gap-1 text-type-caption font-blender-book leading-tight ${
-            status.kind === 'ok' ? 'text-(--primary)' : 'text-(--color-danger)'
-          }`}
+      {/* Центр: ссылка «где взять файл» + описание/статус (по центру, как в макете) */}
+      <div className="flex w-full flex-col items-center gap-1 text-center">
+        <a
+          href="https://tarkov.dev/players"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-blender-book text-xs text-tactical-amber underline underline-offset-2 transition-opacity hover:opacity-80"
         >
-          {status.kind === 'ok' ? (
-            <Check className="mt-px size-3 shrink-0" />
-          ) : (
-            <FileWarning className="mt-px size-3 shrink-0" />
-          )}
-          <span className="line-clamp-2">{status.text}</span>
-        </p>
-      ) : (
-        <p className="text-type-caption font-blender-book leading-tight text-text-secondary">
-          Выбери режим и загрузи его сюда для просмотра полной статистики.
-        </p>
-      )}
+          Скачай свой профиль тут
+        </a>
+        {status ? (
+          <p
+            className={`flex items-center justify-center gap-1 font-blender-book text-xs leading-tight ${
+              status.kind === 'ok' ? 'text-tactical-amber' : 'text-(--color-danger)'
+            }`}
+          >
+            {status.kind === 'ok' ? (
+              <Check className="size-3 shrink-0" />
+            ) : (
+              <FileWarning className="size-3 shrink-0" />
+            )}
+            <span className="line-clamp-2">{status.text}</span>
+          </p>
+        ) : (
+          <p className="font-blender-book text-xs leading-tight text-text-secondary">
+            Выбери режим и загрузи его сюда для просмотра полной статистики.
+          </p>
+        )}
+      </div>
 
-      {/* Кнопка загрузки — открывает файл-пикер */}
+      {/* Кнопка загрузки — на всю ширину, иконка file-up (открывает файл-пикер) */}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="mt-auto flex items-center justify-center gap-1.5 rounded-xs border border-lines-hover bg-(--color-base) px-2 py-1.5 text-type-caption font-blender-medium uppercase tracking-widest text-text-primary transition-colors hover:border-(--primary) hover:text-(--primary)"
+        className="flex h-9 w-full items-center justify-center gap-2 rounded-xs border border-lines-hover bg-card-menu px-3 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-tactical-amber hover:text-tactical-amber"
       >
-        <Upload className="size-3.5 shrink-0" />
-        Загрузить статистику
+        <FileUp className="size-4 shrink-0" />
+        <span className="truncate">Загрузить статистику</span>
       </button>
       <input
         ref={inputRef}
