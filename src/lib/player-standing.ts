@@ -51,10 +51,17 @@ const WEIGHTS = {
   xpTierStep: 40,
   /** Доля очков за прогресс внутри тира (0..100 → 0..this). */
   xpProgressMax: 20,
-  /** Множитель кармы comlink (репутация сайта весит заметно). */
+  /** Множитель кармы comlink (репутация сайта весит заметно). Вклад МОЖЕТ БЫТЬ <0 (грифер). */
   karmaComlink: 2,
-  /** Множитель кармы companion (микро-грайнд — мелкий вклад). */
-  karmaCompanion: 0.5,
+  /**
+   * База кармы companion: очки = round(√karma × this) — §7 спеки «осмысленный вклад».
+   * АНКЕР ТЮНИНГА: карма companion микро (per-upload cap 0.01, day-cap 0.05, репутация 1.0 =
+   * недели-месяцы реального вклада — companion-gamification.md). При √-нормировке активный
+   * «Аналитик рынка» на karma≈1.0 даёт ≈120 очков (уровень среднего под-трека, цель спеки),
+   * один день грайнда (karma≈0.05) — уже ≈27 (не 0), а тяжёлый вкладчик (karma≈4) — ≈240
+   * (√ гасит доминирование, как arcadeRoot гасит рекордсменов). Точная база тюнится на данных.
+   */
+  karmaCompanionRoot: 120,
   /** Аркада: очки за корень из лучшего счёта (сглаживаем рекордсменов). */
   arcadeRoot: 1.2,
   /** За каждый пройденный этап туториала. */
@@ -88,8 +95,12 @@ function rankFor(total: number): { rank: number; label: string } {
 export function computeStanding(s: StandingSignals): PlayerStanding {
   const xp = Math.max(0, s.xpTier - 1) * WEIGHTS.xpTierStep
     + Math.round((clamp01(s.xpProgress / 100)) * WEIGHTS.xpProgressMax);
-  const comlink = s.karmaComlink != null ? Math.round(Math.max(0, s.karmaComlink) * WEIGHTS.karmaComlink) : 0;
-  const companion = s.karmaCompanion != null ? Math.round(Math.max(0, s.karmaCompanion) * WEIGHTS.karmaCompanion) : 0;
+  // comlink вычитает: репутация сайта может уходить в минус (грифер теряет ранг). Без max(0,…).
+  const comlink = s.karmaComlink != null ? Math.round(s.karmaComlink * WEIGHTS.karmaComlink) : 0;
+  // companion: √-нормировка (осмысленный вклад, §7). Карма ≥0 по механике; на всякий — max(0,…).
+  const companion = s.karmaCompanion != null
+    ? Math.round(Math.sqrt(Math.max(0, s.karmaCompanion)) * WEIGHTS.karmaCompanionRoot)
+    : 0;
   const arcade = Math.round(Math.sqrt(Math.max(0, s.arcadeBest)) * WEIGHTS.arcadeRoot);
   const tutorial = clamp(s.tutorialDone, 0, 10) * WEIGHTS.tutorialStep;
   const achievements = Math.max(0, s.achievements) * WEIGHTS.achievement;
@@ -103,7 +114,8 @@ export function computeStanding(s: StandingSignals): PlayerStanding {
     { key: 'achievements', label: 'Достижения', value: achievements },
   ];
 
-  const total = contributions.reduce((sum, c) => sum + c.value, 0);
+  // floor 0: ранг не ниже НЕОБСТРЕЛЯННЫЙ, но отдельные вклады (comlink) допустимо <0 (§2 спеки).
+  const total = Math.max(0, contributions.reduce((sum, c) => sum + c.value, 0));
   const { rank, label } = rankFor(total);
 
   return { total, rank, tierLabel: label, contributions };
@@ -122,10 +134,20 @@ export function nextStandingRank(total: number): { rank: number; label: string; 
 /** Тир подписки, как в auth/subscription (клиентская проекция). */
 export type AccessTier = 'free' | 'operative' | 'veteran';
 
-/** Ключи доп-функций досье, открываемых прогрессом и/или подпиской. */
+/**
+ * Ключи доп-функций досье, открываемых прогрессом и/или подпиской.
+ * earned-набор — стартовая карта ранг→power-user из спеки (раздел «Ранг → анлоки»);
+ * paid-набор (косметика/слоты «по подписке») оставлен как есть.
+ */
 export type UnlockableFeature =
-  | 'standing-history' // вкладка истории standing — ЗАРАБОТАННАЯ прогрессом
-  | 'detailed-radar' // детальный радар компетенций — ЗАРАБОТАННАЯ прогрессом
+  // ─ earned: открываются ТОЛЬКО рангом standing (плата НЕ байпасит) ─
+  | 'standing-history' // личный журнал/история standing — ранг 2
+  | 'detailed-radar' // детальный радар компетенций — ранг 3
+  | 'dossier-slots' // доп-слоты персонализации Досье/главной (заработанные) — ранг 3
+  | 'squad-priority' // приоритет в Отряде — ранг 4
+  | 'analytics-trends' // расширенная аналитика/тренды — ранг 4
+  | 'community-tools' // комьюнити-инструменты (предложить билд в ростер) — ранг 5
+  // ─ paid: ранг ИЛИ платный тир (косметика/слоты «по подписке») ─
   | 'home-slots' // доп-слоты персонализации главной — платная/косметика
   | 'tag-frames'; // рамки/темы жетона — платная/косметика
 
@@ -138,14 +160,22 @@ export type UnlockableFeature =
 const FEATURE_KIND: Record<UnlockableFeature, 'earned' | 'paid'> = {
   'standing-history': 'earned',
   'detailed-radar': 'earned',
+  'dossier-slots': 'earned',
+  'squad-priority': 'earned',
+  'analytics-trends': 'earned',
+  'community-tools': 'earned',
   'home-slots': 'paid',
   'tag-frames': 'paid',
 };
 
-/** Минимальный ранг standing для каждой доп-функции. */
+/** Минимальный ранг standing для каждой доп-функции (стартовая карта из спеки — тюнится). */
 const FEATURE_MIN_RANK: Record<UnlockableFeature, number> = {
   'standing-history': 2,
   'detailed-radar': 3,
+  'dossier-slots': 3,
+  'squad-priority': 4,
+  'analytics-trends': 4,
+  'community-tools': 5,
   'home-slots': 4,
   'tag-frames': 2,
 };
@@ -166,6 +196,110 @@ export function unlockedBy(
   // 'paid': платный тир снимает ранг-требование (витрина «доступно по подписке»).
   const paid = tier === 'operative' || tier === 'veteran';
   return byRank || paid;
+}
+
+// ─── Звания под-треков (§5 спеки «глубина → под-треки») ──────
+// «Ширина осваивается заголовком (ранг standing), глубина — под-треками со своими званиями».
+// Данные, не JSX (§4.7): будущий UI Досье рисует «специалист горд под-треком». Ключи звания
+// совпадают с ключами StandingContribution — панель мэтчит вклад ↔ звание один-в-один.
+// XP-тир НЕ дублируем: его звание уже отдаёт getCurrentTier(xp).label (trader-тир) — источник
+// правды один, здесь только под-трек-title. Пороги companion/comlink — из механик кармы.
+
+/** Ключ под-трека (совпадает с StandingContribution.key). */
+export type SubTrackKey = StandingContribution['key'];
+
+/** Ступень звания внутри под-трека: порог сигнала → подпись. */
+export interface SubTrackTitle {
+  /** Мин. значение сырого сигнала под-трека для этой ступени. */
+  min: number;
+  /** Подпись звания (Nightfall-стиль). */
+  label: string;
+}
+
+/** Мета под-трека: имя дорожки + лестница званий (по возрастанию min). */
+export interface SubTrackMeta {
+  key: SubTrackKey;
+  /** Имя под-трека для заголовка секции. */
+  track: string;
+  /** Какой сырой сигнал измеряется (для резолва звания). */
+  signal: keyof StandingSignals;
+  /** Лестница званий; [] — звание берётся извне (XP: getCurrentTier). */
+  titles: readonly SubTrackTitle[];
+}
+
+/**
+ * Конфиг под-трек-званий. Companion получает «Аналитик рынка» (§7 спеки). Comlink-ступени
+ * зеркалят карма-тиры Дикий/Боец/Ветеран/Легенда (спека, траст-гейты) — те же пороги, что
+ * серверный `can(action, karmaTier)` получит позже. Пороги — стартовые, тюнятся на данных.
+ */
+export const SUB_TRACKS: Record<SubTrackKey, SubTrackMeta> = {
+  xp: { key: 'xp', track: 'Экономика бартера', signal: 'xpTier', titles: [] },
+  karmaComlink: {
+    key: 'karmaComlink',
+    track: 'Репутация Связи',
+    signal: 'karmaComlink',
+    titles: [
+      { min: 0, label: 'ДИКИЙ' },
+      { min: 50, label: 'БОЕЦ' },
+      { min: 200, label: 'ВЕТЕРАН' },
+      { min: 500, label: 'ЛЕГЕНДА' },
+    ],
+  },
+  karmaCompanion: {
+    key: 'karmaCompanion',
+    track: 'Вклад в данные',
+    signal: 'karmaCompanion',
+    titles: [
+      { min: 0, label: 'НАБЛЮДАТЕЛЬ' },
+      { min: 0.05, label: 'ИНФОРМАТОР' },
+      { min: 0.5, label: 'АНАЛИТИК РЫНКА' },
+      { min: 2, label: 'СМОТРЯЩИЙ РЫНКА' },
+    ],
+  },
+  arcade: {
+    key: 'arcade',
+    track: 'Полигон',
+    signal: 'arcadeBest',
+    titles: [
+      { min: 0, label: 'СТАЖЁР' },
+      { min: 2500, label: 'СТРЕЛОК' },
+      { min: 10000, label: 'СНАЙПЕР' },
+    ],
+  },
+  tutorial: {
+    key: 'tutorial',
+    track: 'Путь Новобранца',
+    signal: 'tutorialDone',
+    titles: [
+      { min: 0, label: 'НОВОБРАНЕЦ' },
+      { min: 10, label: 'АДАПТИРОВАН' },
+    ],
+  },
+  achievements: {
+    key: 'achievements',
+    track: 'Достижения',
+    signal: 'achievements',
+    titles: [
+      { min: 0, label: 'БЕЗ НАГРАД' },
+      { min: 5, label: 'ОТМЕЧЕННЫЙ' },
+      { min: 20, label: 'ЗАСЛУЖЕННЫЙ' },
+    ],
+  },
+};
+
+/**
+ * Звание под-трека по сырому значению сигнала. Для XP (titles: []) — null (звание брать из
+ * getCurrentTier(xp).label). null-сигнал кармы → первая ступень (аноним = базовое звание).
+ */
+export function subTrackTitle(key: SubTrackKey, signalValue: number | null): string | null {
+  const meta = SUB_TRACKS[key];
+  if (meta.titles.length === 0) return null;
+  const v = signalValue ?? 0;
+  let current = meta.titles[0];
+  for (const t of meta.titles) {
+    if (v >= t.min) current = t;
+  }
+  return current.label;
 }
 
 function clamp(v: number, min: number, max: number): number {
