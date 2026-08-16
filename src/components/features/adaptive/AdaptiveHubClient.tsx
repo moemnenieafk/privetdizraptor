@@ -350,7 +350,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
         </div>
 
         {/* ── ПРАВАЯ ПАНЕЛЬ: прокачка ──────────────────────────────────── */}
-        <aside className="relative flex flex-col gap-5 rounded-xs border border-lines-hover bg-card-menu p-5">
+        <aside className="relative flex flex-col gap-5 rounded-xs border border-lines-hover bg-(--color-darkbase) p-5">
           {/* Бейдж архетипа: гекс-иконка + «ЦТА АРХЕТИП» + имя роли */}
           <div className="flex items-center gap-3">
             <HexRingProgress
