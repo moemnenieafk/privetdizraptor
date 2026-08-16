@@ -178,7 +178,6 @@ export function AdaptiveHubClient(props: HubServerProps = {
   const activeId = usePlayerStore((s) => s.activeProfileId);
   const profile = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId) ?? null);
   const derived = useRoleStore((s) => s.byProfile[activeId]?.derived ?? null);
-  const manualOverride = useRoleStore((s) => s.byProfile[activeId]?.manualOverride ?? null);
   const effectiveRole = useRoleStore((s) => effectiveRoleFor(s, activeId));
   const pve = useIsPve();
   const { tier } = useSubscription();
@@ -371,7 +370,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
           {/* Бейдж архетипа: гекс-иконка + «ЦТА АРХЕТИП» + имя роли */}
           <div className="flex items-center gap-3">
             <HexRingProgress
-              progress={manualOverride ? 1 : (derived?.confidence ?? 0)}
+              progress={subTrack.progress}
               accent={visual.accent}
               iconClass={visual.iconClass}
               size={56}
@@ -386,19 +385,12 @@ export function AdaptiveHubClient(props: HubServerProps = {
                 «{roleLabel.name}»
               </span>
 
-              {/* Уровень под-трека архетипа (глубина XP-слоя) + тонкий прогресс-бар. */}
+              {/* Уровень под-трека архетипа — ПРОГРЕСС показывает гекс-кольцо вокруг иконки,
+                  здесь только номер уровня (лишний бар не дублируем). */}
               {xpHydrated && (
-                <div className="mt-1 flex flex-col gap-1">
-                  <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-                    {roleLabel.name} · ур. {subTrack.level}
-                  </span>
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-lines-hover">
-                    <div
-                      className="h-full rounded-full transition-[width] duration-500"
-                      style={{ width: `${Math.round(subTrack.progress * 100)}%`, backgroundColor: visual.accent }}
-                    />
-                  </div>
-                </div>
+                <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                  Уровень {subTrack.level}
+                </span>
               )}
             </div>
 
