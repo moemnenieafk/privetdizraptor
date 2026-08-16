@@ -389,7 +389,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
           </div>
 
           {/* Тир подписки */}
-          <div className="flex items-center justify-between gap-3 border-t border-lines-hover pt-4">
+          <div className="flex items-center justify-between gap-3">
             <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
               Тир подписки
             </span>
