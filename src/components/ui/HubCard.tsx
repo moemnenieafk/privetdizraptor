@@ -70,7 +70,7 @@ export function HubCard({
             <img src={resolvedIconUrl} alt="" className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity" />
           ) : (
             <div
-              className="w-full h-full bg-text-primary opacity-80 group-hover:opacity-100 group-hover:bg-primary transition-colors duration-300"
+              className="w-full h-full bg-text-secondary group-hover:bg-primary transition-colors duration-300"
               style={{
                 WebkitMaskImage: `url(${resolvedIconUrl})`,
                 WebkitMaskSize: 'contain',
@@ -110,7 +110,7 @@ export function HubCard({
             ) : (
               <div 
                 className={`w-full h-full transition-colors duration-300 ${
-                  isActive ? "bg-(--primary) opacity-100" : "bg-text-primary opacity-80 group-hover:opacity-100 group-hover:bg-(--primary)"
+                  isActive ? "bg-(--primary)" : "bg-text-secondary group-hover:bg-(--primary)"
                 }`}
                 style={{
                   WebkitMaskImage: `url(${resolvedIconUrl})`,
@@ -155,8 +155,8 @@ export function HubCard({
               <img src={resolvedIconUrl} alt="" className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity" />
             ) : (
               /* Используем CSS-маску для автоматического перекрашивания SVG в цвет текущей темы */
-              <div 
-                className="w-full h-full bg-text-primary opacity-80 group-hover:opacity-100 group-hover:bg-primary transition-colors duration-300"
+              <div
+                className="w-full h-full bg-text-secondary group-hover:bg-primary transition-colors duration-300"
                 style={{
                   WebkitMaskImage: `url(${resolvedIconUrl})`,
                   WebkitMaskSize: 'contain',

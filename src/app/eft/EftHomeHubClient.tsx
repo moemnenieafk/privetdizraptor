@@ -76,7 +76,9 @@ export function EftHomeHubClient() {
   const xpHydrated = useXpStore((s) => s._hasHydrated);
   const discovered = useXpStore((s) => s.discovered);
   const recordFeatureUse = useXpStore((s) => s.recordFeatureUse);
-  const suggestions = xpHydrated ? suggestFeatures(role, new Set(discovered)) : [];
+  // onGrid: id плиток, уже показанных на главной — подсказки их не дублируют.
+  const onGrid = new Set(items.map((it) => it.feature.id));
+  const suggestions = xpHydrated ? suggestFeatures(role, new Set(discovered), onGrid) : [];
 
   // До регидрации роль ещё не известна → скелетон формы будущей сетки (§8: форма контента,
   // animate-pulse, не спиннер). Число и форма ячеек = вычисленному списку.
@@ -96,10 +98,9 @@ export function EftHomeHubClient() {
     );
   }
 
-  const idsInSet = new Set(items.map((it) => it.feature.id));
   // Каталог для панели «Добавить»: скрытые + фичи не в наборе; action-фичи (feedback) не добавляемы.
   const addable = FEATURE_CATALOG.filter(
-    (f) => f.action === undefined && (!idsInSet.has(f.id) || hidden.includes(f.id)),
+    (f) => f.action === undefined && (!onGrid.has(f.id) || hidden.includes(f.id)),
   );
 
   // Edit-контролы шапки → в action-слот PageHeader (PRO), либо апселл-CTA (free).
@@ -278,7 +279,7 @@ export function EftHomeHubClient() {
                 description={feature.description}
                 href={feature.href}
                 iconPath={feature.iconPath}
-                variant="mini"
+                variant="rectangle"
                 onSelect={() => recordFeatureUse(feature.id, role)}
               />
             ))}

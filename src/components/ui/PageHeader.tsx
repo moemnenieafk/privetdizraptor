@@ -22,7 +22,7 @@ export function PageHeader({ pageId, title, description, iconClass, count, actio
   const finalIcon = content?.iconClass || iconClass || 'icon-eft-items-loot-tier';
 
   return (
-    <div className={`flex items-center gap-5 ${dense ? 'mb-6' : 'mb-12'}`}>
+    <div className={`flex items-center gap-5 ${dense ? 'mb-7' : 'mb-12'}`}>
       {/* Добавлен text-(--color-base) для инверсии цвета иконки */}
       <div className="shrink-0 flex items-center justify-center w-13.25 h-13.25 rounded bg-(--primary) text-(--color-base)">
         <div className={`w-7 h-7 icon-mask ${finalIcon}`}></div>

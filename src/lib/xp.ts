@@ -75,12 +75,17 @@ export function isOnArchetype(featureId: string, role: PlayerRole): boolean {
 /**
  * Подсказки фич: НЕтронутые фичи (пробелы открытия) с приоритетом релевантности архетипу.
  * Порядок: сперва фичи набора архетипа (в порядке набора), затем прочие (в порядке каталога).
- * Исключаются: уже открытые (discovered), action-фичи (feedback) и не построенные (ready:false).
+ * Исключаются: уже открытые (discovered), уже показанные на главной (onGrid — чтобы подсказки
+ * не дублировали избранные плитки), action-фичи (feedback) и не построенные (ready:false).
  * Топ-SUGGEST_LIMIT.
  */
-export function suggestFeatures(role: PlayerRole, discovered: Set<string>): PortalFeature[] {
+export function suggestFeatures(
+  role: PlayerRole,
+  discovered: Set<string>,
+  onGrid: Set<string> = new Set(),
+): PortalFeature[] {
   const eligible = (f: PortalFeature | undefined): f is PortalFeature =>
-    f !== undefined && f.action === undefined && f.ready && !discovered.has(f.id);
+    f !== undefined && f.action === undefined && f.ready && !discovered.has(f.id) && !onGrid.has(f.id);
 
   const seen = new Set<string>();
   const out: PortalFeature[] = [];
