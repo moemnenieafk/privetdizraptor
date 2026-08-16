@@ -9,13 +9,17 @@ import type { EditionType } from '@/components/layout/header-modules/ProfileSett
  * [бейдж режима · эмблема фракции] → [edition-эмблема · ник] → [уровень · престиж].
  */
 
-/** Класс edition-эмблемы (icon-mask) — зеркалит EDITION_META из ProfileStats. */
-const EDITION_ICON: Record<EditionType, string> = {
-  TUE: 'icon-eft-profile-tue',
-  EOD: 'icon-eft-profile-eod',
-  PFE: 'icon-eft-profile-pfe',
-  LB: 'icon-eft-profile-lb',
-  Standard: 'icon-eft-profile-s',
+/**
+ * Стиль издания — зеркалит EDITIONS из ProfileSettingsModal: эмблема (icon-mask),
+ * цвет ника (text-) и тинт эмблемы (bg-) красятся цветом издания (§6, токен --color-edition-*).
+ * Ник и эмблема НАПРЯМУЮ зависят от издания, выбранного в модалке настроек профиля.
+ */
+const EDITION_STYLE: Record<EditionType, { icon: string; text: string; fill: string }> = {
+  TUE: { icon: 'icon-eft-profile-tue', text: 'text-edition-tue', fill: 'bg-edition-tue' },
+  EOD: { icon: 'icon-eft-profile-eod', text: 'text-edition-eod', fill: 'bg-edition-eod' },
+  PFE: { icon: 'icon-eft-profile-pfe', text: 'text-edition-pfe', fill: 'bg-edition-pfe' },
+  LB: { icon: 'icon-eft-profile-lb', text: 'text-edition-lb', fill: 'bg-edition-lb' },
+  Standard: { icon: 'icon-eft-profile-s', text: 'text-edition-std', fill: 'bg-edition-std' },
 };
 
 /** Группа иконки уровня: <5 → 1, дальше по пятёркам с потолком 16 (как getLevelGroup в ProfileStats). */
@@ -33,6 +37,7 @@ export interface DogTagProfileCardProps {
 export function DogTagProfileCard({ nickname, faction, edition, level, prestige, pve }: DogTagProfileCardProps) {
   const modeColor = pve ? 'var(--color-mode-pve)' : 'var(--color-mode-pvp)';
   const group = level == null || Number.isNaN(level) ? 1 : levelGroup(level);
+  const ed = EDITION_STYLE[edition];
 
   return (
     <div className="relative flex h-40 w-72 flex-col justify-between rounded-2xl border border-lines-hover bg-card-menu py-4 pr-5 pl-10">
@@ -80,8 +85,8 @@ export function DogTagProfileCard({ nickname, faction, edition, level, prestige,
 
       {/* Строка ника: edition-эмблема · ник (recessed-панель) */}
       <div className="flex h-9 items-center gap-3 rounded-md bg-(--color-base) px-3">
-        <span className={`icon-mask ${EDITION_ICON[edition]} size-7 shrink-0 bg-(--primary)`} aria-hidden />
-        <span className="truncate text-xl font-blender-medium tracking-wide text-(--primary)">
+        <span className={`icon-mask ${ed.icon} size-7 shrink-0 ${ed.fill}`} aria-hidden />
+        <span className={`truncate text-xl font-blender-medium tracking-wide ${ed.text}`}>
           {nickname ?? '—'}
         </span>
       </div>
