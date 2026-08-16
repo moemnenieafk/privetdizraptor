@@ -33,7 +33,7 @@ function FeatureCell({ feature, active }: { feature: PortalFeature; active: bool
       }`}
     >
       <span
-        className={`icon-mask size-7 transition-colors ${active ? 'bg-tactical-amber' : 'bg-text-muted group-hover:bg-text-secondary'}`}
+        className={`icon-mask size-5.5 transition-colors ${active ? 'bg-tactical-amber' : 'bg-text-muted group-hover:bg-text-secondary'}`}
         style={{
           WebkitMaskImage: `url(${feature.iconPath})`,
           maskImage: `url(${feature.iconPath})`,
