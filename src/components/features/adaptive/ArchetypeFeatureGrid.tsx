@@ -98,7 +98,7 @@ export function ArchetypeFeatureGrid({ featureIds }: ArchetypeFeatureGridProps) 
             <FeatureCell key={feature.id} feature={feature} active={active.has(feature.id)} />
           ))}
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
           {FEATURE_CATALOG.map((feature) => (
             <FeatureRow key={feature.id} feature={feature} active={active.has(feature.id)} />
           ))}
