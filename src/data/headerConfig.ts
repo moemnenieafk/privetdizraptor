@@ -18,7 +18,14 @@ export interface HeaderConfig {
   searchPlaceholder: string;
   menuItems: MenuItem[];
   currencySymbol: string;
+  /** Сегмент → лейбл. Только для глобально-уникальных слагов (одно значение на весь сайт). */
   breadcrumbNames?: Record<string, string>;
+  /**
+   * Полный путь → лейбл. Приоритет над breadcrumbNames — решает семантические конфликты,
+   * когда один и тот же слаг значит разное в разных ветках (напр. `secure`:
+   * контейнеры «Защищенные» vs урок новобранца «Не потеряй всё»).
+   */
+  breadcrumbPaths?: Record<string, string>;
 }
 
 export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
@@ -245,6 +252,25 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       advices: 'Советы',
       news: 'Новости',
       streams: 'Стримы',
+      // Связь — подразделы без узла в дереве
+      reports: 'Жалобы',
+      verify: 'Подтверждение профилей',
+      // Прочие подразделы (глобально-уникальные слаги)
+      companion: 'Компаньон',
+      soon: 'Скоро',
+      rooms: 'Меченые комнаты',
+      gunsmith: 'Оружейник',
+      map: 'Карта',
+    },
+    // Контекстные лейблы по полному пути (приоритет над breadcrumbNames).
+    // Уроки «Путь Новобранца» — слаги, которые могут значить иное в других ветках (напр. secure).
+    breadcrumbPaths: {
+      '/eft/progress/rookie/fir': 'Найдено в рейде',
+      '/eft/progress/rookie/first-build': 'Первая сборка',
+      '/eft/progress/rookie/flea': 'Барахолка',
+      '/eft/progress/rookie/pmc-scav': 'ЧВК и Дикий',
+      '/eft/progress/rookie/raid': 'Что такое рейд',
+      '/eft/progress/rookie/secure': 'Не потеряй всё',
     },
     menuItems: [
       // ВЕТКА 1: КАРТЫ (Полностью структурированная)

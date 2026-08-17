@@ -86,7 +86,7 @@ export function EftHomeHubClient() {
     return (
       <>
         <PageHeader pageId="eft" dense />
-        <div className="home-grid">
+        <div className="tactical-grid">
           {items.map(({ feature, size }) => (
             <div
               key={feature.id}
@@ -191,8 +191,8 @@ export function EftHomeHubClient() {
         </div>
       )}
 
-      {/* Сетка плиток (фикс-160 колонки, центрованы — см. .home-grid) */}
-      <div className="home-grid">
+      {/* Сетка плиток — канон .tactical-grid (моб 1 → sm 2 → md+ фикс-160, gap 28, центр) */}
+      <div className="tactical-grid">
         {items.map(({ feature, size }, index) => {
           const ResizeIcon = sizeIcon(size);
           return editing ? (
@@ -269,7 +269,7 @@ export function EftHomeHubClient() {
             </h2>
             <div className="h-px flex-1 bg-lines-hover" />
           </div>
-          <div className="home-grid">
+          <div className="tactical-grid">
             {suggestions.map((feature) => (
               <HubCard
                 key={feature.id}

@@ -11,6 +11,7 @@ const ROOT_OVERRIDES: Record<string, string | null> = {
   eft: 'EFT',
   item: null, // routing artifact — no breadcrumb
   task: null, // routing artifact (/eft/quests/task/[id]) — no breadcrumb
+  b: null, // routing artifact (/eft/progress/{loadouts,seasons}/b/[code] — шэр-ссылка)
 };
 
 // BSG-идентификатор (24 hex) — сырой параметр динамического роута, в крошках не показываем.
@@ -28,16 +29,23 @@ function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null 
 }
 
 // Приоритет резолва: ROOT_OVERRIDES → узел дерева навигации (точный path) →
-// словарь breadcrumbNames (сегмент → русский лейбл; карты/категории/слаги) → сырой сегмент.
+// breadcrumbPaths (полный путь → лейбл; контекстные конфликты) →
+// словарь breadcrumbNames (сегмент → русский лейбл; глобально-уникальные слаги) → сырой сегмент.
 function resolveLabel(
   segment: string,
   fullPath: string,
   menuItems: MenuItem[],
   names: Record<string, string>,
+  paths: Record<string, string>,
 ): string | null {
   if (segment in ROOT_OVERRIDES) return ROOT_OVERRIDES[segment];
   if (BSG_ID_RE.test(segment)) return null; // сырой id — скрываем (деталь назовёт себя сама)
-  return findNodeByPath(menuItems, fullPath)?.label ?? names[segment] ?? segment;
+  return (
+    findNodeByPath(menuItems, fullPath)?.label ??
+    paths[fullPath] ??
+    names[segment] ??
+    segment
+  );
 }
 
 export function Breadcrumbs() {
@@ -48,6 +56,7 @@ export function Breadcrumbs() {
   const cfg = HEADER_DICTIONARY['eft'];
   const menuItems = cfg?.menuItems ?? [];
   const names = cfg?.breadcrumbNames ?? {};
+  const paths = cfg?.breadcrumbPaths ?? {};
 
   if (segments.length <= 1) return null;
 
@@ -63,7 +72,7 @@ export function Breadcrumbs() {
   const staticCrumbs = staticSegments
     .map((segment, index) => {
       const path = `/${staticSegments.slice(0, index + 1).join('/')}`;
-      const label = resolveLabel(segment, path, menuItems, names);
+      const label = resolveLabel(segment, path, menuItems, names, paths);
       return label !== null ? { label, href: path } : null;
     })
     .filter((c): c is { label: string; href: string } => c !== null);
