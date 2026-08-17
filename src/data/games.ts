@@ -44,7 +44,7 @@ export const GAMES_DATA: Game[] = [
   {
     id: 'eft',
     title: 'Escape from Tarkov',
-    subtitle: 'Hardcore FPS/RPG',
+    subtitle: 'Минимум кликов — Максимум выживания',
     bg: '/games/eft/bg.webp',
     bgHover: '/games/eft/bg-hover.webp',
     bgInactive: '/games/eft/bg-inactive.webp',
@@ -58,7 +58,7 @@ export const GAMES_DATA: Game[] = [
   {
     id: 'frago',
     title: 'Fragmentary Order',
-    subtitle: 'Тактический шутер 5х5',
+    subtitle: 'В РАЗРАБОТКЕ...',
     bg: '/games/frago/bg.webp',
     bgHover: '/games/frago/bg-hover.webp',
     bgInactive: '/games/frago/bg-inactive.webp',
@@ -72,7 +72,7 @@ export const GAMES_DATA: Game[] = [
   {
     id: 'abi',
     title: 'Arena Breakout: Infinite',
-    subtitle: 'PC-версия популярного шутера',
+    subtitle: 'В РАЗРАБОТКЕ...',
     bg: '/games/abi/bg.webp',
     bgHover: '/games/abi/bg-hover.webp',
     bgInactive: '/games/abi/bg-inactive.webp',
@@ -86,7 +86,7 @@ export const GAMES_DATA: Game[] = [
   {
     id: 'gzw',
     title: 'Gray Zone Warfare',
-    subtitle: 'В РАЗРАБОТКЕ',
+    subtitle: 'В РАЗРАБОТКЕ...',
     bg: '/games/gzw/bg.webp',
     bgHover: '/games/gzw/bg-hover.webp',
     bgInactive: '/games/gzw/bg-inactive.webp',
@@ -100,7 +100,7 @@ export const GAMES_DATA: Game[] = [
   {
     id: 'arcraiders',
     title: 'Arc Raiders',
-    subtitle: 'В РАЗРАБОТКЕ',
+    subtitle: 'В РАЗРАБОТКЕ...',
     bg: '/games/arcraiders/bg.webp',
     bgHover: '/games/arcraiders/bg-hover.webp',
     bgInactive: '/games/arcraiders/bg-inactive.webp',
@@ -114,7 +114,7 @@ export const GAMES_DATA: Game[] = [
   {
     id: 'marathon',
     title: 'Marathon',
-    subtitle: 'В РАЗРАБОТКЕ',
+    subtitle: 'В РАЗРАБОТКЕ...',
     bg: '/games/marathon/bg.webp',
     bgHover: '/games/marathon/bg-hover.webp',
     bgInactive: '/games/marathon/bg-inactive.webp',
@@ -128,7 +128,7 @@ export const GAMES_DATA: Game[] = [
   {
     id: 'actmat',
     title: 'Active Matter',
-    subtitle: 'В РАЗРАБОТКЕ',
+    subtitle: 'В РАЗРАБОТКЕ...',
     bg: '/games/actmat/bg.webp',
     bgHover: '/games/actmat/bg-hover.webp',
     bgInactive: '/games/actmat/bg-inactive.webp',
@@ -142,7 +142,7 @@ export const GAMES_DATA: Game[] = [
   {
     id: 'wardogs',
     title: 'Wardogs',
-    subtitle: 'В РАЗРАБОТКЕ',
+    subtitle: 'В РАЗРАБОТКЕ...',
     bg: '/games/wardogs/bg.webp',
     bgHover: '/games/wardogs/bg-hover.webp',
     bgInactive: '/games/wardogs/bg-inactive.webp',
