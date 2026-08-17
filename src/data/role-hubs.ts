@@ -43,7 +43,6 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
     intro: 'Живёшь барахолкой? Вот где деньги.',
     pveHint: 'В ПвЕ живой барахолки нет — профит идёт через крафты убежища и лут, а не перепродажу.',
     links: [
-      { id: 'trader-barter', title: 'Прибыль бартера', description: 'Где бартер выгоднее покупки.', href: '/eft/progress/barter', iconPath: '/icons/eft/04-progression/barter-profit.svg' },
       { id: 'trader-craft', title: 'Прибыль убежища', description: 'Крафты, что приносят профит.', href: '/eft/progress/hideout/craft-profit', iconPath: '/icons/eft/04-progression/craft-profit.svg' },
     ],
   },

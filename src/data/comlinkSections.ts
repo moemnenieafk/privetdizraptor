@@ -1,13 +1,12 @@
 // Раздел «Связь» (COMLINK) — сообщество ЦТА.
-// Единый источник правды для роутов /eft/comlink/* и табов внутри раздела.
 //
-// Живые подразделы (свои статические роуты, перебивают [section]):
-//   find-partner    — мои рейды: заявки, подтверждения, оценки
-//   candidates      — анкеты игроков (фундамент раздела)
-//   players         — статистика игрока по profile.json (загрузка + разбор)
-//   sherpa-exchange — биржа наставников
-//   discussions     — форум
-// Заглушки (пока через [section]): masterclasses, blog, game-updates.
+// ⚠️ ИСТОЧНИК ПРАВДЫ — HEADER_DICTIONARY (headerConfig.ts), ветка `comlink`. Этот модуль лишь
+// ПРОЕЦИРУЕТ детей меню в форму ComlinkSection, которую ждут потребители ([section]-роут,
+// ComlinkHubNav, индекс раздела). Так убрал пункт из верхнего меню → он автоматически исчез
+// и внутри раздела (карточки, под-страницы, табы) — единый источник, без ручной синхронизации.
+// Тот же принцип, что у «Прогресса» (getSectionHubCards). Описания/иконки берём из полей пункта меню.
+
+import { HEADER_DICTIONARY, type MenuItem } from "@/data/headerConfig";
 
 export const COMLINK_BASE = "/eft/comlink";
 // Иконка раздела целиком (шапка индекса/заглушек). У подпунктов — свои иконки (поле icon ниже).
@@ -17,16 +16,22 @@ export interface ComlinkSection {
   slug: string;
   label: string;
   description: string;
-  /** Иконка подраздела (плейсхолдер Lucide, до фирменной графики). */
+  /** Иконка подраздела (из пункта меню; фолбэк — иконка раздела). */
   icon: string;
 }
 
-export const COMLINK_SECTIONS: ComlinkSection[] = [
-  { slug: "find-partner", label: "Поиск напарника", description: "Заявки на совместные рейды, подтверждения и оценки напарников.", icon: "/icons/eft/07-comlink/find-partner.svg" },
-  { slug: "candidates", label: "Кандидаты", description: "Анкеты игроков, ищущих команду или сокомандников.", icon: "/icons/eft/07-comlink/candidates.svg" },
-  { slug: "players", label: "Статистика игрока", description: "Загрузи profile.json и посмотри полную стату: рейды, K/D, выживаемость, навыки, мастерство и престиж.", icon: "/icons/eft/07-comlink/player-stats.svg" },
-  { slug: "sherpa-exchange", label: "Биржа шерпов", description: "Опытные игроки-наставники помогают новичкам освоиться.", icon: "/icons/eft/07-comlink/sherpa.svg" },
-  { slug: "discussions", label: "Обсуждения", description: "Темы по игре: мета, споты, механики. У каждого автора виден уровень доверия.", icon: "/icons/eft/07-comlink/discussions.svg" },
-  { slug: "masterclasses", label: "Мастер-классы", description: "Разборы, обучающие сессии и гайды от профи.", icon: "/icons/eft/07-comlink/masterclasses.svg" },
-  { slug: "blog", label: "Новостной блог", description: "Новости проекта ЦТА, статьи и объявления.", icon: "/icons/eft/07-comlink/blog.svg" },
-];
+/** Дети ветки «Связь» из словаря меню. */
+function comlinkMenuChildren(): MenuItem[] {
+  const comlink = HEADER_DICTIONARY["eft"].menuItems.find((m) => m.path === COMLINK_BASE);
+  return comlink?.children ?? [];
+}
+
+/** Пункты раздела «Связь» — проекция детей меню (slug = хвост пути после /eft/comlink/). */
+export const COMLINK_SECTIONS: ComlinkSection[] = comlinkMenuChildren()
+  .filter((c): c is MenuItem & { path: string } => Boolean(c.path) && c.path !== COMLINK_BASE)
+  .map((c) => ({
+    slug: c.path.slice(COMLINK_BASE.length + 1),
+    label: c.label,
+    description: c.description ?? "",
+    icon: c.iconUrl ?? COMLINK_ICON,
+  }));

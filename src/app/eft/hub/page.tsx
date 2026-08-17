@@ -5,7 +5,7 @@ import { getKarmaMap } from '@/db/comlink';
 import { getCompanionKarma } from '@/db/companion-prices';
 import { getPlayerProfileSnapshot } from '@/db/player-profile';
 
-export const metadata: Metadata = { title: 'Досье оперативника | ЦТА' };
+export const metadata: Metadata = { title: 'Досье игрока | ЦТА' };
 
 // RSC-обёртка досье: карма — серверная (Drizzle owner-role, мимо RLS), клиент её не знает.
 // Читаем существующими путями (getMe + getKarmaMap + getCompanionKarma), никаких новых

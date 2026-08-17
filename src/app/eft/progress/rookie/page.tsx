@@ -5,7 +5,7 @@ import { getRushDeck } from '@/lib/eft-barter-rush';
 
 export const metadata: Metadata = { title: 'Аркады | Прогресс ЦТА' };
 
-// Колода бартеров для game03 зеркалится из нашей Supabase (как /eft/progress/barter).
+// Колода бартеров для game03 зеркалится из нашей Supabase (§4.11).
 export const revalidate = 3600;
 
 // Индекс раздела «Аркады» = зал автоматов (мини-игры). Туториал «Путь Новобранца»

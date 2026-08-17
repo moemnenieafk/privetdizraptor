@@ -44,11 +44,15 @@ export function PlayerProfileSync() {
         // В облаке пусто — засеваем его текущим локальным.
         await saveCtaPlayerProfile(snapshot());
       } else {
-        // Сервер главнее — грузим в стор.
-        usePlayerStore.setState({
-          profiles: server.profiles,
-          activeProfileId: server.activeProfileId,
+        // Сервер главнее ПО СВОИМ полям, но НЕ теряем аддитивную EFT-стату (kills/deaths/kd/killed/
+        // survived/experience/memberCategory), которой нет в облачной схеме слоя 4d: мержим облако
+        // поверх локального профиля по id. Иначе detailed-стата затиралась при загрузке (bug).
+        const local = usePlayerStore.getState().profiles;
+        const merged = server.profiles.map((sp) => {
+          const lp = local.find((p) => p.id === sp.id);
+          return lp ? { ...lp, ...sp } : sp;
         });
+        usePlayerStore.setState({ profiles: merged, activeProfileId: server.activeProfileId });
       }
       hydrated.current = true; // ПОСЛЕ загрузки — чтобы не сейвить только что загруженное
     }

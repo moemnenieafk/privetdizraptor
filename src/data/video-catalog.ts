@@ -3,6 +3,7 @@ import type {
   VideoCategorySlug,
   VideoSort,
 } from '@/types/video';
+import { HEADER_DICTIONARY } from '@/data/headerConfig';
 
 /**
  * Каталог раздела «Видео» — единственный источник правды по контенту.
@@ -37,7 +38,9 @@ export const CATALOG_TTL = 3600;
 
 /* ─────────────────────── Категории ─────────────────────── */
 
-export const VIDEO_CATEGORIES: VideoCategoryMeta[] = [
+// Полный каталог категорий с инжест-конфигом (playlistId/twitch). Состав и ПОРЯДОК того, что реально
+// показывается и синкается, задаёт верхнее меню (см. VIDEO_CATEGORIES ниже) — это внутренний реестр.
+const VIDEO_CATEGORY_CATALOG: VideoCategoryMeta[] = [
   {
     slug: 'guides',
     title: 'Гайды',
@@ -73,6 +76,24 @@ export const VIDEO_CATEGORIES: VideoCategoryMeta[] = [
     includeTwitch: true,
   },
 ];
+
+/**
+ * ⚠️ ВЕРХНЕЕ МЕНЮ — ГЛАВНЫЙ РУБИЛЬНИК. Состав и порядок категорий диктуют дети `/eft/videos`
+ * из HEADER_DICTIONARY: убрал пункт из меню → категория исчезает ВЕЗДЕ (карточки индекса, роут
+ * [category], инжест YouTube/Twitch). Конфиг (playlistId/twitch) живёт в каталоге выше и берётся
+ * по slug. Категория без пары в каталоге просто не появится (нужен инжест-конфиг). Единый источник
+ * — как у «Прогресса»/«Кодекса»/«Связи».
+ */
+const VIDEO_BASE = '/eft/videos';
+const MENU_VIDEO_SLUGS: string[] = (
+  HEADER_DICTIONARY['eft'].menuItems.find((m) => m.path === VIDEO_BASE)?.children ?? []
+)
+  .map((c) => (c.path ? c.path.slice(VIDEO_BASE.length + 1) : ''))
+  .filter(Boolean);
+
+export const VIDEO_CATEGORIES: VideoCategoryMeta[] = MENU_VIDEO_SLUGS
+  .map((slug) => VIDEO_CATEGORY_CATALOG.find((c) => c.slug === slug))
+  .filter((c): c is VideoCategoryMeta => Boolean(c));
 
 export const CATEGORY_BY_SLUG: Record<VideoCategorySlug, VideoCategoryMeta> =
   VIDEO_CATEGORIES.reduce(

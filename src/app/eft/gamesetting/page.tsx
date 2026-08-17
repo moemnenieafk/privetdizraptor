@@ -1,110 +1,24 @@
-﻿import { PageHeader } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/ui/PageHeader';
 import React from 'react';
 import { HubCard } from '@/components/ui/HubCard';
+import { getSectionHubCards } from '@/lib/section-hub-nav';
 
-// Данные для карточек навигации раздела "Кодекс"
-const CODEX_HUB_CARDS = [
-  {
-    id: 'lore',
-    title: 'История мира',
-    description: 'Погрузитесь в историю вселенной Russia 2028, предшествующую событиям в Таркове.',
-    href: '/eft/gamesetting/lore',
-    iconPath: '/icons/eft/05-gamesetting/tarkov-lore.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'timeline',
-    title: 'Хронология',
-    description: 'Ключевые события, приведшие к конфликту в Норвинской области, в хронологическом порядке.',
-    href: '/eft/gamesetting/timeline',
-    iconPath: '/icons/eft/05-gamesetting/timeline.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'characters',
-    title: 'Персонажи',
-    description: 'Досье на ключевых действующих лиц: боссов, торговцев и других важных персонажей.',
-    href: '/eft/gamesetting/characters',
-    iconPath: '/icons/eft/05-gamesetting/characters.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'factions',
-    title: 'Фракции',
-    description: 'Информация о противоборствующих сторонах: USEC, BEAR и Диких.',
-    href: '/eft/gamesetting/factions',
-    iconPath: '/icons/eft/05-gamesetting/fractions.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'corporations',
-    title: 'Корпорации',
-    description: 'Сведения о TerraGroup, ее деятельности и других корпорациях, замешанных в конфликте.',
-    href: '/eft/gamesetting/corporations',
-    iconPath: '/icons/eft/05-gamesetting/corporations.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'locations',
-    title: 'Локации',
-    description: 'История и описание ключевых мест в Таркове и его окрестностях.',
-    href: '/eft/gamesetting/locations',
-    iconPath: '/icons/eft/05-gamesetting/locations.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'materials',
-    title: 'Материалы',
-    description: 'Сборник внутриигровых документов, аудиозаписей и записок, раскрывающих сюжет.',
-    href: '/eft/gamesetting/materials',
-    iconPath: '/icons/eft/05-gamesetting/docs-notes.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'theories',
-    title: 'Теории и загадки',
-    description: 'Разбор фанатских теорий, неразгаданных тайн и загадок мира Escape from Tarkov.',
-    href: '/eft/gamesetting/theories',
-    iconPath: '/icons/eft/05-gamesetting/theory-riddles.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'game-updates',
-    title: 'Обновления игры',
-    description: 'Патчи и «что реально изменилось» — статы, торговцы, крафты и квесты с разбором на русском.',
-    href: '/eft/gamesetting/game-updates',
-    iconPath: '/icons/eft/05-gamesetting/game-updates.svg',
-    variant: 'rectangle' as const,
-  },
-  // Переехали из «Прогресса» (навигация headerConfig уже здесь; роуты прежние).
-  {
-    id: 'achievements',
-    title: 'Достижения',
-    description: 'Отслеживайте свои внутриигровые достижения, от сюжетных вех до уникальных испытаний.',
-    href: '/eft/progress/achievements',
-    iconPath: '/icons/eft/04-progression/achievments.svg',
-    variant: 'rectangle' as const,
-  },
-  {
-    id: 'prestige',
-    title: 'Престиж',
-    description: 'Продемонстрируйте свой опыт и получите уникальные награды после достижения максимального уровня.',
-    href: '/eft/progress/prestige',
-    iconPath: '/icons/eft/04-progression/prestige.svg',
-    variant: 'rectangle' as const,
-  },
-];
+// Карточки навигации раздела «Кодекс» строятся из HEADER_DICTIONARY (дети /eft/gamesetting),
+// а не из локального массива: словарь — единственный источник и для верхней навигации, и для
+// этой сетки. Убрал пункт из меню → карточка исчезла и здесь. Описания/иконки — из пунктов меню.
+// Достижения и Престиж живут под /eft/progress/*, но в меню — дети «Кодекса» (карточки здесь).
+const CODEX_HUB_CARDS = getSectionHubCards('/eft/gamesetting');
 
 export default function CodexHubPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
         <PageHeader pageId="eft-gamesetting" />
-        
+
         {/* Сетка HubCard */}
         <div className="tactical-grid">
           {CODEX_HUB_CARDS.map((card, index) => (
-            <HubCard key={card.id} gameId="eft" {...card} index={index} />
+            <HubCard key={card.id} gameId="eft" variant="rectangle" {...card} index={index} />
           ))}
         </div>
       </div>

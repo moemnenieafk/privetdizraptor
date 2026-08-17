@@ -85,7 +85,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       'ref-quest': 'Реф',
       'lightkeeper-quest': 'Смотритель Маяка',
       questmap: 'Карта Заданий',
-      hub: 'Досье оперативника',
+      hub: 'Досье игрока',
       rookie: 'Аркады',
       path: 'Путь Новобранца',
       arcade: 'Зал автоматов',
@@ -530,7 +530,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/progress',
         iconUrl: '/icons/eft/progress-icon.svg',
         children: [
-          { id: 'p-hub', label: 'Досье оперативника', description: 'Твой тактический профиль: архетип, боевая эффективность, карма и весь прогресс в одном экране.', path: '/eft/hub', iconUrl: '/icons/eft/04-progression/utarkov.svg' },
+          { id: 'p-hub', label: 'Досье игрока', description: 'Твой тактический профиль: архетип, боевая эффективность, карма и весь прогресс в одном экране.', path: '/eft/hub', iconUrl: '/icons/eft/04-progression/utarkov.svg' },
           { id: 'p-rookie', label: 'Аркады', description: 'Зал автоматов: аркадные мини-игры по вселенной Таркова. Новичку — подраздел «Путь Новобранца», курс из 10 этапов.', path: '/eft/progress/rookie', iconUrl: '/icons/eft/04-progression/eft-arcade-icon.svg', iconClass: 'icon-eft-arcade' },
           {
             id: 'p-hideout',
@@ -543,13 +543,6 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
               { id: 'p-hideout-craft', label: 'Прибыль убежища', path: '/eft/progress/hideout/craft-profit', iconUrl: '/icons/eft/04-progression/craft-profit.svg' },
               { id: 'p-hideout-btc', label: 'Прибыль Bitcoin', path: '/eft/progress/hideout/bitcoin-profit', iconUrl: '/icons/eft/04-progression/bitcoin-profit.svg' }
             ]
-          },
-          {
-            id: 'p-barter',
-            label: 'Прибыль бартера',
-            description: 'Анализируйте выгодные обмены у торговцев, чтобы максимизировать свою прибыль.',
-            path: '/eft/progress/barter',
-            iconUrl: '/icons/eft/04-progression/barter-profit.svg',
           },
           {
             id: 'p-seasons',
@@ -585,25 +578,27 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/gamesetting',
         iconUrl: '/icons/eft/codex-icon.svg',
         children: [
-          { id: 'gs-lore', label: 'История мира', path: '/eft/gamesetting/lore', iconUrl: '/icons/eft/05-gamesetting/tarkov-lore.svg' },
-          { id: 'gs-timeline', label: 'Хронология', path: '/eft/gamesetting/timeline', iconUrl: '/icons/eft/05-gamesetting/timeline.svg' },
-          { id: 'gs-game-updates', label: 'Обновления игры', path: '/eft/gamesetting/game-updates', iconUrl: '/icons/eft/05-gamesetting/game-updates.svg', iconClass: 'icon-eft-lore-game-updates' },
-          { 
-            id: 'gs-characters', 
-            label: 'Персонажи', 
-            path: '/eft/gamesetting/characters', 
+          { id: 'gs-lore', label: 'История мира', description: 'Погрузитесь в историю вселенной Russia 2028, предшествующую событиям в Таркове.', path: '/eft/gamesetting/lore', iconUrl: '/icons/eft/05-gamesetting/tarkov-lore.svg' },
+          { id: 'gs-timeline', label: 'Хронология', description: 'Ключевые события, приведшие к конфликту в Норвинской области, в хронологическом порядке.', path: '/eft/gamesetting/timeline', iconUrl: '/icons/eft/05-gamesetting/timeline.svg' },
+          { id: 'gs-game-updates', label: 'Обновления игры', description: 'Патчи и «что реально изменилось» — статы, торговцы, крафты и квесты с разбором на русском.', path: '/eft/gamesetting/game-updates', iconUrl: '/icons/eft/05-gamesetting/game-updates.svg', iconClass: 'icon-eft-lore-game-updates' },
+          {
+            id: 'gs-characters',
+            label: 'Персонажи',
+            description: 'Досье на ключевых действующих лиц: боссов, торговцев и других важных персонажей.',
+            path: '/eft/gamesetting/characters',
             iconUrl: '/icons/eft/05-gamesetting/characters.svg',
             children: [
               { id: 'gs-bosses', label: 'Боссы', path: '/eft/gamesetting/bosses', iconUrl: '/icons/eft/05-gamesetting/bosses.svg' },
               { id: 'gs-traders', label: 'Торговцы', path: '/eft/gamesetting/traders', iconUrl: '/icons/eft/05-gamesetting/traders.svg' }
             ]
           },
-          { id: 'gs-factions', label: 'Фракции', path: '/eft/gamesetting/factions', iconUrl: '/icons/eft/05-gamesetting/fractions.svg' },
-          { id: 'gs-corporations', label: 'Корпорации', path: '/eft/gamesetting/corporations', iconUrl: '/icons/eft/05-gamesetting/corporations.svg' },
-          { id: 'gs-locations', label: 'Локации', path: '/eft/gamesetting/locations', iconUrl: '/icons/eft/05-gamesetting/locations.svg' },
-          { 
-            id: 'gs-materials', 
-            label: 'Материалы', 
+          { id: 'gs-factions', label: 'Фракции', description: 'Информация о противоборствующих сторонах: USEC, BEAR и Диких.', path: '/eft/gamesetting/factions', iconUrl: '/icons/eft/05-gamesetting/fractions.svg' },
+          { id: 'gs-corporations', label: 'Корпорации', description: 'Сведения о TerraGroup, ее деятельности и других корпорациях, замешанных в конфликте.', path: '/eft/gamesetting/corporations', iconUrl: '/icons/eft/05-gamesetting/corporations.svg' },
+          { id: 'gs-locations', label: 'Локации', description: 'История и описание ключевых мест в Таркове и его окрестностях.', path: '/eft/gamesetting/locations', iconUrl: '/icons/eft/05-gamesetting/locations.svg' },
+          {
+            id: 'gs-materials',
+            label: 'Материалы',
+            description: 'Сборник внутриигровых документов, аудиозаписей и записок, раскрывающих сюжет.',
             path: '/eft/gamesetting/materials',
             iconUrl: '/icons/eft/05-gamesetting/docs-notes.svg',
             children: [
@@ -611,9 +606,9 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
               { id: 'gs-docs', label: 'Документы и записки', path: '/eft/gamesetting/docs-notes', iconUrl: '/icons/eft/05-gamesetting/docs-notes.svg' }
             ]
           },
-          { id: 'gs-theories', label: 'Теории и загадки', path: '/eft/gamesetting/theories', iconUrl: '/icons/eft/05-gamesetting/theory-riddles.svg' },
-          { id: 'gs-achievements', label: 'Достижения', path: '/eft/progress/achievements', iconUrl: '/icons/eft/04-progression/achievments.svg' },
-          { id: 'gs-prestige', label: 'Престиж', path: '/eft/progress/prestige', iconUrl: '/icons/eft/04-progression/prestige.svg' }
+          { id: 'gs-theories', label: 'Теории и загадки', description: 'Разбор фанатских теорий, неразгаданных тайн и загадок мира Escape from Tarkov.', path: '/eft/gamesetting/theories', iconUrl: '/icons/eft/05-gamesetting/theory-riddles.svg' },
+          { id: 'gs-achievements', label: 'Достижения', description: 'Отслеживайте свои внутриигровые достижения, от сюжетных вех до уникальных испытаний.', path: '/eft/progress/achievements', iconUrl: '/icons/eft/04-progression/achievments.svg' },
+          { id: 'gs-prestige', label: 'Престиж', description: 'Продемонстрируйте свой опыт и получите уникальные награды после достижения максимального уровня.', path: '/eft/progress/prestige', iconUrl: '/icons/eft/04-progression/prestige.svg' }
         ]
       },
       { 
@@ -636,13 +631,12 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/comlink',
         iconUrl: '/icons/eft/00-nav/comlink-icon.svg',
         children: [
-          { id: 'cl-find-partner', label: 'Поиск напарника', path: '/eft/comlink/find-partner', iconUrl: '/icons/eft/07-comlink/find-partner.svg' },
-          { id: 'cl-candidates', label: 'Кандидаты', path: '/eft/comlink/candidates', iconUrl: '/icons/eft/07-comlink/candidates.svg' },
-          { id: 'cl-sherpa', label: 'Биржа шерпов', path: '/eft/comlink/sherpa-exchange', iconUrl: '/icons/eft/07-comlink/sherpa.svg' },
-          { id: 'cl-discussions', label: 'Обсуждения', path: '/eft/comlink/discussions', iconUrl: '/icons/eft/07-comlink/discussions.svg' },
-          { id: 'cl-masterclasses', label: 'Мастер-классы', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/07-comlink/masterclasses.svg' },
-          { id: 'cl-blog', label: 'Новостной блог', path: '/eft/comlink/blog', iconUrl: '/icons/eft/07-comlink/blog.svg' },
-          { id: 'cl-players', label: 'Статистика игрока', path: '/eft/comlink/players', iconUrl: '/icons/eft/07-comlink/player-stats.svg' }
+          { id: 'cl-find-partner', label: 'Поиск напарника', description: 'Заявки на совместные рейды, подтверждения и оценки напарников.', path: '/eft/comlink/find-partner', iconUrl: '/icons/eft/07-comlink/find-partner.svg' },
+          { id: 'cl-candidates', label: 'Кандидаты', description: 'Анкеты игроков, ищущих команду или сокомандников.', path: '/eft/comlink/candidates', iconUrl: '/icons/eft/07-comlink/candidates.svg' },
+          { id: 'cl-sherpa', label: 'Биржа шерпов', description: 'Опытные игроки-наставники помогают новичкам освоиться.', path: '/eft/comlink/sherpa-exchange', iconUrl: '/icons/eft/07-comlink/sherpa.svg' },
+          { id: 'cl-discussions', label: 'Обсуждения', description: 'Темы по игре: мета, споты, механики. У каждого автора виден уровень доверия.', path: '/eft/comlink/discussions', iconUrl: '/icons/eft/07-comlink/discussions.svg' },
+          { id: 'cl-masterclasses', label: 'Мастер-классы', description: 'Разборы, обучающие сессии и гайды от профи.', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/07-comlink/masterclasses.svg' },
+          { id: 'cl-blog', label: 'Новостной блог', description: 'Новости проекта ЦТА, статьи и объявления.', path: '/eft/comlink/blog', iconUrl: '/icons/eft/07-comlink/blog.svg' }
         ]
       },
     ],

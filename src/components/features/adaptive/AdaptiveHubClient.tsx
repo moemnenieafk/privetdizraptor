@@ -17,6 +17,8 @@ import { applySnapshot, buildSnapshot, hasLocalProfile } from '@/lib/player-prof
 import { savePlayerProfileAction } from '@/actions/player-profile';
 import type { PlayerProfileSnapshot } from '@/types/eft-player';
 import { DossierPmcStats } from '@/components/features/adaptive/DossierPmcStats';
+import { DossierManualEditor } from '@/components/features/adaptive/DossierManualEditor';
+import { ArchetypeLevelGuide } from '@/components/features/adaptive/ArchetypeLevelGuide';
 import { HexRingProgress } from '@/components/features/adaptive/HexRingProgress';
 import { useIsPve } from '@/hooks/useGameMode';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -24,13 +26,11 @@ import { useAchievementStore } from '@/store/useAchievementStore';
 import { useFirstVisitStore } from '@/store/useFirstVisitStore';
 import { computeStanding } from '@/lib/player-standing';
 import {
-  XpNotchBar,
   CompetencyRadar,
   RollUpCounter,
   usePlayerStandingSignals,
 } from '@/components/features/profile';
 import { TIERS } from '@/data/subscription-tiers';
-import { getCurrentTier, getNextTier } from '@/types/gamification';
 import { useGamificationStore } from '@/store/useGamificationStore';
 import { useXpStore } from '@/store/useXpStore';
 import { subTrackLevel } from '@/lib/xp';
@@ -222,9 +222,6 @@ export function AdaptiveHubClient(props: HubServerProps = {
   // Сигналы standing (карма — с сервера, иначе вклад 0). Хук читает существующие сторы.
   const signals = usePlayerStandingSignals({ karmaComlink, karmaCompanion });
   const standing = computeStanding(signals);
-  const xp = useGamificationStore((s) => s.xp);
-  const currentTier = getCurrentTier(xp);
-  const nextTier = getNextTier(xp);
   const unlocks = dossierUnlocks(standing, tier);
 
   if (!hydrated) {
@@ -382,6 +379,9 @@ export function AdaptiveHubClient(props: HubServerProps = {
 
           {/* ── ДЕТАЛЬНАЯ СТАТА ЧВК: навыки / мастерство / рейды (профиль-гейт: пусто → нет секции) ── */}
           <DossierPmcStats />
+
+          {/* ── РУЧНОЙ ВВОД ПРОГРЕССА (Слой C): убежище/навыки/трейдеры без JSON ── */}
+          <DossierManualEditor isAuthed={isAuthed} />
         </div>
 
         {/* ── ПРАВАЯ ПАНЕЛЬ: прокачка ──────────────────────────────────── */}
@@ -532,13 +532,9 @@ export function AdaptiveHubClient(props: HubServerProps = {
             </div>
           </div>
 
-          {/* XP-полоса тира (нижний якорь панели) */}
+          {/* Инструкция «как качать архетип» — нижний блок панели (числа из XP-экономики) */}
           <div className="border-t border-lines-hover pt-4">
-            <XpNotchBar
-              percent={signals.xpProgress}
-              tierLabel={`XP · ${currentTier.label}`}
-              nextLabel={nextTier ? `След. тир: ${nextTier.label}` : 'Максимальный тир'}
-            />
+            <ArchetypeLevelGuide roleName={roleLabel.name} level={subTrack.level} accent={visual.accent} />
           </div>
 
           {/* Пикер архетипа — оверлей «в том же фрейме» поверх панели прогрессии */}

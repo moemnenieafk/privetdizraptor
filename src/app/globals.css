@@ -308,9 +308,13 @@ html {
   }
 
 
+  /* Сетка HubCard-хабов всех разделов. Десктоп (≥md) = вёрстка главной (.home-grid): фикс-модули
+     160px, ряды 160px, gap 28, центрованы → карточки rectangle всегда ровно 348×160 (md:col-span-2),
+     square — 348². Планшет (sm) = 2 в ряд. Телефон (<sm) = 1 в ряд full-width (канон
+     mobile-style-content.md). */
   .tactical-grid {
     display: grid;
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: 1fr;
     gap: 1rem;
     width: 100%;
   }
@@ -320,11 +324,12 @@ html {
   }
 
   @media (min-width: 768px) {
-    .tactical-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-
-  @media (min-width: 1280px) {
-    .tactical-grid { grid-template-columns: repeat(6, 1fr); }
+    .tactical-grid {
+      grid-template-columns: repeat(auto-fill, 160px);
+      grid-auto-rows: 160px;
+      gap: 28px;
+      justify-content: center;
+    }
   }
 
   /* Сетка конструктора главной EFT: фикс-колонки 160px, центрованы, ряды по 160px.

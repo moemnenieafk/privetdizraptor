@@ -58,6 +58,14 @@ function parseProfile(v: unknown): PlayerProfilePersist | null {
     raids: numOrNull(v.raids),
     survivalRate: numOrNull(v.survivalRate),
     traderLevels: parseTraderLevels(v.traderLevels),
+    // Аддитивная EFT-стата (из profile.json) — сохраняем в облаке, иначе синк слоя 4d её терял.
+    memberCategory: numOrNull(v.memberCategory),
+    experience: numOrNull(v.experience),
+    kills: numOrNull(v.kills),
+    deaths: numOrNull(v.deaths),
+    killed: numOrNull(v.killed),
+    survived: numOrNull(v.survived),
+    kd: numOrNull(v.kd),
   };
 }
 

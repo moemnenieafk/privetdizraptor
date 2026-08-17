@@ -152,29 +152,12 @@ export interface PlayerView {
   updatedAt: number | null;
 }
 
-// ── Серверный снапшот профиля (Слой B): JSONB в cta_player_profiles. Достаточен, чтобы
-//    регидрировать оба клиентских стора (идентичность usePlayerStore + рич-вью usePmcStatsStore). ──
+// ── Серверный снапшот профиля (Слой B): JSONB в cta_player_profiles. Хранит ТОЛЬКО то, что уникально
+//    Слою B — рич-вью ЧВК (usePmcStatsStore: навыки/мастерство/рейды) + ручные оверрайды (Слой C).
+//    Идентичность (usePlayerStore: ник/уровень/K:D/трейдеры, мультипрофиль) ведёт СЛОЙ 4d
+//    (PlayerProfileSync + /api/eft/player-profile) — здесь НЕ дублируется, чтобы две системы не
+//    конкурировали за одни поля (баг «стата сбрасывается при загрузке», 2026-08). ──
 export type ProfileSource = "tarkov.dev" | "game-profile" | "manual" | "mixed";
-
-/** Плоская идентичность (подмножество usePlayerStore.PlayerProfile без локального id/mode). */
-export interface PlayerIdentitySnapshot {
-  nickname?: string;
-  faction?: "USEC" | "BEAR";
-  edition?: string;
-  level?: string;
-  prestige?: string;
-  experience?: number | null;
-  memberCategory?: number | null;
-  raids?: number | null;
-  survivalRate?: number | null;
-  hoursPlayed?: number | null;
-  kills?: number | null;
-  deaths?: number | null;
-  killed?: number | null;
-  survived?: number | null;
-  kd?: number | null;
-  traderLevels?: Record<string, number>;
-}
 
 /** Ручные оверрайды (Слой C): уровни, введённые без JSON. Ключи — id навыка / type станции / traderId. */
 export interface PlayerManualOverrides {
@@ -183,10 +166,9 @@ export interface PlayerManualOverrides {
   traders?: Record<string, number>;
 }
 
-/** Полный снапшот профиля — точка истины на сервере (или localStorage у анонима). */
+/** Снапшот Слоя B: рич-вью + ручные оверрайды. Идентичность — не здесь (см. коммент выше). */
 export interface PlayerProfileSnapshot {
   view: PlayerView | null;
-  identity: PlayerIdentitySnapshot | null;
   manual?: PlayerManualOverrides;
   source: ProfileSource;
 }

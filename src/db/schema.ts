@@ -737,6 +737,16 @@ export type PlayerProfilePersist = {
   raids: number | null;
   survivalRate: number | null;
   traderLevels: Record<string, number>;
+  // Аддитивная EFT-идентичность из profile.json (kills/deaths/kd/…). Опциональны: старые облачные
+  // строки их не имеют. JSONB-колонка — passthrough, миграция БД не нужна. Без них облачный синк
+  // (слой 4d) терял детальную стату при перезаписи стора (bug: «стата сбрасывается при загрузке»).
+  memberCategory?: number | null;
+  experience?: number | null;
+  kills?: number | null;
+  deaths?: number | null;
+  killed?: number | null;
+  survived?: number | null;
+  kd?: number | null;
 };
 
 export const playerProfiles = pgTable(

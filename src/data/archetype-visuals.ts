@@ -22,7 +22,7 @@ export interface ArchetypeVisual {
 //   sherpa/squad → голубой (edition-tue / mode-pve) · progressor → success ·
 //   viewer → twitch · lore → kappa · rookie → нейтральный muted.
 // Расширенные архетипы (4) — свои неповторяющиеся токены:
-//   seasonal → золото (edition-eod) · collector → фиолет (rarity-rare-badge) ·
+//   seasonal → бирюза сезона (season-01) · collector → фиолет (rarity-rare-badge) ·
 //   tryhard → красный-failure (отличен от danger рейдера) · casual → бирюза (accent-frago).
 // ⚠️ iconClass у 4 расширенных — ЗАГЛУШКИ (тематически близкая существующая иконка);
 //   V4DYA дорисует свои. См. CONCERNS в отчёте.
@@ -85,7 +85,9 @@ export const ARCHETYPE_VISUALS: Record<PlayerRole, ArchetypeVisual> = {
   // ── Расширенные архетипы: iconClass — ЗАГЛУШКИ (V4DYA дорисует) ──
   seasonal: {
     iconClass: '/icons/eft/04-progression/seasons/seasons-icon.svg', // заглушка
-    accent: 'var(--color-edition-eod)',
+    // Акцент = цвет активного сезона (--color-season-01, бирюза «KORD BREACH»): архетип
+    // «Сезонник» визуально совпадает с сезонным брендингом (бейджи/предметы/достижения).
+    accent: 'var(--color-season-01)',
     tag: 'SEASON',
   },
   collector: {

@@ -23,10 +23,9 @@ export async function upsertPlayerProfileSnapshot(
   snapshot: PlayerProfileSnapshot,
 ): Promise<void> {
   const gameId = await eftGameId();
-  const level =
-    snapshot.view?.level ??
-    (snapshot.identity?.level != null && snapshot.identity.level !== "" ? Number(snapshot.identity.level) : null);
-  const experience = snapshot.view?.experience ?? snapshot.identity?.experience ?? null;
+  // Денорм-колонки для индексации — из рич-вью (идентичность Слой B больше не хранит, см. sync-lib).
+  const level = snapshot.view?.level ?? null;
+  const experience = snapshot.view?.experience ?? null;
 
   await db
     .insert(playerProfiles)

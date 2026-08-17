@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
+import { useManualProfileStore } from '@/store/useManualProfileStore';
+import { effectiveSkills } from '@/lib/tarkov/player-view-merge';
 import { SKILL_ICONS, SKILL_CAT_ORDER, SKILL_RU, type SkillCat } from './skill-icons';
 import type { PlayerSkillView, PlayerMasteringView, RaidStatLine } from '@/types/eft-player';
 
@@ -204,14 +206,19 @@ export function DossierPmcStats() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const view = usePmcStatsStore((s) => s.view);
+  const manualSkills = useManualProfileStore((s) => s.skills);
 
-  if (!mounted || !view) return null;
+  // Навыки — эффективные (загруженные, перекрытые ручным вводом Слоя C, last-write-wins).
+  const skills = effectiveSkills(view, manualSkills);
+
+  // Секции нет, только если ни профиля, ни ручных навыков.
+  if (!mounted || (!view && skills.length === 0)) return null;
 
   return (
     <section className="flex flex-col gap-8">
-      <SkillsSection skills={view.skills} />
-      <MasterySection mastering={view.mastering} />
-      <RaidsSection rows={view.raidStats} />
+      <SkillsSection skills={skills} />
+      {view && <MasterySection mastering={view.mastering} />}
+      {view && <RaidsSection rows={view.raidStats} />}
     </section>
   );
 }

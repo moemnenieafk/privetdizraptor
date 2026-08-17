@@ -264,61 +264,66 @@ export function ProfileSettingsForm({
         </div>
       </div>
 
-      {setHoursPlayed && (
-        <div className="flex w-full flex-col items-start justify-start gap-2">
-          <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Часов в игре</div>
-          <div className="flex h-10 w-full items-center rounded border border-lines-hover bg-(--color-base) px-3">
-            <input
-              type="text"
-              inputMode="numeric"
-              value={hoursPlayed != null ? String(hoursPlayed) : ''}
-              onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, '').slice(0, 5);
-                setHoursPlayed?.(digits === '' ? null : Number(digits));
-              }}
-              className="flex-1 w-full bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
-              placeholder="НЕ УКАЗАНО"
-              spellCheck={false}
-            />
-            <span className="text-type-label font-blender-medium uppercase text-text-secondary">ч</span>
-          </div>
-        </div>
-      )}
-
-      {setRaids && (
-        <div className="flex w-full gap-2">
-          <div className="flex flex-1 flex-col items-start justify-start gap-2">
-            <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Рейдов</div>
-            <div className="flex h-10 w-full items-center rounded border border-lines-hover bg-(--color-base) px-3">
-              <input
-                type="text"
-                inputMode="numeric"
-                value={raids != null ? String(raids) : ''}
-                onChange={(e) => setRaids?.(e.target.value.replace(/\D/g, '').slice(0, 5) === '' ? null : Number(e.target.value.replace(/\D/g, '').slice(0, 5)))}
-                className="flex-1 w-full bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
-                placeholder="—"
-                spellCheck={false}
-              />
+      {(setHoursPlayed || setRaids || setSurvivalRate) && (
+        // Три стата в один ряд: Часов · Рейдов · Выживаемость (равные колонки; подписи
+        // фикс-высоты min-h-8, чтобы длинные названия при переносе не разъезжали инпуты).
+        <div className="flex w-full items-start gap-2">
+          {setHoursPlayed && (
+            <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2">
+              <div className="w-full truncate text-type-micro font-blender-medium uppercase leading-4 text-text-secondary">Часов в игре</div>
+              <div className="flex h-10 w-full min-w-0 items-center rounded border border-lines-hover bg-(--color-base) px-3">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={hoursPlayed != null ? String(hoursPlayed) : ''}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 5);
+                    setHoursPlayed?.(digits === '' ? null : Number(digits));
+                  }}
+                  className="min-w-0 flex-1 bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
+                  placeholder="—"
+                  spellCheck={false}
+                />
+                <span className="text-type-label font-blender-medium uppercase text-text-secondary">ч</span>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-1 flex-col items-start justify-start gap-2">
-            <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Выживаемость</div>
-            <div className="flex h-10 w-full items-center rounded border border-lines-hover bg-(--color-base) px-3">
-              <input
-                type="text"
-                inputMode="numeric"
-                value={survivalRate != null ? String(survivalRate) : ''}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
-                  setSurvivalRate?.(digits === '' ? null : Math.min(100, Number(digits)));
-                }}
-                className="flex-1 w-full bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
-                placeholder="—"
-                spellCheck={false}
-              />
-              <span className="text-type-label font-blender-medium uppercase text-text-secondary">%</span>
+          )}
+          {setRaids && (
+            <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2">
+              <div className="w-full truncate text-type-micro font-blender-medium uppercase leading-4 text-text-secondary">Рейдов</div>
+              <div className="flex h-10 w-full min-w-0 items-center rounded border border-lines-hover bg-(--color-base) px-3">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={raids != null ? String(raids) : ''}
+                  onChange={(e) => setRaids?.(e.target.value.replace(/\D/g, '').slice(0, 5) === '' ? null : Number(e.target.value.replace(/\D/g, '').slice(0, 5)))}
+                  className="min-w-0 flex-1 bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
+                  placeholder="—"
+                  spellCheck={false}
+                />
+              </div>
             </div>
-          </div>
+          )}
+          {setSurvivalRate && (
+            <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2">
+              <div className="w-full truncate text-type-micro font-blender-medium uppercase leading-4 text-text-secondary">Выживаемость</div>
+              <div className="flex h-10 w-full min-w-0 items-center rounded border border-lines-hover bg-(--color-base) px-3">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={survivalRate != null ? String(survivalRate) : ''}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+                    setSurvivalRate?.(digits === '' ? null : Math.min(100, Number(digits)));
+                  }}
+                  className="min-w-0 flex-1 bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
+                  placeholder="—"
+                  spellCheck={false}
+                />
+                <span className="text-type-label font-blender-medium uppercase text-text-secondary">%</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

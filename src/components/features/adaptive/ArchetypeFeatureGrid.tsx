@@ -129,8 +129,9 @@ export function ArchetypeFeatureGrid({ featureIds }: ArchetypeFeatureGridProps) 
         </span>
       </div>
 
-      {/* Слева грид иконок, справа список названий. На узких — список уходит под грид. */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
+      {/* Слева грид иконок, справа список названий. На узких — список уходит под грид.
+          Отступ грид↔список — 28px (канон) в обеих раскладках. */}
+      <div className="flex flex-col gap-7 lg:flex-row">
         <div className="grid shrink-0 self-start grid-cols-4 gap-3.5 sm:grid-cols-7">
           {FEATURE_CATALOG.map((feature) => (
             <FeatureCell key={feature.id} feature={feature} active={active.has(feature.id)} onFeedback={onFeedback} onUse={onUse(feature.id)} />
