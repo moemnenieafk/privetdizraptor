@@ -351,7 +351,10 @@ html {
   }
   .tactical-card-base:not(.is-inactive):hover {
     border-color: transparent;
-    box-shadow: var(--shadow-neon);
+    /* Мягкая цветная тень (внешний glow), автотон под тему через --primary */
+    box-shadow:
+      0 24px 55px color-mix(in srgb, var(--primary) 45%, transparent),
+      0 8px 24px color-mix(in srgb, var(--primary) 30%, transparent);
     transform: translateY(-28px);
   }
   .tactical-card-base.is-inactive:hover {

@@ -122,13 +122,6 @@ export function GameCard({ game, index }: GameCardProps) {
       {/* Слой 3: Декоративный градиент */}
       <div className="absolute inset-0 bg-linear-to-t from-base/90 via-base/40 to-transparent pointer-events-none z-20" />
 
-      {/* Слой 3.5: Неоновая подсветка при наведении */}
-      {!game.isInactive && (
-        <div
-          className="absolute bottom-0 left-0 w-full h-7 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out bg-[radial-gradient(ellipse_at_bottom,var(--primary)_0%,transparent_70%)] z-25"
-        />
-      )}
-
       {/* Слой 3.8: Градиентная обводка при наведении */}
       {!game.isInactive && (
         <div className="tactical-gradient-border group-hover:opacity-100" />

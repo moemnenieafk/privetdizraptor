@@ -17,7 +17,7 @@ export const Carousel: React.FC<CarouselProps> = ({
   children,
   options,
   slideClassName = "flex-[0_0_80vw] sm:flex-[0_0_348px] mr-4 sm:mr-7",
-  viewportPadClassName = "py-[2.625rem]",
+  viewportPadClassName = "pt-[2.625rem] pb-24",
 }) => {
   const emblaOptions: EmblaOptionsType = useMemo(() => ({
     loop: true,
