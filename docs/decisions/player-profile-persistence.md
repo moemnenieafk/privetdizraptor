@@ -1,5 +1,5 @@
 ---
-status: 🟢 Слои A+B в проде; Слой C (ручной редактор) реализован локально (2026-08-17) — ждёт live-verify + коммит
+status: ✅ Слои A+B+C В ПРОДЕ (2026-08-17, main 265c6b80) + фикс двух синков; live-verify пройден в браузере
 affects: dossier, profile, supabase-schema, parser, manual-entry
 date: 2026-08-17
 ---
