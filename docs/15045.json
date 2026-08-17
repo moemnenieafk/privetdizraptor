@@ -1,0 +1,1234 @@
+{
+    "aid": 15045,
+    "info": {
+        "nickname": "V4DYATV",
+        "side": "Bear",
+        "experience": 9165146,
+        "memberCategory": 1026,
+        "selectedMemberCategory": 1024,
+        "prestigeLevel": 1
+    },
+    "customization": {
+        "head": "5cc084dd14c02e000b0550a3",
+        "body": "68bc2bb6dc0a9c7cea0d71de",
+        "feet": "68bc2d67b50500fb3d079f42",
+        "hands": "68bc2e09b50500fb3d079f44"
+    },
+    "skills": {
+        "Common": [
+            {
+                "Id": "BotReload",
+                "Progress": 0,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": -2147483648
+            },
+            {
+                "Id": "BotSound",
+                "Progress": 100,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1764959685
+            },
+            {
+                "Id": "Endurance",
+                "Progress": 3784.97876,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785734054
+            },
+            {
+                "Id": "Strength",
+                "Progress": 3608.10034,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736671
+            },
+            {
+                "Id": "Vitality",
+                "Progress": 2279.83154,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785733390
+            },
+            {
+                "Id": "Health",
+                "Progress": 2532.80029,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736671
+            },
+            {
+                "Id": "StressResistance",
+                "Progress": 1712.86145,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736673
+            },
+            {
+                "Id": "Metabolism",
+                "Progress": 5100,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785733680
+            },
+            {
+                "Id": "Immunity",
+                "Progress": 933.0368,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785734768
+            },
+            {
+                "Id": "Perception",
+                "Progress": 3401.78784,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736673
+            },
+            {
+                "Id": "Intellect",
+                "Progress": 819.6200000000001,
+                "PointsEarnedDuringSession": 0.79,
+                "LastAccess": 1785889089
+            },
+            {
+                "Id": "Attention",
+                "Progress": 3384.46118,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736639
+            },
+            {
+                "Id": "Charisma",
+                "Progress": 3075.434750000001,
+                "PointsEarnedDuringSession": 0.06999999999999999,
+                "LastAccess": 1785889089
+            },
+            {
+                "Id": "Pistol",
+                "Progress": 774.2284,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785729246
+            },
+            {
+                "Id": "Revolver",
+                "Progress": 164.6332,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1772631290
+            },
+            {
+                "Id": "SMG",
+                "Progress": 801.680542,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736514
+            },
+            {
+                "Id": "Assault",
+                "Progress": 2433.30762,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785731577
+            },
+            {
+                "Id": "Shotgun",
+                "Progress": 645.9219,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1780358620
+            },
+            {
+                "Id": "Sniper",
+                "Progress": 2146.902,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785732374
+            },
+            {
+                "Id": "LMG",
+                "Progress": 607.0846,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1780364736
+            },
+            {
+                "Id": "HMG",
+                "Progress": 100,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1764959685
+            },
+            {
+                "Id": "Launcher",
+                "Progress": 100,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1764959685
+            },
+            {
+                "Id": "AttachedLauncher",
+                "Progress": 100,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1764959685
+            },
+            {
+                "Id": "Throwing",
+                "Progress": 1057.11609,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785723722
+            },
+            {
+                "Id": "Melee",
+                "Progress": 100,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1764959685
+            },
+            {
+                "Id": "DMR",
+                "Progress": 855.7976,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1780271857
+            },
+            {
+                "Id": "AimDrills",
+                "Progress": 2308.975,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736514
+            },
+            {
+                "Id": "TroubleShooting",
+                "Progress": 342.2412,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1773401922
+            },
+            {
+                "Id": "Surgery",
+                "Progress": 1889.23425,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785731169
+            },
+            {
+                "Id": "CovertMovement",
+                "Progress": 1485.05908,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785735038
+            },
+            {
+                "Id": "Search",
+                "Progress": 3827.85474,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736639
+            },
+            {
+                "Id": "MagDrills",
+                "Progress": 1137.63269,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785736302
+            },
+            {
+                "Id": "LightVests",
+                "Progress": 1040.88269,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785733317
+            },
+            {
+                "Id": "HeavyVests",
+                "Progress": 1106.84351,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785732458
+            },
+            {
+                "Id": "WeaponTreatment",
+                "Progress": 599.3,
+                "PointsEarnedDuringSession": 0,
+                "LastAccess": 1785474528
+            },
+            {
+                "Id": "Crafting",
+                "Progress": 2402.21,
+                "PointsEarnedDuringSession": 26.88,
+                "LastAccess": 1785889089
+            },
+            {
+                "Id": "HideoutManagement",
+                "Progress": 2453.4100000000003,
+                "PointsEarnedDuringSession": 12.649999999999999,
+                "LastAccess": 1785889089
+            }
+        ],
+        "Mastering": [
+            {
+                "Id": "AKM",
+                "Progress": 593,
+                "Kills": 0
+            },
+            {
+                "Id": "AK74",
+                "Progress": 5100,
+                "Kills": 0
+            },
+            {
+                "Id": "Mk17",
+                "Progress": 139,
+                "Kills": 0
+            },
+            {
+                "Id": "RPD",
+                "Progress": 345,
+                "Kills": 0
+            },
+            {
+                "Id": "MP443",
+                "Progress": 16,
+                "Kills": 0
+            },
+            {
+                "Id": "VPO_215",
+                "Progress": 107,
+                "Kills": 0
+            },
+            {
+                "Id": "mosin",
+                "Progress": 73,
+                "Kills": 0
+            },
+            {
+                "Id": "PP19",
+                "Progress": 62,
+                "Kills": 0
+            },
+            {
+                "Id": "MXLR",
+                "Progress": 167,
+                "Kills": 0
+            },
+            {
+                "Id": "MDR",
+                "Progress": 369,
+                "Kills": 0
+            },
+            {
+                "Id": "SR25",
+                "Progress": 996,
+                "Kills": 0
+            },
+            {
+                "Id": "AKSU",
+                "Progress": 215,
+                "Kills": 0
+            },
+            {
+                "Id": "G36",
+                "Progress": 22,
+                "Kills": 0
+            },
+            {
+                "Id": "MPX",
+                "Progress": 107,
+                "Kills": 0
+            },
+            {
+                "Id": "M4",
+                "Progress": 5100,
+                "Kills": 0
+            },
+            {
+                "Id": "TT",
+                "Progress": 0,
+                "Kills": 0
+            },
+            {
+                "Id": "VECTOR",
+                "Progress": 135,
+                "Kills": 0
+            },
+            {
+                "Id": "57",
+                "Progress": 176,
+                "Kills": 0
+            },
+            {
+                "Id": "SKS",
+                "Progress": 3,
+                "Kills": 0
+            },
+            {
+                "Id": "UZI",
+                "Progress": 16,
+                "Kills": 0
+            },
+            {
+                "Id": "m1911",
+                "Progress": 0,
+                "Kills": 0
+            },
+            {
+                "Id": "PL15",
+                "Progress": 20,
+                "Kills": 0
+            },
+            {
+                "Id": "MP153",
+                "Progress": 5100,
+                "Kills": 0
+            },
+            {
+                "Id": "AUG",
+                "Progress": 92,
+                "Kills": 0
+            },
+            {
+                "Id": "r700",
+                "Progress": 204,
+                "Kills": 0
+            },
+            {
+                "Id": "PP-91",
+                "Progress": 10,
+                "Kills": 0
+            },
+            {
+                "Id": "mp7",
+                "Progress": 3032,
+                "Kills": 0
+            },
+            {
+                "Id": "MK47",
+                "Progress": 1509,
+                "Kills": 0
+            },
+            {
+                "Id": "SR2",
+                "Progress": 2165,
+                "Kills": 0
+            },
+            {
+                "Id": "DEAGLE",
+                "Progress": 7,
+                "Kills": 0
+            },
+            {
+                "Id": "AXMC",
+                "Progress": 57,
+                "Kills": 0
+            },
+            {
+                "Id": "RFB",
+                "Progress": 13,
+                "Kills": 0
+            },
+            {
+                "Id": "VSS",
+                "Progress": 143,
+                "Kills": 0
+            },
+            {
+                "Id": "PKM",
+                "Progress": 5100,
+                "Kills": 0
+            },
+            {
+                "Id": "P90",
+                "Progress": 107,
+                "Kills": 0
+            },
+            {
+                "Id": "MP-18",
+                "Progress": 18,
+                "Kills": 0
+            },
+            {
+                "Id": "m9",
+                "Progress": 3,
+                "Kills": 0
+            },
+            {
+                "Id": "DVL",
+                "Progress": 246,
+                "Kills": 0
+            },
+            {
+                "Id": "USP",
+                "Progress": 1,
+                "Kills": 0
+            },
+            {
+                "Id": "VSK94",
+                "Progress": 1200,
+                "Kills": 0
+            },
+            {
+                "Id": "T5000",
+                "Progress": 10,
+                "Kills": 0
+            },
+            {
+                "Id": "MP133",
+                "Progress": 1,
+                "Kills": 0
+            },
+            {
+                "Id": "SAIGA",
+                "Progress": 235,
+                "Kills": 0
+            },
+            {
+                "Id": "APS",
+                "Progress": 4,
+                "Kills": 0
+            },
+            {
+                "Id": "SV98",
+                "Progress": 64,
+                "Kills": 0
+            },
+            {
+                "Id": "MP5",
+                "Progress": 633,
+                "Kills": 0
+            },
+            {
+                "Id": "P226",
+                "Progress": 8,
+                "Kills": 0
+            },
+            {
+                "Id": "MR43",
+                "Progress": 97,
+                "Kills": 0
+            },
+            {
+                "Id": "SVD",
+                "Progress": 300,
+                "Kills": 0
+            },
+            {
+                "Id": "AA12",
+                "Progress": 3850,
+                "Kills": 0
+            },
+            {
+                "Id": "R11SRASS",
+                "Progress": 1128,
+                "Kills": 0
+            },
+            {
+                "Id": "M3S90",
+                "Progress": 60,
+                "Kills": 0
+            },
+            {
+                "Id": "ASH12",
+                "Progress": 39,
+                "Kills": 0
+            },
+            {
+                "Id": "PM",
+                "Progress": 0,
+                "Kills": 0
+            },
+            {
+                "Id": "PB",
+                "Progress": 60,
+                "Kills": 0
+            },
+            {
+                "Id": "GLOCK17",
+                "Progress": 40,
+                "Kills": 0
+            },
+            {
+                "Id": "KS23",
+                "Progress": 14,
+                "Kills": 0
+            },
+            {
+                "Id": "MCX",
+                "Progress": 941,
+                "Kills": 0
+            },
+            {
+                "Id": "SA-58",
+                "Progress": 32,
+                "Kills": 0
+            },
+            {
+                "Id": "PPSH",
+                "Progress": 0,
+                "Kills": 0
+            },
+            {
+                "Id": "G28",
+                "Progress": 9,
+                "Kills": 0
+            },
+            {
+                "Id": "M1A",
+                "Progress": 1,
+                "Kills": 0
+            },
+            {
+                "Id": "MP9",
+                "Progress": 1,
+                "Kills": 0
+            },
+            {
+                "Id": "RSH12",
+                "Progress": 12,
+                "Kills": 0
+            },
+            {
+                "Id": "M60",
+                "Progress": 3,
+                "Kills": 0
+            },
+            {
+                "Id": "SVT-40",
+                "Progress": 2,
+                "Kills": 0
+            },
+            {
+                "Id": "SPEAR",
+                "Progress": 57,
+                "Kills": 0
+            },
+            {
+                "Id": "Mk18",
+                "Progress": 31,
+                "Kills": 0
+            },
+            {
+                "Id": "UMP45",
+                "Progress": 76,
+                "Kills": 1
+            }
+        ],
+        "Points": 0
+    },
+    "equipment": {
+        "Id": "693325c5e70ceae7bf0d5dba",
+        "Items": [
+            {
+                "_id": "693325c5e70ceae7bf0d5dba",
+                "_tpl": "55d7217a4bdc2d86028b456d"
+            },
+            {
+                "_id": "6a6ff7c13633eeff9613fbe5",
+                "_tpl": "606dae0ab0e443224b421bb7",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "FirstPrimaryWeapon",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 93,
+                        "Durability": 40.8909378
+                    },
+                    "FireMode": {
+                        "FireMode": "single"
+                    }
+                }
+            },
+            {
+                "_id": "6a6ff7c13633eeff9613fbe6",
+                "_tpl": "68540a07961c6f351f04d917",
+                "parentId": "6a6ff7c13633eeff9613fbe5",
+                "slotId": "mod_barrel"
+            },
+            {
+                "_id": "6a6ff7c13633eeff9613fbe7",
+                "_tpl": "607d5aa50494a626335e12ed",
+                "parentId": "6a6ff7c13633eeff9613fbe5",
+                "slotId": "mod_handguard"
+            },
+            {
+                "_id": "6a6ff7c13633eeff9613fbed",
+                "_tpl": "6076c87f232e5a31c233d50e",
+                "parentId": "6a6ff7c13633eeff9613fbe5",
+                "slotId": "mod_magazine"
+            },
+            {
+                "_id": "6a6ff7c13633eeff9613fbe9",
+                "_tpl": "607d5a891246154cad35d6aa",
+                "parentId": "6a6ff7c13633eeff9613fbe5",
+                "slotId": "mod_stock"
+            },
+            {
+                "_id": "6a6ff7c13633eeff9613fbeb",
+                "_tpl": "55d48a634bdc2d8b2f8b456a",
+                "parentId": "6a6ff7c13633eeff9613fbe5",
+                "slotId": "mod_mount"
+            },
+            {
+                "_id": "6a700f4416d91f0baa000003",
+                "_tpl": "560d5e524bdc2d25448b4571",
+                "parentId": "6a6ff7c13633eeff9613fbe5",
+                "slotId": "patron_in_weapon"
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42e9",
+                "_tpl": "5fc3e272f8b6a877a729eac5",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "SecondPrimaryWeapon",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 100,
+                        "Durability": 96.29082
+                    },
+                    "Foldable": {
+                        "Folded": false
+                    },
+                    "FireMode": {
+                        "FireMode": "fullauto"
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42ea",
+                "_tpl": "5fc3e466187fea44d52eda90",
+                "parentId": "6a70218fabd8d35b6b0f42e9",
+                "slotId": "mod_magazine"
+            },
+            {
+                "_id": "6a70216bd6ce1afe0414e2d0",
+                "_tpl": "64785e7c19d732620e045e15",
+                "parentId": "6a70218fabd8d35b6b0f42e9",
+                "slotId": "mod_scope",
+                "upd": {
+                    "SpawnedInSession": true,
+                    "Sight": {
+                        "ScopesCurrentCalibPointIndexes": [
+                            0
+                        ],
+                        "ScopesSelectedModes": [
+                            0
+                        ],
+                        "SelectedScope": 0,
+                        "ScopeZoomValue": 0
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42eb",
+                "_tpl": "5fc3e4ee7283c4046c5814af",
+                "parentId": "6a70218fabd8d35b6b0f42e9",
+                "slotId": "mod_stock"
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42ec",
+                "_tpl": "5fc3e4a27283c4046c5814ab",
+                "parentId": "6a70218fabd8d35b6b0f42e9",
+                "slotId": "mod_barrel"
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42ed",
+                "_tpl": "5fc53954f8b6a877a729eaeb",
+                "parentId": "6a70218fabd8d35b6b0f42e9",
+                "slotId": "mod_mount_000"
+            },
+            {
+                "_id": "6a70216bd6ce1afe0414e2d4",
+                "_tpl": "59f8a37386f7747af3328f06",
+                "parentId": "6a70218fabd8d35b6b0f42ed",
+                "slotId": "mod_foregrip",
+                "upd": {
+                    "SpawnedInSession": true
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42ee",
+                "_tpl": "5fc5396e900b1d5091531e72",
+                "parentId": "6a70218fabd8d35b6b0f42e9",
+                "slotId": "mod_mount_001"
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42ef",
+                "_tpl": "5fc5396e900b1d5091531e72",
+                "parentId": "6a70218fabd8d35b6b0f42e9",
+                "slotId": "mod_mount_002"
+            },
+            {
+                "_id": "6a702c4070ef98cd12000004",
+                "_tpl": "5ea2a8e200685063ec28c05a",
+                "parentId": "6a70218fabd8d35b6b0f42e9",
+                "slotId": "patron_in_weapon"
+            },
+            {
+                "_id": "6a07844dd3d9ff3c010dba3d",
+                "_tpl": "5d67abc1a4b93614ec50137f",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "Holster",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 100,
+                        "Durability": 100
+                    },
+                    "FireMode": {
+                        "FireMode": "single"
+                    }
+                }
+            },
+            {
+                "_id": "6a07844dd3d9ff3c010dba3e",
+                "_tpl": "5d3eb59ea4b9361c284bb4b2",
+                "parentId": "6a07844dd3d9ff3c010dba3d",
+                "slotId": "mod_barrel"
+            },
+            {
+                "_id": "6a07844dd3d9ff3c010dba3f",
+                "_tpl": "5d3ef698a4b9361182109872",
+                "parentId": "6a07844dd3d9ff3c010dba3e",
+                "slotId": "mod_muzzle"
+            },
+            {
+                "_id": "6a07844dd3d9ff3c010dba40",
+                "_tpl": "5d3eb44aa4b93650d64e4979",
+                "parentId": "6a07844dd3d9ff3c010dba3d",
+                "slotId": "mod_reciever"
+            },
+            {
+                "_id": "6a07844dd3d9ff3c010dba41",
+                "_tpl": "5d3eb4aba4b93650d64e497d",
+                "parentId": "6a07844dd3d9ff3c010dba40",
+                "slotId": "mod_sight_rear",
+                "upd": {
+                    "Sight": {
+                        "ScopesCurrentCalibPointIndexes": [
+                            0
+                        ],
+                        "ScopesSelectedModes": [
+                            0
+                        ],
+                        "SelectedScope": 0,
+                        "ScopeZoomValue": 0
+                    }
+                }
+            },
+            {
+                "_id": "6a07844dd3d9ff3c010dba42",
+                "_tpl": "5d3eb536a4b9363b1f22f8e2",
+                "parentId": "6a07844dd3d9ff3c010dba40",
+                "slotId": "mod_sight_front",
+                "upd": {
+                    "Sight": {
+                        "ScopesCurrentCalibPointIndexes": [
+                            0
+                        ],
+                        "ScopesSelectedModes": [
+                            0
+                        ],
+                        "SelectedScope": 0,
+                        "ScopeZoomValue": 0
+                    }
+                }
+            },
+            {
+                "_id": "6a07844dd3d9ff3c010dba43",
+                "_tpl": "5d3eb5eca4b9363b1f22f8e4",
+                "parentId": "6a07844dd3d9ff3c010dba3d",
+                "slotId": "mod_magazine"
+            },
+            {
+                "_id": "6a70216bd6ce1afe0414dbbf",
+                "_tpl": "5fd8d28367cb5e077335170f",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "FaceCover",
+                "upd": {
+                    "SpawnedInSession": true
+                }
+            },
+            {
+                "_id": "6a701e87c52d97e4fd04332b",
+                "_tpl": "6745895717824b1ec20570a6",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "Headwear"
+            },
+            {
+                "_id": "6a701e87c52d97e4fd04332c",
+                "_tpl": "657baaf0b7e9ca9a02045c02",
+                "parentId": "6a701e87c52d97e4fd04332b",
+                "slotId": "Helmet_top",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 15,
+                        "Durability": 15
+                    }
+                }
+            },
+            {
+                "_id": "6a701e87c52d97e4fd04332d",
+                "_tpl": "657bab6ec6f689d3a205b85f",
+                "parentId": "6a701e87c52d97e4fd04332b",
+                "slotId": "Helmet_back",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 15,
+                        "Durability": 15
+                    }
+                }
+            },
+            {
+                "_id": "6a701e87c52d97e4fd04332e",
+                "_tpl": "657babc6f58ba5a6250107a2",
+                "parentId": "6a701e87c52d97e4fd04332b",
+                "slotId": "Helmet_ears",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 15,
+                        "Durability": 15
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f0",
+                "_tpl": "5b44c8ea86f7742d1627baf1",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "TacticalVest"
+            },
+            {
+                "_id": "695e781b03b268b72b0b784b",
+                "_tpl": "664a55d84a90fc2c8a6305c9",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "SecuredContainer"
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42e1",
+                "_tpl": "618bb76513f5097c8d5aa2d5",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "Backpack"
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f1",
+                "_tpl": "5c0e53c886f7747fa54205c7",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "ArmorVest"
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f8",
+                "_tpl": "656f603f94b480b8a500c0d6",
+                "parentId": "6a70218fabd8d35b6b0f42f1",
+                "slotId": "front_plate",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 50,
+                        "Durability": 50
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f9",
+                "_tpl": "656efd66034e8e01c407f35c",
+                "parentId": "6a70218fabd8d35b6b0f42f1",
+                "slotId": "back_plate",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 45,
+                        "Durability": 45
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f2",
+                "_tpl": "654a8b0b0337d53f9102c2ae",
+                "parentId": "6a70218fabd8d35b6b0f42f1",
+                "slotId": "soft_armor_front",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 34,
+                        "Durability": 34
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f3",
+                "_tpl": "654a8976f414fcea4004d78b",
+                "parentId": "6a70218fabd8d35b6b0f42f1",
+                "slotId": "soft_armor_back",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 34,
+                        "Durability": 34
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f4",
+                "_tpl": "654a8b3df414fcea4004d78f",
+                "parentId": "6a70218fabd8d35b6b0f42f1",
+                "slotId": "soft_armor_left",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 6,
+                        "Durability": 6
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f5",
+                "_tpl": "654a8b80f414fcea4004d797",
+                "parentId": "6a70218fabd8d35b6b0f42f1",
+                "slotId": "soft_armor_right",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 6,
+                        "Durability": 6
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f6",
+                "_tpl": "654a8ae00337d53f9102c2aa",
+                "parentId": "6a70218fabd8d35b6b0f42f1",
+                "slotId": "Collar",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 14,
+                        "Durability": 14
+                    }
+                }
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42f7",
+                "_tpl": "654a8bc5f414fcea4004d79b",
+                "parentId": "6a70218fabd8d35b6b0f42f1",
+                "slotId": "Groin",
+                "upd": {
+                    "Repairable": {
+                        "MaxDurability": 14,
+                        "Durability": 14
+                    }
+                }
+            },
+            {
+                "_id": "693325c5e70ceae7bf0d5db8",
+                "_tpl": "65e080be269cbd5c5005e529",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "Pockets"
+            },
+            {
+                "_id": "6a70218fabd8d35b6b0f42fb",
+                "_tpl": "5645bcc04bdc2d363b8b4572",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "Earpiece"
+            },
+            {
+                "_id": "693325c5e70ceae7bf0d5f27",
+                "_tpl": "619bc61e86e01e16f839a999",
+                "parentId": "693325c5e70ceae7bf0d5dba",
+                "slotId": "ArmBand"
+            }
+        ]
+    },
+    "achievements": {
+        "65141c30ec10ff011f17cc3b": 1715377488,
+        "65141c80ec10ff011f17cc3e": 1715710637,
+        "6527ee4a647c29201011defe": 1715857355,
+        "6513eb6e0dc723592b0f9095": 1716797849,
+        "6513ed89cf2f1c285e606068": 1717718270,
+        "6513ee11a3dd9b6aa7159b4a": 1717718457,
+        "65141e37cf2f1c285e606361": 1717886859,
+        "65141eb5c31fcb0e163577dd": 1720267289,
+        "6513f0a10dc723592b0f90cf": 1721609452,
+        "66c328de9dc78468f4040f35": 1730411188,
+        "65141bdfcf2f1c285e606446": 1730797694,
+        "66c328aca91e7d66fa1b0b7b": 1730887488,
+        "670febed5ee0fc738a0965a4": 1730963044,
+        "675998a894008342eb04e47f": 1736106259,
+        "65141b9859647d2cb3213ca2": 1737056553,
+        "6513efa1b49e3253755f47eb": 1743115645,
+        "6513eec00dc723592b0f90cc": 1743505739,
+        "67a0e57117e34930e50075f3": 1744808356,
+        "664f23e44702fd5db50ee732": 1745194312,
+        "6514321bec10ff011f17ccac": 1745348176,
+        "67a0e57b972c11a3f50773b2": 1745361229,
+        "65141dd6303df252af1c72c9": 1745687357,
+        "6512f1e3be73cc7f07358ed5": 1747944426,
+        "675709bef4e2a2ce0f058f56": 1748900026,
+        "6512eb3ddfb0ae1ee75a0376": 1750103981,
+        "664f1f8768508d74604bf556": 1751366383,
+        "655b49bc91aa9e07687ae47c": 1751785119,
+        "676091c0f457869a94017a23": 1752014702,
+        "6512ea46f7a078264a4376e4": 1752437735,
+        "685d3d6b81d993fda109cdb8": 1754501953,
+        "693a83434cb1cf587c0a63f9": 1767307654,
+        "691212088e10a4e1fb0f48c4": 1767979294,
+        "691213956b60607135006811": 1769734128,
+        "6984ab58ee0ae2c0d5075f33": 1771013020,
+        "691214c93d597b2ef80a2206": 1771631365,
+        "69121487d2f0e6de2f0561ef": 1771873993,
+        "6912168c52ddd29bf002d37a": 1772665936,
+        "6912145e52ddd29bf002d343": 1772666461,
+        "691213c8680e04c5da0571eb": 1772678929,
+        "691213f0dbcdbbc54402fe00": 1773418926,
+        "6a04f93d7a6a2b325906bb5c": 1779576108,
+        "6513f1feec10ff011f17c7ea": 1780270770,
+        "6a11d9028fd274eb6207c0bc": 1780356129,
+        "6514134eec10ff011f17cc26": 1785720353,
+        "6a0344563743e4b101070b92": 1785735509
+    },
+    "favoriteItems": [],
+    "pmcStats": {
+        "eft": {
+            "totalInGameTime": 7245565,
+            "overAllCounters": {
+                "Items": [
+                    {
+                        "Key": [
+                            "Sessions",
+                            "Pmc"
+                        ],
+                        "Value": 944
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "Killed",
+                            "Pmc"
+                        ],
+                        "Value": 485
+                    },
+                    {
+                        "Key": [
+                            "Kills"
+                        ],
+                        "Value": 2858
+                    },
+                    {
+                        "Key": [
+                            "Deaths"
+                        ],
+                        "Value": 485
+                    },
+                    {
+                        "Key": [
+                            "KilledPmc"
+                        ],
+                        "Value": 370
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "Transit",
+                            "Pmc"
+                        ],
+                        "Value": 79
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "Survived",
+                            "Pmc"
+                        ],
+                        "Value": 366
+                    },
+                    {
+                        "Key": [
+                            "LongestWinStreak",
+                            "Pmc"
+                        ],
+                        "Value": 11
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "Runner",
+                            "Pmc"
+                        ],
+                        "Value": 12
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "MissingInAction",
+                            "Pmc"
+                        ],
+                        "Value": 2
+                    }
+                ]
+            }
+        }
+    },
+    "scavStats": {
+        "eft": {
+            "totalInGameTime": 7245565,
+            "overAllCounters": {
+                "Items": [
+                    {
+                        "Key": [
+                            "Sessions",
+                            "Scav"
+                        ],
+                        "Value": 236
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "Survived",
+                            "Scav"
+                        ],
+                        "Value": 147
+                    },
+                    {
+                        "Key": [
+                            "Kills"
+                        ],
+                        "Value": 87
+                    },
+                    {
+                        "Key": [
+                            "Deaths"
+                        ],
+                        "Value": 70
+                    },
+                    {
+                        "Key": [
+                            "KilledPmc"
+                        ],
+                        "Value": 14
+                    },
+                    {
+                        "Key": [
+                            "LongestWinStreak",
+                            "Scav"
+                        ],
+                        "Value": 16
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "Killed",
+                            "Scav"
+                        ],
+                        "Value": 69
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "Transit",
+                            "Scav"
+                        ],
+                        "Value": 14
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "MissingInAction",
+                            "Scav"
+                        ],
+                        "Value": 5
+                    },
+                    {
+                        "Key": [
+                            "ExitStatus",
+                            "Left",
+                            "Scav"
+                        ],
+                        "Value": 1
+                    }
+                ]
+            }
+        }
+    },
+    "ending": {
+        "current": null,
+        "achieved": []
+    },
+    "hideout": null,
+    "hideoutAreaStashes": null,
+    "items": null,
+    "customizationStash": null,
+    "selectedSeasonalPerkIds": null,
+    "battlePassProgress": [
+        {
+            "battlePassId": "6a27da69f3610ccfe5e71ab5",
+            "completed": 0,
+            "total": 53
+        }
+    ],
+    "seasonalRewards": {
+        "completed": 0,
+        "total": 5
+    },
+    "updated": 1786869512558
+}

@@ -129,3 +129,7 @@ map-exports/
 
 # Скачанное сырьё с kord-map-mtdv.ru (CC BY-NC-SA), не коммитим
 kord-import/
+
+# OS/тулинг-артефакты — не в репо
+desktop.ini
+.autopilot/
