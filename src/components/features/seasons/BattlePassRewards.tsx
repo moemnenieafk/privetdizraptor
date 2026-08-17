@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BP_PAGES, BP_REWARD_IMG, type BpDocType, type BpReward } from '@/data/eft-battlepass';
 import { affordProgress, rewardDocCount, type PageProgress } from '@/lib/battlepass';
-import { BP_REWARD_FACTION, DocCostCells, KIND_META, RewardMedia } from './battlepassVisual';
+import { BP_REWARD_FACTION, DocCostCells, KIND_META, PageDocBar, RewardMedia } from './battlepassVisual';
 import { BP_UI } from './battlepassAssets';
 
 const MASK = 'mask-contain mask-center mask-no-repeat';
@@ -49,6 +49,10 @@ interface Props {
   dailyLocked: boolean;
   /** Сброс дневного таймера (после подтверждения в модалке «Уже прошёл день?»). */
   onDailyReset: () => void;
+  /** Награды, отмеченные «Мне это нужно» (подсветка типов в полосе документации страницы). */
+  wanted: ReadonlySet<string>;
+  /** Тогл «Мне это нужно» для награды. */
+  onToggleWanted: (reward: BpReward) => void;
 }
 
 function rewardDotState(
@@ -69,7 +73,9 @@ function RewardCard({
   locked,
   dailyLocked,
   requiresPage,
+  wanted,
   onToggle,
+  onToggleWanted,
   onIncDoc,
   onCatchUp,
   onDailyHold,
@@ -80,7 +86,9 @@ function RewardCard({
   locked: boolean;
   dailyLocked: boolean;
   requiresPage?: number;
+  wanted: boolean;
   onToggle: () => void;
+  onToggleWanted: () => void;
   onIncDoc: (type: BpDocType, delta: number) => void;
   onCatchUp: () => void;
   onDailyHold: () => void;
@@ -206,6 +214,8 @@ function RewardCard({
           onInc={anyLocked ? undefined : onIncDoc}
         />
 
+        {/* Ряд контролов: получение + «Мне это нужно» (планирую брать) */}
+        <div className="mt-auto flex items-stretch gap-1.5">
         {/* Кнопка — единственный контрол получения */}
         <button
           type="button"
@@ -221,7 +231,7 @@ function RewardCard({
               : undefined
           }
           className={[
-            'relative mt-auto flex h-9 items-center justify-center gap-1.5 overflow-hidden rounded border font-blender-medium text-type-micro uppercase tracking-widest transition-colors',
+            'relative flex h-9 flex-1 items-center justify-center gap-1.5 overflow-hidden rounded border font-blender-medium text-type-micro uppercase tracking-widest transition-colors',
             claimed
               ? 'border-transparent bg-season-01/10 text-season-01 hover:bg-season-01/15'
               : ready
@@ -253,6 +263,25 @@ function RewardCard({
             )}
           </span>
         </button>
+
+        {/* «Мне это нужно» — планирую брать: подсвечивает нужные типы в полосе документации страницы */}
+        <button
+          type="button"
+          onClick={onToggleWanted}
+          aria-pressed={wanted}
+          title={wanted ? 'В планах — убрать из желаемого' : 'Планирую брать — подсветить нужные документы в полосе страницы'}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded border transition-colors ${
+            wanted
+              ? 'border-season-01 bg-season-01/10 hover:bg-season-01/15'
+              : 'border-lines-hover text-text-muted hover:border-season-01/60 hover:text-season-01'
+          }`}
+        >
+          <span
+            aria-hidden
+            className={`icon-eft-battlepass-wanted h-4 w-4 ${MASK} ${wanted ? 'bg-season-01' : 'bg-text-muted'}`}
+          />
+        </button>
+      </div>
       </div>
     </div>
   );
@@ -315,6 +344,8 @@ export function BattlePassRewards({
   onCatchUp,
   dailyLocked,
   onDailyReset,
+  wanted,
+  onToggleWanted,
 }: Props) {
   const [activePage, setActivePage] = useState(1);
   const [advance, setAdvance] = useState<{ phrase: string; sec: number } | null>(null);
@@ -389,6 +420,9 @@ export function BattlePassRewards({
         </button>
       </div>
 
+      {/* ── Полоса подсчёта документации страницы (переиспользуемый атом) ── */}
+      <PageDocBar rewards={page.rewards} wanted={wanted} collected={collected} />
+
       {/* ── Баннер авто-перехода (страница собрана) ── */}
       {advance && (
         <div className="flex items-center justify-between gap-3 rounded-sm border border-season-01/50 bg-season-01/10 px-4 py-2.5">
@@ -420,7 +454,9 @@ export function BattlePassRewards({
             locked={locked}
             dailyLocked={dailyLocked}
             requiresPage={page.requires?.fromPage}
+            wanted={wanted.has(reward.id)}
             onToggle={() => onToggleReward(reward)}
+            onToggleWanted={() => onToggleWanted(reward)}
             onIncDoc={onIncDoc}
             onCatchUp={() => onCatchUp(reward.page)}
             onDailyHold={() => setDayResetOpen(true)}

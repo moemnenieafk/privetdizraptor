@@ -19,7 +19,9 @@ export function BattlePassTracker({ season }: { season: Season }) {
   const slug = season.slug;
   const claimedMap = useBattlePassStore((s) => s.claimed);
   const docCountsMap = useBattlePassStore((s) => s.docCounts);
+  const wantedMap = useBattlePassStore((s) => s.wanted);
   const toggle = useBattlePassStore((s) => s.toggle);
+  const toggleWanted = useBattlePassStore((s) => s.toggleWanted);
   const incDoc = useBattlePassStore((s) => s.incDoc);
   const bumpDaily = useBattlePassStore((s) => s.bumpDaily);
   const rolloverDaily = useBattlePassStore((s) => s.rolloverDaily);
@@ -28,12 +30,14 @@ export function BattlePassTracker({ season }: { season: Season }) {
 
   const claimedArr = claimedMap[slug] ?? EMPTY;
   const docCountsRaw = docCountsMap[slug] ?? EMPTY_DOCS;
+  const wantedArr = wantedMap[slug] ?? EMPTY;
 
   const [mounted, setMounted] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const claimedSet = useMemo<Set<string>>(() => new Set<string>(mounted ? claimedArr : []), [mounted, claimedArr]);
+  const wantedSet = useMemo<Set<string>>(() => new Set<string>(mounted ? wantedArr : []), [mounted, wantedArr]);
   const collected = mounted ? docCountsRaw : EMPTY_DOCS;
 
   // Дневной лимит исчерпан + игрок подтвердил «Да» (идёт таймер отката) → замок на доступные награды.
@@ -132,6 +136,8 @@ export function BattlePassTracker({ season }: { season: Season }) {
           onCatchUp={onCatchUp}
           dailyLocked={dailyLocked}
           onDailyReset={() => rolloverDaily(slug)}
+          wanted={wantedSet}
+          onToggleWanted={(reward) => toggleWanted(slug, reward.id)}
         />
       </div>
       <aside className="w-full shrink-0 lg:w-87">

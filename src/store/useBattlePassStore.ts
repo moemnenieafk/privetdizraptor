@@ -36,8 +36,12 @@ interface BattlePassState {
   claimed: Record<string, string[]>;
   docCounts: Record<string, DocCounts>;
   daily: Record<string, BpDaily>;
+  /** «Планирую брать» — награды, отмеченные игроком как желанные (подсветка типов в полосе страницы). */
+  wanted: Record<string, string[]>;
 
   toggle: (slug: string, rewardId: string) => void;
+  /** Тогл «Мне это нужно» для награды (по сезону). */
+  toggleWanted: (slug: string, rewardId: string) => void;
   setMany: (slug: string, rewardIds: string[], on: boolean) => void;
   /** Установить точное количество собранного документа (клампится ≥ 0). */
   setDoc: (slug: string, type: BpDocType, n: number) => void;
@@ -57,6 +61,7 @@ interface BattlePassState {
   claimedFor: (slug: string) => string[];
   docCountsFor: (slug: string) => DocCounts;
   dailyFor: (slug: string) => BpDaily;
+  wantedFor: (slug: string) => string[];
 }
 
 export const useBattlePassStore = create<BattlePassState>()(
@@ -65,10 +70,12 @@ export const useBattlePassStore = create<BattlePassState>()(
       claimed: {},
       docCounts: {},
       daily: {},
+      wanted: {},
 
       claimedFor: (slug) => get().claimed[slug] ?? [],
       docCountsFor: (slug) => get().docCounts[slug] ?? {},
       dailyFor: (slug) => get().daily[slug] ?? EMPTY_DAILY,
+      wantedFor: (slug) => get().wanted[slug] ?? [],
 
       toggle: (slug, rewardId) => {
         const current = get().claimed[slug] ?? [];
@@ -76,6 +83,14 @@ export const useBattlePassStore = create<BattlePassState>()(
           ? current.filter((id) => id !== rewardId)
           : [...current, rewardId];
         set((s) => ({ claimed: { ...s.claimed, [slug]: next } }));
+      },
+
+      toggleWanted: (slug, rewardId) => {
+        const current = get().wanted[slug] ?? [];
+        const next = current.includes(rewardId)
+          ? current.filter((id) => id !== rewardId)
+          : [...current, rewardId];
+        set((s) => ({ wanted: { ...s.wanted, [slug]: next } }));
       },
 
       setMany: (slug, rewardIds, on) => {
@@ -106,6 +121,7 @@ export const useBattlePassStore = create<BattlePassState>()(
           docCounts: { ...s.docCounts, [slug]: {} },
           // «Сбросить прогресс сезона» чистит и дневной слой целиком, включая режим (Q5).
           daily: { ...s.daily, [slug]: { ...EMPTY_DAILY } },
+          wanted: { ...s.wanted, [slug]: [] },
         })),
 
       setDailyMode: (slug, mode) => {

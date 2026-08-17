@@ -28,8 +28,10 @@ import {
   type BpDailyMode,
   type BpDoc,
   type BpDocType,
+  type BpReward,
   type BpRewardKind,
 } from '@/data/eft-battlepass';
+import { sumCost } from '@/lib/battlepass';
 
 export const KIND_META: Record<BpRewardKind, { icon: LucideIcon; label: string }> = {
   weapon: { icon: Crosshair, label: 'Оружие' },
@@ -156,6 +158,63 @@ const COST_STATE: Record<Exclude<CostCellState, 'default'>, { fill: string; text
   found: { fill: 'bg-online', text: 'text-online' },
   done: { fill: 'bg-season-01', text: 'text-season-01' },
 };
+
+/**
+ * Полоса подсчёта документации СТРАНИЦЫ (редизайн V4DYA, Figma 2869-5739). Переиспользует тот же
+ * блок ячеек документов, что в карточке награды (DocCostCells): рарити-ячейка + иконка + заливка
+ * «собрано/нужно» + бейдж X/Y. Состав считается из данных:
+ *  - отмечены «Мне это нужно» → сумма стоимостей ТОЛЬКО выбранных наград (точный список — сколько и
+ *    каких документов нужно именно под них, чтобы не фармить в игре лишнее);
+ *  - ничего не выбрано → вся страница (сколько нужно на все награды текущей страницы).
+ * В режиме «желаемого» полоса получает рамку и подпись цвета сезона (season-01).
+ */
+export function PageDocBar({
+  rewards,
+  wanted,
+  collected,
+}: {
+  rewards: readonly BpReward[];
+  /** id наград, отмеченных «Мне это нужно» (планирую брать). */
+  wanted: ReadonlySet<string>;
+  /** Собрано документов «в руках» — для заливки прогресса ячеек. */
+  collected: Partial<Record<BpDocType, number>>;
+}) {
+  const wantedRewards = rewards.filter((r) => wanted.has(r.id));
+  const targeted = wantedRewards.length > 0;
+  const { totals, total } = sumCost(targeted ? wantedRewards : rewards);
+  if (total === 0) return null;
+
+  // Сколько из нужного уже в руках (капнуто по потребности) — «собрано N из total».
+  const have = BP_DOC_ORDER.reduce((n, t) => n + Math.min(collected[t] ?? 0, totals[t]), 0);
+
+  return (
+    <div
+      className={`flex items-center gap-4 rounded-sm border bg-(--color-darkbase) px-3.5 py-3 transition-colors ${
+        targeted ? 'border-season-01/50' : 'border-lines-hover'
+      }`}
+    >
+      <div className="min-w-0 flex-1">
+        <DocCostCells cost={totals} collected={collected} />
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end gap-1 self-start">
+        <span
+          className={`font-blender-medium text-type-micro uppercase tracking-widest ${targeted ? 'text-season-01' : 'text-text-muted'}`}
+          title={targeted ? `Нужно документов под ${wantedRewards.length} выбранных наград` : 'Нужно документов на все награды страницы'}
+        >
+          {targeted ? `Планирую взять · ${wantedRewards.length}` : 'На странице'}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="icon-eft-battlepass-docs-coin h-5 w-5 bg-season-01 mask-contain mask-center mask-no-repeat" />
+          <span className="font-blender-medium text-xl leading-none text-text-primary">
+            {have}
+            <span className="text-text-muted">/{total}</span>
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function DocCostCells({
   cost,
