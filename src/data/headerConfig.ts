@@ -121,6 +121,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       needed: 'Важные предметы',
       'side-quests': 'Побочные',
       'lore-quests': 'Сюжетные',
+      collector: 'Коллекционер',
       items: 'Предметы',
       gear: 'Снаряжение',
       guns: 'Оружие',
@@ -305,6 +306,12 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
         path: '/eft/quests',
         iconUrl: '/icons/eft/quests-icon.svg',
         children: [
+          {
+            id: 'collector',
+            label: 'Коллекционер',
+            path: '/eft/quests/collector',
+            iconUrl: '/icons/eft/profile-pannel/kappa_icon.svg'
+          },
           {
             id: 'story-quests',
             label: 'Сюжетные',

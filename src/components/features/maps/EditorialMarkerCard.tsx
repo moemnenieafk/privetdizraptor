@@ -12,7 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Plus, X, Paperclip, ChevronLeft, ChevronRight, ZoomIn, Bookmark, Move3d, MapPinPen,
-  ArrowLeft, ArrowRight, Save, Trash2, EyeOff,
+  ArrowLeft, ArrowRight, Save, Trash2, EyeOff, Search,
 } from 'lucide-react';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { SPAWN_CATEGORIES, CONTAINER_CATEGORIES, categoryLabel } from '@/data/map-markers/categories';
@@ -330,6 +330,8 @@ interface Props {
   onBatchSave?: (draft: Draft) => Promise<void> | void;
   /** Число выбранных для батча — для лейбла кнопки «Применить (N)». */
   batchCount?: number;
+  /** Батч-ПОСТАНОВКА (шаблон меток): визард настраивает общие поля, финал → «К постановке →». */
+  batchCreate?: boolean;
 }
 
 export function EditorialMarkerCard({
@@ -351,6 +353,7 @@ export function EditorialMarkerCard({
   onHide,
   onBatchSave,
   batchCount,
+  batchCreate = false,
 }: Props) {
   const [sel, setSel] = useState(0);
   // Якорь для боковой панели медиа-библиотеки (пикер встаёт справа от карточки).
@@ -432,14 +435,24 @@ export function EditorialMarkerCard({
   // Связь-предмет (linkKind='item'): async-поиск по каталогу (5044 предмета не тащим в клиент).
   const [itemQ, setItemQ] = useState('');
   const [itemHits, setItemHits] = useState<SearchItemResult[]>([]);
+  const [itemLoading, setItemLoading] = useState(false); // async-поиск предмета-пропуска идёт
   const [pickedItem, setPickedItem] = useState<{ id: string; name: string } | null>(null);
   useEffect(() => {
     if (draft.linkKind !== 'item') return;
     const q = itemQ.trim();
     let alive = true;
+    if (q.length < 2) {
+      setItemLoading(false);
+      setItemHits([]);
+      return;
+    }
+    setItemLoading(true);
     const t = setTimeout(async () => {
-      const res = q.length < 2 ? [] : await searchEftItemsAction(q);
-      if (alive) setItemHits(res);
+      const res = await searchEftItemsAction(q);
+      if (alive) {
+        setItemHits(res);
+        setItemLoading(false);
+      }
     }, 250);
     return () => {
       alive = false;
@@ -455,14 +468,24 @@ export function EditorialMarkerCard({
   // и выбрать было нечего. Теперь куратор привязывает любой предмет игры.
   const [lootQ, setLootQ] = useState('');
   const [lootHits, setLootHits] = useState<SearchItemResult[]>([]);
+  const [lootLoading, setLootLoading] = useState(false); // async-поиск идёт (§4.8: скелетон + лупа в поле)
   const [lootNames, setLootNames] = useState<Record<string, string>>({}); // id→имя для чипов пула (из поиска)
   useEffect(() => {
     if (catKey !== 'loot') return;
     const q = lootQ.trim();
     let alive = true;
+    if (q.length < 2) {
+      setLootLoading(false);
+      setLootHits([]);
+      return;
+    }
+    setLootLoading(true);
     const t = setTimeout(async () => {
-      const res = q.length < 2 ? [] : await searchEftItemsAction(q);
-      if (alive) setLootHits(res);
+      const res = await searchEftItemsAction(q);
+      if (alive) {
+        setLootHits(res);
+        setLootLoading(false);
+      }
     }, 250);
     return () => {
       alive = false;
@@ -798,7 +821,10 @@ export function EditorialMarkerCard({
                         placeholder="Поиск предмета…"
                         className="w-full bg-transparent font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
                       />
-                      {lootQ && (
+                      {lootLoading && (
+                        <Search className="h-3.5 w-3.5 shrink-0 animate-pulse text-(--primary)" aria-label="Идёт поиск" />
+                      )}
+                      {lootQ && !lootLoading && (
                         <button type="button" onClick={() => setLootQ('')} aria-label="Очистить" className="shrink-0 text-text-muted transition-colors hover:text-(--primary)">
                           <X className="h-3.5 w-3.5" />
                         </button>
@@ -819,7 +845,11 @@ export function EditorialMarkerCard({
                       </div>
                     )}
                     {/* Результаты поиска → ДОБАВИТЬ в пул (уже выбранные скрыты). Можно добавить несколько. */}
-                    {lootHits.filter((it) => !draft.lootItems.includes(it.id)).length > 0 ? (
+                    {lootLoading ? (
+                      <div className="rounded-xs border border-lines-hover">
+                        <ItemSearchSkeleton rows={3} icon={28} />
+                      </div>
+                    ) : lootHits.filter((it) => !draft.lootItems.includes(it.id)).length > 0 ? (
                       <div className="scrollbar-hidden flex max-h-40 flex-col overflow-y-auto rounded-xs border border-lines-hover">
                         {lootHits
                           .filter((it) => !draft.lootItems.includes(it.id))
@@ -1032,9 +1062,16 @@ export function EditorialMarkerCard({
                         value={itemQ}
                         onChange={(e) => setItemQ(e.target.value)}
                         placeholder="Найти предмет-пропуск…"
-                        className="h-8 w-full rounded-xs border border-lines-hover bg-(--color-base) px-2 font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
+                        className="h-8 w-full rounded-xs border border-lines-hover bg-(--color-base) pr-7 pl-2 font-blender-book text-xs text-text-primary outline-none placeholder:text-text-muted"
                       />
-                      {itemHits.length > 0 && (
+                      {itemLoading && (
+                        <Search className="pointer-events-none absolute top-1/2 right-2 h-3.5 w-3.5 -translate-y-1/2 animate-pulse text-(--primary)" aria-label="Идёт поиск" />
+                      )}
+                      {itemLoading ? (
+                        <div className="absolute top-9 right-0 left-0 z-20 rounded-xs border border-lines-hover bg-(--color-base) shadow-xl">
+                          <ItemSearchSkeleton rows={3} icon={24} />
+                        </div>
+                      ) : itemHits.length > 0 && (
                         <div className="absolute top-9 right-0 left-0 z-20 max-h-48 overflow-y-auto rounded-xs border border-lines-hover bg-(--color-base) shadow-xl">
                           {itemHits.map((it) => (
                             <button
@@ -1088,7 +1125,11 @@ export function EditorialMarkerCard({
                 className="flex h-9 min-w-px flex-1 items-center justify-center gap-1.5 rounded-xs bg-(--primary) font-blender-medium text-type-micro uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {isLast ? (
-                  <><Save className="h-3.5 w-3.5" /> {onBatchSave ? `Применить (${batchCount ?? 0})` : 'Сохранить'}</>
+                  batchCreate ? (
+                    <>К постановке <ArrowRight className="h-3.5 w-3.5" /></>
+                  ) : (
+                    <><Save className="h-3.5 w-3.5" /> {onBatchSave ? `Применить (${batchCount ?? 0})` : 'Сохранить'}</>
+                  )
                 ) : (
                   <>Далее <ArrowRight className="h-3.5 w-3.5" /></>
                 )}
@@ -1380,6 +1421,24 @@ export function EditorialMarkerCard({
 }
 
 // Амбер прогресс-бар шага визарда (N сегментов, заполнены до текущего).
+// Скелетон результатов поиска предмета (§4.8: загрузка показывает ФОРМУ будущего контента —
+// строки «иконка + имя» с animate-pulse, а не спиннер). Иконка-квадрат под размер строк выдачи.
+function ItemSearchSkeleton({ rows = 3, icon = 28 }: { rows?: number; icon?: number }) {
+  return (
+    <div className="flex flex-col" aria-hidden>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+          <span className="shrink-0 animate-pulse rounded-xs bg-lines-hover" style={{ width: icon, height: icon }} />
+          <span
+            className="h-3 animate-pulse rounded-xs bg-lines-hover"
+            style={{ width: `${70 - i * 12}%` }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function StepProgress({ total, current }: { total: number; current: number }) {
   return (
     <div className="flex shrink-0 items-center gap-1">

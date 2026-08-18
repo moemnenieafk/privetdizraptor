@@ -1,6 +1,6 @@
 'use client';
 
-import { Layers, MapPin, MapPinned, Maximize, Minimize, Ruler, SquarePen, Trash2, Users } from 'lucide-react';
+import { Layers, MapPin, MapPinned, MapPinPlus, Maximize, Minimize, Ruler, SquarePen, Trash2, Users } from 'lucide-react';
 import { MapNavDropdown, type NavMapItem } from './MapNavDropdown';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useSquadStore } from '@/store/useSquadStore';
@@ -44,6 +44,8 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
   const toggleAddMode = useMapUiStore((s) => s.toggleAddMode);
   const overrideMode = useMapUiStore((s) => s.overrideMode);
   const toggleOverrideMode = useMapUiStore((s) => s.toggleOverrideMode);
+  const batchAddMode = useMapUiStore((s) => s.batchAddMode);
+  const toggleBatchAddMode = useMapUiStore((s) => s.toggleBatchAddMode);
   const editOpen = useMapUiStore((s) => s.editOpen);
   const toggleEdit = useMapUiStore((s) => s.toggleEdit);
   const editCount = useMapUiStore((s) => s.editMarks.length);
@@ -108,6 +110,18 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
             className={toggleCls(addMode)}
           >
             <MapPin className="h-5.5 w-5.5" />
+          </button>
+        )}
+        {canEdit && data.config.editorial && (
+          <button
+            type="button"
+            onClick={toggleBatchAddMode}
+            aria-pressed={batchAddMode}
+            title={batchAddMode ? 'Батч-постановка активна — настрой шаблон и кликай по карте' : 'Батч-постановка меток: шаблон → серия кликов → добавить все разом'}
+            aria-label="Батч-постановка меток"
+            className={toggleCls(batchAddMode)}
+          >
+            <MapPinPlus className="h-5.5 w-5.5" />
           </button>
         )}
         {hasSquad && (

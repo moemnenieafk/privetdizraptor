@@ -1,6 +1,6 @@
 'use client';
 
-import { Crosshair, MapPin, Ruler, SquarePen, Trash2 } from 'lucide-react';
+import { Crosshair, MapPin, MapPinPlus, Ruler, SquarePen, Trash2 } from 'lucide-react';
 import { BottomSheet } from '@/components/layout/BottomSheet';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import type { TrackerControls } from './PlayerTracker';
@@ -30,6 +30,8 @@ export function MapToolsSheet({ canEditMarkers, tracker }: MapToolsSheetProps) {
   const toggleRuler = useMapUiStore((s) => s.toggleRuler);
   const overrideMode = useMapUiStore((s) => s.overrideMode);
   const toggleOverrideMode = useMapUiStore((s) => s.toggleOverrideMode);
+  const batchAddMode = useMapUiStore((s) => s.batchAddMode);
+  const toggleBatchAddMode = useMapUiStore((s) => s.toggleBatchAddMode);
   const deleteOpen = useMapUiStore((s) => s.deleteOpen);
   const toggleDelete = useMapUiStore((s) => s.toggleDelete);
 
@@ -50,6 +52,14 @@ export function MapToolsSheet({ canEditMarkers, tracker }: MapToolsSheetProps) {
             label="Добавить свою метку"
             active={addMode}
             onClick={() => run(toggleAddMode)}
+          />
+        )}
+        {canEditMarkers && (
+          <ToolRow
+            icon={<MapPinPlus className="size-4" strokeWidth={2} />}
+            label="Батч-постановка меток"
+            active={batchAddMode}
+            onClick={() => run(toggleBatchAddMode)}
           />
         )}
         <ToolRow

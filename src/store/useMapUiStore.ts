@@ -61,10 +61,14 @@ interface MapUiState {
   addMode: boolean;
   /** Режим правки синканных маркеров (admin): клик по маркеру → карточка-оверрайд. */
   overrideMode: boolean;
+  /** Режим батч-постановки (admin, editorial): шаблон меток → серия кликов → коммит всех разом. */
+  batchAddMode: boolean;
   setAddMode: (v: boolean) => void;
   setOverrideMode: (v: boolean) => void;
+  setBatchAddMode: (v: boolean) => void;
   toggleAddMode: () => void;
   toggleOverrideMode: () => void;
+  toggleBatchAddMode: () => void;
   /** Оверлей «пересборки слоя» поверх карты (см. ReloadOverlay). null = скрыт. */
   reloadOverlay: ReloadOverlay | null;
   setReloadOverlay: (o: ReloadOverlay | null) => void;
@@ -136,20 +140,28 @@ export const useMapUiStore = create<MapUiState>((set) => ({
       const squadOpen = !s.squadOpen;
       return { squadOpen, layersOpen: squadOpen ? false : s.layersOpen, deleteOpen: squadOpen ? false : s.deleteOpen, editOpen: squadOpen ? false : s.editOpen, searchOpen: squadOpen && narrow() ? false : s.searchOpen };
     }),
-  // addMode/overrideMode — взаимоисключающие режимы клика по карте (постановка ↔ правка синканных).
+  // addMode/overrideMode/batchAddMode — взаимоисключающие режимы клика по карте
+  // (постановка ↔ правка синканных ↔ батч-постановка). Включение любого гасит два других.
   addMode: false,
   overrideMode: false,
-  setAddMode: (addMode) => set((s) => ({ addMode, overrideMode: addMode ? false : s.overrideMode })),
-  setOverrideMode: (overrideMode) => set((s) => ({ overrideMode, addMode: overrideMode ? false : s.addMode })),
+  batchAddMode: false,
+  setAddMode: (addMode) => set((s) => ({ addMode, overrideMode: addMode ? false : s.overrideMode, batchAddMode: addMode ? false : s.batchAddMode })),
+  setOverrideMode: (overrideMode) => set((s) => ({ overrideMode, addMode: overrideMode ? false : s.addMode, batchAddMode: overrideMode ? false : s.batchAddMode })),
+  setBatchAddMode: (batchAddMode) => set((s) => ({ batchAddMode, addMode: batchAddMode ? false : s.addMode, overrideMode: batchAddMode ? false : s.overrideMode })),
   toggleAddMode: () =>
     set((s) => {
       const addMode = !s.addMode;
-      return { addMode, overrideMode: addMode ? false : s.overrideMode };
+      return { addMode, overrideMode: addMode ? false : s.overrideMode, batchAddMode: addMode ? false : s.batchAddMode };
     }),
   toggleOverrideMode: () =>
     set((s) => {
       const overrideMode = !s.overrideMode;
-      return { overrideMode, addMode: overrideMode ? false : s.addMode };
+      return { overrideMode, addMode: overrideMode ? false : s.addMode, batchAddMode: overrideMode ? false : s.batchAddMode };
+    }),
+  toggleBatchAddMode: () =>
+    set((s) => {
+      const batchAddMode = !s.batchAddMode;
+      return { batchAddMode, addMode: batchAddMode ? false : s.addMode, overrideMode: batchAddMode ? false : s.overrideMode };
     }),
   reloadOverlay: null,
   setReloadOverlay: (reloadOverlay) => set({ reloadOverlay }),

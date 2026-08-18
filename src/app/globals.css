@@ -784,9 +784,15 @@ html {
 .cta-map-svg [data-floor].is-dimmed { display: none; }
 .cta-map-svg [data-floor].cta-floor-base-dim { opacity: 0.2; }
 
-/* Маркеры/editorial-метки чужого этажа — скрыты (метки только активного этажа). */
+/* Маркеры/editorial-метки чужого этажа — по умолчанию скрыты (метки только активного этажа). */
 .cta-mk-offfloor { display: none; }
 .cta-editorial-offfloor { display: none; }
+/* Тоггл «показать все этажи» (панель слоёв): чужие этажи возвращаются приглушённо + бейдж-прыжок.
+   Синканые — некликабельны (пространственный контекст); editorial остаются кликабельными
+   (клик → прыжок на этаж), поэтому прозрачность вешаем на .cta-mk-scale, чтобы бейдж-подсказка не блёк. */
+.cta-show-all-floors .cta-mk-offfloor { display: block; opacity: 0.2; pointer-events: none; }
+.cta-show-all-floors .cta-editorial-offfloor { display: block; }
+.cta-show-all-floors .cta-editorial-offfloor .cta-mk-scale { opacity: 0.35; }
 /* бейдж up/down (16×16) ВСЕГДА справа от капли (корень divIcon позиционирован → absolute от него).
    По вертикали направление кодирует этаж: метка выше → сверху-справа, ниже → снизу-справа. */
 .cta-floor-hint {
@@ -796,6 +802,13 @@ html {
 }
 .cta-floor-hint.is-up { bottom: 50%; margin-bottom: 2px; }
 .cta-floor-hint.is-down { top: 50%; margin-top: 2px; }
+/* Бейдж «нет скриншотов» (админ-режим) — danger-иконка ImageOff СЛЕВА от капли (зеркально floor-hint). */
+.cta-img-off {
+  position: absolute; right: 100%; margin-right: 2px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; color: var(--color-danger); pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9));
+}
+.cta-img-off svg { display: block; width: 100%; height: 100%; }
 
 /* цвет маркера по фракции/типу */
 .ef-pmc, .ss-pmc, .lg-spawn { --mk: #5FB85B; }

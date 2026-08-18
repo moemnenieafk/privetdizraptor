@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, Flame, Layers, Minus, X } from 'lucide-react';
+import { Check, ChevronDown, Flame, Layers, Layers3, Minus, X } from 'lucide-react';
 import { LAYER_GROUPS, type LayerItem } from './map-layers';
 import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
 import { useHeatmapStore } from '@/store/useHeatmapStore';
@@ -71,6 +71,9 @@ export function MapLayersDrawer({
   open: openProp,
   onOpenChange,
   hasHeat = false,
+  multiFloor = false,
+  showAllFloors = false,
+  onToggleAllFloors,
 }: {
   vis: Record<string, boolean>;
   counts: Record<string, number>;
@@ -85,6 +88,11 @@ export function MapLayersDrawer({
   onOpenChange?: (v: boolean) => void;
   /** Есть ли у карты heat-датасет — тогда на мобилке показываем тоггл (десктоп: в зум-кластере). */
   hasHeat?: boolean;
+  /** Мульти-этажная карта (не soloFloors) — показываем тоггл «показать все этажи». */
+  multiFloor?: boolean;
+  /** Состояние тоггла «показать все этажи» (метки чужих этажей). */
+  showAllFloors?: boolean;
+  onToggleAllFloors?: () => void;
 }) {
   const heatActive = useHeatmapStore((s) => s.active);
   const heatToggle = useHeatmapStore((s) => s.toggle);
@@ -221,6 +229,24 @@ export function MapLayersDrawer({
             Доступна мульти-фильтрация, например: Платный, Босс, Опасности · <span className="text-(--primary)">Alt+клик</span> по категории — показать только её
           </p>
         </div>
+
+        {/* Тоггл «показать все этажи»: по умолчанию метки чужих этажей скрыты; ВКЛ — видны приглушённо
+            + up/down бейджи-прыжки. Только мульти-этажные не-soloFloors карты. Виден на десктопе И мобилке. */}
+        {multiFloor && onToggleAllFloors && (
+          <button
+            type="button"
+            onClick={onToggleAllFloors}
+            aria-pressed={showAllFloors}
+            className={`mx-3 mb-1 flex h-9 shrink-0 items-center gap-2 rounded-xs border px-2.5 transition-colors ${
+              showAllFloors ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-secondary'
+            }`}
+            title="По умолчанию видны метки только текущего этажа. Включи, чтобы увидеть метки всех этажей приглушённо."
+          >
+            <Layers3 className="h-4 w-4 shrink-0" strokeWidth={2} />
+            <span className="flex-1 text-left font-blender-medium text-type-caption uppercase tracking-widest">Показать все этажи</span>
+            <Box state={showAllFloors ? 'on' : 'off'} />
+          </button>
+        )}
 
         {/* Тепловая карта денег (EV лута) — на мобилке живёт тут (зум-кластер с этим тогглом скрыт <lg). */}
         {hasHeat && (

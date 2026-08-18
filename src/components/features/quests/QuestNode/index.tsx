@@ -1,13 +1,15 @@
 'use client';
 
 import { memo, useState } from 'react';
+import Link from 'next/link';
 import type { QuestNodeData } from '@/types/quest';
 import type { TaskObjective, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
 import { traderImg } from '@/lib/trader-utils';
 import { TRADER_COLORS } from '@/data/traderColors';
 import { getQuestHeroImg } from '@/lib/quest-utils';
-import { Paperclip, ArrowLeftRight } from 'lucide-react';
+import { isCollectorTask, COLLECTOR_TRACKER_HREF } from '@/lib/quest-constants';
+import { Paperclip, ArrowLeftRight, ListChecks } from 'lucide-react';
 
 function getObjectiveIcon(obj: TaskObjective): string {
   if (obj.__typename === 'TaskObjectiveTraderLevel') return 'icon-eft-quests-rep';

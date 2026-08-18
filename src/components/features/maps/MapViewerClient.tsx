@@ -10,6 +10,7 @@ import { MapMarkerEditor } from './MapMarkerEditor';
 import { MapLayersDrawer } from './MapLayersDrawer';
 import { MarkerDeletionDrawer } from './MarkerDeletionDrawer';
 import { MarkerEditDrawer } from './MarkerEditDrawer';
+import { BatchCreateDrawer } from './BatchCreateDrawer';
 import { MapReloadOverlay, LOADER_MIN_MS } from './MapReloadOverlay';
 import { useEftTracker } from './PlayerTracker';
 import { MapToolsSheet } from './MapToolsSheet';
@@ -144,6 +145,30 @@ function editorialIcon(m: EditorialMarkerData): L.DivIcon {
     // Лут-пул: >1 предмета на споте → бейдж «+N» (доп. сверх первого).
     badge: m.type === 'loot' && m.lootItems && m.lootItems.length > 1 ? m.lootItems.length - 1 : undefined,
   });
+}
+
+// Бейдж «нет скриншотов» (админ): danger-иконка ImageOff (lucide) СЛЕВА от капли. Только «контентные»
+// типы, где скрин осмыслен (poi/лут/контейнер/квест/интерактив) — спавны/выходы/опасности без бейджа (шум).
+const IMAGE_OFF_CONTENT_TYPES = new Set(['poi', 'loot', 'container', 'quest_zone', 'lock', 'switch', 'stationary']);
+const IMAGE_OFF_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><line x1="2" x2="22" y1="2" y2="22"/><path d="M10.41 10.41a2 2 0 1 1-2.83-2.83"/><line x1="13.5" x2="6" y1="13.5" y2="21"/><line x1="18" x2="21" y1="12" y2="15"/><path d="M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59"/><path d="M21 15V5a2 2 0 0 0-2-2H9"/></svg>';
+const needsImageOff = (m: EditorialMarkerData, canEdit: boolean): boolean =>
+  canEdit && IMAGE_OFF_CONTENT_TYPES.has(m.type) && (m.screenshots?.length ?? 0) === 0;
+/** Добавить/убрать бейдж «нет скриншотов» на DOM-элементе капли (по образцу cta-floor-hint). */
+function syncImageOffBadge(el: HTMLElement | null | undefined, show: boolean): void {
+  if (!el) return;
+  let b = el.querySelector('span.cta-img-off') as HTMLSpanElement | null;
+  if (show) {
+    if (!b) {
+      b = document.createElement('span');
+      b.className = 'cta-img-off';
+      b.innerHTML = IMAGE_OFF_SVG;
+      b.title = 'Нет скриншотов — дозагрузить';
+      el.appendChild(b);
+    }
+  } else if (b) {
+    b.remove();
+  }
 }
 
 /** Иконка тиммейта (сквад): стрелка в его цвете + ник под ней. nick эскейпится (user input в HTML). */
@@ -316,6 +341,8 @@ export function MapViewerClient({
 
   // Видимость слоёв — единый стор (GRILL-2 §3): синхронно с легендой и левым drawer'ом.
   const vis = useMapViewStore((s) => s.activeFilters);
+  // Тоггл «показать все этажи» — вешает класс на корень, CSS возвращает метки чужих этажей приглушённо.
+  const showAllFloors = useMapViewStore((s) => s.showAllFloors);
   const visRef = useRef(vis);
   useEffect(() => {
     visRef.current = vis;
@@ -465,6 +492,20 @@ export function MapViewerClient({
     editOpenRef.current = editOpen;
     editMarksRef.current = editMarks;
   });
+  // Батч-ПОСТАНОВКА (editorial): шаблон общих полей → серия кликов по карте → коммит всех разом.
+  // batchAddMode — взаимоисключающий режим клика (см. useMapUiStore). Шаблон задаётся визардом
+  // (onBatchSave), после чего начинается фаза постановки: каждый клик кладёт точку на активном этаже.
+  const batchAddMode = useMapUiStore((s) => s.batchAddMode);
+  const setBatchAddMode = useMapUiStore((s) => s.setBatchAddMode);
+  // Общие поля шаблона — та же форма, что отдаёт визард в onBatchSave (черновик карточки).
+  type BatchTemplate = Pick<
+    EditorialMarkerData,
+    'type' | 'category' | 'faction' | 'title' | 'description' | 'screenshots' | 'linkKind' | 'linkId' | 'linkStep' | 'polygon' | 'lootItems'
+  >;
+  const [batchTemplate, setBatchTemplate] = useState<BatchTemplate | null>(null);
+  const [batchPoints, setBatchPoints] = useState<{ x: number; z: number; floor: number | null }[]>([]);
+  const batchPointsRef = useRef<{ x: number; z: number; floor: number | null }[]>([]);
+  const [batchBusy, setBatchBusy] = useState(false);
   // Индексы id→маркер: строятся раз на смену данных, чтобы пометка была O(помеченных), а НЕ
   // O(всех маркеров карты). Лут — тысячи точек, скан на каждый клик пометки подвешивал UI.
   const syncedById = useMemo(() => {
@@ -601,6 +642,60 @@ export function MapViewerClient({
     } finally {
       setEditBusy(false);
     }
+  };
+
+  // Батч-постановка: шаблон один, позиции/этаж — у каждой точки свои. Коммит INSERT'ит все разом
+  // (id опущен → вставка; sourceMarkerId/hidden/y фиксированы). Форма payload — как в confirmEditMarks.
+  const confirmBatchCreate = async () => {
+    if (!batchTemplate || !mapId || batchPoints.length === 0) return;
+    setBatchBusy(true);
+    try {
+      for (const pt of batchPoints) {
+        const res = await fetch('/api/admin/editorial-markers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mapId,
+            slug: data.slug,
+            x: pt.x,
+            z: pt.z,
+            y: null,
+            floor: pt.floor,
+            type: batchTemplate.type,
+            category: batchTemplate.category,
+            faction: batchTemplate.faction,
+            title: batchTemplate.title,
+            description: batchTemplate.description,
+            screenshots: batchTemplate.screenshots,
+            linkKind: batchTemplate.linkKind,
+            linkId: batchTemplate.linkId,
+            linkStep: batchTemplate.linkStep,
+            polygon: batchTemplate.polygon,
+            sourceMarkerId: null,
+            hidden: false,
+            lootItems: batchTemplate.lootItems ?? null,
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      }
+      setBatchTemplate(null);
+      setBatchPoints([]);
+      batchPointsRef.current = [];
+      setBatchAddMode(false);
+      reloadWithOverlay('Метки добавлены', 'Синхронизация слоя…');
+    } catch (e) {
+      console.error('[marker batch create]', e);
+      failOverlay('Сбой записи', 'Телеметрия записана. Повторите операцию.');
+    } finally {
+      setBatchBusy(false);
+    }
+  };
+  // Сброс сессии батч-постановки (× / закрытие drawer / отмена шаблона).
+  const cancelBatch = () => {
+    setBatchTemplate(null);
+    setBatchPoints([]);
+    batchPointsRef.current = [];
+    setBatchAddMode(false);
   };
 
   // Рисование области-лассо (по запросу из карточки). Точки в ref (перф) + счётчик для UI.
@@ -865,6 +960,7 @@ export function MapViewerClient({
         const cm = L.marker(ll({ x: cx, z: cz }), { icon, interactive: false });
         cm.addTo(group);
         if (marked) cm.getElement()?.classList.add('cta-mk-del');
+        syncImageOffBadge(cm.getElement(), needsImageOff(m, !!canEditMarkers));
         els.set(id, { mk: cm, poly, floor: m.floor });
         continue;
       }
@@ -878,6 +974,7 @@ export function MapViewerClient({
       });
       mk.addTo(group);
       if (marked) mk.getElement()?.classList.add('cta-mk-del');
+      syncImageOffBadge(mk.getElement(), needsImageOff(m, !!canEditMarkers));
       els.set(id, { mk, floor: m.floor });
     }
     editorialElsRef.current = els;
@@ -886,7 +983,7 @@ export function MapViewerClient({
       editorialLayerRef.current = null;
       editorialElsRef.current = new Map();
     };
-  }, [mapInst, editorialMarkers]);
+  }, [mapInst, editorialMarkers, canEditMarkers]);
 
   // Пометка на удаление — ИМПЕРАТИВНО (класс + приглушение полигона), без пересборки слоёв.
   // editorial по id, синканые по `src:<id>`. Так пометка не роняет Leaflet при гонке с refresh.
@@ -1067,6 +1164,48 @@ export function MapViewerClient({
       mk.remove();
     };
   }, [mapInst, pendingMarker]);
+
+  // Батч-постановка, фаза «постановка» (шаблон задан): курсор-прицел, каждый клик по карте кладёт
+  // точку {x,z,floor=активный}. Смена этажа между кликами ставит следующие точки на новом этаже.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !batchAddMode || !batchTemplate || !mapId) return;
+    const el = map.getContainer();
+    el.style.cursor = 'crosshair';
+    const onClick = (e: L.LeafletMouseEvent) => {
+      const next = [...batchPointsRef.current, { x: e.latlng.lng, z: e.latlng.lat, floor: activeFloorRef.current }];
+      batchPointsRef.current = next;
+      setBatchPoints(next);
+    };
+    map.on('click', onClick);
+    return () => {
+      map.off('click', onClick);
+      el.style.cursor = '';
+    };
+  }, [mapInst, batchAddMode, batchTemplate, mapId]);
+
+  // Призрачные метки батча — полупрозрачный слой по каждой поставленной точке (иконка шаблона).
+  // Пересобирается на смену batchPoints; interactive:false — не перехватывает клики постановки.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !batchTemplate || batchPoints.length === 0) return;
+    const group = L.layerGroup().addTo(map);
+    const icon = editorialIcon({
+      mapId: mapId ?? '',
+      x: 0,
+      z: 0,
+      y: null,
+      floor: null,
+      ...batchTemplate,
+    });
+    batchPoints.forEach((p) => {
+      const mk = L.marker(ll({ x: p.x, z: p.z }), { icon, interactive: false, opacity: 0.55 }).addTo(group);
+      mk.getElement()?.classList.add('cta-editorial-mk');
+    });
+    return () => {
+      group.remove();
+    };
+  }, [mapInst, batchTemplate, batchPoints, mapId]);
 
   // Режим лассо: ЛКМ ставит вершину, ПКМ убирает последнюю; живой полигон (пунктир+заливка).
   // Завершение — кнопкой «Готово» в панели (dblclick конфликтует с двойным click). Pan остаётся.
@@ -1268,6 +1407,11 @@ export function MapViewerClient({
   }, [data.markers, editorialBridge]);
 
   const floors = useMemo(() => buildMapFloors(data.config), [data.config]);
+  // Имя этажа для подписи точки батч-постановки (null = метка на всех этажах).
+  const floorName = useCallback(
+    (f: number | null): string => (f == null ? 'Все этажи' : floors[f]?.name ?? '—'),
+    [floors],
+  );
   const isStatic = !!data.config.staticMap;
   // Тайловая подложка (нарезка sharp'ом, см. skill map-stitch): рисуем L.tileLayer вместо SVG-оверлея.
   const isTiled = !!data.config.tileBase;
@@ -2239,6 +2383,7 @@ export function MapViewerClient({
   const rootCls = [
     'cta-map-root absolute inset-0 overflow-hidden bg-(--color-base)',
     data.config.soloFloors ? 'solo-floors' : '',
+    showAllFloors ? 'cta-show-all-floors' : '',
     rulerActive ? 'cta-ruler-mode' : '',
   ]
     .filter(Boolean)
@@ -2555,6 +2700,9 @@ export function MapViewerClient({
           open={layersOpen}
           onOpenChange={setLayersOpen}
           hasHeat={!!heatPoints?.length}
+          multiFloor={(isTiled || floors.length > 1) && !data.config.soloFloors}
+          showAllFloors={showAllFloors}
+          onToggleAllFloors={() => useMapViewStore.getState().toggleShowAllFloors()}
         />
       ) : (
         // Старый статик-редактор ручных маркеров (git-данные) — только на НЕ-editorial статике.
@@ -2619,6 +2767,69 @@ export function MapViewerClient({
             />
           </div>
         </div>
+      )}
+
+      {/* Батч-ПОСТАНОВКА (editorial): фаза 1 — визард настраивает шаблон общих полей. Пока шаблон
+          не задан, карточка по центру (как батч-правка); задан → модалка гаснет, начинается постановка. */}
+      {data.config.editorial && canEditMarkers && batchAddMode && batchTemplate === null && mapId && (
+        <div
+          className="absolute inset-0 z-[560] flex items-center justify-center bg-black/50 p-4"
+          onClick={cancelBatch}
+        >
+          <div className="w-87" onClick={(e) => e.stopPropagation()}>
+            <EditorialMarkerCard
+              marker={{
+                mapId,
+                x: 0,
+                z: 0,
+                y: null,
+                floor: null,
+                type: 'poi',
+                category: null,
+                title: '',
+                description: null,
+                screenshots: [],
+                linkKind: 'none',
+                linkId: null,
+                linkStep: null,
+              }}
+              batchCreate
+              defaultEditing
+              canEdit={canEditMarkers}
+              questIndex={questIndex}
+              storyIndex={storyIndex}
+              mapSlug={data.slug}
+              lootIndex={lootIndex}
+              onCancel={cancelBatch}
+              onBatchSave={(fields) => {
+                setBatchTemplate(fields);
+              }}
+            />
+          </div>
+        </div>
+      )}
+      {/* Фаза 2 — правый drawer с поставленными точками + коммит всех разом. */}
+      {data.config.editorial && canEditMarkers && (
+        <BatchCreateDrawer
+          open={batchAddMode && batchTemplate !== null}
+          templateType={batchTemplate?.type ?? 'poi'}
+          templateTitle={batchTemplate?.title ?? ''}
+          points={batchPoints}
+          onRemovePoint={(i) => {
+            const next = batchPoints.filter((_, j) => j !== i);
+            batchPointsRef.current = next;
+            setBatchPoints(next);
+          }}
+          onUndo={() => {
+            const next = batchPoints.slice(0, -1);
+            batchPointsRef.current = next;
+            setBatchPoints(next);
+          }}
+          onCommit={confirmBatchCreate}
+          onCancel={cancelBatch}
+          busy={batchBusy}
+          floorName={floorName}
+        />
       )}
 
       {/* Сквад — шаринг позиции (только карты с проекцией координат). */}

@@ -18,6 +18,10 @@ interface MapViewState {
   selectedMarkerId: string | null;
   activeFilters: Record<string, boolean>;
   activePresetId: string | null;
+  /** Тоггл «показать все этажи»: по умолчанию off — метки чужих этажей скрыты (display:none).
+   * on → чужие этажи возвращаются приглушённо + up/down бейджи-прыжки (старое поведение до 547415de).
+   * Эфемерно, не персистится и не в URL — чисто вид текущей сессии. */
+  showAllFloors: boolean;
 
   setFloor: (floor: number) => void;
   setView: (v: { zoom?: number; centerX?: number; centerY?: number }) => void;
@@ -30,6 +34,8 @@ interface MapViewState {
   /** Соло: включить ТОЛЬКО эти слои, все остальные выключить (Alt+клик по категории). */
   soloFilters: (keys: string[]) => void;
   setPreset: (id: string | null) => void;
+  /** Переключить видимость меток чужих этажей (тоггл «показать все этажи»). */
+  toggleShowAllFloors: () => void;
   /** Гидрация из URL при маунте (только присутствующие ключи). */
   hydrate: (partial: Partial<MapViewState>) => void;
 }
@@ -42,6 +48,7 @@ export const useMapViewStore = create<MapViewState>((set) => ({
   selectedMarkerId: null,
   activeFilters: defaultLayerVisibility(),
   activePresetId: null,
+  showAllFloors: false,
 
   setFloor: (floor) => set({ floor }),
   setView: (v) => set((s) => ({ ...s, ...v })),
@@ -58,5 +65,6 @@ export const useMapViewStore = create<MapViewState>((set) => ({
       return { activeFilters: next };
     }),
   setPreset: (activePresetId) => set({ activePresetId }),
+  toggleShowAllFloors: () => set((s) => ({ showAllFloors: !s.showAllFloors })),
   hydrate: (partial) => set(partial),
 }));
