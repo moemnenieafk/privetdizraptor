@@ -7,10 +7,12 @@ import { MediaLibrary } from './MediaLibrary';
 
 interface Props {
   onPick: (url: string) => void;
+  /** Bug 6: батч-выбор (режим «Выбрать») — добавить несколько картинок разом. */
+  onPickMany?: (urls: string[]) => void;
   onClose: () => void;
 }
 
-export function MediaPicker({ onPick, onClose }: Props) {
+export function MediaPicker({ onPick, onPickMany, onClose }: Props) {
   return (
     <div
       className="fixed inset-0 z-100 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm"
@@ -37,6 +39,14 @@ export function MediaPicker({ onPick, onClose }: Props) {
             onPick(url);
             onClose();
           }}
+          onPickMany={
+            onPickMany
+              ? (urls) => {
+                  onPickMany(urls);
+                  onClose();
+                }
+              : undefined
+          }
         />
       </div>
     </div>
