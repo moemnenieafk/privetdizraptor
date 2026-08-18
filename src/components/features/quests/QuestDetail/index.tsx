@@ -2,8 +2,9 @@
 
 import { useRef, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Paperclip, Maximize2, Map as MapIcon, MapPin, ArrowLeftRight, ChevronRight } from 'lucide-react';
+import { Paperclip, Maximize2, Map as MapIcon, MapPin, ArrowLeftRight, ChevronRight, ListChecks } from 'lucide-react';
 import { useQuestStore, isObjectiveComplete } from '@/store/useQuestStore';
+import { isCollectorTask, COLLECTOR_TRACKER_HREF } from '@/lib/quest-constants';
 import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem, QuestBarterLite } from '@/types/quest';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
@@ -453,6 +454,25 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
     </div>
   );
 
+  // ── Кросс-линк на трекер Kappa — только на «Коллекционере» (карта заданий + страница квеста) ──
+  const collectorBlock = isCollectorTask(task) && (
+    <div className={isPage ? 'px-6 py-6' : 'px-5 py-5'}>
+      <div className="mb-3 flex items-center gap-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary">
+        <ListChecks className="h-3.5 w-3.5" />
+        Трекер Kappa
+      </div>
+      <Link
+        href={COLLECTOR_TRACKER_HREF}
+        className="group flex items-center gap-2 rounded-xs border border-(--primary)/40 bg-(--primary)/10 p-2 transition-colors hover:border-(--primary)/70 hover:bg-(--primary)/15"
+      >
+        <span className="min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest text-(--primary)">
+          Открыть трекер Коллекционера
+        </span>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-(--primary)" />
+      </Link>
+    </div>
+  );
+
   // ── Footer ──────────────────────────────────────────────────────────────
   const footer = (
     <div className={`shrink-0 border-t border-lines-hover flex items-center gap-2 ${isPage ? 'px-6 py-4' : 'px-5 h-14'}`}>
@@ -490,6 +510,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
         {rewardsBlock}
         {bartersBlock}
         {unlocksBlock}
+        {collectorBlock}
         {footer}
       </div>
     );
@@ -506,6 +527,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
         {rewardsBlock}
         {bartersBlock}
         {unlocksBlock}
+        {collectorBlock}
       </div>
       {footer}
     </>

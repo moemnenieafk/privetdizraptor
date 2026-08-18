@@ -95,13 +95,23 @@ export const SEASON_ITEM_BUNDLES: Readonly<Record<SeasonItemCategory, readonly s
 // ─── Looted-документы прогрессии БП Сезона 1 (8) — ЕДИНЫЙ источник правды ───────────────
 // Один набор питает ОБЕ фичи синхронно: фильтр каталога (/eft/items/battle-pass, selectForSlug)
 // И слой карты (bp-season-1-docs, layerKeyForMarker). id — из канон json.tarkov.dev (§4.12).
-export const BP_SEASON_1_DOC_IDS: ReadonlySet<string> = new Set([
-  '6a31807f17005505b70d5827', // Финансовая документация
-  '6a3182dc6cd8de21cf0a3a7d', // Медицинская документация
-  '6a31830dde69ceafd805afa0', // Эксплуатационная документация
-  '6a317b9692cfdcddcb02a58e', // Личные данные ЧВК
-  '6a3181f178450ec91c0ea1aa', // Проектная документация
-  '6a31824878450ec91c0ea1ae', // Чертежи и тех. документация
-  '6a31828557705071410ca00e', // Тестовая документация
-  '6a3182b72fd891345e047eef', // Пользовательская документация
-]);
+export interface BpSeasonDoc {
+  /** BSG inGameId предмета-документа. */
+  id: string;
+  /** Русское имя департамента документации. */
+  name: string;
+}
+
+/** 8 департаментов документации TerraGroup (BP S1). Порядок = порядок детей в легенде карты. */
+export const BP_SEASON_1_DOCS: readonly BpSeasonDoc[] = [
+  { id: '6a31807f17005505b70d5827', name: 'Финансовая документация' },
+  { id: '6a3182dc6cd8de21cf0a3a7d', name: 'Медицинская документация' },
+  { id: '6a31830dde69ceafd805afa0', name: 'Эксплуатационная документация' },
+  { id: '6a317b9692cfdcddcb02a58e', name: 'Личные данные ЧВК' },
+  { id: '6a3181f178450ec91c0ea1aa', name: 'Проектная документация' },
+  { id: '6a31824878450ec91c0ea1ae', name: 'Чертежи и тех. документация' },
+  { id: '6a31828557705071410ca00e', name: 'Тестовая документация' },
+  { id: '6a3182b72fd891345e047eef', name: 'Пользовательская документация' },
+];
+
+export const BP_SEASON_1_DOC_IDS: ReadonlySet<string> = new Set(BP_SEASON_1_DOCS.map((d) => d.id));

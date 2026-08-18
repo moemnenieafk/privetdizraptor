@@ -1,7 +1,8 @@
 import type { MapViewMarker } from './map-types';
 import { spawnSubkind, containerFile, extractSubtype, lockKind, hazardSubtype, stationarySubtype, questZoneKind, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
-import { BP_SEASON_1_DOC_IDS } from '@/data/eft-season-items';
+import { BP_SEASON_1_DOC_IDS, BP_SEASON_1_DOCS } from '@/data/eft-season-items';
+import { itemIconUrl } from '@/lib/item-icon';
 
 /**
  * Таксономия СЛОЁВ интерактивной карты — единая точка правды для рендера (группировка
@@ -67,9 +68,10 @@ const LOOSE_SUBLAYERS = LOOT_15.map((c) => ({ slug: c.key, label: c.label, iconC
 
 /** Ключ под-слоя (листа) для маркера, или null — тип не отображается слоем. */
 export function layerKeyForMarker(m: MapViewMarker): string | null {
-  // Сезонный синтетический слой: loose-маркер документа БП Сезона 1 → единый тумблер (синхрон с каталогом).
+  // Документация TerraGroup (BP S1): каждый департамент — свой под-слой bp-doc-<id> (раскрываемый
+  // узел в легенде → тумблер каждого документа; в дереве показываются только присутствующие на карте).
   if ((m.type === 'loot_loose' || m.type === 'loot') && m.linkedItemId && BP_SEASON_1_DOC_IDS.has(m.linkedItemId)) {
-    return 'bp-season-1-docs';
+    return `bp-doc-${m.linkedItemId}`;
   }
   switch (m.type) {
     case 'extract':
@@ -178,10 +180,17 @@ export const LAYER_GROUPS: LayerGroup[] = [
         })),
       },
       {
+        // Раскрываемый узел (сам слоем не является) — тумблер всех департаментов; иконка-монета BP.
         key: 'bp-season-1-docs',
-        label: 'Документы БП — Сезон 1',
+        label: 'Документация Terragroup — BP S1',
         sample: { type: 'loot_loose' } as MarkerIconInput,
-        iconClass: 'icon-eft-seasons',
+        iconClass: 'icon-eft-battlepass-docs-coin',
+        children: BP_SEASON_1_DOCS.map((d) => ({
+          key: `bp-doc-${d.id}`,
+          label: d.name,
+          sample: { type: 'loot_loose' } as MarkerIconInput,
+          iconImg: itemIconUrl(d.id),
+        })),
       },
     ],
   },
@@ -216,7 +225,7 @@ export const LAYER_GROUPS: LayerGroup[] = [
 export type LodTier = 0 | 1 | 2 | 3;
 
 export function lodTierForKey(key: string): LodTier {
-  if (key === 'bp-season-1-docs') return 0; // сезонный слой — всегда виден (как контейнеры/loose)
+  if (key.startsWith('bp-doc-')) return 0; // документы BP — всегда видны (как контейнеры/loose)
   // Контейнеры/добыча по дефолту выключены и включаются точечно из drawer'а → показываем СРАЗУ
   // (тир 0, без зум-порога), иначе тоггл на общем зуме «не срабатывает» до приближения (V4DYA).
   if (key.startsWith('container-') || key.startsWith('loose-')) return 0;

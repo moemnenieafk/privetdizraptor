@@ -116,12 +116,14 @@ export const useMapUiStore = create<MapUiState>((set) => ({
   toggleEditMark: (id) =>
     set((s) => ({ editMarks: s.editMarks.includes(id) ? s.editMarks.filter((x) => x !== id) : [...s.editMarks, id] })),
   clearEditMarks: () => set({ editMarks: [] }),
+  // Батч-правка (editOpen) — режим выбора меток кликом; взаимоисключающа с клик-режимами
+  // addMode/overrideMode/batchAddMode (иначе на обычных картах правка синканных дерётся с выбором).
   setEditOpen: (editOpen) =>
-    set((s) => ({ editOpen, layersOpen: editOpen ? false : s.layersOpen, deleteOpen: editOpen ? false : s.deleteOpen, squadOpen: editOpen ? false : s.squadOpen, searchOpen: editOpen && narrow() ? false : s.searchOpen })),
+    set((s) => ({ editOpen, layersOpen: editOpen ? false : s.layersOpen, deleteOpen: editOpen ? false : s.deleteOpen, squadOpen: editOpen ? false : s.squadOpen, searchOpen: editOpen && narrow() ? false : s.searchOpen, addMode: editOpen ? false : s.addMode, overrideMode: editOpen ? false : s.overrideMode, batchAddMode: editOpen ? false : s.batchAddMode })),
   toggleEdit: () =>
     set((s) => {
       const editOpen = !s.editOpen;
-      return { editOpen, layersOpen: editOpen ? false : s.layersOpen, deleteOpen: editOpen ? false : s.deleteOpen, squadOpen: editOpen ? false : s.squadOpen, searchOpen: editOpen && narrow() ? false : s.searchOpen };
+      return { editOpen, layersOpen: editOpen ? false : s.layersOpen, deleteOpen: editOpen ? false : s.deleteOpen, squadOpen: editOpen ? false : s.squadOpen, searchOpen: editOpen && narrow() ? false : s.searchOpen, addMode: editOpen ? false : s.addMode, overrideMode: editOpen ? false : s.overrideMode, batchAddMode: editOpen ? false : s.batchAddMode };
     }),
   toggleDeleteMark: (id) =>
     set((s) => ({ deleteMarks: s.deleteMarks.includes(id) ? s.deleteMarks.filter((x) => x !== id) : [...s.deleteMarks, id] })),
@@ -145,23 +147,23 @@ export const useMapUiStore = create<MapUiState>((set) => ({
   addMode: false,
   overrideMode: false,
   batchAddMode: false,
-  setAddMode: (addMode) => set((s) => ({ addMode, overrideMode: addMode ? false : s.overrideMode, batchAddMode: addMode ? false : s.batchAddMode })),
-  setOverrideMode: (overrideMode) => set((s) => ({ overrideMode, addMode: overrideMode ? false : s.addMode, batchAddMode: overrideMode ? false : s.batchAddMode })),
-  setBatchAddMode: (batchAddMode) => set((s) => ({ batchAddMode, addMode: batchAddMode ? false : s.addMode, overrideMode: batchAddMode ? false : s.overrideMode })),
+  setAddMode: (addMode) => set((s) => ({ addMode, overrideMode: addMode ? false : s.overrideMode, batchAddMode: addMode ? false : s.batchAddMode, editOpen: addMode ? false : s.editOpen })),
+  setOverrideMode: (overrideMode) => set((s) => ({ overrideMode, addMode: overrideMode ? false : s.addMode, batchAddMode: overrideMode ? false : s.batchAddMode, editOpen: overrideMode ? false : s.editOpen })),
+  setBatchAddMode: (batchAddMode) => set((s) => ({ batchAddMode, addMode: batchAddMode ? false : s.addMode, overrideMode: batchAddMode ? false : s.overrideMode, editOpen: batchAddMode ? false : s.editOpen })),
   toggleAddMode: () =>
     set((s) => {
       const addMode = !s.addMode;
-      return { addMode, overrideMode: addMode ? false : s.overrideMode, batchAddMode: addMode ? false : s.batchAddMode };
+      return { addMode, overrideMode: addMode ? false : s.overrideMode, batchAddMode: addMode ? false : s.batchAddMode, editOpen: addMode ? false : s.editOpen };
     }),
   toggleOverrideMode: () =>
     set((s) => {
       const overrideMode = !s.overrideMode;
-      return { overrideMode, addMode: overrideMode ? false : s.addMode, batchAddMode: overrideMode ? false : s.batchAddMode };
+      return { overrideMode, addMode: overrideMode ? false : s.addMode, batchAddMode: overrideMode ? false : s.batchAddMode, editOpen: overrideMode ? false : s.editOpen };
     }),
   toggleBatchAddMode: () =>
     set((s) => {
       const batchAddMode = !s.batchAddMode;
-      return { batchAddMode, addMode: batchAddMode ? false : s.addMode, overrideMode: batchAddMode ? false : s.overrideMode };
+      return { batchAddMode, addMode: batchAddMode ? false : s.addMode, overrideMode: batchAddMode ? false : s.overrideMode, editOpen: batchAddMode ? false : s.editOpen };
     }),
   reloadOverlay: null,
   setReloadOverlay: (reloadOverlay) => set({ reloadOverlay }),

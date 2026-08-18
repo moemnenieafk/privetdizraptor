@@ -80,10 +80,26 @@ export function ProgressSync() {
       timer.current = setTimeout(() => void saveCtaProgress(snapshot()), 1200);
     });
 
+    // Flush отложенного сейва при уходе со страницы: закрытие вкладки / переход / сворачивание —
+    // чтобы отметка, сделанная за <1200мс до ухода, ГАРАНТИРОВАННО дошла до аккаунта (keepalive).
+    const flush = () => {
+      if (!loggedIn.current || !hydrated.current || !timer.current) return;
+      clearTimeout(timer.current);
+      timer.current = null;
+      void saveCtaProgress(snapshot(), true);
+    };
+    const onHide = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", flush);
+
     return () => {
       active = false;
       sub.subscription.unsubscribe();
       unsub();
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", flush);
       if (timer.current) clearTimeout(timer.current);
     };
   }, []);

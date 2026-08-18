@@ -1,6 +1,6 @@
 'use client';
 
-import { Layers, MapPin, MapPinned, MapPinPlus, Maximize, Minimize, Ruler, SquarePen, Trash2, Users } from 'lucide-react';
+import { Layers, MapPin, MapPinned, MapPinPlus, Maximize, Minimize, Pencil, Ruler, SquarePen, Trash2, Users } from 'lucide-react';
 import { MapNavDropdown, type NavMapItem } from './MapNavDropdown';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { useSquadStore } from '@/store/useSquadStore';
@@ -67,18 +67,17 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
   const hasSquad = !!data.config.transform; // отряд только на картах с проекцией координат
 
   return (
-    <div className="relative flex h-14 items-center px-3.5 border-t border-lines-hover shrink-0 overflow-x-auto scrollbar-hidden">
-      {/* Слева — поиск 36×36 (открывает левый drawer «ПОИСК НА ЛОКАЦИИ») */}
-      <div className="flex flex-1 items-center">
+    // 3-колоночный грид [minmax(0,1fr) · auto · minmax(0,1fr)]: боковые колонки принудительно равны →
+    // средняя (плашка карты) ВСЕГДА по центру бара = центру контент-области (в фулскрине = центру экрана),
+    // независимо от числа кнопок слева/справа. Слева — вьюер/одиночное/замер/отряд; справа — все батч + фулскрин.
+    <div className="relative grid h-14 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3.5 px-3.5 border-t border-lines-hover shrink-0">
+      {/* ЛЕВО: поиск(угол) · линейка · скрин · метка · оверрайд · отряд */}
+      <div className="flex min-w-0 items-center gap-3.5 justify-self-start overflow-x-auto scrollbar-hidden">
         {(!data.config.staticMap || data.config.editorial) && (
           <button type="button" onClick={toggleSearch} title="Поиск (Ctrl+F)" aria-label="Поиск" className={toggleCls(searchOpen)}>
             <span className="icon-mask icon-eft-search-icon h-5.5 w-5.5" />
           </button>
         )}
-      </div>
-
-      {/* Центр-группа: [линейка · постановка] · плашка · [оверрайд · удаление · отряд · фуллскрин] */}
-      <div className="flex shrink-0 items-center gap-3.5">
         {hasRuler && (
           <button type="button" onClick={toggleRuler} title="Линейка — замер расстояния (ЛКМ точки, ПКМ сброс)" aria-label="Линейка" className={toggleCls(rulerActive)}>
             <Ruler className="h-5.5 w-5.5" />
@@ -112,16 +111,17 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
             <MapPin className="h-5.5 w-5.5" />
           </button>
         )}
-        {canEdit && data.config.editorial && (
+        {/* Оверрайд синканных — одиночная правка (не батч) → слева; только там, где есть синканные (не-editorial). */}
+        {canEdit && !data.config.editorial && (
           <button
             type="button"
-            onClick={toggleBatchAddMode}
-            aria-pressed={batchAddMode}
-            title={batchAddMode ? 'Батч-постановка активна — настрой шаблон и кликай по карте' : 'Батч-постановка меток: шаблон → серия кликов → добавить все разом'}
-            aria-label="Батч-постановка меток"
-            className={toggleCls(batchAddMode)}
+            onClick={toggleOverrideMode}
+            aria-pressed={overrideMode}
+            title={overrideMode ? 'Выключить правку синканных (клик по маркеру = ссылка)' : 'Править синканные маркеры: клик → карточка-оверрайд'}
+            aria-label="Править синканные маркеры"
+            className={toggleCls(overrideMode)}
           >
-            <MapPinPlus className="h-5.5 w-5.5" />
+            <Pencil className="h-5.5 w-5.5" />
           </button>
         )}
         {hasSquad && (
@@ -141,45 +141,48 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
             )}
           </button>
         )}
+      </div>
 
-        <MapNavDropdown
-          maps={navMaps}
-          activeSlug={data.slug}
-          activeName={data.name}
-          activePlayers={data.players}
-          activeRaidDuration={data.raidDuration}
-        />
+      {/* ЦЕНТР: плашка карты — всегда по центру бара */}
+      <MapNavDropdown
+        maps={navMaps}
+        activeSlug={data.slug}
+        activeName={data.name}
+        activePlayers={data.players}
+        activeRaidDuration={data.raidDuration}
+      />
 
-        {canEdit &&
-          (data.config.editorial ? (
-            // Editorial-карты (factory-hd): синканных нет → square-pen = БАТЧ-ПРАВКА (выбор кликом + drawer).
-            <button
-              type="button"
-              onClick={toggleEdit}
-              aria-pressed={editOpen}
-              title="Батч-правка: выбери метки кликом → «Редактировать (N)»"
-              aria-label="Батч-правка маркеров"
-              className={`${toggleCls(editOpen)} relative`}
-            >
-              <SquarePen className="h-5.5 w-5.5" />
-              {editCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--primary) px-1 font-blender-medium text-[0.5625rem] text-(--color-base) tabular-nums">
-                  {editCount}
-                </span>
-              )}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={toggleOverrideMode}
-              aria-pressed={overrideMode}
-              title={overrideMode ? 'Выключить правку синканных (клик по маркеру = ссылка)' : 'Править синканные маркеры: клик → карточка-оверрайд'}
-              aria-label="Править синканные маркеры"
-              className={toggleCls(overrideMode)}
-            >
-              <SquarePen className="h-5.5 w-5.5" />
-            </button>
-          ))}
+      {/* ПРАВО: батч-добавл · батч-правка · батч-удаление · фулскрин · легенда(угол) */}
+      <div className="flex min-w-0 items-center justify-end gap-3.5 justify-self-end overflow-x-auto scrollbar-hidden">
+        {canEdit && (
+          <button
+            type="button"
+            onClick={toggleBatchAddMode}
+            aria-pressed={batchAddMode}
+            title={batchAddMode ? 'Батч-постановка активна — настрой шаблон и кликай по карте' : 'Батч-постановка меток: шаблон → серия кликов → добавить все разом'}
+            aria-label="Батч-постановка меток"
+            className={toggleCls(batchAddMode)}
+          >
+            <MapPinPlus className="h-5.5 w-5.5" />
+          </button>
+        )}
+        {canEdit && (
+          <button
+            type="button"
+            onClick={toggleEdit}
+            aria-pressed={editOpen}
+            title="Батч-правка: выбери метки кликом → «Редактировать (N)»"
+            aria-label="Батч-правка маркеров"
+            className={`${toggleCls(editOpen)} relative`}
+          >
+            <SquarePen className="h-5.5 w-5.5" />
+            {editCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--primary) px-1 font-blender-medium text-[0.5625rem] text-(--color-base) tabular-nums">
+                {editCount}
+              </span>
+            )}
+          </button>
+        )}
         {canEdit && (
           <button
             type="button"
@@ -208,10 +211,6 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
         >
           {isFullscreen ? <Minimize className="h-5.5 w-5.5" /> : <Maximize className="h-5.5 w-5.5" />}
         </button>
-      </div>
-
-      {/* Справа — слои 36×36 у правого края (легенда/фильтр: интерактивные + editorial-статик) */}
-      <div className="flex flex-1 items-center justify-end">
         {(hasLayers || !!data.config.editorial) && (
           <button type="button" onClick={toggleLayers} title="Слои и фильтры" aria-label="Слои и фильтры" className={toggleCls(layersOpen)}>
             <Layers className="h-5.5 w-5.5" />

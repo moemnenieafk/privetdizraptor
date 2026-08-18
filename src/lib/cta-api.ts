@@ -96,11 +96,14 @@ export async function getCtaProgress(): Promise<ProgressPayload | null> {
 }
 
 // Сохранить прогресс. false — не авторизован/ошибка.
-export async function saveCtaProgress(p: ProgressPayload): Promise<boolean> {
+// keepalive=true — запрос переживает выгрузку страницы (flush отметки при уходе, чтобы ни одна
+// отметка не потерялась из-за debounce). Лимит keepalive-тела — 64КБ; наш payload меньше.
+export async function saveCtaProgress(p: ProgressPayload, keepalive = false): Promise<boolean> {
   const res = await fetch(`${baseUrl()}/api/eft/progress`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(p),
+    keepalive,
   });
   return res.ok;
 }

@@ -103,7 +103,7 @@ export function MapLayersDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = openProp ?? internalOpen;
   const setOpen = (v: boolean) => (onOpenChange ? onOpenChange(v) : setInternalOpen(v));
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ containers: true, loose: true });
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ containers: true, loose: true, 'bp-season-1-docs': true });
   const [filter, setFilter] = useState('');
 
   // Мульти-фильтр: термины через запятую (OR). Пусто → показываем всё. Совпадение по имени

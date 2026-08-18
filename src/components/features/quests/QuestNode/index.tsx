@@ -316,6 +316,20 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
           )}
         </footer>
 
+        {/* Кросс-линк на трекер Kappa — только на карточке квеста «Коллекционер». */}
+        {isCollectorTask(task) && (
+          <div className="px-4 pb-4">
+            <Link
+              href={COLLECTOR_TRACKER_HREF}
+              data-no-pan
+              onClick={(e) => e.stopPropagation()}
+              className="flex h-9 w-full items-center justify-center gap-1.5 rounded-xs border border-(--primary)/50 bg-(--primary)/10 text-xs font-blender-medium uppercase tracking-widest text-(--primary) transition-colors hover:bg-(--primary)/20"
+            >
+              <ListChecks className="h-4 w-4" /> Трекер Kappa
+            </Link>
+          </div>
+        )}
+
       </div>
     </article>
   );

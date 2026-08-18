@@ -2731,7 +2731,7 @@ export function MapViewerClient({
       )}
 
       {/* Батч-правка (editorial): drawer выбранных + «Редактировать (N)» → центрированный визард. */}
-      {data.config.editorial && canEditMarkers && (
+      {(!isStatic || data.config.editorial) && canEditMarkers && (
         <MarkerEditDrawer
           marked={markedForEdit}
           open={editOpen}
@@ -2771,7 +2771,7 @@ export function MapViewerClient({
 
       {/* Батч-ПОСТАНОВКА (editorial): фаза 1 — визард настраивает шаблон общих полей. Пока шаблон
           не задан, карточка по центру (как батч-правка); задан → модалка гаснет, начинается постановка. */}
-      {data.config.editorial && canEditMarkers && batchAddMode && batchTemplate === null && mapId && (
+      {(!isStatic || data.config.editorial) && canEditMarkers && batchAddMode && batchTemplate === null && mapId && (
         <div
           className="absolute inset-0 z-[560] flex items-center justify-center bg-black/50 p-4"
           onClick={cancelBatch}
@@ -2809,7 +2809,7 @@ export function MapViewerClient({
         </div>
       )}
       {/* Фаза 2 — правый drawer с поставленными точками + коммит всех разом. */}
-      {data.config.editorial && canEditMarkers && (
+      {(!isStatic || data.config.editorial) && canEditMarkers && (
         <BatchCreateDrawer
           open={batchAddMode && batchTemplate !== null}
           templateType={batchTemplate?.type ?? 'poi'}
