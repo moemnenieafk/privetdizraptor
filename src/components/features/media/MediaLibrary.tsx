@@ -5,7 +5,7 @@
 //   • модалка-пикер внутри редакторов (onPick) — выбрать картинку, не уходя с формы.
 // Разделять их значило бы дублировать загрузку и грид.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, CheckSquare, Copy, Loader2, Pencil, Square, Trash2, Upload, X } from 'lucide-react';
+import { Check, CheckSquare, Copy, ImageUp, Loader2, Pencil, Square, Trash2, X } from 'lucide-react';
 
 export interface MediaItem {
   id: string;
@@ -190,73 +190,76 @@ export function MediaLibrary({ onPick, onPickMany }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={busy}
-          className="flex h-11 items-center gap-2 rounded-xs border border-(--primary) px-4 font-blender-medium text-xs uppercase tracking-widest text-(--primary) transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] disabled:opacity-50"
-        >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-          Загрузить
-        </button>
-        <span className="font-blender-book text-xs text-text-muted">
-          png · jpg · webp · gif — конвертируется в webp (R2) · можно выбрать несколько
-        </span>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/webp,image/png,image/jpeg,image/gif"
-          multiple
-          hidden
-          onChange={(e) => void upload(e.target.files)}
-        />
-
-        {/* Bug 6: справа — тоггл «Выбрать» (обычный режим) / панель батч-действий (режим выбора). */}
-        {items.length > 0 && (
-          <div className="ml-auto flex items-center gap-2">
-            {!selectMode ? (
+      <div className="flex flex-col gap-3.5">
+        {/* Figma 2905-1046: две кнопки 50/50, gap 8px, h-36; «Загрузить» — амбер-10% фон + 0.5px
+            амбер-бордер + image-up; «Выбрать» — card-menu + lines-hover. Текст 12px medium, без tracking. */}
+        <div className="flex items-stretch gap-2">
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/webp,image/png,image/jpeg,image/gif"
+            multiple
+            hidden
+            onChange={(e) => void upload(e.target.files)}
+          />
+          {!selectMode ? (
+            <>
               <button
                 type="button"
-                onClick={() => setSelectMode(true)}
-                className="flex h-9 items-center gap-2 rounded-xs border border-lines-hover px-3 font-blender-medium text-xs uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+                onClick={() => inputRef.current?.click()}
+                disabled={busy}
+                className="flex h-9 min-w-px flex-1 items-center justify-center gap-1 rounded-xs border-[0.5px] border-(--color-tactical-amber) bg-(--color-tactical-amber)/10 font-blender-medium text-xs uppercase text-tactical-amber transition-opacity hover:opacity-90 disabled:opacity-50"
               >
-                <CheckSquare className="h-4 w-4" /> Выбрать
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageUp className="h-4 w-4" />}
+                Загрузить
               </button>
-            ) : (
-              <>
-                <span className="font-blender-book text-xs text-text-muted">Выбрано: {selected.size}</span>
-                {isPicker ? (
-                  <button
-                    type="button"
-                    onClick={commitPick}
-                    disabled={selected.size === 0}
-                    className="flex h-9 items-center gap-2 rounded-xs bg-(--primary) px-3 font-blender-medium text-xs uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-40"
-                  >
-                    <Check className="h-4 w-4" /> Добавить ({selected.size})
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => void batchDelete()}
-                    disabled={selected.size === 0 || busy}
-                    className="flex h-9 items-center gap-2 rounded-xs border border-danger/50 px-3 font-blender-medium text-xs uppercase tracking-widest text-danger transition-colors hover:border-danger hover:bg-danger/10 disabled:opacity-40"
-                  >
-                    <Trash2 className="h-4 w-4" /> Удалить ({selected.size})
-                  </button>
-                )}
+              {items.length > 0 && (
                 <button
                   type="button"
-                  onClick={exitSelect}
-                  aria-label="Выйти из режима выбора"
-                  className="flex size-9 items-center justify-center rounded-xs border border-lines-hover text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+                  onClick={() => setSelectMode(true)}
+                  className="flex h-9 min-w-px flex-1 items-center justify-center gap-2 rounded-xs border border-lines-hover bg-card-menu font-blender-medium text-xs uppercase text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
                 >
-                  <X className="h-4 w-4" />
+                  <CheckSquare className="h-4 w-4" /> Выбрать
                 </button>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          ) : (
+            <>
+              <span className="flex items-center whitespace-nowrap font-blender-book text-xs text-text-muted">Выбрано: {selected.size}</span>
+              {isPicker ? (
+                <button
+                  type="button"
+                  onClick={commitPick}
+                  disabled={selected.size === 0}
+                  className="flex h-9 min-w-px flex-1 items-center justify-center gap-2 rounded-xs bg-(--primary) font-blender-medium text-xs uppercase text-(--color-base) transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  <Check className="h-4 w-4" /> Добавить ({selected.size})
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void batchDelete()}
+                  disabled={selected.size === 0 || busy}
+                  className="flex h-9 min-w-px flex-1 items-center justify-center gap-2 rounded-xs border border-danger/50 font-blender-medium text-xs uppercase text-danger transition-colors hover:border-danger hover:bg-danger/10 disabled:opacity-40"
+                >
+                  <Trash2 className="h-4 w-4" /> Удалить ({selected.size})
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={exitSelect}
+                aria-label="Выйти из режима выбора"
+                className="flex size-9 shrink-0 items-center justify-center rounded-xs border border-lines-hover text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </>
+          )}
+        </div>
+        <p className="text-center font-blender-book text-xs leading-tight text-text-muted">
+          PNG · JPG · WEBP · GIF — конвертируется в webp (R2).<br />
+          Можно выбрать несколько
+        </p>
       </div>
 
       {error && (
@@ -266,9 +269,9 @@ export function MediaLibrary({ onPick, onPickMany }: Props) {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className={`grid gap-3 ${isPicker ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}`}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-square animate-pulse rounded-xs bg-(--color-darkbase)" />
+            <div key={i} className="aspect-[3/2] animate-pulse rounded-xs bg-(--color-darkbase)" />
           ))}
         </div>
       ) : items.length === 0 ? (
@@ -276,7 +279,7 @@ export function MediaLibrary({ onPick, onPickMany }: Props) {
           Пока пусто. Загрузите первый файл.
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className={`grid gap-3 ${isPicker ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}`}>
           {items.map((m) => {
             const isSel = selected.has(m.id);
             return (
@@ -290,75 +293,68 @@ export function MediaLibrary({ onPick, onPickMany }: Props) {
                 type="button"
                 onClick={() => (selectMode ? toggleSelect(m.id) : onPick?.(m.url))}
                 disabled={!selectMode && !onPick}
-                className="aspect-square w-full bg-(--color-darkbase) transition-opacity disabled:cursor-default enabled:hover:opacity-80"
+                title={`${m.alt || 'без имени'} · ${fmtSize(m.bytes)}`}
+                className="aspect-[3/2] w-full bg-(--color-darkbase) transition-opacity disabled:cursor-default enabled:hover:opacity-80"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={m.url} alt={m.alt} loading="lazy" className={`h-full w-full object-cover ${selectMode && isSel ? 'opacity-70' : ''}`} />
               </button>
 
-              {/* Bug 6: галочка-оверлей в режиме выбора */}
+              {/* Галочка-оверлей в режиме выбора */}
               {selectMode && (
                 <span className="pointer-events-none absolute left-1.5 top-1.5 flex size-6 items-center justify-center rounded-xs bg-black/60">
                   {isSel ? <CheckSquare className="h-4 w-4 text-(--primary)" /> : <Square className="h-4 w-4 text-text-secondary" />}
                 </span>
               )}
 
-              <figcaption className="flex items-center justify-between gap-1 px-2 py-1.5">
-                {renaming === m.id ? (
-                  <input
-                    autoFocus
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={() => void saveRename(m.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') void saveRename(m.id);
-                      else if (e.key === 'Escape') setRenaming(null);
-                    }}
-                    placeholder="Имя файла"
-                    className="min-w-0 flex-1 rounded-xs border border-(--primary)/60 bg-(--color-base) px-1.5 py-0.5 font-blender-book text-xs text-text-primary outline-none"
-                  />
-                ) : (
-                  <span
-                    className="min-w-0 flex-1 truncate font-blender-book text-xs text-text-muted"
-                    title={`${m.alt || 'без имени'} · ${fmtSize(m.bytes)}`}
-                  >
-                    {m.alt || fmtSize(m.bytes)}
-                  </span>
-                )}
-                {!selectMode && renaming !== m.id && (
-                  <span className="flex shrink-0 items-center gap-0.5">
-                    <button
-                      type="button"
-                      onClick={() => { setRenaming(m.id); setRenameValue(m.alt); }}
-                      aria-label="Переименовать"
-                      className="flex size-7 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-(--primary)"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void copy(m.url)}
-                      aria-label="Скопировать ссылку"
-                      className="flex size-7 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-(--primary)"
-                    >
-                      {copied === m.url ? (
-                        <Check className="h-3.5 w-3.5 text-success" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void remove(m.id)}
-                      disabled={busy}
-                      aria-label="Удалить"
-                      className="flex size-7 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-danger disabled:opacity-50"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </span>
-                )}
-              </figcaption>
+              {/* Панель действий (Figma): карандаш · копия · удалить, поровну на ширину. Без подписи-имени.
+                  В режиме выбора скрыта — там клик по ячейке = выбор. Rename → инлайн-инпут вместо иконок. */}
+              {!selectMode && (
+                <figcaption className="flex h-8 items-center border-t border-lines-hover/60">
+                  {renaming === m.id ? (
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onBlur={() => void saveRename(m.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') void saveRename(m.id);
+                        else if (e.key === 'Escape') setRenaming(null);
+                      }}
+                      placeholder="Имя файла"
+                      className="mx-1 min-w-0 flex-1 rounded-xs border border-(--primary)/60 bg-(--color-base) px-1.5 py-0.5 font-blender-book text-xs text-text-primary outline-none"
+                    />
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => { setRenaming(m.id); setRenameValue(m.alt); }}
+                        aria-label="Переименовать"
+                        className="flex h-full flex-1 items-center justify-center text-text-muted transition-colors hover:text-(--primary)"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void copy(m.url)}
+                        aria-label="Скопировать ссылку"
+                        className="flex h-full flex-1 items-center justify-center text-text-muted transition-colors hover:text-(--primary)"
+                      >
+                        {copied === m.url ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void remove(m.id)}
+                        disabled={busy}
+                        aria-label="Удалить"
+                        className="flex h-full flex-1 items-center justify-center text-text-muted transition-colors hover:text-danger disabled:opacity-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                </figcaption>
+              )}
             </figure>
             );
           })}

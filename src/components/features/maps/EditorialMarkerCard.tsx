@@ -8,7 +8,7 @@
 //    амбер прогресс-бар. Шаг «объект» пропускается у типов без под-категории (poi и пр.).
 // Данные — editorial_markers. Решения: docs/decisions/UI - Step Marker Creation control.md,
 // docs/decisions/editorial-markers-tool.md.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Plus, X, Paperclip, ChevronLeft, ChevronRight, ZoomIn, Bookmark, Move3d, MapPinPen,
@@ -353,6 +353,8 @@ export function EditorialMarkerCard({
   batchCount,
 }: Props) {
   const [sel, setSel] = useState(0);
+  // Якорь для боковой панели медиа-библиотеки (пикер встаёт справа от карточки).
+  const cardRootRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState(defaultEditing);
   // Локальный черновик правок. Сброс при смене маркера — через key={marker.id} на компоненте в родителе.
   const [draft, setDraft] = useState<Draft>(() => makeDraft(marker));
@@ -613,6 +615,7 @@ export function EditorialMarkerCard({
   return (
     <div className="flex w-full flex-col items-center gap-1">
       <div
+        ref={cardRootRef}
         className="scrollbar-hidden flex max-h-[82vh] w-full flex-col items-center gap-2.5 overflow-y-auto rounded border-[0.5px] p-3.5"
         style={{
           borderColor: `color-mix(in srgb, ${tintVar} 60%, transparent)`,
@@ -1356,10 +1359,11 @@ export function EditorialMarkerCard({
           document.body,
         )}
 
-      {/* Пикер скринов из медиатеки. Рендерится ВНУТРИ карточки (DOM-потомок overlay) →
-          outside-close popup'а не срабатывает. onPick добавляет URL в draft.screenshots. */}
+      {/* Пикер скринов — боковая панель СПРАВА от карточки (portal в body, якорь = cardRootRef).
+          onPick добавляет URL в draft.screenshots. */}
       {picking && (
         <MediaPicker
+          anchorRef={cardRootRef}
           onPick={(url) => {
             setDraft((d) => ({ ...d, screenshots: [...d.screenshots, url] }));
             setPicking(false);
