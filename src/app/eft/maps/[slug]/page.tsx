@@ -149,9 +149,13 @@ export default async function MapPage({ params, searchParams }: Props) {
       // Каталог для имён лут-пулов (id→{name,shortName}) — лениво, только если на карте есть пул.
       // shortName для показа в карточке/заголовке (компактно), name — для поиска по спискам (bridge).
       const hasLootItem = rows.some((r) => !r.hidden && lootIdsOf(r.type, r.category, r.lootItems ?? null).length > 0);
-      const catById = hasLootItem ? new Map((await getEftCatalog()).map((i) => [i.id, i])) : null;
+      // Bug 2: item-линки (linkKind='item', напр. Ключ) тоже требуют каталог/цены для имени+редкости
+      // в карточке — иначе связанный предмет не резолвится (был хардкод linkedItem:null).
+      const hasItemLink = rows.some((r) => !r.hidden && r.linkKind === 'item' && !!r.linkId);
+      const needCatalog = hasLootItem || hasItemLink;
+      const catById = needCatalog ? new Map((await getEftCatalog()).map((i) => [i.id, i])) : null;
       // Цвет редкости (backgroundColor) лут-предметов — из зеркала цен, для ячейки-иконки 56×56 в карточке.
-      const priceIndex = hasLootItem ? await getEftPriceIndex() : null;
+      const priceIndex = needCatalog ? await getEftPriceIndex() : null;
       editorialMarkers = rows
         .filter((r) => !r.hidden)
         .map((r) => {
@@ -182,7 +186,17 @@ export default async function MapPage({ params, searchParams }: Props) {
                 }
               : null,
             linkedStory: r.linkKind === 'story' && r.linkId ? { title: storyTitle.get(r.linkId) ?? r.linkId } : null,
-            linkedItem: null,
+            // Bug 2: резолв связанного предмета (linkKind='item', напр. Ключ) — зеркало ветки B.
+            // TODO(долг): два builder'а editorialMarkers (эта ветка + синканная) — кандидаты на дедуп.
+            linkedItem:
+              r.linkKind === 'item' && r.linkId
+                ? {
+                    id: r.linkId,
+                    name: catById?.get(r.linkId)?.name ?? r.linkId,
+                    slug: priceIndex?.get(r.linkId)?.normalizedName ?? null,
+                    bg: priceIndex?.get(r.linkId)?.backgroundColor ?? null,
+                  }
+                : null,
           };
         });
       // Мост editorial→MapViewMarker для drawer'ов поиска/легенды и счётчиков фильтра.

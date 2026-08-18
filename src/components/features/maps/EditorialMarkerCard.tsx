@@ -316,6 +316,8 @@ interface Props {
   onMutated?: () => void;
   /** Отмена правки НОВОГО маркера (без id) — родитель закрывает карточку. */
   onCancel?: () => void;
+  /** Bug 3: карточка «залочена» (визард на шаге 2+) → родитель не закрывает её по клику мимо. */
+  onEditGuardChange?: (locked: boolean) => void;
   /** Запросить рисование области-лассо на карте: parent рисует, onDone возвращает точки (или null). */
   onDrawArea?: (req: { current: { x: number; z: number }[] | null; color: string; onDone: (poly: { x: number; z: number }[] | null) => void }) => void;
   /** Индекс лута карты (loose loot, без контейнеров) — для поиска предмета в Лут-шаге 2. */
@@ -342,6 +344,7 @@ export function EditorialMarkerCard({
   mapSlug,
   onMutated,
   onCancel,
+  onEditGuardChange,
   onDrawArea,
   lootIndex,
   onMove,
@@ -399,6 +402,19 @@ export function EditorialMarkerCard({
     if (isLast) void save();
     else setStepIdx(si + 1);
   };
+  // Bug 3: осознанный выход из визарда (× / Esc). При набранных изменениях — подтверждение,
+  // иначе молча. backToDisplay откатывает существующий маркер к показу, новый — закрывает (onCancel).
+  const requestClose = () => {
+    const dirty = JSON.stringify(draft) !== JSON.stringify(makeDraft(marker));
+    if (dirty && !window.confirm('Закрыть редактор? Введённые данные будут потеряны.')) return;
+    backToDisplay();
+  };
+  // Bug 3: пока визард на шаге 2+ — сообщаем родителю «залочено», чтобы клик мимо не закрыл карточку
+  // и не стёр черновик. Шаг 1 (выбор категории) не лочим — терять ещё нечего.
+  useEffect(() => {
+    onEditGuardChange?.(editing && si >= 1);
+  }, [editing, si, onEditGuardChange]);
+  useEffect(() => () => onEditGuardChange?.(false), [onEditGuardChange]);
 
   const [picking, setPicking] = useState(false);
   // Автокомплит привязки к квесту (редакторам).
@@ -470,6 +486,17 @@ export function EditorialMarkerCard({
       return { ...d, lootItems: items, category: items[0] ?? null };
     });
   };
+
+  // Bug 4: при входе на шаг «название», если поле пустое — автоподставляем ЛУЧШУЮ метку объекта
+  // (лут → имя предмета, босс → имя, подтип выхода → его метка, иначе — метка категории). Гейт
+  // titleOk остаётся, но блокирует только если юзер САМ стёр название в пустоту. Не перетираем
+  // ни введённое юзером, ни автоимя лута (addLootItem уже заполнил). Триггер — смена шага.
+  useEffect(() => {
+    if (curStep !== 'details' || draft.title.trim() !== '') return;
+    const best = markerCategoryLabel(draft, lootLabel);
+    if (best) editField({ title: best });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [curStep]);
 
   // Сохранение/удаление через API (запись защищена canEditContent на сервере).
   const [busy, setBusy] = useState(false);
@@ -548,6 +575,20 @@ export function EditorialMarkerCard({
     return () => document.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightbox, shots.length]);
+  // Bug 3: Esc в визарде = осознанный выход (requestClose). Открытый лайтбокс важнее — его Esc
+  // закрывает лайтбокс (эффект выше), сюда не доходит.
+  useEffect(() => {
+    if (!editing) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && lightbox === null) {
+        e.stopPropagation();
+        requestClose();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing, lightbox, draft, marker]);
   const completed = useQuestStore((s) => s.completedQuests);
   const pinned = useQuestStore((s) => s.pinnedQuests);
   const toggleQuest = useQuestStore((s) => s.toggleQuest);
@@ -654,7 +695,19 @@ export function EditorialMarkerCard({
                   {si === 0 ? 'Категория маркера' : (WIZARD_CATEGORIES.find((c) => c.key === catKey)?.label ?? 'Маркер')}
                 </span>
               </span>
-              <StepProgress total={steps.length} current={si + 1} />
+              <span className="flex shrink-0 items-center gap-2">
+                <StepProgress total={steps.length} current={si + 1} />
+                {/* Bug 3: осознанный выход из визарда (клик мимо больше не закрывает на шаге 2+). */}
+                <button
+                  type="button"
+                  onClick={requestClose}
+                  disabled={busy}
+                  title="Закрыть редактор"
+                  className="flex size-5 shrink-0 items-center justify-center rounded-xs text-text-muted transition-colors hover:text-danger disabled:opacity-50"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
             </div>
 
             {/* Индикатор выбранного объекта (шаги 2-4) */}
@@ -1309,6 +1362,10 @@ export function EditorialMarkerCard({
         <MediaPicker
           onPick={(url) => {
             setDraft((d) => ({ ...d, screenshots: [...d.screenshots, url] }));
+            setPicking(false);
+          }}
+          onPickMany={(urls) => {
+            setDraft((d) => ({ ...d, screenshots: [...d.screenshots, ...urls] }));
             setPicking(false);
           }}
           onClose={() => setPicking(false)}

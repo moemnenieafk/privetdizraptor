@@ -65,3 +65,22 @@ export async function removeMedia(id: string): Promise<{ path: string; url: stri
     .returning({ path: mediaAssets.path, url: mediaAssets.url });
   return row ?? null;
 }
+
+/** Переименование (правка alt/подписи). Колонка `alt` уже есть — миграция не нужна. */
+export async function updateMediaAlt(id: string, alt: string): Promise<MediaItem | null> {
+  const [row] = await db
+    .update(mediaAssets)
+    .set({ alt })
+    .where(eq(mediaAssets.id, id))
+    .returning();
+  if (!row) return null;
+  return {
+    id: row.id,
+    url: row.url,
+    path: row.path,
+    alt: row.alt,
+    mime: row.mime,
+    bytes: row.bytes,
+    createdAt: row.createdAt.toISOString(),
+  };
+}

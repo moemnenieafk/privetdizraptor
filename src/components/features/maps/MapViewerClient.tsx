@@ -428,6 +428,13 @@ export function MapViewerClient({
     setOpenEditorialId(null);
     setPendingMarker(null);
   };
+  // Bug 3: пока визард на шаге 2+, карточка «залочена» — клик мимо НЕ закрывает её (иначе теряется
+  // весь черновик, это локальный state). Карточка сообщает своё состояние сюда; ref (не state) —
+  // чтобы не переподписывать document-листенер и читать актуальное значение прямо в обработчике.
+  const editGuardRef = useRef(false);
+  const handleEditGuard = useCallback((locked: boolean) => {
+    editGuardRef.current = locked;
+  }, []);
 
   // Drawer «Удаление маркеров» + список помеченных (объявлено до editorial-эффекта — он читает deleteMarks).
   // Ключ пометки: editorial → его id; синканый tarkov.dev → `src:<sourceMarkerId>` (см. карточку).
@@ -1001,6 +1008,7 @@ export function MapViewerClient({
   useEffect(() => {
     if (!activeMarker || areaDraw || moveMarker) return; // лассо/move: клики по карте — не закрытие
     const onDown = (e: MouseEvent) => {
+      if (editGuardRef.current) return; // Bug 3: визард на шаге 2+ — клик мимо не закрывает
       if (!editorialOverlayRef.current?.contains(e.target as Node)) closeCard();
     };
     const t = setTimeout(() => document.addEventListener('mousedown', onDown), 0);
@@ -1556,6 +1564,12 @@ export function MapViewerClient({
     }
   }, [rulerActive]);
 
+  // Bug 1: тик «SVG-группы этажей загружены/пересобраны». Гонка при загрузке с ?floor=N (URL):
+  // applyFloor мог примениться пока groups=null, а гарантированный ре-apply в loadImage шёл по РЕФУ
+  // (мог быть устаревшим) → на single-SVG static-картах (the-lab и пр.) активный этаж не применялся
+  // и подложка гасла. Теперь loadImage бампает этот тик, а эффект ниже переприменяет ТЕКУЩИЙ activeFloor.
+  const [svgReadyTick, setSvgReadyTick] = useState(0);
+
   // Применить этаж: затемнить чужие <g>-слои SVG + спрятать маркеры вне диапазона высоты.
   const applyFloor = useCallback(
     (idx: number) => {
@@ -1604,8 +1618,10 @@ export function MapViewerClient({
   });
 
   useEffect(() => {
+    // Bug 1: svgReadyTick в зависимостях — как только группы SVG готовы (loadImage бампнул тик),
+    // применяем ТЕКУЩИЙ activeFloor из рендера (не из рефа). Снимает гонку порядка при ?floor=N.
     applyFloor(activeFloor);
-  }, [activeFloor, applyFloor]);
+  }, [activeFloor, applyFloor, svgReadyTick]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -1677,7 +1693,8 @@ export function MapViewerClient({
             keepWith.set(target, arr);
           });
           svgKeepWithRef.current = keepWith;
-          applyFloorRef.current(activeFloorRef.current);
+          // Bug 1: группы готовы → бампаем тик; state-эффект применит АКТУАЛЬНЫЙ activeFloor (не ref).
+          setSvgReadyTick((n) => n + 1);
         })
         .catch(() => {
           if (cancelledSvg || !mapRef.current) return;
@@ -2169,7 +2186,16 @@ export function MapViewerClient({
       return;
     }
     const img = floors[activeFloor]?.image;
-    if (img) loadImageRef.current?.(img);
+    if (img) {
+      loadImageRef.current?.(img);
+    } else if (!svgGroupsRef.current && floors[0]?.image) {
+      // Bug 1: single-SVG мульти-этаж (the-lab и пр.) — свой image есть ТОЛЬКО у наземного этажа,
+      // а весь SVG (все <g>-группы этажей) лежит в нём. При заходе сразу на верхний этаж (?floor=N из
+      // URL после reloadWithOverlay) этот эффект видел activeFloor=N, img=null → базовый SVG НЕ грузился
+      // вовсе, подложка пустая. Грузим базовый SVG один раз; дальше переключение этажей — applyFloor
+      // (затемнение групп), без перезагрузки. svgGroupsRef заполнится → повторно сюда не зайдём.
+      loadImageRef.current?.(floors[0].image);
+    }
   }, [activeFloor, isStatic, isTiled, floors]);
 
   // Оверлей меченых комнат на многоэтажной/тайловой карте: показываем только комнаты активного этажа
@@ -2371,6 +2397,7 @@ export function MapViewerClient({
             storyIndex={storyIndex}
             mapSlug={data.slug}
             onCancel={closeCard}
+            onEditGuardChange={handleEditGuard}
             onDrawArea={startAreaDraw}
             lootIndex={lootIndex}
             onMove={startMove}

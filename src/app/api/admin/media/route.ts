@@ -2,6 +2,7 @@
 //
 //   GET    — каталог (последние загрузки)
 //   POST   — загрузить файл (multipart: file, alt) → КОНВЕРТ В WEBP → Cloudflare R2
+//   PATCH  — переименовать (JSON: id, alt) — только правка подписи, файл не трогаем
 //   DELETE — удалить (?id=) из каталога и из бакета (R2 или legacy Supabase Storage)
 //
 // Хранилище — Cloudflare R2 (общий бакет с иконками/картами, zero-egress). Конвертация в webp
@@ -16,7 +17,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { getMe } from "@/lib/auth/me";
 import { canEditContent } from "@/lib/auth/roles";
 import { rateLimit } from "@/lib/rate-limit";
-import { addMedia, listMedia, removeMedia } from "@/db/media";
+import { addMedia, listMedia, removeMedia, updateMediaAlt } from "@/db/media";
 import { r2Configured, r2Put, r2Delete } from "@/lib/r2";
 
 export const runtime = "nodejs";
@@ -125,6 +126,28 @@ export async function POST(req: Request): Promise<NextResponse> {
     console.error("[api/admin/media] catalog", e);
     return err(500, "Каталог медиа недоступен. Прогоните миграцию migrate-media.");
   }
+}
+
+export async function PATCH(req: Request): Promise<NextResponse> {
+  const me = await getMe();
+  if (!me) return err(401, "Не авторизован");
+  if (!canEditContent(me.role)) return err(403, "Только для редакторов ЦТА");
+
+  let body: { id?: unknown; alt?: unknown };
+  try {
+    body = (await req.json()) as { id?: unknown; alt?: unknown };
+  } catch {
+    return err(400, "Некорректный запрос");
+  }
+
+  const id = typeof body.id === "string" ? body.id : "";
+  if (!UUID_RE.test(id)) return err(422, "Некорректный id");
+  const alt = String(body.alt ?? "").trim().slice(0, 200);
+
+  const item = await updateMediaAlt(id, alt);
+  if (!item) return err(404, "Файл не найден");
+
+  return NextResponse.json({ ok: true, item });
 }
 
 export async function DELETE(req: Request): Promise<NextResponse> {
