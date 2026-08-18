@@ -178,7 +178,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       secure: 'Защищенные',
       food: 'Еда',
       drinks: 'Напитки',
-      'battle-pass': 'Предметы для Батлпасса — Сезон 1',
+      'battle-pass': 'BATTLEPASS - S1',
       specialequipment: 'Спецоборудование',
       valuables: 'Ценности',
       electronics: 'Электроника',
