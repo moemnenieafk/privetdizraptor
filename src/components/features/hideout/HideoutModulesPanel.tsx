@@ -77,33 +77,40 @@ export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo
 
   return (
     <div className="rounded-sm bg-(--color-darkbase)">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
-      >
-        <span className="shrink-0 font-blender-medium text-sm uppercase tracking-widest text-text-primary">Убежище ЧВК</span>
-        <span className="hidden min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-muted md:block">
-          Клик по модулю — <span className="text-(--primary)">уровень выше</span>, ПКМ —{' '}
-          <span className="text-text-secondary">ниже</span>. Без кнопок +/−.
-        </span>
-        <ChevronDown className={`ml-auto h-4 w-4 shrink-0 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
-      </button>
+      <div className="flex items-center gap-3 px-3 py-2.5">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
+          <span className="shrink-0 font-blender-medium text-sm uppercase tracking-widest text-text-primary">Убежище ЧВК</span>
+          <span className="hidden min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-muted md:block">
+            Клик по модулю — <span className="text-(--primary)">уровень выше</span>, ПКМ —{' '}
+            <span className="text-text-secondary">ниже</span>. Без кнопок +/−.
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={reset}
+          title="Сбросить все уровни"
+          className="flex h-7 shrink-0 items-center gap-1 rounded-xs border border-lines-hover px-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted transition-colors hover:border-danger hover:text-danger"
+        >
+          <RotateCcw className="h-3 w-3" aria-hidden />
+          Сброс
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? 'Свернуть' : 'Развернуть'}
+          className="shrink-0"
+        >
+          <ChevronDown className={`h-4 w-4 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
+        </button>
+      </div>
 
       {open && (
-        <div className="flex flex-col gap-3 border-t border-lines-hover p-3">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={reset}
-              title="Сбросить все уровни"
-              className="flex h-7 shrink-0 items-center gap-1 rounded-xs border border-lines-hover px-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted transition-colors hover:border-danger hover:text-danger"
-            >
-              <RotateCcw className="h-3 w-3" aria-hidden />
-              Сброс
-            </button>
-          </div>
+        <div className="p-3 pt-0">
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-6">
             {stations.map((s) => (
               <ModuleTile key={s.normalizedName} station={s} />
