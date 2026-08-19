@@ -6,12 +6,12 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
-// slug (normalizedName) → верный shortName
-const FIXES: Record<string, string> = {
-  "can-of-gigabeef-meat": "GigaBeef",
-  "lm-kc-130-model-aircraft": "KC-130",
-  "french-bakery-baguette": "Cocaoo_",
-  "bottle-of-ymxc-water": "YMXC",
+// slug (normalizedName) → верные RU-имя + shortName (у новых предметов и то, и то было мангл).
+const FIXES: Record<string, { name: string; shortName: string }> = {
+  "can-of-gigabeef-meat": { name: "Консервированное мясо", shortName: "GigaBeef" },
+  "lm-kc-130-model-aircraft": { name: "Модель самолёта LM KC-130", shortName: "KC-130" },
+  "french-bakery-baguette": { name: "Багет из французской пекарни", shortName: "Cocaoo_" },
+  "bottle-of-ymxc-water": { name: "Бутылка воды YMXC", shortName: "YMXC" },
 };
 
 async function main() {
@@ -34,7 +34,7 @@ async function main() {
   console.log("Резолв slug → id:");
   for (const s of slugs) console.log(`  ${s} → ${bySlug.get(s) ?? "НЕ НАЙДЕН"}`);
 
-  for (const [slug, shortName] of Object.entries(FIXES)) {
+  for (const [slug, fix] of Object.entries(FIXES)) {
     const id = bySlug.get(slug);
     if (!id) {
       console.warn(`⚠ ${slug}: id не найден в prices — пропуск`);
@@ -50,11 +50,11 @@ async function main() {
     }
     const updated = await db
       .update(items)
-      .set({ shortName })
+      .set({ name: fix.name, shortName: fix.shortName })
       .where(and(eq(items.gameId, gameId), eq(items.inGameId, id)))
       .returning({ id: items.inGameId, name: items.name, shortName: items.shortName });
     console.log(
-      `✓ ${before[0].name}: shortName «${before[0].shortName ?? "—"}» → «${updated[0].shortName}»`,
+      `✓ «${before[0].name}» / «${before[0].shortName ?? "—"}» → «${updated[0].name}» / «${updated[0].shortName}»`,
     );
   }
 
