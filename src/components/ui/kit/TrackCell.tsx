@@ -7,7 +7,7 @@
 //   • Мобайл (грубый указатель): невидимые тап-зоны — левая половина −1, правая +1.
 // Зоны включаются только под `@media (pointer: coarse)`, поэтому на десктопе не мешают
 // ЛКМ/ПКМ, а на телефоне дают убавление без контекстного меню (идея V4DYA).
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Package } from 'lucide-react';
 
 export interface TrackCellProps {
@@ -24,6 +24,12 @@ export interface TrackCellProps {
   sizeClass?: string;
   /** Класс рарити-фона под иконкой. По умолчанию — редкое (#4C2A55 @30%). */
   bgClass?: string;
+  /** Инлайн-фон ячейки (реальный цвет предмета). Переопределяет bgClass. */
+  bgColor?: string;
+  /** Не заливать ячейку вертикально (прогресс показывает родитель — напр. фон строки рейла). */
+  noFill?: boolean;
+  /** Угловой слот (верх-лево): FiR-маркер / бейдж «+N» и т.п. Рисуется поверх. */
+  topLeft?: ReactNode;
   /** Витринный режим: подсветить невидимые мобильные тап-зоны (−/+). */
   revealZones?: boolean;
 }
@@ -38,6 +44,9 @@ export function TrackCell({
   onInc,
   sizeClass = 'h-14 w-14',
   bgClass = 'bg-(--color-rarity-rare)/30',
+  bgColor,
+  noFill = false,
+  topLeft,
   revealZones = false,
 }: TrackCellProps) {
   const [imgFailed, setImgFailed] = useState(false);
@@ -61,12 +70,16 @@ export function TrackCell({
     <div
       className={`relative shrink-0 select-none overflow-hidden rounded-xs border border-(--color-darkbase) ${sizeClass}`}
     >
-      {/* Рарити-фон + линейный блик */}
-      <span aria-hidden className={`absolute inset-0 ${bgClass}`} />
+      {/* Рарити-фон (класс или инлайн реальный цвет предмета) + линейный блик */}
+      <span
+        aria-hidden
+        className={`absolute inset-0 ${bgColor ? '' : bgClass}`}
+        style={bgColor ? { backgroundColor: bgColor } : undefined}
+      />
       <span aria-hidden className="absolute inset-0 bg-gradient-to-b from-white/6 to-transparent" />
 
-      {/* Заливка снизу «собрано/нужно» */}
-      {fillPct > 0 && (
+      {/* Заливка снизу «собрано/нужно» (кроме noFill — там прогресс показывает родитель) */}
+      {!noFill && fillPct > 0 && (
         <span
           aria-hidden
           className={`absolute inset-x-0 bottom-0 ${fillCls} transition-[height] duration-300`}
@@ -101,6 +114,9 @@ export function TrackCell({
       >
         {clampedHave}/{need}
       </span>
+
+      {/* Угловой слот верх-лево: FiR-маркер / бейдж «+N». */}
+      {topLeft && <span className="pointer-events-none absolute left-0 top-0 z-20">{topLeft}</span>}
 
       {/* Десктоп-слой: ЛКМ +1, ПКМ −1. Отключается на грубом указателе. */}
       <button

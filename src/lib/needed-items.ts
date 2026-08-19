@@ -5,8 +5,12 @@
 //   • any-of (o.anyOf + acceptedItems[]) → отдельная «групповая строка» «N из категории»;
 //   • квест-предметы (findQuestItem/…) → per-item, флаг isQuestItem (только рейд, нельзя купить).
 // FiR — per-source (и квесты, и убежище). Имена/иконки — наш Storage (itemIconUrl), не baked.
+import { and, eq, inArray } from 'drizzle-orm';
 import { getQuests, type QuestMode } from '@/data/quests';
-import { getHideoutNeeds } from '@/db/hideout';
+import { getHideoutNeeds, CURRENCY_IDS } from '@/db/hideout';
+import { db } from '@/db';
+import { prices } from '@/db/schema';
+import { eftGameId } from '@/db/eft';
 import { itemIconUrl } from '@/lib/item-icon';
 import type { TaskObjectiveItem } from '@/types/quest';
 
@@ -21,6 +25,8 @@ export interface NeededQuestSource {
   fir: boolean;
   /** giveItem | findItem | plantItem | sellItem | findQuestItem | … */
   type: string;
+  /** RU-имена карт «где искать» (из objective.maps). */
+  maps?: string[];
 }
 export interface NeededHideoutSource {
   station: string;
@@ -34,6 +40,10 @@ export interface NeededItem {
   itemName: string;
   itemShort: string;
   itemIcon: string;
+  /** normalizedName из prices — кросс-линк на карточку предмета. */
+  slug?: string;
+  /** Имя цвета слота (violet/blue/…) из prices — для фона ячейки (getTarkovBackgroundColor). */
+  backgroundColor?: string;
   quests: NeededQuestSource[];
   hideout: NeededHideoutSource[];
   /** Предмет — квест-предмет (только рейд, нельзя купить/застэшить). */
@@ -120,6 +130,7 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
       }
 
       if (!oi.item) continue; // нерезолвнутый предмет → пропуск (§4.4)
+      if (CURRENCY_IDS.has(oi.item.id)) continue; // валюта (₽/€/$) — не собираемый предмет
       const ni = ensure(oi.item.id, oi.item.name, oi.item.shortName);
       ni.quests.push({
         questId: t.id,
@@ -129,6 +140,7 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
         count: oi.count ?? 1,
         fir: !!oi.foundInRaid,
         type: oi.type,
+        maps: oi.maps?.map((m) => m.name).filter((n): n is string => !!n),
       });
       if (isQItem) ni.isQuestItem = true;
     }
@@ -164,6 +176,26 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
     }
     ni.neededTotal = total;
     ni.neededFir = fir;
+  }
+
+  // slug + backgroundColor (цвет слота) из зеркала prices — кросс-линк + фон ячейки.
+  const ids = [...items.keys()];
+  if (ids.length) {
+    const gameId = await eftGameId();
+    const rows = await db
+      .select({
+        inGameId: prices.inGameId,
+        normalizedName: prices.normalizedName,
+        backgroundColor: prices.backgroundColor,
+      })
+      .from(prices)
+      .where(and(eq(prices.gameId, gameId), inArray(prices.inGameId, ids)));
+    const byId = new Map(rows.map((r) => [r.inGameId, r]));
+    for (const ni of items.values()) {
+      const p = byId.get(ni.itemId);
+      if (p?.normalizedName) ni.slug = p.normalizedName;
+      if (p?.backgroundColor) ni.backgroundColor = p.backgroundColor;
+    }
   }
 
   const list = [...items.values()].sort(
