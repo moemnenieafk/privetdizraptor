@@ -28,6 +28,8 @@ export interface ParsedPmcStats {
   survivalRate: number | null;
   /** Часы в рейдах (totalInGameTime → часы). */
   hoursPlayed: number | null;
+  /** Самая длинная серия выживаний ЧВК (LongestWinStreak). */
+  streak: number | null;
 }
 
 /** Верхушка навыков (по уровню) — для превью в Досье. */
@@ -56,6 +58,8 @@ export interface ParsedGameProfile {
   /** Топ навыков по уровню (усечён вызывающим при показе). */
   skillsTop: ParsedSkillTop[];
   achievementsCount: number;
+  /** Заработанные достижения (id из profile.json = id зеркала tarkov.dev). */
+  achievementsEarned: string[];
 }
 
 const emptyPmc: ParsedPmcStats = {
@@ -67,6 +71,7 @@ const emptyPmc: ParsedPmcStats = {
   kd: null,
   survivalRate: null,
   hoursPlayed: null,
+  streak: null,
 };
 
 /** Конечное число → оно само, иначе null (гард на NaN/undefined/Infinity). */
@@ -93,7 +98,16 @@ function flattenPmc(view: PlayerView): ParsedPmcStats {
     kd: num(Number(pmc.kdr.toFixed(2))),
     survivalRate: num(Number(pmc.survivalRate.toFixed(1))),
     hoursPlayed: hoursFrom(view.totalTimeSeconds),
+    streak: num(pmc.streak),
   };
+}
+
+/** Ключи объекта achievements (id заработанных достижений) — совпадают с id зеркала tarkov.dev. */
+function readAchievementIds(json: unknown): string[] {
+  if (typeof json !== "object" || json === null) return [];
+  const a = (json as { achievements?: unknown }).achievements;
+  if (typeof a !== "object" || a === null) return [];
+  return Object.keys(a as Record<string, unknown>);
 }
 
 /** memberCategory сырьём из файла (normalizeProfile его не выносит наружу). */
@@ -124,5 +138,6 @@ export function parseGameProfile(json: unknown): ParsedGameProfile | null {
     pmcStats: flattenPmc(view),
     skillsTop: view.skills.map((s) => ({ id: s.id, level: s.level })),
     achievementsCount: view.achievementsCount,
+    achievementsEarned: readAchievementIds(json),
   };
 }

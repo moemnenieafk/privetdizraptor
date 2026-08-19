@@ -9,6 +9,8 @@ interface AchievementStore {
   trackedIds: string[];
   toggleCompleted: (id: string) => void;
   toggleTracked: (id: string) => void;
+  /** массовая отметка «выполнено» из profile.json — объединяем, ручные не теряем */
+  markCompleted: (ids: string[]) => void;
   /** заливка из облака при логине */
   loadProgress: (completedIds: string[], trackedIds: string[]) => void;
   resetProgress: () => void;
@@ -36,6 +38,18 @@ export const useAchievementStore = create<AchievementStore>()(
             ? s.trackedIds.filter((x) => x !== id)
             : [...s.trackedIds, id],
         })),
+      markCompleted: (ids) =>
+        set((s) => {
+          if (ids.length === 0) return s;
+          const merged = Array.from(new Set([...s.completedIds, ...ids]));
+          if (merged.length === s.completedIds.length) return s; // ничего нового — без ре-рендера
+          const idSet = new Set(ids);
+          return {
+            completedIds: merged,
+            // отмеченное «выполнено» убираем из вотчлиста (как в toggleCompleted)
+            trackedIds: s.trackedIds.filter((x) => !idSet.has(x)),
+          };
+        }),
       loadProgress: (completedIds, trackedIds) => set({ completedIds, trackedIds }),
       resetProgress: () => set({ completedIds: [], trackedIds: [] }),
     }),

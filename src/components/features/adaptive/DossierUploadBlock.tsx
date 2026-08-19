@@ -6,6 +6,7 @@ import { parseProfile, normalizeProfile } from '@/lib/tarkov/player-stats';
 import { parseGameProfile } from '@/lib/parse-profile';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
+import { useAchievementStore } from '@/store/useAchievementStore';
 import { useIsPve } from '@/hooks/useGameMode';
 import { buildSnapshot } from '@/lib/player-profile-sync';
 import { savePlayerProfileAction } from '@/actions/player-profile';
@@ -90,7 +91,13 @@ export function DossierUploadBlock({ isAuthed = false }: { isAuthed?: boolean })
           ...(parsed.pmcStats.killed != null ? { killed: parsed.pmcStats.killed } : {}),
           ...(parsed.pmcStats.survived != null ? { survived: parsed.pmcStats.survived } : {}),
           ...(parsed.pmcStats.kd != null ? { kd: parsed.pmcStats.kd } : {}),
+          ...(parsed.pmcStats.streak != null ? { streak: parsed.pmcStats.streak } : {}),
         });
+      }
+
+      // Достижения из профиля → трекер (объединяем с ручными; AchievementSync зальёт в облако).
+      if (parsed && parsed.achievementsEarned.length > 0) {
+        useAchievementStore.getState().markCompleted(parsed.achievementsEarned);
       }
 
       // Источник: полный игровой/SPT-профиль отличаем по наличию убежища/трейдеров (у тонкого

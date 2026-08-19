@@ -5,6 +5,7 @@ import { Upload, FileWarning, Check } from "lucide-react";
 import { parseProfile, normalizeProfile } from "@/lib/tarkov/player-stats";
 import { parseGameProfile } from "@/lib/parse-profile";
 import { usePlayerStore } from "@/store/usePlayerStore";
+import { useAchievementStore } from "@/store/useAchievementStore";
 import { ProfileStats } from "@/components/features/players/ProfileStats";
 import { SyncPmcButton } from "@/components/features/players/SyncPmcButton";
 import type { PlayerView } from "@/types/eft-player";
@@ -70,8 +71,13 @@ export function ProfileUpload() {
           ...(parsed.pmcStats.killed != null ? { killed: parsed.pmcStats.killed } : {}),
           ...(parsed.pmcStats.survived != null ? { survived: parsed.pmcStats.survived } : {}),
           ...(parsed.pmcStats.kd != null ? { kd: parsed.pmcStats.kd } : {}),
+          ...(parsed.pmcStats.streak != null ? { streak: parsed.pmcStats.streak } : {}),
         });
         setSyncedNick(active.nickname);
+      }
+      // Достижения из профиля → трекер (объединяем с ручными; AchievementSync зальёт в облако).
+      if (parsed && parsed.achievementsEarned.length > 0) {
+        useAchievementStore.getState().markCompleted(parsed.achievementsEarned);
       }
     },
     [profiles, activeProfileId, updateProfile],

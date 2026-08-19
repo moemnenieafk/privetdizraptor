@@ -32,6 +32,8 @@ export interface PlayerProfile {
   survived?: number | null;
   /** K/D = kills/deaths. */
   kd?: number | null;
+  /** Самая длинная серия выживаний ЧВК (LongestWinStreak). */
+  streak?: number | null;
 }
 
 const defaultTraderLevels = {
@@ -70,6 +72,7 @@ export const usePlayerStore = create<PlayerStore>()(
           killed: null,
           survived: null,
           kd: null,
+          streak: null,
         }
       ],
       activeProfileId: '1',
@@ -98,6 +101,7 @@ export const usePlayerStore = create<PlayerStore>()(
           killed: null,
           survived: null,
           kd: null,
+          streak: null,
         };
         return {
           profiles: [...state.profiles, newProfile],

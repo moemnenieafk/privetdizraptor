@@ -747,6 +747,7 @@ export type PlayerProfilePersist = {
   killed?: number | null;
   survived?: number | null;
   kd?: number | null;
+  streak?: number | null;
 };
 
 export const playerProfiles = pgTable(

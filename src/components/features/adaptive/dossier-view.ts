@@ -84,7 +84,7 @@ export function statGrid(profile: PlayerProfile | null, achievements: number): S
     { key: 'hours', label: 'Часов', iconClass: 'icon-eft-stat-gamehours', value: profile?.hoursPlayed ?? null, kind: 'int' },
     { key: 'raids', label: 'Рейдов', iconClass: 'icon-eft-stat-raids', value: profile?.raids ?? null, kind: 'int' },
     { key: 'survived', label: 'Выживаний', iconClass: 'icon-eft-stat-survives', value: survivedCount, kind: 'int' },
-    { key: 'streak', label: 'Серия выживаний', iconClass: 'icon-eft-stat-survives', value: null, kind: 'int' },
+    { key: 'streak', label: 'Серия выживаний', iconClass: 'icon-eft-stat-survives', value: profile?.streak ?? null, kind: 'int' },
     { key: 'kd', label: 'К·О', iconClass: 'icon-eft-stat-kd', value: profile?.kd ?? null, kind: 'ratio' },
     { key: 'kills', label: 'Убийств ЧВК', iconClass: 'icon-eft-stat-pmckills', value: profile?.kills ?? null, kind: 'int' },
     { key: 'deaths', label: 'Смертей', iconClass: 'icon-eft-stat-deaths', value: profile?.deaths ?? null, kind: 'int' },

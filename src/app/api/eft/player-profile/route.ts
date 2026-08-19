@@ -66,6 +66,7 @@ function parseProfile(v: unknown): PlayerProfilePersist | null {
     killed: numOrNull(v.killed),
     survived: numOrNull(v.survived),
     kd: numOrNull(v.kd),
+    streak: numOrNull(v.streak),
   };
 }
 
