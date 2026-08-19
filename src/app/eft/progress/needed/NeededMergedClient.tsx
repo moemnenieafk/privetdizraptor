@@ -202,8 +202,9 @@ export function NeededMergedClient({
   const [onlyHideout, setOnlyHideout] = useState(false);
   const [onlyQuests, setOnlyQuests] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  // Снап-порядок: замораживаем порядок id при загрузке; «убрать собранные» пересобирает.
-  const [snap, setSnap] = useState<string[]>(() => [
+  // Снап-порядок: замораживаем порядок id при загрузке, чтобы строки не прыгали под курсором
+  // при +/− (серверный порядок статичен, живой пересортировки нет).
+  const [snap] = useState<string[]>(() => [
     ...data.items.map((i) => i.itemId),
     ...data.groups.map((g) => `g:${g.key}`),
   ]);
@@ -358,17 +359,9 @@ export function NeededMergedClient({
       visible.push({ id, item: ni, st });
     }
   }
-  const doneCount = data.items.filter((ni) => {
-    const st = stateOf(ni);
-    return st.need > 0 && st.have >= st.need;
-  }).length;
-
   // Разбивка на две колонки (1,3,5 / 2,4,6).
   const left = visible.filter((_, i) => i % 2 === 0);
   const right = visible.filter((_, i) => i % 2 === 1);
-
-  const resnap = () =>
-    setSnap([...data.items.map((i) => i.itemId), ...data.groups.map((g) => `g:${g.key}`)]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -405,15 +398,6 @@ export function NeededMergedClient({
           <FilterChip on={onlyQuests} onClick={() => setOnlyQuests((v) => !v)} icon="/icons/eft/quests-icon.svg">
             По заданиям
           </FilterChip>
-          {doneCount > 0 && (
-            <button
-              type="button"
-              onClick={resnap}
-              className="h-9 flex-1 whitespace-nowrap rounded-sm border border-lines-hover px-2 font-blender-medium text-type-micro uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
-            >
-              Убрать собранные ({doneCount})
-            </button>
-          )}
         </div>
       </div>
 
