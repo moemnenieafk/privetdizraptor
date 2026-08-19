@@ -18,11 +18,28 @@ const ASSET_HOTLINK_HEADERS = [
   { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
 ];
 
+// Оффлоад статических медиа на Cloudflare R2 (zero egress) через 308-редирект: ссылки в коде,
+// data-файлах и CSS остаются `/images/<cat>/...`, а Vercel редиректит их на R2 (файлы 1:1 залиты
+// `npm run db:upload-dir-r2`). Редирект идёт ДО отдачи public/ — локальные копии остаются как
+// фолбэк/источник, но не раздаются. ⚠️ ТОЛЬКО DOM-<img>/CSS-категории: arcade и traders НЕ здесь —
+// их спрайты рисуются на WebGL-канвасе аркад (barter-rush), а R2 без CORS затейнит канвас (см.
+// eft-barter-rush.ts). items/achievements/quests уже отдаются прямым R2-URL из своих резолверов.
+const R2_MEDIA_BASE = process.env.NEXT_PUBLIC_ICON_BASE_URL;
+const R2_MEDIA_CATEGORIES = ['bosses', 'seasons', 'battlepass', 'character', 'quests/eft/story'];
+const R2_MEDIA_REDIRECTS = R2_MEDIA_BASE
+  ? R2_MEDIA_CATEGORIES.map((cat) => ({
+      source: `/images/${cat}/:path*`,
+      destination: `${R2_MEDIA_BASE}/${cat}/:path*`,
+      permanent: true,
+    }))
+  : [];
+
 const nextConfig: NextConfig = {
   /* config options here */
 
   async redirects() {
     return [
+      ...R2_MEDIA_REDIRECTS,
       // «Обновления игры» переехали из «Связи» в «Кодекс» (URL отражает раздел).
       { source: '/eft/comlink/game-updates', destination: '/eft/gamesetting/game-updates', permanent: true },
       { source: '/eft/comlink/game-updates/:slug*', destination: '/eft/gamesetting/game-updates/:slug*', permanent: true },

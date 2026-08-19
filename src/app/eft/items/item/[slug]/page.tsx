@@ -6,6 +6,7 @@ import { eftGameId } from '@/db/eft';
 import { getEftPriceBySlug, getEftPricesByIds, getEftPricesByCategory, getCurrencyRates, getPricesAgeHours } from '@/db/prices';
 import { getItemChanges } from '@/db/game-changes';
 import { itemIconUrl } from '@/lib/item-icon';
+import { getQuestHeroImg } from '@/lib/quest-utils';
 import { EFT_QUESTS } from '@/data/quests';
 import type { ItemEffectsRaw } from '@/data/eft/item-effects';
 import { BreadcrumbsSetter } from '@/components/features/items/BreadcrumbsSetter';
@@ -40,7 +41,7 @@ const QUEST_IMAGE_IDS: Set<string> = (() => {
 })();
 
 const questImage = (taskId: string): string | undefined =>
-  QUEST_IMAGE_IDS.has(taskId) ? `/images/quests/eft/${taskId}.webp` : undefined;
+  QUEST_IMAGE_IDS.has(taskId) ? getQuestHeroImg(taskId) : undefined;
 
 // === ТИПИЗАЦИЯ ===
 
