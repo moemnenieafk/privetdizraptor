@@ -30,6 +30,9 @@ export interface TrackCellProps {
   noFill?: boolean;
   /** Угловой слот (верх-лево): FiR-маркер / бейдж «+N» и т.п. Рисуется поверх. */
   topLeft?: ReactNode;
+  /** Прямой ввод общего числа: клик по бейджу X/Y → инпут, Enter коммитит onSetTotal
+   *  (решает «×4500 кликов» — вводишь число, а не жмёшь). Клампинг до need — внутри. */
+  onSetTotal?: (n: number) => void;
   /** Витринный режим: подсветить невидимые мобильные тап-зоны (−/+). */
   revealZones?: boolean;
 }
@@ -47,9 +50,16 @@ export function TrackCell({
   bgColor,
   noFill = false,
   topLeft,
+  onSetTotal,
   revealZones = false,
 }: TrackCellProps) {
   const [imgFailed, setImgFailed] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const commit = () => {
+    onSetTotal?.(Math.max(0, Math.min(need, parseInt(draft, 10) || 0)));
+    setEditing(false);
+  };
 
   const clampedHave = Math.max(0, Math.min(have, need));
   const state: 'default' | 'tracked' | 'done' =
@@ -108,12 +118,45 @@ export function TrackCell({
       {/* Внутренняя тень слота */}
       <span aria-hidden className={`pointer-events-none absolute inset-0 z-10 ${CELL_SHADOW}`} />
 
-      {/* Бейдж X/Y */}
-      <span
-        className={`absolute bottom-0 right-0 z-20 rounded-tl-xs bg-(--color-darkbase)/90 px-1 py-0.5 font-blender-medium text-[10pt] leading-none ${badgeTxt}`}
-      >
-        {clampedHave}/{need}
-      </span>
+      {/* Бейдж X/Y — кликабелен для прямого ввода числа, если задан onSetTotal */}
+      {onSetTotal ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDraft(String(clampedHave));
+            setEditing(true);
+          }}
+          title="Клик — ввести число"
+          className={`absolute bottom-0 right-0 z-40 cursor-text rounded-tl-xs bg-(--color-darkbase)/90 px-1 py-0.5 font-blender-medium text-[10pt] leading-none ${badgeTxt}`}
+        >
+          {clampedHave}/{need}
+        </button>
+      ) : (
+        <span
+          className={`absolute bottom-0 right-0 z-20 rounded-tl-xs bg-(--color-darkbase)/90 px-1 py-0.5 font-blender-medium text-[10pt] leading-none ${badgeTxt}`}
+        >
+          {clampedHave}/{need}
+        </span>
+      )}
+
+      {/* Оверлей прямого ввода общего числа */}
+      {editing && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-(--color-darkbase)/95 p-1.5">
+          <input
+            autoFocus
+            inputMode="numeric"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.replace(/\D/g, ''))}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commit();
+              if (e.key === 'Escape') setEditing(false);
+            }}
+            className="w-full rounded-xs border border-(--primary) bg-(--color-base) py-0.5 text-center text-base font-blender-medium tabular-nums text-text-primary focus:outline-none"
+          />
+        </div>
+      )}
 
       {/* Угловой слот верх-лево: FiR-маркер / бейдж «+N». */}
       {topLeft && <span className="pointer-events-none absolute left-0 top-0 z-20">{topLeft}</span>}

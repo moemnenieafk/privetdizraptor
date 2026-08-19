@@ -280,6 +280,21 @@ export function NeededMergedClient({
     }
   };
 
+  /** Прямой ввод общего числа (клик по X/Y): заливаем источники в приоритете FiR→не-FiR→убежище до total. */
+  const setTotal = (sources: SrcState[], total: number) => {
+    const order = [
+      ...sources.filter((s) => s.kind === 'quest' && s.fir),
+      ...sources.filter((s) => s.kind === 'quest' && !s.fir),
+      ...sources.filter((s) => s.kind === 'hideout'),
+    ];
+    let remaining = total;
+    for (const s of order) {
+      const give = Math.max(0, Math.min(s.count, remaining));
+      if (give !== s.collected) s.set(give);
+      remaining -= give;
+    }
+  };
+
   const byId = useMemo(() => new Map(data.items.map((i) => [i.itemId, i])), [data.items]);
   const groupById = useMemo(() => new Map(data.groups.map((g) => [g.key, g])), [data.groups]);
 
@@ -399,6 +414,7 @@ export function NeededMergedClient({
                     expanded={open === n.id}
                     onToggle={() => setOpen((o) => (o === n.id ? null : n.id))}
                     onInc={(d) => distribute(n.st!.sources, d)}
+                    onSetTotal={(v) => setTotal(n.st!.sources, v)}
                     stash={n.st!.stash}
                     onStash={(v) => setOwned(n.item!.itemId, v)}
                   />
@@ -441,6 +457,7 @@ function ItemRow({
   expanded,
   onToggle,
   onInc,
+  onSetTotal,
   stash,
   onStash,
 }: {
@@ -449,6 +466,7 @@ function ItemRow({
   expanded: boolean;
   onToggle: () => void;
   onInc: (delta: number) => void;
+  onSetTotal: (total: number) => void;
   stash: number;
   onStash: (v: number) => void;
 }) {
@@ -469,6 +487,7 @@ function ItemRow({
           have={st.have}
           need={st.need}
           onInc={onInc}
+          onSetTotal={onSetTotal}
           noFill
           bgColor={bg}
           sizeClass="h-28 w-28"
@@ -510,7 +529,7 @@ function ItemRow({
             aria-expanded={expanded}
             className={`flex w-fit items-center gap-1 ${MICRO} transition-colors ${expanded ? 'text-(--primary)' : 'text-text-muted hover:text-(--primary)'}`}
           >
-            где найти
+            Подробнее
             <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
           </button>
         </div>
@@ -545,7 +564,7 @@ function ItemRow({
           {!item.isQuestItem && (
             <div className="mt-1 flex items-center justify-between gap-3 border-t border-lines-hover pt-2">
               <span className="flex items-center gap-2 text-type-caption">
-                <span className="text-text-muted">в стэше</span>
+                <span className="text-text-muted">в схроне</span>
                 <QtyControl value={stash} max={9999} onChange={onStash} size="sm" />
               </span>
               <span className="font-blender-medium text-type-caption">
