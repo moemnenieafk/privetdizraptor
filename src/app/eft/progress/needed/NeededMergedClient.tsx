@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, ChevronDown, Search } from 'lucide-react';
-import { ProgressBar, TrackCell } from '@/components/ui/kit';
+import { TrackCell } from '@/components/ui/kit';
 import { QtyControl } from '@/components/ui/QtyControl';
 import { type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
 import { HideoutModulesPanel } from '@/components/features/hideout/HideoutModulesPanel';
@@ -85,6 +85,43 @@ function SummaryStat({ icon, label, value, accent }: { icon: string; label: stri
       />
       <span className={`${MICRO} flex-1 leading-tight text-text-muted`}>{label}</span>
       <AnimatedNumber value={value} className={`font-blender-medium text-[1.75rem] leading-none ${a.num}`} />
+    </div>
+  );
+}
+
+/** Общий прогресс-бар: 12 делений под сетку, %, бегунок-указатель с текущим значением, анимация. */
+function SummaryProgress({ value, max, label, divisions = 12 }: { value: number; max: number; label: string; divisions?: number }) {
+  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  const ptr = Math.min(98, Math.max(2, pct)); // держим бегунок в пределах шкалы
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between">
+        <span className={`${MICRO} text-text-muted`}>{label}</span>
+        <span className="flex items-baseline gap-1 font-blender-medium text-type-caption">
+          <AnimatedNumber value={Math.round(pct)} className="text-(--primary)" />
+          <span className="text-(--primary)">%</span>
+          <span className="text-text-muted">· из {max.toLocaleString('ru-RU')}</span>
+        </span>
+      </div>
+      <div className="relative h-6">
+        {/* Бегунок-указатель со значением над шкалой */}
+        <div className="absolute top-0 z-10 flex -translate-x-1/2 flex-col items-center transition-[left] duration-500 ease-out" style={{ left: `${ptr}%` }}>
+          <span className="rounded-xs bg-(--primary) px-1.5 py-0.5 font-blender-medium text-[10px] leading-none tabular-nums text-(--color-base) shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_50%,transparent)]">
+            <AnimatedNumber value={value} />
+          </span>
+          <span aria-hidden className="h-1.5 w-px bg-(--primary)" />
+        </div>
+        {/* Шкала + анимированная заливка */}
+        <div className="absolute inset-x-0 bottom-0 h-2 overflow-hidden rounded-xs border border-lines-hover bg-(--color-base)">
+          <div className="h-full bg-(--primary)/80 transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
+        </div>
+        {/* Деления под сетку */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2">
+          {Array.from({ length: divisions - 1 }).map((_, i) => (
+            <span key={i} aria-hidden className="absolute top-0 h-full w-0.5 bg-(--color-darkbase)" style={{ left: `${((i + 1) / divisions) * 100}%` }} />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -287,7 +324,7 @@ export function NeededMergedClient({
         <SummaryStat icon="/icons/eft/03-items/price-per-slot.svg" label="Осталось" value={summary.remaining} accent="primary" />
         <SummaryStat icon="/icons/eft/02-quests/quest-modify.svg" label="Докупить" value={summary.buy} accent="amber" />
       </div>
-      <ProgressBar label="Общий прогресс" value={summary.have} max={Math.max(1, summary.need)} colorClass="bg-(--primary)" />
+      <SummaryProgress label="Общий прогресс" value={summary.have} max={summary.need} />
 
       {/* ── Фильтры ── */}
       <div className="flex flex-wrap items-center gap-3">

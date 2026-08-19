@@ -46,23 +46,24 @@ function ModuleTile({ station }: { station: HideoutStationInfo }) {
         className={`absolute inset-y-0 left-0 transition-[width] duration-300 ${done ? 'bg-success/25' : 'bg-(--primary)/20'}`}
         style={{ width: `${pct}%` }}
       />
-      {/* Иконка модуля 28px (маска, перекраска) */}
-      <span
-        aria-hidden
-        className={`relative h-7 w-7 mask-contain mask-center mask-no-repeat transition-colors ${
-          done ? 'bg-success' : active ? 'bg-(--primary)' : 'bg-text-muted group-hover:bg-text-secondary'
-        }`}
-        style={{ maskImage: `url(${moduleIcon(station.normalizedName)})`, WebkitMaskImage: `url(${moduleIcon(station.normalizedName)})` }}
-      />
-      {/* Уровень «0N» 22px */}
-      <span
-        className={`relative font-blender-medium text-[22px] leading-none tabular-nums ${
-          done ? 'text-success' : active ? 'text-(--primary)' : 'text-text-muted'
-        }`}
-      >
-        {String(level).padStart(2, '0')}
+      {/* Иконка модуля 28px + уровень «0N» 22px — в один ряд (компактнее) */}
+      <span className="relative flex items-center gap-2">
+        <span
+          aria-hidden
+          className={`h-7 w-7 shrink-0 mask-contain mask-center mask-no-repeat transition-colors ${
+            done ? 'bg-success' : active ? 'bg-(--primary)' : 'bg-text-muted group-hover:bg-text-secondary'
+          }`}
+          style={{ maskImage: `url(${moduleIcon(station.normalizedName)})`, WebkitMaskImage: `url(${moduleIcon(station.normalizedName)})` }}
+        />
+        <span
+          className={`font-blender-medium text-[22px] leading-none tabular-nums ${
+            done ? 'text-success' : active ? 'text-(--primary)' : 'text-text-muted'
+          }`}
+        >
+          {String(level).padStart(2, '0')}
+        </span>
       </span>
-      {/* Имя модуля */}
+      {/* Имя модуля (под иконкой+уровнем) */}
       <span className="relative line-clamp-1 w-full text-center font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary">
         {station.name}
       </span>
@@ -80,7 +81,7 @@ export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo
   const totalLevels = stations.reduce((n, s) => n + s.maxLevel, 0);
 
   return (
-    <div className="rounded-sm bg-card-menu">
+    <div className="rounded-sm bg-(--color-darkbase)">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
