@@ -51,7 +51,13 @@ export interface Season {
   startAt: string | null;
   /** Заявленная минимальная длительность. */
   minDays: number;
+  /** ISO-дата конца. Официальной у BSG нет → это МИНИМУМ (startAt + minDays); помечается endIsMinimum. */
+  endAt: string | null;
+  /** true — endAt это гарантированный минимум, а не объявленная дата конца. */
+  endIsMinimum?: boolean;
   status: 'announced' | 'live' | 'ended';
+  /** Акцент сезона (CSS-цвет/токен) — бейдж, таймер, активная кнопка, свечение карточки. */
+  accent?: string;
   summary: string[];
   perks: SeasonPerk[];
 }
@@ -441,10 +447,14 @@ export const EFT_SEASONS: Season[] = [
     patch: '1.1.0',
     logoUrl: '/icons/eft/04-progression/seasons/season01/KORD_BREACH_Season01_logo.svg',
     kickoffEvent: 'Blackout',
-    // Окно объявлено (июль 2026), конкретный день BSG не назвала.
-    startAt: null,
+    startAt: '2026-08-03',
     minDays: 74,
-    status: 'announced',
+    // Официальной даты конца НЕТ (BSG отказалась от вайпов) — считаем к гарантированному минимуму:
+    // старт + 74 дня = 2026-10-16. Обновить на точную, когда BSG её объявит. (ресёрч 2026-08-19)
+    endAt: '2026-10-16',
+    endIsMinimum: true,
+    status: 'live',
+    accent: 'var(--color-season-01)',
     summary: [
       'Сезонный персонаж — отдельный и добровольный: 1 уровень, пустой схрон, только PvP.',
       'Основной профиль не трогается: уровень, схрон, убежище и «Каппа» остаются как есть.',
