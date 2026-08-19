@@ -514,13 +514,11 @@ function SourceChip({ s }: { s: SrcState }) {
           style={{ borderColor: color }}
         />
       ) : (
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border" style={{ borderColor: color }}>
-          <span
-            aria-hidden
-            className="h-4 w-4 mask-contain mask-center mask-no-repeat bg-(--color-hideout)"
-            style={{ maskImage: `url(${moduleIcon(s.nn)})`, WebkitMaskImage: `url(${moduleIcon(s.nn)})` }}
-          />
-        </span>
+        <span
+          aria-hidden
+          className="h-7 w-7 shrink-0 mask-contain mask-center mask-no-repeat bg-(--color-hideout)"
+          style={{ maskImage: `url(${moduleIcon(s.nn)})`, WebkitMaskImage: `url(${moduleIcon(s.nn)})` }}
+        />
       )}
       {/* Имя + мета */}
       <span className="flex min-w-0 flex-1 flex-col">
