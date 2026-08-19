@@ -49,7 +49,7 @@ function FirMark({ className = '' }: { className?: string }) {
  */
 const META_BADGE: Record<'quest' | 'hideout' | 'fir', { box: string; icon: string }> = {
   quest: { box: 'border-tactical-amber/40 bg-tactical-amber/10 text-tactical-amber', icon: 'bg-tactical-amber' },
-  hideout: { box: 'border-mode-pve/40 bg-mode-pve/10 text-mode-pve', icon: 'bg-mode-pve' },
+  hideout: { box: 'border-hideout/40 bg-hideout/10 text-hideout', icon: 'bg-hideout' },
   fir: { box: 'border-nvg-green/40 bg-nvg-green/10 text-nvg-green', icon: 'bg-nvg-green' },
 };
 function MetaBadge({ variant, icon, children }: { variant: keyof typeof META_BADGE; icon: string; children: React.ReactNode }) {
@@ -491,10 +491,10 @@ function FilterChip({
 }
 
 /** Чип источника в развороте — микро-версия квест-ноды с карт.
- *  Квест: цвет/аватар трейдера + «УР. N+». Убежище: цвет mode-pve + иконка модуля + уровень «0N». */
+ *  Квест: цвет/аватар трейдера + «УР. N+». Убежище: цвет --color-hideout + иконка модуля + уровень «0N». */
 function SourceChip({ s }: { s: SrcState }) {
   const isQuest = s.kind === 'quest';
-  const color = isQuest ? (TRADER_COLORS[s.nn] ?? TRADER_COLORS.stories) : 'var(--color-mode-pve)';
+  const color = isQuest ? (TRADER_COLORS[s.nn] ?? TRADER_COLORS.stories) : 'var(--color-hideout)';
   return (
     <div
       className="flex items-center gap-2.5 rounded-sm border p-1.5"
@@ -517,7 +517,7 @@ function SourceChip({ s }: { s: SrcState }) {
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border" style={{ borderColor: color }}>
           <span
             aria-hidden
-            className="h-4 w-4 mask-contain mask-center mask-no-repeat bg-(--color-mode-pve)"
+            className="h-4 w-4 mask-contain mask-center mask-no-repeat bg-(--color-hideout)"
             style={{ maskImage: `url(${moduleIcon(s.nn)})`, WebkitMaskImage: `url(${moduleIcon(s.nn)})` }}
           />
         </span>
@@ -532,7 +532,7 @@ function SourceChip({ s }: { s: SrcState }) {
               <span style={{ color }}>УР. {s.minLevel ?? 0}+</span>
             </>
           ) : (
-            <span className="font-blender-medium tabular-nums text-(--color-mode-pve)">
+            <span className="font-blender-medium tabular-nums text-(--color-hideout)">
               УР. {String(s.level ?? 0).padStart(2, '0')}
             </span>
           )}

@@ -90,6 +90,8 @@
   /* Game mode indicators */
   --color-mode-pvp: #9A8866;
   --color-mode-pve: #0095E2;
+  /* Убежище — акцент бейджа/модулей в трекере «Важные предметы» */
+  --color-hideout: #9A8866;
   --color-success: #8DE736;
   --color-failure: #E3433F;
   --color-moderate: #FF7724;
