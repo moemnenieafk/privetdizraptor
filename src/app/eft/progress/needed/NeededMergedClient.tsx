@@ -11,7 +11,8 @@ import Link from 'next/link';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { ProgressBar, TrackCell } from '@/components/ui/kit';
 import { QtyControl } from '@/components/ui/QtyControl';
-import { HideoutLevelsPanel, type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
+import { type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
+import { HideoutModulesPanel } from '@/components/features/hideout/HideoutModulesPanel';
 import { useQuestStore } from '@/store/useQuestStore';
 import { useHideoutStore, hideoutItemKey } from '@/store/useHideoutStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
@@ -314,8 +315,8 @@ export function NeededMergedClient({
         )}
       </div>
 
-      {/* ── Моё убежище ── */}
-      <HideoutLevelsPanel stations={hideoutStations} />
+      {/* ── Убежище ЧВК ── */}
+      <HideoutModulesPanel stations={hideoutStations} />
 
       {/* ── Двухколоночная сетка (masonry: 2 независимые колонки) ── */}
       {visible.length === 0 ? (
