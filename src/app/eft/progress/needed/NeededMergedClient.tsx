@@ -389,7 +389,7 @@ export function NeededMergedClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Поиск предмета…"
-            className="h-9 w-full rounded-full border border-lines-hover bg-(--color-base) pl-10 pr-4 font-blender-book text-type-caption text-text-primary placeholder:text-text-muted focus:border-(--primary) focus:outline-none"
+            className="h-9 w-full rounded-sm border border-lines-hover bg-(--color-base) pl-10 pr-4 font-blender-book text-type-caption text-text-primary placeholder:text-text-muted focus:border-(--primary) focus:outline-none"
           />
         </div>
         <div className="flex flex-1 flex-wrap items-center gap-2">
@@ -409,7 +409,7 @@ export function NeededMergedClient({
             <button
               type="button"
               onClick={resnap}
-              className="h-9 flex-1 rounded-full border border-lines-hover px-3 font-blender-medium text-type-caption uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
+              className="h-9 flex-1 whitespace-nowrap rounded-sm border border-lines-hover px-2 font-blender-medium text-type-micro uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
             >
               Убрать собранные ({doneCount})
             </button>
@@ -473,7 +473,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`flex h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 font-blender-medium text-type-caption uppercase tracking-wider transition-colors ${
+      className={`flex h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm border px-2 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
         on ? 'border-(--primary) bg-(--primary)/15 text-(--primary)' : 'border-lines-hover text-text-muted hover:text-text-secondary'
       }`}
     >
