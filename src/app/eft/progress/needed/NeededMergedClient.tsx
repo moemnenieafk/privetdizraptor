@@ -12,7 +12,9 @@ import { Check, ChevronDown, Search } from 'lucide-react';
 import { TrackCell } from '@/components/ui/kit';
 import { QtyControl } from '@/components/ui/QtyControl';
 import { type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
-import { HideoutModulesPanel } from '@/components/features/hideout/HideoutModulesPanel';
+import { HideoutModulesPanel, moduleIcon } from '@/components/features/hideout/HideoutModulesPanel';
+import { TRADER_COLORS } from '@/data/traderColors';
+import { traderImg } from '@/lib/trader-utils';
 import { useQuestStore } from '@/store/useQuestStore';
 import { useHideoutStore, hideoutItemKey } from '@/store/useHideoutStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
@@ -154,10 +156,16 @@ interface SrcState {
   kind: 'quest' | 'hideout';
   label: string;
   sub: string;
+  /** normalizedName: торговец (квест) или станция (убежище) — для цвета/аватара/иконки чипа. */
+  nn: string;
   count: number;
   collected: number;
   fir: boolean;
   maps?: string[];
+  /** Уровень станции (убежище) — для индикатора «0N». */
+  level?: number;
+  /** minPlayerLevel (квест) — для бейджа «УР. N+». */
+  minLevel?: number;
   set: (n: number) => void;
 }
 interface ItemState {
@@ -191,6 +199,8 @@ export function NeededMergedClient({
   const [search, setSearch] = useState('');
   const [hideDone, setHideDone] = useState(true);
   const [firOnly, setFirOnly] = useState(false);
+  const [onlyHideout, setOnlyHideout] = useState(false);
+  const [onlyQuests, setOnlyQuests] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   // Снап-порядок: замораживаем порядок id при загрузке; «убрать собранные» пересобирает.
   const [snap, setSnap] = useState<string[]>(() => [
@@ -224,10 +234,12 @@ export function NeededMergedClient({
         kind: 'quest',
         label: q.questName,
         sub: q.trader,
+        nn: q.traderNn,
         count: q.count,
         collected,
         fir: q.fir,
         maps: q.maps,
+        minLevel: q.minLevel,
         set: (n) => setItemCount(q.questId, q.objectiveId, Math.max(0, Math.min(q.count, n))),
       });
     }
@@ -244,9 +256,11 @@ export function NeededMergedClient({
         kind: 'hideout',
         label: h.stationName,
         sub: `Ур. ${h.level}`,
+        nn: h.station,
         count: h.count,
         collected,
         fir: h.fir,
+        level: h.level,
         set: (n) => setHideoutProgress(key, Math.max(0, Math.min(h.count, n))),
       });
     }
@@ -325,6 +339,7 @@ export function NeededMergedClient({
     if (id.startsWith('g:')) {
       const g = groupById.get(id.slice(2));
       if (!g) continue;
+      if (onlyHideout) continue; // any-of группы — квестовые, не убежище
       if (q && !g.questName.toLowerCase().includes(q)) continue;
       if (hideDone) {
         /* группы прогресс не трекают в v1 — показываем всегда, если не done-фильтр не режет */
@@ -336,6 +351,8 @@ export function NeededMergedClient({
       const st = stateOf(ni);
       if (st.need === 0) continue;
       if (firOnly && st.needFir === 0) continue;
+      if (onlyHideout && !st.sources.some((s) => s.kind === 'hideout')) continue;
+      if (onlyQuests && !st.sources.some((s) => s.kind === 'quest')) continue;
       if (hideDone && st.have >= st.need) continue;
       if (q && !ni.itemName.toLowerCase().includes(q) && !ni.itemShort.toLowerCase().includes(q)) continue;
       visible.push({ id, item: ni, st });
@@ -364,30 +381,40 @@ export function NeededMergedClient({
       </div>
       <SummaryProgress label="Общий прогресс" value={summary.have} max={summary.need} />
 
-      {/* ── Фильтры ── */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" aria-hidden />
+      {/* ── Фильтры: поиск на полширины (скруглён) + gap 28px + кнопки равномерно (gap 8px) ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-7">
+        <div className="relative w-full sm:w-1/2">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" aria-hidden />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Поиск предмета…"
-            className="h-9 w-full rounded-xs border border-lines-hover bg-(--color-base) pl-8 pr-3 font-blender-book text-type-caption text-text-primary placeholder:text-text-muted focus:border-(--primary) focus:outline-none"
+            className="h-9 w-full rounded-full border border-lines-hover bg-(--color-base) pl-10 pr-4 font-blender-book text-type-caption text-text-primary placeholder:text-text-muted focus:border-(--primary) focus:outline-none"
           />
         </div>
-        <FilterChip on={hideDone} onClick={() => setHideDone((v) => !v)}>Скрыть готовые</FilterChip>
-        <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)} icon="/icons/eft/02-quests/side-quests.svg">
-          Найдено в рейде
-        </FilterChip>
-        {doneCount > 0 && (
-          <button
-            type="button"
-            onClick={resnap}
-            className="ml-auto h-9 rounded border border-lines-hover px-3 font-blender-medium text-type-caption uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
-          >
-            Убрать собранные ({doneCount})
-          </button>
-        )}
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          <FilterChip on={hideDone} onClick={() => setHideDone((v) => !v)} lucide={<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}>
+            Скрыть готовые
+          </FilterChip>
+          <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)} icon="/icons/eft/02-quests/side-quests.svg">
+            Найдено в рейде
+          </FilterChip>
+          <FilterChip on={onlyHideout} onClick={() => setOnlyHideout((v) => !v)} icon="/icons/eft/04-progression/hideout-modules.svg">
+            Строю Убежище
+          </FilterChip>
+          <FilterChip on={onlyQuests} onClick={() => setOnlyQuests((v) => !v)} icon="/icons/eft/quests-icon.svg">
+            По заданиям
+          </FilterChip>
+          {doneCount > 0 && (
+            <button
+              type="button"
+              onClick={resnap}
+              className="h-9 flex-1 rounded-full border border-lines-hover px-3 font-blender-medium text-type-caption uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
+            >
+              Убрать собранные ({doneCount})
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Убежище ЧВК ── */}
@@ -428,13 +455,25 @@ export function NeededMergedClient({
   );
 }
 
-function FilterChip({ on, onClick, icon, children }: { on: boolean; onClick: () => void; icon?: string; children: React.ReactNode }) {
+function FilterChip({
+  on,
+  onClick,
+  icon,
+  lucide,
+  children,
+}: {
+  on: boolean;
+  onClick: () => void;
+  icon?: string;
+  lucide?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`flex h-9 items-center gap-1.5 rounded border px-3 font-blender-medium text-type-caption uppercase tracking-wider transition-colors ${
+      className={`flex h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 font-blender-medium text-type-caption uppercase tracking-wider transition-colors ${
         on ? 'border-(--primary) bg-(--primary)/15 text-(--primary)' : 'border-lines-hover text-text-muted hover:text-text-secondary'
       }`}
     >
@@ -445,8 +484,76 @@ function FilterChip({ on, onClick, icon, children }: { on: boolean; onClick: () 
           style={{ maskImage: `url(${icon})`, WebkitMaskImage: `url(${icon})` }}
         />
       )}
+      {lucide}
       {children}
     </button>
+  );
+}
+
+/** Чип источника в развороте — микро-версия квест-ноды с карт.
+ *  Квест: цвет/аватар трейдера + «УР. N+». Убежище: цвет mode-pve + иконка модуля + уровень «0N». */
+function SourceChip({ s }: { s: SrcState }) {
+  const isQuest = s.kind === 'quest';
+  const color = isQuest ? (TRADER_COLORS[s.nn] ?? TRADER_COLORS.stories) : 'var(--color-mode-pve)';
+  return (
+    <div
+      className="flex items-center gap-2.5 rounded-sm border p-1.5"
+      style={{
+        borderColor: color,
+        background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${color} 38%, transparent), #000000)`,
+        boxShadow: `0 0 10px color-mix(in srgb, ${color} 20%, transparent)`,
+      }}
+    >
+      {/* Аватар трейдера / иконка модуля 28px */}
+      {isQuest ? (
+        <img
+          src={traderImg(s.nn)}
+          alt=""
+          loading="lazy"
+          className="h-7 w-7 shrink-0 rounded-full border object-cover"
+          style={{ borderColor: color }}
+        />
+      ) : (
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border" style={{ borderColor: color }}>
+          <span
+            aria-hidden
+            className="h-4 w-4 mask-contain mask-center mask-no-repeat bg-(--color-mode-pve)"
+            style={{ maskImage: `url(${moduleIcon(s.nn)})`, WebkitMaskImage: `url(${moduleIcon(s.nn)})` }}
+          />
+        </span>
+      )}
+      {/* Имя + мета */}
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate font-blender-medium text-type-caption text-text-primary">{s.label}</span>
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-type-micro uppercase tracking-wide text-text-muted">
+          {isQuest ? (
+            <>
+              <span className="text-text-secondary">{s.sub}</span>
+              <span style={{ color }}>УР. {s.minLevel ?? 0}+</span>
+            </>
+          ) : (
+            <span className="font-blender-medium tabular-nums text-(--color-mode-pve)">
+              УР. {String(s.level ?? 0).padStart(2, '0')}
+            </span>
+          )}
+          {s.fir && (
+            <span className="flex items-center gap-0.5 text-nvg-green">
+              <Check className="h-3 w-3" strokeWidth={3} aria-hidden /> в рейде
+            </span>
+          )}
+          {s.maps?.map((m) =>
+            MAP_SLUG[m] ? (
+              <Link key={m} href={`/eft/maps/${MAP_SLUG[m]}`} className="text-text-secondary hover:text-(--primary)">
+                {m}
+              </Link>
+            ) : (
+              <span key={m}>{m}</span>
+            ),
+          )}
+        </span>
+      </span>
+      <QtyControl value={s.collected} max={s.count} onChange={s.set} size="sm" />
+    </div>
   );
 }
 
@@ -536,29 +643,9 @@ function ItemRow({
       </div>
 
       {expanded && (
-        <div className="relative flex flex-col gap-2 border-t border-nvg-green/20 p-2.5">
+        <div className="relative flex flex-col gap-1.5 p-2.5 pt-0">
           {st.sources.map((s, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="flex items-center gap-1 truncate font-blender-medium text-type-caption text-text-primary">
-                  {s.fir && <Check className="h-3 w-3 shrink-0 text-nvg-green" strokeWidth={3} aria-hidden />}
-                  {s.label}
-                </span>
-                <span className="flex flex-wrap items-center gap-x-2 text-type-micro uppercase text-text-muted">
-                  <span>{s.sub}</span>
-                  {s.maps?.map((m) =>
-                    MAP_SLUG[m] ? (
-                      <Link key={m} href={`/eft/maps/${MAP_SLUG[m]}`} className="text-text-secondary hover:text-(--primary)">
-                        {m}
-                      </Link>
-                    ) : (
-                      <span key={m}>{m}</span>
-                    ),
-                  )}
-                </span>
-              </span>
-              <QtyControl value={s.collected} max={s.count} onChange={s.set} size="sm" />
-            </div>
+            <SourceChip key={i} s={s} />
           ))}
           {/* Стэш / докупить */}
           {!item.isQuestItem && (
