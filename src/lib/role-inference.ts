@@ -105,7 +105,12 @@ export interface ProfileFacts {
   traderLevelAvg: number | null;
   survivalRate: number | null;
   raids: number | null;
+  /** Доля собранного трекера Каппы 0..1 (из useQuestStore), null — трекер пуст/не загружен. */
+  kappaProgress: number | null;
 }
+
+/** Порог сбора Каппы, при котором Каппавод детерминированно становится primary (§ чек-7 сверки). */
+export const KAPPA_PRIMARY_LOCK = 0.75;
 
 /** Результат инференса. */
 export interface RoleInference {
@@ -182,9 +187,11 @@ function inferAxes(signals: BehaviorSignals, facts: ProfileFacts): RoleAxes {
   // Эконом↔боевой: бартеры/цены vs билды/боссы.
   const economy = (g('barters') + g('prices') + g('loot')) / total;
   const combat = (g('loadouts') + g('gunsmith') + g('bosses')) / total;
-  // Спидран↔коллекционер: квест-фокус vs needed/лут (складирование).
+  // Спидран↔коллекционер: квест-фокус vs needed/лут (складирование). Сбор Каппы — сильный
+  // сигнал «коллекционера» (осознанное складирование редких предметов под контейнер).
   const sprint = (g('quests') + g('questmap')) / total;
-  const collect = (g('needed') + g('loot') + g('hideout')) / total;
+  const kappaCollect = facts.kappaProgress != null ? facts.kappaProgress * 0.6 : 0;
+  const collect = (g('needed') + g('loot') + g('hideout')) / total + kappaCollect;
   // Соло↔сокланы: пока только видео как слабый прокси «смотрит комьюнити».
   const clan = (g('videos') + g('comlink') + g('partner')) / total;
   // Выживаемость: высокая → осторожный, низкая → агрессивный.
@@ -240,6 +247,19 @@ export function computeRole(facts: ProfileFacts, signals: BehaviorSignals = {}):
     scores.collector += 1.5;
     reasons.push('престиж пройден — гонит достижения/каппу');
   }
+  // Каппа: активный сбор трекера Коллекционера — прямая, сильная улика «Каппавода».
+  // Вес растёт с долей (до +6) и на серьёзном сборе перевешивает поведение → primary.
+  // Распределяем по смежным: сбор Каппы = эндгейм-квестинг (progressor); финал = тащер-гринд.
+  const kappa = facts.kappaProgress;
+  if (kappa != null && kappa > 0) {
+    scores.collector += kappa * 6;
+    scores.progressor += kappa * 1.5;
+    reasons.push(`трекер Каппы: собрано ${Math.round(kappa * 100)}%`);
+    if (kappa >= 0.8) {
+      scores.tryhard += 1;
+      reasons.push('Каппа почти закрыта — эндгейм-цель');
+    }
+  }
   // Тащер: высокая выживаемость как прокси «тащит рейды» (K/D в фактах нет — берём survivalRate).
   if (facts.survivalRate != null && facts.survivalRate >= 55) {
     scores.tryhard += 1.5;
@@ -258,8 +278,20 @@ export function computeRole(facts: ProfileFacts, signals: BehaviorSignals = {}):
   // 4. Ранжирование.
   const ranked = (Object.entries(scores) as [PlayerRole, number][])
     .sort((a, b) => b[1] - a[1]);
-  const [primary, primaryScore] = ranked[0];
-  const [secondary, secondaryScore] = ranked[1];
+  let [primary, primaryScore] = ranked[0];
+  let [secondary, secondaryScore] = ranked[1];
+
+  // 4.5. Каппа-лок: при сборе ≥ порога Каппавод перехватывает primary МИМО поведения.
+  //      Фактовый сигнал (единицы очков) не может конкурировать с безграничными счётчиками
+  //      визитов (сотни), поэтому у активного игрока это не «вес», а детерминированный захват:
+  //      собрал ≥ порога контейнера — ты Каппавод, что бы ты ни листал. Прежний лидер → secondary.
+  if ((facts.kappaProgress ?? 0) >= KAPPA_PRIMARY_LOCK && primary !== 'collector') {
+    secondary = primary;
+    secondaryScore = primaryScore;
+    primary = 'collector';
+    primaryScore = scores.collector;
+    reasons.push('Каппа собрана под порог — архетип закреплён за Каппаводом');
+  }
 
   // 5. Уверенность: объём поведения + наличие фактов + отрыв лидера.
   const hasFacts = facts.level !== null || facts.hoursPlayed !== null || facts.prestige !== null;

@@ -32,7 +32,14 @@ export function CollectorTracker({ questId, items }: Props) {
   const itemProgress = useQuestStore((s) => s.itemProgress);
   const setItemCount = useQuestStore((s) => s.setItemCount);
   const resetItemProgress = useQuestStore((s) => s.resetItemProgress);
+  const setKappaObjectiveIds = useQuestStore((s) => s.setKappaObjectiveIds);
   const [query, setQuery] = useState('');
+
+  // Засеиваем набор id'ов Каппы в персист-стор (сеттер с гардом) → Досье и инференс роли считают
+  // Каппу даже без визита карты заданий и переживают refresh (сверка, факт B).
+  useEffect(() => {
+    setKappaObjectiveIds(items.map((it) => it.objectiveId));
+  }, [items, setKappaObjectiveIds]);
   const [confirmReset, setConfirmReset] = useState(false);
 
   const progressForQuest = itemProgress[questId];

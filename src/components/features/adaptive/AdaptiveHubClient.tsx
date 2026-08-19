@@ -24,6 +24,8 @@ import { useIsPve } from '@/hooks/useGameMode';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAchievementStore } from '@/store/useAchievementStore';
 import { useFirstVisitStore } from '@/store/useFirstVisitStore';
+import { useQuestStore } from '@/store/useQuestStore';
+import { kappaProgressFromIds } from '@/lib/kappa-progress';
 import { computeStanding } from '@/lib/player-standing';
 import {
   CompetencyRadar,
@@ -62,6 +64,8 @@ export interface HubServerProps {
   serverError?: boolean;
   /** Снапшот профиля с сервера (точка истины). null — аноним/нет сохранённого профиля. */
   profileSnapshot?: PlayerProfileSnapshot | null;
+  /** objective-id'ы Каппы, посчитанные RSC из EFT_QUESTS — блок/сигнал работают на холодном хабе. */
+  kappaObjectiveIds?: string[];
 }
 
 /** Формат значения стат-ячейки: целое с разделителями либо коэффициент (K/O 0.71). */
@@ -170,7 +174,13 @@ export function AdaptiveHubClient(props: HubServerProps = {
   karmaComlinkTier: null,
   karmaCompanion: null,
 }) {
-  const { isAuthed, karmaComlink, karmaComlinkTier, karmaCompanion, serverError, profileSnapshot } = props;
+  const { isAuthed, karmaComlink, karmaComlinkTier, karmaCompanion, serverError, profileSnapshot, kappaObjectiveIds = [] } = props;
+
+  // Засеиваем набор id'ов Каппы (с сервера) в персист-стор → инференс роли (RoleAutoWire) и любой
+  // холодный вход в Досье считают Каппу без рантайм-tasks. Сеттер с гардом — лишних ререндеров нет.
+  useEffect(() => {
+    if (kappaObjectiveIds.length) useQuestStore.getState().setKappaObjectiveIds(kappaObjectiveIds);
+  }, [kappaObjectiveIds]);
 
   useEffect(() => {
     void useRoleStore.persist.rehydrate();
@@ -201,6 +211,10 @@ export function AdaptiveHubClient(props: HubServerProps = {
   const pve = useIsPve();
   const { tier } = useSubscription();
   const achievements = useAchievementStore((s) => s.completedIds.length);
+
+  // Прогресс трекера Каппы — контекстный сигнал архетипа «Каппавод». total из серверных id'ов (пропс),
+  // found реактивно из itemProgress — блок живёт и на холодном хабе (refresh/deep-link), см. факт B.
+  const kappaItemProgress = useQuestStore((s) => s.itemProgress);
 
   // Под-трек архетипа (XP-слой): mount-гейт своего persist-стора — до регидрации чип не рендерим.
   const xpHydrated = useXpStore((s) => s._hasHydrated);
@@ -246,6 +260,9 @@ export function AdaptiveHubClient(props: HubServerProps = {
 
   const visual = ARCHETYPE_VISUALS[effectiveRole];
   const roleLabel = ROLE_LABELS[effectiveRole];
+  // Каппа-прогресс показываем только Каппаводу (контекст архетипа) и только когда набор id'ов засеян.
+  const kappa = kappaProgressFromIds(kappaObjectiveIds, kappaItemProgress);
+  const showKappa = effectiveRole === 'collector' && kappa.total > 0;
   const level = profile ? Number.parseInt(profile.level, 10) : NaN;
   const prestige = profile ? Number.parseInt(profile.prestige, 10) : 0;
 
@@ -430,6 +447,40 @@ export function AdaptiveHubClient(props: HubServerProps = {
               />
             </button>
           </div>
+
+          {/* Каппа: прогресс трекера Коллекционера — контекстный блок архетипа «Каппавод» */}
+          {showKappa && (
+            <Link
+              href="/eft/progress/collector"
+              className="group flex flex-col gap-2 rounded-xs border border-lines-hover bg-(--color-base) p-3 transition-colors hover:border-(--primary)/50"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
+                  Контейнер Kappa
+                </span>
+                <span className="text-type-micro font-blender-medium uppercase tracking-widest text-text-secondary">
+                  {kappa.found} / {kappa.total}
+                </span>
+              </div>
+              <div className="h-1 w-full overflow-hidden rounded-full bg-lines-hover">
+                <div
+                  className="h-full rounded-full bg-(--primary) transition-[width] duration-300"
+                  style={{ width: `${kappa.pct}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className="text-type-micro font-blender-medium uppercase tracking-widest"
+                  style={{ color: visual.accent }}
+                >
+                  Собрано {kappa.pct}%
+                </span>
+                <span className="inline-flex items-center gap-1 text-type-micro font-blender-medium uppercase tracking-widest text-text-muted transition-colors group-hover:text-(--primary)">
+                  Трекер <ArrowRight className="size-3" />
+                </span>
+              </div>
+            </Link>
+          )}
 
           {/* Тир подписки */}
           <div className="flex items-center justify-between gap-3">

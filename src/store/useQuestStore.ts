@@ -11,6 +11,12 @@ interface QuestStore {
   toggleQuest: (id: string) => void;
   resetProgress: () => void;
 
+  // Каппа-мета: objective-id'ы предметов контейнера Kappa. Засеваются сервером (RSC Досье и
+  // страница трекера), персистятся → Досье и инференс роли считают Каппу без рантайм-tasks,
+  // переживая refresh/deep-link (см. сверку, факт B).
+  kappaObjectiveIds: string[];
+  setKappaObjectiveIds: (ids: string[]) => void;
+
   // UX-3: Item tracking — questId → objectiveId → foundCount
   itemProgress: Record<string, Record<string, number>>;
   setItemCount: (questId: string, objectiveId: string, count: number) => void;
@@ -53,6 +59,14 @@ export const useQuestStore = create<QuestStore>()(
           };
         }),
       resetProgress: () => set({ completedQuests: [], itemProgress: {}, checkedObjectives: {} }),
+
+      kappaObjectiveIds: [],
+      setKappaObjectiveIds: (ids) =>
+        set((s) =>
+          s.kappaObjectiveIds.length === ids.length && s.kappaObjectiveIds.every((v, i) => v === ids[i])
+            ? s // тот же набор — не дёргаем подписчиков (иначе RoleAutoWire зациклит пересчёт)
+            : { kappaObjectiveIds: ids },
+        ),
 
       itemProgress: {},
       setItemCount: (questId, objectiveId, count) =>
@@ -126,6 +140,7 @@ export const useQuestStore = create<QuestStore>()(
         checkedObjectives: s.checkedObjectives,
         pinnedQuests: s.pinnedQuests,
         questNotes: s.questNotes,
+        kappaObjectiveIds: s.kappaObjectiveIds,
       }),
     },
   ),

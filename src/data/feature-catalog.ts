@@ -35,6 +35,7 @@ export interface PortalFeature {
 export const FEATURE_CATALOG: readonly PortalFeature[] = [
   { id: 'maps', name: 'Карты локаций', description: 'Интерактивные топографические данные', iconPath: '/icons/eft/maps-icon.svg', href: '/eft/maps', ready: true, big: true },
   { id: 'questmap', name: 'Карта заданий', description: 'Интерактивный прогресс выполнения заданий', iconPath: '/icons/eft/04-progression/quest-map.svg', href: '/eft/questmap', ready: true },
+  { id: 'collector', name: 'Трекер Каппы', description: 'Все предметы контейнера Kappa — отмечай собранное', iconPath: '/icons/eft/profile-pannel/kappa_icon.svg', href: '/eft/progress/collector', ready: true },
   { id: 'items', name: 'Предметы', description: 'База предметов: цены, тиры лута, характеристики', iconPath: '/icons/eft/03-items/loot-tier.svg', href: '/eft/items', ready: true },
   { id: 'story', name: 'Сюжетные', description: 'Сюжетные квесты и прохождение по шагам', iconPath: '/icons/eft/02-quests/lore-quests.svg', href: '/eft/quests/lore-quests', ready: true },
   { id: 'side', name: 'Побочные', description: 'Побочные задания торговцев', iconPath: '/icons/eft/02-quests/side-quests.svg', href: '/eft/quests/side-quests', ready: true },
@@ -90,7 +91,7 @@ export const ARCHETYPE_FEATURES: Record<PlayerRole, readonly string[]> = {
   lore: ['maps', 'items', 'codex', 'story', 'events', 'game-updates', 'news', 'blog'],
   squad: ['maps', 'items', 'find-partner', 'candidates', 'discussions', 'streams', 'events', 'arcade'],
   seasonal: ['maps', 'items', 'seasons', 'battlepass', 'events', 'achievements', 'progress', 'arcade'],
-  collector: ['maps', 'items', 'achievements', 'questmap', 'side', 'tracker', 'needed', 'prestige'],
+  collector: ['maps', 'items', 'collector', 'achievements', 'questmap', 'side', 'tracker', 'needed', 'prestige'],
   tryhard: ['maps', 'items', 'loadouts', 'streams', 'achievements', 'events', 'arcade'],
   casual: ['maps', 'items', 'arcade', 'events', 'streams', 'news', 'codex'],
 };

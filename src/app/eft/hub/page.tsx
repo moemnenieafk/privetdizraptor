@@ -4,6 +4,7 @@ import { getMe } from '@/lib/auth/me';
 import { getKarmaMap } from '@/db/comlink';
 import { getCompanionKarma } from '@/db/companion-prices';
 import { getPlayerProfileSnapshot } from '@/db/player-profile';
+import { getKappaObjectiveIds } from '@/lib/kappa-objectives.server';
 
 export const metadata: Metadata = { title: 'Досье игрока | ЦТА' };
 
@@ -49,13 +50,15 @@ async function loadServerSignals(): Promise<HubServerProps> {
 
 export default async function AdaptiveHubPage() {
   const server = await loadServerSignals();
+  // Набор id'ов Каппы (статичен, из EFT_QUESTS) — чтобы блок и инференс жили на холодном хабе (факт B).
+  const kappaObjectiveIds = getKappaObjectiveIds();
 
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-4 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">
         {/* Шапка (HubNav) и весь досье-визуал — внутри клиента: заголовок/навигация по разделу
             живут в DossierHubNav. Страница остаётся RSC-обёрткой и прокидывает серверную карму. */}
-        <AdaptiveHubClient {...server} />
+        <AdaptiveHubClient {...server} kappaObjectiveIds={kappaObjectiveIds} />
       </div>
     </main>
   );
