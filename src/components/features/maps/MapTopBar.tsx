@@ -68,16 +68,19 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
 
   return (
     // 3-колоночный грид [minmax(0,1fr) · auto · minmax(0,1fr)]: боковые колонки принудительно равны →
-    // средняя (плашка карты) ВСЕГДА по центру бара = центру контент-области (в фулскрине = центру экрана),
-    // независимо от числа кнопок слева/справа. Слева — вьюер/одиночное/замер/отряд; справа — все батч + фулскрин.
+    // средняя (плашка карты) ВСЕГДА по центру бара = центру контент-области (в фулскрине = центру экрана).
+    // Кластеры инструментов ЖМУТСЯ К ПЛАШКЕ (justify-self-end слева / start справа), а не к краям вьюпорта —
+    // у краёв открываются drawer'ы (поиск слева, легенда справа) и накрыли бы инструменты (design-to-code, Figma 2924-1422).
     <div className="relative grid h-14 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3.5 px-3.5 border-t border-lines-hover shrink-0">
-      {/* ЛЕВО: поиск(угол) · линейка · скрин · метка · оверрайд · отряд */}
-      <div className="flex min-w-0 items-center gap-3.5 justify-self-start overflow-x-auto scrollbar-hidden">
+      {/* ЛЕВО: поиск — у ЛЕВОГО КРАЯ (это тоггл/закрытие левого drawer'а, стоит на его крае);
+          остальные инструменты — кластером, жмутся к плашке (ml-auto), край оставляем под drawer. */}
+      <div className="flex min-w-0 items-center overflow-x-auto scrollbar-hidden">
         {(!data.config.staticMap || data.config.editorial) && (
           <button type="button" onClick={toggleSearch} title="Поиск (Ctrl+F)" aria-label="Поиск" className={toggleCls(searchOpen)}>
             <span className="icon-mask icon-eft-search-icon h-5.5 w-5.5" />
           </button>
         )}
+        <div className="ml-auto flex items-center gap-3.5">
         {hasRuler && (
           <button type="button" onClick={toggleRuler} title="Линейка — замер расстояния (ЛКМ точки, ПКМ сброс)" aria-label="Линейка" className={toggleCls(rulerActive)}>
             <Ruler className="h-5.5 w-5.5" />
@@ -141,6 +144,7 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
             )}
           </button>
         )}
+        </div>
       </div>
 
       {/* ЦЕНТР: плашка карты — всегда по центру бара */}
@@ -152,8 +156,10 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
         activeRaidDuration={data.raidDuration}
       />
 
-      {/* ПРАВО: батч-добавл · батч-правка · батч-удаление · фулскрин · легенда(угол) */}
-      <div className="flex min-w-0 items-center justify-end gap-3.5 justify-self-end overflow-x-auto scrollbar-hidden">
+      {/* ПРАВО: легенда — у ПРАВОГО КРАЯ (тоггл/закрытие правого drawer'а, стоит на его крае);
+          остальные — кластером, жмутся к плашке (mr-auto), край оставляем под drawer. */}
+      <div className="flex min-w-0 items-center overflow-x-auto scrollbar-hidden">
+        <div className="mr-auto flex items-center gap-3.5">
         {canEdit && (
           <button
             type="button"
@@ -211,6 +217,7 @@ export function MapTopBar({ data, navMaps, isFullscreen, onToggleFullscreen, can
         >
           {isFullscreen ? <Minimize className="h-5.5 w-5.5" /> : <Maximize className="h-5.5 w-5.5" />}
         </button>
+        </div>
         {(hasLayers || !!data.config.editorial) && (
           <button type="button" onClick={toggleLayers} title="Слои и фильтры" aria-label="Слои и фильтры" className={toggleCls(layersOpen)}>
             <Layers className="h-5.5 w-5.5" />

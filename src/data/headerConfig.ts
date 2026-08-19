@@ -142,8 +142,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       melee: 'Холодное',
       special: 'Специальное',
       crafts: 'Крафты',
-      barter: 'Предметы для Бартера',
-      'quest-items': 'Предметы для Заданий',
+      barter: 'Для Бартера',
+      'quest-items': 'Для Заданий',
       barters: 'Бартеры',
       weapons: 'Оружие',
       hideout: 'Убежище ЧВК',
@@ -179,7 +179,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       secure: 'Защищенные',
       food: 'Еда',
       drinks: 'Напитки',
-      'battle-pass': 'BATTLEPASS - S1',
+      'battle-pass': 'Battlepass - S1',
       specialequipment: 'Спецоборудование',
       valuables: 'Ценности',
       electronics: 'Электроника',
@@ -372,15 +372,15 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           // 0. БОЕВОЙ ПРОПУСК — СЕЗОН 1 (сезонная категория, синхрон со слоем карты)
           {
             id: 'i-battlepass-s1',
-            label: 'BATTLEPASS - S1',
-            menuTitle: 'BATTLEPASS - S1',
+            label: 'Battlepass - S1',
+            menuTitle: 'Battlepass - S1',
             path: '/eft/items/battle-pass',
             iconUrl: '/icons/eft/04-progression/seasons/seasons-icon.svg',
           },
           // 1. БАРТЕР
           {
             id: 'i-barter',
-            label: 'Предметы для Бартера',
+            label: 'Для Бартера',
             menuTitle: 'Для Бартера',
             path: '/eft/items/barter',
             iconUrl: '/icons/eft/04-progression/barter-profit.svg',
@@ -550,7 +550,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             ]
           },
           // 9. ПРЕДМЕТЫ ДЛЯ ЗАДАНИЙ
-          { id: 'i-questitems', label: 'Предметы для Заданий', menuTitle: 'Для Заданий', path: '/eft/items/quest-items', iconUrl: '/icons/eft/03-items/questitems.svg', iconClass: 'icon-eft-questitems' },
+          { id: 'i-questitems', label: 'Для Заданий', menuTitle: 'Для Заданий', path: '/eft/items/quest-items', iconUrl: '/icons/eft/03-items/questitems.svg', iconClass: 'icon-eft-questitems' },
           // 10. ИНФО ПРЕДМЕТЫ
           { id: 'i-info', label: 'Инфо предметы', path: '/eft/items/info', iconUrl: '/icons/eft/03-items/equipment/infoitems.svg' },
           // 11. СПЕЦОБОРУДОВАНИЕ

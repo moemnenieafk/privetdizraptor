@@ -14,7 +14,7 @@ export interface HubNavTab {
 }
 
 const DEFAULT_CATEGORIES: HubNavTab[] = [
-  { id: 'i-barter',           label: 'Предметы для Бартера', menuTitle: 'Для Бартера',   href: '/eft/items/barter',          iconUrl: '/icons/eft/04-progression/barter-profit.svg' },
+  { id: 'i-barter',           label: 'Для Бартера', menuTitle: 'Для Бартера',   href: '/eft/items/barter',          iconUrl: '/icons/eft/04-progression/barter-profit.svg' },
   { id: 'i-gear',             label: 'Снаряжение',                                        href: '/eft/items/gear',             iconUrl: '/icons/eft/03-items/gear.svg' },
   { id: 'i-mods',             label: 'Моды',                                              href: '/eft/items/mods',             iconUrl: '/icons/eft/03-items/guns/cat-gunmods.svg' },
   { id: 'i-weapons',          label: 'Оружие',                                            href: '/eft/items/weapons',          iconUrl: '/icons/eft/03-items/guns.svg' },
@@ -22,7 +22,7 @@ const DEFAULT_CATEGORIES: HubNavTab[] = [
   { id: 'i-provisions',       label: 'Провизия',                                          href: '/eft/items/provisions',       iconUrl: '/icons/eft/03-items/equipment/provisions.svg' },
   { id: 'i-meds',             label: 'Медикаменты',                                       href: '/eft/items/meds',             iconUrl: '/icons/eft/03-items/equipment/meds.svg' },
   { id: 'i-keys',             label: 'Ключи',                                             href: '/eft/items/keys',             iconUrl: '/icons/eft/03-items/equipment/keys.svg' },
-  { id: 'i-questitems',       label: 'Предметы для Заданий', menuTitle: 'Для Заданий',   href: '/eft/items/quest-items',      iconUrl: '/icons/eft/03-items/questitems.svg' },
+  { id: 'i-questitems',       label: 'Для Заданий', menuTitle: 'Для Заданий',   href: '/eft/items/quest-items',      iconUrl: '/icons/eft/03-items/questitems.svg' },
   { id: 'i-info',             label: 'Инфо предметы',                                     href: '/eft/items/info',             iconUrl: '/icons/eft/03-items/equipment/infoitems.svg' },
   { id: 'i-specialequipment', label: 'Спецоборудование',                                  href: '/eft/items/specialequipment', iconUrl: '/icons/eft/03-items/equipment/special-equipment.svg' },
 ];

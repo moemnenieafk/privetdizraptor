@@ -16,7 +16,7 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
     iconClass: 'icon-eft-items-loot-tier',
   },
   'eft-items-battle-pass': {
-    title: 'Предметы для Батлпасса — Сезон 1',
+    title: 'Battlepass - S1',
     description: 'Документация TerraGroup — прогрессия Боевого пропуска KORD BREACH. Лутается в рейде; смотри «Где найти» на карточке и слой «Документы БП — Сезон 1» на карте.',
     iconClass: 'icon-eft-seasons',
   },
@@ -330,7 +330,7 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
   },
   // ─── Бартер-предметы ──────────────────────────────────────────────────────────
   'eft-items-barter': {
-    title: 'Предметы для Бартера',
+    title: 'Для Бартера',
     description: 'Обменный фонд зоны. Электроника, ценности, стройматериалы, инструменты — валюта торговых постов.',
     iconClass: 'icon-eft-prog-barter',
   },
@@ -414,7 +414,7 @@ export const PAGE_CONTENT_DICTIONARY: Record<string, PageContent> = {
   // ─── Спецоборудование ─────────────────────────────────────────────────────────
   'eft-items-specialequipment': { title: 'Спецоборудование', description: 'Специализированное тактическое снаряжение высокого приоритета. Ограниченное применение — максимальная эффективность.', iconClass: 'icon-eft-eq-special' },
   // ─── Предметы для заданий (новый роут) ───────────────────────────────────────
-  'eft-items-quest-items': { title: 'Предметы для Заданий', description: 'Квестовые реквизиты. Передача торговцам по контракту. Запрещены к продаже. Хранить отдельно.', iconClass: 'icon-eft-questitems' },
+  'eft-items-quest-items': { title: 'Для Заданий', description: 'Квестовые реквизиты. Передача торговцам по контракту. Запрещены к продаже. Хранить отдельно.', iconClass: 'icon-eft-questitems' },
   // ─── Контейнеры (под gear) ────────────────────────────────────────────────────
   'eft-items-gear-containers': { title: 'Контейнеры', description: 'Специализированная переноска ценного груза. Кейсы для конкретных типов снаряжения.', iconClass: 'icon-eft-eq-containers' },
   'eft-items-gear-containers-cases': { title: 'Кейсы', description: 'Предметные контейнеры. Высокая плотность хранения для специфического типа груза.', iconClass: 'icon-eft-eq-containers' },
