@@ -4327,33 +4327,37 @@
     }
   },
   {
-    "id": "66058cb22cee99303f1ba067",
-    "name": "Легкие деньги. Часть 1 [PVP ZONE]",
-    "normalizedName": "easy-money-part-1-pvp-zone",
+    "id": "6834145ebc1f443d7603c8a7",
+    "name": "Легкие деньги. Часть 1 [PVE ZONE]",
+    "normalizedName": "easy-money-part-1-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
-    "experience": 4500,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "657315e270bb0b8dba00cc48",
-          "name": "По коням"
-        }
-      }
-    ],
+    "experience": 3000,
+    "taskRequirements": [],
     "trader": {
       "name": "Лыжник",
       "normalizedName": "skier",
       "imageLink": "https://assets.tarkov.dev/58330581ace78e27b8b10cee.webp"
     },
-    "traderRequirements": [],
+    "traderRequirements": [
+      {
+        "trader": {
+          "id": "58330581ace78e27b8b10cee",
+          "name": "Лыжник",
+          "normalizedName": "skier"
+        },
+        "requirementType": "level",
+        "compareMethod": ">=",
+        "level": 2
+      }
+    ],
     "requiredPrestige": null,
     "factionName": "Any",
     "ulTier": 2,
     "objectives": [
       {
-        "id": "6606b709f7ce34bb26221cab",
+        "id": "6834145ebc1f443d7603c8ab",
         "type": "plantItem",
         "__typename": "TaskObjectiveItem",
         "description": "Заложить плакат \"Гробовщик vs Зубр\" в жилых помещениях базы Диких на локации Таможня",
@@ -4379,30 +4383,30 @@
       "traderStanding": [],
       "items": [
         {
-          "count": 35000,
+          "count": 450,
           "item": {
-            "id": "5449016a4bdc2d6f028b456f",
-            "name": "Рубли",
-            "shortName": "Рубли",
-            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
+            "id": "569668774bdc2da2298b4568",
+            "name": "Евро",
+            "shortName": "Евро",
+            "image512pxLink": "https://assets.tarkov.dev/569668774bdc2da2298b4568-512.webp"
           }
         }
       ]
     }
   },
   {
-    "id": "675c15fbf7da9792a4059871",
-    "name": "Обеспечить просмотры",
-    "normalizedName": "provide-viewership",
+    "id": "6834158f2f0e2a7eb90b62c8",
+    "name": "Легкие деньги. Часть 2 [PVE ZONE]",
+    "normalizedName": "easy-money-part-2-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
-    "experience": 32000,
+    "experience": 2900,
     "taskRequirements": [
       {
         "task": {
-          "id": "66058cb5ae4719735349b9e8",
-          "name": "Легкие деньги. Часть 2 [PVP ZONE]"
+          "id": "6834145ebc1f443d7603c8a7",
+          "name": "Легкие деньги. Часть 1 [PVE ZONE]"
         }
       }
     ],
@@ -4417,452 +4421,7 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "675c1c87caddcfa893af10e9",
-        "type": "plantItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Установить первую WI-FI Камеру в здании промышленного корпуса на локации Таможня",
-        "optional": false,
-        "count": 1,
-        "foundInRaid": false,
-        "item": {
-          "id": "5b4391a586f7745321235ab2",
-          "name": "WI-FI Камера",
-          "shortName": "Камера",
-          "image512pxLink": "https://assets.tarkov.dev/5b4391a586f7745321235ab2-512.webp"
-        },
-        "maps": [
-          {
-            "id": "56f40101d2720b2a4d8b45d6",
-            "name": "Таможня",
-            "normalizedName": "customs"
-          }
-        ]
-      },
-      {
-        "id": "676047054c9696a7d071bc08",
-        "type": "plantItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Установить вторую WI-FI Камеру в здании промышленного корпуса на локации Таможня",
-        "optional": false,
-        "count": 1,
-        "foundInRaid": false,
-        "item": {
-          "id": "5b4391a586f7745321235ab2",
-          "name": "WI-FI Камера",
-          "shortName": "Камера",
-          "image512pxLink": "https://assets.tarkov.dev/5b4391a586f7745321235ab2-512.webp"
-        },
-        "maps": [
-          {
-            "id": "56f40101d2720b2a4d8b45d6",
-            "name": "Таможня",
-            "normalizedName": "customs"
-          }
-        ]
-      },
-      {
-        "id": "6760470877d1b7790af5de11",
-        "type": "plantItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Установить третью WI-FI Камеру в здании промышленного корпуса на локации Таможня",
-        "optional": false,
-        "count": 1,
-        "foundInRaid": false,
-        "item": {
-          "id": "5b4391a586f7745321235ab2",
-          "name": "WI-FI Камера",
-          "shortName": "Камера",
-          "image512pxLink": "https://assets.tarkov.dev/5b4391a586f7745321235ab2-512.webp"
-        },
-        "maps": [
-          {
-            "id": "56f40101d2720b2a4d8b45d6",
-            "name": "Таможня",
-            "normalizedName": "customs"
-          }
-        ]
-      },
-      {
-        "id": "6760470b7d65f702a6295820",
-        "type": "plantItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Установить четвертую WI-FI Камеру в здании промышленного корпуса на локации Таможня",
-        "optional": false,
-        "count": 1,
-        "foundInRaid": false,
-        "item": {
-          "id": "5b4391a586f7745321235ab2",
-          "name": "WI-FI Камера",
-          "shortName": "Камера",
-          "image512pxLink": "https://assets.tarkov.dev/5b4391a586f7745321235ab2-512.webp"
-        },
-        "maps": [
-          {
-            "id": "56f40101d2720b2a4d8b45d6",
-            "name": "Таможня",
-            "normalizedName": "customs"
-          }
-        ]
-      },
-      {
-        "id": "675c1c980fd114390c638b89",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Устранить любую цель в здании промышленного корпуса на локации Таможня",
-        "optional": false,
-        "count": 15,
-        "maps": [
-          {
-            "id": "56f40101d2720b2a4d8b45d6",
-            "name": "Таможня",
-            "normalizedName": "customs"
-          }
-        ]
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.02,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 45,
-          "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "5d4d617f86f77449c463d107",
-            "name": "Карабин Lone Star TX-15 DML 5.56x45 По умолчанию",
-            "shortName": "TX-15 DML По умолчанию",
-            "image512pxLink": "https://assets.tarkov.dev/5d4d617f86f77449c463d107-512.webp"
-          }
-        },
-        {
-          "count": 3,
-          "item": {
-            "id": "5c6d42cb2e2216000e69d7d1",
-            "name": "Магазин полимерный \"HK 30 STANAG\" на 30 патронов 5.56x45 для AR-15",
-            "shortName": "HK poly",
-            "image512pxLink": "https://assets.tarkov.dev/5c6d42cb2e2216000e69d7d1-512.webp"
-          }
-        },
-        {
-          "count": 3,
-          "item": {
-            "id": "657024e3c5d7d4cb4d07856a",
-            "name": "Пачка патронов 5.56x45мм M855A1 (50 штук)",
-            "shortName": "M855A1",
-            "image512pxLink": "https://assets.tarkov.dev/657024e3c5d7d4cb4d07856a-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058cb7c7f3584787181476",
-    "name": "Баланс. Часть 1 [PVP ZONE]",
-    "normalizedName": "balancing-part-1-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 5100,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058cb5ae4719735349b9e8",
-          "name": "Легкие деньги. Часть 2 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "6606d133fcb99b9004aa2d1d",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить Диких, используя Steyr AUG на любой локации",
-        "optional": false,
-        "count": 5
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.03,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 45,
-          "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "6398636bb483a550805be5e5",
-            "name": "Штурмовая винтовка Steyr AUG A1 5.56x45 По умолчанию",
-            "shortName": "AUG A1 По умолчанию",
-            "image512pxLink": "https://assets.tarkov.dev/6398636bb483a550805be5e5-512.webp"
-          }
-        },
-        {
-          "count": 3,
-          "item": {
-            "id": "657024e8cfc010a0f5006a0d",
-            "name": "Пачка патронов 5.56x45мм M856 (50 штук)",
-            "shortName": "M856",
-            "image512pxLink": "https://assets.tarkov.dev/657024e8cfc010a0f5006a0d-512.webp"
-          }
-        },
-        {
-          "count": 3,
-          "item": {
-            "id": "62e7c98b550c8218d602cbb4",
-            "name": "Магазин на 30 патронов 5.56x45 для Steyr AUG",
-            "shortName": "AUG",
-            "image512pxLink": "https://assets.tarkov.dev/62e7c98b550c8218d602cbb4-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "6570aead4d84f81fd002a033",
-            "name": "Легкая армированная маска \"Тень Смерти\"",
-            "shortName": "Тень Смерти",
-            "image512pxLink": "https://assets.tarkov.dev/6570aead4d84f81fd002a033-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058cbd9f59e625462acc8e",
-    "name": "Отвлекающий маневр. Часть 1 [PVP ZONE]",
-    "normalizedName": "create-a-distraction-part-1-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 5000,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058cbb06ef1d50a60c1f46",
-          "name": "Сюрприз [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "660a9dc64c0927ead4fcfeef",
-        "type": "plantItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Заложить Тротиловые шашки ТП-200 в кафе на втором этаже на локации Эпицентр",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": false,
-        "item": {
-          "id": "60391b0fb847c71012789415",
-          "name": "Тротиловая шашка ТП-200",
-          "shortName": "ТП-200",
-          "image512pxLink": "https://assets.tarkov.dev/60391b0fb847c71012789415-512.webp"
-        },
-        "maps": [
-          {
-            "id": "65b8d6f5cdde2479cb2a3125",
-            "name": "Эпицентр 21+",
-            "normalizedName": "ground-zero-21"
-          },
-          {
-            "id": "653e6760052c01c1c805532f",
-            "name": "Эпицентр",
-            "normalizedName": "ground-zero"
-          }
-        ]
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.05,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 28,
-          "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "707265736574000000000037",
-            "name": "Штурмовая винтовка Desert Tech MDR 5.56x45 ONE",
-            "shortName": "MDR ONE",
-            "image512pxLink": "https://assets.tarkov.dev/707265736574000000000037-512.webp"
-          }
-        },
-        {
-          "count": 3,
-          "item": {
-            "id": "5448c1d04bdc2dff2f8b4569",
-            "name": "Магазин Magpul \"PMAG 20 GEN M3 STANAG\" на 20 патронов 5.56x45 для AR-15",
-            "shortName": "GEN M3",
-            "image512pxLink": "https://assets.tarkov.dev/5448c1d04bdc2dff2f8b4569-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "65702656c5d7d4cb4d078591",
-            "name": "Пачка патронов 5.56x45мм M856 (100 штук)",
-            "shortName": "M856",
-            "image512pxLink": "https://assets.tarkov.dev/65702656c5d7d4cb4d078591-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058cb9e8e4f17985230805",
-    "name": "Баланс. Часть 2 [PVP ZONE]",
-    "normalizedName": "balancing-part-2-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 7000,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058cb7c7f3584787181476",
-          "name": "Баланс. Часть 1 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "660a9c99c650fa4d531f4c96",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить бойцов ЧВК, одевшись в Бронежилет PACA на любой локации",
-        "optional": false,
-        "count": 2
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.03,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 45,
-          "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
-          }
-        },
-        {
-          "count": 2,
-          "item": {
-            "id": "6570aead4d84f81fd002a033",
-            "name": "Легкая армированная маска \"Тень Смерти\"",
-            "shortName": "Тень Смерти",
-            "image512pxLink": "https://assets.tarkov.dev/6570aead4d84f81fd002a033-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058cb5ae4719735349b9e8",
-    "name": "Легкие деньги. Часть 2 [PVP ZONE]",
-    "normalizedName": "easy-money-part-2-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 4200,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058cb22cee99303f1ba067",
-          "name": "Легкие деньги. Часть 1 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "6606bd2aa49db36b69b6dbf9",
+        "id": "6834158f2f0e2a7eb90b62cb",
         "type": "giveItem",
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденные в рейде предметы из категории Напитки",
@@ -4994,7 +4553,7 @@
         ]
       },
       {
-        "id": "6606bd6768f8018fffebd998",
+        "id": "6834158f2f0e2a7eb90b62cc",
         "type": "giveItem",
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденные в рейде предметы из категории Еда",
@@ -5147,6 +4706,121 @@
     "finishRewards": {
       "traderStanding": [
         {
+          "standing": 0.02,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 22,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "68341846186efa3c5b07f989",
+    "name": "Баланс. Часть 1 [PVE ZONE]",
+    "normalizedName": "balancing-part-1-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 5100,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "6834158f2f0e2a7eb90b62c8",
+          "name": "Легкие деньги. Часть 2 [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "68341846186efa3c5b07f98c",
+        "type": "shoot",
+        "__typename": "TaskObjectiveShoot",
+        "description": "Устранить Диких, используя Steyr AUG на любой локации",
+        "optional": false,
+        "count": 5,
+        "maps": [
+          {
+            "id": "5704e5fad2720bc05b8b4567",
+            "name": "Резерв",
+            "normalizedName": "reserve"
+          },
+          {
+            "id": "5704e4dad2720bb55b8b4567",
+            "name": "Маяк",
+            "normalizedName": "lighthouse"
+          },
+          {
+            "id": "5714dbc024597771384a510d",
+            "name": "Развязка",
+            "normalizedName": "interchange"
+          },
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          },
+          {
+            "id": "59fc81d786f774390775787e",
+            "name": "Ночной Завод",
+            "normalizedName": "night-factory"
+          },
+          {
+            "id": "69af492a4819ea4ba10a69c5",
+            "name": "Ледокол",
+            "normalizedName": "icebreaker"
+          },
+          {
+            "id": "5704e3c2d2720bac5b8b4567",
+            "name": "Лес",
+            "normalizedName": "woods"
+          },
+          {
+            "id": "68236e8153654e8c1200798a",
+            "name": "Ground Zero Обучение",
+            "normalizedName": "ground-zero-tutorial"
+          },
+          {
+            "id": "5704e554d2720bac5b8b456e",
+            "name": "Берег",
+            "normalizedName": "shoreline"
+          },
+          {
+            "id": "5714dc692459777137212e12",
+            "name": "Улицы Таркова",
+            "normalizedName": "streets-of-tarkov"
+          },
+          {
+            "id": "55f2d3fd4bdc2d5f408b4567",
+            "name": "Завод",
+            "normalizedName": "factory"
+          }
+        ]
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
           "standing": 0.03,
           "trader": {
             "name": "Реф",
@@ -5156,95 +4830,7 @@
       ],
       "items": [
         {
-          "count": 52,
-          "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058cc72cee99303f1ba069",
-    "name": "Вперед, к вершинам! Часть 4 [PVP ZONE]",
-    "normalizedName": "to-great-heights-part-4-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 5600,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058cc5bb83da7ba474aba9",
-          "name": "Вперед, к вершинам! Часть 3 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "6633a85e347a2a2b4051a26b",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать Рубли с баланса ЕФТ",
-        "optional": false,
-        "count": 1000000,
-        "foundInRaid": false,
-        "item": {
-          "id": "5449016a4bdc2d6f028b456f",
-          "name": "Рубли",
-          "shortName": "Рубли",
-          "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
-        }
-      },
-      {
-        "id": "662bb23200ae352a6d5a415d",
-        "type": "visit",
-        "__typename": "TaskObjectiveBasic",
-        "description": "Выиграть в трех из шести матчей в режиме TeamFight, BlastGang или CheckPoint на Арене",
-        "optional": false
-      },
-      {
-        "id": "665493a649bd17856482ba77",
-        "type": "visit",
-        "__typename": "TaskObjectiveBasic",
-        "description": "Условие провала: Проиграть 4 матчей",
-        "optional": true
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.05,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 2500000,
-          "item": {
-            "id": "5449016a4bdc2d6f028b456f",
-            "name": "Рубли",
-            "shortName": "Рубли",
-            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
-          }
-        },
-        {
-          "count": 35,
+          "count": 45,
           "item": {
             "id": "5d235b4d86f7742e017bc88a",
             "name": "Монета GP",
@@ -5255,304 +4841,113 @@
         {
           "count": 1,
           "item": {
-            "id": "665732f4464c4b4ba4670fa9",
-            "name": "Вскрытый кейс снабжения (Редкий)",
-            "shortName": "Снабжение (Редкое)",
-            "image512pxLink": "https://assets.tarkov.dev/665732f4464c4b4ba4670fa9-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058cbf2f19c31a5a1337ec",
-    "name": "Отвлекающий маневр. Часть 2 [PVP ZONE]",
-    "normalizedName": "create-a-distraction-part-2-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 10000,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058cbd9f59e625462acc8e",
-          "name": "Отвлекающий маневр. Часть 1 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "660d5effb318c171fb1ca234",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить свиту Кабана или Коллонтая на локации Улицы Таркова",
-        "optional": false,
-        "count": 2,
-        "maps": [
-          {
-            "id": "5714dc692459777137212e12",
-            "name": "Улицы Таркова",
-            "normalizedName": "streets-of-tarkov"
-          }
-        ]
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.07,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 1,
-          "item": {
-            "id": "657eb30326f0eb0718056204",
-            "name": "Ручной пулемет Дегтярева РПДН 7.62x39 По умолчанию",
-            "shortName": "РПДН По умолчанию",
-            "image512pxLink": "https://assets.tarkov.dev/657eb30326f0eb0718056204-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "6513f0a194c72326990a3868",
-            "name": "Короб \"Бубен\" на 100 патронов 7.62x39 для РПД",
-            "shortName": "Бубен",
-            "image512pxLink": "https://assets.tarkov.dev/6513f0a194c72326990a3868-512.webp"
-          }
-        },
-        {
-          "count": 10,
-          "item": {
-            "id": "64ace9d9b5bf5e95f50a4c1d",
-            "name": "Пачка патронов 7.62x39мм FMJ (20 штук)",
-            "shortName": "FMJ",
-            "image512pxLink": "https://assets.tarkov.dev/64ace9d9b5bf5e95f50a4c1d-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "6656560053eaaa7a23349c86",
-            "name": "Медаль Lega",
-            "shortName": "Lega",
-            "image512pxLink": "https://assets.tarkov.dev/6656560053eaaa7a23349c86-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058ccf06ef1d50a60c1f48",
-    "name": "Между двух огней [PVP ZONE]",
-    "normalizedName": "between-two-fires-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 18500,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058ccde8e4f17985230807",
-          "name": "Сделка с совестью. Часть 2 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Скупщик",
-      "normalizedName": "fence",
-      "imageLink": "https://assets.tarkov.dev/579dc571d53a0658a154fbec.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 2,
-    "objectives": [
-      {
-        "id": "6658eb28849643547f210708",
-        "type": "visit",
-        "__typename": "TaskObjectiveBasic",
-        "description": "Вернуться в убежище бывшего чемпиона Арены на локации Таможня",
-        "optional": false,
-        "maps": [
-          {
-            "id": "56f40101d2720b2a4d8b45d6",
-            "name": "Таможня",
-            "normalizedName": "customs"
-          }
-        ]
-      },
-      {
-        "id": "664fd7aba8d870609d099fed",
-        "type": "findQuestItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Найти компромат на Распорядителя",
-        "optional": false,
-        "count": 1,
-        "item": {
-          "id": "664fce7a90294949fe2d81cb",
-          "name": "Компромат на Распорядителя",
-          "shortName": "Компромат",
-          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
-        },
-        "maps": [
-          {
-            "id": "56f40101d2720b2a4d8b45d6",
-            "name": "Таможня",
-            "normalizedName": "customs"
-          }
-        ]
-      },
-      {
-        "id": "664fd7f0837ee02ad4c8e658",
-        "type": "giveQuestItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденную информацию",
-        "optional": false,
-        "count": 1,
-        "item": {
-          "id": "664fce7a90294949fe2d81cb",
-          "name": "Компромат на Распорядителя",
-          "shortName": "Компромат",
-          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
-        }
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.2,
-          "trader": {
-            "name": "Скупщик",
-            "normalizedName": "fence"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 165000,
-          "item": {
-            "id": "5449016a4bdc2d6f028b456f",
-            "name": "Рубли",
-            "shortName": "Рубли",
-            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "664a55d84a90fc2c8a6305c9",
-            "name": "Защищенный контейнер \"Тета\"",
-            "shortName": "Тета",
-            "image512pxLink": "https://assets.tarkov.dev/664a55d84a90fc2c8a6305c9-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058ccde8e4f17985230807",
-    "name": "Сделка с совестью. Часть 2 [PVP ZONE]",
-    "normalizedName": "against-the-conscience-part-2-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 23000,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058ccbc7f3584787181478",
-          "name": "Сделка с совестью. Часть 1 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "663b9bb7fe7953705cb09114",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить противников в любом режиме на Арене",
-        "optional": false,
-        "count": 100
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.06,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 88,
-          "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
-          }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "657eb3773271d8578610fe28",
-            "name": "Штурмовая винтовка SIG MCX-SPEAR 6.8x51 По умолчанию",
-            "shortName": "SPEAR 6.8 По умолчанию",
-            "image512pxLink": "https://assets.tarkov.dev/657eb3773271d8578610fe28-512.webp"
+            "id": "6398636bb483a550805be5e5",
+            "name": "Штурмовая винтовка Steyr AUG A1 5.56x45 По умолчанию",
+            "shortName": "AUG A1 По умолчанию",
+            "image512pxLink": "https://assets.tarkov.dev/6398636bb483a550805be5e5-512.webp"
           }
         },
         {
           "count": 3,
           "item": {
-            "id": "65293c38fc460e50a509cb25",
-            "name": "Магазин Lancer \"L7AWM\" на 20 патронов 7.62x51 для AR-10",
-            "shortName": "L7AWM",
-            "image512pxLink": "https://assets.tarkov.dev/65293c38fc460e50a509cb25-512.webp"
+            "id": "657024e8cfc010a0f5006a0d",
+            "name": "Пачка патронов 5.56x45мм M856 (50 штук)",
+            "shortName": "M856",
+            "image512pxLink": "https://assets.tarkov.dev/657024e8cfc010a0f5006a0d-512.webp"
           }
         },
         {
-          "count": 41,
+          "count": 3,
           "item": {
-            "id": "6529302b8c26af6326029fb7",
-            "name": "6.8x51мм SIG FMJ",
-            "shortName": "FMJ",
-            "image512pxLink": "https://assets.tarkov.dev/6529302b8c26af6326029fb7-512.webp"
+            "id": "62e7c98b550c8218d602cbb4",
+            "name": "Магазин на 30 патронов 5.56x45 для Steyr AUG",
+            "shortName": "AUG",
+            "image512pxLink": "https://assets.tarkov.dev/62e7c98b550c8218d602cbb4-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "6570aead4d84f81fd002a033",
+            "name": "Легкая армированная маска \"Тень Смерти\"",
+            "shortName": "Тень Смерти",
+            "image512pxLink": "https://assets.tarkov.dev/6570aead4d84f81fd002a033-512.webp"
           }
         }
       ]
     }
   },
   {
-    "id": "66058cbb06ef1d50a60c1f46",
-    "name": "Сюрприз [PVP ZONE]",
-    "normalizedName": "surprise-pvp-zone",
+    "id": "68341a0b2f0e2a7eb90b62d4",
+    "name": "Баланс. Часть 2 [PVE ZONE]",
+    "normalizedName": "balancing-part-2-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 7000,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "68341846186efa3c5b07f989",
+          "name": "Баланс. Часть 1 [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "68341a0b2f0e2a7eb90b62d7",
+        "type": "shoot",
+        "__typename": "TaskObjectiveShoot",
+        "description": "Устранить бойцов ЧВК, одевшись в Бронежилет PACA на любой локации",
+        "optional": false,
+        "count": 2
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.03,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 45,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        },
+        {
+          "count": 2,
+          "item": {
+            "id": "6570aead4d84f81fd002a033",
+            "name": "Легкая армированная маска \"Тень Смерти\"",
+            "shortName": "Тень Смерти",
+            "image512pxLink": "https://assets.tarkov.dev/6570aead4d84f81fd002a033-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "68341b407559f4e6d50bc0ce",
+    "name": "Сюрприз [PVE ZONE]",
+    "normalizedName": "surprise-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
@@ -5560,8 +4955,8 @@
     "taskRequirements": [
       {
         "task": {
-          "id": "66058cb9e8e4f17985230805",
-          "name": "Баланс. Часть 2 [PVP ZONE]"
+          "id": "68341a0b2f0e2a7eb90b62d4",
+          "name": "Баланс. Часть 2 [PVE ZONE]"
         }
       }
     ],
@@ -5576,7 +4971,7 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "6606d08b4e2e27ca2d80085e",
+        "id": "68341b407559f4e6d50bc0d1",
         "type": "giveItem",
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденные в рейде предметы: Бронеплита 4+ класса защиты",
@@ -5819,18 +5214,18 @@
     }
   },
   {
-    "id": "66058cc9ae4719735349b9ea",
-    "name": "Вперед, к вершинам! Часть 5 [PVP ZONE]",
-    "normalizedName": "to-great-heights-part-5-pvp-zone",
+    "id": "68341c4babec72d95d0c1260",
+    "name": "Отвлекающий маневр. Часть 1 [PVE ZONE]",
+    "normalizedName": "create-a-distraction-part-1-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
-    "experience": 6900,
+    "experience": 5000,
     "taskRequirements": [
       {
         "task": {
-          "id": "66058cc72cee99303f1ba069",
-          "name": "Вперед, к вершинам! Часть 4 [PVP ZONE]"
+          "id": "68341b407559f4e6d50bc0ce",
+          "name": "Сюрприз [PVE ZONE]"
         }
       }
     ],
@@ -5845,10 +5240,492 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "662ba87106e44407b79e9ab2",
+        "id": "68341c4babec72d95d0c1263",
+        "type": "plantItem",
+        "__typename": "TaskObjectiveItem",
+        "description": "Заложить Тротиловые шашки ТП-200 в кафе на втором этаже на локации Эпицентр",
+        "optional": false,
+        "count": 3,
+        "foundInRaid": false,
+        "item": {
+          "id": "60391b0fb847c71012789415",
+          "name": "Тротиловая шашка ТП-200",
+          "shortName": "ТП-200",
+          "image512pxLink": "https://assets.tarkov.dev/60391b0fb847c71012789415-512.webp"
+        },
+        "maps": [
+          {
+            "id": "653e6760052c01c1c805532f",
+            "name": "Эпицентр",
+            "normalizedName": "ground-zero"
+          },
+          {
+            "id": "65b8d6f5cdde2479cb2a3125",
+            "name": "Эпицентр 21+",
+            "normalizedName": "ground-zero-21"
+          }
+        ]
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.05,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 28,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "707265736574000000000026",
+            "name": "Штурмовая винтовка Desert Tech MDR 5.56x45 EXPS3-0",
+            "shortName": "MDR EXPS3-0",
+            "image512pxLink": "https://assets.tarkov.dev/707265736574000000000026-512.webp"
+          }
+        },
+        {
+          "count": 3,
+          "item": {
+            "id": "5448c1d04bdc2dff2f8b4569",
+            "name": "Магазин Magpul \"PMAG 20 GEN M3 STANAG\" на 20 патронов 5.56x45 для AR-15",
+            "shortName": "GEN M3",
+            "image512pxLink": "https://assets.tarkov.dev/5448c1d04bdc2dff2f8b4569-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "65702656c5d7d4cb4d078591",
+            "name": "Пачка патронов 5.56x45мм M856 (100 штук)",
+            "shortName": "M856",
+            "image512pxLink": "https://assets.tarkov.dev/65702656c5d7d4cb4d078591-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "68341d7d7559f4e6d50bc0db",
+    "name": "Отвлекающий маневр. Часть 2 [PVE ZONE]",
+    "normalizedName": "create-a-distraction-part-2-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 10000,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "68341c4babec72d95d0c1260",
+          "name": "Отвлекающий маневр. Часть 1 [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "68341d7d7559f4e6d50bc0de",
+        "type": "shoot",
+        "__typename": "TaskObjectiveShoot",
+        "description": "Устранить свиту Кабана или Коллонтая на локации Улицы Таркова",
+        "optional": false,
+        "count": 2,
+        "maps": [
+          {
+            "id": "5714dc692459777137212e12",
+            "name": "Улицы Таркова",
+            "normalizedName": "streets-of-tarkov"
+          }
+        ]
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.07,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 1,
+          "item": {
+            "id": "657eb30326f0eb0718056204",
+            "name": "Ручной пулемет Дегтярева РПДН 7.62x39 По умолчанию",
+            "shortName": "РПДН По умолчанию",
+            "image512pxLink": "https://assets.tarkov.dev/657eb30326f0eb0718056204-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "6513f0a194c72326990a3868",
+            "name": "Короб \"Бубен\" на 100 патронов 7.62x39 для РПД",
+            "shortName": "Бубен",
+            "image512pxLink": "https://assets.tarkov.dev/6513f0a194c72326990a3868-512.webp"
+          }
+        },
+        {
+          "count": 10,
+          "item": {
+            "id": "64ace9d9b5bf5e95f50a4c1d",
+            "name": "Пачка патронов 7.62x39мм FMJ (20 штук)",
+            "shortName": "FMJ",
+            "image512pxLink": "https://assets.tarkov.dev/64ace9d9b5bf5e95f50a4c1d-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "6656560053eaaa7a23349c86",
+            "name": "Медаль Lega",
+            "shortName": "Lega",
+            "image512pxLink": "https://assets.tarkov.dev/6656560053eaaa7a23349c86-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "68341eb25619c8e2a9031501",
+    "name": "Вперед, к вершинам! Часть 1 [PVE ZONE]",
+    "normalizedName": "to-great-heights-part-1-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 2800,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "6978907718bd6d7cbd0e8b8e",
+          "name": "Профпригодность. Часть 2 [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "68341eb25619c8e2a9031504",
         "type": "visit",
         "__typename": "TaskObjectiveBasic",
-        "description": "Выиграть в двух матчах подряд в режиме TeamFight, BlastGang или CheckPoint на Арене",
+        "description": "Выиграть матч в режиме CheckPoint или LastHero на Арене",
+        "optional": false
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.02,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 55,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "68341f6fe2e7ef70a3060a0a",
+    "name": "Вперед, к вершинам! Часть 2 [PVE ZONE]",
+    "normalizedName": "to-great-heights-part-2-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 3500,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "68341eb25619c8e2a9031501",
+          "name": "Вперед, к вершинам! Часть 1 [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "68341f6fe2e7ef70a3060a0d",
+        "type": "visit",
+        "__typename": "TaskObjectiveBasic",
+        "description": "Выиграть матч в режиме TeamFight, BlastGang или Checkpoint на Арене",
+        "optional": false
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.02,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 32,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "66572b3f6a723f7f005a066c",
+            "name": "Закрытый кейс с оружием (Редкий)",
+            "shortName": "Оружие (Редкое)",
+            "image512pxLink": "https://assets.tarkov.dev/66572b3f6a723f7f005a066c-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "6834202a186efa3c5b07f9a2",
+    "name": "Вперед, к вершинам! Часть 3 [PVE ZONE]",
+    "normalizedName": "to-great-heights-part-3-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 4500,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "68341f6fe2e7ef70a3060a0a",
+          "name": "Вперед, к вершинам! Часть 2 [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "6834202a186efa3c5b07f9a5",
+        "type": "visit",
+        "__typename": "TaskObjectiveBasic",
+        "description": "Выиграть матч, заняв не ниже 3 места в режиме TeamFight, BlastGang или CheckPoint на Арене",
+        "optional": false
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.03,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 28,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "66572bb3ac60f009f270d1df",
+            "name": "Закрытый кейс с ценностями (Редкий)",
+            "shortName": "Ценности (Редкое)",
+            "image512pxLink": "https://assets.tarkov.dev/66572bb3ac60f009f270d1df-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "683421515619c8e2a9031511",
+    "name": "Вперед, к вершинам! Часть 4 [PVE ZONE]",
+    "normalizedName": "to-great-heights-part-4-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 5600,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "6834202a186efa3c5b07f9a2",
+          "name": "Вперед, к вершинам! Часть 3 [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "683421515619c8e2a9031514",
+        "type": "giveItem",
+        "__typename": "TaskObjectiveItem",
+        "description": "Передать Рубли",
+        "optional": false,
+        "count": 1000000,
+        "foundInRaid": false,
+        "item": {
+          "id": "5449016a4bdc2d6f028b456f",
+          "name": "Рубли",
+          "shortName": "Рубли",
+          "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
+        }
+      },
+      {
+        "id": "683421515619c8e2a9031515",
+        "type": "visit",
+        "__typename": "TaskObjectiveBasic",
+        "description": "Выиграть в трех из шести матчей в режиме TeamFight, BlastGang или CheckPoint на Арене",
+        "optional": false
+      },
+      {
+        "id": "683421515619c8e2a9031518",
+        "type": "visit",
+        "__typename": "TaskObjectiveBasic",
+        "description": "Условие провала: Проиграть 4 матчей",
+        "optional": true
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.05,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 35,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        },
+        {
+          "count": 1000002,
+          "item": {
+            "id": "5449016a4bdc2d6f028b456f",
+            "name": "Рубли",
+            "shortName": "Рубли",
+            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "66572b88ac60f009f270d1dc",
+            "name": "Закрытый кейс снабжения (Редкий)",
+            "shortName": "Снабжение (Редкое)",
+            "image512pxLink": "https://assets.tarkov.dev/66572b88ac60f009f270d1dc-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "68342265a8d674b5740b31f0",
+    "name": "Вперед, к вершинам! Часть 5 [PVE ZONE]",
+    "normalizedName": "to-great-heights-part-5-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 6900,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "683421515619c8e2a9031511",
+          "name": "Вперед, к вершинам! Часть 4 [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "6978a3305f21afb01d7e0c53",
+        "type": "visit",
+        "__typename": "TaskObjectiveBasic",
+        "description": "Выиграть матч на Арене в режиме BlastGang, TeamFight или Checkpoint, заняв не ниже второго места в команде",
         "optional": false
       }
     ],
@@ -5876,18 +5753,18 @@
     }
   },
   {
-    "id": "66058cd19f59e625462acc90",
-    "name": "На распутье [PVP ZONE]",
-    "normalizedName": "decisions-decisions-pvp-zone",
+    "id": "68342446a8d674b5740b31fc",
+    "name": "Сделка с совестью. Часть 2 [PVE ZONE]",
+    "normalizedName": "against-the-conscience-part-2-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
-    "experience": 18500,
+    "experience": 23000,
     "taskRequirements": [
       {
         "task": {
-          "id": "66058ccf06ef1d50a60c1f48",
-          "name": "Между двух огней [PVP ZONE]"
+          "id": "6834233fecd5cf3a440d855b",
+          "name": "Сделка с совестью. Часть 1 [PVE ZONE]"
         }
       }
     ],
@@ -5902,7 +5779,65 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "664fd86520fa1bd9f8fa5489",
+        "id": "68342446a8d674b5740b31ff",
+        "type": "shoot",
+        "__typename": "TaskObjectiveShoot",
+        "description": "Устранить противников в любом режиме на Арене",
+        "optional": false,
+        "count": 100
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.04,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 100,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "6834254f2f0e2a7eb90b62ef",
+    "name": "На распутье [PVE ZONE]",
+    "normalizedName": "decisions-decisions-pve-zone",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 10,
+    "experience": 18500,
+    "taskRequirements": [
+      {
+        "task": {
+          "id": "683425dd8f5b18d29a05d9d1",
+          "name": "Между двух огней [PVE ZONE]"
+        }
+      }
+    ],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "6834254f2f0e2a7eb90b62f1",
         "type": "findQuestItem",
         "__typename": "TaskObjectiveItem",
         "description": "Найти компромат на Распорядителя",
@@ -5923,7 +5858,7 @@
         ]
       },
       {
-        "id": "664fd88c4f7e4352f0799f92",
+        "id": "6834254f2f0e2a7eb90b62f2",
         "type": "giveQuestItem",
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
@@ -5977,141 +5912,126 @@
     }
   },
   {
-    "id": "66058cc1da30b620a34e6e86",
-    "name": "Вперед, к вершинам! Часть 1 [PVP ZONE]",
-    "normalizedName": "to-great-heights-part-1-pvp-zone",
+    "id": "683425dd8f5b18d29a05d9d1",
+    "name": "Между двух огней [PVE ZONE]",
+    "normalizedName": "between-two-fires-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
-    "experience": 2800,
+    "experience": 18500,
     "taskRequirements": [
       {
         "task": {
-          "id": "69788db3878a4385d10c0718",
-          "name": "Профпригодность - Часть 2 [PVP ZONE]"
+          "id": "68342446a8d674b5740b31fc",
+          "name": "Сделка с совестью. Часть 2 [PVE ZONE]"
         }
       }
     ],
     "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+      "name": "Скупщик",
+      "normalizedName": "fence",
+      "imageLink": "https://assets.tarkov.dev/579dc571d53a0658a154fbec.webp"
     },
     "traderRequirements": [],
     "requiredPrestige": null,
     "factionName": "Any",
-    "ulTier": 1,
+    "ulTier": 2,
     "objectives": [
       {
-        "id": "662ba5a89d8041c264dd9673",
+        "id": "683425dd8f5b18d29a05d9d4",
         "type": "visit",
         "__typename": "TaskObjectiveBasic",
-        "description": "Выиграть матч в режиме CheckPoint или LastHero на Арене",
-        "optional": false
+        "description": "Вернуться в убежище бывшего чемпиона Арены на локации Таможня",
+        "optional": false,
+        "maps": [
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          }
+        ]
+      },
+      {
+        "id": "683425dd8f5b18d29a05d9d6",
+        "type": "findQuestItem",
+        "__typename": "TaskObjectiveItem",
+        "description": "Найти компромат на Распорядителя",
+        "optional": false,
+        "count": 1,
+        "item": {
+          "id": "664fce7a90294949fe2d81cb",
+          "name": "Компромат на Распорядителя",
+          "shortName": "Компромат",
+          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
+        },
+        "maps": [
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          }
+        ]
+      },
+      {
+        "id": "683425dd8f5b18d29a05d9d8",
+        "type": "giveQuestItem",
+        "__typename": "TaskObjectiveItem",
+        "description": "Передать найденную информацию",
+        "optional": false,
+        "count": 1,
+        "item": {
+          "id": "664fce7a90294949fe2d81cb",
+          "name": "Компромат на Распорядителя",
+          "shortName": "Компромат",
+          "image512pxLink": "https://assets.tarkov.dev/664fce7a90294949fe2d81cb-512.webp"
+        }
       }
     ],
     "finishRewards": {
       "traderStanding": [
         {
-          "standing": 0.02,
+          "standing": 0.2,
           "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
+            "name": "Скупщик",
+            "normalizedName": "fence"
           }
         }
       ],
       "items": [
         {
-          "count": 55,
+          "count": 165000,
           "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058cc208308761cf390993",
-    "name": "Вперед, к вершинам! Часть 2 [PVP ZONE]",
-    "normalizedName": "to-great-heights-part-2-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 3500,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "66058cc1da30b620a34e6e86",
-          "name": "Вперед, к вершинам! Часть 1 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "662ba78e19c86d3199ae0a93",
-        "type": "visit",
-        "__typename": "TaskObjectiveBasic",
-        "description": "Выиграть матч в режиме TeamFight, BlastGang или Checkpoint на Арене",
-        "optional": false
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.02,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 32,
-          "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+            "id": "5449016a4bdc2d6f028b456f",
+            "name": "Рубли",
+            "shortName": "Рубли",
+            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
           }
         },
         {
           "count": 1,
           "item": {
-            "id": "66572b3f6a723f7f005a066c",
-            "name": "Закрытый кейс с оружием (Редкий)",
-            "shortName": "Оружие (Редкое)",
-            "image512pxLink": "https://assets.tarkov.dev/66572b3f6a723f7f005a066c-512.webp"
+            "id": "664a55d84a90fc2c8a6305c9",
+            "name": "Защищенный контейнер \"Тета\"",
+            "shortName": "Тета",
+            "image512pxLink": "https://assets.tarkov.dev/664a55d84a90fc2c8a6305c9-512.webp"
           }
         }
       ]
     }
   },
   {
-    "id": "66058cc5bb83da7ba474aba9",
-    "name": "Вперед, к вершинам! Часть 3 [PVP ZONE]",
-    "normalizedName": "to-great-heights-part-3-pvp-zone",
+    "id": "69788d4e963f08d9140bce19",
+    "name": "Профпригодность - Часть 1 [PVE ZONE]",
+    "normalizedName": "professional-fitness-part-1-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
-    "experience": 4500,
+    "experience": 1800,
     "taskRequirements": [
       {
         "task": {
-          "id": "66058cc208308761cf390993",
-          "name": "Вперед, к вершинам! Часть 2 [PVP ZONE]"
+          "id": "697878057aa1273126030fb0",
+          "name": "Дела на Арене [PVE ZONE]"
         }
       }
     ],
@@ -6126,17 +6046,17 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "662ba61d3ed61b6b78187b71",
+        "id": "69788d4e963f08d9140bce1c",
         "type": "visit",
         "__typename": "TaskObjectiveBasic",
-        "description": "Выиграть матч, заняв не ниже 3 места в режиме TeamFight, BlastGang или CheckPoint на Арене",
+        "description": "Сыграть матч в режимах CheckPoint или Last Hero",
         "optional": false
       }
     ],
     "finishRewards": {
       "traderStanding": [
         {
-          "standing": 0.03,
+          "standing": 0.01,
           "trader": {
             "name": "Реф",
             "normalizedName": "ref"
@@ -6145,30 +6065,21 @@
       ],
       "items": [
         {
-          "count": 28,
+          "count": 10,
           "item": {
             "id": "5d235b4d86f7742e017bc88a",
             "name": "Монета GP",
             "shortName": "GP",
             "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
           }
-        },
-        {
-          "count": 1,
-          "item": {
-            "id": "66572bb3ac60f009f270d1df",
-            "name": "Закрытый кейс с ценностями (Редкий)",
-            "shortName": "Ценности (Редкое)",
-            "image512pxLink": "https://assets.tarkov.dev/66572bb3ac60f009f270d1df-512.webp"
-          }
         }
       ]
     }
   },
   {
-    "id": "697877e0c639962b2e0cf24f",
-    "name": "Дела на Арене [PVP ZONE]",
-    "normalizedName": "arena-business-pvp-zone",
+    "id": "697878057aa1273126030fb0",
+    "name": "Дела на Арене [PVE ZONE]",
+    "normalizedName": "arena-business-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
@@ -6176,8 +6087,8 @@
     "taskRequirements": [
       {
         "task": {
-          "id": "66058cb7c7f3584787181476",
-          "name": "Баланс. Часть 1 [PVP ZONE]"
+          "id": "68341846186efa3c5b07f989",
+          "name": "Баланс. Часть 1 [PVE ZONE]"
         }
       }
     ],
@@ -6192,40 +6103,32 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "69789727f9ef98d604a0a4eb",
+        "id": "69789903c30426685c9f3080",
         "type": "taskStatus",
         "__typename": "TaskObjectiveBasic",
-        "description": "Complete the task Professional Fitness - Part 2",
+        "description": "Завершить задание \"Профпригодность. Часть 2\"",
         "optional": false
       },
       {
-        "id": "69789737271caeeb3db66e8d",
+        "id": "6978990cbe971818240c2d7f",
         "type": "taskStatus",
         "__typename": "TaskObjectiveBasic",
-        "description": "Complete the task To Great Heights! - Part 6",
+        "description": "Завершить задание \"Вперёд, к вершинам! Часть 6\"",
         "optional": false
       },
       {
-        "id": "6978973c2834db5eb178fdc8",
+        "id": "697899167ed646e5d6187fea",
         "type": "taskStatus",
         "__typename": "TaskObjectiveBasic",
-        "description": "Complete the task Hold the Lead",
+        "description": "Завершить задание \"Удержаться в лидерах\"",
         "optional": false
       }
     ],
     "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.04,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
+      "traderStanding": [],
       "items": [
         {
-          "count": 250,
+          "count": 102,
           "item": {
             "id": "5d235b4d86f7742e017bc88a",
             "name": "Монета GP",
@@ -6273,18 +6176,18 @@
     }
   },
   {
-    "id": "69788c2bac719606e40b4e77",
-    "name": "Профпригодность - Часть 1 [PVP ZONE]",
-    "normalizedName": "professional-fitness-part-1-pvp-zone",
+    "id": "69789660b2187365e70bb94a",
+    "name": "Удержаться в лидерах [PVE ZONE]",
+    "normalizedName": "hold-the-lead-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
-    "experience": 1800,
+    "experience": 9100,
     "taskRequirements": [
       {
         "task": {
-          "id": "66058cb7c7f3584787181476",
-          "name": "Баланс. Часть 1 [PVP ZONE]"
+          "id": "697895277d31587eab080266",
+          "name": "Вперед, к вершинам! - Часть 6 [PVE ZONE]"
         }
       }
     ],
@@ -6299,17 +6202,18 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "69788c6d403c43a13a7ba7c2",
-        "type": "visit",
-        "__typename": "TaskObjectiveBasic",
-        "description": "Play a match in CheckPoint or Last Hero mode in Arena",
-        "optional": false
+        "id": "69789660b2187365e70bb94d",
+        "type": "shoot",
+        "__typename": "TaskObjectiveShoot",
+        "description": "Устранить противников на Арене",
+        "optional": false,
+        "count": 75
       }
     ],
     "finishRewards": {
       "traderStanding": [
         {
-          "standing": 0.01,
+          "standing": 0.05,
           "trader": {
             "name": "Реф",
             "normalizedName": "ref"
@@ -6318,7 +6222,7 @@
       ],
       "items": [
         {
-          "count": 10,
+          "count": 75,
           "item": {
             "id": "5d235b4d86f7742e017bc88a",
             "name": "Монета GP",
@@ -6330,9 +6234,9 @@
     }
   },
   {
-    "id": "69788db3878a4385d10c0718",
-    "name": "Профпригодность - Часть 2 [PVP ZONE]",
-    "normalizedName": "professional-fitness-part-2-pvp-zone",
+    "id": "6978907718bd6d7cbd0e8b8e",
+    "name": "Профпригодность. Часть 2 [PVE ZONE]",
+    "normalizedName": "professional-fitness-part-2-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
@@ -6340,8 +6244,8 @@
     "taskRequirements": [
       {
         "task": {
-          "id": "69788c2bac719606e40b4e77",
-          "name": "Профпригодность - Часть 1 [PVP ZONE]"
+          "id": "69788d4e963f08d9140bce19",
+          "name": "Профпригодность - Часть 1 [PVE ZONE]"
         }
       }
     ],
@@ -6356,11 +6260,12 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "69788fc3dc3074ce1c851e20",
-        "type": "visit",
-        "__typename": "TaskObjectiveBasic",
-        "description": "Eliminate 20 enemies in Arena",
-        "optional": false
+        "id": "6978907718bd6d7cbd0e8b91",
+        "type": "shoot",
+        "__typename": "TaskObjectiveShoot",
+        "description": "Устранить противников на Арене",
+        "optional": false,
+        "count": 20
       }
     ],
     "finishRewards": {
@@ -6396,9 +6301,9 @@
     }
   },
   {
-    "id": "69789418b2187365e70bb947",
-    "name": "Вперёд, к вершинам! – Часть 6 [PVP ZONE]",
-    "normalizedName": "to-great-heights-part-6-pvp-zone",
+    "id": "697895277d31587eab080266",
+    "name": "Вперед, к вершинам! - Часть 6 [PVE ZONE]",
+    "normalizedName": "to-great-heights-part-6-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
@@ -6406,8 +6311,8 @@
     "taskRequirements": [
       {
         "task": {
-          "id": "66058cc9ae4719735349b9ea",
-          "name": "Вперед, к вершинам! Часть 5 [PVP ZONE]"
+          "id": "68342265a8d674b5740b31f0",
+          "name": "Вперед, к вершинам! Часть 5 [PVE ZONE]"
         }
       }
     ],
@@ -6422,15 +6327,23 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "6978a28fe2bee676ada49c79",
+        "id": "6978a2bc18130b67d9156d7a",
         "type": "visit",
         "__typename": "TaskObjectiveBasic",
-        "description": "Win 2 matches in a row in TeamFight, BlastGang or CheckPoint mode in Arena",
+        "description": "Выиграть в двух матчах подряд в режимах TeamFight, BlastGang или Checkpoint на Арене",
         "optional": false
       }
     ],
     "finishRewards": {
-      "traderStanding": [],
+      "traderStanding": [
+        {
+          "standing": 0.04,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
       "items": [
         {
           "count": 55,
@@ -6445,66 +6358,9 @@
     }
   },
   {
-    "id": "697895b6c639962b2e0cf268",
-    "name": "Удержаться в лидерах [PVP ZONE]",
-    "normalizedName": "hold-the-lead-pvp-zone",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 10,
-    "experience": 9100,
-    "taskRequirements": [
-      {
-        "task": {
-          "id": "69789418b2187365e70bb947",
-          "name": "Вперёд, к вершинам! – Часть 6 [PVP ZONE]"
-        }
-      }
-    ],
-    "trader": {
-      "name": "Реф",
-      "normalizedName": "ref",
-      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 1,
-    "objectives": [
-      {
-        "id": "697895e700201d158bb28f22",
-        "type": "visit",
-        "__typename": "TaskObjectiveBasic",
-        "description": "Eliminate 75 enemies in Arena",
-        "optional": false
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.05,
-          "trader": {
-            "name": "Реф",
-            "normalizedName": "ref"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 75,
-          "item": {
-            "id": "5d235b4d86f7742e017bc88a",
-            "name": "Монета GP",
-            "shortName": "GP",
-            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "66058ccbc7f3584787181478",
-    "name": "Сделка с совестью. Часть 1 [PVP ZONE]",
-    "normalizedName": "against-the-conscience-part-1-pvp-zone",
+    "id": "6834233fecd5cf3a440d855b",
+    "name": "Сделка с совестью. Часть 1 [PVE ZONE]",
+    "normalizedName": "against-the-conscience-part-1-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 10,
@@ -6512,14 +6368,14 @@
     "taskRequirements": [
       {
         "task": {
-          "id": "66058cbd9f59e625462acc8e",
-          "name": "Отвлекающий маневр. Часть 1 [PVP ZONE]"
+          "id": "68341c4babec72d95d0c1260",
+          "name": "Отвлекающий маневр. Часть 1 [PVE ZONE]"
         }
       },
       {
         "task": {
-          "id": "697895b6c639962b2e0cf268",
-          "name": "Удержаться в лидерах [PVP ZONE]"
+          "id": "697878057aa1273126030fb0",
+          "name": "Дела на Арене [PVE ZONE]"
         }
       }
     ],
@@ -6534,7 +6390,7 @@
     "ulTier": 2,
     "objectives": [
       {
-        "id": "664ef2e5c11296c444642040",
+        "id": "6834233fecd5cf3a440d855f",
         "type": "visit",
         "__typename": "TaskObjectiveBasic",
         "description": "Найти комнату бывшего чемпиона на локации Таможня",
@@ -6548,7 +6404,7 @@
         ]
       },
       {
-        "id": "67e6b531ca71d03c35350b31",
+        "id": "6834233fecd5cf3a440d8567",
         "type": "findItem",
         "__typename": "TaskObjectiveItem",
         "description": "Найти ключ на базе контрабандистов на локации Берег",
@@ -6563,7 +6419,7 @@
         }
       },
       {
-        "id": "664ef37c4c1e8a2e6c4b1e9a",
+        "id": "6834233fecd5cf3a440d8561",
         "type": "visit",
         "__typename": "TaskObjectiveBasic",
         "description": "Выяснить, что случилось с чемпионом",
@@ -6577,7 +6433,7 @@
         ]
       },
       {
-        "id": "664ef3c238dad5c6686a6d1e",
+        "id": "6834233fecd5cf3a440d8564",
         "type": "extract",
         "__typename": "TaskObjectiveExtract",
         "description": "Выжить и выйти с локации",
@@ -14769,318 +14625,6 @@
     }
   },
   {
-    "id": "6761f28a022f60bb320f3e95",
-    "name": "Новое начало",
-    "normalizedName": "new-beginning",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 25,
-    "experience": 10000,
-    "taskRequirements": [],
-    "trader": {
-      "name": "Барахольщик",
-      "normalizedName": "ragman",
-      "imageLink": "https://assets.tarkov.dev/5ac3b934156ae10c4430e83c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": null,
-    "factionName": "Any",
-    "ulTier": 2,
-    "objectives": [
-      {
-        "id": "6761f93bc757eb8c228fa754",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить Диких",
-        "optional": false,
-        "count": 50
-      },
-      {
-        "id": "6761f9d718fa62aac3264ff2",
-        "type": "extract",
-        "__typename": "TaskObjectiveExtract",
-        "description": "Посетить локацию Лаборатория и выжить",
-        "optional": false,
-        "count": 1,
-        "maps": [
-          {
-            "id": "5b0fc42d86f7744a585f9105",
-            "name": "Лаборатория",
-            "normalizedName": "the-lab"
-          }
-        ]
-      },
-      {
-        "id": "6761f6f1bacf72169272e381",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать предмет: Фигурка бойца BEAR",
-        "optional": false,
-        "count": 1,
-        "foundInRaid": false,
-        "item": {
-          "id": "655c652d60d0ac437100fed7",
-          "name": "Фигурка бойца BEAR",
-          "shortName": "BEAR",
-          "image512pxLink": "https://assets.tarkov.dev/655c652d60d0ac437100fed7-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "655c652d60d0ac437100fed7",
-            "name": "Фигурка бойца BEAR",
-            "shortName": "BEAR",
-            "image512pxLink": "https://assets.tarkov.dev/655c652d60d0ac437100fed7-512.webp"
-          },
-          {
-            "id": "655c663a6689c676ce57af85",
-            "name": "Фигурка бойца USEC",
-            "shortName": "USEC",
-            "image512pxLink": "https://assets.tarkov.dev/655c663a6689c676ce57af85-512.webp"
-          },
-          {
-            "id": "66572b8d80b1cd4b6a67847f",
-            "name": "Фигурка Дэна",
-            "shortName": "Дэн",
-            "image512pxLink": "https://assets.tarkov.dev/66572b8d80b1cd4b6a67847f-512.webp"
-          },
-          {
-            "id": "68f26124b84c6e1f8a09cfff",
-            "name": "Фигурка Ходячий Танк",
-            "shortName": "Танк",
-            "image512pxLink": "https://assets.tarkov.dev/68f26124b84c6e1f8a09cfff-512.webp"
-          },
-          {
-            "id": "6841b6b674a3c16f5e03d653",
-            "name": "Фигурка ЧВК Начало",
-            "shortName": "Начало",
-            "image512pxLink": "https://assets.tarkov.dev/6841b6b674a3c16f5e03d653-512.webp"
-          },
-          {
-            "id": "68f11224197b61ffe703b16f",
-            "name": "Фигурка ЧВК Матёрый",
-            "shortName": "Матёрый",
-            "image512pxLink": "https://assets.tarkov.dev/68f11224197b61ffe703b16f-512.webp"
-          },
-          {
-            "id": "697cddb414e932098005748d",
-            "name": "Фигурка Утки",
-            "shortName": "Утка",
-            "image512pxLink": "https://assets.tarkov.dev/697cddb414e932098005748d-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6761f7d086fd2d9c941b8aa3",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать предмет: Фигурка Депутата Муткевича",
-        "optional": false,
-        "count": 1,
-        "foundInRaid": false,
-        "item": {
-          "id": "655c673673a43e23e857aebd",
-          "name": "Фигурка Дикого",
-          "shortName": "Дикий",
-          "image512pxLink": "https://assets.tarkov.dev/655c673673a43e23e857aebd-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "655c673673a43e23e857aebd",
-            "name": "Фигурка Дикого",
-            "shortName": "Дикий",
-            "image512pxLink": "https://assets.tarkov.dev/655c673673a43e23e857aebd-512.webp"
-          },
-          {
-            "id": "655c67782a1356436041c9c5",
-            "name": "Фигурка Рыжего",
-            "shortName": "Рыжий",
-            "image512pxLink": "https://assets.tarkov.dev/655c67782a1356436041c9c5-512.webp"
-          },
-          {
-            "id": "655c66e40b2de553b618d4b8",
-            "name": "Фигурка Депутата Муткевича",
-            "shortName": "Муткевич",
-            "image512pxLink": "https://assets.tarkov.dev/655c66e40b2de553b618d4b8-512.webp"
-          },
-          {
-            "id": "68f261f6928cd23ddf0471fd",
-            "name": "Фигурка Мастехина",
-            "shortName": "Мастехин",
-            "image512pxLink": "https://assets.tarkov.dev/68f261f6928cd23ddf0471fd-512.webp"
-          },
-          {
-            "id": "690c70a2a1461a01d605a1bd",
-            "name": "Фигурка Elvisvista",
-            "shortName": "Elvisvista",
-            "image512pxLink": "https://assets.tarkov.dev/690c70a2a1461a01d605a1bd-512.webp"
-          },
-          {
-            "id": "68f260d7b84c6e1f8a09cffd",
-            "name": "Фигурка Кота",
-            "shortName": "Кот",
-            "image512pxLink": "https://assets.tarkov.dev/68f260d7b84c6e1f8a09cffd-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6761f7f87b309912d6b5f2a9",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать предмет: Фигурка Киллы",
-        "optional": false,
-        "count": 1,
-        "foundInRaid": false,
-        "item": {
-          "id": "66572c82ad599021091c6118",
-          "name": "Фигурка Киллы",
-          "shortName": "Килла",
-          "image512pxLink": "https://assets.tarkov.dev/66572c82ad599021091c6118-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "66572c82ad599021091c6118",
-            "name": "Фигурка Киллы",
-            "shortName": "Килла",
-            "image512pxLink": "https://assets.tarkov.dev/66572c82ad599021091c6118-512.webp"
-          },
-          {
-            "id": "66572cbdad599021091c611a",
-            "name": "Фигурка Тагиллы",
-            "shortName": "Тагилла",
-            "image512pxLink": "https://assets.tarkov.dev/66572cbdad599021091c611a-512.webp"
-          },
-          {
-            "id": "66572be36a723f7f005a066e",
-            "name": "Фигурка Решалы",
-            "shortName": "Решала",
-            "image512pxLink": "https://assets.tarkov.dev/66572be36a723f7f005a066e-512.webp"
-          },
-          {
-            "id": "655c67ab0d37ca5135388f4b",
-            "name": "Фигурка Деда Мороза",
-            "shortName": "Дед Мороз",
-            "image512pxLink": "https://assets.tarkov.dev/655c67ab0d37ca5135388f4b-512.webp"
-          },
-          {
-            "id": "655c669103999d3c810c025b",
-            "name": "Фигурка Сектанта",
-            "shortName": "Сектант",
-            "image512pxLink": "https://assets.tarkov.dev/655c669103999d3c810c025b-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6761f87227aeff895cef62c5",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать предмет: Фигурка Дэна",
-        "optional": false,
-        "count": 1,
-        "foundInRaid": false,
-        "item": {
-          "id": "68f25c64b2b53abd200b954f",
-          "name": "Фигурка Прапор",
-          "shortName": "Прапор",
-          "image512pxLink": "https://assets.tarkov.dev/68f25c64b2b53abd200b954f-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "68f25c64b2b53abd200b954f",
-            "name": "Фигурка Прапор",
-            "shortName": "Прапор",
-            "image512pxLink": "https://assets.tarkov.dev/68f25c64b2b53abd200b954f-512.webp"
-          },
-          {
-            "id": "68f25ce9b2b53abd200b9551",
-            "name": "Фигурка Терапевт",
-            "shortName": "Терапевт",
-            "image512pxLink": "https://assets.tarkov.dev/68f25ce9b2b53abd200b9551-512.webp"
-          },
-          {
-            "id": "68f25da3b84c6e1f8a09cffb",
-            "name": "Фигурка Скупщик",
-            "shortName": "Скупщик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25da3b84c6e1f8a09cffb-512.webp"
-          },
-          {
-            "id": "68f25eba19a2b503d70dc28f",
-            "name": "Фигурка Лыжник",
-            "shortName": "Лыжник",
-            "image512pxLink": "https://assets.tarkov.dev/68f25eba19a2b503d70dc28f-512.webp"
-          },
-          {
-            "id": "68f25eef19a2b503d70dc291",
-            "name": "Фигурка Миротворец",
-            "shortName": "Миротворец",
-            "image512pxLink": "https://assets.tarkov.dev/68f25eef19a2b503d70dc291-512.webp"
-          },
-          {
-            "id": "68f25f1201fb9de974058be4",
-            "name": "Фигурка Механик",
-            "shortName": "Механик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25f1201fb9de974058be4-512.webp"
-          },
-          {
-            "id": "68f25f3a5d977110860c3350",
-            "name": "Фигурка Барахольщик",
-            "shortName": "Барахольщик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25f3a5d977110860c3350-512.webp"
-          },
-          {
-            "id": "68f25faa22c8979ee308f4da",
-            "name": "Фигурка Егерь",
-            "shortName": "Егерь",
-            "image512pxLink": "https://assets.tarkov.dev/68f25faa22c8979ee308f4da-512.webp"
-          },
-          {
-            "id": "68f25fdf928cd23ddf0471fb",
-            "name": "Фигурка Смотритель",
-            "shortName": "Смотритель",
-            "image512pxLink": "https://assets.tarkov.dev/68f25fdf928cd23ddf0471fb-512.webp"
-          },
-          {
-            "id": "68f26063b2b53abd200b9553",
-            "name": "Фигурка Реф",
-            "shortName": "Реф",
-            "image512pxLink": "https://assets.tarkov.dev/68f26063b2b53abd200b9553-512.webp"
-          },
-          {
-            "id": "68f2608301fb9de974058be6",
-            "name": "Фигурка БТР",
-            "shortName": "БТР",
-            "image512pxLink": "https://assets.tarkov.dev/68f2608301fb9de974058be6-512.webp"
-          }
-        ]
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.01,
-          "trader": {
-            "name": "Барахольщик",
-            "normalizedName": "ragman"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 100000,
-          "item": {
-            "id": "5449016a4bdc2d6f028b456f",
-            "name": "Рубли",
-            "shortName": "Рубли",
-            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
     "id": "5ac244eb86f7741356335af1",
     "name": "Оружейник. М4A1",
     "normalizedName": "gunsmith-m4a1",
@@ -16986,318 +16530,6 @@
     }
   },
   {
-    "id": "6761ff17cdc36bd66102e9d0",
-    "name": "Новое начало",
-    "normalizedName": "new-beginning-2",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 30,
-    "experience": 11000,
-    "taskRequirements": [],
-    "trader": {
-      "name": "Барахольщик",
-      "normalizedName": "ragman",
-      "imageLink": "https://assets.tarkov.dev/5ac3b934156ae10c4430e83c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": "672df12f97f0469cea52f55e",
-    "factionName": "Any",
-    "ulTier": 3,
-    "objectives": [
-      {
-        "id": "6762015739c53fca8ac51336",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить бойцов ЧВК",
-        "optional": false,
-        "count": 10
-      },
-      {
-        "id": "6761ff17cdc36bd66102e9d6",
-        "type": "extract",
-        "__typename": "TaskObjectiveExtract",
-        "description": "Посетить локацию Лаборатория и выжить",
-        "optional": false,
-        "count": 1,
-        "maps": [
-          {
-            "id": "5b0fc42d86f7744a585f9105",
-            "name": "Лаборатория",
-            "normalizedName": "the-lab"
-          }
-        ]
-      },
-      {
-        "id": "6761ff17cdc36bd66102e9d8",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка бойца BEAR",
-        "optional": false,
-        "count": 2,
-        "foundInRaid": true,
-        "item": {
-          "id": "655c652d60d0ac437100fed7",
-          "name": "Фигурка бойца BEAR",
-          "shortName": "BEAR",
-          "image512pxLink": "https://assets.tarkov.dev/655c652d60d0ac437100fed7-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "655c652d60d0ac437100fed7",
-            "name": "Фигурка бойца BEAR",
-            "shortName": "BEAR",
-            "image512pxLink": "https://assets.tarkov.dev/655c652d60d0ac437100fed7-512.webp"
-          },
-          {
-            "id": "655c663a6689c676ce57af85",
-            "name": "Фигурка бойца USEC",
-            "shortName": "USEC",
-            "image512pxLink": "https://assets.tarkov.dev/655c663a6689c676ce57af85-512.webp"
-          },
-          {
-            "id": "66572b8d80b1cd4b6a67847f",
-            "name": "Фигурка Дэна",
-            "shortName": "Дэн",
-            "image512pxLink": "https://assets.tarkov.dev/66572b8d80b1cd4b6a67847f-512.webp"
-          },
-          {
-            "id": "68f26124b84c6e1f8a09cfff",
-            "name": "Фигурка Ходячий Танк",
-            "shortName": "Танк",
-            "image512pxLink": "https://assets.tarkov.dev/68f26124b84c6e1f8a09cfff-512.webp"
-          },
-          {
-            "id": "6841b6b674a3c16f5e03d653",
-            "name": "Фигурка ЧВК Начало",
-            "shortName": "Начало",
-            "image512pxLink": "https://assets.tarkov.dev/6841b6b674a3c16f5e03d653-512.webp"
-          },
-          {
-            "id": "68f11224197b61ffe703b16f",
-            "name": "Фигурка ЧВК Матёрый",
-            "shortName": "Матёрый",
-            "image512pxLink": "https://assets.tarkov.dev/68f11224197b61ffe703b16f-512.webp"
-          },
-          {
-            "id": "697cddb414e932098005748d",
-            "name": "Фигурка Утки",
-            "shortName": "Утка",
-            "image512pxLink": "https://assets.tarkov.dev/697cddb414e932098005748d-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6761ff17cdc36bd66102e9d9",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Депутата Муткевича",
-        "optional": false,
-        "count": 2,
-        "foundInRaid": true,
-        "item": {
-          "id": "655c673673a43e23e857aebd",
-          "name": "Фигурка Дикого",
-          "shortName": "Дикий",
-          "image512pxLink": "https://assets.tarkov.dev/655c673673a43e23e857aebd-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "655c673673a43e23e857aebd",
-            "name": "Фигурка Дикого",
-            "shortName": "Дикий",
-            "image512pxLink": "https://assets.tarkov.dev/655c673673a43e23e857aebd-512.webp"
-          },
-          {
-            "id": "655c67782a1356436041c9c5",
-            "name": "Фигурка Рыжего",
-            "shortName": "Рыжий",
-            "image512pxLink": "https://assets.tarkov.dev/655c67782a1356436041c9c5-512.webp"
-          },
-          {
-            "id": "655c66e40b2de553b618d4b8",
-            "name": "Фигурка Депутата Муткевича",
-            "shortName": "Муткевич",
-            "image512pxLink": "https://assets.tarkov.dev/655c66e40b2de553b618d4b8-512.webp"
-          },
-          {
-            "id": "68f261f6928cd23ddf0471fd",
-            "name": "Фигурка Мастехина",
-            "shortName": "Мастехин",
-            "image512pxLink": "https://assets.tarkov.dev/68f261f6928cd23ddf0471fd-512.webp"
-          },
-          {
-            "id": "690c70a2a1461a01d605a1bd",
-            "name": "Фигурка Elvisvista",
-            "shortName": "Elvisvista",
-            "image512pxLink": "https://assets.tarkov.dev/690c70a2a1461a01d605a1bd-512.webp"
-          },
-          {
-            "id": "68f260d7b84c6e1f8a09cffd",
-            "name": "Фигурка Кота",
-            "shortName": "Кот",
-            "image512pxLink": "https://assets.tarkov.dev/68f260d7b84c6e1f8a09cffd-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6761ff17cdc36bd66102e9da",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Киллы",
-        "optional": false,
-        "count": 2,
-        "foundInRaid": true,
-        "item": {
-          "id": "66572c82ad599021091c6118",
-          "name": "Фигурка Киллы",
-          "shortName": "Килла",
-          "image512pxLink": "https://assets.tarkov.dev/66572c82ad599021091c6118-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "66572c82ad599021091c6118",
-            "name": "Фигурка Киллы",
-            "shortName": "Килла",
-            "image512pxLink": "https://assets.tarkov.dev/66572c82ad599021091c6118-512.webp"
-          },
-          {
-            "id": "66572cbdad599021091c611a",
-            "name": "Фигурка Тагиллы",
-            "shortName": "Тагилла",
-            "image512pxLink": "https://assets.tarkov.dev/66572cbdad599021091c611a-512.webp"
-          },
-          {
-            "id": "66572be36a723f7f005a066e",
-            "name": "Фигурка Решалы",
-            "shortName": "Решала",
-            "image512pxLink": "https://assets.tarkov.dev/66572be36a723f7f005a066e-512.webp"
-          },
-          {
-            "id": "655c67ab0d37ca5135388f4b",
-            "name": "Фигурка Деда Мороза",
-            "shortName": "Дед Мороз",
-            "image512pxLink": "https://assets.tarkov.dev/655c67ab0d37ca5135388f4b-512.webp"
-          },
-          {
-            "id": "655c669103999d3c810c025b",
-            "name": "Фигурка Сектанта",
-            "shortName": "Сектант",
-            "image512pxLink": "https://assets.tarkov.dev/655c669103999d3c810c025b-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6761ff17cdc36bd66102e9e1",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Дэна",
-        "optional": false,
-        "count": 2,
-        "foundInRaid": true,
-        "item": {
-          "id": "68f25c64b2b53abd200b954f",
-          "name": "Фигурка Прапор",
-          "shortName": "Прапор",
-          "image512pxLink": "https://assets.tarkov.dev/68f25c64b2b53abd200b954f-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "68f25c64b2b53abd200b954f",
-            "name": "Фигурка Прапор",
-            "shortName": "Прапор",
-            "image512pxLink": "https://assets.tarkov.dev/68f25c64b2b53abd200b954f-512.webp"
-          },
-          {
-            "id": "68f25ce9b2b53abd200b9551",
-            "name": "Фигурка Терапевт",
-            "shortName": "Терапевт",
-            "image512pxLink": "https://assets.tarkov.dev/68f25ce9b2b53abd200b9551-512.webp"
-          },
-          {
-            "id": "68f25da3b84c6e1f8a09cffb",
-            "name": "Фигурка Скупщик",
-            "shortName": "Скупщик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25da3b84c6e1f8a09cffb-512.webp"
-          },
-          {
-            "id": "68f25eba19a2b503d70dc28f",
-            "name": "Фигурка Лыжник",
-            "shortName": "Лыжник",
-            "image512pxLink": "https://assets.tarkov.dev/68f25eba19a2b503d70dc28f-512.webp"
-          },
-          {
-            "id": "68f25eef19a2b503d70dc291",
-            "name": "Фигурка Миротворец",
-            "shortName": "Миротворец",
-            "image512pxLink": "https://assets.tarkov.dev/68f25eef19a2b503d70dc291-512.webp"
-          },
-          {
-            "id": "68f25f1201fb9de974058be4",
-            "name": "Фигурка Механик",
-            "shortName": "Механик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25f1201fb9de974058be4-512.webp"
-          },
-          {
-            "id": "68f25f3a5d977110860c3350",
-            "name": "Фигурка Барахольщик",
-            "shortName": "Барахольщик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25f3a5d977110860c3350-512.webp"
-          },
-          {
-            "id": "68f25faa22c8979ee308f4da",
-            "name": "Фигурка Егерь",
-            "shortName": "Егерь",
-            "image512pxLink": "https://assets.tarkov.dev/68f25faa22c8979ee308f4da-512.webp"
-          },
-          {
-            "id": "68f25fdf928cd23ddf0471fb",
-            "name": "Фигурка Смотритель",
-            "shortName": "Смотритель",
-            "image512pxLink": "https://assets.tarkov.dev/68f25fdf928cd23ddf0471fb-512.webp"
-          },
-          {
-            "id": "68f26063b2b53abd200b9553",
-            "name": "Фигурка Реф",
-            "shortName": "Реф",
-            "image512pxLink": "https://assets.tarkov.dev/68f26063b2b53abd200b9553-512.webp"
-          },
-          {
-            "id": "68f2608301fb9de974058be6",
-            "name": "Фигурка БТР",
-            "shortName": "БТР",
-            "image512pxLink": "https://assets.tarkov.dev/68f2608301fb9de974058be6-512.webp"
-          }
-        ]
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.01,
-          "trader": {
-            "name": "Барахольщик",
-            "normalizedName": "ragman"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 200000,
-          "item": {
-            "id": "5449016a4bdc2d6f028b456f",
-            "name": "Рубли",
-            "shortName": "Рубли",
-            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
     "id": "5c0d0d5086f774363760aef2",
     "name": "Физкультурник",
     "normalizedName": "athlete",
@@ -18466,355 +17698,6 @@
     }
   },
   {
-    "id": "6848100b00afffa81f09e365",
-    "name": "Новое начало",
-    "normalizedName": "new-beginning-3",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 35,
-    "experience": 11000,
-    "taskRequirements": [],
-    "trader": {
-      "name": "Барахольщик",
-      "normalizedName": "ragman",
-      "imageLink": "https://assets.tarkov.dev/5ac3b934156ae10c4430e83c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": "672df4281ab8d9c8849a0c88",
-    "factionName": "Any",
-    "ulTier": 3,
-    "objectives": [
-      {
-        "id": "6848100b00afffa81f09e369",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить бойцов ЧВК",
-        "optional": false,
-        "count": 15
-      },
-      {
-        "id": "684812156189183883f13947",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить Рейдеров",
-        "optional": false,
-        "count": 20
-      },
-      {
-        "id": "6848100b00afffa81f09e36b",
-        "type": "extract",
-        "__typename": "TaskObjectiveExtract",
-        "description": "Совершить переход с Лаборатории на Улицы Таркова",
-        "optional": false,
-        "count": 1,
-        "maps": [
-          {
-            "id": "5b0fc42d86f7744a585f9105",
-            "name": "Лаборатория",
-            "normalizedName": "the-lab"
-          },
-          {
-            "id": "5714dc692459777137212e12",
-            "name": "Улицы Таркова",
-            "normalizedName": "streets-of-tarkov"
-          }
-        ]
-      },
-      {
-        "id": "6848116061809d65b8503617",
-        "type": "extract",
-        "__typename": "TaskObjectiveExtract",
-        "description": "Выжить и выйти на локации Улицы Таркова",
-        "optional": false,
-        "count": 1,
-        "maps": [
-          {
-            "id": "5714dc692459777137212e12",
-            "name": "Улицы Таркова",
-            "normalizedName": "streets-of-tarkov"
-          }
-        ]
-      },
-      {
-        "id": "6848100b00afffa81f09e36d",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка бойца BEAR",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": true,
-        "item": {
-          "id": "655c652d60d0ac437100fed7",
-          "name": "Фигурка бойца BEAR",
-          "shortName": "BEAR",
-          "image512pxLink": "https://assets.tarkov.dev/655c652d60d0ac437100fed7-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "655c652d60d0ac437100fed7",
-            "name": "Фигурка бойца BEAR",
-            "shortName": "BEAR",
-            "image512pxLink": "https://assets.tarkov.dev/655c652d60d0ac437100fed7-512.webp"
-          },
-          {
-            "id": "655c663a6689c676ce57af85",
-            "name": "Фигурка бойца USEC",
-            "shortName": "USEC",
-            "image512pxLink": "https://assets.tarkov.dev/655c663a6689c676ce57af85-512.webp"
-          },
-          {
-            "id": "66572b8d80b1cd4b6a67847f",
-            "name": "Фигурка Дэна",
-            "shortName": "Дэн",
-            "image512pxLink": "https://assets.tarkov.dev/66572b8d80b1cd4b6a67847f-512.webp"
-          },
-          {
-            "id": "68f26124b84c6e1f8a09cfff",
-            "name": "Фигурка Ходячий Танк",
-            "shortName": "Танк",
-            "image512pxLink": "https://assets.tarkov.dev/68f26124b84c6e1f8a09cfff-512.webp"
-          },
-          {
-            "id": "6841b6b674a3c16f5e03d653",
-            "name": "Фигурка ЧВК Начало",
-            "shortName": "Начало",
-            "image512pxLink": "https://assets.tarkov.dev/6841b6b674a3c16f5e03d653-512.webp"
-          },
-          {
-            "id": "68f11224197b61ffe703b16f",
-            "name": "Фигурка ЧВК Матёрый",
-            "shortName": "Матёрый",
-            "image512pxLink": "https://assets.tarkov.dev/68f11224197b61ffe703b16f-512.webp"
-          },
-          {
-            "id": "697cddb414e932098005748d",
-            "name": "Фигурка Утки",
-            "shortName": "Утка",
-            "image512pxLink": "https://assets.tarkov.dev/697cddb414e932098005748d-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6848100b00afffa81f09e36e",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Депутата Муткевича",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": true,
-        "item": {
-          "id": "655c673673a43e23e857aebd",
-          "name": "Фигурка Дикого",
-          "shortName": "Дикий",
-          "image512pxLink": "https://assets.tarkov.dev/655c673673a43e23e857aebd-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "655c673673a43e23e857aebd",
-            "name": "Фигурка Дикого",
-            "shortName": "Дикий",
-            "image512pxLink": "https://assets.tarkov.dev/655c673673a43e23e857aebd-512.webp"
-          },
-          {
-            "id": "655c67782a1356436041c9c5",
-            "name": "Фигурка Рыжего",
-            "shortName": "Рыжий",
-            "image512pxLink": "https://assets.tarkov.dev/655c67782a1356436041c9c5-512.webp"
-          },
-          {
-            "id": "655c66e40b2de553b618d4b8",
-            "name": "Фигурка Депутата Муткевича",
-            "shortName": "Муткевич",
-            "image512pxLink": "https://assets.tarkov.dev/655c66e40b2de553b618d4b8-512.webp"
-          },
-          {
-            "id": "68f261f6928cd23ddf0471fd",
-            "name": "Фигурка Мастехина",
-            "shortName": "Мастехин",
-            "image512pxLink": "https://assets.tarkov.dev/68f261f6928cd23ddf0471fd-512.webp"
-          },
-          {
-            "id": "690c70a2a1461a01d605a1bd",
-            "name": "Фигурка Elvisvista",
-            "shortName": "Elvisvista",
-            "image512pxLink": "https://assets.tarkov.dev/690c70a2a1461a01d605a1bd-512.webp"
-          },
-          {
-            "id": "68f260d7b84c6e1f8a09cffd",
-            "name": "Фигурка Кота",
-            "shortName": "Кот",
-            "image512pxLink": "https://assets.tarkov.dev/68f260d7b84c6e1f8a09cffd-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6848100b00afffa81f09e36f",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Киллы",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": true,
-        "item": {
-          "id": "66572c82ad599021091c6118",
-          "name": "Фигурка Киллы",
-          "shortName": "Килла",
-          "image512pxLink": "https://assets.tarkov.dev/66572c82ad599021091c6118-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "66572c82ad599021091c6118",
-            "name": "Фигурка Киллы",
-            "shortName": "Килла",
-            "image512pxLink": "https://assets.tarkov.dev/66572c82ad599021091c6118-512.webp"
-          },
-          {
-            "id": "66572cbdad599021091c611a",
-            "name": "Фигурка Тагиллы",
-            "shortName": "Тагилла",
-            "image512pxLink": "https://assets.tarkov.dev/66572cbdad599021091c611a-512.webp"
-          },
-          {
-            "id": "66572be36a723f7f005a066e",
-            "name": "Фигурка Решалы",
-            "shortName": "Решала",
-            "image512pxLink": "https://assets.tarkov.dev/66572be36a723f7f005a066e-512.webp"
-          },
-          {
-            "id": "655c67ab0d37ca5135388f4b",
-            "name": "Фигурка Деда Мороза",
-            "shortName": "Дед Мороз",
-            "image512pxLink": "https://assets.tarkov.dev/655c67ab0d37ca5135388f4b-512.webp"
-          },
-          {
-            "id": "655c669103999d3c810c025b",
-            "name": "Фигурка Сектанта",
-            "shortName": "Сектант",
-            "image512pxLink": "https://assets.tarkov.dev/655c669103999d3c810c025b-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "6848100b00afffa81f09e376",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Дэна",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": true,
-        "item": {
-          "id": "68f25c64b2b53abd200b954f",
-          "name": "Фигурка Прапор",
-          "shortName": "Прапор",
-          "image512pxLink": "https://assets.tarkov.dev/68f25c64b2b53abd200b954f-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "68f25c64b2b53abd200b954f",
-            "name": "Фигурка Прапор",
-            "shortName": "Прапор",
-            "image512pxLink": "https://assets.tarkov.dev/68f25c64b2b53abd200b954f-512.webp"
-          },
-          {
-            "id": "68f25ce9b2b53abd200b9551",
-            "name": "Фигурка Терапевт",
-            "shortName": "Терапевт",
-            "image512pxLink": "https://assets.tarkov.dev/68f25ce9b2b53abd200b9551-512.webp"
-          },
-          {
-            "id": "68f25da3b84c6e1f8a09cffb",
-            "name": "Фигурка Скупщик",
-            "shortName": "Скупщик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25da3b84c6e1f8a09cffb-512.webp"
-          },
-          {
-            "id": "68f25eba19a2b503d70dc28f",
-            "name": "Фигурка Лыжник",
-            "shortName": "Лыжник",
-            "image512pxLink": "https://assets.tarkov.dev/68f25eba19a2b503d70dc28f-512.webp"
-          },
-          {
-            "id": "68f25eef19a2b503d70dc291",
-            "name": "Фигурка Миротворец",
-            "shortName": "Миротворец",
-            "image512pxLink": "https://assets.tarkov.dev/68f25eef19a2b503d70dc291-512.webp"
-          },
-          {
-            "id": "68f25f1201fb9de974058be4",
-            "name": "Фигурка Механик",
-            "shortName": "Механик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25f1201fb9de974058be4-512.webp"
-          },
-          {
-            "id": "68f25f3a5d977110860c3350",
-            "name": "Фигурка Барахольщик",
-            "shortName": "Барахольщик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25f3a5d977110860c3350-512.webp"
-          },
-          {
-            "id": "68f25faa22c8979ee308f4da",
-            "name": "Фигурка Егерь",
-            "shortName": "Егерь",
-            "image512pxLink": "https://assets.tarkov.dev/68f25faa22c8979ee308f4da-512.webp"
-          },
-          {
-            "id": "68f25fdf928cd23ddf0471fb",
-            "name": "Фигурка Смотритель",
-            "shortName": "Смотритель",
-            "image512pxLink": "https://assets.tarkov.dev/68f25fdf928cd23ddf0471fb-512.webp"
-          },
-          {
-            "id": "68f26063b2b53abd200b9553",
-            "name": "Фигурка Реф",
-            "shortName": "Реф",
-            "image512pxLink": "https://assets.tarkov.dev/68f26063b2b53abd200b9553-512.webp"
-          },
-          {
-            "id": "68f2608301fb9de974058be6",
-            "name": "Фигурка БТР",
-            "shortName": "БТР",
-            "image512pxLink": "https://assets.tarkov.dev/68f2608301fb9de974058be6-512.webp"
-          }
-        ]
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.01,
-          "trader": {
-            "name": "Барахольщик",
-            "normalizedName": "ragman"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 2000000,
-          "item": {
-            "id": "5449016a4bdc2d6f028b456f",
-            "name": "Рубли",
-            "shortName": "Рубли",
-            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
-          }
-        },
-        {
-          "count": 2,
-          "item": {
-            "id": "59faff1d86f7746c51718c9c",
-            "name": "Монета Биткоина",
-            "shortName": "0.2BTC",
-            "image512pxLink": "https://assets.tarkov.dev/59faff1d86f7746c51718c9c-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
     "id": "5c0bdb5286f774166e38eed4",
     "name": "Кремень",
     "normalizedName": "flint",
@@ -18890,9 +17773,9 @@
     }
   },
   {
-    "id": "67e993b1ac26bf29380a320b",
-    "name": "Неожиданный подарок [PVP ZONE]",
-    "normalizedName": "surprise-gift-pvp-zone",
+    "id": "683427418f5b18d29a05d9e3",
+    "name": "Неожиданный подарок [PVE ZONE]",
+    "normalizedName": "surprise-gift-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 35,
@@ -18900,8 +17783,8 @@
     "taskRequirements": [
       {
         "task": {
-          "id": "66058ccf06ef1d50a60c1f48",
-          "name": "Между двух огней [PVP ZONE]"
+          "id": "683425dd8f5b18d29a05d9d1",
+          "name": "Между двух огней [PVE ZONE]"
         }
       }
     ],
@@ -18916,7 +17799,7 @@
     "ulTier": 1,
     "objectives": [
       {
-        "id": "67e993b1ac26bf29380a320e",
+        "id": "683427418f5b18d29a05d9e5",
         "type": "visit",
         "__typename": "TaskObjectiveBasic",
         "description": "Вернуться в убежище бывшего чемпиона на локации Таможня",
@@ -18930,7 +17813,7 @@
         ]
       },
       {
-        "id": "67e993b1ac26bf29380a3210",
+        "id": "683427418f5b18d29a05d9e7",
         "type": "findQuestItem",
         "__typename": "TaskObjectiveItem",
         "description": "Найти компромат на Рефа",
@@ -18951,7 +17834,7 @@
         ]
       },
       {
-        "id": "67e993b1ac26bf29380a3212",
+        "id": "683427418f5b18d29a05d9e9",
         "type": "giveQuestItem",
         "__typename": "TaskObjectiveItem",
         "description": "Передать найденную информацию",
@@ -19124,9 +18007,9 @@
     }
   },
   {
-    "id": "67e993f5ed537409f009da75",
-    "name": "Отложенная награда [PVP ZONE]",
-    "normalizedName": "postponed-reward-pvp-zone",
+    "id": "6834287b7559f4e6d50bc0fa",
+    "name": "Отложенная награда [PVE ZONE]",
+    "normalizedName": "postponed-reward-pve-zone",
     "kappaRequired": false,
     "lightkeeperRequired": false,
     "minPlayerLevel": 35,
@@ -19134,8 +18017,8 @@
     "taskRequirements": [
       {
         "task": {
-          "id": "67e993b1ac26bf29380a320b",
-          "name": "Неожиданный подарок [PVP ZONE]"
+          "id": "683427418f5b18d29a05d9e3",
+          "name": "Неожиданный подарок [PVE ZONE]"
         }
       }
     ],
@@ -19150,7 +18033,7 @@
     "ulTier": 4,
     "objectives": [
       {
-        "id": "67ebc5f501052193cdb4c9ac",
+        "id": "6834287b7559f4e6d50bc0fd",
         "type": "giveItem",
         "__typename": "TaskObjectiveItem",
         "description": "Передать предмет: Медаль Lega",
@@ -22326,375 +21209,6 @@
             "name": "Рубли",
             "shortName": "Рубли",
             "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
-          }
-        }
-      ]
-    }
-  },
-  {
-    "id": "68481881f43abfdda2058369",
-    "name": "Новое начало",
-    "normalizedName": "new-beginning-4",
-    "kappaRequired": false,
-    "lightkeeperRequired": false,
-    "minPlayerLevel": 40,
-    "experience": 11000,
-    "taskRequirements": [],
-    "trader": {
-      "name": "Барахольщик",
-      "normalizedName": "ragman",
-      "imageLink": "https://assets.tarkov.dev/5ac3b934156ae10c4430e83c.webp"
-    },
-    "traderRequirements": [],
-    "requiredPrestige": "683da91d6f472cfa738c52f2",
-    "factionName": "Any",
-    "ulTier": 3,
-    "objectives": [
-      {
-        "id": "68481881f43abfdda205836d",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить бойцов ЧВК",
-        "optional": false,
-        "count": 20
-      },
-      {
-        "id": "68481a8eda10b760b3b1a73f",
-        "type": "shoot",
-        "__typename": "TaskObjectiveShoot",
-        "description": "Убить Отступников",
-        "optional": false,
-        "count": 30
-      },
-      {
-        "id": "68481881f43abfdda205836f",
-        "type": "extract",
-        "__typename": "TaskObjectiveExtract",
-        "description": "Совершить переход с Лаборатории на Улицы Таркова",
-        "optional": false,
-        "count": 1,
-        "maps": [
-          {
-            "id": "5b0fc42d86f7744a585f9105",
-            "name": "Лаборатория",
-            "normalizedName": "the-lab"
-          },
-          {
-            "id": "5714dc692459777137212e12",
-            "name": "Улицы Таркова",
-            "normalizedName": "streets-of-tarkov"
-          }
-        ]
-      },
-      {
-        "id": "68483a05801f8d9e40ac05b1",
-        "type": "extract",
-        "__typename": "TaskObjectiveExtract",
-        "description": "Совершить переход с Улиц Таркова на Развязку",
-        "optional": false,
-        "count": 1,
-        "maps": [
-          {
-            "id": "5714dc692459777137212e12",
-            "name": "Улицы Таркова",
-            "normalizedName": "streets-of-tarkov"
-          },
-          {
-            "id": "5714dbc024597771384a510d",
-            "name": "Развязка",
-            "normalizedName": "interchange"
-          }
-        ]
-      },
-      {
-        "id": "68486a0eda4828c0772e337b",
-        "type": "extract",
-        "__typename": "TaskObjectiveExtract",
-        "description": "Передать любую найденную в рейде лимитированную фигурку из Лабиринта",
-        "optional": false,
-        "count": 1,
-        "maps": [
-          {
-            "id": "5714dbc024597771384a510d",
-            "name": "Развязка",
-            "normalizedName": "interchange"
-          }
-        ]
-      },
-      {
-        "id": "68481881f43abfdda2058371",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка бойца BEAR",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": true,
-        "item": {
-          "id": "655c652d60d0ac437100fed7",
-          "name": "Фигурка бойца BEAR",
-          "shortName": "BEAR",
-          "image512pxLink": "https://assets.tarkov.dev/655c652d60d0ac437100fed7-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "655c652d60d0ac437100fed7",
-            "name": "Фигурка бойца BEAR",
-            "shortName": "BEAR",
-            "image512pxLink": "https://assets.tarkov.dev/655c652d60d0ac437100fed7-512.webp"
-          },
-          {
-            "id": "655c663a6689c676ce57af85",
-            "name": "Фигурка бойца USEC",
-            "shortName": "USEC",
-            "image512pxLink": "https://assets.tarkov.dev/655c663a6689c676ce57af85-512.webp"
-          },
-          {
-            "id": "66572b8d80b1cd4b6a67847f",
-            "name": "Фигурка Дэна",
-            "shortName": "Дэн",
-            "image512pxLink": "https://assets.tarkov.dev/66572b8d80b1cd4b6a67847f-512.webp"
-          },
-          {
-            "id": "68f26124b84c6e1f8a09cfff",
-            "name": "Фигурка Ходячий Танк",
-            "shortName": "Танк",
-            "image512pxLink": "https://assets.tarkov.dev/68f26124b84c6e1f8a09cfff-512.webp"
-          },
-          {
-            "id": "6841b6b674a3c16f5e03d653",
-            "name": "Фигурка ЧВК Начало",
-            "shortName": "Начало",
-            "image512pxLink": "https://assets.tarkov.dev/6841b6b674a3c16f5e03d653-512.webp"
-          },
-          {
-            "id": "68f11224197b61ffe703b16f",
-            "name": "Фигурка ЧВК Матёрый",
-            "shortName": "Матёрый",
-            "image512pxLink": "https://assets.tarkov.dev/68f11224197b61ffe703b16f-512.webp"
-          },
-          {
-            "id": "697cddb414e932098005748d",
-            "name": "Фигурка Утки",
-            "shortName": "Утка",
-            "image512pxLink": "https://assets.tarkov.dev/697cddb414e932098005748d-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "68481881f43abfdda2058372",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Депутата Муткевича",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": true,
-        "item": {
-          "id": "655c673673a43e23e857aebd",
-          "name": "Фигурка Дикого",
-          "shortName": "Дикий",
-          "image512pxLink": "https://assets.tarkov.dev/655c673673a43e23e857aebd-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "655c673673a43e23e857aebd",
-            "name": "Фигурка Дикого",
-            "shortName": "Дикий",
-            "image512pxLink": "https://assets.tarkov.dev/655c673673a43e23e857aebd-512.webp"
-          },
-          {
-            "id": "655c67782a1356436041c9c5",
-            "name": "Фигурка Рыжего",
-            "shortName": "Рыжий",
-            "image512pxLink": "https://assets.tarkov.dev/655c67782a1356436041c9c5-512.webp"
-          },
-          {
-            "id": "655c66e40b2de553b618d4b8",
-            "name": "Фигурка Депутата Муткевича",
-            "shortName": "Муткевич",
-            "image512pxLink": "https://assets.tarkov.dev/655c66e40b2de553b618d4b8-512.webp"
-          },
-          {
-            "id": "68f261f6928cd23ddf0471fd",
-            "name": "Фигурка Мастехина",
-            "shortName": "Мастехин",
-            "image512pxLink": "https://assets.tarkov.dev/68f261f6928cd23ddf0471fd-512.webp"
-          },
-          {
-            "id": "690c70a2a1461a01d605a1bd",
-            "name": "Фигурка Elvisvista",
-            "shortName": "Elvisvista",
-            "image512pxLink": "https://assets.tarkov.dev/690c70a2a1461a01d605a1bd-512.webp"
-          },
-          {
-            "id": "68f260d7b84c6e1f8a09cffd",
-            "name": "Фигурка Кота",
-            "shortName": "Кот",
-            "image512pxLink": "https://assets.tarkov.dev/68f260d7b84c6e1f8a09cffd-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "68481881f43abfdda2058373",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Киллы",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": true,
-        "item": {
-          "id": "66572c82ad599021091c6118",
-          "name": "Фигурка Киллы",
-          "shortName": "Килла",
-          "image512pxLink": "https://assets.tarkov.dev/66572c82ad599021091c6118-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "66572c82ad599021091c6118",
-            "name": "Фигурка Киллы",
-            "shortName": "Килла",
-            "image512pxLink": "https://assets.tarkov.dev/66572c82ad599021091c6118-512.webp"
-          },
-          {
-            "id": "66572cbdad599021091c611a",
-            "name": "Фигурка Тагиллы",
-            "shortName": "Тагилла",
-            "image512pxLink": "https://assets.tarkov.dev/66572cbdad599021091c611a-512.webp"
-          },
-          {
-            "id": "66572be36a723f7f005a066e",
-            "name": "Фигурка Решалы",
-            "shortName": "Решала",
-            "image512pxLink": "https://assets.tarkov.dev/66572be36a723f7f005a066e-512.webp"
-          },
-          {
-            "id": "655c67ab0d37ca5135388f4b",
-            "name": "Фигурка Деда Мороза",
-            "shortName": "Дед Мороз",
-            "image512pxLink": "https://assets.tarkov.dev/655c67ab0d37ca5135388f4b-512.webp"
-          },
-          {
-            "id": "655c669103999d3c810c025b",
-            "name": "Фигурка Сектанта",
-            "shortName": "Сектант",
-            "image512pxLink": "https://assets.tarkov.dev/655c669103999d3c810c025b-512.webp"
-          }
-        ]
-      },
-      {
-        "id": "68481881f43abfdda205837a",
-        "type": "giveItem",
-        "__typename": "TaskObjectiveItem",
-        "description": "Передать найденный в рейде предмет: Фигурка Дэна",
-        "optional": false,
-        "count": 3,
-        "foundInRaid": true,
-        "item": {
-          "id": "68f25c64b2b53abd200b954f",
-          "name": "Фигурка Прапор",
-          "shortName": "Прапор",
-          "image512pxLink": "https://assets.tarkov.dev/68f25c64b2b53abd200b954f-512.webp"
-        },
-        "anyOf": true,
-        "acceptedItems": [
-          {
-            "id": "68f25c64b2b53abd200b954f",
-            "name": "Фигурка Прапор",
-            "shortName": "Прапор",
-            "image512pxLink": "https://assets.tarkov.dev/68f25c64b2b53abd200b954f-512.webp"
-          },
-          {
-            "id": "68f25ce9b2b53abd200b9551",
-            "name": "Фигурка Терапевт",
-            "shortName": "Терапевт",
-            "image512pxLink": "https://assets.tarkov.dev/68f25ce9b2b53abd200b9551-512.webp"
-          },
-          {
-            "id": "68f25da3b84c6e1f8a09cffb",
-            "name": "Фигурка Скупщик",
-            "shortName": "Скупщик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25da3b84c6e1f8a09cffb-512.webp"
-          },
-          {
-            "id": "68f25eba19a2b503d70dc28f",
-            "name": "Фигурка Лыжник",
-            "shortName": "Лыжник",
-            "image512pxLink": "https://assets.tarkov.dev/68f25eba19a2b503d70dc28f-512.webp"
-          },
-          {
-            "id": "68f25eef19a2b503d70dc291",
-            "name": "Фигурка Миротворец",
-            "shortName": "Миротворец",
-            "image512pxLink": "https://assets.tarkov.dev/68f25eef19a2b503d70dc291-512.webp"
-          },
-          {
-            "id": "68f25f1201fb9de974058be4",
-            "name": "Фигурка Механик",
-            "shortName": "Механик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25f1201fb9de974058be4-512.webp"
-          },
-          {
-            "id": "68f25f3a5d977110860c3350",
-            "name": "Фигурка Барахольщик",
-            "shortName": "Барахольщик",
-            "image512pxLink": "https://assets.tarkov.dev/68f25f3a5d977110860c3350-512.webp"
-          },
-          {
-            "id": "68f25faa22c8979ee308f4da",
-            "name": "Фигурка Егерь",
-            "shortName": "Егерь",
-            "image512pxLink": "https://assets.tarkov.dev/68f25faa22c8979ee308f4da-512.webp"
-          },
-          {
-            "id": "68f25fdf928cd23ddf0471fb",
-            "name": "Фигурка Смотритель",
-            "shortName": "Смотритель",
-            "image512pxLink": "https://assets.tarkov.dev/68f25fdf928cd23ddf0471fb-512.webp"
-          },
-          {
-            "id": "68f26063b2b53abd200b9553",
-            "name": "Фигурка Реф",
-            "shortName": "Реф",
-            "image512pxLink": "https://assets.tarkov.dev/68f26063b2b53abd200b9553-512.webp"
-          },
-          {
-            "id": "68f2608301fb9de974058be6",
-            "name": "Фигурка БТР",
-            "shortName": "БТР",
-            "image512pxLink": "https://assets.tarkov.dev/68f2608301fb9de974058be6-512.webp"
-          }
-        ]
-      }
-    ],
-    "finishRewards": {
-      "traderStanding": [
-        {
-          "standing": 0.01,
-          "trader": {
-            "name": "Барахольщик",
-            "normalizedName": "ragman"
-          }
-        }
-      ],
-      "items": [
-        {
-          "count": 3000000,
-          "item": {
-            "id": "5449016a4bdc2d6f028b456f",
-            "name": "Рубли",
-            "shortName": "Рубли",
-            "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
-          }
-        },
-        {
-          "count": 3,
-          "item": {
-            "id": "59faff1d86f7746c51718c9c",
-            "name": "Монета Биткоина",
-            "shortName": "0.2BTC",
-            "image512pxLink": "https://assets.tarkov.dev/59faff1d86f7746c51718c9c-512.webp"
           }
         }
       ]
@@ -137313,6 +135827,179 @@
             "name": "Рубли",
             "shortName": "Рубли",
             "image512pxLink": "https://assets.tarkov.dev/5449016a4bdc2d6f028b456f-512.webp"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "675c15fbf7da9792a4059871",
+    "name": "Обеспечить просмотры",
+    "normalizedName": "provide-viewership",
+    "kappaRequired": false,
+    "lightkeeperRequired": false,
+    "minPlayerLevel": 0,
+    "experience": 32000,
+    "taskRequirements": [],
+    "trader": {
+      "name": "Реф",
+      "normalizedName": "ref",
+      "imageLink": "https://assets.tarkov.dev/6617beeaa9cfa777ca915b7c.webp"
+    },
+    "traderRequirements": [],
+    "requiredPrestige": null,
+    "factionName": "Any",
+    "ulTier": 1,
+    "objectives": [
+      {
+        "id": "675c1c87caddcfa893af10e9",
+        "type": "plantItem",
+        "__typename": "TaskObjectiveItem",
+        "description": "Установить первую WI-FI Камеру в здании промышленного корпуса на локации Таможня",
+        "optional": false,
+        "count": 1,
+        "foundInRaid": false,
+        "item": {
+          "id": "5b4391a586f7745321235ab2",
+          "name": "WI-FI Камера",
+          "shortName": "Камера",
+          "image512pxLink": "https://assets.tarkov.dev/5b4391a586f7745321235ab2-512.webp"
+        },
+        "maps": [
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          }
+        ]
+      },
+      {
+        "id": "676047054c9696a7d071bc08",
+        "type": "plantItem",
+        "__typename": "TaskObjectiveItem",
+        "description": "Установить вторую WI-FI Камеру в здании промышленного корпуса на локации Таможня",
+        "optional": false,
+        "count": 1,
+        "foundInRaid": false,
+        "item": {
+          "id": "5b4391a586f7745321235ab2",
+          "name": "WI-FI Камера",
+          "shortName": "Камера",
+          "image512pxLink": "https://assets.tarkov.dev/5b4391a586f7745321235ab2-512.webp"
+        },
+        "maps": [
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          }
+        ]
+      },
+      {
+        "id": "6760470877d1b7790af5de11",
+        "type": "plantItem",
+        "__typename": "TaskObjectiveItem",
+        "description": "Установить третью WI-FI Камеру в здании промышленного корпуса на локации Таможня",
+        "optional": false,
+        "count": 1,
+        "foundInRaid": false,
+        "item": {
+          "id": "5b4391a586f7745321235ab2",
+          "name": "WI-FI Камера",
+          "shortName": "Камера",
+          "image512pxLink": "https://assets.tarkov.dev/5b4391a586f7745321235ab2-512.webp"
+        },
+        "maps": [
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          }
+        ]
+      },
+      {
+        "id": "6760470b7d65f702a6295820",
+        "type": "plantItem",
+        "__typename": "TaskObjectiveItem",
+        "description": "Установить четвертую WI-FI Камеру в здании промышленного корпуса на локации Таможня",
+        "optional": false,
+        "count": 1,
+        "foundInRaid": false,
+        "item": {
+          "id": "5b4391a586f7745321235ab2",
+          "name": "WI-FI Камера",
+          "shortName": "Камера",
+          "image512pxLink": "https://assets.tarkov.dev/5b4391a586f7745321235ab2-512.webp"
+        },
+        "maps": [
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          }
+        ]
+      },
+      {
+        "id": "675c1c980fd114390c638b89",
+        "type": "shoot",
+        "__typename": "TaskObjectiveShoot",
+        "description": "Устранить любую цель в здании промышленного корпуса на локации Таможня",
+        "optional": false,
+        "count": 15,
+        "maps": [
+          {
+            "id": "56f40101d2720b2a4d8b45d6",
+            "name": "Таможня",
+            "normalizedName": "customs"
+          }
+        ]
+      }
+    ],
+    "finishRewards": {
+      "traderStanding": [
+        {
+          "standing": 0.02,
+          "trader": {
+            "name": "Реф",
+            "normalizedName": "ref"
+          }
+        }
+      ],
+      "items": [
+        {
+          "count": 45,
+          "item": {
+            "id": "5d235b4d86f7742e017bc88a",
+            "name": "Монета GP",
+            "shortName": "GP",
+            "image512pxLink": "https://assets.tarkov.dev/5d235b4d86f7742e017bc88a-512.webp"
+          }
+        },
+        {
+          "count": 1,
+          "item": {
+            "id": "5d4d617f86f77449c463d107",
+            "name": "Карабин Lone Star TX-15 DML 5.56x45 По умолчанию",
+            "shortName": "TX-15 DML По умолчанию",
+            "image512pxLink": "https://assets.tarkov.dev/5d4d617f86f77449c463d107-512.webp"
+          }
+        },
+        {
+          "count": 3,
+          "item": {
+            "id": "5c6d42cb2e2216000e69d7d1",
+            "name": "Магазин полимерный \"HK 30 STANAG\" на 30 патронов 5.56x45 для AR-15",
+            "shortName": "HK poly",
+            "image512pxLink": "https://assets.tarkov.dev/5c6d42cb2e2216000e69d7d1-512.webp"
+          }
+        },
+        {
+          "count": 3,
+          "item": {
+            "id": "657024e3c5d7d4cb4d07856a",
+            "name": "Пачка патронов 5.56x45мм M855A1 (50 штук)",
+            "shortName": "M855A1",
+            "image512pxLink": "https://assets.tarkov.dev/657024e3c5d7d4cb4d07856a-512.webp"
           }
         }
       ]

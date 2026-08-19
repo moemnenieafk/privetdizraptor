@@ -12,12 +12,18 @@
  * Форма файла у JSON = старый ответ GraphQL, слитый в статику; здесь мы разворачиваем
  * id-ссылки (trader/item) обратно в объекты, как их ждёт QuestMapClient/quest-status.
  *
- * Run: node scripts/dump-quests.mjs
+ * Run: node scripts/dump-quests.mjs [regular|pve]
+ *   regular → src/data/quests/eft-quests.json (по умолчанию)
+ *   pve     → src/data/quests/eft-quests.pve.json
  */
 
 import { writeFileSync, mkdirSync } from 'fs';
 
 const JSON_BASE = 'https://json.tarkov.dev';
+// Режим игры: regular (PVP) | pve. Требования предметов почти совпадают, но набор задач
+// различается (regular 517 / pve 513), поэтому дампим по режиму и читаем по профилю игрока.
+const MODE = (process.argv[2] || 'regular').toLowerCase();
+if (!['regular', 'pve'].includes(MODE)) { console.error(`Неизвестный режим: ${MODE} (regular|pve)`); process.exit(1); }
 
 // RU-имена торговцев по normalizedName (совпадает с src/lib/tarkov-labels TRADER_RU).
 const TRADER_RU = {
@@ -70,14 +76,14 @@ async function getJson(path) {
 }
 
 async function main() {
-  console.log('Fetching quests from json.tarkov.dev (GraphQL отставлен)...');
+  console.log(`Fetching quests from json.tarkov.dev/${MODE} (GraphQL отставлен)...`);
   const [tasksData, tr, itemsRu, tradersData, mapsData, mapsRu] = await Promise.all([
-    getJson('regular/tasks'),
-    getJson('regular/tasks_ru'),
-    getJson('regular/items_ru'),
-    getJson('regular/traders'),
-    getJson('regular/maps'),
-    getJson('regular/maps_ru'),
+    getJson(`${MODE}/tasks`),
+    getJson(`${MODE}/tasks_ru`),
+    getJson(`${MODE}/items_ru`),
+    getJson(`${MODE}/traders`),
+    getJson(`${MODE}/maps`),
+    getJson(`${MODE}/maps_ru`),
   ]);
 
   // карта id → {id, name(ru), normalizedName} для зон объективов (раньше имена были null)
@@ -144,10 +150,17 @@ async function main() {
     };
     if (o.count != null) out.count = o.count;
     if (o.foundInRaid != null) out.foundInRaid = o.foundInRaid;
-    // предмет(ы): JSON даёт items:[id]; старый файл ждал item:{...} (первый допустимый)
+    // предмет(ы): JSON даёт items:[id]; старый файл ждёт item:{...} (первый допустимый).
+    // any-of (o.items.length>1): помимо представительного item сохраняем ВЕСЬ список принимаемых
+    // → acceptedItems[] + anyOf=true. Нужно для «групповой строки» трекера «N любых из категории»
+    // (иначе теряется, что цель принимает любой из вариантов). Решение important-items-merge.
     const itemId = o.item ?? (Array.isArray(o.items) ? o.items[0] : undefined);
     if (itemId) out.item = itemObj(itemId);
     else if (o.questItem) out.item = questItemObj(o.questItem);
+    if (Array.isArray(o.items) && o.items.length > 1) {
+      out.anyOf = true;
+      out.acceptedItems = o.items.map(itemObj);
+    }
     if (o.markerItem) out.markerItem = itemObj(o.markerItem);
     // карты: JSON — [id]; разворачиваем в {id,name,normalizedName}
     if (Array.isArray(o.maps) && o.maps.length) {
@@ -225,8 +238,12 @@ async function main() {
   console.log(`Added ${STORY_QUESTS.length} story quest stubs.`);
 
   mkdirSync('./src/data/quests', { recursive: true });
-  writeFileSync('./src/data/quests/eft-quests.json', JSON.stringify(tasks, null, 2), 'utf-8');
-  console.log(`Done: src/data/quests/eft-quests.json (${tasks.length} quests total)`);
+  const outFile = MODE === 'regular' ? 'eft-quests.json' : `eft-quests.${MODE}.json`;
+  writeFileSync(`./src/data/quests/${outFile}`, JSON.stringify(tasks, null, 2), 'utf-8');
+  console.log(`Done: src/data/quests/${outFile} (${tasks.length} quests total)`);
+
+  // Пообъектные точки целей карт — только для regular (пины на карте mode-агностичны).
+  if (MODE !== 'regular') return;
 
   // Пообъектные точки целей (possibleLocations, сырые game x/y/z) — ОТДЕЛЬНЫЙ лёгкий файл:
   // читает только серверная страница карты (пообъектные пины по ?quest=id), в клиентский
