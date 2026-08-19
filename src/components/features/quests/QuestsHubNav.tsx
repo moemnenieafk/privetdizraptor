@@ -101,7 +101,7 @@ export function QuestsHubNav({
             ))}
           </div>
           {subTabs && subTabs.length > 0 && (
-            <div className="grid grid-cols-6 gap-3.5 w-max lg:w-64 lg:gap-7">
+            <div className="grid w-max grid-cols-5 gap-2">
               {subTabs.map((tab) => (
                 <QuestNavTab key={tab.id} tab={tab} activeHref={activeHref} />
               ))}
