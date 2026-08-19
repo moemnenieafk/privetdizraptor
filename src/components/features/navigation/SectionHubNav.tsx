@@ -28,6 +28,9 @@ interface SectionHubNavProps {
   /** Класс ширины контейнера (по умолчанию max-w-275; для статьи — max-w-3xl). */
   widthClass?: string;
   sectionsLabel?: string;
+  /** Доп. классы контейнера variant='full'. Для прямого использования (не через layout) —
+   *  сюда `mb-7` (28px hubnav→контент, канон DESIGN_SYSTEM.md §2.1), т.к. mb у контейнера нет. */
+  className?: string;
 }
 
 /**
@@ -44,6 +47,7 @@ export function SectionHubNav({
   deepOnly = false,
   widthClass = 'max-w-275',
   sectionsLabel = 'Разделы',
+  className,
 }: SectionHubNavProps) {
   const pathname = usePathname();
   if (pathname === rootPath) return null;
@@ -53,7 +57,10 @@ export function SectionHubNav({
 
   if (variant === 'full') {
     return (
-      <div className={`w-full ${widthClass} mx-auto flex flex-col gap-6 px-4 mb-8 lg:mb-12 lg:flex-row lg:items-center lg:gap-7 xl:px-0`}>
+      // Отступ hubnav→контент НЕ здесь: через layout (SectionLayoutNav/ComlinkHubNav) им владеет
+      // верхний pt-7 (28px) страничного <main>. При ПРЯМОМ использовании внутри <main> зазор
+      // задаётся пропом className="mb-7". Канон — DESIGN_SYSTEM.md §2.1.
+      <div className={`w-full ${widthClass} mx-auto flex flex-col gap-6 px-4 lg:flex-row lg:items-center lg:gap-7 xl:px-0${className ? ` ${className}` : ''}`}>
         {/* Левый блок: иконка + заголовок + описание */}
         <div className="flex items-center gap-4 lg:w-[32.625rem] lg:shrink-0 lg:gap-7">
           <div className="w-21 h-21 shrink-0 flex items-center justify-center rounded-md bg-(--color-darkbase)">

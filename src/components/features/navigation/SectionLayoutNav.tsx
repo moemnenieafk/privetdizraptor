@@ -39,7 +39,9 @@ export function SectionLayoutNav({
   if (!node && !fallbackTitle) return null;
 
   return (
-    <div className="pt-7">
+    // pt-4 (16px) + pb-3 крошек в Header (12px) = 28px крошки→hubnav @1920, далее пропорц. разрешению
+    // (root font-size clamp). Канон в DESIGN_SYSTEM.md «Вертикальный ритм разделов».
+    <div className="pt-4">
       <SectionHubNav
         rootPath={rootPath}
         variant="full"

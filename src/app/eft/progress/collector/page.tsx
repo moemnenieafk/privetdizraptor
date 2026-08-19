@@ -55,7 +55,7 @@ export default async function CollectorTrackerPage() {
 
   // Заголовок/навигацию/крошки даёт layout раздела (SectionLayoutNav). Здесь — только контент трекера.
   return (
-    <main className="flex w-full flex-col items-center justify-start pb-14 animate-[fade-in_0.5s_ease-out_both]">
+    <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
       <div className="w-full max-w-275 px-4 xl:px-0">
         <CollectorTracker questId={quest?.id ?? COLLECTOR_ID} items={items} />
       </div>

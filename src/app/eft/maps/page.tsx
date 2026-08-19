@@ -13,7 +13,7 @@ export default async function MapsPage() {
   const sorted = [...dbMaps, ...staticMaps].sort((a, b) => mapOrderIndex(a.slug) - mapOrderIndex(b.slug));
 
   return (
-    <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
+    <main className="flex w-full flex-col items-center justify-start pt-4 pb-14 animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
       <div className="w-full max-w-275 px-4 xl:px-0 mx-auto">
         <PageHeader pageId="eft-maps" />
         <div className="w-full max-w-275 mx-auto">

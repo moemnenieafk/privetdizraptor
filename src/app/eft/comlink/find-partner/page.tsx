@@ -16,7 +16,7 @@ export default async function FindPartnerPage() {
   const me = await getMe();
 
   return (
-    <main className="flex w-full flex-col items-center justify-start pb-14 animate-[fade-in_0.5s_ease-out_both]">
+    <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
       <div className="w-full max-w-275 px-4 xl:px-0">
         <MyRaidsClient authorized={me !== null} />
       </div>

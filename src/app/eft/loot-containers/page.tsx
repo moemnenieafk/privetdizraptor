@@ -13,7 +13,7 @@ export const metadata = {
 
 export default function LootContainersPage() {
   return (
-    <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
+    <main className="flex w-full flex-col items-center justify-start pt-4 pb-14 animate-[fade-in-up_0.5s_ease-out_both]">
       <div className="mx-auto w-full max-w-275 px-4 xl:px-0">
         <PageHeader
           title="Лут-контейнеры"

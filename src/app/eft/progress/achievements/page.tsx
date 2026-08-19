@@ -8,7 +8,7 @@ export default async function AchievementsPage() {
   const achievements = await getEftAchievements();
 
   return (
-    <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
+    <main className="flex w-full flex-col items-center justify-start pt-4 pb-14 animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
       <div className="w-full max-w-275 px-4 xl:px-0 mx-auto">
         <PageHeader pageId="eft-progress-achievements" />
         <PveNotice>Достижения за PvP-убийства в режиме PvE не засчитываются.</PveNotice>

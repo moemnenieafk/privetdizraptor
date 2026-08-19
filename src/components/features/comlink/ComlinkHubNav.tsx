@@ -25,7 +25,8 @@ export function ComlinkHubNav() {
   const util = UTILITY[seg];
 
   return (
-    <div className="pt-7">
+    // pt-4 (16px) + pb-3 крошек (12px) = 28px крошки→hubnav (канон DESIGN_SYSTEM.md §2.1).
+    <div className="pt-4">
       <SectionHubNav
         rootPath={COMLINK_BASE}
         variant="full"
