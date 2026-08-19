@@ -11,6 +11,10 @@ export interface TaskObjective {
   item?: { id: string; name: string; shortName: string; image512pxLink: string };
   count?: number;
   foundInRaid?: boolean;
+  // any-of цель («N любых из списка»): item — представитель, acceptedItems — весь список
+  // принимаемых вариантов (для «групповой строки» трекера «Важные предметы»).
+  anyOf?: boolean;
+  acceptedItems?: Array<{ id: string; name: string; shortName: string; image512pxLink: string }>;
   // TaskObjectiveShoot
   target?: string;
   distance?: { value: number; compareMethod: string } | null;
