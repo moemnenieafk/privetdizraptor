@@ -38,7 +38,7 @@ function ModuleTile({ station }: { station: HideoutStationInfo }) {
         if (level > 0) setLevel(station.normalizedName, level - 1);
       }}
       title={`${station.name} — ур. ${level}/${max} · ЛКМ выше · ПКМ ниже`}
-      className="group relative flex select-none flex-col items-center gap-1 overflow-hidden rounded-xs border border-lines-hover bg-card-menu p-2 transition-[filter] hover:brightness-110"
+      className="group relative flex select-none flex-col items-center gap-1 overflow-hidden rounded-xs border border-lines-hover bg-(--color-base) p-2 transition-[filter] hover:brightness-110"
     >
       {/* Горизонтальная заливка level/maxLevel */}
       <span
@@ -72,13 +72,8 @@ function ModuleTile({ station }: { station: HideoutStationInfo }) {
 }
 
 export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo[] }) {
-  const levels = useHideoutStore((s) => s.levels);
   const reset = useHideoutStore((s) => s.reset);
   const [open, setOpen] = useState(false);
-
-  const built = stations.filter((s) => (levels[s.normalizedName] ?? 0) > 0).length;
-  const curLevels = stations.reduce((n, s) => n + (levels[s.normalizedName] ?? 0), 0);
-  const totalLevels = stations.reduce((n, s) => n + s.maxLevel, 0);
 
   return (
     <div className="rounded-sm bg-(--color-darkbase)">
@@ -86,22 +81,19 @@ export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center gap-2 px-3 py-2.5"
+        className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
       >
-        <span className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">Убежище ЧВК</span>
-        <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-          {built}/{stations.length} модулей · {curLevels}/{totalLevels} ур.
+        <span className="shrink-0 font-blender-medium text-sm uppercase tracking-widest text-text-primary">Убежище ЧВК</span>
+        <span className="hidden min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-muted md:block">
+          Клик по модулю — <span className="text-(--primary)">уровень выше</span>, ПКМ —{' '}
+          <span className="text-text-secondary">ниже</span>. Без кнопок +/−.
         </span>
-        <ChevronDown className={`ml-auto h-4 w-4 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
+        <ChevronDown className={`ml-auto h-4 w-4 shrink-0 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
       </button>
 
       {open && (
         <div className="flex flex-col gap-3 border-t border-lines-hover p-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-blender-book text-type-caption text-text-secondary text-pretty">
-              Клик по модулю — <span className="text-(--primary)">уровень выше</span>, ПКМ —{' '}
-              <span className="text-text-primary">ниже</span>. Никаких кнопок +/−.
-            </p>
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={reset}
