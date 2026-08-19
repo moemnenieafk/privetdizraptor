@@ -3,7 +3,6 @@ import { EntityComments } from '@/components/features/comments/EntityComments';
 import { draftMode } from 'next/headers';
 import { SectionPlaceholder } from '@/components/ui/SectionPlaceholder';
 import { getSectionPlaceholder } from '@/lib/section-nav';
-import { getSectionHubNav } from '@/lib/section-hub-nav';
 import { getCodex } from '@/db/codex';
 import { getMe } from '@/lib/auth/me';
 import { canEditContent } from '@/lib/auth/roles';
@@ -42,7 +41,6 @@ export default async function CodexSlugPage({ params }: Props) {
 
   const data = getSectionPlaceholder(`/eft/gamesetting/${slug}`);
   if (!data) notFound();
-  // Шапка-переключатель по всем разделам «Кодекса» (единый ряд, как full-навигация индексов).
-  const { sections } = getSectionHubNav('/eft/gamesetting', `/eft/gamesetting/${slug}`);
-  return <SectionPlaceholder {...data} tabs={sections} />;
+  // Навигацию (full-hubnav) даёт layout Кодекса (SectionLayoutNav) — заглушка только контент.
+  return <SectionPlaceholder {...data} hideHeader />;
 }

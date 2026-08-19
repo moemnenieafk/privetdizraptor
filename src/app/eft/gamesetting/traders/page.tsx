@@ -2,7 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TRADERS } from '@/data/traders';
-import { SectionHubNav } from '@/components/features/navigation/SectionHubNav';
 
 export const metadata: Metadata = { title: 'Торговцы | Кодекс ЦТА' };
 
@@ -10,13 +9,6 @@ export const metadata: Metadata = { title: 'Торговцы | Кодекс ЦТ
 export default function TradersIndexPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
-      <SectionHubNav
-        rootPath="/eft/gamesetting"
-        variant="full"
-        title="Торговцы"
-        description="Досье на торговцев Таркова: кто они, где, чем торгуют. Нажмите карточку для подробностей и заданий."
-        iconUrl="/icons/eft/05-gamesetting/traders.svg"
-      />
       <div className="w-full max-w-275 px-4 xl:px-0">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {TRADERS.map((t) => (

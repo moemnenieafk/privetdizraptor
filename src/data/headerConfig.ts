@@ -616,8 +616,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             path: '/eft/gamesetting/characters',
             iconUrl: '/icons/eft/05-gamesetting/characters.svg',
             children: [
-              { id: 'gs-bosses', label: 'Боссы', path: '/eft/gamesetting/bosses', iconUrl: '/icons/eft/05-gamesetting/bosses.svg' },
-              { id: 'gs-traders', label: 'Торговцы', path: '/eft/gamesetting/traders', iconUrl: '/icons/eft/05-gamesetting/traders.svg' }
+              { id: 'gs-bosses', label: 'Боссы', description: 'Досье на боссов локаций: характеристики, HP по зонам, тактика и достоверный лор.', path: '/eft/gamesetting/bosses', iconUrl: '/icons/eft/05-gamesetting/bosses.svg' },
+              { id: 'gs-traders', label: 'Торговцы', description: 'Досье на торговцев Таркова: кто они, где, чем торгуют. Нажмите карточку для подробностей и заданий.', path: '/eft/gamesetting/traders', iconUrl: '/icons/eft/05-gamesetting/traders.svg' }
             ]
           },
           { id: 'gs-factions', label: 'Фракции', description: 'Информация о противоборствующих сторонах: USEC, BEAR и Диких.', path: '/eft/gamesetting/factions', iconUrl: '/icons/eft/05-gamesetting/fractions.svg' },

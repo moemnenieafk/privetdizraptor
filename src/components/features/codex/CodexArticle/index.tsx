@@ -1,16 +1,14 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import type { CodexArticle as CodexArticleType } from '@/types/codex';
-import { SectionHubNav } from '@/components/features/navigation/SectionHubNav';
 
 /** Статья кодекса: шапка-глиф, лид, опц. таймлайн, секции, связанное, источники. */
 export function CodexArticle({ article }: { article: CodexArticleType }) {
   const { title, subtitle, icon, intro, sections, timeline, related, sources, confidence } = article;
 
   return (
-    <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pb-14">
-      <SectionHubNav rootPath="/eft/gamesetting" variant="bar" widthClass="max-w-3xl" />
-      <div className="w-full max-w-3xl px-4 mt-6 xl:px-0">
+    <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
+      <div className="w-full max-w-3xl px-4 xl:px-0">
         <Link
           href="/eft/gamesetting"
           className="mb-5 inline-flex items-center gap-1.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors hover:text-(--primary)"

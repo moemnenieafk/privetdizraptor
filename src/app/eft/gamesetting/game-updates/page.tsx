@@ -46,19 +46,6 @@ export default async function GameUpdatesPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
       <div className="w-full max-w-275 px-4 xl:px-0">
-        <header className="mb-8">
-          <div className="mb-2 flex items-center gap-3">
-            <span aria-hidden="true" className="h-8 w-8 icon-mask icon-eft-lore-game-updates bg-(--primary)" />
-            <h1 className="font-blender-medium text-3xl uppercase tracking-widest text-text-primary">
-              Обновления игры
-            </h1>
-          </div>
-          <p className="max-w-xl font-blender-book text-sm text-text-secondary">
-            Патчи Escape from Tarkov из официального источника. Где есть разбор ЦТА —
-            объясняем по-русски, что изменилось для игрока.
-          </p>
-        </header>
-
         <GameChangesPanel changesets={changesets} digests={digests} canEdit={canEdit} />
 
         <SilentChangesPanel pulls={silentPulls} />

@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { SectionHubNav } from '@/components/features/navigation/SectionHubNav';
 
 export const metadata: Metadata = { title: 'Персонажи | Кодекс ЦТА' };
 
@@ -13,13 +12,6 @@ const CARDS = [
 export default function CharactersIndexPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
-      <SectionHubNav
-        rootPath="/eft/gamesetting"
-        variant="full"
-        title="Персонажи"
-        description="Ключевые фигуры Норвинского конфликта — боссы локаций и торговцы."
-        iconUrl="/icons/eft/05-gamesetting/characters.svg"
-      />
       <div className="w-full max-w-275 px-4 xl:px-0">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {CARDS.map((c) => (
