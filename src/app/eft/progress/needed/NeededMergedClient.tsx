@@ -41,6 +41,29 @@ function FirMark({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * Мета-бейдж строки предмета — дизайн 1:1 со StatusBadge карточки предмета
+ * (ItemDetailLayout: БАРТЕР/КРАФТ/ЗАДАНИЕ) для единой идентификации. Иконка — маска по пути.
+ */
+const META_BADGE: Record<'quest' | 'hideout' | 'fir', { box: string; icon: string }> = {
+  quest: { box: 'border-tactical-amber/40 bg-tactical-amber/10 text-tactical-amber', icon: 'bg-tactical-amber' },
+  hideout: { box: 'border-mode-pve/40 bg-mode-pve/10 text-mode-pve', icon: 'bg-mode-pve' },
+  fir: { box: 'border-nvg-green/40 bg-nvg-green/10 text-nvg-green', icon: 'bg-nvg-green' },
+};
+function MetaBadge({ variant, icon, children }: { variant: keyof typeof META_BADGE; icon: string; children: React.ReactNode }) {
+  const s = META_BADGE[variant];
+  return (
+    <span className={`inline-flex h-5 items-center gap-1 rounded-sm border px-1.5 font-blender-medium text-[0.625rem] uppercase tracking-widest ${s.box}`}>
+      <span
+        aria-hidden
+        className={`h-3 w-3 shrink-0 ${s.icon} mask-contain mask-center mask-no-repeat`}
+        style={{ maskImage: `url(${icon})`, WebkitMaskImage: `url(${icon})` }}
+      />
+      {children}
+    </span>
+  );
+}
+
 /** Анимированное число: плавный tween при инкременте/декременте (ease-out cubic ~350ms). */
 function AnimatedNumber({ value, className = '' }: { value: number; className?: string }) {
   const [display, setDisplay] = useState(value);
@@ -434,7 +457,6 @@ function ItemRow({
   const bg = getTarkovBackgroundColor(item.backgroundColor);
   const qCount = st.sources.filter((s) => s.kind === 'quest').length;
   const hCount = st.sources.filter((s) => s.kind === 'hideout').length;
-  const srcHint = [qCount ? `${qCount} кв.` : '', hCount ? 'убежище' : ''].filter(Boolean).join(' · ');
 
   return (
     <div className={`relative flex flex-col overflow-hidden rounded-sm bg-card-menu ${done ? 'opacity-60' : ''}`}>
@@ -460,15 +482,27 @@ function ItemRow({
           >
             {item.itemName}
           </Link>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-blender-medium text-type-micro uppercase tracking-wide">
-            {srcHint && <span className="text-text-muted">{srcHint}</span>}
+          <span className="flex flex-wrap items-center gap-1.5">
+            {qCount > 0 && (
+              <MetaBadge variant="quest" icon="/icons/eft/quests-icon.svg">
+                задание · {qCount}
+              </MetaBadge>
+            )}
+            {hCount > 0 && (
+              <MetaBadge variant="hideout" icon="/icons/eft/04-progression/hideout-modules.svg">
+                убежище · {hCount}
+              </MetaBadge>
+            )}
             {st.needFir > 0 && (
-              <span className="flex items-center gap-0.5 text-nvg-green">
-                <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden />
-                {st.needFir} в рейде
+              <MetaBadge variant="fir" icon="/icons/eft/02-quests/side-quests.svg">
+                найдено в рейде · {st.needFir}
+              </MetaBadge>
+            )}
+            {item.isQuestItem && (
+              <span className="inline-flex h-5 items-center rounded-sm border border-lines-hover bg-lines-hover/30 px-1.5 font-blender-medium text-[0.625rem] uppercase tracking-widest text-text-secondary">
+                только рейд
               </span>
             )}
-            {item.isQuestItem && <span className="rounded-xs bg-lines-hover px-1 text-text-secondary">только рейд</span>}
           </span>
           <button
             type="button"
