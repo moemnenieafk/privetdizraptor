@@ -6,10 +6,10 @@
 // авто-распределяет по источникам (FiR-квесты → не-FiR квесты → убежище) в родные сторы.
 // Разворот — точечный редакт источников + «в стэше/докупить». Раскладка: две masonry-колонки.
 // Решения: docs/decisions/important-items-merge.md.
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, ChevronDown, Search } from 'lucide-react';
-import { MetricCard, ProgressBar, TrackCell } from '@/components/ui/kit';
+import { ProgressBar, TrackCell } from '@/components/ui/kit';
 import { QtyControl } from '@/components/ui/QtyControl';
 import { HideoutLevelsPanel, type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
 import { useQuestStore } from '@/store/useQuestStore';
@@ -37,6 +37,54 @@ function FirMark({ className = '' }: { className?: string }) {
     >
       <Check className="h-2.5 w-2.5 text-nvg-green" strokeWidth={3} aria-hidden />
     </span>
+  );
+}
+
+/** Анимированное число: плавный tween при инкременте/декременте (ease-out cubic ~350ms). */
+function AnimatedNumber({ value, className = '' }: { value: number; className?: string }) {
+  const [display, setDisplay] = useState(value);
+  const displayRef = useRef(value);
+  useEffect(() => {
+    const from = displayRef.current;
+    const to = value;
+    if (from === to) return;
+    let raf = 0;
+    const start = performance.now();
+    const dur = 350;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const cur = Math.round(from + (to - from) * eased);
+      displayRef.current = cur;
+      setDisplay(cur);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <span className={`tabular-nums ${className}`}>{display.toLocaleString('ru-RU')}</span>;
+}
+
+const STAT_ACCENT: Record<string, { icon: string; num: string }> = {
+  default: { icon: 'bg-text-secondary', num: 'text-text-primary' },
+  success: { icon: 'bg-success', num: 'text-success' },
+  primary: { icon: 'bg-(--primary)', num: 'text-(--primary)' },
+  amber: { icon: 'bg-tactical-amber', num: 'text-tactical-amber' },
+};
+
+/** Блок сводки: слева иконка (маска, перекраска в акцент) + название, справа число 28px (анимация). */
+function SummaryStat({ icon, label, value, accent }: { icon: string; label: string; value: number; accent: keyof typeof STAT_ACCENT }) {
+  const a = STAT_ACCENT[accent];
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-lines-hover bg-card-menu/40 p-3">
+      <span
+        aria-hidden
+        className={`h-6 w-6 shrink-0 ${a.icon} mask-contain mask-center mask-no-repeat`}
+        style={{ maskImage: `url(${icon})`, WebkitMaskImage: `url(${icon})` }}
+      />
+      <span className={`${MICRO} flex-1 leading-tight text-text-muted`}>{label}</span>
+      <AnimatedNumber value={value} className={`font-blender-medium text-[1.75rem] leading-none ${a.num}`} />
+    </div>
   );
 }
 
@@ -232,11 +280,11 @@ export function NeededMergedClient({
   return (
     <div className="flex flex-col gap-6">
       {/* ── Сводка ── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <MetricCard label="Всего предметов" value={summary.items} />
-        <MetricCard label="Собрано" value={summary.have} accent="success" />
-        <MetricCard label="Осталось" value={summary.remaining} accent="primary" />
-        <MetricCard label="Докупить" value={summary.buy} accent="warning" subtext="не-FiR остаток" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryStat icon="/icons/eft/03-items/loot-tier.svg" label="Всего предметов" value={summary.items} accent="default" />
+        <SummaryStat icon="/icons/eft/04-progression/seasons/battlepass-wanted-item-icon.svg" label="Собрано" value={summary.have} accent="success" />
+        <SummaryStat icon="/icons/eft/03-items/price-per-slot.svg" label="Осталось" value={summary.remaining} accent="primary" />
+        <SummaryStat icon="/icons/eft/02-quests/quest-modify.svg" label="Докупить" value={summary.buy} accent="amber" />
       </div>
       <ProgressBar label="Общий прогресс" value={summary.have} max={Math.max(1, summary.need)} colorClass="bg-(--primary)" />
 
@@ -252,7 +300,9 @@ export function NeededMergedClient({
           />
         </div>
         <FilterChip on={hideDone} onClick={() => setHideDone((v) => !v)}>Скрыть готовые</FilterChip>
-        <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)}>Только FiR</FilterChip>
+        <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)} icon="/icons/eft/02-quests/side-quests.svg">
+          Найдено в рейде
+        </FilterChip>
         {doneCount > 0 && (
           <button
             type="button"
@@ -301,16 +351,23 @@ export function NeededMergedClient({
   );
 }
 
-function FilterChip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
+function FilterChip({ on, onClick, icon, children }: { on: boolean; onClick: () => void; icon?: string; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`h-9 rounded border px-3 font-blender-medium text-type-caption uppercase tracking-wider transition-colors ${
+      className={`flex h-9 items-center gap-1.5 rounded border px-3 font-blender-medium text-type-caption uppercase tracking-wider transition-colors ${
         on ? 'border-(--primary) bg-(--primary)/15 text-(--primary)' : 'border-lines-hover text-text-muted hover:text-text-secondary'
       }`}
     >
+      {icon && (
+        <span
+          aria-hidden
+          className={`h-4 w-4 shrink-0 mask-contain mask-center mask-no-repeat transition-colors ${on ? 'bg-(--primary)' : 'bg-text-muted'}`}
+          style={{ maskImage: `url(${icon})`, WebkitMaskImage: `url(${icon})` }}
+        />
+      )}
       {children}
     </button>
   );
