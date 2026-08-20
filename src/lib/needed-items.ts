@@ -20,6 +20,10 @@ export interface NeededQuestSource {
   questId: string;
   questName: string;
   trader: string;
+  /** normalizedName торговца — для цвета/аватара квест-чипа (TRADER_COLORS/traderImg). */
+  traderNn: string;
+  /** minPlayerLevel квеста — для бейджа «УР. N+». */
+  minLevel: number;
   objectiveId: string;
   count: number;
   fir: boolean;
@@ -77,6 +81,9 @@ export interface NeededData {
 
 const REAL = new Set(['giveItem', 'findItem', 'plantItem', 'sellItem']);
 const QITEM = new Set(['findQuestItem', 'giveQuestItem', 'plantQuestItem']);
+// «Отдающие» цели расходуют предметы (аддитивно между собой); «находящие» — те же предметы (max).
+const CONSUME = new Set(['giveItem', 'giveQuestItem', 'plantItem', 'plantQuestItem', 'sellItem']);
+const FIND = new Set(['findItem', 'findQuestItem']);
 
 /** Собрать индекс нужных предметов для режима (regular/pve). RSC-only (читает зеркало убежища). */
 export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<NeededData> {
@@ -103,7 +110,13 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
     return ni;
   };
 
+  // Один квест часто просит один предмет в НЕСКОЛЬКИХ целях: найти + сдать (find→give — это
+  // ОДНИ И ТЕ ЖЕ предметы, count=max) или заложить в разных местах (plant×N — аддитивно, count=sum).
+  // Схлопываем цели квеста по предмету в ОДИН источник, иначе визуальный дубль + двойной счёт в тоталах.
+  type QObj = { id: string; type: string; count: number; fir: boolean; maps?: string[] };
   for (const t of quests) {
+    const perItem = new Map<string, { name: string; short: string; isQItem: boolean; objs: QObj[] }>();
+
     for (const o of t.objectives) {
       if (o.__typename !== 'TaskObjectiveItem') continue;
       const oi = o as TaskObjectiveItem;
@@ -131,18 +144,44 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
 
       if (!oi.item) continue; // нерезолвнутый предмет → пропуск (§4.4)
       if (CURRENCY_IDS.has(oi.item.id)) continue; // валюта (₽/€/$) — не собираемый предмет
-      const ni = ensure(oi.item.id, oi.item.name, oi.item.shortName);
+      let e = perItem.get(oi.item.id);
+      if (!e) {
+        e = { name: oi.item.name, short: oi.item.shortName, isQItem: false, objs: [] };
+        perItem.set(oi.item.id, e);
+      }
+      e.isQItem = e.isQItem || isQItem;
+      e.objs.push({
+        id: oi.id,
+        type: oi.type,
+        count: oi.count ?? 1,
+        fir: !!oi.foundInRaid,
+        maps: oi.maps?.map((m) => m.name).filter((n): n is string => !!n),
+      });
+    }
+
+    for (const [itemId, e] of perItem) {
+      const ni = ensure(itemId, e.name, e.short);
+      // count: сумма «отдающих» (give/plant/sell — расходуются) vs max «находящих» (find — те же предметы).
+      const consumeSum = e.objs.filter((o) => CONSUME.has(o.type)).reduce((s, o) => s + o.count, 0);
+      const findMax = e.objs.filter((o) => FIND.has(o.type)).reduce((m, o) => Math.max(m, o.count), 0);
+      const count = Math.max(consumeSum, findMax) || e.objs.reduce((m, o) => Math.max(m, o.count), 1);
+      // представитель для записи прогресса: приоритет «отдающим», затем макс count.
+      const rep = [...e.objs].sort(
+        (a, b) => (CONSUME.has(b.type) ? 1 : 0) - (CONSUME.has(a.type) ? 1 : 0) || b.count - a.count,
+      )[0];
       ni.quests.push({
         questId: t.id,
         questName: t.name,
         trader: t.trader.name,
-        objectiveId: oi.id,
-        count: oi.count ?? 1,
-        fir: !!oi.foundInRaid,
-        type: oi.type,
-        maps: oi.maps?.map((m) => m.name).filter((n): n is string => !!n),
+        traderNn: t.trader.normalizedName,
+        minLevel: t.minPlayerLevel ?? 0,
+        objectiveId: rep.id,
+        count,
+        fir: e.objs.some((o) => o.fir),
+        type: rep.type,
+        maps: [...new Set(e.objs.flatMap((o) => o.maps ?? []))],
       });
-      if (isQItem) ni.isQuestItem = true;
+      if (e.isQItem) ni.isQuestItem = true;
     }
   }
 
