@@ -23,6 +23,8 @@ interface QuestStore {
   incrementItem: (questId: string, objectiveId: string, max: number) => void;
   decrementItem: (questId: string, objectiveId: string) => void;
   resetItemProgress: (questId: string) => void;
+  /** Обнулить ВЕСЬ прогресс сбора предметов (не трогает выполненные квесты/галки). */
+  clearItemProgress: () => void;
 
   // B: завершение НЕ-предметных целей (галки) — локально-персистентно (Tier 1).
   // Item-цели завершаются через itemProgress (счётчик ≥ нужного), тут их нет.
@@ -102,6 +104,7 @@ export const useQuestStore = create<QuestStore>()(
           const { [questId]: _checks, ...checkRest } = s.checkedObjectives;
           return { itemProgress: itemRest, checkedObjectives: checkRest };
         }),
+      clearItemProgress: () => set({ itemProgress: {} }),
 
       checkedObjectives: {},
       toggleCheckedObjective: (questId, objectiveId) =>

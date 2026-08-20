@@ -8,11 +8,12 @@
 // Решения: docs/decisions/important-items-merge.md.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, ChevronDown, Search } from 'lucide-react';
+import { Check, ChevronDown, RotateCcw, Search } from 'lucide-react';
 import { TrackCell } from '@/components/ui/kit';
 import { QtyControl } from '@/components/ui/QtyControl';
 import { type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
 import { HideoutModulesPanel, moduleIcon } from '@/components/features/hideout/HideoutModulesPanel';
+import { NeededResetModal } from './NeededResetModal';
 import { TRADER_COLORS } from '@/data/traderColors';
 import { traderImg } from '@/lib/trader-utils';
 import { useQuestStore } from '@/store/useQuestStore';
@@ -119,13 +120,38 @@ function SummaryStat({ icon, label, value, accent }: { icon: string; label: stri
 }
 
 /** Общий прогресс-бар: 12 делений под сетку, %, бегунок-указатель с текущим значением, анимация. */
-function SummaryProgress({ value, max, label, divisions = 12 }: { value: number; max: number; label: string; divisions?: number }) {
+function SummaryProgress({
+  value,
+  max,
+  label,
+  divisions = 12,
+  onReset,
+}: {
+  value: number;
+  max: number;
+  label: string;
+  divisions?: number;
+  onReset?: () => void;
+}) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   const ptr = Math.min(98, Math.max(2, pct)); // держим бегунок в пределах шкалы
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
-        <span className={`${MICRO} text-text-muted`}>{label}</span>
+        <span className="flex items-center gap-2">
+          <span className={`${MICRO} text-text-muted`}>{label}</span>
+          {onReset && (
+            <button
+              type="button"
+              onClick={onReset}
+              title="Сбросить весь прогресс сбора"
+              className="flex items-center gap-1 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted transition-colors hover:text-danger"
+            >
+              <RotateCcw className="h-3 w-3" aria-hidden />
+              Сброс
+            </button>
+          )}
+        </span>
         <span className="flex items-baseline gap-1 font-blender-medium text-type-caption">
           <AnimatedNumber value={Math.round(pct)} className="text-(--primary)" />
           <span className="text-(--primary)">%</span>
@@ -199,10 +225,12 @@ export function NeededMergedClient({
   const setItemCount = useQuestStore((s) => s.setItemCount);
   const incrementItem = useQuestStore((s) => s.incrementItem);
   const decrementItem = useQuestStore((s) => s.decrementItem);
+  const clearQuestProgress = useQuestStore((s) => s.clearItemProgress);
   const hideoutProgress = useHideoutStore((s) => s.itemProgress);
   const hideoutLevels = useHideoutStore((s) => s.levels);
   const setHideoutProgress = useHideoutStore((s) => s.setItemProgress);
   const bumpHideoutProgress = useHideoutStore((s) => s.bumpItemProgress);
+  const clearHideoutProgress = useHideoutStore((s) => s.clearItemProgress);
   const ownedItems = useInventoryStore((s) => s.ownedItems);
   const setOwned = useInventoryStore((s) => s.setCount);
 
@@ -211,6 +239,7 @@ export function NeededMergedClient({
   const [search, setSearch] = useState('');
   const [hideDone, setHideDone] = useState(true);
   const [firOnly, setFirOnly] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [onlyHideout, setOnlyHideout] = useState(false);
   const [onlyQuests, setOnlyQuests] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
@@ -390,7 +419,20 @@ export function NeededMergedClient({
         <SummaryStat icon="/icons/eft/03-items/price-per-slot.svg" label="Осталось" value={summary.remaining} accent="primary" />
         <SummaryStat icon="/icons/eft/02-quests/quest-modify.svg" label="Докупить" value={summary.buy} accent="amber" />
       </div>
-      <SummaryProgress label="Общий прогресс" value={summary.have} max={summary.need} />
+      <SummaryProgress
+        label="Общий прогресс"
+        value={summary.have}
+        max={summary.need}
+        onReset={() => setConfirmReset(true)}
+      />
+      <NeededResetModal
+        isOpen={confirmReset}
+        onClose={() => setConfirmReset(false)}
+        onConfirm={() => {
+          clearQuestProgress();
+          clearHideoutProgress();
+        }}
+      />
 
       {/* ── Фильтры: поиск на полширины (скруглён) + gap 28px + кнопки равномерно (gap 8px) ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-7">
