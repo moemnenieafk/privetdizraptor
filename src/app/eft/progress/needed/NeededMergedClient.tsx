@@ -508,8 +508,7 @@ function SourceChip({ s }: { s: SrcState }) {
           src={traderImg(s.nn)}
           alt=""
           loading="lazy"
-          className="h-7 w-7 shrink-0 rounded-full border object-cover"
-          style={{ borderColor: color }}
+          className="h-7 w-7 shrink-0 rounded-xs object-cover"
         />
       ) : (
         <span
@@ -533,8 +532,13 @@ function SourceChip({ s }: { s: SrcState }) {
             </span>
           )}
           {s.fir && (
-            <span className="flex items-center gap-0.5 text-nvg-green">
-              <Check className="h-3 w-3" strokeWidth={3} aria-hidden /> в рейде
+            <span className="flex items-center gap-1 text-nvg-green">
+              <span
+                aria-hidden
+                className="h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-nvg-green"
+                style={{ maskImage: 'url(/icons/eft/02-quests/side-quests.svg)', WebkitMaskImage: 'url(/icons/eft/02-quests/side-quests.svg)' }}
+              />
+              в рейде
             </span>
           )}
           {s.maps?.map((m) =>
@@ -548,6 +552,12 @@ function SourceChip({ s }: { s: SrcState }) {
           )}
         </span>
       </span>
+      {/* Итого нужно на этот квест/модуль + разделитель у минуса */}
+      <span className="flex shrink-0 flex-col items-center leading-none" title={`Нужно всего: ${s.count}`}>
+        <span className="font-blender-medium text-sm tabular-nums text-text-primary">{s.count}</span>
+        <span className="text-[9px] uppercase tracking-wide text-text-muted">нужно</span>
+      </span>
+      <span aria-hidden className="h-8 w-px shrink-0 bg-lines-hover" />
       <QtyControl value={s.collected} max={s.count} onChange={s.set} size="sm" />
     </div>
   );
@@ -702,8 +712,13 @@ function GroupRow({
           <span className="flex items-center gap-x-2 font-blender-medium text-type-micro uppercase tracking-wide text-text-muted">
             {group.trader}
             {group.fir && (
-              <span className="flex items-center gap-0.5 text-nvg-green">
-                <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden /> в рейде
+              <span className="flex items-center gap-1 text-nvg-green">
+                <span
+                  aria-hidden
+                  className="h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-nvg-green"
+                  style={{ maskImage: 'url(/icons/eft/02-quests/side-quests.svg)', WebkitMaskImage: 'url(/icons/eft/02-quests/side-quests.svg)' }}
+                />
+                в рейде
               </span>
             )}
           </span>
