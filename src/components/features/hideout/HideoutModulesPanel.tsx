@@ -19,7 +19,7 @@ const ICON_OVERRIDE: Record<string, string> = {
   'weapon-rack': 'weapon_rack',
   'gear-rack': 'gear_rack',
 };
-const moduleIcon = (nn: string) => `${ICON_BASE}/${ICON_OVERRIDE[nn] ?? nn.replace(/-/g, '_')}.svg`;
+export const moduleIcon = (nn: string) => `${ICON_BASE}/${ICON_OVERRIDE[nn] ?? nn.replace(/-/g, '_')}.svg`;
 
 function ModuleTile({ station }: { station: HideoutStationInfo }) {
   const level = useHideoutStore((s) => s.levels[station.normalizedName] ?? 0);
