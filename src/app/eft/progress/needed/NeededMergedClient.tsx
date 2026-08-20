@@ -594,7 +594,7 @@ function ItemRow({
   const hCount = st.sources.filter((s) => s.kind === 'hideout').length;
 
   return (
-    <div className={`relative flex flex-col overflow-hidden rounded-sm bg-(--color-darkbase) ${done ? 'opacity-60' : ''}`}>
+    <div className={`relative flex flex-col overflow-hidden rounded-sm border border-(--color-card-menu) bg-(--color-darkbase) ${done ? 'opacity-60' : ''}`}>
       {/* Горизонтальный прогресс по фону строки */}
       <span aria-hidden className="absolute inset-y-0 left-0 bg-nvg-green/25 transition-[width] duration-300" style={{ width: `${pct}%` }} />
       <div className="relative flex items-start gap-3 p-2.5">
@@ -693,7 +693,7 @@ function GroupRow({
 }) {
   const rep = group.accepted[0];
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-sm bg-(--color-darkbase)">
+    <div className="relative flex flex-col overflow-hidden rounded-sm border border-(--color-card-menu) bg-(--color-darkbase)">
       <div className="relative flex items-center gap-3 p-2.5">
         <TrackCell
           iconSrc={rep?.icon ?? itemIconUrl('')}
