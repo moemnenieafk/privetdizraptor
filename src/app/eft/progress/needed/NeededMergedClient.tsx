@@ -588,15 +588,12 @@ function ItemRow({
   onStash: (v: number) => void;
 }) {
   const done = st.have >= st.need;
-  const pct = st.need > 0 ? Math.min(100, Math.round((st.have / st.need) * 100)) : 0;
   const bg = getTarkovBackgroundColor(item.backgroundColor);
   const qCount = st.sources.filter((s) => s.kind === 'quest').length;
   const hCount = st.sources.filter((s) => s.kind === 'hideout').length;
 
   return (
     <div className={`relative flex flex-col overflow-hidden rounded-sm border border-(--color-card-menu) bg-(--color-darkbase) ${done ? 'opacity-60' : ''}`}>
-      {/* Горизонтальный прогресс по фону строки */}
-      <span aria-hidden className="absolute inset-y-0 left-0 bg-nvg-green/25 transition-[width] duration-300" style={{ width: `${pct}%` }} />
       <div className="relative flex items-start gap-3 p-2.5">
         <TrackCell
           iconSrc={item.itemIcon}
@@ -605,7 +602,6 @@ function ItemRow({
           need={st.need}
           onInc={onInc}
           onSetTotal={onSetTotal}
-          noFill
           bgColor={bg}
           sizeClass="h-28 w-28"
           bottomLeft={st.needFir > 0 ? <FirMark /> : undefined}
