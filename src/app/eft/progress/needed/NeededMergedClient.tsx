@@ -40,7 +40,7 @@ function FirMark() {
     >
       <span
         aria-hidden
-        className="h-4 w-4 mask-contain mask-center mask-no-repeat bg-(--color-rarity-legendary)"
+        className="h-3 w-3 mask-contain mask-center mask-no-repeat bg-(--color-rarity-legendary)"
         style={{ maskImage: 'url(/icons/eft/02-quests/side-quests.svg)', WebkitMaskImage: 'url(/icons/eft/02-quests/side-quests.svg)' }}
       />
     </span>
