@@ -12,6 +12,8 @@ interface HideoutStore {
   itemProgress: Record<string, number>;
   setLevel: (station: string, level: number) => void;
   setItemProgress: (key: string, count: number) => void;
+  /** Функциональный ±delta (читает живое значение стора, клампит [0, max]) — против гонок быстрых кликов. */
+  bumpItemProgress: (key: string, delta: number, max: number) => void;
   clearLevelProgress: (station: string, level: number) => void;
   reset: () => void;
 }
@@ -28,6 +30,11 @@ export const useHideoutStore = create<HideoutStore>()(
         set((state) => ({ levels: { ...state.levels, [station]: Math.max(0, level) } })),
       setItemProgress: (key, count) =>
         set((state) => ({ itemProgress: { ...state.itemProgress, [key]: Math.max(0, count) } })),
+      bumpItemProgress: (key, delta, max) =>
+        set((state) => {
+          const cur = state.itemProgress[key] ?? 0;
+          return { itemProgress: { ...state.itemProgress, [key]: Math.max(0, Math.min(max, cur + delta)) } };
+        }),
       clearLevelProgress: (station, level) =>
         set((state) => {
           const prefix = `${station}|${level}|`;

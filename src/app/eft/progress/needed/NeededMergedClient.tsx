@@ -166,7 +166,12 @@ interface SrcState {
   level?: number;
   /** minPlayerLevel (квест) — для бейджа «УР. N+». */
   minLevel?: number;
+  /** Абсолютный сеттер (QtyControl в развороте). */
   set: (n: number) => void;
+  /** Функциональный ±delta через живой стор (ячейка ЛКМ/ПКМ) — против гонок быстрых кликов. */
+  bump: (delta: number) => void;
+  /** Живое значение collected из стора (для выбора источника в distribute без stale-снапшота). */
+  get: () => number;
 }
 interface ItemState {
   need: number;
@@ -188,9 +193,12 @@ export function NeededMergedClient({
   const questProgress = useQuestStore((s) => s.itemProgress);
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const setItemCount = useQuestStore((s) => s.setItemCount);
+  const incrementItem = useQuestStore((s) => s.incrementItem);
+  const decrementItem = useQuestStore((s) => s.decrementItem);
   const hideoutProgress = useHideoutStore((s) => s.itemProgress);
   const hideoutLevels = useHideoutStore((s) => s.levels);
   const setHideoutProgress = useHideoutStore((s) => s.setItemProgress);
+  const bumpHideoutProgress = useHideoutStore((s) => s.bumpItemProgress);
   const ownedItems = useInventoryStore((s) => s.ownedItems);
   const setOwned = useInventoryStore((s) => s.setCount);
 
@@ -242,6 +250,8 @@ export function NeededMergedClient({
         maps: q.maps,
         minLevel: q.minLevel,
         set: (n) => setItemCount(q.questId, q.objectiveId, Math.max(0, Math.min(q.count, n))),
+        bump: (d) => (d > 0 ? incrementItem(q.questId, q.objectiveId, q.count) : decrementItem(q.questId, q.objectiveId)),
+        get: () => Math.min(q.count, useQuestStore.getState().itemProgress[q.questId]?.[q.objectiveId] ?? 0),
       });
     }
     for (const h of ni.hideout) {
@@ -263,6 +273,8 @@ export function NeededMergedClient({
         fir: h.fir,
         level: h.level,
         set: (n) => setHideoutProgress(key, Math.max(0, Math.min(h.count, n))),
+        bump: (d) => bumpHideoutProgress(key, d, h.count),
+        get: () => Math.min(h.count, useHideoutStore.getState().itemProgress[key] ?? 0),
       });
     }
 
@@ -279,19 +291,21 @@ export function NeededMergedClient({
     };
   };
 
-  /** Авто-распределение ЛКМ/ПКМ по источникам (FiR-квесты → не-FiR → убежище). */
+  /** Авто-распределение ЛКМ/ПКМ по источникам (FiR-квесты → не-FiR → убежище).
+   *  Выбор источника и ±1 — по ЖИВОМУ значению стора (get/bump), а не рендер-снапшоту:
+   *  иначе быстрые клики читают устаревший collected и «возвращают то же число». */
   const distribute = (sources: SrcState[], delta: number) => {
-    const inc = [
+    const order = [
       ...sources.filter((s) => s.kind === 'quest' && s.fir),
       ...sources.filter((s) => s.kind === 'quest' && !s.fir),
       ...sources.filter((s) => s.kind === 'hideout'),
     ];
     if (delta > 0) {
-      const t = inc.find((s) => s.collected < s.count);
-      if (t) t.set(t.collected + 1);
+      const t = order.find((s) => s.get() < s.count);
+      if (t) t.bump(1);
     } else {
-      const t = [...inc].reverse().find((s) => s.collected > 0);
-      if (t) t.set(t.collected - 1);
+      const t = [...order].reverse().find((s) => s.get() > 0);
+      if (t) t.bump(-1);
     }
   };
 
