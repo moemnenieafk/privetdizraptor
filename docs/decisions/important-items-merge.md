@@ -1,7 +1,8 @@
 ---
-status: 🔵 спека
+status: ✅ реализовано
 affects: /eft/progress/needed, /eft/progress/tracker, src/data/quests, hideout-mirror, headerConfig, dump-quests.mjs, ui/kit/TrackCell
 date: 2026-08-19
+done: 2026-08-20
 ---
 # Объединённая страница «Важные предметы» = слияние двух трекеров
 
@@ -56,6 +57,20 @@ date: 2026-08-19
 ## Гарды
 - **Масштаб:** крупный — новый клиентский компонент + ридер-индекс + правка dump-скрипта + редирект + меню. Дизайн-система NIGHTFALL (§6), мантра «нет фрейма-в-фрейме» (§5.5).
 - **Ручное подтверждение нужно для:** `db:sync-hideout` (regular+pve) — запись в Supabase; пуш в main. Рефреш квестов-regular уже сделан (правка `eft-quests.json`, отдельным коммитом от ветки кита).
+
+## Статус исполнения (2026-08-20)
+Реализовано на ветке `feat/important-items-merge`:
+- **Данные:** `dump-quests.mjs` параметризован (regular/pve) + сохраняет `acceptedItems[]` для any-of; оба режима свежие; `getQuests(mode)`; синк убежища (regular).
+- **Ридер:** `src/lib/needed-items.ts` — `buildNeededItems(mode)`: single-item + any-of группы + квест-предметы («только рейд») + убежище, FiR per-source, join slug/backgroundColor из prices.
+- **UI:** `NeededMergedClient.tsx` — двухколоночный masonry-рейл на `TrackCell` (112px), сводка с иконками+анимацией, прогресс-бар (12 делений, %, бегунок), фильтр-бар (поиск + «Скрыть готовые»/«Найдено в рейде»/«Строю Убежище»/«По заданиям»), панель «Убежище ЧВК» (`HideoutModulesPanel`, токен `--color-hideout` #9A8866), разворот с квест/убежище-чипами (микро-ноды), прямой ввод числа на ячейке, авто-распределение через живой стор (фикс гонки быстрых кликов).
+- **Роутинг/меню:** `/eft/progress/tracker` → `redirect('/eft/progress/needed')`; удалены `ItemTrackerClient`, `NeededTabs`, `NeededItemsClient`, `HideoutNeededClient`; убраны дубли из `headerConfig`/`role-hubs`/`feature-catalog`.
+
+**Хвост (follow-up, не блокер):**
+- Режим **pve из профиля** — `page.tsx` пока хардкодит `'regular'` (данные pve готовы, нужен читатель режима игрока).
+- Синк убежища для **pve** — таблица не партиционирована по режиму (материалы совпадают → regular покрывает v1).
+- Цены «докупить ~₽» — отложены (числа без ₽).
+- Вынос `TrackCell` в канон `ui/kit` (TODO из `battlepassVisual.tsx`) — отдельный заход.
+- Не смёржено в main (ждёт PR + live-verify V4DYA).
 
 ---
 *Процесс: [[engineering-loop]]*
