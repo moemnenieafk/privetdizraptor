@@ -31,14 +31,18 @@ const MAP_SLUG: Record<string, string> = {
 
 const MICRO = 'font-blender-medium text-type-micro uppercase tracking-widest';
 
-/** FiR-маркер (найдено в рейде) — компактный чек. */
-function FirMark({ className = '' }: { className?: string }) {
+/** FiR-маркер (найдено в рейде) — фрейм 36×36 в углу ячейки + иконка side-quests 22×22 (#BDA550). */
+function FirMark() {
   return (
     <span
       title="Найдено в рейде"
-      className={`flex h-4 items-center gap-0.5 rounded-br-xs bg-(--color-darkbase)/90 px-1 ${className}`}
+      className="flex h-9 w-9 items-center justify-center rounded-tr-xs bg-(--color-darkbase)/90"
     >
-      <Check className="h-2.5 w-2.5 text-nvg-green" strokeWidth={3} aria-hidden />
+      <span
+        aria-hidden
+        className="h-5.5 w-5.5 mask-contain mask-center mask-no-repeat bg-(--color-rarity-legendary)"
+        style={{ maskImage: 'url(/icons/eft/02-quests/side-quests.svg)', WebkitMaskImage: 'url(/icons/eft/02-quests/side-quests.svg)' }}
+      />
     </span>
   );
 }
@@ -604,7 +608,7 @@ function ItemRow({
           noFill
           bgColor={bg}
           sizeClass="h-28 w-28"
-          topLeft={st.needFir > 0 ? <FirMark /> : undefined}
+          bottomLeft={st.needFir > 0 ? <FirMark /> : undefined}
         />
         <div className="flex min-w-0 flex-1 flex-col gap-3.5">
           <div className="flex flex-col gap-0.5">

@@ -28,8 +28,10 @@ export interface TrackCellProps {
   bgColor?: string;
   /** Не заливать ячейку вертикально (прогресс показывает родитель — напр. фон строки рейла). */
   noFill?: boolean;
-  /** Угловой слот (верх-лево): FiR-маркер / бейдж «+N» и т.п. Рисуется поверх. */
+  /** Угловой слот (верх-лево): бейдж «+N» и т.п. Рисуется поверх. */
   topLeft?: ReactNode;
+  /** Угловой слот (низ-лево): FiR-маркер и т.п. Рисуется поверх (не перекрывает бейдж X/Y справа). */
+  bottomLeft?: ReactNode;
   /** Прямой ввод общего числа: клик по бейджу X/Y → инпут, Enter коммитит onSetTotal
    *  (решает «×4500 кликов» — вводишь число, а не жмёшь). Клампинг до need — внутри. */
   onSetTotal?: (n: number) => void;
@@ -50,6 +52,7 @@ export function TrackCell({
   bgColor,
   noFill = false,
   topLeft,
+  bottomLeft,
   onSetTotal,
   revealZones = false,
 }: TrackCellProps) {
@@ -158,8 +161,11 @@ export function TrackCell({
         </div>
       )}
 
-      {/* Угловой слот верх-лево: FiR-маркер / бейдж «+N». */}
+      {/* Угловой слот верх-лево: бейдж «+N». */}
       {topLeft && <span className="pointer-events-none absolute left-0 top-0 z-20">{topLeft}</span>}
+
+      {/* Угловой слот низ-лево: FiR-маркер. */}
+      {bottomLeft && <span className="pointer-events-none absolute bottom-0 left-0 z-20">{bottomLeft}</span>}
 
       {/* Десктоп-слой: ЛКМ +1, ПКМ −1. Отключается на грубом указателе. */}
       <button
