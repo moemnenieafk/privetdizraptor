@@ -28,9 +28,16 @@ const clamp = (n: number, max: number): number => Math.max(0, Math.min(max, n));
 
 /**
  * Повтор действия по удержанию с ускорением (240ms → 30ms).
- * ВАЖНО: step держим в ref — иначе таймер замыкается на устаревшем value
+ * ВАЖНО #1: step держим в ref — иначе таймер замыкается на устаревшем value
  * и повтор бесконечно пишет одно и то же число (значение «залипает»).
+ * ВАЖНО #2: отпускание слушаем на WINDOW, а не на кнопке. Кнопка становится
+ * `disabled` при достижении границы (max/0), а disabled-элемент НЕ получает
+ * pointerup → цикл повтора зависает и вечно дозаполняет значение до границы
+ * («минус не работает — восполняет в зелёную зону»). Window ловит отпускание всегда.
  */
+/* eslint-disable react-hooks/refs, react-hooks/immutability --
+   императивный таймер-контроллер удержания: refs и взаимный вызов stop()/start()
+   здесь намеренны, React-Compiler их не моделирует. */
 function useHoldRepeat(step: () => void) {
   const delay = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loop = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,11 +46,20 @@ function useHoldRepeat(step: () => void) {
   stepRef.current = step;
 
   const stop = useCallback(() => {
-    if (delay.current) clearTimeout(delay.current);
-    if (loop.current) clearTimeout(loop.current);
+    if (delay.current) {
+      clearTimeout(delay.current);
+      delay.current = null;
+    }
+    if (loop.current) {
+      clearTimeout(loop.current);
+      loop.current = null;
+    }
+    window.removeEventListener('pointerup', stop);
+    window.removeEventListener('pointercancel', stop);
   }, []);
 
   const start = useCallback(() => {
+    stop(); // защита от наложения нескольких циклов
     stepRef.current();
     speed.current = 240;
     const tick = () => {
@@ -52,11 +68,14 @@ function useHoldRepeat(step: () => void) {
       loop.current = setTimeout(tick, speed.current);
     };
     delay.current = setTimeout(tick, 400);
-  }, []);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+  }, [stop]);
 
   useEffect(() => stop, [stop]);
-  return { onPointerDown: start, onPointerUp: stop, onPointerLeave: stop, onPointerCancel: stop };
+  return { onPointerDown: start };
 }
+/* eslint-enable react-hooks/refs, react-hooks/immutability */
 
 export function QtyControl({ value, max, onChange, onDelta, size = 'sm', showMax = false, showClear = false }: QtyControlProps) {
   const [editing, setEditing] = useState(false);
