@@ -562,7 +562,7 @@ function SourceChip({ s }: { s: SrcState }) {
         <span className="text-[9px] uppercase tracking-wide text-text-muted">нужно</span>
       </span>
       <span aria-hidden className="h-8 w-px shrink-0 bg-lines-hover" />
-      <QtyControl value={s.collected} max={s.count} onChange={s.set} size="sm" />
+      <QtyControl value={s.collected} max={s.count} onChange={s.set} onDelta={s.bump} size="sm" />
     </div>
   );
 }

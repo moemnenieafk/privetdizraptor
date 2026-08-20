@@ -12,6 +12,10 @@ interface QtyControlProps {
   value: number;
   max: number;
   onChange: (next: number) => void;
+  /** Функциональный ±1 через живой стор (если задан — кнопки −/+ зовут его вместо
+   *  onChange(value±1)). Против гонки быстрых кликов: onChange от рендер-value «залипает»,
+   *  когда клики быстрее ре-рендера. Прямой ввод числа по-прежнему идёт через onChange. */
+  onDelta?: (delta: number) => void;
   /** md — крупный (шапка одиночной карточки), sm — компакт (строки заданий). */
   size?: 'sm' | 'md';
   /** Кнопка «Макс» — залить до нужного. */
@@ -54,14 +58,14 @@ function useHoldRepeat(step: () => void) {
   return { onPointerDown: start, onPointerUp: stop, onPointerLeave: stop, onPointerCancel: stop };
 }
 
-export function QtyControl({ value, max, onChange, size = 'sm', showMax = false, showClear = false }: QtyControlProps) {
+export function QtyControl({ value, max, onChange, onDelta, size = 'sm', showMax = false, showClear = false }: QtyControlProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const done = value >= max;
-  const dec = useHoldRepeat(() => onChange(clamp(value - 1, max)));
-  const inc = useHoldRepeat(() => onChange(clamp(value + 1, max)));
+  const dec = useHoldRepeat(() => (onDelta ? onDelta(-1) : onChange(clamp(value - 1, max))));
+  const inc = useHoldRepeat(() => (onDelta ? onDelta(1) : onChange(clamp(value + 1, max))));
 
   useEffect(() => {
     if (editing) {
