@@ -30,13 +30,11 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const {
     task, status, dimmed, isSubgraphTarget, isMapTarget, freshlyUnlocked, pinned, chainRole, barterCount = 0,
     headerIconClass, hidePin,
-    onToggle, onForceComplete, onSelect, onHover, onPin,
+    onToggle, onSelect, onHover, onPin,
   } = data;
 
-  // Разблокировка заблокированного квеста: клик → мини-подтверждение «Уже прошёл? Да/Нет»
-  // → onForceComplete (проставляет предков-пререквизиты + сам квест). Защита от случайного разблока.
-  const [confirming, setConfirming] = useState(false);
-
+  // Отметку прогресса ставит сам игрок: клик по кнопке любой ноды (в т.ч. locked)
+  // просто toggle'ит этот квест. Никакого авто-каскада по предкам.
   const [heroFailed, setHeroFailed] = useState(false);
 
   const itemProgress  = useQuestStore(s => s.itemProgress);
@@ -92,7 +90,9 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
     ? 'ring-1 ring-amber-400/60'
     : '';
 
-  const footerBtnStyle: React.CSSProperties = status === 'active' ? {
+  // Кнопка отметки: активная (цвет торговца) на любой неотмеченной ноде, включая locked —
+  // игрок сам решает, что прошёл. Отмеченная — зелёная.
+  const footerBtnStyle: React.CSSProperties = status !== 'completed' ? {
     backgroundColor: `color-mix(in srgb, ${traderColor} 10%, transparent)`,
     color: traderColor,
     border: `1px solid color-mix(in srgb, ${traderColor} 30%, transparent)`,
@@ -100,11 +100,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
 
   const footerBtnCls = [
     'h-9 flex-1 text-xs font-blender-medium uppercase tracking-widest rounded-xs transition-colors',
-    status === 'completed'
-      ? 'bg-success/10 text-success'
-      : status === 'locked'
-      ? 'border border-lines-hover text-text-secondary hover:border-(--primary) hover:text-(--primary)'
-      : '',
+    status === 'completed' ? 'bg-success/10 text-success' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -268,39 +264,14 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
         )}
 
         <footer className="px-4 pb-4 pt-3 flex items-center gap-2">
-          {status === 'locked' && confirming ? (
-            <>
-              <button
-                data-no-pan
-                onClick={e => { e.stopPropagation(); onForceComplete(task.id); setConfirming(false); }}
-                className="h-9 flex-1 rounded-xs bg-success/10 text-success text-xs font-blender-medium uppercase tracking-widest transition-colors hover:bg-success/20"
-              >
-                Уже прошёл
-              </button>
-              <button
-                data-no-pan
-                onClick={e => { e.stopPropagation(); setConfirming(false); }}
-                className="h-9 shrink-0 rounded-xs border border-lines-hover px-4 text-xs font-blender-medium uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
-              >
-                Нет
-              </button>
-            </>
-          ) : (
-            <button
-              data-no-pan
-              onClick={e => {
-                e.stopPropagation();
-                if (status === 'locked') setConfirming(true);
-                else onToggle(task.id);
-              }}
-              style={footerBtnStyle}
-              className={footerBtnCls}
-            >
-              {status === 'completed' ? '✓ ВЫПОЛНЕНО'
-                : status === 'locked' ? 'ЗАБЛОКИРОВАНО'
-                : 'ВЫПОЛНЕНО?'}
-            </button>
-          )}
+          <button
+            data-no-pan
+            onClick={e => { e.stopPropagation(); onToggle(task.id); }}
+            style={footerBtnStyle}
+            className={footerBtnCls}
+          >
+            {status === 'completed' ? '✓ ВЫПОЛНЕНО' : 'ВЫПОЛНЕНО?'}
+          </button>
           {!hidePin && (
           <button
             data-no-pan
