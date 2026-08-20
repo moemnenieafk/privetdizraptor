@@ -583,7 +583,7 @@ function ItemRow({
     <div className={`relative flex flex-col overflow-hidden rounded-sm bg-card-menu ${done ? 'opacity-60' : ''}`}>
       {/* Горизонтальный прогресс по фону строки */}
       <span aria-hidden className="absolute inset-y-0 left-0 bg-nvg-green/25 transition-[width] duration-300" style={{ width: `${pct}%` }} />
-      <div className="relative flex items-center gap-3 p-2.5">
+      <div className="relative flex items-start gap-3 p-2.5">
         <TrackCell
           iconSrc={item.itemIcon}
           alt={item.itemName}
@@ -596,14 +596,19 @@ function ItemRow({
           sizeClass="h-28 w-28"
           topLeft={st.needFir > 0 ? <FirMark /> : undefined}
         />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <Link
-            href={item.slug ? `/eft/items/item/${item.slug}` : '#'}
-            className="line-clamp-2 font-blender-medium text-sm uppercase leading-tight tracking-wide text-text-primary transition-colors hover:text-(--primary)"
-            title={item.itemName}
-          >
-            {item.itemName}
-          </Link>
+        <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+          <div className="flex flex-col gap-0.5">
+            <Link
+              href={item.slug ? `/eft/items/item/${item.slug}` : '#'}
+              className="line-clamp-2 font-blender-medium text-base uppercase leading-tight tracking-wide text-text-primary transition-colors hover:text-(--primary)"
+              title={item.itemName}
+            >
+              {item.itemName}
+            </Link>
+            {item.itemShort && item.itemShort !== item.itemName && (
+              <span className="font-blender-book text-xs uppercase tracking-wide text-text-muted">{item.itemShort}</span>
+            )}
+          </div>
           <span className="flex flex-wrap items-center gap-1.5">
             {qCount > 0 && (
               <MetaBadge variant="quest" icon="/icons/eft/quests-icon.svg">
@@ -630,10 +635,10 @@ function ItemRow({
             type="button"
             onClick={onToggle}
             aria-expanded={expanded}
-            className={`flex w-fit items-center gap-1 ${MICRO} transition-colors ${expanded ? 'text-(--primary)' : 'text-text-muted hover:text-(--primary)'}`}
+            className={`flex w-fit items-center gap-1 font-blender-medium text-xs uppercase tracking-widest transition-colors ${expanded ? 'text-(--primary)' : 'text-text-muted hover:text-(--primary)'}`}
           >
             Подробнее
-            <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden />
           </button>
         </div>
       </div>
