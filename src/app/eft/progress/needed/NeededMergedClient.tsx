@@ -36,11 +36,11 @@ function FirMark() {
   return (
     <span
       title="Найдено в рейде"
-      className="flex h-9 w-9 items-center justify-center rounded-tr-xs bg-(--color-darkbase)/90"
+      className="flex h-5 w-5 items-center justify-center"
     >
       <span
         aria-hidden
-        className="h-5.5 w-5.5 mask-contain mask-center mask-no-repeat bg-(--color-rarity-legendary)"
+        className="h-4 w-4 mask-contain mask-center mask-no-repeat bg-(--color-rarity-legendary)"
         style={{ maskImage: 'url(/icons/eft/02-quests/side-quests.svg)', WebkitMaskImage: 'url(/icons/eft/02-quests/side-quests.svg)' }}
       />
     </span>
