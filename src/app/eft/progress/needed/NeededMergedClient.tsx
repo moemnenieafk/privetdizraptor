@@ -141,13 +141,13 @@ function SummaryProgress({ value, max, label, divisions = 12 }: { value: number;
           <span aria-hidden className="h-1.5 w-px bg-(--primary)" />
         </div>
         {/* Шкала + анимированная заливка */}
-        <div className="absolute inset-x-0 bottom-0 h-2 overflow-hidden rounded-xs border border-lines-hover bg-(--color-base)">
+        <div className="absolute inset-x-0 bottom-0 h-2 overflow-hidden rounded-xs border border-lines-hover bg-(--color-darkbase)">
           <div className="h-full bg-(--primary)/80 transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
         </div>
         {/* Деления под сетку */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2">
           {Array.from({ length: divisions - 1 }).map((_, i) => (
-            <span key={i} aria-hidden className="absolute top-0 h-full w-0.5 bg-(--color-darkbase)" style={{ left: `${((i + 1) / divisions) * 100}%` }} />
+            <span key={i} aria-hidden className="absolute top-0 h-full w-0.5 bg-(--color-base)" style={{ left: `${((i + 1) / divisions) * 100}%` }} />
           ))}
         </div>
       </div>
