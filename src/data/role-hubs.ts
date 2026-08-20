@@ -35,7 +35,6 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
     links: [
       { id: 'progressor-questmap', title: 'Карта заданий', description: 'Граф квестов и зависимости.', href: '/eft/questmap', iconPath: '/icons/eft/04-progression/quest-map.svg' },
       { id: 'progressor-quests', title: 'Задания', description: 'Все квесты по торговцам и сюжету.', href: '/eft/quests', iconPath: '/icons/eft/quests-icon.svg' },
-      { id: 'progressor-tracker', title: 'Трекер предметов', description: 'Что нужно сдать и куда.', href: '/eft/progress/tracker', iconPath: '/icons/eft/04-progression/items-tracker.svg' },
       { id: 'progressor-needed', title: 'Важные предметы', description: 'Что не выкидывать из схрона.', href: '/eft/progress/needed', iconPath: '/icons/eft/04-progression/items-needed.svg' },
     ],
   },
@@ -131,7 +130,7 @@ export const ROLE_HUBS: Record<PlayerRole, RoleHub> = {
     links: [
       { id: 'collector-achievements', title: 'Достижения', description: 'Все ачивки и что нужно для Каппы.', href: '/eft/progress/achievements', iconPath: '/icons/eft/04-progression/achievments.svg' },
       { id: 'collector-questmap', title: 'Карта заданий', description: 'Граф квестов и зависимости.', href: '/eft/questmap', iconPath: '/icons/eft/04-progression/quest-map.svg' },
-      { id: 'collector-tracker', title: 'Трекер предметов', description: 'Что нужно сдать и куда.', href: '/eft/progress/tracker', iconPath: '/icons/eft/04-progression/items-tracker.svg' },
+      { id: 'collector-needed', title: 'Важные предметы', description: 'Что нужно сдать и куда.', href: '/eft/progress/needed', iconPath: '/icons/eft/04-progression/items-needed.svg' },
       { id: 'collector-prestige', title: 'Престиж', description: 'Что даёт и как готовиться.', href: '/eft/progress/prestige', iconPath: '/icons/eft/04-progression/prestige.svg' },
     ],
   },

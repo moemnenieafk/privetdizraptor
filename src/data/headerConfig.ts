@@ -595,7 +595,6 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
               { id: 'p-loadouts-add', label: 'Создать сборку', path: '/eft/progress/loadouts/add', iconUrl: '/icons/eft/04-progression/gun-loadouts/add-gun-loadout.svg' }
             ]
           },
-          { id: 'p-tracker', label: 'Трекер предметов', description: 'Отмечайте найденные предметы для квестов, убежища и бартеров в удобном чек-листе.', path: '/eft/progress/tracker', iconUrl: '/icons/eft/04-progression/items-tracker.svg' },
           { id: 'p-needed', label: 'Важные предметы', description: 'Полный список всех предметов, необходимых для выполнения заданий и постройки убежища.', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
           { id: 'p-collector', label: 'Коллекционер', description: 'Все предметы для контейнера Kappa. Отмечай найденные — они уходят вниз, а ненайденные всплывают вверх.', path: '/eft/progress/collector', iconUrl: '/icons/eft/profile-pannel/kappa_icon.svg' }
         ]
