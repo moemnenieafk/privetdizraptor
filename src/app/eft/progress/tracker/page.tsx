@@ -1,15 +1,8 @@
-import { getQuestMapTasks } from '@/lib/eft-api';
-import { ItemTrackerClient } from './ItemTrackerClient';
+import { redirect } from 'next/navigation';
 
-export const metadata = { title: 'Трекер Предметов — CTA' };
-
-export default async function ItemTrackerPage() {
-  const tasks = await getQuestMapTasks();
-  return (
-    <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
-      <div className="w-full max-w-275 px-4 xl:px-0">
-        <ItemTrackerClient initialTasks={tasks} />
-      </div>
-    </main>
-  );
+// «Трекер предметов» слит в единый «Важные предметы» (источник истины по прогрессу).
+// Оставляем редирект, чтобы старые ссылки/закладки/хабы вели на объединённую страницу.
+// Спека: docs/decisions/important-items-merge.md.
+export default function ItemTrackerRedirect() {
+  redirect('/eft/progress/needed');
 }
