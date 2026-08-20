@@ -81,7 +81,7 @@ export function TrackCell({
 
   return (
     <div
-      className={`relative shrink-0 select-none overflow-hidden rounded-xs border border-(--color-darkbase) ${sizeClass}`}
+      className={`relative shrink-0 select-none overflow-hidden rounded-xs border border-(--color-base) ${sizeClass}`}
     >
       {/* Рарити-фон (класс или инлайн реальный цвет предмета) + линейный блик */}
       <span
