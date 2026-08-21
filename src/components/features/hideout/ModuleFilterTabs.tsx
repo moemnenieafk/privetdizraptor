@@ -24,13 +24,13 @@ export interface ModuleFilterTabsProps {
 
 export function ModuleFilterTabs({ tabs, totalAll, active, onSelect }: ModuleFilterTabsProps) {
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--color-lines-hover)_55%,transparent)_transparent]">
+    <div className="flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--color-lines-hover)_55%,transparent)_transparent]">
       {/* «Все» — сумма всех рецептов, активна когда фильтр снят (active === null). */}
       <button
         type="button"
         onClick={() => onSelect(null)}
         title="Все модули"
-        className={`flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xs border p-2 transition-all ${
+        className={`flex min-h-20 min-w-24 flex-1 flex-col items-center justify-center gap-1 rounded-xs border p-2 transition-all ${
           active === null
             ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]'
             : 'border-lines-hover bg-(--color-base) hover:brightness-110'
@@ -65,7 +65,7 @@ export function ModuleFilterTabs({ tabs, totalAll, active, onSelect }: ModuleFil
             // Клик по активной снимает фильтр; иначе выбирает станцию (одиночный выбор).
             onClick={() => onSelect(isActive ? null : t.key)}
             title={`${t.name} — рецептов ${t.availCount} / ${t.totalCount}`}
-            className={`flex min-h-16 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xs border p-2 transition-all ${
+            className={`flex min-h-20 min-w-24 flex-1 flex-col items-center justify-center gap-1 rounded-xs border p-2 transition-all ${
               isActive
                 ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]'
                 : 'border-lines-hover bg-(--color-base) hover:brightness-110'
@@ -81,8 +81,15 @@ export function ModuleFilterTabs({ tabs, totalAll, active, onSelect }: ModuleFil
               </span>
             </span>
             <span
-              className={`line-clamp-1 w-full text-center font-blender-medium text-type-micro tabular-nums tracking-wide ${
+              className={`line-clamp-1 w-full text-center font-blender-medium text-type-micro uppercase tracking-wide ${
                 isActive ? 'text-(--primary)' : 'text-text-secondary'
+              }`}
+            >
+              {t.name}
+            </span>
+            <span
+              className={`line-clamp-1 w-full text-center font-blender-medium text-type-micro tabular-nums tracking-wide ${
+                isActive ? 'text-(--primary)' : 'text-text-muted'
               }`}
             >
               рецептов {t.availCount} / {t.totalCount}
