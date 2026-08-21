@@ -74,7 +74,7 @@ export interface CraftEconomyInput {
     /** Продажа трейдеру за штуку — база для «пустого топлива» (10%). */
     sellTrader?: number;
   }[];
-  output: { basePrice: number; bestTraderSell: number; fleaPrice: number; count: number };
+  output: { basePrice: number; bestTraderSell: number; fleaPrice: number; count: number; buyBest: number };
   baseDurationSec: number;
   craftingLevel: number;
   hideoutMgmtLevel: number;
@@ -94,6 +94,8 @@ export interface CraftEconomy {
   profitPerHour: number;
   roi: number;
   usedFlea: boolean;
+  /** Экономия «крафт для себя»: цена покупки выхода (buyBest·count) − стоимость входов. 0, если нет цены. */
+  savings: number;
 }
 
 /** Стоимость одного входа за штуку: инструмент/FIR → 0; пустое топливо → sellTrader·0.1; иначе unitBuy. */
@@ -134,6 +136,13 @@ export function computeCraftEconomy(i: CraftEconomyInput): CraftEconomy {
   const netSell = usedFlea ? fleaNet : traderTotal;
 
   const profit = netSell - totalCost;
+
+  // Экономия «крафт для себя»: сколько сэкономишь, сделав выход сам вместо покупки на весь тираж.
+  // Нет цены покупки выхода → 0 (не мотивируем крафтить то, что не купить). Guard от NaN/Infinity.
+  const buyBest = safe(i.output.buyBest);
+  const savingsRaw = buyBest * outCount - totalCost;
+  const savings = Number.isFinite(savingsRaw) ? savingsRaw : 0;
+
   const effDurationSec = effectiveDuration(i.baseDurationSec, i.craftingLevel);
 
   // profit/час: делим на длительность в часах; при eff=0 не делим (0, а не Infinity).
@@ -150,5 +159,6 @@ export function computeCraftEconomy(i: CraftEconomyInput): CraftEconomy {
     profitPerHour,
     roi,
     usedFlea,
+    savings,
   };
 }

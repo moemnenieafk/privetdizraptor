@@ -55,6 +55,8 @@ export interface CraftOutput {
   bestTraderSell: number;
   /** Цена барахолки за штуку (lastLowPrice ?? avg24hPrice). */
   fleaPrice: number;
+  /** Дешевейшая cash-покупка выхода за штуку (₽) — база «Экономии». 0, если не купить. */
+  buyBest: number;
 }
 
 export interface StationGate {
@@ -113,6 +115,7 @@ function craftEconomy(
       bestTraderSell: out?.bestTraderSell ?? 0,
       fleaPrice: out?.fleaPrice ?? 0,
       count: out?.count ?? 1,
+      buyBest: out?.buyBest ?? 0,
     },
     baseDurationSec: c.duration,
     craftingLevel,
@@ -221,7 +224,8 @@ export function CraftProfitClient({
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [hideLocked, setHideLocked] = useState(false);
   const [sort, setSort] = useState<CraftSortMode>('pph');
-  const [activeStation, setActiveStation] = useState<string | null>(null);
+  // Дефолт — вкладка «ТОП» (прибыльные крафты по всем станциям); иначе stationKey.
+  const [activeStation, setActiveStation] = useState<string>('top');
 
   // Снапшот метрики по каждому крафту под текущие навыки/тумблеры — один проход, переиспользуется
   // фильтром/сортировкой/вкладками. Пересчёт только когда меняются входные условия (§4.7).
@@ -232,6 +236,12 @@ export function CraftProfitClient({
     }
     return m;
   }, [crafts, craftingLevel, hideoutMgmtLevel, intelCenterBuilt, emptyFuel]);
+
+  // Счётчик прибыльных крафтов по всем станциям — число на плитке «ТОП» (динамично от навыков/тумблеров).
+  const topCount = useMemo(
+    () => crafts.reduce((n, c) => n + ((metrics.get(c.id)?.profit ?? 0) > 0 ? 1 : 0), 0),
+    [crafts, metrics],
+  );
 
   // Вкладки модулей: builtLevel из профиля, availCount = крафтов на текущем уровне, totalCount = всего.
   const moduleTabs = useMemo<ModuleTabDatum[]>(() => {
@@ -271,7 +281,12 @@ export function CraftProfitClient({
       if (onlyProfitable && m.profit <= 0) return false;
       if (onlyAvailable && !available) return false;
       if (hideLocked && !available) return false;
-      if (activeStation && (c.stationNormalized || c.stationName) !== activeStation) return false;
+      // Вкладка «ТОП» — только прибыльные по всем станциям; stationKey — фильтр этой станции.
+      if (activeStation === 'top') {
+        if (m.profit <= 0) return false;
+      } else if ((c.stationNormalized || c.stationName) !== activeStation) {
+        return false;
+      }
       if (q) {
         const hit = c.reward.some(
           (r) => r.item.name.toLowerCase().includes(q) || r.item.shortName.toLowerCase().includes(q),
@@ -306,7 +321,7 @@ export function CraftProfitClient({
       {/* Вкладки модулей. */}
       <ModuleFilterTabs
         tabs={moduleTabs}
-        totalAll={crafts.length}
+        topCount={topCount}
         active={activeStation}
         onSelect={setActiveStation}
       />

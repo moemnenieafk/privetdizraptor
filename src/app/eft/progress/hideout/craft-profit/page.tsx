@@ -138,6 +138,8 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
           basePrice: itemMap.get(s.itemId)?.basePrice ?? 0,
           bestTraderSell: bestTraderSell(s.itemId),
           fleaPrice: p?.lastLowPrice ?? p?.avg24hPrice ?? 0,
+          // Дешевейшая cash-покупка выхода (₽) — база «Экономии» (крафт vs купить). 0, если не купить.
+          buyBest: cheapestBuy(s.itemId),
         };
       });
 

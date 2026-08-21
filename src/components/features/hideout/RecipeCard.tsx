@@ -114,6 +114,7 @@ export function RecipeCard({
         bestTraderSell: reward?.bestTraderSell ?? 0,
         fleaPrice: reward?.fleaPrice ?? 0,
         count: reward?.count ?? 1,
+        buyBest: reward?.buyBest ?? 0,
       },
       baseDurationSec: craft.duration,
       craftingLevel,
@@ -280,6 +281,16 @@ export function RecipeCard({
             {fmtRub(eco.profit)}
           </dd>
         </div>
+        {/* «Экономия» (крафт для себя): цена покупки выхода − стоимость входов. Только когда выгодно. */}
+        {eco.savings > 0 && (
+          <div className="flex items-center justify-between">
+            <dt className="flex items-center gap-1.5 font-blender-medium uppercase tracking-widest text-text-muted">
+              <span aria-hidden className="h-3.5 w-3.5 shrink-0 icon-mask icon-eft-savings bg-nvg-green" />
+              Экономия
+            </dt>
+            <dd className="font-blender-medium text-nvg-green">+{fmtRub(eco.savings)}</dd>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <dt className="font-blender-medium uppercase tracking-widest text-text-muted">₽/час</dt>
           <dd className={`font-blender-medium ${pphColor(eco.profitPerHour)}`}>{fmtRub(eco.profitPerHour)}/ч</dd>
