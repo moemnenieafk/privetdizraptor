@@ -56,6 +56,9 @@ export interface NeededItem {
   neededTotal: number;
   /** Из neededTotal — сколько должно быть FiR. */
   neededFir: number;
+  /** Дешёвейшая цена покупки в ₽ (мин. из buyFor режима: барахолка/торговец). undefined — нет
+   *  предложений или квест-предмет (не купить). Для оценки «докупить ~₽» на клиенте. */
+  buyPrice?: number;
 }
 export interface NeededGroupVariant {
   id: string;
@@ -69,6 +72,8 @@ export interface NeededGroup {
   questId: string;
   questName: string;
   trader: string;
+  /** minPlayerLevel квеста — для сортировки «новичок→профи». */
+  minLevel: number;
   count: number;
   fir: boolean;
   /** Принимаемые варианты (любой из них засчитывается). */
@@ -130,6 +135,7 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
           questId: t.id,
           questName: t.name,
           trader: t.trader.name,
+          minLevel: t.minPlayerLevel ?? 0,
           count: oi.count ?? 1,
           fir: !!oi.foundInRaid,
           accepted: oi.acceptedItems.map((a) => ({
@@ -217,7 +223,7 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
     ni.neededFir = fir;
   }
 
-  // slug + backgroundColor (цвет слота) из зеркала prices — кросс-линк + фон ячейки.
+  // slug + backgroundColor (цвет слота) + цена покупки из зеркала prices — кросс-линк + фон ячейки + «докупить ₽».
   const ids = [...items.keys()];
   if (ids.length) {
     const gameId = await eftGameId();
@@ -226,6 +232,8 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
         inGameId: prices.inGameId,
         normalizedName: prices.normalizedName,
         backgroundColor: prices.backgroundColor,
+        buyFor: prices.buyFor,
+        buyForPve: prices.buyForPve,
       })
       .from(prices)
       .where(and(eq(prices.gameId, gameId), inArray(prices.inGameId, ids)));
@@ -234,6 +242,17 @@ export async function buildNeededItems(mode: NeededMode = 'regular'): Promise<Ne
       const p = byId.get(ni.itemId);
       if (p?.normalizedName) ni.slug = p.normalizedName;
       if (p?.backgroundColor) ni.backgroundColor = p.backgroundColor;
+      // Квест-предмет не купить (только рейд) → цену не считаем. Иначе — мин. buyFor режима
+      // (pve fallback на regular, если pve-предложений нет). Барахолка И торговцы, в ₽.
+      if (!ni.isQuestItem) {
+        const offers = (mode === 'pve' ? p?.buyForPve : p?.buyFor) ?? p?.buyFor ?? [];
+        let cheapest = Infinity;
+        for (const o of offers) {
+          const rub = o.priceRUB ?? o.price;
+          if (rub && rub > 0 && rub < cheapest) cheapest = rub;
+        }
+        if (Number.isFinite(cheapest)) ni.buyPrice = cheapest;
+      }
     }
   }
 

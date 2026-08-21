@@ -8,7 +8,7 @@
 // Решения: docs/decisions/important-items-merge.md.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, ChevronDown, RotateCcw, Search } from 'lucide-react';
+import { ArrowDownWideNarrow, Check, ChevronDown, RotateCcw, Search } from 'lucide-react';
 import { TrackCell } from '@/components/ui/kit';
 import { QtyControl } from '@/components/ui/QtyControl';
 import { type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
@@ -19,10 +19,13 @@ import { traderImg } from '@/lib/trader-utils';
 import { useQuestStore } from '@/store/useQuestStore';
 import { useHideoutStore, hideoutItemKey } from '@/store/useHideoutStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { editionFloor } from '@/lib/hideout-edition';
 import { computeStashOverlay } from '@/lib/stash-overlay';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { formatRub, formatCompactRub } from '@/lib/barter-calc';
 import { itemIconUrl } from '@/lib/item-icon';
-import type { NeededData, NeededItem } from '@/lib/needed-items';
+import type { NeededData, NeededItem, NeededMode } from '@/lib/needed-items';
 
 const MAP_SLUG: Record<string, string> = {
   Таможня: 'customs', 'Улицы Таркова': 'streets-of-tarkov', Развязка: 'interchange', Резерв: 'reserve',
@@ -31,6 +34,44 @@ const MAP_SLUG: Record<string, string> = {
 };
 
 const MICRO = 'font-blender-medium text-type-micro uppercase tracking-widest';
+
+// Потолок «в схроне» — практически недостижим, нужен лишь как кламп для bumpCount/QtyControl.
+const STASH_MAX = 9999;
+
+// «Оптовый» предмет: нужное кол-во ≥ порога (напр. 4500 патронов SOST одного квеста). Ячейка
+// трекается как обычно (0/4500), но в ИТОГАХ сводки такая позиция весит 1, а не N юнитов —
+// иначе одна патронная цель перекашивает Осталось/Собрано/Докупить (§ «разметка не считает» —
+// правило подачи, не доменной логики). Валюта отсекается раньше (CURRENCY_IDS в ридере).
+const BULK_THRESHOLD = 1000;
+
+// Сортировка «новичок → профи». Убежище (уровень станции) и квесты (minLevel игрока) — разные
+// шкалы; сводим уровень станции к ПРИМЕРНОМУ игровому уровню, к которому его обычно строят, чтобы
+// оба источника легли на одну ось «когда впервые нужен». Числа — прикидка, легко подкрутить.
+const HIDEOUT_STAGE: Record<number, number> = { 1: 1, 2: 7, 3: 15, 4: 25, 5: 35 };
+const hideoutStage = (level: number): number => HIDEOUT_STAGE[level] ?? level * 8;
+
+/** «Когда впервые нужен» — минимум по источникам на общей оси игрового уровня (первично в сорте). */
+function earliestOf(ni: NeededItem): number {
+  let e = Infinity;
+  for (const q of ni.quests) e = Math.min(e, q.minLevel || 0);
+  for (const h of ni.hideout) e = Math.min(e, hideoutStage(h.level));
+  return Number.isFinite(e) ? e : 999;
+}
+/** «Важность» — скольким источникам нужен (частота = универсальная полезность; вторично в сорте). */
+const importanceOf = (ni: NeededItem): number => ni.quests.length + ni.hideout.length;
+
+// Методы сортировки списка. Прогрессия/важность/алфавит — статичны (от прогресса не зависят);
+// «осталось»/«дороже» зависят от собранного → порядок снимается СНАПШОТОМ на смену сорта, а не
+// вживую (иначе строки прыгали бы под курсором на +/−). Порядок в массиве = порядок в меню.
+type SortMode = 'progression' | 'remaining' | 'buycost' | 'importance' | 'alpha' | 'original';
+const SORT_OPTIONS: { key: SortMode; label: string }[] = [
+  { key: 'progression', label: 'Новичок → Профи' },
+  { key: 'remaining', label: 'Больше осталось' },
+  { key: 'buycost', label: 'Дороже сверху (₽)' },
+  { key: 'importance', label: 'По важности' },
+  { key: 'alpha', label: 'По алфавиту (А→Я)' },
+  { key: 'original', label: 'Исходный' },
+];
 
 /** FiR-маркер (найдено в рейде) — фрейм 36×36 в углу ячейки + иконка side-quests 22×22 (#BDA550). */
 function FirMark() {
@@ -104,7 +145,7 @@ const STAT_ACCENT: Record<string, { icon: string; num: string }> = {
 };
 
 /** Блок сводки: слева иконка (маска, перекраска в акцент) + название, справа число 28px (анимация). */
-function SummaryStat({ icon, label, value, accent }: { icon: string; label: string; value: number; accent: keyof typeof STAT_ACCENT }) {
+function SummaryStat({ icon, label, value, accent, sub }: { icon: string; label: string; value: number; accent: keyof typeof STAT_ACCENT; sub?: string }) {
   const a = STAT_ACCENT[accent];
   return (
     <div className="flex items-center gap-3 rounded-md border border-lines-hover bg-card-menu/40 p-3">
@@ -113,7 +154,10 @@ function SummaryStat({ icon, label, value, accent }: { icon: string; label: stri
         className={`h-6 w-6 shrink-0 ${a.icon} mask-contain mask-center mask-no-repeat`}
         style={{ maskImage: `url(${icon})`, WebkitMaskImage: `url(${icon})` }}
       />
-      <span className={`${MICRO} flex-1 leading-tight text-text-muted`}>{label}</span>
+      <span className="flex-1 leading-tight">
+        <span className={`${MICRO} block text-text-muted`}>{label}</span>
+        {sub && <span className="mt-0.5 block font-blender-medium text-type-micro tabular-nums text-text-secondary">{sub}</span>}
+      </span>
       <AnimatedNumber value={value} className={`font-blender-medium text-[1.75rem] leading-none ${a.num}`} />
     </div>
   );
@@ -188,6 +232,8 @@ interface SrcState {
   sub: string;
   /** normalizedName: торговец (квест) или станция (убежище) — для цвета/аватара/иконки чипа. */
   nn: string;
+  /** BSG id квеста (только kind='quest') — ссылка на карту квестов `/eft/questmap?quest=`. */
+  questId?: string;
   count: number;
   collected: number;
   fir: boolean;
@@ -214,12 +260,22 @@ interface ItemState {
 }
 
 export function NeededMergedClient({
-  data,
+  dataByMode,
   hideoutStations,
 }: {
-  data: NeededData;
+  dataByMode: Record<NeededMode, NeededData>;
   hideoutStations: HideoutStationInfo[];
 }) {
+  // Режим — из активного профиля ЧВК (usePlayerStore, PVE→pve, иначе regular). Стор персистится
+  // в localStorage и регидратируется ПОСЛЕ маунта: SSR и первый клиентский рендер дают дефолт
+  // (regular) → совпадают (нет hydration-mismatch), затем pve-профиль перещёлкивает набор. Тот же
+  // паттерн, что у прочих persist-сторов страницы (прогресс квестов/убежища).
+  const activeProfileId = usePlayerStore((s) => s.activeProfileId);
+  const profiles = usePlayerStore((s) => s.profiles);
+  const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0];
+  const mode: NeededMode = activeProfile?.mode === 'PVE' ? 'pve' : 'regular';
+  const data = dataByMode[mode];
+
   const questProgress = useQuestStore((s) => s.itemProgress);
   const completedQuests = useQuestStore((s) => s.completedQuests);
   const setItemCount = useQuestStore((s) => s.setItemCount);
@@ -233,6 +289,7 @@ export function NeededMergedClient({
   const clearHideoutProgress = useHideoutStore((s) => s.clearItemProgress);
   const ownedItems = useInventoryStore((s) => s.ownedItems);
   const setOwned = useInventoryStore((s) => s.setCount);
+  const bumpOwned = useInventoryStore((s) => s.bumpCount);
 
   const completed = useMemo(() => new Set(completedQuests), [completedQuests]);
 
@@ -243,12 +300,10 @@ export function NeededMergedClient({
   const [onlyHideout, setOnlyHideout] = useState(false);
   const [onlyQuests, setOnlyQuests] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  // Снап-порядок: замораживаем порядок id при загрузке, чтобы строки не прыгали под курсором
-  // при +/− (серверный порядок статичен, живой пересортировки нет).
-  const [snap] = useState<string[]>(() => [
-    ...data.items.map((i) => i.itemId),
-    ...data.groups.map((g) => `g:${g.key}`),
-  ]);
+  // Сортировка (дефолт — прогрессия) + открытость меню «Фильтры и сортировка».
+  const [sortMode, setSortMode] = useState<SortMode>('progression');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   /** Пересчёт состояния предмета из текущих сторов. */
   const stateOf = (ni: NeededItem): ItemState => {
@@ -277,6 +332,7 @@ export function NeededMergedClient({
         label: q.questName,
         sub: q.trader,
         nn: q.traderNn,
+        questId: q.questId,
         count: q.count,
         collected,
         fir: q.fir,
@@ -288,7 +344,8 @@ export function NeededMergedClient({
       });
     }
     for (const h of ni.hideout) {
-      if (h.level <= (hideoutLevels[h.station] ?? 0)) continue; // уровень уже построен
+      // Издание тоже «строит» модули (TUE → Круг сектантов): editionFloor поверх сохранённого уровня.
+      if (h.level <= Math.max(hideoutLevels[h.station] ?? 0, editionFloor(h.station, activeProfile?.edition))) continue;
       const key = hideoutItemKey(h.station, h.level, ni.itemId);
       const collected = Math.min(h.count, hideoutProgress[key] ?? 0);
       need += h.count;
@@ -360,30 +417,98 @@ export function NeededMergedClient({
   const byId = useMemo(() => new Map(data.items.map((i) => [i.itemId, i])), [data.items]);
   const groupById = useMemo(() => new Map(data.groups.map((g) => [g.key, g])), [data.groups]);
 
-  // Сводка.
+  // Состояние всех предметов — ОДИН пересчёт за рендер, мемо по слоям сторов. Раньше stateOf
+  // звался дважды (в summary + при построении visible в теле рендера), и visible пересчитывал
+  // все 397 состояний даже на тоглы open/поиск. Теперь и сводка, и visible, и сорт читают эту карту.
+  const statesById = useMemo(() => {
+    const m = new Map<string, ItemState>();
+    for (const ni of data.items) m.set(ni.itemId, stateOf(ni));
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.items, questProgress, hideoutProgress, hideoutLevels, ownedItems, completed, activeProfile?.edition]);
+
+  // Порядок отображения по выбранному методу. «original» — как отдал ридер. Остальные сортируют
+  // копию базового списка. Прогресс-зависимые метрики (remaining/buycost) берутся из statesById
+  // СНАПШОТОМ: statesById намеренно вне deps → на +/− память не пересобирается, строки не прыгают;
+  // пересорт только при смене sortMode или данных (pve). Статичные метрики — из самого предмета.
+  const orderedIds = useMemo(() => {
+    const base = [...data.items.map((i) => i.itemId), ...data.groups.map((g) => `g:${g.key}`)];
+    if (sortMode === 'original') return base;
+
+    const metric = (id: string) => {
+      if (id.startsWith('g:')) {
+        const g = groupById.get(id.slice(2));
+        return { earliest: g?.minLevel ?? 999, importance: 1, total: g?.count ?? 0, remaining: g?.count ?? 0, buycost: 0, name: g?.questName ?? '' };
+      }
+      const ni = byId.get(id);
+      const st = statesById.get(id);
+      return {
+        earliest: ni ? earliestOf(ni) : 999,
+        importance: ni ? importanceOf(ni) : 0,
+        total: ni?.neededTotal ?? 0,
+        remaining: st ? Math.max(0, st.need - st.have) : 0,
+        buycost: st && ni?.buyPrice ? st.buyTotal * ni.buyPrice : 0,
+        name: ni?.itemName ?? '',
+      };
+    };
+
+    return [...base].sort((a, b) => {
+      const ka = metric(a);
+      const kb = metric(b);
+      switch (sortMode) {
+        case 'remaining': return kb.remaining - ka.remaining || ka.name.localeCompare(kb.name);
+        case 'buycost': return kb.buycost - ka.buycost || ka.name.localeCompare(kb.name);
+        case 'importance': return kb.importance - ka.importance || ka.earliest - kb.earliest || ka.name.localeCompare(kb.name);
+        case 'alpha': return ka.name.localeCompare(kb.name);
+        default: /* progression */ return ka.earliest - kb.earliest || kb.importance - ka.importance || kb.total - ka.total || ka.name.localeCompare(kb.name);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- statesById снимается снапшотом на смену sortMode/данных (не live)
+  }, [sortMode, data.items, data.groups, byId, groupById]);
+
+  // Меню «Фильтры и сортировка»: закрытие по клику-вне и Esc.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as globalThis.Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
+    window.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  // Сводка — из готовой карты состояний.
   const summary = useMemo(() => {
     let need = 0;
     let have = 0;
     let buy = 0;
+    let buyRub = 0;
     let items = 0;
     for (const ni of data.items) {
-      const st = stateOf(ni);
-      if (st.need === 0) continue;
+      const st = statesById.get(ni.itemId);
+      if (!st || st.need === 0) continue;
       items++;
-      need += st.need;
-      have += st.have;
-      buy += st.buyTotal;
+      // Оптовые (4500 патронов и т.п.) весят в итогах 1 позицию, а не N юнитов: need→1,
+      // have→готово?1:0, buy→надо докупать?1:0. ₽ докупки остаётся РЕАЛЬНЫМ (деньги — деньги).
+      const bulk = ni.neededTotal >= BULK_THRESHOLD;
+      need += bulk ? 1 : st.need;
+      have += bulk ? (st.have >= st.need ? 1 : 0) : st.have;
+      buy += bulk ? (st.buyTotal > 0 ? 1 : 0) : st.buyTotal;
+      if (ni.buyPrice) buyRub += st.buyTotal * ni.buyPrice;
     }
-    return { need, have, buy, items, remaining: Math.max(0, need - have) };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.items, questProgress, hideoutProgress, hideoutLevels, ownedItems, completed]);
+    return { need, have, buy, buyRub, items, remaining: Math.max(0, need - have) };
+  }, [data.items, statesById]);
 
   const q = search.trim().toLowerCase();
 
   // Видимые узлы в снап-порядке (предметы + группы), с фильтрами.
   type Node = { id: string; item?: NeededItem; group?: (typeof data.groups)[number]; st?: ItemState };
   const visible: Node[] = [];
-  for (const id of snap) {
+  for (const id of orderedIds) {
     if (id.startsWith('g:')) {
       const g = groupById.get(id.slice(2));
       if (!g) continue;
@@ -396,8 +521,8 @@ export function NeededMergedClient({
     } else {
       const ni = byId.get(id);
       if (!ni) continue;
-      const st = stateOf(ni);
-      if (st.need === 0) continue;
+      const st = statesById.get(ni.itemId);
+      if (!st || st.need === 0) continue;
       if (firOnly && st.needFir === 0) continue;
       if (onlyHideout && !st.sources.some((s) => s.kind === 'hideout')) continue;
       if (onlyQuests && !st.sources.some((s) => s.kind === 'quest')) continue;
@@ -417,7 +542,7 @@ export function NeededMergedClient({
         <SummaryStat icon="/icons/eft/03-items/loot-tier.svg" label="Всего предметов" value={summary.items} accent="default" />
         <SummaryStat icon="/icons/eft/04-progression/seasons/battlepass-wanted-item-icon.svg" label="Собрано" value={summary.have} accent="success" />
         <SummaryStat icon="/icons/eft/03-items/price-per-slot.svg" label="Осталось" value={summary.remaining} accent="primary" />
-        <SummaryStat icon="/icons/eft/02-quests/quest-modify.svg" label="Докупить" value={summary.buy} accent="amber" />
+        <SummaryStat icon="/icons/eft/02-quests/quest-modify.svg" label="Докупить" value={summary.buy} accent="amber" sub={summary.buyRub > 0 ? `~₽ ${formatCompactRub(summary.buyRub)}` : undefined} />
       </div>
       <SummaryProgress
         label="Общий прогресс"
@@ -434,9 +559,9 @@ export function NeededMergedClient({
         }}
       />
 
-      {/* ── Фильтры: поиск на полширины (скруглён) + gap 28px + кнопки равномерно (gap 8px) ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-7">
-        <div className="relative w-full sm:w-1/2">
+      {/* ── Поиск + фильтры-кнопки + дропдаун сортировки (одна строка) ── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-2">
+        <div className="relative w-full sm:min-w-40 sm:flex-1">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" aria-hidden />
           <input
             value={search}
@@ -445,19 +570,57 @@ export function NeededMergedClient({
             className="h-9 w-full rounded-sm border border-lines-hover bg-(--color-base) pl-10 pr-4 font-blender-book text-type-caption text-text-primary placeholder:text-text-muted focus:border-(--primary) focus:outline-none"
           />
         </div>
-        <div className="flex flex-1 flex-wrap items-center gap-2">
-          <FilterChip on={hideDone} onClick={() => setHideDone((v) => !v)} lucide={<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}>
-            Скрыть готовые
-          </FilterChip>
-          <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)} icon="/icons/eft/02-quests/side-quests.svg">
-            Найдено в рейде
-          </FilterChip>
-          <FilterChip on={onlyHideout} onClick={() => setOnlyHideout((v) => !v)} icon="/icons/eft/04-progression/hideout-modules.svg">
-            Строю Убежище
-          </FilterChip>
-          <FilterChip on={onlyQuests} onClick={() => setOnlyQuests((v) => !v)} icon="/icons/eft/quests-icon.svg">
-            По заданиям
-          </FilterChip>
+        <FilterChip on={hideDone} onClick={() => setHideDone((v) => !v)} lucide={<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}>
+          Скрыть готовые
+        </FilterChip>
+        <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)} icon="/icons/eft/02-quests/side-quests.svg">
+          Найдено в рейде
+        </FilterChip>
+        <FilterChip on={onlyHideout} onClick={() => setOnlyHideout((v) => !v)} icon="/icons/eft/04-progression/hideout-modules.svg">
+          Строю Убежище
+        </FilterChip>
+        <FilterChip on={onlyQuests} onClick={() => setOnlyQuests((v) => !v)} icon="/icons/eft/quests-icon.svg">
+          По заданиям
+        </FilterChip>
+
+        {/* Дропдаун — ТОЛЬКО сортировка (фильтры остаются кнопками) */}
+        <div ref={menuRef} className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            className={`flex h-9 items-center gap-2 rounded-sm border px-3 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
+              menuOpen ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-muted hover:text-text-secondary'
+            }`}
+          >
+            <ArrowDownWideNarrow className="h-4 w-4 shrink-0" aria-hidden />
+            Сортировка
+            <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${menuOpen ? 'rotate-180' : ''}`} aria-hidden />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-64 rounded-md border border-lines-hover bg-(--color-base) p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+              {SORT_OPTIONS.map((o) => {
+                const active = sortMode === o.key;
+                return (
+                  <button
+                    key={o.key}
+                    type="button"
+                    onClick={() => {
+                      setSortMode(o.key);
+                      setMenuOpen(false);
+                    }}
+                    className={`flex h-8 w-full items-center justify-between rounded-sm px-2.5 font-blender-medium text-type-caption transition-colors ${
+                      active ? 'bg-(--primary)/15 text-(--primary)' : 'text-text-secondary hover:bg-lines-hover/40'
+                    }`}
+                  >
+                    {o.label}
+                    {active && <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -488,6 +651,7 @@ export function NeededMergedClient({
                     onSetTotal={(v) => setTotal(n.st!.sources, v)}
                     stash={n.st!.stash}
                     onStash={(v) => setOwned(n.item!.itemId, v)}
+                    onStashDelta={(d) => bumpOwned(n.item!.itemId, d, STASH_MAX)}
                   />
                 ),
               )}
@@ -499,6 +663,7 @@ export function NeededMergedClient({
   );
 }
 
+/** Кнопка-фильтр списка (тоггл). Иконка-маска ИЛИ lucide-нода + подпись; активна — рамка/фон primary. */
 function FilterChip({
   on,
   onClick,
@@ -517,7 +682,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       aria-pressed={on}
-      className={`flex h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm border px-2 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
+      className={`flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm border px-3 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
         on ? 'border-(--primary) bg-(--primary)/15 text-(--primary)' : 'border-lines-hover text-text-muted hover:text-text-secondary'
       }`}
     >
@@ -565,7 +730,17 @@ function SourceChip({ s }: { s: SrcState }) {
       )}
       {/* Имя + мета */}
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate font-blender-medium text-type-caption text-text-primary">{s.label}</span>
+        {isQuest && s.questId ? (
+          <Link
+            href={`/eft/questmap?quest=${s.questId}`}
+            title="Открыть на карте квестов"
+            className="truncate font-blender-medium text-type-caption text-text-primary transition-colors hover:text-(--primary)"
+          >
+            {s.label}
+          </Link>
+        ) : (
+          <span className="truncate font-blender-medium text-type-caption text-text-primary">{s.label}</span>
+        )}
         <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-type-micro uppercase tracking-wide text-text-muted">
           {isQuest ? (
             <>
@@ -619,6 +794,7 @@ function ItemRow({
   onSetTotal,
   stash,
   onStash,
+  onStashDelta,
 }: {
   item: NeededItem;
   st: ItemState;
@@ -628,6 +804,7 @@ function ItemRow({
   onSetTotal: (total: number) => void;
   stash: number;
   onStash: (v: number) => void;
+  onStashDelta: (delta: number) => void;
 }) {
   const done = st.have >= st.need;
   const bg = getTarkovBackgroundColor(item.backgroundColor);
@@ -705,11 +882,14 @@ function ItemRow({
             <div className="mt-1 flex items-center justify-between gap-3 border-t border-lines-hover pt-2">
               <span className="flex items-center gap-2 text-type-caption">
                 <span className="text-text-muted">в схроне</span>
-                <QtyControl value={stash} max={9999} onChange={onStash} size="sm" />
+                <QtyControl value={stash} max={STASH_MAX} onChange={onStash} onDelta={onStashDelta} size="sm" />
               </span>
               <span className="font-blender-medium text-type-caption">
                 <span className="text-text-muted">докупить </span>
                 <span className={st.buyTotal > 0 ? 'text-tactical-amber' : 'text-nvg-green'}>{st.buyTotal}</span>
+                {st.buyTotal > 0 && item.buyPrice != null && (
+                  <span className="text-text-muted"> · ~{formatRub(st.buyTotal * item.buyPrice)}</span>
+                )}
               </span>
             </div>
           )}

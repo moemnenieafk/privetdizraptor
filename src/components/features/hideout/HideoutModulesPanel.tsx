@@ -1,12 +1,15 @@
 'use client';
 
 // Плотная сетка модулей убежища (для объединённого трекера «Важные предметы»).
-// Плитка модуля = иконка (28px) + уровень «0N» (22px) + имя; горизонтальная заливка
-// level/maxLevel. Логика как у TrackCell: ЛКМ — уровень выше, ПКМ — ниже, без +/−.
-// Пишет useHideoutStore.levels (синхрон со страницей Убежища). Свёрнута по умолчанию.
+// Плитка = иконка (28px) + уровень «0N» (22px) + имя; горизонтальная заливка level/maxLevel.
+// ИНДИКАТОР уровней (read-only) + ССЫЛКА на постройку: клик → /modules?module=<nn>.
+// Уровни ставятся на странице модулей; здесь только показ (учитывая editionFloor). Свёрнута по умолчанию.
 import { useState } from 'react';
+import Link from 'next/link';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { editionFloor } from '@/lib/hideout-edition';
 import type { HideoutStationInfo } from './HideoutLevelsPanel';
 
 const ICON_BASE = '/icons/eft/04-progression/hideout-modules';
@@ -21,23 +24,18 @@ const ICON_OVERRIDE: Record<string, string> = {
 };
 export const moduleIcon = (nn: string) => `${ICON_BASE}/${ICON_OVERRIDE[nn] ?? nn.replace(/-/g, '_')}.svg`;
 
-function ModuleTile({ station }: { station: HideoutStationInfo }) {
-  const level = useHideoutStore((s) => s.levels[station.normalizedName] ?? 0);
-  const setLevel = useHideoutStore((s) => s.setLevel);
+function ModuleTile({ station, edition }: { station: HideoutStationInfo; edition?: string }) {
+  const raw = useHideoutStore((s) => s.levels[station.normalizedName] ?? 0);
+  const level = Math.max(raw, editionFloor(station.normalizedName, edition)); // индикатор с учётом издания
   const max = station.maxLevel;
   const pct = max > 0 ? Math.round((level / max) * 100) : 0;
   const done = level >= max;
   const active = level > 0;
 
   return (
-    <button
-      type="button"
-      onClick={() => level < max && setLevel(station.normalizedName, level + 1)}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        if (level > 0) setLevel(station.normalizedName, level - 1);
-      }}
-      title={`${station.name} — ур. ${level}/${max} · ЛКМ выше · ПКМ ниже`}
+    <Link
+      href={`/eft/progress/hideout/modules?module=${station.normalizedName}`}
+      title={`${station.name} — ур. ${level}/${max} · открыть постройку`}
       className="group relative flex select-none flex-col items-center gap-1 overflow-hidden rounded-xs border border-lines-hover bg-(--color-base) p-2 transition-[filter] hover:brightness-110"
     >
       {/* Горизонтальная заливка level/maxLevel */}
@@ -67,12 +65,13 @@ function ModuleTile({ station }: { station: HideoutStationInfo }) {
       <span className="relative line-clamp-1 w-full text-center font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary">
         {station.name}
       </span>
-    </button>
+    </Link>
   );
 }
 
 export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo[] }) {
   const reset = useHideoutStore((s) => s.reset);
+  const edition = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId)?.edition);
   const [open, setOpen] = useState(false);
 
   return (
@@ -86,8 +85,7 @@ export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo
         >
           <span className="shrink-0 font-blender-medium text-sm uppercase tracking-widest text-text-primary">Убежище ЧВК</span>
           <span className="hidden min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-muted md:block">
-            Клик по модулю — <span className="text-(--primary)">уровень выше</span>, ПКМ —{' '}
-            <span className="text-text-secondary">ниже</span>. Без кнопок +/−.
+            Индикатор уровней. Клик по модулю — <span className="text-(--primary)">открыть его постройку</span>.
           </span>
         </button>
         <button
@@ -113,7 +111,7 @@ export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo
         <div className="p-3 pt-0">
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 xl:grid-cols-6">
             {stations.map((s) => (
-              <ModuleTile key={s.normalizedName} station={s} />
+              <ModuleTile key={s.normalizedName} station={s} edition={edition} />
             ))}
           </div>
         </div>

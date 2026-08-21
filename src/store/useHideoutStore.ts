@@ -15,6 +15,8 @@ interface HideoutStore {
   /** Функциональный ±delta (читает живое значение стора, клампит [0, max]) — против гонок быстрых кликов. */
   bumpItemProgress: (key: string, delta: number, max: number) => void;
   clearLevelProgress: (station: string, level: number) => void;
+  /** Полный сброс ОДНОЙ станции: уровень→0 + все её собранные материалы (по всем уровням). */
+  resetStation: (station: string) => void;
   /** Обнулить ВЕСЬ прогресс сбора материалов (не трогает построенные уровни). */
   clearItemProgress: () => void;
   reset: () => void;
@@ -36,6 +38,17 @@ export const useHideoutStore = create<HideoutStore>()(
         set((state) => {
           const cur = state.itemProgress[key] ?? 0;
           return { itemProgress: { ...state.itemProgress, [key]: Math.max(0, Math.min(max, cur + delta)) } };
+        }),
+      resetStation: (station) =>
+        set((state) => {
+          const prefix = `${station}|`;
+          const nextProgress: Record<string, number> = {};
+          for (const [k, v] of Object.entries(state.itemProgress)) {
+            if (!k.startsWith(prefix)) nextProgress[k] = v;
+          }
+          const nextLevels = { ...state.levels };
+          delete nextLevels[station];
+          return { levels: nextLevels, itemProgress: nextProgress };
         }),
       clearItemProgress: () => set({ itemProgress: {} }),
       clearLevelProgress: (station, level) =>

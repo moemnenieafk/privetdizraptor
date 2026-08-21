@@ -17,9 +17,15 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus, ArrowRight, Hammer, Check, Maximize2 } from 'lucide-react';
 import { useHideoutStore, hideoutItemKey } from '@/store/useHideoutStore';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { editionFloor } from '@/lib/hideout-edition';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { FillMedia } from '@/components/ui/FillMedia';
+import { TrackCell } from '@/components/ui/kit';
 import { itemIconUrl } from '@/lib/item-icon';
-import type { HideoutNeed, HideoutStationInfo } from '@/db/hideout';
+import { traderImg } from '@/lib/trader-utils';
+import { SKILL_ICONS, SKILL_RU } from '@/components/features/adaptive/skill-icons';
+import type { HideoutNeed, HideoutStationInfo, HideoutUnlockMap } from '@/db/hideout';
 import { ResetControl } from '@/components/features/tracking/ResetControl';
 
 const ICON_OVERRIDES: Record<string, string> = {
@@ -31,6 +37,20 @@ export function stationIconClass(normalizedName: string): string {
   const file = ICON_OVERRIDES[normalizedName] ?? normalizedName.replace(/-/g, '_');
   return `icon-eft-${file}`;
 }
+
+// Порядок постройки модулей «как в игре» (ранняя прогрессия → поздняя). Явный список —
+// правится одной строкой; станции вне списка уезжают в конец. Порядок задал V4DYA.
+const BUILD_ORDER = [
+  'security', 'illumination', 'lavatory', 'stash', 'generator',
+  'water-collector', 'heating', 'vents', 'workbench', 'nutrition-unit',
+  'rest-space', 'medstation', 'intelligence-center', 'shooting-range', 'library',
+  'scav-case', 'bitcoin-farm', 'solar-power', 'air-filtering-unit', 'booze-generator',
+  'weapon-rack', 'gear-rack', 'hall-of-fame', 'gym', 'defective-wall', 'cultist-circle',
+];
+const buildRank = (nn: string) => {
+  const i = BUILD_ORDER.indexOf(nn);
+  return i === -1 ? BUILD_ORDER.length : i;
+};
 
 // Метка-заголовок блока с линией (rule-micro-labels).
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -45,15 +65,25 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export function HideoutBuildTracker({
   stations,
   hideoutNeeds,
+  unlockMap,
+  initialModule,
   wide = false,
   showModulesCta = true,
+  moduleTiles = false,
 }: {
   stations: HideoutStationInfo[];
   hideoutNeeds: HideoutNeed[];
+  /** Требования разблокировки уровня (станции/торговцы/навыки) по ключу `${nn}|${level}`. */
+  unlockMap?: HideoutUnlockMap;
+  /** Дип-линк из «Убежище ЧВК» (`?module=`): предвыбрать этот модуль (normalizedName). */
+  initialModule?: string;
   /** Страница раздела: левая колонка 348px, gap 28px. false — компакт вкладки «Трекинг». */
   wide?: boolean;
   /** CTA «Модули» в шапке (на самой странице modules — не нужна). */
   showModulesCta?: boolean;
+  /** Дизайн /modules: слева ПЛИТКИ модулей (стиль «Убежище ЧВК», клик = выбрать),
+   *  справа — сборка БЕЗ обводки. false — список-строки + карточка с рамкой (вкладка «Трекинг»). */
+  moduleTiles?: boolean;
 }) {
   // mounted-гард: persist-стор только на клиенте (иначе hydration mismatch).
   const [mounted, setMounted] = useState(false);
@@ -63,15 +93,30 @@ export function HideoutBuildTracker({
   const itemProgress = useHideoutStore((s) => s.itemProgress);
   const setLevel = useHideoutStore((s) => s.setLevel);
   const setItemProgress = useHideoutStore((s) => s.setItemProgress);
+  const bumpItemProgress = useHideoutStore((s) => s.bumpItemProgress);
   const clearLevelProgress = useHideoutStore((s) => s.clearLevelProgress);
   const resetHideout = useHideoutStore((s) => s.reset);
+  const resetStation = useHideoutStore((s) => s.resetStation);
   const [selected, setSelected] = useState<string | null>(null);
+  const [hammering, setHammering] = useState(false);
 
-  const built = (station: string) => (mounted ? (levels[station] ?? 0) : 0);
+  // Издание активного профиля — для авто-построенных модулей (TUE → Круг сектантов). Читаем,
+  // но НЕ пишем в стор: накладываем на уровень через editionFloor (см. built ниже).
+  const edition = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId)?.edition);
 
-  // Предметы по (станция, уровень): из sources агрегата hideoutNeeds (+fir, +slug).
+  // Порядок модулей: /modules — по постройке «как в игре»; иначе — как пришли (алфавит из ридера).
+  const orderedStations = useMemo(
+    () => (moduleTiles ? [...stations].sort((a, b) => buildRank(a.normalizedName) - buildRank(b.normalizedName)) : stations),
+    [stations, moduleTiles],
+  );
+
+  // Построенный уровень: max(сохранённый, гарантированный изданием). До маунта — 0 (hydration).
+  const built = (station: string) =>
+    mounted ? Math.max(levels[station] ?? 0, editionFloor(station, edition)) : 0;
+
+  // Предметы по (станция, уровень): из sources агрегата hideoutNeeds (+fir, +slug, +bgColor).
   const itemsByStationLevel = useMemo(() => {
-    const map = new Map<string, { itemId: string; name: string; count: number; fir?: boolean; slug?: string }[]>();
+    const map = new Map<string, { itemId: string; name: string; count: number; fir?: boolean; slug?: string; backgroundColor?: string }[]>();
     for (const n of hideoutNeeds) {
       for (const s of n.sources) {
         const key = `${s.station}|${s.level}`;
@@ -82,6 +127,7 @@ export function HideoutBuildTracker({
           count: s.count,
           ...(s.fir ? { fir: true } : {}),
           ...(n.slug ? { slug: n.slug } : {}),
+          ...(n.backgroundColor ? { backgroundColor: n.backgroundColor } : {}),
         });
         map.set(key, arr);
       }
@@ -90,11 +136,18 @@ export function HideoutBuildTracker({
     return map;
   }, [hideoutNeeds]);
 
-  // Дефолтный выбор после маунта — первая недостроенная станция.
+  // Дефолтный выбор после маунта: /modules — ПЕРВЫЙ модуль списка (всегда что-то выбрано,
+  // «выберите модуль» не мелькает); вкладка «Трекинг» — первая недостроенная (как было).
   useEffect(() => {
     if (!mounted || selected) return;
-    const firstUnbuilt = stations.find((s) => built(s.normalizedName) < s.maxLevel);
-    setSelected((firstUnbuilt ?? stations[0])?.normalizedName ?? null);
+    if (moduleTiles) {
+      // `initialModule` (из `?module=` «Убежище ЧВК») имеет приоритет, если валиден; иначе первый.
+      const fromParam = initialModule && orderedStations.some((s) => s.normalizedName === initialModule) ? initialModule : null;
+      setSelected(fromParam ?? orderedStations[0]?.normalizedName ?? null);
+    } else {
+      const firstUnbuilt = stations.find((s) => built(s.normalizedName) < s.maxLevel);
+      setSelected((firstUnbuilt ?? stations[0])?.normalizedName ?? null);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
@@ -106,11 +159,21 @@ export function HideoutBuildTracker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stations, levels, mounted]);
 
-  const sel = stations.find((s) => s.normalizedName === selected) ?? null;
+  const sel =
+    orderedStations.find((s) => s.normalizedName === selected) ??
+    (moduleTiles ? (orderedStations[0] ?? null) : null);
   const selLvl = sel ? built(sel.normalizedName) : 0;
   const selIsMax = sel ? selLvl >= sel.maxLevel : false;
+  // Модуль ПОЛНОСТЬЮ обеспечен изданием (напр. Схрон L4 на EOD/TUE, Круг на TUE) → сбрасывать
+  // нечего: built() всё равно вернёт editionFloor. Мини-сброс для такого модуля прячем.
+  const selLockedByEdition = sel ? editionFloor(sel.normalizedName, edition) >= sel.maxLevel : false;
   const nextLevel = selLvl + 1;
   const selItems = sel && !selIsMax ? (itemsByStationLevel.get(`${sel.normalizedName}|${nextLevel}`) ?? []) : [];
+
+  // Требования разблокировки следующего уровня: станции-пререквизиты + торговцы + навыки.
+  // Станции сверяем с built() (гейт «Построить»); торговцев/навыки — только показ (их нет в сторе).
+  const selUnlock = sel && !selIsMax ? unlockMap?.[`${sel.normalizedName}|${nextLevel}`] : undefined;
+  const stationReqsMet = selUnlock ? selUnlock.stations.every((s) => built(s.nn) >= s.level) : true;
 
   // «Бак» выбранного уровня: собрано/нужно по каждому предмету + общий прогресс.
   const found = (itemId: string) =>
@@ -122,56 +185,124 @@ export function HideoutBuildTracker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selItems, itemProgress, mounted, selected, nextLevel]);
 
+  // Сегментный бак (/modules): деление = категория (предмет) закрыта целиком (got ≥ нужно).
+  const matSegments = selItems.map((it) => Math.min(found(it.itemId), it.count) >= it.count);
+
+  // Готовность постройки: материалы собраны И станции-пререквизиты построены.
+  const materialsReady = tank.full || tank.need === 0;
+  const canBuildSel = materialsReady && stationReqsMet;
+
   const buildLevel = () => {
-    if (!sel || selIsMax) return;
+    if (!sel || selIsMax || !stationReqsMet) return; // не строим при невыполненных станциях-пререквизитах
     setLevel(sel.normalizedName, nextLevel);
     clearLevelProgress(sel.normalizedName, nextLevel); // материалы «потрачены»
   };
+  // Постройка с анимацией молотка (кнопка в шапке /modules): проиграть удар → построить.
+  const triggerBuild = () => {
+    setHammering(true);
+    window.setTimeout(() => setHammering(false), 450);
+    buildLevel();
+  };
+
+  // Глобальный «Сброс убежища» — один элемент, используется в шапке (Трекинг) или под плитками (/modules).
+  const resetHideoutControl = (
+    <ResetControl
+      buttonLabel="СБРОС УБЕЖИЩА"
+      buttonTitle="Сбросить построенные уровни и материалы"
+      modalTitle="Подтверждение сброса убежища"
+      onConfirm={resetHideout}
+    >
+      <p>Вы действительно хотите сбросить прогресс убежища?</p>
+      <p>
+        Все станции вернутся к <span className="text-zinc-100">уровню 0</span>, счётчики
+        собранных материалов обнулятся. Задания, предметы и достижения не затрагиваются.
+      </p>
+    </ResetControl>
+  );
 
   return (
     <div className="flex flex-col">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
-          Построено: <span className="text-success">{totals.builtLevels}</span>
-          <span className="text-text-muted"> / {totals.totalLevels} уровней</span>
-        </span>
-        <div className="flex items-center gap-2">
-          <ResetControl
-            buttonLabel="СБРОС УБЕЖИЩА"
-            buttonTitle="Сбросить построенные уровни и материалы"
-            modalTitle="Подтверждение сброса убежища"
-            onConfirm={resetHideout}
-          >
-            <p>Вы действительно хотите сбросить прогресс убежища?</p>
-            <p>
-              Все станции вернутся к <span className="text-zinc-100">уровню 0</span>, счётчики
-              собранных материалов обнулятся. Задания, предметы и достижения не затрагиваются.
-            </p>
-          </ResetControl>
-          {showModulesCta && (
-            <Link
-              href="/eft/progress/hideout/modules"
-              className="inline-flex h-7 items-center gap-1.5 rounded border border-lines-hover px-2.5 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
-            >
-              Модули
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          )}
+      {!moduleTiles && (
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
+            Построено: <span className="text-success">{totals.builtLevels}</span>
+            <span className="text-text-muted"> / {totals.totalLevels} уровней</span>
+          </span>
+          <div className="flex items-center gap-2">
+            {resetHideoutControl}
+            {showModulesCta && (
+              <Link
+                href="/eft/progress/hideout/modules"
+                className="inline-flex h-7 items-center gap-1.5 rounded border border-lines-hover px-2.5 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary)"
+              >
+                Модули
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Две колонки: модули | бак материалов (wide: 348px + gap 28px) ── */}
-      <div className={`grid grid-cols-1 ${wide ? 'gap-7 lg:grid-cols-[348px_1fr]' : 'gap-4 lg:grid-cols-[272px_1fr]'}`}>
+      <div className={`grid grid-cols-1 ${wide ? (moduleTiles ? 'gap-7 lg:grid-cols-[420px_1fr]' : 'gap-7 lg:grid-cols-[348px_1fr]') : 'gap-4 lg:grid-cols-[272px_1fr]'}`}>
         {/* СЛЕВА: выбираемый модуль. Высота = высоте правой панели (absolute-заполнение
             grid-ячейки на lg), список скроллится внутри почти незаметным скроллбаром. */}
         <div className="flex flex-col">
-          <SectionLabel>Модули · {stations.length}</SectionLabel>
+          {!moduleTiles && <SectionLabel>Модули · {stations.length}</SectionLabel>}
           <div className="relative flex-1 lg:min-h-96">
-          <div className="grid grid-cols-2 gap-1.5 lg:absolute lg:inset-0 lg:flex lg:flex-col lg:overflow-y-auto lg:pr-1 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--color-lines-hover)_55%,transparent)_transparent]">
-            {stations.map((s) => {
+          <div
+            className={
+              moduleTiles
+                ? 'grid grid-cols-3 gap-1.5 content-start'
+                : 'grid grid-cols-2 gap-1.5 lg:absolute lg:inset-0 lg:flex lg:flex-col lg:overflow-y-auto lg:pr-1 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--color-lines-hover)_55%,transparent)_transparent]'
+            }
+          >
+            {orderedStations.map((s) => {
               const lvl = built(s.normalizedName);
               const isMax = lvl >= s.maxLevel;
               const isSel = selected === s.normalizedName;
+              const pct = s.maxLevel > 0 ? Math.round((lvl / s.maxLevel) * 100) : 0;
+
+              // Плитка-выбор (стиль «Убежище ЧВК»): иконка + уровень «0N» + имя + гориз. заливка.
+              if (moduleTiles) {
+                return (
+                  <button
+                    key={s.normalizedName}
+                    type="button"
+                    onClick={() => setSelected(s.normalizedName)}
+                    title={`${s.name} — ур. ${lvl}/${s.maxLevel}`}
+                    className={`group relative flex min-h-16 select-none flex-col items-center justify-center gap-1 overflow-hidden rounded-xs border p-2 transition-all ${
+                      isSel
+                        ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]'
+                        : 'border-lines-hover bg-(--color-base) hover:brightness-110'
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      className={`absolute inset-y-0 left-0 transition-[width] duration-300 ${isMax ? 'bg-success/25' : 'bg-(--primary)/20'}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                    <span className="relative flex items-center gap-2">
+                      <span
+                        className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(s.normalizedName)} ${
+                          isMax ? 'bg-success' : lvl > 0 ? 'bg-(--primary)' : 'bg-text-muted'
+                        }`}
+                      />
+                      <span
+                        className={`font-blender-medium text-[22px] leading-none tabular-nums ${
+                          isMax ? 'text-success' : lvl > 0 ? 'text-(--primary)' : 'text-text-muted'
+                        }`}
+                      >
+                        {String(lvl).padStart(2, '0')}
+                      </span>
+                    </span>
+                    <span className={`relative line-clamp-1 w-full text-center font-blender-medium text-type-micro uppercase tracking-wide ${isSel ? 'text-(--primary)' : 'text-text-secondary'}`}>
+                      {s.name}
+                    </span>
+                  </button>
+                );
+              }
+
               return (
                 <button
                   key={s.normalizedName}
@@ -207,50 +338,115 @@ export function HideoutBuildTracker({
             })}
           </div>
           </div>
+          {moduleTiles && <div className="mt-3 flex justify-start">{resetHideoutControl}</div>}
         </div>
 
         {/* СПРАВА: бак материалов выбранной станции */}
         <div className="min-w-0">
-          <SectionLabel>Стройка</SectionLabel>
+          {!moduleTiles && <SectionLabel>Стройка</SectionLabel>}
           {sel ? (
-            <div className="rounded-lg border border-lines-hover bg-(--color-base) p-4">
-              {/* Шапка станции: имя + степпер уровня */}
-              <div className="mb-4 flex flex-wrap items-center gap-3 border-b border-lines-hover pb-3">
-                <span className={`h-8 w-8 shrink-0 icon-mask ${stationIconClass(sel.normalizedName)} ${selIsMax ? 'bg-success' : 'bg-text-primary'}`} />
-                <span className="font-blender-medium text-base uppercase tracking-widest text-text-primary">
-                  {sel.name}
-                </span>
-                <Link
-                  href={`/eft/progress/hideout/modules/${sel.normalizedName}`}
-                  title="Страница модуля"
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-lines-hover text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
-                >
-                  <Maximize2 className="h-3.5 w-3.5" />
-                </Link>
-                <div className="ml-auto flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    aria-label="Понизить уровень"
-                    onClick={() => setLevel(sel.normalizedName, selLvl - 1)}
-                    disabled={selLvl <= 0}
-                    className="flex h-7 w-7 items-center justify-center rounded border border-lines-hover text-text-muted transition-colors hover:border-text-secondary hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </button>
-                  <span className={`w-14 text-center font-blender-medium text-sm ${selIsMax ? 'text-success' : 'text-text-primary'}`}>
-                    {selIsMax ? 'МАКС' : `${selLvl} / ${sel.maxLevel}`}
+            <div className={moduleTiles ? '' : 'rounded-lg border border-lines-hover bg-(--color-base) p-4'}>
+              {/* Шапка станции */}
+              {moduleTiles ? (
+                // /modules: 56-иконка + имя + уровень-индикатор «0N» + мини-сброс модуля + «Построить».
+                <div className="mb-3 flex items-center gap-3">
+                  <span className={`h-14 w-14 shrink-0 icon-mask ${stationIconClass(sel.normalizedName)} ${selIsMax ? 'bg-success' : 'bg-text-primary'}`} />
+                  <span className="font-blender-medium text-base uppercase tracking-widest text-text-primary">
+                    {sel.name}
                   </span>
-                  <button
-                    type="button"
-                    aria-label="Повысить уровень"
-                    onClick={() => setLevel(sel.normalizedName, Math.min(sel.maxLevel, selLvl + 1))}
-                    disabled={selIsMax}
-                    className="flex h-7 w-7 items-center justify-center rounded border border-lines-hover text-text-muted transition-colors hover:border-success hover:text-success disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </button>
+                  <span className={`font-blender-medium text-2xl leading-none tabular-nums ${selIsMax ? 'text-success' : 'text-(--primary)'}`}>
+                    {String(selLvl).padStart(2, '0')}
+                  </span>
+                  {!selLockedByEdition && (
+                    <ResetControl
+                      buttonLabel=""
+                      buttonTitle={`Сбросить модуль «${sel.name}»`}
+                      modalTitle="Сброс модуля"
+                      onConfirm={() => resetStation(sel.normalizedName)}
+                      buttonClassName="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-lines-hover text-text-muted transition-colors hover:border-danger hover:text-danger"
+                    >
+                      <p>Сбросить модуль <span className="text-zinc-100">«{sel.name}»</span>?</p>
+                      <p>
+                        Уровень станции вернётся к <span className="text-zinc-100">0</span>, собранные для
+                        неё материалы обнулятся. Остальное убежище не затрагивается.
+                      </p>
+                    </ResetControl>
+                  )}
+                  {!selIsMax && (
+                    <button
+                      type="button"
+                      onClick={triggerBuild}
+                      disabled={!canBuildSel}
+                      title={
+                        !stationReqsMet
+                          ? 'Сначала постройте станции-пререквизиты'
+                          : materialsReady
+                            ? `Построить уровень ${nextLevel}`
+                            : 'Сначала соберите все материалы'
+                      }
+                      className={`ml-auto flex h-9 shrink-0 items-center gap-2 rounded border px-3.5 font-blender-medium text-type-caption uppercase tracking-widest transition-all ${
+                        canBuildSel
+                          ? 'border-success bg-success/15 text-success hover:bg-success/25'
+                          : 'cursor-not-allowed border-lines-hover text-text-muted opacity-50'
+                      }`}
+                    >
+                      <span
+                        aria-hidden
+                        // Спрайт 8 кадров (2048×256) → на 16px иконке маска 128px (8×16), кадр 0 статикой.
+                        className={`h-4 w-4 shrink-0 bg-current ${hammering ? 'animate-hammer-hit' : ''}`}
+                        style={{
+                          maskImage: 'url(/icons/eft/04-progression/hideout-modules/hammer-anim.svg)',
+                          WebkitMaskImage: 'url(/icons/eft/04-progression/hideout-modules/hammer-anim.svg)',
+                          maskSize: '128px 16px',
+                          WebkitMaskSize: '128px 16px',
+                          maskRepeat: 'no-repeat',
+                          WebkitMaskRepeat: 'no-repeat',
+                          maskPosition: '0 0',
+                          WebkitMaskPosition: '0 0',
+                        }}
+                      />
+                      Построить
+                    </button>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="mb-4 flex flex-wrap items-center gap-3 border-b border-lines-hover pb-3">
+                  <span className={`h-8 w-8 shrink-0 icon-mask ${stationIconClass(sel.normalizedName)} ${selIsMax ? 'bg-success' : 'bg-text-primary'}`} />
+                  <span className="font-blender-medium text-base uppercase tracking-widest text-text-primary">
+                    {sel.name}
+                  </span>
+                  <Link
+                    href={`/eft/progress/hideout/modules/${sel.normalizedName}`}
+                    title="Страница модуля"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-lines-hover text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
+                  >
+                    <Maximize2 className="h-3.5 w-3.5" />
+                  </Link>
+                  <div className="ml-auto flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      aria-label="Понизить уровень"
+                      onClick={() => setLevel(sel.normalizedName, selLvl - 1)}
+                      disabled={selLvl <= 0}
+                      className="flex h-7 w-7 items-center justify-center rounded border border-lines-hover text-text-muted transition-colors hover:border-text-secondary hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </button>
+                    <span className={`w-14 text-center font-blender-medium text-sm ${selIsMax ? 'text-success' : 'text-text-primary'}`}>
+                      {selIsMax ? 'МАКС' : `${selLvl} / ${sel.maxLevel}`}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Повысить уровень"
+                      onClick={() => setLevel(sel.normalizedName, Math.min(sel.maxLevel, selLvl + 1))}
+                      disabled={selIsMax}
+                      className="flex h-7 w-7 items-center justify-center rounded border border-lines-hover text-text-muted transition-colors hover:border-success hover:text-success disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {selIsMax ? (
                 <p className="flex items-center gap-2 py-6 text-center text-sm text-success">
@@ -258,47 +454,157 @@ export function HideoutBuildTracker({
                 </p>
               ) : (
                 <>
-                  {/* Общий бак уровня + кнопка «Построить» */}
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1.5 flex items-baseline justify-between">
-                        <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-primary/50">
-                          Материалы на уровень {nextLevel}
-                        </span>
-                        <span className="font-blender-medium text-xs text-text-primary/70">
-                          {tank.got} / {tank.need}
-                        </span>
+                  {/* Прогресс материалов уровня */}
+                  {moduleTiles ? (
+                    // /modules: только сегментный бар под шапкой (деление = закрытая категория). Построить — в шапке.
+                    selItems.length > 0 && (
+                      <div className="mb-4 flex gap-1">
+                        {selItems.map((it, i) => (
+                          <span
+                            key={it.itemId}
+                            title={`${it.name}: ${matSegments[i] ? 'собрано' : 'не добрано'}`}
+                            className={`h-2 flex-1 rounded-xs transition-colors ${matSegments[i] ? 'bg-success' : 'bg-card-menu'}`}
+                          />
+                        ))}
                       </div>
-                      <div className="h-2 overflow-hidden rounded-xs bg-card-menu">
-                        <div
-                          className={`h-full rounded-xs transition-[width] duration-500 ${tank.full ? 'bg-success' : 'bg-(--primary)'}`}
-                          style={{ width: `${tank.pct}%` }}
-                        />
+                    )
+                  ) : (
+                    <div className="mb-4 flex items-center gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1.5 flex items-baseline justify-between">
+                          <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-primary/50">
+                            Материалы на уровень {nextLevel}
+                          </span>
+                          <span className="font-blender-medium text-xs text-text-primary/70">
+                            {tank.got} / {tank.need}
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-xs bg-card-menu">
+                          <div
+                            className={`h-full rounded-xs transition-[width] duration-500 ${tank.full ? 'bg-success' : 'bg-(--primary)'}`}
+                            style={{ width: `${tank.pct}%` }}
+                          />
+                        </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={buildLevel}
+                        disabled={!tank.full && tank.need > 0}
+                        title={tank.full || tank.need === 0 ? `Построить уровень ${nextLevel}` : 'Сначала соберите все материалы'}
+                        className={`flex h-9 shrink-0 items-center gap-2 rounded border px-3.5 font-blender-medium text-type-caption uppercase tracking-widest transition-all ${
+                          tank.full || tank.need === 0
+                            ? 'border-success bg-success/15 text-success hover:bg-success/25'
+                            : 'cursor-not-allowed border-lines-hover text-text-muted opacity-50'
+                        }`}
+                      >
+                        <Hammer className="h-4 w-4" />
+                        Построить
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={buildLevel}
-                      disabled={!tank.full && tank.need > 0}
-                      title={tank.full || tank.need === 0 ? `Построить уровень ${nextLevel}` : 'Сначала соберите все материалы'}
-                      className={`flex h-9 shrink-0 items-center gap-2 rounded border px-3.5 font-blender-medium text-type-caption uppercase tracking-widest transition-all ${
-                        tank.full || tank.need === 0
-                          ? 'border-success bg-success/15 text-success hover:bg-success/25'
-                          : 'cursor-not-allowed border-lines-hover text-text-muted opacity-50'
-                      }`}
-                    >
-                      <Hammer className="h-4 w-4" />
-                      Построить
-                    </button>
-                  </div>
+                  )}
+
+                  {/* Требования разблокировки уровня: станции-пререквизиты (сверка built → зелёный/амбер),
+                      торговцы и навыки (только показ — их уровней в сторе нет). Только /modules. */}
+                  {moduleTiles && selUnlock && selUnlock.stations.length + selUnlock.traders.length + selUnlock.skills.length > 0 && (
+                    <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                      <span className="mr-0.5 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+                        Требования{!stationReqsMet && <span className="text-tactical-amber"> · достройте станции</span>}
+                      </span>
+                      {selUnlock.stations.map((s) => {
+                        const met = built(s.nn) >= s.level;
+                        return (
+                          <span
+                            key={`st-${s.nn}`}
+                            className={`inline-flex items-center gap-1.5 rounded-xs border px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide ${
+                              met ? 'border-success/40 bg-success/10 text-success' : 'border-tactical-amber/40 bg-tactical-amber/10 text-tactical-amber'
+                            }`}
+                          >
+                            <span aria-hidden className={`h-3.5 w-3.5 shrink-0 icon-mask ${stationIconClass(s.nn)} ${met ? 'bg-success' : 'bg-tactical-amber'}`} />
+                            {s.name} · Ур. {s.level}
+                            {met && <Check className="h-3 w-3 shrink-0" strokeWidth={3} aria-hidden />}
+                          </span>
+                        );
+                      })}
+                      {selUnlock.traders.map((t) => (
+                        <span key={`tr-${t.nn}`} className="inline-flex items-center gap-1.5 rounded-xs border border-lines-hover bg-card-menu/40 px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary">
+                          <img src={traderImg(t.nn)} alt="" loading="lazy" className="h-3.5 w-3.5 shrink-0 rounded-xs object-cover" />
+                          {t.name} · Ур. {t.level}
+                        </span>
+                      ))}
+                      {selUnlock.skills.map((sk) => {
+                        const icon = SKILL_ICONS[sk.id]?.src;
+                        return (
+                          <span key={`sk-${sk.id}`} className="inline-flex items-center gap-1.5 rounded-xs border border-lines-hover bg-card-menu/40 px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary">
+                            {icon && <img src={icon} alt="" loading="lazy" className="h-3.5 w-3.5 shrink-0 object-contain" />}
+                            {SKILL_RU[sk.id] ?? sk.id} · Ур. {sk.level}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {selItems.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                    <div className={moduleTiles ? 'flex flex-wrap gap-3' : 'grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4'}>
                       {selItems.map((it) => {
                         const key = hideoutItemKey(sel.normalizedName, nextLevel, it.itemId);
                         const got = Math.min(mounted ? (itemProgress[key] ?? 0) : 0, it.count);
                         const pct = it.count > 0 ? Math.round((got / it.count) * 100) : 0;
                         const done = got >= it.count;
+
+                        // /modules: канон-ячейка TrackCell (как /needed) + имя-ссылка + FIR в слот.
+                        if (moduleTiles) {
+                          return (
+                            <div key={it.itemId} className="flex w-28 flex-col items-center gap-1.5">
+                              <TrackCell
+                                iconSrc={itemIconUrl(it.itemId)}
+                                alt={it.name}
+                                have={got}
+                                need={it.count}
+                                sizeClass="h-28 w-28"
+                                bgColor={getTarkovBackgroundColor(it.backgroundColor)}
+                                onInc={(d) => bumpItemProgress(key, d, it.count)}
+                                onSetTotal={(n) => setItemProgress(key, n)}
+                                bottomLeft={
+                                  it.fir ? (
+                                    <span title="Найдено в рейде" className="flex h-5 w-5 items-center justify-center">
+                                      <span aria-hidden className="h-3 w-3 icon-mask icon-eft-quests-side bg-(--color-rarity-legendary)" />
+                                    </span>
+                                  ) : undefined
+                                }
+                                topRight={
+                                  it.slug ? (
+                                    <Link
+                                      href={`/eft/items/item/${it.slug}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      title="Информация о предмете"
+                                      aria-label="Информация о предмете"
+                                      className="group/info flex h-5 w-5 items-center justify-center"
+                                    >
+                                      <span
+                                        aria-hidden
+                                        className="h-3 w-3 mask-contain mask-center mask-no-repeat bg-text-secondary transition-colors group-hover/info:bg-(--primary)"
+                                        style={{ maskImage: 'url(/icons/info-label.svg)', WebkitMaskImage: 'url(/icons/info-label.svg)' }}
+                                      />
+                                    </Link>
+                                  ) : undefined
+                                }
+                              />
+                              {it.slug ? (
+                                <Link
+                                  href={`/eft/items/item/${it.slug}`}
+                                  className="line-clamp-2 text-center text-type-micro uppercase leading-tight tracking-wider text-text-secondary transition-colors hover:text-(--primary)"
+                                >
+                                  {it.name}
+                                </Link>
+                              ) : (
+                                <span className="line-clamp-2 text-center text-type-micro uppercase leading-tight tracking-wider text-text-secondary">
+                                  {it.name}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        }
+
                         return (
                           <div
                             key={it.itemId}
@@ -388,7 +694,7 @@ export function HideoutBuildTracker({
               )}
             </div>
           ) : (
-            <p className="rounded-lg border border-lines-hover bg-(--color-base) p-8 text-center text-sm text-text-muted">
+            <p className={`text-center text-sm text-text-muted ${moduleTiles ? 'p-8' : 'rounded-lg border border-lines-hover bg-(--color-base) p-8'}`}>
               Выберите модуль слева.
             </p>
           )}

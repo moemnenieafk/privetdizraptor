@@ -141,6 +141,8 @@ export interface HideoutNeed {
   itemShort: string;
   /** normalizedName из зеркала prices — для кросс-линка на карточку предмета. */
   slug?: string;
+  /** Имя цвета слота (violet/blue/grey…) из prices — для фона ячейки по тарковской редкости. */
+  backgroundColor?: string;
   total: number;
   sources: HideoutNeedSource[];
 }
@@ -183,20 +185,21 @@ export async function getHideoutNeeds(): Promise<HideoutNeed[]> {
         .select({ inGameId: items.inGameId, name: items.name, shortName: items.shortName })
         .from(items)
         .where(and(eq(items.gameId, gameId), inArray(items.inGameId, ids))),
-      // slug (normalizedName) — для кросс-линка на карточку предмета.
+      // slug (normalizedName) + backgroundColor (редкость слота) — кросс-линк + фон ячейки.
       db
-        .select({ inGameId: prices.inGameId, normalizedName: prices.normalizedName })
+        .select({ inGameId: prices.inGameId, normalizedName: prices.normalizedName, backgroundColor: prices.backgroundColor })
         .from(prices)
         .where(and(eq(prices.gameId, gameId), inArray(prices.inGameId, ids))),
     ]);
     const byId = new Map(itemRows.map((i) => [i.inGameId, i]));
-    const slugById = new Map(priceRows.map((p) => [p.inGameId, p.normalizedName]));
+    const priceById = new Map(priceRows.map((p) => [p.inGameId, p]));
     for (const a of map.values()) {
       const it = byId.get(a.itemId);
       a.itemName = it?.name ?? a.itemId;
       a.itemShort = it?.shortName ?? "";
-      const slug = slugById.get(a.itemId);
-      if (slug) a.slug = slug;
+      const p = priceById.get(a.itemId);
+      if (p?.normalizedName) a.slug = p.normalizedName;
+      if (p?.backgroundColor) a.backgroundColor = p.backgroundColor;
     }
   }
 
@@ -265,9 +268,9 @@ const TRADER_RU: Record<string, string> = {
 };
 
 export interface StationUnlock {
-  stations: { name: string; level: number }[]; // пререквизит-станции (рус. имя)
-  traders: { name: string; level: number }[]; // торговец (рус. имя) + ЛВЛ
-  skills: { name: string; level: number }[]; // навык (имя уже рус. из lang:ru)
+  stations: { nn: string; name: string; level: number }[]; // пререквизит-станции (nn для сверки built + иконка + рус. имя)
+  traders: { nn: string; name: string; level: number }[]; // торговец (nn для аватара + рус. имя) + ЛВЛ
+  skills: { id: string; name: string; level: number }[]; // id навыка (иконка SKILL_ICONS/имя SKILL_RU) + name (сырой id, для старых потребителей) + ЛВЛ
 }
 // Ключ — `${stationNormalizedName}|${level}`.
 export type HideoutUnlockMap = Record<string, StationUnlock>;
@@ -287,9 +290,9 @@ export async function getHideoutUnlockMap(): Promise<HideoutUnlockMap> {
   const out: HideoutUnlockMap = {};
   for (const r of rows) {
     out[`${r.stationNormalizedName}|${r.level}`] = {
-      stations: r.stationRequirements.map((s) => ({ name: stationRu.get(s.station) ?? s.station, level: s.level })),
-      traders: r.traderRequirements.map((t) => ({ name: TRADER_RU[t.trader] ?? t.trader, level: t.level })),
-      skills: r.skillRequirements.map((s) => ({ name: s.skill, level: s.level })),
+      stations: r.stationRequirements.map((s) => ({ nn: s.station, name: stationRu.get(s.station) ?? s.station, level: s.level })),
+      traders: r.traderRequirements.map((t) => ({ nn: t.trader, name: TRADER_RU[t.trader] ?? t.trader, level: t.level })),
+      skills: r.skillRequirements.map((s) => ({ id: s.skill, name: s.skill, level: s.level })),
     };
   }
   return out;

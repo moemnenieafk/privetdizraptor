@@ -32,6 +32,8 @@ export interface TrackCellProps {
   topLeft?: ReactNode;
   /** Угловой слот (низ-лево): FiR-маркер и т.п. Рисуется поверх (не перекрывает бейдж X/Y справа). */
   bottomLeft?: ReactNode;
+  /** Угловой слот (верх-право): КЛИКАБЕЛЬНЫЙ (ссылка на карточку и т.п.) — z-40 над слоем +/−. */
+  topRight?: ReactNode;
   /** Прямой ввод общего числа: клик по бейджу X/Y → инпут, Enter коммитит onSetTotal
    *  (решает «×4500 кликов» — вводишь число, а не жмёшь). Клампинг до need — внутри. */
   onSetTotal?: (n: number) => void;
@@ -53,6 +55,7 @@ export function TrackCell({
   noFill = false,
   topLeft,
   bottomLeft,
+  topRight,
   onSetTotal,
   revealZones = false,
 }: TrackCellProps) {
@@ -166,6 +169,9 @@ export function TrackCell({
 
       {/* Угловой слот низ-лево: FiR-маркер. */}
       {bottomLeft && <span className="pointer-events-none absolute bottom-0 left-0 z-20">{bottomLeft}</span>}
+
+      {/* Угловой слот верх-право: кликабельный (z-40 — выше слоя +/−, чтобы ловил клик). */}
+      {topRight && <span className="absolute right-0 top-0 z-40">{topRight}</span>}
 
       {/* Десктоп-слой: ЛКМ +1, ПКМ −1. Отключается на грубом указателе. */}
       <button
