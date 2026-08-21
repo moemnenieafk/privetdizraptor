@@ -314,7 +314,7 @@ export const companionAnomalies = pgTable(
  * чтении, чтобы оставались свежими). Слоты — массив {itemId, count}; имя/иконка/
  * цена подтягиваются join'ом к `items` + `prices`. Наполняет тот же крон.
  */
-export type TradeSlot = { itemId: string; count: number };
+export type TradeSlot = { itemId: string; count: number; tool?: boolean };
 
 export const barters = pgTable("barters", {
   id: text("id").primaryKey(), // tarkov.dev barter id
@@ -343,6 +343,9 @@ export const crafts = pgTable("crafts", {
   duration: integer("duration"), // секунды
   requiredItems: jsonb("required_items").$type<TradeSlot[]>().notNull(),
   rewardItems: jsonb("reward_items").$type<TradeSlot[]>().notNull(),
+  taskUnlockId: text("task_unlock_id"), // квест-гейт крафта (33 крафта в дампе)
+  gameEditions: jsonb("game_editions").$type<string[]>(), // издания-анлоки (EoD и т.п.)
+  requiredQuestItems: jsonb("required_quest_items").$type<string[]>(), // id квест-предметов на входе
   syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

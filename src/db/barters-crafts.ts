@@ -43,12 +43,16 @@ interface CraftRow {
   duration: number | null;
   requiredItems: TradeSlot[];
   rewardItems: TradeSlot[];
+  taskUnlockId: string | null;
+  gameEditions: string[] | null;
+  requiredQuestItems: string[] | null;
 }
 
 /* ─────────────── JSON-плоскость (primary) ─────────────── */
 interface JsonSlot {
   item?: string; // id предмета (в GraphQL было item{id})
   count?: number;
+  attributes?: { tool?: boolean }; // input-инструмент (не расходуется) — помечаем слот
 }
 interface JsonBarter {
   id: string;
@@ -66,12 +70,19 @@ interface JsonCraft {
   duration?: number | null;
   requiredItems?: JsonSlot[];
   productItem?: JsonSlot | null; // в GraphQL было rewardItems[]
+  taskUnlock?: string | null; // id квеста-анлока крафта
+  gameEditions?: string[]; // издания-анлоки (напр. edge_of_darkness)
+  requiredQuestItems?: { item: string }[]; // квест-предметы на входе
 }
 
 const toSlotsJson = (arr?: JsonSlot[]): TradeSlot[] =>
   (arr ?? [])
     .filter((s): s is JsonSlot & { item: string } => !!s.item)
-    .map((s) => ({ itemId: s.item, count: s.count ?? 1 }));
+    .map((s) => ({
+      itemId: s.item,
+      count: s.count ?? 1,
+      ...(s.attributes?.tool === true ? { tool: true } : {}),
+    }));
 
 async function bartersFromJson(gameId: string): Promise<BarterRow[]> {
   const [data, traders] = await Promise.all([
@@ -115,6 +126,11 @@ async function craftsFromJson(gameId: string): Promise<CraftRow[]> {
         duration: c.duration ?? null,
         requiredItems: toSlotsJson(c.requiredItems),
         rewardItems: toSlotsJson(c.productItem ? [c.productItem] : []),
+        taskUnlockId: typeof c.taskUnlock === "string" ? c.taskUnlock : null,
+        gameEditions: c.gameEditions?.length ? c.gameEditions : null,
+        requiredQuestItems: c.requiredQuestItems?.length
+          ? c.requiredQuestItems.map((q) => q.item)
+          : null,
       };
     });
 }
@@ -173,6 +189,9 @@ export async function syncEftBartersCrafts(): Promise<SyncStaticResult> {
           duration: sql`excluded.duration`,
           requiredItems: sql`excluded.required_items`,
           rewardItems: sql`excluded.reward_items`,
+          taskUnlockId: sql`excluded.task_unlock_id`,
+          gameEditions: sql`excluded.game_editions`,
+          requiredQuestItems: sql`excluded.required_quest_items`,
           syncedAt: sql`now()`,
         },
       });
