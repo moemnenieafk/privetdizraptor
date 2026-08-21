@@ -829,19 +829,6 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
     hoveredRafRef.current = requestAnimationFrame(() => setHoveredId(pendingHoverRef.current));
   }, []);
 
-  const handleForceComplete = useCallback((taskId: string) => {
-    const { completedQuests: nowCompleted, toggleQuest } = useQuestStore.getState();
-    const ancestors = ancestorMap.get(taskId) ?? new Set<string>();
-    for (const ancestorId of ancestors) {
-      if (!nowCompleted.includes(ancestorId)) {
-        toggleQuest(ancestorId);
-      }
-    }
-    if (!nowCompleted.includes(taskId)) {
-      toggleQuest(taskId);
-    }
-  }, [ancestorMap]);
-
   const handleToggle = useCallback((taskId: string) => {
     clearGuardSoft();   // юзер вовлечён в квест — не откатывать
     const { completedQuests: nowCompleted, toggleQuest } = useQuestStore.getState();
@@ -1425,7 +1412,6 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                     chainRole:        getChainRole(task.id),
                     barterCount:      bartersByQuest?.[task.id]?.length ?? 0,
                     onToggle:         handleToggle,
-                    onForceComplete:  handleForceComplete,
                     onPin:            togglePin,
                     onSelect:         (t) => { clearGuardSoft(); setSelectedTask(t); },
                     onHover:          handleHover,

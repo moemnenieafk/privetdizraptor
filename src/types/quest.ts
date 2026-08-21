@@ -121,7 +121,6 @@ export interface QuestNodeData {
   /** Спрятать кнопку-скрепку (карты сюжетных историй — пины не поддерживаются). */
   hidePin?: boolean;
   onToggle: (id: string) => void;
-  onForceComplete: (id: string) => void;
   onSelect: (task: TaskRaw) => void;
   onHover: (id: string | null) => void;
   onPin: (id: string) => void;

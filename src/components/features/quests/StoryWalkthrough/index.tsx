@@ -363,7 +363,6 @@ export function StoryWalkthroughView({
                   hidePin: true,
                   headerIconClass: conditionHeaderIcon(b.condition),
                   onToggle: () => toggleCondition(key),
-                  onForceComplete: noop,
                   onSelect: noopSelect,
                   onHover: noopHover,
                   onPin: noop,

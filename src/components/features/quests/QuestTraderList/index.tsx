@@ -81,10 +81,6 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
   ];
 
   const handleToggle = (id: string) => useQuestStore.getState().toggleQuest(id);
-  const handleForceComplete = (id: string) => {
-    const st = useQuestStore.getState();
-    if (!st.completedQuests.includes(id)) st.toggleQuest(id);
-  };
   const noop = () => {};
 
   const hasNav = (navSections?.length ?? 0) > 0 || (navTraders?.length ?? 0) > 0;
@@ -194,7 +190,6 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
                     pinned: pinnedSet.has(task.id),
                     traderLevels,
                     onToggle: handleToggle,
-                    onForceComplete: handleForceComplete,
                     onSelect: setSelectedTask,
                     onHover: noop,
                     onPin: togglePin,

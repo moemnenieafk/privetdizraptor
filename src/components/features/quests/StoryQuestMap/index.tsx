@@ -195,7 +195,6 @@ export function StoryQuestMap({ map }: { map: StoryQuestMapData }) {
             hidePin: true,
             headerIconClass: headerIconFor(n),
             onToggle: () => n.conditionKey && toggleCondition(n.conditionKey),
-            onForceComplete: noop,
             onSelect: noopSelect,
             onHover: noopHover,
             onPin: noop,
