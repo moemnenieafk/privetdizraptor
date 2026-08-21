@@ -6,7 +6,9 @@ import { useHideoutStore } from '@/store/useHideoutStore';
 import { HideoutLevelsPanel, type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
 
 export interface CraftSlot {
-  item: { id: string; name: string; shortName: string; image512pxLink?: string };
+  // `backgroundColor`/`slug` — опциональны: ридер T7 их наполнит (рарити-фон + ссылка на предмет),
+  // текущий page.tsx их не отдаёт → карточка деградирует мягко (серый фон, имя без ссылки).
+  item: { id: string; name: string; shortName: string; image512pxLink?: string; backgroundColor?: string; slug?: string };
   count: number;
   unitPrice: number;
 }
