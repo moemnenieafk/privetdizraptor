@@ -7,7 +7,7 @@
 // Доменная математика — computeCraftEconomy (T2) + хелперы таймера стора; в JSX только форматирование.
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Clock, Hammer, Paperclip, Percent, ShoppingCart } from 'lucide-react';
+import { Clock, Paperclip, Percent, ShoppingCart } from 'lucide-react';
 import { TrackCell } from '@/components/ui/kit';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { itemIconUrl } from '@/lib/item-icon';
@@ -284,7 +284,20 @@ export function RecipeCard({
               построить
             </span>
             <span className="text-base tabular-nums">{String(craft.level).padStart(2, '0')}</span>
-            <Hammer className="h-4 w-4 shrink-0" aria-hidden />
+            <span
+              aria-hidden
+              className="h-4 w-4 shrink-0 bg-tactical-amber"
+              style={{
+                maskImage: 'url(/icons/eft/04-progression/hideout-modules/hideout-build-icon.svg)',
+                WebkitMaskImage: 'url(/icons/eft/04-progression/hideout-modules/hideout-build-icon.svg)',
+                maskSize: 'contain',
+                WebkitMaskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center',
+                WebkitMaskPosition: 'center',
+              }}
+            />
           </span>
         )}
 
@@ -396,14 +409,10 @@ export function RecipeCard({
             </>
           )}
 
-          {/* 4. Требования (станция/квест/издание) — только в locked/can-craft (в таймере скрыты) */}
+          {/* 4. Требования КРАФТА: квест/издание/квест-предметы. Станцию НЕ дублируем — она в шапке
+              («требуется построить NN» / уровень). Ряд рисуем только если есть что показать. */}
+          {(questGated || editionGated || (craft.requiredQuestItems?.length ?? 0) > 0) && (
           <div className="flex flex-wrap items-center gap-2">
-            <RequirementChip
-              iconClass={stationKey ? stationIconClass(stationKey) : undefined}
-              label={`${craft.stationName} · Ур. ${craft.level}`}
-              met={stationMet}
-              title={`${craft.stationName} — нужен уровень ${craft.level}, у вас ${builtStationLevel}`}
-            />
             {questGated && (
               <Link href={`/eft/questmap?quest=${craft.taskUnlock}`} className="rounded-sm transition-opacity hover:opacity-80">
                 <RequirementChip
@@ -428,6 +437,7 @@ export function RecipeCard({
               />
             )}
           </div>
+          )}
 
           {/* 5. Метрики: лейбл-линия «ВЫРУЧКА» → список строк с иконками и цветом по знаку */}
           <DividerLabel label="Выручка" />
