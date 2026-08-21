@@ -426,25 +426,28 @@ function SkillSlider({
   onChange: (v: number) => void;
 }) {
   return (
-    <label className="flex min-w-0 flex-1 flex-col gap-1.5">
-      <span className="flex items-center gap-2">
-        <img src={iconSrc} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-xs object-contain" />
-        <span className="min-w-0 flex-1 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-          {label}
+    <label className="flex min-w-0 flex-1 items-center gap-3">
+      {/* Крупная иконка навыка слева, крутилка справа. */}
+      <img src={iconSrc} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-xs object-contain" />
+      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <span className="flex items-center gap-2">
+          <span className="min-w-0 flex-1 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+            {label}
+          </span>
+          <span className="shrink-0 font-blender-medium text-type-caption tabular-nums text-(--primary)">
+            {value}
+          </span>
         </span>
-        <span className="shrink-0 font-blender-medium text-type-caption tabular-nums text-(--primary)">
-          {value}
-        </span>
+        <input
+          type="range"
+          min={0}
+          max={SKILL_MAX}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-lines-hover accent-(--primary)"
+        />
       </span>
-      <input
-        type="range"
-        min={0}
-        max={SKILL_MAX}
-        step={1}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-lines-hover accent-(--primary)"
-      />
     </label>
   );
 }
