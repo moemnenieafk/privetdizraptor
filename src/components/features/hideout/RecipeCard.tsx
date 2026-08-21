@@ -159,21 +159,18 @@ export function RecipeCard({
       {/* 2. Герой — предмет-ВЫХОД: крупная рарити-иконка + имя (ссылка) + ×N + цена продажи */}
       {reward && (
         <div className="flex items-center gap-3">
-          <span
-            className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-(--color-base)"
-            style={{ backgroundColor: rewardBg }}
-          >
-            <img
-              src={reward.item.image512pxLink ?? itemIconUrl(reward.item.id)}
-              alt={reward.item.name}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-contain p-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]"
-            />
-            <span className="absolute bottom-0 right-0 rounded-tl-xs bg-(--color-darkbase)/90 px-1 py-0.5 font-blender-medium text-type-micro leading-none text-text-primary">
-              ×{reward.count}
-            </span>
-          </span>
+          {/* Выход = канон-ячейка TrackCell (тарковский рарити-фон + блик + тень), display-режим: бейдж «×N». */}
+          <TrackCell
+            iconSrc={reward.item.image512pxLink ?? itemIconUrl(reward.item.id)}
+            alt={reward.item.name}
+            have={0}
+            need={0}
+            onInc={() => {}}
+            sizeClass="h-20 w-20"
+            bgColor={rewardBg}
+            noFill
+            badge={`×${reward.count}`}
+          />
           <div className="min-w-0 flex-1">
             {reward.item.slug ? (
               <Link

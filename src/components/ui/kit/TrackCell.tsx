@@ -34,6 +34,9 @@ export interface TrackCellProps {
   bottomLeft?: ReactNode;
   /** Угловой слот (верх-право): КЛИКАБЕЛЬНЫЙ (ссылка на карточку и т.п.) — z-40 над слоем +/−. */
   topRight?: ReactNode;
+  /** Статичный бейдж вместо трекинг-счётчика X/Y (display-режим — напр. выход крафта «×N»).
+   *  Задан → ячейка показывает его вместо X/Y, прямой ввод числа отключён. */
+  badge?: ReactNode;
   /** Прямой ввод общего числа: клик по бейджу X/Y → инпут, Enter коммитит onSetTotal
    *  (решает «×4500 кликов» — вводишь число, а не жмёшь). Клампинг до need — внутри. */
   onSetTotal?: (n: number) => void;
@@ -56,6 +59,7 @@ export function TrackCell({
   topLeft,
   bottomLeft,
   topRight,
+  badge,
   onSetTotal,
   revealZones = false,
 }: TrackCellProps) {
@@ -125,8 +129,12 @@ export function TrackCell({
       {/* Внутренняя тень слота */}
       <span aria-hidden className={`pointer-events-none absolute inset-0 z-10 ${CELL_SHADOW}`} />
 
-      {/* Бейдж X/Y — кликабелен для прямого ввода числа, если задан onSetTotal */}
-      {onSetTotal ? (
+      {/* Бейдж: статичный display-бейдж (badge) переопределяет трекинг-счётчик X/Y. */}
+      {badge != null ? (
+        <span className="absolute bottom-0 right-0 z-20 rounded-tl-xs bg-(--color-darkbase)/90 px-1 py-0.5 font-blender-medium text-[10pt] leading-none text-text-primary">
+          {badge}
+        </span>
+      ) : onSetTotal ? (
         <button
           type="button"
           onClick={(e) => {
