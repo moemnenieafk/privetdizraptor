@@ -302,33 +302,8 @@ export function CraftProfitClient({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* 1. Интро-блок: иконка + H1 + короткое описание. */}
-      <header className="flex items-center gap-4">
-        <span
-          aria-hidden
-          className="h-12 w-12 shrink-0 icon-mask bg-(--primary)"
-          style={{
-            maskImage: 'url(/icons/eft/04-progression/craft-profit.svg)',
-            WebkitMaskImage: 'url(/icons/eft/04-progression/craft-profit.svg)',
-            maskSize: 'contain',
-            WebkitMaskSize: 'contain',
-            maskRepeat: 'no-repeat',
-            WebkitMaskRepeat: 'no-repeat',
-            maskPosition: 'center',
-            WebkitMaskPosition: 'center',
-          }}
-        />
-        <div className="min-w-0">
-          <h1 className="font-blender-medium text-2xl uppercase tracking-widest text-text-primary">
-            Прибыль убежища
-          </h1>
-          <p className="mt-1 text-type-caption text-text-muted font-blender-book">
-            Что выгодно крафтить сейчас — профит с учётом налога барахолки, твоих навыков и построенных станций.
-          </p>
-        </div>
-      </header>
-
-      {/* 2. Вкладки модулей. */}
+      {/* Заголовок/описание раздела — в SectionHubNav (headerConfig p-hideout-craft), не дублируем. */}
+      {/* Вкладки модулей. */}
       <ModuleFilterTabs
         tabs={moduleTabs}
         totalAll={crafts.length}
