@@ -18,6 +18,9 @@ import Link from 'next/link';
 import { Minus, Plus, ArrowRight, Hammer, Check, Maximize2 } from 'lucide-react';
 import { useHideoutStore, hideoutItemKey } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { usePmcStatsStore } from '@/store/usePmcStatsStore';
+import { useManualProfileStore } from '@/store/useManualProfileStore';
+import { resolveSkillLevel } from '@/lib/tarkov/player-view-merge';
 import { editionFloor } from '@/lib/hideout-edition';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { FillMedia } from '@/components/ui/FillMedia';
@@ -103,6 +106,13 @@ export function HideoutBuildTracker({
   // Издание активного профиля — для авто-построенных модулей (TUE → Круг сектантов). Читаем,
   // но НЕ пишем в стор: накладываем на уровень через editionFloor (см. built ниже).
   const edition = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId)?.edition);
+  // Уровни лояльности торговцев активного профиля (nn → 1..4, дефолт 1). Ключ — normalizedName,
+  // совпадает с StationUnlock.traders[].nn → прямая сверка требований-торговцев.
+  const traderLevels = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId)?.traderLevels);
+  // Навыки игрока: загруженный профиль (usePmcStatsStore.view) + ручные оверрайды (Слой C).
+  // Читаем канонически через resolveSkillLevel — manual бьёт загруженное (last-write-wins, §4.7).
+  const skillView = usePmcStatsStore((s) => s.view);
+  const manualSkills = useManualProfileStore((s) => s.skills);
 
   // Порядок модулей: /modules — по постройке «как в игре»; иначе — как пришли (алфавит из ридера).
   const orderedStations = useMemo(
@@ -171,9 +181,23 @@ export function HideoutBuildTracker({
   const selItems = sel && !selIsMax ? (itemsByStationLevel.get(`${sel.normalizedName}|${nextLevel}`) ?? []) : [];
 
   // Требования разблокировки следующего уровня: станции-пререквизиты + торговцы + навыки.
-  // Станции сверяем с built() (гейт «Построить»); торговцев/навыки — только показ (их нет в сторе).
+  // ВСЕ ТРИ сверяются с профилем и гейтят постройку (§ «связано и работает»):
+  //  · станции — built() из useHideoutStore;
+  //  · торговцы — traderLevels активного профиля (дефолт LL1);
+  //  · навыки — реальный уровень игрока (загруженный профиль + ручные оверрайды).
   const selUnlock = sel && !selIsMax ? unlockMap?.[`${sel.normalizedName}|${nextLevel}`] : undefined;
+
+  // Есть ли вообще данные о навыках игрока (загружен профиль или ручной ввод). Нет данных —
+  // навык «неизвестен»: НЕ блокируем постройку и НЕ красим (планировщик не гейтит на пустом профиле).
+  const hasSkillData = mounted && (skillView != null || Object.keys(manualSkills).length > 0);
+  const skillLevelOf = (id: string) => (mounted ? resolveSkillLevel(skillView, manualSkills, id) : 0);
+  const traderLevelOf = (nn: string) => (mounted ? (traderLevels?.[nn] ?? 0) : 0);
+
   const stationReqsMet = selUnlock ? selUnlock.stations.every((s) => built(s.nn) >= s.level) : true;
+  const traderReqsMet = selUnlock ? selUnlock.traders.every((t) => traderLevelOf(t.nn) >= t.level) : true;
+  // Навык блокирует, только когда данные есть И уровень недобран (unknown → не блокирует).
+  const skillReqsMet = selUnlock ? selUnlock.skills.every((sk) => !hasSkillData || skillLevelOf(sk.id) >= sk.level) : true;
+  const reqsMet = stationReqsMet && traderReqsMet && skillReqsMet;
 
   // «Бак» выбранного уровня: собрано/нужно по каждому предмету + общий прогресс.
   const found = (itemId: string) =>
@@ -188,12 +212,12 @@ export function HideoutBuildTracker({
   // Сегментный бак (/modules): деление = категория (предмет) закрыта целиком (got ≥ нужно).
   const matSegments = selItems.map((it) => Math.min(found(it.itemId), it.count) >= it.count);
 
-  // Готовность постройки: материалы собраны И станции-пререквизиты построены.
+  // Готовность постройки: материалы собраны И ВСЕ требования (станции + торговцы + навыки) выполнены.
   const materialsReady = tank.full || tank.need === 0;
-  const canBuildSel = materialsReady && stationReqsMet;
+  const canBuildSel = materialsReady && reqsMet;
 
   const buildLevel = () => {
-    if (!sel || selIsMax || !stationReqsMet) return; // не строим при невыполненных станциях-пререквизитах
+    if (!sel || selIsMax || !reqsMet) return; // не строим при невыполненных требованиях разблокировки
     setLevel(sel.normalizedName, nextLevel);
     clearLevelProgress(sel.normalizedName, nextLevel); // материалы «потрачены»
   };
@@ -378,8 +402,8 @@ export function HideoutBuildTracker({
                       onClick={triggerBuild}
                       disabled={!canBuildSel}
                       title={
-                        !stationReqsMet
-                          ? 'Сначала постройте станции-пререквизиты'
+                        !reqsMet
+                          ? 'Сначала выполните требования разблокировки (станции · торговцы · навыки)'
                           : materialsReady
                             ? `Построить уровень ${nextLevel}`
                             : 'Сначала соберите все материалы'
@@ -503,43 +527,78 @@ export function HideoutBuildTracker({
                     </div>
                   )}
 
-                  {/* Требования разблокировки уровня: станции-пререквизиты (сверка built → зелёный/амбер),
-                      торговцы и навыки (только показ — их уровней в сторе нет). Только /modules. */}
+                  {/* Требования разблокировки уровня — ВСЕ сверяются с профилем персонажа:
+                      станции (built), торговцы (traderLevels), навыки (загруженный профиль + ручные).
+                      Met → зелёный+галочка, не добрано → амбер, навык без данных → нейтральный.
+                      Бейджи крупные: иконка 28px, текст caption. Только /modules. */}
                   {moduleTiles && selUnlock && selUnlock.stations.length + selUnlock.traders.length + selUnlock.skills.length > 0 && (
-                    <div className="mb-4 flex flex-wrap items-center gap-1.5">
-                      <span className="mr-0.5 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-                        Требования{!stationReqsMet && <span className="text-tactical-amber"> · достройте станции</span>}
+                    <div className="mb-4 flex flex-col gap-2">
+                      {/* Строка 1: подпись. Строка 2: сами бейджи (переносятся между собой). */}
+                      <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+                        Требования{!reqsMet && <span className="text-tactical-amber"> · выполните требования</span>}
                       </span>
+                      <div className="flex flex-wrap items-center gap-2">
                       {selUnlock.stations.map((s) => {
                         const met = built(s.nn) >= s.level;
                         return (
                           <span
                             key={`st-${s.nn}`}
-                            className={`inline-flex items-center gap-1.5 rounded-xs border px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide ${
-                              met ? 'border-success/40 bg-success/10 text-success' : 'border-tactical-amber/40 bg-tactical-amber/10 text-tactical-amber'
+                            title={`${s.name} — нужен уровень ${s.level}, у вас ${built(s.nn)}`}
+                            className={`inline-flex items-center gap-1.5 rounded-sm px-2 py-1 font-blender-medium text-type-micro uppercase tracking-wide ${
+                              met ? 'bg-nvg-green/10 text-nvg-green' : 'bg-tactical-amber/10 text-tactical-amber'
                             }`}
                           >
-                            <span aria-hidden className={`h-3.5 w-3.5 shrink-0 icon-mask ${stationIconClass(s.nn)} ${met ? 'bg-success' : 'bg-tactical-amber'}`} />
+                            <span aria-hidden className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(s.nn)} ${met ? 'bg-nvg-green' : 'bg-tactical-amber'}`} />
                             {s.name} · Ур. {s.level}
-                            {met && <Check className="h-3 w-3 shrink-0" strokeWidth={3} aria-hidden />}
+                            {met && <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden />}
                           </span>
                         );
                       })}
-                      {selUnlock.traders.map((t) => (
-                        <span key={`tr-${t.nn}`} className="inline-flex items-center gap-1.5 rounded-xs border border-lines-hover bg-card-menu/40 px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary">
-                          <img src={traderImg(t.nn)} alt="" loading="lazy" className="h-3.5 w-3.5 shrink-0 rounded-xs object-cover" />
-                          {t.name} · Ур. {t.level}
-                        </span>
-                      ))}
+                      {selUnlock.traders.map((t) => {
+                        const have = traderLevelOf(t.nn);
+                        const met = have >= t.level;
+                        return (
+                          <span
+                            key={`tr-${t.nn}`}
+                            title={`${t.name} — нужна лояльность ${t.level}, у вас ${have}`}
+                            className={`inline-flex items-center gap-1.5 rounded-sm px-2 py-1 font-blender-medium text-type-micro uppercase tracking-wide ${
+                              met ? 'bg-nvg-green/10 text-nvg-green' : 'bg-tactical-amber/10 text-tactical-amber'
+                            }`}
+                          >
+                            <img src={traderImg(t.nn)} alt="" loading="lazy" className="h-7 w-7 shrink-0 rounded-xs object-cover" />
+                            {t.name} · Ур. {t.level}
+                            {met && <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden />}
+                          </span>
+                        );
+                      })}
                       {selUnlock.skills.map((sk) => {
                         const icon = SKILL_ICONS[sk.id]?.src;
+                        const have = skillLevelOf(sk.id);
+                        // Три состояния: данных нет (нейтр.) · добрано (зелёный+✓) · не добрано (амбер).
+                        const met = hasSkillData && have >= sk.level;
+                        const unmet = hasSkillData && have < sk.level;
+                        const tone = met
+                          ? 'bg-nvg-green/10 text-nvg-green'
+                          : unmet
+                            ? 'bg-tactical-amber/10 text-tactical-amber'
+                            : 'bg-card-menu/40 text-text-secondary';
                         return (
-                          <span key={`sk-${sk.id}`} className="inline-flex items-center gap-1.5 rounded-xs border border-lines-hover bg-card-menu/40 px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-wide text-text-secondary">
-                            {icon && <img src={icon} alt="" loading="lazy" className="h-3.5 w-3.5 shrink-0 object-contain" />}
+                          <span
+                            key={`sk-${sk.id}`}
+                            title={
+                              hasSkillData
+                                ? `${SKILL_RU[sk.id] ?? sk.id} — нужен уровень ${sk.level}, у вас ${have}`
+                                : `${SKILL_RU[sk.id] ?? sk.id} — нужен уровень ${sk.level} (загрузите профиль для сверки)`
+                            }
+                            className={`inline-flex items-center gap-1.5 rounded-sm px-2 py-1 font-blender-medium text-type-micro uppercase tracking-wide ${tone}`}
+                          >
+                            {icon && <img src={icon} alt="" loading="lazy" className="h-7 w-7 shrink-0 object-contain" />}
                             {SKILL_RU[sk.id] ?? sk.id} · Ур. {sk.level}
+                            {met && <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden />}
                           </span>
                         );
                       })}
+                      </div>
                     </div>
                   )}
 

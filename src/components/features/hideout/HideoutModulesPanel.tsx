@@ -6,7 +6,7 @@
 // Уровни ставятся на странице модулей; здесь только показ (учитывая editionFloor). Свёрнута по умолчанию.
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, RotateCcw } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { editionFloor } from '@/lib/hideout-edition';
@@ -70,7 +70,6 @@ function ModuleTile({ station, edition }: { station: HideoutStationInfo; edition
 }
 
 export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo[] }) {
-  const reset = useHideoutStore((s) => s.reset);
   const edition = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId)?.edition);
   const [open, setOpen] = useState(false);
 
@@ -87,15 +86,6 @@ export function HideoutModulesPanel({ stations }: { stations: HideoutStationInfo
           <span className="hidden min-w-0 flex-1 truncate font-blender-book text-type-caption text-text-muted md:block">
             Индикатор уровней. Клик по модулю — <span className="text-(--primary)">открыть его постройку</span>.
           </span>
-        </button>
-        <button
-          type="button"
-          onClick={reset}
-          title="Сбросить все уровни"
-          className="flex h-7 shrink-0 items-center gap-1 rounded-xs border border-lines-hover px-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted transition-colors hover:border-danger hover:text-danger"
-        >
-          <RotateCcw className="h-3 w-3" aria-hidden />
-          Сброс
         </button>
         <button
           type="button"

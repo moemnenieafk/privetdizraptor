@@ -72,8 +72,9 @@ export function TrackCell({
     clampedHave <= 0 ? 'default' : clampedHave >= need ? 'done' : 'tracked';
   const fillPct = state === 'tracked' ? Math.round((clampedHave / need) * 100) : state === 'done' ? 100 : 0;
 
-  const fillCls = state === 'done' ? 'bg-success' : 'bg-tactical-amber';
-  const badgeTxt = state === 'done' ? 'text-success' : state === 'tracked' ? 'text-tactical-amber' : 'text-text-primary';
+  // «Собрано» = nvg-green (#689963) — канон-цвет успеха/убежища дизайн-системы, а не яркий лайм success.
+  const fillCls = state === 'done' ? 'bg-nvg-green' : 'bg-tactical-amber';
+  const badgeTxt = state === 'done' ? 'text-nvg-green' : state === 'tracked' ? 'text-tactical-amber' : 'text-text-primary';
 
   const inc = () => {
     if (clampedHave < need) onInc(1);
@@ -84,7 +85,7 @@ export function TrackCell({
 
   return (
     <div
-      className={`relative shrink-0 select-none overflow-hidden rounded-xs border border-(--color-base) ${sizeClass}`}
+      className={`relative shrink-0 select-none overflow-hidden rounded-sm border border-(--color-base) ${sizeClass}`}
     >
       {/* Рарити-фон (класс или инлайн реальный цвет предмета) + линейный блик */}
       <span

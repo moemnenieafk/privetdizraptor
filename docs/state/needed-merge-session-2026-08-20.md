@@ -100,12 +100,15 @@ spec: docs/decisions/important-items-merge.md
 ## Продолжение в НОВОМ ЧАТЕ — отложенные запросы V4DYA (2026-08-21)
 Перед ними сделан **коммит + пуш в main** всей наработки сессии (важные предметы + весь редизайн /modules + издания + требования + иконки). Дальше — в новом чате:
 
-1. **Синхрон требований с ПРОФИЛЕМ персонажа.** Симптом V4DYA: «ЧВК с Вниманием 33 ур., а Построить не даёт, где требование Внимание 3». Сейчас на /modules `canBuildSel`/`stationReqsMet` гейтит ТОЛЬКО станции (сверка `built()` из `useHideoutStore`); **навыки и торговцы — show-only, не сверяются**. Надо:
-   - **Навыки**-пререквизиты сверять с РЕАЛЬНЫМИ уровнями навыков игрока → met/not-met + красить (зелёный/амбер) + гейтить. Где брать уровни навыков: `usePmcStatsStore` (`PlayerView`) / parse-profile (`skills.Common[].Id`+`Level`); сверять по `Id` (у нас `StationUnlock.skills[].id`, `SKILL_ICONS`/`SKILL_RU` тоже по Id).
-   - **Торговцы**-пререквизиты сверять с `usePlayerStore` активный профиль `traderLevels: Record<string, number>` (УЖЕ ЕСТЬ). Ключ — normalizedName торговца (`StationUnlock.traders[].nn`); сверить формат ключа `traderLevels` (может быть по nn или иначе — проверить).
-   - «**Всё должно быть связано и работать**»: единый met для станций+торговцев+навыков → в `canBuildSel` и в раскраску чипов.
-   - Файлы: `HideoutBuildTracker.tsx` (блок «Требования» + `stationReqsMet`/`canBuildSel`), `usePlayerStore` (traderLevels), `usePmcStatsStore`/parse-profile (skills).
-2. **Крупнее бейджи требований.** Иконки в чипах «Требования» → **28px** (сейчас 14px = `h-3.5`), кнопки и текст крупнее — «места предостаточно». Чипы в `HideoutBuildTracker.tsx` (блок Требования: `stationIconClass`/`traderImg`/`SKILL_ICONS`, класс `text-type-micro` → крупнее).
+1. ✅ **Синхрон требований с ПРОФИЛЕМ персонажа** (сделано 2026-08-21). Симптом V4DYA: «ЧВК с Вниманием 33 ур., а Построить не даёт, где требование Внимание 3». Теперь на /modules `canBuildSel`/`buildLevel` гейтят по ЕДИНОМУ `reqsMet = stationReqsMet && traderReqsMet && skillReqsMet`, а чипы красятся по реальному профилю:
+   - **Навыки** — канонический уровень через `resolveSkillLevel(view, manualSkills, id)` (`usePmcStatsStore.view` = загруженный профиль + `useManualProfileStore.skills` = ручные оверрайды Слоя C, last-write-wins §4.7). Сверка по `StationUnlock.skills[].id` (= `Attention` и т.п.). **Три состояния чипа:** данных о навыках нет (нейтр. серый, НЕ гейтит — планировщик не блокирует на пустом профиле) · добрано (зелёный+✓) · не добрано (амбер). `hasSkillData = view!=null || есть ручные навыки`; навык блокирует только когда данные есть И уровень недобран.
+   - **Торговцы** — `usePlayerStore` активный профиль `traderLevels[nn]` (дефолт LL1, ключ = normalizedName = `StationUnlock.traders[].nn`, формат совпал). Met/not-met → зелёный+✓ / амбер, гейтит.
+   - **Станции** — как было (`built()` из `useHideoutStore`), теперь в общем `reqsMet`.
+   - Title-тултип каждого чипа: «нужен уровень N, у вас M» — прямой ответ на путаницу V4DYA.
+   - Файл: `HideoutBuildTracker.tsx` (+ импорты `usePmcStatsStore`, `useManualProfileStore`, `resolveSkillLevel`). `mounted`-гард на чтении persist-сторов (навыки/трейдеры) — до маунта уровни=0 (без hydration mismatch). tsc 0 ошибок, eslint 0 ошибок (2 варнинга — предсуществующие set-state-in-effect на `mounted`/выборе модуля).
+2. ✅ **Крупнее бейджи требований** (сделано 2026-08-21). Иконки чипов «Требования» (станция/торговец/навык) → **28px** (`h-7 w-7`, было 14px), текст `text-type-micro`→`text-type-caption`, паддинг `px-1.5 py-0.5`→`px-2.5 py-1.5`, gap `1.5`→`2`, галочка `h-3 w-3`→`h-4 w-4`, `rounded-xs`→`rounded-sm`. Ряд-контейнер gap `1.5`→`2`.
+
+⏳ **Осталось:** live-verify V4DYA (dev на `/eft/progress/hideout/modules`, профиль с навыками загружен → чип «Внимание» зелёный+✓ на его 33 ур.), затем PR/пуш в main (§5, необратимое — явный «ок»).
 
 ## Гочи (помнить)
 - UI читает ТОЛЬКО зеркало (§4.11); `db:sync-*` пишут в БД — подтверждение.
