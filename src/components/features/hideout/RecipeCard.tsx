@@ -29,10 +29,27 @@ export interface RecipeCardProps {
   intelCenterBuilt: boolean;
   /** Глобальный тумблер «Пустой бак»: топливные входы по 10% от продажи трейдеру. */
   emptyFuel: boolean;
-  /** Квест-анлок пройден (T1, опц.): true/false задаёт тон чипа, undefined — чипа нет. */
-  questDone?: boolean;
-  /** Издание, дающее крафт, куплено (T1, опц.): аналогично questDone. */
-  editionOwned?: boolean;
+  /** Квест-анлок пройден (резолв клиента). Чип рисуется по наличию `craft.taskUnlock`. */
+  questDone: boolean;
+  /** Издание, дающее крафт, есть (резолв клиента). Чип — по наличию `craft.gameEditions`. */
+  editionOwned: boolean;
+}
+
+// Коды изданий tarkov.dev → короткий рус-лейбл чипа. Несколько кодов / неизвестный → «Издание».
+const EDITION_LABEL: Record<string, string> = {
+  edge_of_darkness: 'EOD',
+  unheard_edition: 'Unheard',
+  eod_tue_edition: 'EOD / Unheard',
+  left_behind: 'Left Behind',
+  prepare_for_escape: 'Prepare for Escape',
+  prepare_to_escape: 'Prepare for Escape',
+  standard: 'Standard',
+};
+
+/** Лейбл чипа издания: один известный код → его имя; иначе нейтральное «Издание». */
+function editionLabel(codes: string[] | undefined): string {
+  if (codes?.length === 1) return EDITION_LABEL[codes[0]] ?? 'Издание';
+  return 'Издание';
 }
 
 function fmtRub(n: number): string {
@@ -90,6 +107,7 @@ export function RecipeCard({
         count: r.count,
         isFuel: r.isFuel,
         sellTrader: r.sellTrader,
+        isTool: r.isTool,
       })),
       output: {
         basePrice: reward?.basePrice ?? 0,
@@ -106,8 +124,10 @@ export function RecipeCard({
   }, [craft, reward, craftingLevel, hideoutMgmtLevel, intelCenterBuilt, emptyFuel]);
 
   const stationMet = builtStationLevel >= craft.level;
-  // «Доступно сейчас» = станция построена ≥ уровня И (квест пройден | нет данных) И (издание | нет данных).
-  const available = stationMet && questDone !== false && editionOwned !== false;
+  const questGated = Boolean(craft.taskUnlock);
+  const editionGated = Boolean(craft.gameEditions?.length);
+  // «Доступно сейчас» = станция построена ≥ уровня И (квест пройден | не требуется) И (издание | не требуется).
+  const available = stationMet && (!questGated || questDone) && (!editionGated || editionOwned);
 
   const rewardBg = getTarkovBackgroundColor(reward?.item.backgroundColor);
 
@@ -205,11 +225,31 @@ export function RecipeCard({
           met={stationMet}
           title={`${craft.stationName} — нужен уровень ${craft.level}, у вас ${builtStationLevel}`}
         />
-        {questDone !== undefined && (
-          <RequirementChip label="Квест-анлок" met={questDone} title={questDone ? 'Квест пройден' : 'Требуется пройти квест'} />
+        {questGated && (
+          <Link
+            href={`/eft/questmap?quest=${craft.taskUnlock}`}
+            className="rounded-sm transition-opacity hover:opacity-80"
+          >
+            <RequirementChip
+              label={craft.taskUnlockName ?? 'Квест-анлок'}
+              met={questDone}
+              title={questDone ? 'Квест пройден' : 'Требуется пройти квест — открыть на карте квестов'}
+            />
+          </Link>
         )}
-        {editionOwned !== undefined && (
-          <RequirementChip label="Издание" met={editionOwned} title={editionOwned ? 'Издание есть' : 'Требуется издание'} />
+        {editionGated && (
+          <RequirementChip
+            label={editionLabel(craft.gameEditions)}
+            met={editionOwned}
+            title={editionOwned ? 'Издание есть' : 'Крафт открывается изданием игры'}
+          />
+        )}
+        {craft.requiredQuestItems && craft.requiredQuestItems.length > 0 && (
+          <RequirementChip
+            label={`Нужны квест-предметы · ${craft.requiredQuestItems.length}`}
+            met={null}
+            title="На входе есть квест-предметы (не покупаются на барахолке)"
+          />
         )}
       </div>
 

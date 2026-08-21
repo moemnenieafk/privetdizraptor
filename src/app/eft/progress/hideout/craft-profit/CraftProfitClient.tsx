@@ -9,8 +9,9 @@ import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
 import { useManualProfileStore } from '@/store/useManualProfileStore';
+import { useQuestStore } from '@/store/useQuestStore';
 import { resolveSkillLevel } from '@/lib/tarkov/player-view-merge';
-import { editionFloor } from '@/lib/hideout-edition';
+import { editionFloor, ownsAnyEdition } from '@/lib/hideout-edition';
 import { computeCraftEconomy, type CraftEconomy } from '@/lib/craft-profit';
 import { RecipeCard } from '@/components/features/hideout/RecipeCard';
 import { CraftControls, type CraftSortMode } from '@/components/features/hideout/CraftControls';
@@ -40,6 +41,8 @@ export interface CraftInput {
   isFuel: boolean;
   /** Лучшая продажа трейдеру за штуку — база «пустого бака». */
   sellTrader: number;
+  /** Инструмент (не расходуется) — в стоимость крафта не идёт (§1.1 ресёрча). */
+  isTool?: boolean;
 }
 
 /** Выход рецепта: сырые компоненты цены (basePrice для налога + два канала продажи). */
@@ -70,10 +73,14 @@ export interface ProcessedCraft {
   required: CraftInput[];
   reward: CraftOutput[];
   gate?: StationGate;
-  /** Квест-анлок пройден (T1, миграция): пока всегда undefined. */
-  taskUnlock?: boolean;
-  /** Крафт даётся изданием (T1, миграция): пока всегда undefined. */
-  gameEditions?: boolean;
+  /** id квеста-анлока крафта (crafts.taskUnlockId). Резолв «пройден?» — на клиенте. */
+  taskUnlock?: string;
+  /** Имя квеста-анлока для лейбла чипа (если сджойнено ридером). */
+  taskUnlockName?: string;
+  /** Коды изданий-анлоков tarkov.dev (crafts.gameEditions). Резолв «есть?» — на клиенте. */
+  gameEditions?: string[];
+  /** id квест-предметов на входе (crafts.requiredQuestItems) — для нейтрального чипа. */
+  requiredQuestItems?: string[];
 }
 
 /** ID навыков в SKILL_CATALOG (resolveSkillLevel читает по ним). */
@@ -99,6 +106,7 @@ function craftEconomy(
       count: r.count,
       isFuel: r.isFuel,
       sellTrader: r.sellTrader,
+      isTool: r.isTool,
     })),
     output: {
       basePrice: out?.basePrice ?? 0,
@@ -114,9 +122,32 @@ function craftEconomy(
   });
 }
 
-/** Доступность = станция построена ≥ уровня И (квест пройден | нет данных) И (издание | нет данных). */
-function isAvailable(c: ProcessedCraft, builtLevel: number): boolean {
-  return builtLevel >= c.level && c.taskUnlock !== false && c.gameEditions !== false;
+/** Разрешённый доступ по профилю: квест пройден (если требуется) и издание есть (если требуется). */
+interface CraftAccess {
+  questDone: boolean;
+  editionOwned: boolean;
+}
+
+/**
+ * Резолв доступа крафта из профиля: нет taskUnlock → квест не требуется (questDone=true);
+ * нет gameEditions → издание не требуется (editionOwned=true). До маунта — как «требование снято»
+ * (persist-сторы читаются только на клиенте, иначе hydration mismatch).
+ */
+function resolveAccess(
+  c: ProcessedCraft,
+  completedSet: Set<string>,
+  playerEdition: string | null | undefined,
+  mounted: boolean,
+): CraftAccess {
+  return {
+    questDone: !c.taskUnlock || !mounted || completedSet.has(c.taskUnlock),
+    editionOwned: !c.gameEditions?.length || !mounted || ownsAnyEdition(playerEdition, c.gameEditions),
+  };
+}
+
+/** Доступность = станция построена ≥ уровня И квест пройден (или не нужен) И издание есть (или не нужно). */
+function isAvailable(c: ProcessedCraft, builtLevel: number, access: CraftAccess): boolean {
+  return builtLevel >= c.level && access.questDone && access.editionOwned;
 }
 
 const SORTERS: Record<CraftSortMode, (m: CraftEconomy) => number> = {
@@ -144,6 +175,16 @@ export function CraftProfitClient({
   const edition = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId)?.edition);
   const skillView = usePmcStatsStore((s) => s.view);
   const manualSkills = useManualProfileStore((s) => s.skills);
+  const completedQuests = useQuestStore((s) => s.completedQuests);
+
+  // Доступ каждого крафта по профилю (квест-анлок + издание). Один проход, переиспользуется
+  // фильтром/сортировкой/карточками — как и метрика (§4.7, не в JSX).
+  const accessMap = useMemo(() => {
+    const completedSet = new Set(completedQuests);
+    const m = new Map<string, CraftAccess>();
+    for (const c of crafts) m.set(c.id, resolveAccess(c, completedSet, edition, mounted));
+    return m;
+  }, [crafts, completedQuests, edition, mounted]);
 
   // Построенный уровень станции с учётом издания. До маунта — 0 (hydration).
   const builtLevel = (nn: string) =>
@@ -225,7 +266,8 @@ export function CraftProfitClient({
     return crafts.filter((c) => {
       const m = metrics.get(c.id);
       if (!m) return false;
-      const available = isAvailable(c, builtLevel(c.stationNormalized));
+      const access = accessMap.get(c.id) ?? { questDone: true, editionOwned: true };
+      const available = isAvailable(c, builtLevel(c.stationNormalized), access);
       if (onlyProfitable && m.profit <= 0) return false;
       if (onlyAvailable && !available) return false;
       if (hideLocked && !available) return false;
@@ -239,7 +281,7 @@ export function CraftProfitClient({
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [crafts, metrics, onlyProfitable, onlyAvailable, hideLocked, activeStation, q, levels, edition, mounted]);
+  }, [crafts, metrics, accessMap, onlyProfitable, onlyAvailable, hideLocked, activeStation, q, levels, edition, mounted]);
 
   // Сортировка: 6 методов. Алфавит — по имени выхода; остальные — по метрике (desc).
   const sorted = useMemo(() => {
@@ -355,19 +397,22 @@ export function CraftProfitClient({
       {/* 5. Грид карточек — 1/2/3 колонки. */}
       {sorted.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sorted.map((c) => (
-            <RecipeCard
-              key={c.id}
-              craft={c}
-              builtStationLevel={builtLevel(c.stationNormalized)}
-              craftingLevel={craftingLevel}
-              hideoutMgmtLevel={hideoutMgmtLevel}
-              intelCenterBuilt={intelCenterBuilt}
-              emptyFuel={emptyFuel}
-              questDone={c.taskUnlock}
-              editionOwned={c.gameEditions}
-            />
-          ))}
+          {sorted.map((c) => {
+            const access = accessMap.get(c.id);
+            return (
+              <RecipeCard
+                key={c.id}
+                craft={c}
+                builtStationLevel={builtLevel(c.stationNormalized)}
+                craftingLevel={craftingLevel}
+                hideoutMgmtLevel={hideoutMgmtLevel}
+                intelCenterBuilt={intelCenterBuilt}
+                emptyFuel={emptyFuel}
+                questDone={access?.questDone ?? true}
+                editionOwned={access?.editionOwned ?? true}
+              />
+            );
+          })}
         </div>
       ) : (
         <p className="py-16 text-center text-sm text-text-muted font-blender-book">

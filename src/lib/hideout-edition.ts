@@ -21,3 +21,27 @@ const EDITION_FLOORS: Record<string, Record<string, number>> = {
 export function editionFloor(station: string, edition: string | null | undefined): number {
   return edition ? (EDITION_FLOORS[edition]?.[station] ?? 0) : 0;
 }
+
+// Крафты-анлоки изданий: crafts.gameEditions несёт коды tarkov.dev, профиль — EditionType
+// (Standard|LB|PFE|EOD|TUE). Карта «какой EditionType покрывает код издания». `eod_tue_edition`
+// доступен владельцам EOD ИЛИ TUE. Расширяется одной строкой.
+const EDITION_CODE_COVER: Record<string, readonly string[]> = {
+  standard: ['Standard'],
+  left_behind: ['LB'],
+  prepare_for_escape: ['PFE'],
+  prepare_to_escape: ['PFE'],
+  edge_of_darkness: ['EOD'],
+  unheard_edition: ['TUE'],
+  eod_tue_edition: ['EOD', 'TUE'],
+};
+
+/** Покрывает ли издание игрока код издания-анлока из tarkov.dev. Неизвестный код → false. */
+export function editionCovers(playerEdition: string | null | undefined, code: string): boolean {
+  if (!playerEdition) return false;
+  return EDITION_CODE_COVER[code]?.includes(playerEdition) ?? false;
+}
+
+/** Владеет ли игрок любым из изданий, дающих крафт (пустой список → нет требования → true). */
+export function ownsAnyEdition(playerEdition: string | null | undefined, codes: string[]): boolean {
+  return codes.some((code) => editionCovers(playerEdition, code));
+}

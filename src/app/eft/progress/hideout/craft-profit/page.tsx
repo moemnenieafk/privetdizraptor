@@ -6,7 +6,11 @@ import { eftGameId } from '@/db/eft';
 import { getEftPriceMapFromDb } from '@/db/prices';
 import { getHideoutUnlockMap, getHideoutStations } from '@/db/hideout';
 import { itemIconUrl } from '@/lib/item-icon';
+import { EFT_QUESTS } from '@/data/quests';
 import { CraftProfitClient, type ProcessedCraft, type CraftSlotItem } from './CraftProfitClient';
+
+// id квеста → имя (для лейбла чипа квест-анлока). Статичный набор квестов, не внешний фетч.
+const QUEST_NAME = new Map(EFT_QUESTS.map((q) => [q.id, q.name]));
 
 export const metadata: Metadata = { title: 'Прибыль убежища | Убежище ЦТА' };
 
@@ -123,6 +127,7 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
         unitBuy: cheapestBuy(s.itemId),
         isFuel: FUEL_ITEM_IDS.has(s.itemId),
         sellTrader: bestTraderSell(s.itemId),
+        ...(s.tool ? { isTool: true } : {}),
       }));
 
       const reward = c.rewardItems.map((s) => {
@@ -152,7 +157,12 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
               skills: unlockMap[`${stationNormalized}|${level}`].skills.map((x) => ({ name: x.name, level: x.level })),
             }
           : undefined,
-        // taskUnlock / gameEditions — undefined до миграции T1.
+        ...(c.taskUnlockId ? { taskUnlock: c.taskUnlockId } : {}),
+        ...(c.taskUnlockId && QUEST_NAME.has(c.taskUnlockId)
+          ? { taskUnlockName: QUEST_NAME.get(c.taskUnlockId) }
+          : {}),
+        ...(c.gameEditions?.length ? { gameEditions: c.gameEditions } : {}),
+        ...(c.requiredQuestItems?.length ? { requiredQuestItems: c.requiredQuestItems } : {}),
       };
     });
 }
