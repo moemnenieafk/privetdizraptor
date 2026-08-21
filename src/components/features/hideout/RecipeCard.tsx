@@ -14,7 +14,7 @@ import { useInventoryStore } from '@/store/useInventoryStore';
 import { computeCraftEconomy } from '@/lib/craft-profit';
 import { stationIconClass } from '@/components/features/hideout/HideoutBuildTracker';
 import { RequirementChip } from '@/components/features/hideout/RequirementChip';
-import type { ProcessedCraft } from '@/app/eft/progress/hideout/craft-profit/CraftProfitClient';
+import type { ProcessedCraft, CraftInput } from '@/app/eft/progress/hideout/craft-profit/CraftProfitClient';
 
 export interface RecipeCardProps {
   /** Рецепт из ридера страницы (CraftProfitClient). */
@@ -50,6 +50,12 @@ function fmtDur(sec: number): string {
   return h > 0 ? `${h}ч ${m ? `${m}м` : ''}`.trim() : `${m}м`;
 }
 
+/** Стоимость строки входа с учётом «пустого бака»: топливо → sellTrader·0.1, иначе cash-закупка. */
+function inputLineCost(r: CraftInput, emptyFuel: boolean): number {
+  const unit = emptyFuel && r.isFuel ? r.sellTrader * 0.1 : r.unitBuy;
+  return Math.round(unit * r.count);
+}
+
 function pphColor(pph: number): string {
   if (pph > 20_000) return 'text-success';
   if (pph > 5_000) return 'text-(--primary)';
@@ -75,16 +81,20 @@ export function RecipeCard({
 
   const reward = craft.reward[0];
 
-  // Экономика крафта — чистый хелпер T2. Выход: базовая цена = unitPrice выхода (для налога),
-  // продажа трейдеру/флиа приходят из totalValue ридера (v1: unitPrice = лучшая продажа за штуку).
+  // Экономика крафта — чистый хелпер T2. Входы: cash-закупка + флаги топлива (пустой бак).
+  // Выход: сырые компоненты цены ридера — basePrice (налог), лучший трейдер, барахолка.
   const eco = useMemo(() => {
-    const outUnit = reward?.unitPrice ?? 0;
     return computeCraftEconomy({
-      inputs: craft.required.map((r) => ({ unitBuy: r.unitPrice, count: r.count })),
+      inputs: craft.required.map((r) => ({
+        unitBuy: r.unitBuy,
+        count: r.count,
+        isFuel: r.isFuel,
+        sellTrader: r.sellTrader,
+      })),
       output: {
-        basePrice: outUnit,
-        bestTraderSell: outUnit,
-        fleaPrice: outUnit,
+        basePrice: reward?.basePrice ?? 0,
+        bestTraderSell: reward?.bestTraderSell ?? 0,
+        fleaPrice: reward?.fleaPrice ?? 0,
         count: reward?.count ?? 1,
       },
       baseDurationSec: craft.duration,
@@ -179,7 +189,7 @@ export function RecipeCard({
                   onInc={() => {}}
                 />
                 <span className="w-full text-center font-blender-medium text-type-micro tabular-nums text-text-secondary">
-                  ×{r.count} · {fmtRub(r.unitPrice * r.count)}
+                  ×{r.count} · {fmtRub(inputLineCost(r, emptyFuel))}
                 </span>
               </div>
             ))}

@@ -1,16 +1,57 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Check, Lock } from 'lucide-react';
+// Клиент раздела «Прибыль убежища» (T7 craft-profit-rework): интро-блок + вкладки модулей +
+// контролы + слайдеры навыков + грид карточек RecipeCard. Ридер (page.tsx) отдаёт СЫРЫЕ
+// компоненты цены; всю экономику/фильтр/сортировку считаем реактивно через computeCraftEconomy
+// (T2) в мемо-хелперах (§4.7 — не в JSX). Слайдеры навыков и «пустой бак» кормят те же формулы.
+import { useEffect, useMemo, useState } from 'react';
 import { useHideoutStore } from '@/store/useHideoutStore';
-import { HideoutLevelsPanel, type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { usePmcStatsStore } from '@/store/usePmcStatsStore';
+import { useManualProfileStore } from '@/store/useManualProfileStore';
+import { resolveSkillLevel } from '@/lib/tarkov/player-view-merge';
+import { editionFloor } from '@/lib/hideout-edition';
+import { computeCraftEconomy, type CraftEconomy } from '@/lib/craft-profit';
+import { RecipeCard } from '@/components/features/hideout/RecipeCard';
+import { CraftControls, type CraftSortMode } from '@/components/features/hideout/CraftControls';
+import { ModuleFilterTabs, type ModuleTabDatum } from '@/components/features/hideout/ModuleFilterTabs';
+import { stationIconClass } from '@/components/features/hideout/HideoutBuildTracker';
+import type { HideoutStationInfo } from '@/db/hideout';
 
-export interface CraftSlot {
-  // `backgroundColor`/`slug` — опциональны: ридер T7 их наполнит (рарити-фон + ссылка на предмет),
-  // текущий page.tsx их не отдаёт → карточка деградирует мягко (серый фон, имя без ссылки).
-  item: { id: string; name: string; shortName: string; image512pxLink?: string; backgroundColor?: string; slug?: string };
+/** Мета предмета слота крафта (общая для входа и выхода). */
+export interface CraftSlotItem {
+  id: string;
+  name: string;
+  shortName: string;
+  image512pxLink?: string;
+  /** Имя цвета слота (violet/blue/grey…) — фон ячейки по редкости. */
+  backgroundColor?: string;
+  /** normalizedName из зеркала prices — кросс-линк на карточку предмета. */
+  slug?: string;
+}
+
+/** Вход рецепта: сырые компоненты цены (клиент считает стоимость сам). */
+export interface CraftInput {
+  item: CraftSlotItem;
   count: number;
-  unitPrice: number;
+  /** Дешевейшая cash-покупка из buyFor (₽). */
+  unitBuy: number;
+  /** Топливный бак — для тумблера «пустой бак» (считается как sellTrader·0.1). */
+  isFuel: boolean;
+  /** Лучшая продажа трейдеру за штуку — база «пустого бака». */
+  sellTrader: number;
+}
+
+/** Выход рецепта: сырые компоненты цены (basePrice для налога + два канала продажи). */
+export interface CraftOutput {
+  item: CraftSlotItem;
+  count: number;
+  /** items.basePrice — база расчёта налога барахолки. */
+  basePrice: number;
+  /** Максимальная продажа трейдеру за штуку (БЕЗ барахолки). */
+  bestTraderSell: number;
+  /** Цена барахолки за штуку (lastLowPrice ?? avg24hPrice). */
+  fleaPrice: number;
 }
 
 export interface StationGate {
@@ -26,317 +67,349 @@ export interface ProcessedCraft {
   stationIcon: string | null;
   level: number;
   duration: number;
-  required: CraftSlot[];
-  reward: CraftSlot[];
-  totalCost: number;
-  totalValue: number;
-  profit: number;
-  profitPerHour: number;
-  roi: number;
+  required: CraftInput[];
+  reward: CraftOutput[];
   gate?: StationGate;
+  /** Квест-анлок пройден (T1, миграция): пока всегда undefined. */
+  taskUnlock?: boolean;
+  /** Крафт даётся изданием (T1, миграция): пока всегда undefined. */
+  gameEditions?: boolean;
 }
 
-type SortKey = 'pph' | 'profit' | 'roi' | 'duration';
+/** ID навыков в SKILL_CATALOG (resolveSkillLevel читает по ним). */
+const SKILL_CRAFTING = 'Crafting';
+const SKILL_HIDEOUT_MGMT = 'HideoutManagement';
+const SKILL_MAX = 51; // 50 = максимум навыка, 51 — порог Elite-перка (клампится хелпером).
 
-function fmtRub(n: number): string {
-  const a = Math.abs(n);
-  const sign = n < 0 ? '−' : '';
-  if (a >= 1_000_000) return `${sign}${(a / 1_000_000).toFixed(a >= 10_000_000 ? 0 : 1)}М`;
-  if (a >= 1_000) return `${sign}${Math.round(a / 1_000)}к`;
-  return `${sign}${a}`;
+/**
+ * Метрика крафта под текущие навыки/тумблеры. Мемоизируется на уровне списка (не в карточке),
+ * чтобы фильтр/сортировка били по тем же числам, что показывает карточка (§4.7).
+ */
+function craftEconomy(
+  c: ProcessedCraft,
+  craftingLevel: number,
+  hideoutMgmtLevel: number,
+  intelCenterBuilt: boolean,
+  emptyFuel: boolean,
+): CraftEconomy {
+  const out = c.reward[0];
+  return computeCraftEconomy({
+    inputs: c.required.map((r) => ({
+      unitBuy: r.unitBuy,
+      count: r.count,
+      isFuel: r.isFuel,
+      sellTrader: r.sellTrader,
+    })),
+    output: {
+      basePrice: out?.basePrice ?? 0,
+      bestTraderSell: out?.bestTraderSell ?? 0,
+      fleaPrice: out?.fleaPrice ?? 0,
+      count: out?.count ?? 1,
+    },
+    baseDurationSec: c.duration,
+    craftingLevel,
+    hideoutMgmtLevel,
+    intelCenterBuilt,
+    emptyFuel,
+  });
 }
 
-function fmtDur(sec: number): string {
-  if (sec <= 0) return '—';
-  const h = Math.floor(sec / 3600);
-  const m = Math.round((sec % 3600) / 60);
-  return h > 0 ? `${h}ч ${m ? `${m}м` : ''}`.trim() : `${m}м`;
+/** Доступность = станция построена ≥ уровня И (квест пройден | нет данных) И (издание | нет данных). */
+function isAvailable(c: ProcessedCraft, builtLevel: number): boolean {
+  return builtLevel >= c.level && c.taskUnlock !== false && c.gameEditions !== false;
 }
 
-function pphColor(pph: number): string {
-  if (pph > 20_000) return 'text-success';
-  if (pph > 5_000) return 'text-(--primary)';
-  if (pph > 0) return 'text-text-secondary';
-  return 'text-text-muted';
-}
+const SORTERS: Record<CraftSortMode, (m: CraftEconomy) => number> = {
+  pph: (m) => m.profitPerHour,
+  profit: (m) => m.profit,
+  roi: (m) => m.roi,
+  duration: (m) => -m.effDurationSec, // короче → выше
+  cost: (m) => -m.totalCost, // дешевле → выше
+  alpha: () => 0, // алфавит сортируется отдельно по имени выхода
+};
 
-export function CraftProfitClient({ crafts, hideoutStations }: { crafts: ProcessedCraft[]; hideoutStations: HideoutStationInfo[] }) {
+export function CraftProfitClient({
+  crafts,
+  hideoutStations: _hideoutStations,
+}: {
+  crafts: ProcessedCraft[];
+  hideoutStations: HideoutStationInfo[];
+}) {
+  // mounted-гард: persist-сторы читаем только на клиенте (иначе hydration mismatch).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Профиль: построенные уровни, издание (даёт floor), навыки (загруженный + ручные оверрайды).
+  const levels = useHideoutStore((s) => s.levels);
+  const edition = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId)?.edition);
+  const skillView = usePmcStatsStore((s) => s.view);
+  const manualSkills = useManualProfileStore((s) => s.skills);
+
+  // Построенный уровень станции с учётом издания. До маунта — 0 (hydration).
+  const builtLevel = (nn: string) =>
+    mounted ? Math.max(levels[nn] ?? 0, editionFloor(nn, edition)) : 0;
+
+  // Дефолт слайдеров навыков = уровень из профиля (resolveSkillLevel). Инициализируем нулём,
+  // после маунта подтягиваем профиль (persist доступен только на клиенте).
+  const profileCrafting = mounted ? resolveSkillLevel(skillView, manualSkills, SKILL_CRAFTING) : 0;
+  const profileHideoutMgmt = mounted ? resolveSkillLevel(skillView, manualSkills, SKILL_HIDEOUT_MGMT) : 0;
+
+  const [craftingLevel, setCraftingLevel] = useState(0);
+  const [hideoutMgmtLevel, setHideoutMgmtLevel] = useState(0);
+  const [skillsTouched, setSkillsTouched] = useState(false);
+  // Пока слайдеры не трогали руками — держим их синхронными с профилем (в т.ч. после его загрузки).
+  useEffect(() => {
+    if (skillsTouched) return;
+    setCraftingLevel(profileCrafting);
+    setHideoutMgmtLevel(profileHideoutMgmt);
+  }, [profileCrafting, profileHideoutMgmt, skillsTouched]);
+
+  const resetSkillsToProfile = () => {
+    setSkillsTouched(false);
+    setCraftingLevel(profileCrafting);
+    setHideoutMgmtLevel(profileHideoutMgmt);
+  };
+
+  // Разведцентр ур.3+ построен → скидка налога барахолки.
+  const intelCenterBuilt = builtLevel('intelligence-center') >= 3;
+
+  // Тумблеры и контролы.
+  const [emptyFuel, setEmptyFuel] = useState(false);
   const [search, setSearch] = useState('');
   const [onlyProfitable, setOnlyProfitable] = useState(false);
-  const [onlyBuildable, setOnlyBuildable] = useState(false);
-  const [sortKey, setSortKey] = useState<SortKey>('pph');
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [hideLocked, setHideLocked] = useState(false);
+  const [sort, setSort] = useState<CraftSortMode>('pph');
   const [activeStation, setActiveStation] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const levels = useHideoutStore((s) => s.levels);
-  const builtLevel = (c: ProcessedCraft) => levels[c.stationNormalized] ?? 0;
 
-  // Станции: иконка, имя, счётчик, лучший ₽/час
-  const stations = useMemo(() => {
-    const map = new Map<string, { key: string; name: string; icon: string | null; count: number; maxPph: number }>();
+  // Снапшот метрики по каждому крафту под текущие навыки/тумблеры — один проход, переиспользуется
+  // фильтром/сортировкой/вкладками. Пересчёт только когда меняются входные условия (§4.7).
+  const metrics = useMemo(() => {
+    const m = new Map<string, CraftEconomy>();
+    for (const c of crafts) {
+      m.set(c.id, craftEconomy(c, craftingLevel, hideoutMgmtLevel, intelCenterBuilt, emptyFuel));
+    }
+    return m;
+  }, [crafts, craftingLevel, hideoutMgmtLevel, intelCenterBuilt, emptyFuel]);
+
+  // Вкладки модулей: builtLevel из профиля, availCount = крафтов на текущем уровне, totalCount = всего.
+  const moduleTabs = useMemo<ModuleTabDatum[]>(() => {
+    const map = new Map<string, ModuleTabDatum & { maxPph: number }>();
     for (const c of crafts) {
       const key = c.stationNormalized || c.stationName;
-      const e = map.get(key) ?? { key, name: c.stationName, icon: c.stationIcon, count: 0, maxPph: -Infinity };
-      e.count++;
-      e.maxPph = Math.max(e.maxPph, c.profitPerHour);
+      const e =
+        map.get(key) ??
+        {
+          key,
+          name: c.stationName,
+          normalizedName: c.stationNormalized,
+          builtLevel: builtLevel(c.stationNormalized),
+          availCount: 0,
+          totalCount: 0,
+          maxPph: -Infinity,
+        };
+      e.totalCount++;
+      if (c.level <= e.builtLevel) e.availCount++;
+      e.maxPph = Math.max(e.maxPph, metrics.get(c.id)?.profitPerHour ?? 0);
       map.set(key, e);
     }
-    return [...map.values()].sort((a, b) => b.maxPph - a.maxPph);
-  }, [crafts]);
-
-  const sortFn = useMemo(() => {
-    const by: Record<SortKey, (c: ProcessedCraft) => number> = {
-      pph: (c) => c.profitPerHour,
-      profit: (c) => c.profit,
-      roi: (c) => c.roi,
-      duration: (c) => -c.duration,
-    };
-    return (a: ProcessedCraft, b: ProcessedCraft) => by[sortKey](b) - by[sortKey](a);
-  }, [sortKey]);
-
-  const q = search.trim().toLowerCase();
-  const filtered = useMemo(
-    () =>
-      crafts.filter((c) => {
-        if (onlyProfitable && c.profit <= 0) return false;
-        if (onlyBuildable && builtLevel(c) < c.level) return false;
-        if (activeStation && (c.stationNormalized || c.stationName) !== activeStation) return false;
-        if (q) {
-          const hit = c.reward.some((r) => r.item.name.toLowerCase().includes(q) || r.item.shortName.toLowerCase().includes(q));
-          if (!hit) return false;
-        }
-        return true;
-      }),
+    return [...map.values()]
+      .sort((a, b) => b.maxPph - a.maxPph)
+      .map(({ maxPph: _maxPph, ...t }) => t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [crafts, onlyProfitable, onlyBuildable, activeStation, q, levels],
-  );
+  }, [crafts, metrics, levels, edition, mounted]);
 
-  // Группировка по станции (отсортированной по лучшему ₽/час)
-  const groups = useMemo(() => {
-    const byStation = new Map<string, ProcessedCraft[]>();
-    for (const c of filtered) {
-      const key = c.stationNormalized || c.stationName;
-      const arr = byStation.get(key) ?? [];
-      arr.push(c);
-      byStation.set(key, arr);
+  // Фильтрация: поиск по выходу, «только прибыльные», «доступно сейчас», «скрыть заблокированные», вкладка.
+  const q = search.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    return crafts.filter((c) => {
+      const m = metrics.get(c.id);
+      if (!m) return false;
+      const available = isAvailable(c, builtLevel(c.stationNormalized));
+      if (onlyProfitable && m.profit <= 0) return false;
+      if (onlyAvailable && !available) return false;
+      if (hideLocked && !available) return false;
+      if (activeStation && (c.stationNormalized || c.stationName) !== activeStation) return false;
+      if (q) {
+        const hit = c.reward.some(
+          (r) => r.item.name.toLowerCase().includes(q) || r.item.shortName.toLowerCase().includes(q),
+        );
+        if (!hit) return false;
+      }
+      return true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [crafts, metrics, onlyProfitable, onlyAvailable, hideLocked, activeStation, q, levels, edition, mounted]);
+
+  // Сортировка: 6 методов. Алфавит — по имени выхода; остальные — по метрике (desc).
+  const sorted = useMemo(() => {
+    const rewardName = (c: ProcessedCraft) => c.reward[0]?.item.name ?? '';
+    const arr = [...filtered];
+    if (sort === 'alpha') {
+      arr.sort((a, b) => rewardName(a).localeCompare(rewardName(b)));
+      return arr;
     }
-    return stations
-      .filter((s) => byStation.has(s.key))
-      .map((s) => ({ station: s, rows: byStation.get(s.key)!.sort(sortFn) }));
-  }, [filtered, stations, sortFn]);
-
-  const summary = useMemo(() => {
-    const profitable = crafts.filter((c) => c.profit > 0);
-    const maxPph = profitable.reduce((m, c) => Math.max(m, c.profitPerHour), 0);
-    const daySum = profitable.reduce((s, c) => s + c.profit, 0);
-    return { count: profitable.length, maxPph, daySum };
-  }, [crafts]);
-
-  const SORTS: { key: SortKey; label: string }[] = [
-    { key: 'pph', label: '₽/час' },
-    { key: 'profit', label: 'Прибыль' },
-    { key: 'roi', label: 'ROI' },
-    { key: 'duration', label: 'Время' },
-  ];
+    const key = SORTERS[sort];
+    arr.sort((a, b) => {
+      const ma = metrics.get(a.id);
+      const mb = metrics.get(b.id);
+      return (mb ? key(mb) : 0) - (ma ? key(ma) : 0);
+    });
+    return arr;
+  }, [filtered, sort, metrics]);
 
   return (
     <div className="flex flex-col gap-5">
-      <HideoutLevelsPanel stations={hideoutStations} />
-
-      {/* Контролы */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по результату крафта…"
-            className="h-9 min-w-50 flex-1 rounded border border-lines-hover bg-card-menu px-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-(--primary)"
-          />
-          <button
-            type="button"
-            onClick={() => setOnlyProfitable((v) => !v)}
-            className={`h-9 rounded px-3 text-type-caption font-blender-medium uppercase tracking-widest transition-colors ${
-              onlyProfitable
-                ? 'border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-(--primary)'
-                : 'border border-lines-hover bg-card-menu text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            Только прибыльные
-          </button>
-          <button
-            type="button"
-            onClick={() => setOnlyBuildable((v) => !v)}
-            className={`h-9 rounded px-3 text-type-caption font-blender-medium uppercase tracking-widest transition-colors ${
-              onlyBuildable
-                ? 'border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-(--primary)'
-                : 'border border-lines-hover bg-card-menu text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            Доступные сейчас
-          </button>
-          <div className="flex items-center gap-1">
-            <span className="text-type-caption uppercase tracking-widest text-text-muted">Сорт:</span>
-            {SORTS.map((s) => (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => setSortKey(s.key)}
-                className={`h-9 rounded px-2.5 text-type-caption font-blender-medium uppercase tracking-widest transition-colors ${
-                  sortKey === s.key ? 'bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-(--primary)' : 'text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
+      {/* 1. Интро-блок: иконка + H1 + короткое описание. */}
+      <header className="flex items-center gap-4">
+        <span
+          aria-hidden
+          className="h-12 w-12 shrink-0 icon-mask bg-(--primary)"
+          style={{
+            maskImage: 'url(/icons/eft/04-progression/craft-profit.svg)',
+            WebkitMaskImage: 'url(/icons/eft/04-progression/craft-profit.svg)',
+            maskSize: 'contain',
+            WebkitMaskSize: 'contain',
+            maskRepeat: 'no-repeat',
+            WebkitMaskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskPosition: 'center',
+          }}
+        />
+        <div className="min-w-0">
+          <h1 className="font-blender-medium text-2xl uppercase tracking-widest text-text-primary">
+            Прибыль убежища
+          </h1>
+          <p className="mt-1 text-type-caption text-text-muted font-blender-book">
+            Что выгодно крафтить сейчас — профит с учётом налога барахолки, твоих навыков и построенных станций.
+          </p>
         </div>
+      </header>
 
-        {/* Чипы станций */}
-        <div className="flex flex-wrap gap-2">
+      {/* 2. Вкладки модулей. */}
+      <ModuleFilterTabs
+        tabs={moduleTabs}
+        totalAll={crafts.length}
+        active={activeStation}
+        onSelect={setActiveStation}
+      />
+
+      {/* 3. Контролы: поиск + фильтр-чипы + сортировка. */}
+      <CraftControls
+        search={search}
+        onSearch={setSearch}
+        onlyProfitable={onlyProfitable}
+        onToggleProfitable={() => setOnlyProfitable((v) => !v)}
+        onlyAvailable={onlyAvailable}
+        onToggleAvailable={() => setOnlyAvailable((v) => !v)}
+        hideLocked={hideLocked}
+        onToggleHideLocked={() => setHideLocked((v) => !v)}
+        sort={sort}
+        onSort={setSort}
+      />
+
+      {/* 4. Слайдеры навыков + «пустой бак» + сброс к профилю. */}
+      <div className="flex flex-col gap-3 rounded-md border border-lines-hover bg-card-menu/40 p-4 sm:flex-row sm:items-end sm:gap-6">
+        <SkillSlider
+          iconClass={stationIconClass('workbench')}
+          label="Ручное производство"
+          value={craftingLevel}
+          onChange={(v) => {
+            setSkillsTouched(true);
+            setCraftingLevel(v);
+          }}
+        />
+        <SkillSlider
+          iconClass={stationIconClass('intelligence-center')}
+          label="Управление убежищем"
+          value={hideoutMgmtLevel}
+          onChange={(v) => {
+            setSkillsTouched(true);
+            setHideoutMgmtLevel(v);
+          }}
+        />
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setActiveStation(null)}
-            className={`flex h-9 items-center gap-2 rounded px-3 text-type-caption font-blender-medium uppercase tracking-widest transition-colors ${
-              activeStation === null ? 'border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-(--primary)' : 'border border-lines-hover bg-card-menu text-text-secondary hover:text-text-primary'
+            onClick={() => setEmptyFuel((v) => !v)}
+            aria-pressed={emptyFuel}
+            className={`h-9 shrink-0 rounded-sm border px-3 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
+              emptyFuel
+                ? 'border-(--primary) bg-(--primary)/15 text-(--primary)'
+                : 'border-lines-hover text-text-muted hover:text-text-secondary'
             }`}
           >
-            Все ({crafts.length})
+            Пустой бак
           </button>
-          {stations.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => setActiveStation((cur) => (cur === s.key ? null : s.key))}
-              title={s.name}
-              className={`flex h-9 items-center gap-2 rounded px-3 text-type-caption font-blender-medium uppercase tracking-widest transition-colors ${
-                activeStation === s.key ? 'border border-(--primary) bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-(--primary)' : 'border border-lines-hover bg-card-menu text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              {s.icon && (
-                <span
-                  aria-hidden="true"
-                  className={`h-4 w-4 ${activeStation === s.key ? 'bg-(--primary)' : 'bg-text-secondary'}`}
-                  style={{ WebkitMaskImage: `url(${s.icon})`, maskImage: `url(${s.icon})`, WebkitMaskSize: 'contain', maskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center' }}
-                />
-              )}
-              {s.name} ({s.count})
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={resetSkillsToProfile}
+            title="Вернуть уровни навыков к значениям из профиля"
+            className="h-9 shrink-0 rounded-sm border border-lines-hover px-3 font-blender-medium text-type-micro uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
+          >
+            Сбросить к профилю
+          </button>
         </div>
-
-        <p className="text-type-caption text-text-muted font-blender-book">
-          Прибыльных крафтов: {summary.count} · лучший ₽/час: {fmtRub(summary.maxPph)} · цены продажи без вычета налога барахолки.
-        </p>
       </div>
 
-      {/* Группы по станциям */}
-      {groups.map(({ station, rows }) => (
-        <section key={station.key} className="overflow-hidden rounded-md border border-lines-hover">
-          <header className="flex items-center gap-3 bg-card-menu px-4 py-3">
-            {station.icon && (
-              <span
-                aria-hidden="true"
-                className="h-6 w-6 bg-(--primary)"
-                style={{ WebkitMaskImage: `url(${station.icon})`, maskImage: `url(${station.icon})`, WebkitMaskSize: 'contain', maskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center' }}
-              />
-            )}
-            <h2 className="text-sm font-blender-medium uppercase tracking-widest text-text-primary">{station.name}</h2>
-            <span className="text-type-caption uppercase tracking-widest text-text-muted">{rows.length} крафт. · макс {fmtRub(station.maxPph)}/ч</span>
-          </header>
-
-          <div className="divide-y divide-lines-hover">
-            {rows.map((c) => {
-              const expanded = expandedId === c.id;
-              const rewardName = c.reward[0]?.item.name ?? '—';
-              return (
-                <div key={c.id}>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId(expanded ? null : c.id)}
-                    className="grid w-full grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-card-menu/60"
-                  >
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span className={`shrink-0 text-type-caption ${expanded ? 'text-(--primary)' : 'text-text-muted'}`}>{expanded ? '▾' : '▸'}</span>
-                      <span className="truncate text-sm font-blender-medium text-text-primary">{rewardName}</span>
-                      <span className="shrink-0 rounded-xs border border-lines-hover px-1.5 text-type-caption text-text-muted">ур.{c.level}</span>
-                      {builtLevel(c) >= c.level ? (
-                        <Check className="h-3.5 w-3.5 shrink-0 text-success" aria-label="Станция построена — доступно сейчас" />
-                      ) : (
-                        c.gate && (c.gate.traders.length > 0 || c.gate.skills.length > 0) && (
-                          <Lock className="h-3 w-3 shrink-0 text-text-muted" aria-label="Требуется торговец/навык" />
-                        )
-                      )}
-                    </span>
-                    <span className="w-16 text-right text-sm text-text-secondary tabular-nums">{fmtDur(c.duration)}</span>
-                    <span className="w-20 text-right text-sm text-text-secondary tabular-nums">{fmtRub(c.totalCost)}→{fmtRub(c.totalValue)}</span>
-                    <span className={`w-16 text-right text-sm font-blender-medium tabular-nums ${c.profit > 0 ? 'text-text-primary' : 'text-text-muted'}`}>{c.profit > 0 ? '+' : ''}{fmtRub(c.profit)}</span>
-                    <span className={`w-20 text-right text-sm font-blender-medium tabular-nums ${pphColor(c.profitPerHour)}`}>{fmtRub(c.profitPerHour)}/ч</span>
-                  </button>
-
-                  {expanded && (
-                    <div className="bg-(--color-darkbase) px-4 py-3">
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <CraftSlots title="Вход" slots={c.required} />
-                        <CraftSlots title="Выход" slots={c.reward} />
-                      </div>
-                      {c.gate && c.gate.stations.length + c.gate.traders.length + c.gate.skills.length > 0 && (
-                        <StationGateBlock gate={c.gate} stationName={c.stationName} level={c.level} />
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
-
-      {groups.length === 0 && (
-        <p className="py-16 text-center text-sm text-text-muted font-blender-book">Ничего не найдено — измените фильтры.</p>
+      {/* 5. Грид карточек — 1/2/3 колонки. */}
+      {sorted.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {sorted.map((c) => (
+            <RecipeCard
+              key={c.id}
+              craft={c}
+              builtStationLevel={builtLevel(c.stationNormalized)}
+              craftingLevel={craftingLevel}
+              hideoutMgmtLevel={hideoutMgmtLevel}
+              intelCenterBuilt={intelCenterBuilt}
+              emptyFuel={emptyFuel}
+              questDone={c.taskUnlock}
+              editionOwned={c.gameEditions}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="py-16 text-center text-sm text-text-muted font-blender-book">
+          Ничего не найдено — измените фильтры.
+        </p>
       )}
     </div>
   );
 }
 
-function CraftSlots({ title, slots }: { title: string; slots: CraftSlot[] }) {
+/** Слайдер уровня навыка 0–51 с иконкой, подписью и текущим значением. */
+function SkillSlider({
+  iconClass,
+  label,
+  value,
+  onChange,
+}: {
+  iconClass: string;
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
   return (
-    <div>
-      <p className="mb-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted">{title}</p>
-      <ul className="flex flex-col gap-1.5">
-        {slots.map((s, i) => (
-          <li key={i} className="flex items-center gap-2 text-sm">
-            <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xs border border-lines-hover bg-card-menu">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {s.item.image512pxLink && <img src={s.item.image512pxLink} alt={s.item.shortName} className="h-full w-full object-contain p-0.5" loading="lazy" />}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-text-secondary font-blender-book">{s.item.name}</span>
-            <span className="shrink-0 text-text-muted tabular-nums">×{s.count}</span>
-            <span className="w-16 shrink-0 text-right text-text-secondary tabular-nums">{fmtRub(s.unitPrice * s.count)}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-// Требования разблокировки уровня станции (из зеркала hideout_upgrades).
-function StationGateBlock({ gate, stationName, level }: { gate: StationGate; stationName: string; level: number }) {
-  const chips: string[] = [
-    ...gate.stations.map((s) => `${s.name} ур.${s.level}`),
-    ...gate.traders.map((t) => `${t.name} ур.${t.level}`),
-    ...gate.skills.map((s) => `Навык: ${s.name} ур.${s.level}`),
-  ];
-  return (
-    <div className="mt-4 border-t border-lines-hover pt-3">
-      <p className="mb-2 flex items-center gap-1.5 text-type-caption font-blender-medium uppercase tracking-widest text-text-muted">
-        <Lock className="h-3 w-3" /> Доступ — {stationName} ур.{level}
-      </p>
-      <div className="flex flex-wrap gap-1.5">
-        {chips.map((c, i) => (
-          <span key={i} className="rounded-xs border border-lines-hover bg-card-menu px-2 py-0.5 text-type-caption text-text-secondary font-blender-book">
-            {c}
-          </span>
-        ))}
-      </div>
-    </div>
+    <label className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <span className="flex items-center gap-2">
+        <span aria-hidden className={`h-4 w-4 shrink-0 icon-mask ${iconClass} bg-text-secondary`} />
+        <span className="min-w-0 flex-1 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+          {label}
+        </span>
+        <span className="shrink-0 font-blender-medium text-type-caption tabular-nums text-(--primary)">
+          {value}
+        </span>
+      </span>
+      <input
+        type="range"
+        min={0}
+        max={SKILL_MAX}
+        step={1}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-lines-hover accent-(--primary)"
+      />
+    </label>
   );
 }
