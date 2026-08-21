@@ -288,9 +288,12 @@ export function RecipeCard({
           </span>
         )}
 
-        <span className={`shrink-0 font-blender-medium text-xl tabular-nums ${isDone ? 'text-nvg-green' : 'text-text-secondary'}`}>
-          {String(craft.level).padStart(2, '0')}
-        </span>
+        {/* Индикатор уровня справа — во всех стейтах КРОМЕ locked (там уровень уже в «требуется построить NN»). */}
+        {state !== 'locked' && (
+          <span className={`shrink-0 font-blender-medium text-xl tabular-nums ${isDone ? 'text-nvg-green' : 'text-text-secondary'}`}>
+            {String(craft.level).padStart(2, '0')}
+          </span>
+        )}
       </header>
 
       {/* 2. Герой — предмет-ВЫХОД (компакт): ячейка ×N + shortName + строка «ПРОДАЖА <flea> ₽» */}
