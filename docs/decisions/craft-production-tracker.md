@@ -1,6 +1,6 @@
 ---
 type: decision-spec
-status: спека готова (грилл 2026-08-22) — ждёт /figma пиксель-перфект + реализацию
+status: ✅ реализовано (2026-08-22), live-verify пройден (4/5 стейтов); ждёт пуш в main. ГОТОВО — код-верифай (таймер 20 мин, живьём не кликнут)
 sprint: craft-production-tracker
 owner: V4DYA
 figma: node 2990-584, файл «Проект Портала Платформы» (Z1c9wK3AtqBrBhSwNt8qZz)
