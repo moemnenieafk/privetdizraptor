@@ -10,14 +10,32 @@ import { persist } from 'zustand/middleware';
  *
  * persist localStorage; _hasHydrated — флаг завершённой гидрации (паттерн useManualProfileStore).
  */
-export type ProductionEntry = { craftId: string; startedAt: number; durationSec: number };
+/**
+ * `label` — shortName выходного предмета, `stationName` — RU-имя станции: оба нужны
+ * глобальному `CraftWatcher` для текста уведомления о готовности крафта (спека §2).
+ */
+export type ProductionEntry = {
+  craftId: string;
+  startedAt: number;
+  durationSec: number;
+  label: string;
+  stationName: string;
+};
+
+/** Аргументы старта крафта — снапшот запуска без служебного `startedAt` (ставится стором). */
+export type StartArgs = {
+  craftId: string;
+  durationSec: number;
+  label: string;
+  stationName: string;
+};
 
 interface CraftProductionStore {
   active: Record<string, ProductionEntry>;
   _hasHydrated: boolean;
 
   /** Старт ТОЛЬКО если станция свободна (нет активной записи). Пишет снапшот. Занята → false. */
-  start: (stationKey: string, craftId: string, durationSec: number) => boolean;
+  start: (stationKey: string, args: StartArgs) => boolean;
   /** Отмена крафта — удаляет запись станции. */
   cancel: (stationKey: string) => void;
   /** Забрать крафт — удаляет запись, освобождает станцию (эффект как cancel; имя для ясности сайта вызова). */
@@ -31,13 +49,19 @@ export const useCraftProductionStore = create<CraftProductionStore>()(
       active: {},
       _hasHydrated: false,
 
-      start: (stationKey, craftId, durationSec) => {
+      start: (stationKey, args) => {
         if (get().active[stationKey]) return false;
-        const safeDuration = Number.isFinite(durationSec) ? Math.max(0, Math.floor(durationSec)) : 0;
+        const safeDuration = Number.isFinite(args.durationSec) ? Math.max(0, Math.floor(args.durationSec)) : 0;
         set((state) => ({
           active: {
             ...state.active,
-            [stationKey]: { craftId, startedAt: Date.now(), durationSec: safeDuration },
+            [stationKey]: {
+              craftId: args.craftId,
+              startedAt: Date.now(),
+              durationSec: safeDuration,
+              label: args.label,
+              stationName: args.stationName,
+            },
           },
         }));
         return true;
