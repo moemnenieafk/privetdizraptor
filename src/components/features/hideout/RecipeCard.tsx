@@ -1,16 +1,23 @@
 'use client';
 
-// Карточка рецепта крафта в духе EFT Item Card (§5 спеки craft-profit-rework).
+// Карточка рецепта крафта — 4 состояния + трекинг производства (спека craft-production-tracker).
+// Эталон — Figma-нода 2990-584 (Заблокировано · В производство · Производится · Готово) + «занята».
 // Самодостаточна по пропсам (в страницу вшивает T7): чистый ввод — ProcessedCraft + разрешённые
-// уровни навыков/убежища из стора родителя; «в схроне» читает сама из useInventoryStore.
-// Доменная математика — computeCraftEconomy (T2), в JSX только форматирование (§4.7 CLAUDE).
+// уровни навыков/убежища; «в схроне» и активное производство читает сама из сторов (mounted-гард).
+// Доменная математика — computeCraftEconomy (T2) + хелперы таймера стора; в JSX только форматирование.
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Check, Lock } from 'lucide-react';
+import { Clock, Hammer, Paperclip, Percent, ShoppingCart } from 'lucide-react';
 import { TrackCell } from '@/components/ui/kit';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { itemIconUrl } from '@/lib/item-icon';
 import { useInventoryStore } from '@/store/useInventoryStore';
+import {
+  useCraftProductionStore,
+  remainingSec,
+  productionStatus,
+} from '@/store/useCraftProductionStore';
+import { useShoppingListStore } from '@/store/useShoppingListStore';
 import { computeCraftEconomy } from '@/lib/craft-profit';
 import { stationIconClass } from '@/components/features/hideout/HideoutBuildTracker';
 import { RequirementChip } from '@/components/features/hideout/RequirementChip';
@@ -52,19 +59,44 @@ function editionLabel(codes: string[] | undefined): string {
   return 'Издание';
 }
 
-function fmtRub(n: number): string {
-  const a = Math.abs(n);
-  const sign = n < 0 ? '−' : '';
-  if (a >= 1_000_000) return `${sign}${(a / 1_000_000).toFixed(a >= 10_000_000 ? 0 : 1)}М`;
-  if (a >= 1_000) return `${sign}${Math.round(a / 1_000)}к`;
-  return `${sign}${a}`;
+/** Полный ₽: «177 362 ₽», знак «−»/«+» опционален. Пробел-разделитель тысяч (ru-RU). */
+function fmtRubFull(n: number, opts?: { sign?: boolean }): string {
+  const rounded = Math.round(n);
+  const grouped = Math.abs(rounded).toLocaleString('ru-RU').replace(/ /g, ' ');
+  const sign = rounded < 0 ? '−' : opts?.sign ? '+' : '';
+  return `${sign}${grouped} ₽`;
 }
 
-function fmtDur(sec: number): string {
+/** Длительность «02 ч 24 мин» / «45 мин» (ведущий ноль часов, как в макете). */
+function fmtDurLong(sec: number): string {
   if (sec <= 0) return '—';
   const h = Math.floor(sec / 3600);
   const m = Math.round((sec % 3600) / 60);
-  return h > 0 ? `${h}ч ${m ? `${m}м` : ''}`.trim() : `${m}м`;
+  if (h > 0) return `${String(h).padStart(2, '0')} ч ${String(m).padStart(2, '0')} мин`;
+  return `${m} мин`;
+}
+
+/** Разбор остатка секунд на группы таймера с ведущими нулями (дни:часы:минуты:секунды). */
+function timerParts(totalSec: number): { d: string; h: string; m: string; s: string } {
+  const t = Math.max(0, Math.floor(totalSec));
+  const d = Math.floor(t / 86_400);
+  const h = Math.floor((t % 86_400) / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  return {
+    d: String(d).padStart(2, '0'),
+    h: String(h).padStart(2, '0'),
+    m: String(m).padStart(2, '0'),
+    s: String(s).padStart(2, '0'),
+  };
+}
+
+/** Освобождение станции «ЧЧ:ММ» из остатка секунд — для тултипа «СТАНЦИЯ ЗАНЯТА». */
+function fmtHhMm(sec: number): string {
+  const t = Math.max(0, Math.floor(sec));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 /** Стоимость строки входа с учётом «пустого бака»: топливо → sellTrader·0.1, иначе cash-закупка. */
@@ -73,11 +105,51 @@ function inputLineCost(r: CraftInput, emptyFuel: boolean): number {
   return Math.round(unit * r.count);
 }
 
+/** Цвет ₽/час по величине (нейтральный→зелёный градиент). */
 function pphColor(pph: number): string {
-  if (pph > 20_000) return 'text-success';
-  if (pph > 5_000) return 'text-(--primary)';
+  if (pph > 20_000) return 'text-nvg-green';
+  if (pph > 5_000) return 'text-nvg-green';
   if (pph > 0) return 'text-text-secondary';
   return 'text-text-muted';
+}
+
+/** Состояние карточки — приоритет по спеке §1. */
+type CardState = 'locked' | 'can-craft' | 'busy' | 'producing' | 'done';
+
+/** Ряд-разделитель с центральным лейблом (ВХОД / ВЫРУЧКА). */
+function DividerLabel({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span aria-hidden className="h-px flex-1 bg-lines-hover" />
+      <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
+        {label}
+      </span>
+      <span aria-hidden className="h-px flex-1 bg-lines-hover" />
+    </div>
+  );
+}
+
+/** Одна строка метрики: иконка + лейбл слева, значение + цвет справа. */
+function MetricRow({
+  icon,
+  label,
+  value,
+  valueClass,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  valueClass: string;
+}) {
+  return (
+    <div className="flex h-4 items-center justify-between">
+      <span className="flex items-center gap-2 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
+        {icon}
+        {label}
+      </span>
+      <span className={`font-blender-medium text-type-caption tabular-nums ${valueClass}`}>{value}</span>
+    </div>
+  );
 }
 
 export function RecipeCard({
@@ -90,16 +162,24 @@ export function RecipeCard({
   questDone,
   editionOwned,
 }: RecipeCardProps) {
-  // mounted-гард: «в схроне» — persist-стор (localStorage), читаем только на клиенте (hydration).
+  // mounted-гард: «в схроне» и производство — persist-сторы (localStorage), читаем на клиенте.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
   const ownedItems = useInventoryStore((s) => s.ownedItems);
   const stashCount = (id: string) => (mounted ? (ownedItems[id] ?? 0) : 0);
 
-  const reward = craft.reward[0];
+  const active = useCraftProductionStore((s) => s.active);
+  const start = useCraftProductionStore((s) => s.start);
+  const cancel = useCraftProductionStore((s) => s.cancel);
+  const collect = useCraftProductionStore((s) => s.collect);
+  const addToList = useShoppingListStore((s) => s.add);
 
-  // Экономика крафта — чистый хелпер T2. Входы: cash-закупка + флаги топлива (пустой бак).
-  // Выход: сырые компоненты цены ридера — basePrice (налог), лучший трейдер, барахолка.
+  const reward = craft.reward[0];
+  const stationKey = craft.stationNormalized;
+  const entry = mounted ? active[stationKey] : undefined;
+
+  // Экономика крафта — чистый хелпер T2 (§4.7). Числовая математика вне JSX.
   const eco = useMemo(() => {
     return computeCraftEconomy({
       inputs: craft.required.map((r) => ({
@@ -127,172 +207,339 @@ export function RecipeCard({
   const stationMet = builtStationLevel >= craft.level;
   const questGated = Boolean(craft.taskUnlock);
   const editionGated = Boolean(craft.gameEditions?.length);
-  // «Доступно сейчас» = станция построена ≥ уровня И (квест пройден | не требуется) И (издание | не требуется).
   const available = stationMet && (!questGated || questDone) && (!editionGated || editionOwned);
 
+  // Живой тик — только когда станция что-то производит (наш крафт ИЛИ сестринский занят).
+  const isOwnActive = Boolean(entry && entry.craftId === craft.id);
+  const isSiblingBusy = Boolean(entry && entry.craftId !== craft.id);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!entry) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [entry]);
+
+  // Разрешение состояния (приоритет §1): наш крафт → producing/done; сестра → busy; иначе доступность.
+  const state: CardState = isOwnActive
+    ? productionStatus(entry!, now)
+    : isSiblingBusy
+      ? 'busy'
+      : available
+        ? 'can-craft'
+        : 'locked';
+
+  const ownRemaining = isOwnActive ? remainingSec(entry!, now) : 0;
+  const siblingRemaining = isSiblingBusy ? remainingSec(entry!, now) : 0;
+
+  // Скрепка: транзиентное «✓ в списке» ~1.5с (тост-утилиты в проекте нет — inline-подтверждение).
+  const [clipDone, setClipDone] = useState(false);
+  const onClip = () => {
+    addToList(craft.required.map((r) => ({ id: r.item.id, count: r.count })));
+    setClipDone(true);
+    setTimeout(() => setClipDone(false), 1500);
+  };
+
+  const onStart = () => {
+    start(stationKey, {
+      craftId: craft.id,
+      durationSec: eco.effDurationSec,
+      label: reward?.item.shortName ?? craft.stationName,
+      stationName: craft.stationName,
+    });
+  };
+
   const rewardBg = getTarkovBackgroundColor(reward?.item.backgroundColor);
+  const isTimerState = state === 'producing' || state === 'done';
+  const isDone = state === 'done';
+
+  // Обводка/акцент карточки: готово → зелёная рамка+свечение; иначе базовая линия.
+  const cardBorder = isDone
+    ? 'border-nvg-green shadow-[0_0_0_1px_var(--color-nvg-green),0_0_18px_-6px_var(--color-nvg-green)]'
+    : 'border-lines-hover';
+  const cardDim = state === 'producing' ? 'opacity-60' : '';
+
+  const timer = timerParts(ownRemaining);
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-lines-hover bg-card-menu p-4">
-      {/* 1. Шапка: иконка станции + имя + чип «УР. N» + статус */}
-      <header className="flex items-center gap-2.5">
-        {craft.stationNormalized && (
-          <span aria-hidden className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(craft.stationNormalized)} bg-text-secondary`} />
+    <article className={`flex flex-col gap-2 rounded-lg border bg-card-menu p-4 ${cardBorder} ${cardDim}`}>
+      {/* 1. Шапка: иконка станции + имя · справа «02» + (locked) «ТРЕБУЕТСЯ ПОСТРОИТЬ NN» + молоток */}
+      <header className="flex h-7 items-center gap-2">
+        {stationKey && (
+          <span
+            aria-hidden
+            className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(stationKey)} ${isDone ? 'bg-nvg-green' : 'bg-text-secondary'}`}
+          />
         )}
-        <span className="min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest text-text-secondary">
+        <span
+          className={`min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest ${isDone ? 'text-nvg-green' : 'text-text-secondary'}`}
+        >
           {craft.stationName}
         </span>
-        <span className="shrink-0 rounded-xs border border-lines-hover px-1.5 py-0.5 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-          Ур. {craft.level}
-        </span>
-        {available ? (
-          <span title="Доступно сейчас" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xs bg-nvg-green/10 text-nvg-green">
-            <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
-          </span>
-        ) : (
-          <span title="Заблокировано" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xs bg-card-menu/60 text-text-muted">
-            <Lock className="h-3.5 w-3.5" aria-hidden />
+
+        {state === 'locked' && (
+          <span className="flex shrink-0 items-center gap-1.5 font-blender-medium text-type-micro uppercase leading-tight tracking-widest text-tactical-amber">
+            <span className="text-right">
+              Требуется
+              <br />
+              построить
+            </span>
+            <span className="text-base tabular-nums">{String(craft.level).padStart(2, '0')}</span>
+            <Hammer className="h-4 w-4 shrink-0" aria-hidden />
           </span>
         )}
+
+        <span className={`shrink-0 font-blender-medium text-xl tabular-nums ${isDone ? 'text-nvg-green' : 'text-text-secondary'}`}>
+          {String(craft.level).padStart(2, '0')}
+        </span>
       </header>
 
-      {/* 2. Герой — предмет-ВЫХОД: крупная рарити-иконка + имя (ссылка) + ×N + цена продажи */}
+      {/* 2. Герой — предмет-ВЫХОД (компакт): ячейка ×N + shortName + строка «ПРОДАЖА <flea> ₽» */}
       {reward && (
-        <div className="flex items-center gap-3">
-          {/* Выход = канон-ячейка TrackCell (тарковский рарити-фон + блик + тень), display-режим: бейдж «×N». */}
+        <div className="flex h-14 items-center gap-3">
           <TrackCell
             iconSrc={reward.item.image512pxLink ?? itemIconUrl(reward.item.id)}
             alt={reward.item.name}
             have={0}
             need={0}
             onInc={() => {}}
-            sizeClass="h-20 w-20"
+            sizeClass="h-14 w-14"
             bgColor={rewardBg}
             noFill
             badge={`×${reward.count}`}
           />
-          <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
             {reward.item.slug ? (
               <Link
                 href={`/eft/items/item/${reward.item.slug}`}
-                className="line-clamp-2 font-blender-medium text-sm uppercase leading-tight tracking-wide text-text-primary transition-colors hover:text-(--primary)"
+                className="line-clamp-1 font-blender-medium text-type-caption uppercase tracking-wide text-text-primary transition-colors hover:text-(--primary)"
               >
-                {reward.item.name}
+                {reward.item.shortName}
               </Link>
             ) : (
-              <span className="line-clamp-2 font-blender-medium text-sm uppercase leading-tight tracking-wide text-text-primary">
-                {reward.item.name}
+              <span className="line-clamp-1 font-blender-medium text-type-caption uppercase tracking-wide text-text-primary">
+                {reward.item.shortName}
               </span>
             )}
-            <p className="mt-1.5 font-blender-medium text-type-caption tabular-nums text-text-secondary">
-              {fmtRub(eco.outputValue)} {eco.usedFlea ? '(барахолка)' : '(торговец)'}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <span aria-hidden className="h-4 w-4 shrink-0 icon-mask icon-eft-currency-ruble bg-tactical-amber" />
+              <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">Продажа</span>
+              <span className="ml-auto font-blender-medium text-type-caption tabular-nums text-text-primary">
+                {fmtRubFull(reward.fleaPrice)}
+              </span>
+            </div>
           </div>
         </div>
       )}
 
-      {/* 3. Входы: ряд TrackCell в режиме display + «в схроне» (read-only) */}
-      {craft.required.length > 0 && (
-        <div>
-          <p className="mb-1.5 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">Входы</p>
-          <div className="flex flex-wrap gap-2">
-            {craft.required.map((r, i) => (
-              <div key={`${r.item.id}-${i}`} className="flex w-14 flex-col items-center gap-1">
-                <TrackCell
-                  iconSrc={r.item.image512pxLink ?? itemIconUrl(r.item.id)}
-                  alt={r.item.name}
-                  have={stashCount(r.item.id)}
-                  need={r.count}
-                  bgColor={getTarkovBackgroundColor(r.item.backgroundColor)}
-                  onInc={() => {}}
-                />
-                <span className="w-full text-center font-blender-medium text-type-micro tabular-nums text-text-secondary">
-                  ×{r.count} · {fmtRub(inputLineCost(r, emptyFuel))}
-                </span>
+      {/* Ветвление: таймер-состояния заменяют входы+метрики обратным отсчётом; иначе — полный блок. */}
+      {isTimerState ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-4">
+          <div className="flex items-end gap-1.5">
+            {[
+              { v: timer.d, l: 'дней' },
+              { v: timer.h, l: 'часов' },
+              { v: timer.m, l: 'минут' },
+              { v: timer.s, l: 'секунд' },
+            ].map((g, i) => (
+              <div key={g.l} className="flex items-end gap-1.5">
+                {i > 0 && <span className={`pb-4 text-2xl leading-none ${isDone ? 'text-nvg-green' : 'text-text-muted'}`}>:</span>}
+                <div className="flex flex-col items-center gap-1">
+                  <span className={`text-2xl font-blender-medium leading-none tabular-nums ${isDone ? 'text-nvg-green' : 'text-text-secondary'}`}>
+                    {g.v}
+                  </span>
+                  <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">{g.l}</span>
+                </div>
               </div>
             ))}
           </div>
+          {isDone ? (
+            <span className="font-blender-medium text-type-caption uppercase tracking-widest text-nvg-green">
+              Производство завершено
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => cancel(stationKey)}
+              className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors hover:text-text-secondary"
+            >
+              отменить крафт
+            </button>
+          )}
         </div>
+      ) : (
+        <>
+          {/* 3. Входы: лейбл-линия «ВХОД» → ряд ячеек (0/N read-only) + цена под каждой */}
+          {craft.required.length > 0 && (
+            <>
+              <DividerLabel label="Вход" />
+              <div className="flex flex-wrap justify-center gap-3">
+                {craft.required.map((r, i) => (
+                  <div key={`${r.item.id}-${i}`} className="flex flex-col items-center gap-1">
+                    <TrackCell
+                      iconSrc={r.item.image512pxLink ?? itemIconUrl(r.item.id)}
+                      alt={r.item.name}
+                      have={stashCount(r.item.id)}
+                      need={r.count}
+                      bgColor={getTarkovBackgroundColor(r.item.backgroundColor)}
+                      onInc={() => {}}
+                      sizeClass="h-12 w-12"
+                    />
+                    <span className="font-blender-medium text-type-micro tabular-nums text-text-secondary">
+                      {fmtRubFull(inputLineCost(r, emptyFuel))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* 4. Требования (станция/квест/издание) — только в locked/can-craft (в таймере скрыты) */}
+          <div className="flex flex-wrap items-center gap-2">
+            <RequirementChip
+              iconClass={stationKey ? stationIconClass(stationKey) : undefined}
+              label={`${craft.stationName} · Ур. ${craft.level}`}
+              met={stationMet}
+              title={`${craft.stationName} — нужен уровень ${craft.level}, у вас ${builtStationLevel}`}
+            />
+            {questGated && (
+              <Link href={`/eft/questmap?quest=${craft.taskUnlock}`} className="rounded-sm transition-opacity hover:opacity-80">
+                <RequirementChip
+                  label={craft.taskUnlockName ?? 'Квест-анлок'}
+                  met={questDone}
+                  title={questDone ? 'Квест пройден' : 'Требуется пройти квест — открыть на карте квестов'}
+                />
+              </Link>
+            )}
+            {editionGated && (
+              <RequirementChip
+                label={editionLabel(craft.gameEditions)}
+                met={editionOwned}
+                title={editionOwned ? 'Издание есть' : 'Крафт открывается изданием игры'}
+              />
+            )}
+            {craft.requiredQuestItems && craft.requiredQuestItems.length > 0 && (
+              <RequirementChip
+                label={`Нужны квест-предметы · ${craft.requiredQuestItems.length}`}
+                met={null}
+                title="На входе есть квест-предметы (не покупаются на барахолке)"
+              />
+            )}
+          </div>
+
+          {/* 5. Метрики: лейбл-линия «ВЫРУЧКА» → список строк с иконками и цветом по знаку */}
+          <DividerLabel label="Выручка" />
+          <div className="flex flex-col gap-2">
+            <MetricRow
+              icon={<Clock className="h-4 w-4 shrink-0" aria-hidden />}
+              label="Время"
+              value={fmtDurLong(eco.effDurationSec)}
+              valueClass="text-text-secondary"
+            />
+            <MetricRow
+              icon={<span aria-hidden className="h-4 w-4 shrink-0 icon-mask icon-eft-currency-ruble bg-text-secondary" />}
+              label="Выручка"
+              value={fmtRubFull(eco.outputValue)}
+              valueClass="text-text-secondary"
+            />
+            <MetricRow
+              icon={<ShoppingCart className="h-4 w-4 shrink-0" aria-hidden />}
+              label="Покупка"
+              value={fmtRubFull(-eco.totalCost)}
+              valueClass="text-danger"
+            />
+            <MetricRow
+              icon={<Percent className="h-4 w-4 shrink-0" aria-hidden />}
+              label="Комиссия"
+              value={fmtRubFull(-eco.fleaFeeTotal)}
+              valueClass="text-danger"
+            />
+            <MetricRow
+              icon={<span aria-hidden className="h-4 w-4 shrink-0 icon-mask icon-eft-savings bg-nvg-green" />}
+              label="Экономия"
+              value={fmtRubFull(eco.savings, { sign: true })}
+              valueClass="text-nvg-green"
+            />
+            <MetricRow
+              icon={<span aria-hidden className="h-4 w-4 shrink-0 icon-mask icon-eft-profit bg-nvg-green" />}
+              label="Прибыль"
+              value={fmtRubFull(eco.profit, { sign: true })}
+              valueClass="text-nvg-green"
+            />
+            <MetricRow
+              icon={<span aria-hidden className={`h-4 w-4 shrink-0 icon-mask icon-eft-currency-ruble ${pphColor(eco.profitPerHour).replace('text-', 'bg-')}`} />}
+              label="Р/час"
+              value={fmtRubFull(eco.profitPerHour)}
+              valueClass={pphColor(eco.profitPerHour)}
+            />
+          </div>
+        </>
       )}
 
-      {/* 4. Требования: nvg-green чипы (станция всегда; квест/издание — если поля заданы) */}
-      <div className="flex flex-wrap items-center gap-2">
-        <RequirementChip
-          iconClass={craft.stationNormalized ? stationIconClass(craft.stationNormalized) : undefined}
-          label={`${craft.stationName} · Ур. ${craft.level}`}
-          met={stationMet}
-          title={`${craft.stationName} — нужен уровень ${craft.level}, у вас ${builtStationLevel}`}
-        />
-        {questGated && (
-          <Link
-            href={`/eft/questmap?quest=${craft.taskUnlock}`}
-            className="rounded-sm transition-opacity hover:opacity-80"
+      {/* 6. Подвал: кнопка по стейту + скрепка «в список нужного» */}
+      <div className="mt-auto flex h-7 items-center gap-2 pt-1">
+        {state === 'locked' && (
+          <button
+            type="button"
+            disabled
+            className="flex h-7 flex-1 items-center justify-center rounded-sm border border-lines-hover bg-card-menu/40 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted"
           >
-            <RequirementChip
-              label={craft.taskUnlockName ?? 'Квест-анлок'}
-              met={questDone}
-              title={questDone ? 'Квест пройден' : 'Требуется пройти квест — открыть на карте квестов'}
-            />
-          </Link>
+            Заблокировано
+          </button>
         )}
-        {editionGated && (
-          <RequirementChip
-            label={editionLabel(craft.gameEditions)}
-            met={editionOwned}
-            title={editionOwned ? 'Издание есть' : 'Крафт открывается изданием игры'}
-          />
+        {state === 'busy' && (
+          <button
+            type="button"
+            disabled
+            title={`Верстак освободится через ${fmtHhMm(siblingRemaining)}`}
+            className="flex h-7 flex-1 items-center justify-center rounded-sm border border-lines-hover bg-card-menu/40 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted"
+          >
+            Станция занята
+          </button>
         )}
-        {craft.requiredQuestItems && craft.requiredQuestItems.length > 0 && (
-          <RequirementChip
-            label={`Нужны квест-предметы · ${craft.requiredQuestItems.length}`}
-            met={null}
-            title="На входе есть квест-предметы (не покупаются на барахолке)"
-          />
+        {state === 'can-craft' && (
+          <button
+            type="button"
+            onClick={onStart}
+            className="flex h-7 flex-1 items-center justify-center rounded-sm border border-tactical-amber bg-[color-mix(in_srgb,var(--color-tactical-amber)_12%,transparent)] font-blender-medium text-type-caption uppercase tracking-widest text-tactical-amber transition-colors hover:bg-[color-mix(in_srgb,var(--color-tactical-amber)_20%,transparent)]"
+          >
+            В производство
+          </button>
         )}
-      </div>
+        {state === 'producing' && (
+          <button
+            type="button"
+            disabled
+            className="flex h-7 flex-1 items-center justify-center rounded-sm border border-lines-hover bg-card-menu/40 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted"
+          >
+            Производится…
+          </button>
+        )}
+        {state === 'done' && (
+          <button
+            type="button"
+            onClick={() => collect(stationKey)}
+            className="flex h-7 flex-1 items-center justify-center rounded-sm border border-nvg-green bg-[color-mix(in_srgb,var(--color-nvg-green)_12%,transparent)] font-blender-medium text-type-caption uppercase tracking-widest text-nvg-green transition-colors hover:bg-[color-mix(in_srgb,var(--color-nvg-green)_20%,transparent)]"
+          >
+            Забрать крафт
+          </button>
+        )}
 
-      {/* 5. Метрики (подвал): время база→эфф · стоимость→выручка · налог барахолки · профит · ₽/час */}
-      <dl className="mt-auto flex flex-col gap-1 border-t border-lines-hover pt-3 text-type-caption tabular-nums">
-        <div className="flex items-center justify-between">
-          <dt className="text-text-muted">Время</dt>
-          <dd className="text-text-secondary">
-            {fmtDur(craft.duration)} <span className="text-text-muted">→</span> {fmtDur(eco.effDurationSec)}
-          </dd>
-        </div>
-        <div className="flex items-center justify-between">
-          <dt className="text-text-muted">Вход → выручка</dt>
-          <dd className="text-text-secondary">
-            {fmtRub(eco.totalCost)} <span className="text-text-muted">→</span> {fmtRub(eco.outputValue)}
-          </dd>
-        </div>
-        {eco.fleaFeeTotal > 0 && (
-          <div className="flex items-center justify-between">
-            <dt className="text-text-muted">Налог барахолки</dt>
-            <dd className="text-danger">−{fmtRub(eco.fleaFeeTotal)}</dd>
-          </div>
-        )}
-        <div className="flex items-center justify-between">
-          <dt className="font-blender-medium uppercase tracking-widest text-text-muted">Профит</dt>
-          <dd className={`font-blender-medium ${eco.profit > 0 ? 'text-text-primary' : 'text-text-muted'}`}>
-            {eco.profit > 0 ? '+' : ''}
-            {fmtRub(eco.profit)}
-          </dd>
-        </div>
-        {/* «Экономия» (крафт для себя): цена покупки выхода − стоимость входов. Только когда выгодно. */}
-        {eco.savings > 0 && (
-          <div className="flex items-center justify-between">
-            <dt className="flex items-center gap-1.5 font-blender-medium uppercase tracking-widest text-text-muted">
-              <span aria-hidden className="h-3.5 w-3.5 shrink-0 icon-mask icon-eft-savings bg-nvg-green" />
-              Экономия
-            </dt>
-            <dd className="font-blender-medium text-nvg-green">+{fmtRub(eco.savings)}</dd>
-          </div>
-        )}
-        <div className="flex items-center justify-between">
-          <dt className="font-blender-medium uppercase tracking-widest text-text-muted">₽/час</dt>
-          <dd className={`font-blender-medium ${pphColor(eco.profitPerHour)}`}>{fmtRub(eco.profitPerHour)}/ч</dd>
-        </div>
-      </dl>
+        <button
+          type="button"
+          onClick={onClip}
+          title="В список нужного"
+          aria-label="Добавить входы в список нужного"
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-lines-hover transition-colors ${
+            clipDone ? 'text-nvg-green' : 'text-text-muted hover:text-text-secondary'
+          }`}
+        >
+          {clipDone ? (
+            <span className="font-blender-medium text-type-micro leading-none">✓</span>
+          ) : (
+            <Paperclip className="h-4 w-4" aria-hidden />
+          )}
+        </button>
+      </div>
     </article>
   );
 }
