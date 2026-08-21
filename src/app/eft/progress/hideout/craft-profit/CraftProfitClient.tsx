@@ -16,7 +16,7 @@ import { computeCraftEconomy, type CraftEconomy } from '@/lib/craft-profit';
 import { RecipeCard } from '@/components/features/hideout/RecipeCard';
 import { CraftControls, type CraftSortMode } from '@/components/features/hideout/CraftControls';
 import { ModuleFilterTabs, type ModuleTabDatum } from '@/components/features/hideout/ModuleFilterTabs';
-import { stationIconClass } from '@/components/features/hideout/HideoutBuildTracker';
+import { SKILL_ICONS } from '@/components/features/adaptive/skill-icons';
 import type { HideoutStationInfo } from '@/db/hideout';
 
 /** Мета предмета слота крафта (общая для входа и выхода). */
@@ -343,7 +343,7 @@ export function CraftProfitClient({
       {/* 4. Слайдеры навыков + «пустой бак» + сброс к профилю. */}
       <div className="flex flex-col gap-3 rounded-md border border-lines-hover bg-card-menu/40 p-4 sm:flex-row sm:items-end sm:gap-6">
         <SkillSlider
-          iconClass={stationIconClass('workbench')}
+          iconSrc={SKILL_ICONS.Crafting?.src ?? ''}
           label="Ручное производство"
           value={craftingLevel}
           onChange={(v) => {
@@ -352,7 +352,7 @@ export function CraftProfitClient({
           }}
         />
         <SkillSlider
-          iconClass={stationIconClass('intelligence-center')}
+          iconSrc={SKILL_ICONS.HideoutManagement?.src ?? ''}
           label="Управление убежищем"
           value={hideoutMgmtLevel}
           onChange={(v) => {
@@ -415,12 +415,12 @@ export function CraftProfitClient({
 
 /** Слайдер уровня навыка 0–51 с иконкой, подписью и текущим значением. */
 function SkillSlider({
-  iconClass,
+  iconSrc,
   label,
   value,
   onChange,
 }: {
-  iconClass: string;
+  iconSrc: string;
   label: string;
   value: number;
   onChange: (v: number) => void;
@@ -428,7 +428,7 @@ function SkillSlider({
   return (
     <label className="flex min-w-0 flex-1 flex-col gap-1.5">
       <span className="flex items-center gap-2">
-        <span aria-hidden className={`h-4 w-4 shrink-0 icon-mask ${iconClass} bg-text-secondary`} />
+        <img src={iconSrc} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-xs object-contain" />
         <span className="min-w-0 flex-1 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
           {label}
         </span>
