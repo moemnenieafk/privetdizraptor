@@ -306,34 +306,39 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
         {/* Колонка 2 — УБЕЖИЩЕ ЧВК (196px): навык УУ + учёт топлива. */}
         <div className="min-w-0 lg:w-[196px] lg:shrink-0">
           <RuleLabel>Убежище ЧВК</RuleLabel>
-          {/* Навык «Управление убежищем» + степперы. */}
-          <div className="mt-3 flex items-center gap-2">
-            {SKILL_ICONS.HideoutManagement && (
-              <img
-                src={SKILL_ICONS.HideoutManagement.src}
-                alt=""
-                loading="lazy"
-                className="h-9 w-9 shrink-0 rounded-[3px] border border-lines-hover object-contain"
+          {/* Навык «Управление убежищем» + степперы — одна строка (как в Figma):
+              иконка + подпись в 2 строки (принуд. перенос) слева, [− NN +] справа. */}
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              {SKILL_ICONS.HideoutManagement && (
+                <img
+                  src={SKILL_ICONS.HideoutManagement.src}
+                  alt=""
+                  loading="lazy"
+                  className="h-9 w-9 shrink-0 rounded-[3px] border border-lines-hover object-contain"
+                />
+              )}
+              <span className="min-w-0 font-blender-medium text-type-micro uppercase leading-tight tracking-widest text-text-secondary">
+                Управление
+                <br />
+                убежищем
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Stepper
+                dir="down"
+                disabled={mgmtLevel <= 0}
+                onClick={() => setMgmtOverride(clamp(mgmtLevel - 1, 0, 51))}
               />
-            )}
-            <span className="min-w-0 flex-1 font-blender-medium text-type-micro uppercase leading-tight tracking-widest text-text-secondary">
-              Управление убежищем
-            </span>
-          </div>
-          <div className="mt-2 flex items-center justify-center gap-2">
-            <Stepper
-              dir="down"
-              disabled={mgmtLevel <= 0}
-              onClick={() => setMgmtOverride(clamp(mgmtLevel - 1, 0, 51))}
-            />
-            <span className="w-9 text-center font-blender-medium text-2xl leading-none tabular-nums text-text-primary">
-              {mounted ? mgmtLevel : '—'}
-            </span>
-            <Stepper
-              dir="up"
-              disabled={mgmtLevel >= 51}
-              onClick={() => setMgmtOverride(clamp(mgmtLevel + 1, 0, 51))}
-            />
+              <span className="w-7 text-center font-blender-medium text-2xl leading-none tabular-nums text-text-primary">
+                {mounted ? mgmtLevel : '—'}
+              </span>
+              <Stepper
+                dir="up"
+                disabled={mgmtLevel >= 51}
+                onClick={() => setMgmtOverride(clamp(mgmtLevel + 1, 0, 51))}
+              />
+            </div>
           </div>
           <p className="mt-2 text-center font-blender-book text-type-caption leading-tight text-text-muted">
             Уменьшает расход топлива (до −25% на 50 ур.) На скорость добычи не влияет.
