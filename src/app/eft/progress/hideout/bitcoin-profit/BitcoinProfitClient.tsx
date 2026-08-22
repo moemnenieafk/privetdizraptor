@@ -228,10 +228,9 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
 
       {/* 1. КОНФИГУРАТОР — 3-колоночный ряд (Figma 3022:1901): 724 / 196 / 128, gap 28. */}
       <section className="flex flex-col gap-7 lg:flex-row lg:items-start lg:gap-7">
-        {/* Колонка 1 — УРОВЕНЬ ФЕРМЫ: плитки-уровни + кликабельный грид GPU.
-            Пол по Figma-базе (45.25rem = 724px@1920, ничего не меняется), выше — растёт
-            и заполняет контент-колонку на 2К/4К (грид GPU flex-1 тянется за ней). */}
-        <div className="min-w-0 lg:min-w-[45.25rem] lg:flex-1">
+        {/* Колонка 1 — УРОВЕНЬ ФЕРМЫ (724px@1920): плитки-уровни + кликабельный грид GPU.
+            Фикс-rem растёт за глобальным пропорциональным root → 965px@2K, 1448px@4K = Figma. */}
+        <div className="min-w-0 lg:w-[45.25rem] lg:shrink-0">
           <RuleLabel>Уровень фермы</RuleLabel>
           <div className="mt-3 flex flex-col gap-[1.125rem] sm:flex-row sm:items-center">
             {/* Плитки L1/L2/L3. */}
