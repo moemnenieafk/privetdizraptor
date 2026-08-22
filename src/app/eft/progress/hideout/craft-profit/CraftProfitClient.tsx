@@ -501,7 +501,7 @@ function SortDropdown({ sort, onSort }: { sort: CraftSortMode; onSort: (m: Craft
         }`}
       >
         <ArrowDownWideNarrow className="h-4 w-4 shrink-0" aria-hidden />
-        Сортировка
+        {SORT_OPTIONS.find((o) => o.key === sort)?.label ?? 'Сортировка'}
         <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${menuOpen ? 'rotate-180' : ''}`} aria-hidden />
       </button>
 
