@@ -15,13 +15,23 @@ async function fetchBtcPrices(): Promise<BtcPrices> {
 
     let btcId: string | undefined;
     let gpuId: string | undefined;
+    let expedId: string | undefined;
+    let metalId: string | undefined;
     for (const [id, p] of priceMap) {
       if (p.normalizedName === 'physical-bitcoin') btcId = id;
       else if (p.normalizedName === 'graphics-card') gpuId = id;
+      else if (p.normalizedName === 'expeditionary-fuel-tank') expedId = id;
+      else if (p.normalizedName === 'metal-fuel-tank') metalId = id;
     }
 
     const btc = btcId ? priceMap.get(btcId) : undefined;
     const gpu = gpuId ? priceMap.get(gpuId) : undefined;
+
+    // Дешевейшая cash-закупка предмета из buyFor (как gpuCost); 0 если купить негде.
+    const cheapestBuy = (id: string | undefined) => {
+      const buys = ((id ? priceMap.get(id) : undefined)?.buyFor ?? []).map(rubVal).filter((v) => v > 0);
+      return buys.length ? Math.min(...buys) : 0;
+    };
 
     const btcTraderVals = (btc?.sellFor ?? []).filter((x) => !isFlea(x.vendor)).map(rubVal).filter((v) => v > 0);
     const btcTherapist = btcTraderVals.length ? Math.max(...btcTraderVals) : 0;
@@ -31,10 +41,16 @@ async function fetchBtcPrices(): Promise<BtcPrices> {
     const gpuCost = gpuBuys.length ? Math.min(...gpuBuys) : 0;
     const btcBase = (btcId ? catalog.find((i) => i.id === btcId)?.basePrice : 0) ?? 0;
 
-    return { btcTherapist, btcFlea, btcBase, gpuCost };
+    return {
+      btcTherapist,
+      btcFlea,
+      btcBase,
+      gpuCost,
+      fuel: { expeditionary: cheapestBuy(expedId), metal: cheapestBuy(metalId) },
+    };
   } catch (e) {
     console.error('[bitcoin-profit] зеркало недоступно:', e);
-    return { btcTherapist: 0, btcFlea: 0, btcBase: 0, gpuCost: 0 };
+    return { btcTherapist: 0, btcFlea: 0, btcBase: 0, gpuCost: 0, fuel: { expeditionary: 0, metal: 0 } };
   }
 }
 
