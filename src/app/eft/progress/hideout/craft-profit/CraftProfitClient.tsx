@@ -354,16 +354,8 @@ export function CraftProfitClient({
   return (
     <div className="flex flex-col gap-5">
       {/* Заголовок/описание раздела — в SectionHubNav (headerConfig p-hideout-craft), не дублируем. */}
-      {/* Вкладки модулей. */}
-      <ModuleFilterTabs
-        tabs={moduleTabs}
-        topCount={topCount}
-        active={activeStation}
-        onSelect={setActiveStation}
-      />
-
-      {/* 3. Единый ряд контролов: поиск + read-only скилл-индикаторы + иконки-фильтры +
-          профиль-ссылка + сортировка (Figma 3015-1878). */}
+      {/* 1. Единый ряд контролов: поиск + read-only скилл-индикаторы + иконки-фильтры +
+          профиль-ссылка + сортировка (Figma 3015-1878). Над вкладками станций. */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Поиск. */}
         <div className="relative min-w-40 flex-1">
@@ -412,6 +404,14 @@ export function CraftProfitClient({
         {/* Сортировка. */}
         <SortDropdown sort={sort} onSort={setSort} />
       </div>
+
+      {/* 2. Вкладки станций-модулей — под строкой контролов. */}
+      <ModuleFilterTabs
+        tabs={moduleTabs}
+        topCount={topCount}
+        active={activeStation}
+        onSelect={setActiveStation}
+      />
 
       {/* Закреплённые (скрепка) — всегда сверху, вне фильтров/вкладок. */}
       {pinnedCrafts.length > 0 && (
