@@ -80,6 +80,10 @@ export interface ProcessedCraft {
   taskUnlock?: string;
   /** Имя квеста-анлока для лейбла чипа (если сджойнено ридером). */
   taskUnlockName?: string;
+  /** normalizedName торговца квеста-анлока — для аватара/цвета квест-нод-чипа. */
+  taskUnlockTrader?: string;
+  /** minPlayerLevel квеста-анлока — для «УР. N+» в чипе. */
+  taskUnlockMinLevel?: number;
   /** Коды изданий-анлоков tarkov.dev (crafts.gameEditions). Резолв «есть?» — на клиенте. */
   gameEditions?: string[];
   /** id квест-предметов на входе (crafts.requiredQuestItems) — для нейтрального чипа. */

@@ -9,8 +9,11 @@ import { itemIconUrl } from '@/lib/item-icon';
 import { EFT_QUESTS } from '@/data/quests';
 import { CraftProfitClient, type ProcessedCraft, type CraftSlotItem } from './CraftProfitClient';
 
-// id квеста → имя (для лейбла чипа квест-анлока). Статичный набор квестов, не внешний фетч.
-const QUEST_NAME = new Map(EFT_QUESTS.map((q) => [q.id, q.name]));
+// id квеста → {имя, торговец, мин.уровень} для квест-нод-чипа (как в «Важных предметах»).
+// Статичный набор квестов, не внешний фетч.
+const QUEST_INFO = new Map(
+  EFT_QUESTS.map((q) => [q.id, { name: q.name, trader: q.trader?.normalizedName, minLevel: q.minPlayerLevel }] as const),
+);
 
 export const metadata: Metadata = { title: 'Прибыль убежища | Убежище ЦТА' };
 
@@ -120,6 +123,7 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
     .map((c): ProcessedCraft => {
       const stationNormalized = c.stationNormalizedName ?? '';
       const level = c.level ?? 1;
+      const qi = c.taskUnlockId ? QUEST_INFO.get(c.taskUnlockId) : undefined;
 
       const required = c.requiredItems.map((s) => ({
         item: slotItem(s.itemId),
@@ -160,9 +164,9 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
             }
           : undefined,
         ...(c.taskUnlockId ? { taskUnlock: c.taskUnlockId } : {}),
-        ...(c.taskUnlockId && QUEST_NAME.has(c.taskUnlockId)
-          ? { taskUnlockName: QUEST_NAME.get(c.taskUnlockId) }
-          : {}),
+        ...(qi?.name ? { taskUnlockName: qi.name } : {}),
+        ...(qi?.trader ? { taskUnlockTrader: qi.trader } : {}),
+        ...(qi?.minLevel ? { taskUnlockMinLevel: qi.minLevel } : {}),
         ...(c.gameEditions?.length ? { gameEditions: c.gameEditions } : {}),
         ...(c.requiredQuestItems?.length ? { requiredQuestItems: c.requiredQuestItems } : {}),
       };

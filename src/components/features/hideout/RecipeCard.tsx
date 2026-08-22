@@ -7,10 +7,12 @@
 // Доменная математика — computeCraftEconomy (T2) + хелперы таймера стора; в JSX только форматирование.
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Clock, Paperclip, Percent, ShoppingCart } from 'lucide-react';
+import { Check, Clock, Paperclip, Percent, ShoppingCart } from 'lucide-react';
 import { TrackCell } from '@/components/ui/kit';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { itemIconUrl } from '@/lib/item-icon';
+import { traderImg } from '@/lib/trader-utils';
+import { TRADER_COLORS } from '@/data/traderColors';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import {
   useCraftProductionStore,
@@ -149,6 +151,48 @@ function MetricRow({
       </span>
       <span className={`font-blender-medium text-type-caption tabular-nums ${valueClass}`}>{value}</span>
     </div>
+  );
+}
+
+/**
+ * Чип квеста-анлока в стиле квест-нод «Важных предметов» (SourceChip): цвет торговца, его
+ * квадрат-аватар, имя квеста + «УР. N+». Пройден → зелёная галочка. Оборачивается в ссылку на карту.
+ */
+function QuestNodeChip({
+  name,
+  traderNn,
+  minLevel,
+  done,
+}: {
+  name: string;
+  traderNn?: string;
+  minLevel?: number;
+  done: boolean;
+}) {
+  const color = TRADER_COLORS[traderNn ?? ''] ?? TRADER_COLORS.stories;
+  return (
+    <span
+      className="inline-flex items-center gap-2 rounded-sm border p-1 pr-2"
+      style={{
+        borderColor: color,
+        background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${color} 38%, transparent), #000000)`,
+      }}
+    >
+      {traderNn && (
+        <img src={traderImg(traderNn)} alt="" loading="lazy" className="h-6 w-6 shrink-0 rounded-xs object-cover" />
+      )}
+      <span className="flex min-w-0 flex-col leading-tight">
+        <span className="truncate font-blender-medium text-type-micro uppercase tracking-wide text-text-primary">
+          {name}
+        </span>
+        {minLevel != null && minLevel > 0 && (
+          <span className="font-blender-medium text-type-micro tabular-nums" style={{ color }}>
+            Ур. {minLevel}+
+          </span>
+        )}
+      </span>
+      {done && <Check className="h-3.5 w-3.5 shrink-0 text-nvg-green" strokeWidth={3} aria-hidden />}
+    </span>
   );
 }
 
@@ -411,11 +455,16 @@ export function RecipeCard({
           {(questGated || editionGated || (craft.requiredQuestItems?.length ?? 0) > 0) && (
           <div className="flex flex-wrap items-center gap-2">
             {questGated && (
-              <Link href={`/eft/questmap?quest=${craft.taskUnlock}`} className="rounded-sm transition-opacity hover:opacity-80">
-                <RequirementChip
-                  label={craft.taskUnlockName ?? 'Квест-анлок'}
-                  met={questDone}
-                  title={questDone ? 'Квест пройден' : 'Требуется пройти квест — открыть на карте квестов'}
+              <Link
+                href={`/eft/questmap?quest=${craft.taskUnlock}`}
+                title={questDone ? 'Квест пройден — открыть на карте' : 'Требуется пройти квест — открыть на карте квестов'}
+                className="rounded-sm transition-opacity hover:opacity-80"
+              >
+                <QuestNodeChip
+                  name={craft.taskUnlockName ?? 'Квест-анлок'}
+                  traderNn={craft.taskUnlockTrader}
+                  minLevel={craft.taskUnlockMinLevel}
+                  done={questDone}
                 />
               </Link>
             )}
