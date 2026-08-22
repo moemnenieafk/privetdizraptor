@@ -140,6 +140,15 @@ function producingStyle(): React.CSSProperties {
   };
 }
 
+// «Крафт завершён» (Figma 3001-1629): чисто чёрная подложка + зелёная обводка со свечением.
+function doneStyle(): React.CSSProperties {
+  return {
+    background: '#000000',
+    borderColor: 'var(--color-nvg-green)',
+    boxShadow: '0 0 0 1px var(--color-nvg-green), 0 0 18px -6px var(--color-nvg-green)',
+  };
+}
+
 /** Состояние карточки — приоритет по спеке §1. */
 type CardState = 'locked' | 'can-craft' | 'busy' | 'producing' | 'done';
 
@@ -316,11 +325,7 @@ export function RecipeCard({
   const isTimerState = state === 'producing' || state === 'done';
   const isDone = state === 'done';
 
-  // Обводка/акцент карточки: готово → зелёная рамка+свечение; иначе базовая линия.
-  const cardBorder = isDone
-    ? 'border-nvg-green shadow-[0_0_0_1px_var(--color-nvg-green),0_0_18px_-6px_var(--color-nvg-green)]'
-    : 'border-lines-hover';
-  // can-craft → акцент «крафта» (золото); producing → зелёный оттенок (Figma 2990-772).
+  // can-craft → акцент «крафта» (золото); producing/done → чёрная подложка (Figma 2990-772/3001-1629).
   const isCanCraft = state === 'can-craft';
   const isProducing = state === 'producing';
   // Producing: таймер/подписи в #9A8866 (инлайн — литерал не токен). Done — зелёный (классы ниже).
@@ -331,8 +336,8 @@ export function RecipeCard({
 
   return (
     <article
-      className={`flex flex-col gap-2 rounded-lg border p-4 ${isCanCraft || isProducing ? '' : `bg-card-menu ${cardBorder}`}`}
-      style={isCanCraft ? craftAccentStyle() : isProducing ? producingStyle() : undefined}
+      className={`flex flex-col gap-2 rounded-lg border p-4 ${isCanCraft || isProducing || isDone ? '' : 'border-lines-hover bg-card-menu'}`}
+      style={isCanCraft ? craftAccentStyle() : isProducing ? producingStyle() : isDone ? doneStyle() : undefined}
     >
       {/* 1. Шапка: иконка станции + имя · справа «02» + (locked) «ТРЕБУЕТСЯ ПОСТРОИТЬ NN» + молоток */}
       <header className="flex h-7 items-center gap-2">
