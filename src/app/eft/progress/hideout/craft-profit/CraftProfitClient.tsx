@@ -6,8 +6,7 @@
 // мемо-хелперах (§4.7 — не в JSX). Навыки — read-only индикаторы (уровни из Досье ЧВК), они и
 // тумблер «пустой бак» кормят те же формулы.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import { ArrowDownWideNarrow, Check, ChevronDown, Grid3x3, Search, TrendingUp } from 'lucide-react';
+import { ArrowDownWideNarrow, Check, ChevronDown, Search, TrendingUp } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
@@ -389,16 +388,9 @@ export function CraftProfitClient({
           <IconToggle on={emptyFuel} onClick={() => setEmptyFuel((v) => !v)} title="Пустой бак">
             <span aria-hidden className="icon-mask icon-eft-crafting-empty-tank h-5 w-5" />
           </IconToggle>
-          {/* Ненавязчивый вход в визуальную сетку схрона */}
-          <Link
-            href="/eft/progress/stash"
-            title="Открыть визуальную сетку схрона"
-            className="ml-auto flex h-9 shrink-0 items-center gap-2 rounded-sm border border-lines-hover px-3 font-blender-medium text-type-micro uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
-          >
-            <Grid3x3 className="h-4 w-4 shrink-0" aria-hidden />
-            Мой схрон
-          </Link>
-          <SortDropdown sort={sort} onSort={setSort} />
+          <div className="ml-auto">
+            <SortDropdown sort={sort} onSort={setSort} />
+          </div>
         </div>
       </div>
 
