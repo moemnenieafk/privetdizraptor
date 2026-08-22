@@ -13,4 +13,6 @@ export interface StashItemMeta {
   gridHeight: number;
   /** Имя цвета tarkov (orange/violet/blue/…) для getTarkovBackgroundColor. */
   backgroundColor: string | null;
+  /** normalizedName из prices — слаг для линка /eft/items/item/${slug}. Опускается, если пусто. */
+  slug?: string;
 }

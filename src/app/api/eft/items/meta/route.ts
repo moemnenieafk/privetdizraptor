@@ -32,6 +32,7 @@ export async function GET(req: Request): Promise<NextResponse<MetaResponse>> {
         gridWidth: items.gridWidth,
         gridHeight: items.gridHeight,
         backgroundColor: prices.backgroundColor,
+        normalizedName: prices.normalizedName,
       })
       .from(items)
       .leftJoin(prices, and(eq(prices.gameId, items.gameId), eq(prices.inGameId, items.inGameId)))
@@ -39,7 +40,7 @@ export async function GET(req: Request): Promise<NextResponse<MetaResponse>> {
 
     const out: Record<string, StashItemMeta> = {};
     for (const r of rows) {
-      out[r.inGameId] = {
+      const meta: StashItemMeta = {
         inGameId: r.inGameId,
         name: r.name,
         shortName: r.shortName ?? "",
@@ -47,6 +48,8 @@ export async function GET(req: Request): Promise<NextResponse<MetaResponse>> {
         gridHeight: r.gridHeight ?? 1,
         backgroundColor: r.backgroundColor,
       };
+      if (r.normalizedName) meta.slug = r.normalizedName;
+      out[r.inGameId] = meta;
     }
     return NextResponse.json({ items: out });
   } catch (e) {
