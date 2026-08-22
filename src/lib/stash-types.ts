@@ -15,4 +15,6 @@ export interface StashItemMeta {
   backgroundColor: string | null;
   /** normalizedName из prices — слаг для линка /eft/items/item/${slug}. Опускается, если пусто. */
   slug?: string;
+  /** Лимит стека (item_properties.propertiesRaw.stackMaxSize, есть у патронов). Опускается, если нет/не число → трактуется как 1. */
+  stackMaxSize?: number;
 }

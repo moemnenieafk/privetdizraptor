@@ -4,7 +4,7 @@
 import { NextResponse } from "next/server";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { items, prices } from "@/db/schema";
+import { items, itemProperties, prices } from "@/db/schema";
 import { eftGameId } from "@/db/eft";
 import type { StashItemMeta } from "@/lib/stash-types";
 
@@ -33,9 +33,11 @@ export async function GET(req: Request): Promise<NextResponse<MetaResponse>> {
         gridHeight: items.gridHeight,
         backgroundColor: prices.backgroundColor,
         normalizedName: prices.normalizedName,
+        propertiesRaw: itemProperties.propertiesRaw,
       })
       .from(items)
       .leftJoin(prices, and(eq(prices.gameId, items.gameId), eq(prices.inGameId, items.inGameId)))
+      .leftJoin(itemProperties, eq(itemProperties.itemId, items.id))
       .where(and(eq(items.gameId, gameId), inArray(items.inGameId, ids)));
 
     const out: Record<string, StashItemMeta> = {};
@@ -49,6 +51,8 @@ export async function GET(req: Request): Promise<NextResponse<MetaResponse>> {
         backgroundColor: r.backgroundColor,
       };
       if (r.normalizedName) meta.slug = r.normalizedName;
+      const rawStack = r.propertiesRaw?.stackMaxSize;
+      if (typeof rawStack === "number" && Number.isFinite(rawStack)) meta.stackMaxSize = rawStack;
       out[r.inGameId] = meta;
     }
     return NextResponse.json({ items: out });
