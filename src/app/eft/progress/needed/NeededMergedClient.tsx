@@ -8,7 +8,7 @@
 // Решения: docs/decisions/important-items-merge.md.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowDownWideNarrow, Check, ChevronDown, RotateCcw, Search } from 'lucide-react';
+import { ArrowDownWideNarrow, Check, ChevronDown, RotateCcw, Search, X } from 'lucide-react';
 import { TrackCell } from '@/components/ui/kit';
 import { QtyControl } from '@/components/ui/QtyControl';
 import { type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
@@ -824,25 +824,66 @@ function ItemRow({
   const hCount = st.sources.filter((s) => s.kind === 'hideout').length;
   // Сброс только этого предмета: обнуляем прогресс всех источников (задания + убежище→схрон)
   // и остаток в схроне (для чисто-квестовых предметов без hideout-источников).
+  const [confirmReset, setConfirmReset] = useState(false);
   const resetItem = () => {
     onSetTotal(0);
     onStash(0);
+    setConfirmReset(false);
   };
 
   return (
     <div className={`relative flex flex-col overflow-hidden rounded-sm border border-(--color-card-menu) bg-(--color-darkbase) ${done ? 'opacity-60' : ''}`}>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          resetItem();
-        }}
-        title="Сбросить прогресс этого предмета"
-        aria-label="Сбросить прогресс этого предмета"
-        className="absolute right-1.5 top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-sm text-text-muted transition-colors hover:bg-danger/10 hover:text-danger"
-      >
-        <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-      </button>
+      {/* Угол: иконка сброса → при подтверждении меняется на галочку (принять) / крестик (отклонить). */}
+      {confirmReset ? (
+        <div className="absolute right-1.5 top-1.5 z-20 flex items-center gap-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              resetItem();
+            }}
+            title="Подтвердить сброс"
+            aria-label="Подтвердить сброс"
+            className="flex h-6 w-6 items-center justify-center rounded-sm border border-danger/50 text-danger transition-colors hover:bg-danger/15"
+          >
+            <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirmReset(false);
+            }}
+            title="Отменить"
+            aria-label="Отменить"
+            className="flex h-6 w-6 items-center justify-center rounded-sm border border-lines-hover text-text-muted transition-colors hover:border-(--primary) hover:text-text-primary"
+          >
+            <X className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmReset(true);
+          }}
+          title="Сбросить прогресс этого предмета"
+          aria-label="Сбросить прогресс этого предмета"
+          className="absolute right-1.5 top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-sm text-text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+        >
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      )}
+
+      {/* Предупреждение разворачивается сверху карточки при запросе сброса. */}
+      {confirmReset && (
+        <div className="flex items-center gap-1.5 border-b border-danger/40 bg-danger/10 px-2.5 py-1.5 pr-16 font-blender-medium text-type-micro uppercase tracking-widest text-danger">
+          <RotateCcw className="h-3 w-3 shrink-0" aria-hidden />
+          Сбросить прогресс этого предмета?
+        </div>
+      )}
+
       <div className="relative flex items-start gap-3 p-2.5">
         <TrackCell
           iconSrc={item.itemIcon}
