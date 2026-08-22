@@ -10,6 +10,7 @@
 // Профиль-синк «гибрид C»: уровень фермы из useHideoutStore (+editionFloor), навык УУ из
 // resolveSkillLevel (usePmcStatsStore + useManualProfileStore); override поверх.
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Check, Minus, Plus } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -51,6 +52,7 @@ const FUEL_ITEM_ID: Record<FuelTankKey, string> = {
   metal: '5d1b36a186f7742523398433',
 };
 const GPU_ITEM_ID = '57347ca924597744596b4e71'; // Graphics card
+const GPU_SLUG = 'graphics-card'; // normalizedName → карточка предмета
 const GPU_MASK = 'url(/icons/eft/04-progression/gpu-icon.svg)';
 const RUBLE_MASK = 'url(/icons/eft/03-items/currency-ruble.svg)';
 const GPU_COLS = 10;
@@ -63,9 +65,9 @@ const GPU_CELL_BG = rarityCellBg('rgba(28,65,86,0.302)'); // синяя редк
 const FUEL_CELL_BG = rarityCellBg('rgba(104,102,40,0.302)'); // оливковая редкость топлива
 
 // Мета баков для карточки «что нужно купить»: имя предмета, подпись, где купить.
-const FUEL_BUY: Record<FuelTankKey, { name: string; trader: string; traderLabel: string }> = {
-  metal: { name: 'Металлическая топливная канистра', trader: 'jaeger', traderLabel: 'Купить у Егеря' },
-  expeditionary: { name: 'Экспедиционная топливная канистра', trader: 'prapor', traderLabel: 'Купить у Прапора' },
+const FUEL_BUY: Record<FuelTankKey, { name: string; slug: string; trader: string; traderLabel: string }> = {
+  metal: { name: 'Металлическая топливная канистра', slug: 'metal-fuel-tank', trader: 'jaeger', traderLabel: 'Купить у Егеря' },
+  expeditionary: { name: 'Экспедиционная топливная канистра', slug: 'expeditionary-fuel-tank', trader: 'prapor', traderLabel: 'Купить у Прапора' },
 };
 
 const fmt = (n: number) => Math.round(n).toLocaleString('ru-RU');
@@ -549,6 +551,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
           <BuyCard
             iconUrl={itemIconUrl(GPU_ITEM_ID)}
             cellBg={GPU_CELL_BG}
+            slug={GPU_SLUG}
             name="Видеокарта"
             sub="GPU"
             count={gpu}
@@ -570,6 +573,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             <BuyCard
               iconUrl={itemIconUrl(FUEL_ITEM_ID[tank])}
               cellBg={FUEL_CELL_BG}
+              slug={FUEL_BUY[tank].slug}
               name={FUEL_BUY[tank].name}
               sub="топливо"
               total={tankPriceRub}
@@ -673,6 +677,7 @@ function FuelCell({
 function BuyCard({
   iconUrl,
   cellBg,
+  slug,
   name,
   sub,
   total,
@@ -682,6 +687,7 @@ function BuyCard({
 }: {
   iconUrl: string;
   cellBg: string;
+  slug: string;
   name: string;
   sub: string;
   total: number;
@@ -691,8 +697,9 @@ function BuyCard({
 }) {
   return (
     <div className="flex w-full items-end justify-between gap-3 rounded-lg border border-lines-hover bg-card-menu p-3.5 sm:w-87">
-      <div className="flex min-w-0 items-center gap-3.5">
-        <div className="relative size-14 shrink-0 overflow-hidden rounded border border-(--color-base)">
+      {/* Иконка + название — прямой переход на карточку предмета. */}
+      <Link href={`/eft/items/item/${slug}`} title={`${name} — открыть карточку`} className="group flex min-w-0 items-center gap-3.5">
+        <div className="relative size-14 shrink-0 overflow-hidden rounded border border-(--color-base) transition-[border-color] group-hover:border-(--primary)">
           <span aria-hidden className="absolute inset-0 rounded" style={{ backgroundImage: cellBg }} />
           <img src={iconUrl} alt="" loading="lazy" className="absolute inset-0 size-full object-contain p-2" />
           <span
@@ -706,10 +713,12 @@ function BuyCard({
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-1 uppercase leading-none">
-          <span className="font-blender-medium text-type-label text-text-primary">{name}</span>
+          <span className="font-blender-medium text-type-label text-text-primary transition-colors group-hover:text-(--primary)">
+            {name}
+          </span>
           <span className="font-blender-medium text-type-micro text-text-secondary">{sub}</span>
         </div>
-      </div>
+      </Link>
       <div className="flex shrink-0 flex-col items-end gap-1">
         <span className="flex items-center gap-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
           {source}
