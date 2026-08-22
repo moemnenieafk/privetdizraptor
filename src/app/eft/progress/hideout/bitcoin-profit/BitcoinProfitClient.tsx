@@ -557,9 +557,10 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               value={eco.fuelPerDay > 0 ? `−${fmt(eco.fuelPerDay)} ₽` : '—'}
               subtext={
                 fuelEnabled
-                  ? `${tank === 'metal' ? 'Металлический бак' : 'Экспедиционный бак'} · навык «Управление убежищем» ${mgmtLevel}`
+                  ? `${FUEL_BUY[tank].name} · навык «Управление убежищем» ${mgmtLevel}`
                   : 'не учитывается'
               }
+              subtextClass="text-type-micro uppercase leading-tight tracking-wide"
               tone={eco.fuelPerDay > 0 ? 'cost' : 'default'}
               icon={<MaskIcon mask={IC_FUEL} className={`h-5 w-5 ${eco.fuelPerDay > 0 ? 'bg-tactical-amber' : 'bg-text-muted'}`} />}
             />
@@ -744,12 +745,14 @@ function Metric({
   label,
   value,
   subtext,
+  subtextClass,
   icon,
   tone = 'default',
 }: {
   label: string;
   value: string;
   subtext?: string;
+  subtextClass?: string;
   icon?: React.ReactNode;
   tone?: MetricTone;
 }) {
@@ -758,7 +761,9 @@ function Metric({
       {icon && <span className="absolute right-3 top-3 flex">{icon}</span>}
       <div className="mb-1 pr-8 text-type-caption uppercase leading-tight tracking-widest text-text-muted">{label}</div>
       <div className={`font-blender-medium text-lg tracking-tight ${METRIC_TONE[tone]}`}>{value}</div>
-      {subtext && <div className="mt-1 font-blender-book text-type-caption text-text-secondary">{subtext}</div>}
+      {subtext && (
+        <div className={`mt-1 font-blender-book text-text-secondary ${subtextClass ?? 'text-type-caption'}`}>{subtext}</div>
+      )}
     </div>
   );
 }
