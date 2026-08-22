@@ -89,10 +89,20 @@ function fmtHms(sec: number): string {
 }
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
-/** Минимальный уровень фермы, чьи слоты ≥ нужного числа GPU (для клика по locked-слоту). */
+/** Минимальный уровень фермы, чьи слоты ≥ нужного числа видеокарт (для клика по locked-слоту). */
 function minLevelForGpu(count: number): number {
   for (let lvl = 1; lvl <= 3; lvl++) if (slotsForLevel(lvl) >= count) return lvl;
   return 3;
+}
+
+/** Русское склонение слова «видеокарта» по числу (именительный): 1 видеокарта · 2 видеокарты · 5 видеокарт. */
+function plGpu(n: number): string {
+  const d100 = n % 100;
+  if (d100 >= 11 && d100 <= 14) return 'видеокарт';
+  const d10 = n % 10;
+  if (d10 === 1) return 'видеокарта';
+  if (d10 >= 2 && d10 <= 4) return 'видеокарты';
+  return 'видеокарт';
 }
 
 /** Цветокод вердикта чистой прибыли/сутки: выгодно · около нуля · в минус. */
@@ -233,7 +243,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                     key={lvl}
                     type="button"
                     onClick={() => onSelectLevel(lvl)}
-                    title={`Биткоин-ферма ур. ${lvl} — ${lvlSlots} слотов GPU`}
+                    title={`Биткоин-ферма, уровень ${lvl} — ${lvlSlots} слотов под видеокарты`}
                     className={`group relative flex h-12 w-40 select-none items-center justify-between rounded border px-3.5 transition-colors ${
                       isSel
                         ? 'border-(--primary) bg-(--primary)/10'
@@ -306,7 +316,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                     onClick={() => onSelectGpuSlot(idx)}
                     title={
                       locked
-                        ? `Слот ${idx + 1} — поднимет уровень фермы (будет ${idx + 1} GPU)`
+                        ? `Слот ${idx + 1} — поднимет уровень фермы (будет ${idx + 1} ${plGpu(idx + 1)})`
                         : `Будет ${idx + 1} видеокарт`
                     }
                     aria-label={`Слот видеокарты ${idx + 1}`}
@@ -364,7 +374,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
           <p className="mt-1.5 text-center font-blender-book text-type-caption leading-tight text-text-muted">
             Режет расход топлива
             <br />
-            (−25% на 50 ур.).
+            (−25% на 50 уровне).
           </p>
 
           {/* Учёт топлива — 3 ячейки single-select. */}
@@ -468,11 +478,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                 {fmtSigned(eco.netPerDay)} ₽
               </div>
               <span className="mt-1 font-blender-book text-type-caption text-text-secondary">
-                чистыми в сутки · {gpu} GPU · ферма ур. {farmLevel}
+                чистыми в сутки · {gpu} {plGpu(gpu)} · ферма, уровень {farmLevel}
               </span>
               <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 font-blender-book text-type-caption text-text-secondary">
                 <span>
-                  Окупаемость GPU:{' '}
+                  Окупаемость видеокарт:{' '}
                   <span className="font-blender-medium text-text-primary">
                     {Number.isFinite(eco.paybackDays) ? `${eco.paybackDays} дн` : '—'}
                   </span>
@@ -494,11 +504,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                   return (
                     <div key={row.gpu} className="flex items-center gap-3">
                       <span
-                        className={`w-14 shrink-0 text-right font-blender-medium text-type-caption tabular-nums ${
+                        className={`w-24 shrink-0 text-right font-blender-medium text-type-caption tabular-nums ${
                           isCurrent ? 'text-(--primary)' : 'text-text-muted'
                         }`}
                       >
-                        {row.gpu} GPU
+                        {row.gpu} {plGpu(row.gpu)}
                       </span>
                       <div className="relative h-6 min-w-0 flex-1 overflow-hidden rounded-xs bg-card-menu">
                         <div
@@ -533,7 +543,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             <Metric
               label="Время на 1 BTC"
               value={fmtHms(eco.secPerCoin)}
-              subtext={`при ${gpu} GPU`}
+              subtext={`при ${gpu} ${gpu === 1 ? 'видеокарте' : 'видеокартах'}`}
               icon={<MaskIcon mask={IC_TIME} className="h-4 w-4 bg-text-muted" />}
             />
             <Metric
@@ -545,7 +555,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             <Metric
               label="Топливо / сутки"
               value={eco.fuelPerDay > 0 ? `−${fmt(eco.fuelPerDay)} ₽` : '—'}
-              subtext={fuelEnabled ? `${tankMeta.label} · УУ ${mgmtLevel}` : 'не учитывается'}
+              subtext={
+                fuelEnabled
+                  ? `${tank === 'metal' ? 'Металлический бак' : 'Экспедиционный бак'} · навык «Управление убежищем» ${mgmtLevel}`
+                  : 'не учитывается'
+              }
               tone={eco.fuelPerDay > 0 ? 'cost' : 'default'}
               icon={<MaskIcon mask={IC_FUEL} className={`h-5 w-5 ${eco.fuelPerDay > 0 ? 'bg-tactical-amber' : 'bg-text-muted'}`} />}
             />
@@ -557,17 +571,17 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               icon={<MaskIcon mask={IC_PROFIT} className={`h-5 w-5 ${eco.netPerDay >= 0 ? 'bg-success' : 'bg-danger'}`} />}
             />
             <Metric
-              label="Окупаемость GPU"
+              label="Окупаемость видеокарт"
               value={Number.isFinite(eco.paybackDays) ? `${eco.paybackDays} дн` : '—'}
               subtext={`вложено ${fmt(eco.gpuInvest)} ₽`}
-              icon={<FramedGpu colorClass="bg-text-secondary" />}
+              icon={<MaskIcon mask={GPU_MASK} className="h-4 w-8 bg-text-secondary" />}
             />
             <Metric
-              label="Прибыль на 1 GPU"
+              label="Прибыль с 1 видеокарты"
               value={`${fmtSigned(eco.netPerGpu)} ₽`}
               subtext="в сутки"
               tone={gainLoss(eco.netPerGpu)}
-              icon={<FramedGpu colorClass={eco.netPerGpu >= 0 ? 'bg-success' : 'bg-danger'} />}
+              icon={<MaskIcon mask={GPU_MASK} className={`h-4 w-8 ${eco.netPerGpu >= 0 ? 'bg-success' : 'bg-danger'}`} />}
             />
             <Metric
               label="Профит / месяц"
@@ -711,15 +725,6 @@ function FuelCell({
 function MaskIcon({ mask, className }: { mask: string; className: string }) {
   return (
     <span aria-hidden className={`icon-mask shrink-0 ${className}`} style={{ maskImage: mask, WebkitMaskImage: mask }} />
-  );
-}
-
-/** Иконка видеокарты в квадратном фрейме (для метрик по GPU). */
-function FramedGpu({ colorClass }: { colorClass: string }) {
-  return (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-xs border border-lines-hover">
-      <MaskIcon mask={GPU_MASK} className={`h-2.5 w-5 ${colorClass}`} />
-    </span>
   );
 }
 
