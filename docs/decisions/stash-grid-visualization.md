@@ -65,6 +65,6 @@ related: docs/decisions/important-items-merge.md · docs/research/eft-editions-h
 
 **Файлы:** `src/lib/stash-types.ts` · `src/app/api/eft/items/meta/route.ts` (мета из зеркала, §4.11) · `src/lib/stash-packer.ts` (skyline-упаковка) · `src/components/features/stash/StashCell.tsx` (переиспускает TrackCell) · `src/lib/stash-capacity.ts` (ёмкость по изданию) · `src/app/eft/progress/stash/{page,StashClient}.tsx` · узел `p-stash` в `headerConfig.ts` + входы из needed/craft-profit.
 
-**Долг/сверка V4DYA:** иконка узла HubNav — заглушка `items-needed.svg`; прямой ввод количества по бейджу не подключён (nice-to-have); `gridImageLink` не зеркалим (иконка = 512px арт) — долг game-data-ingest; виртуализация — задел-флаг `VIRTUALIZE_THRESHOLD=400`, не реализована.
+**Долг/сверка V4DYA:** ~~иконка узла — заглушка~~ ✅ иконка `hideout-modules/stash.svg` (V4DYA, 2026-08-22); прямой ввод количества по бейджу не подключён (nice-to-have); `gridImageLink` не зеркалим (иконка = 512px арт) — долг game-data-ingest; виртуализация — задел-флаг `VIRTUALIZE_THRESHOLD=400`, не реализована.
 
 **⚠️ Не догнано локально:** прод-`next build` крашит Turbopack (IPC os error 10054) из-за конкуренции за `.next` с работающим dev-сервером. Не код фичи. **Live-verify** — открыть `/eft/progress/stash` на dev-сервере, добавить пару предметов «В схрон» → проверить сетку/футпринты/бейджи/линки/ёмкость/мобилку. Затем пуш.
