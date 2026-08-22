@@ -243,6 +243,7 @@ export function RecipeCard({
   useEffect(() => setMounted(true), []);
 
   const ownedItems = useInventoryStore((s) => s.ownedItems);
+  const bumpCount = useInventoryStore((s) => s.bumpCount);
   const stashCount = (id: string) => (mounted ? (ownedItems[id] ?? 0) : 0);
 
   const active = useCraftProductionStore((s) => s.active);
@@ -490,7 +491,7 @@ export function RecipeCard({
                       have={stashCount(r.item.id)}
                       need={r.count}
                       bgColor={getTarkovBackgroundColor(r.item.backgroundColor)}
-                      onInc={() => {}}
+                      onInc={(d) => bumpCount(r.item.id, d, 9999)}
                       sizeClass="h-12 w-12"
                     />
                     <span className="font-blender-medium text-type-micro tabular-nums text-text-secondary">

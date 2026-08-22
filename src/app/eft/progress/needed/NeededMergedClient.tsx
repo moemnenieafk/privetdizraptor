@@ -17,7 +17,7 @@ import { NeededResetModal } from './NeededResetModal';
 import { TRADER_COLORS } from '@/data/traderColors';
 import { traderImg } from '@/lib/trader-utils';
 import { useQuestStore } from '@/store/useQuestStore';
-import { useHideoutStore, hideoutItemKey } from '@/store/useHideoutStore';
+import { useHideoutStore } from '@/store/useHideoutStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { editionFloor } from '@/lib/hideout-edition';
@@ -282,10 +282,7 @@ export function NeededMergedClient({
   const incrementItem = useQuestStore((s) => s.incrementItem);
   const decrementItem = useQuestStore((s) => s.decrementItem);
   const clearQuestProgress = useQuestStore((s) => s.clearItemProgress);
-  const hideoutProgress = useHideoutStore((s) => s.itemProgress);
   const hideoutLevels = useHideoutStore((s) => s.levels);
-  const setHideoutProgress = useHideoutStore((s) => s.setItemProgress);
-  const bumpHideoutProgress = useHideoutStore((s) => s.bumpItemProgress);
   const clearHideoutProgress = useHideoutStore((s) => s.clearItemProgress);
   const ownedItems = useInventoryStore((s) => s.ownedItems);
   const setOwned = useInventoryStore((s) => s.setCount);
@@ -343,16 +340,17 @@ export function NeededMergedClient({
         get: () => Math.min(q.count, useQuestStore.getState().itemProgress[q.questId]?.[q.objectiveId] ?? 0),
       });
     }
+    const stashOwned = ownedItems[ni.itemId] ?? 0;
     for (const h of ni.hideout) {
       // Издание тоже «строит» модули (TUE → Круг сектантов): editionFloor поверх сохранённого уровня.
       if (h.level <= Math.max(hideoutLevels[h.station] ?? 0, editionFloor(h.station, activeProfile?.edition))) continue;
-      const key = hideoutItemKey(h.station, h.level, ni.itemId);
-      const collected = Math.min(h.count, hideoutProgress[key] ?? 0);
+      // Убежищный itemProgress мигрирован в схрон и очищается (§ИТЕРАЦИЯ 5): «собрано» больше не
+      // хранится отдельно, покрытие идёт ТОЛЬКО через computeStashOverlay(stash). collected здесь —
+      // показ схрона предмета (кламп по потребности уровня); set/bump/get двигают ОБЩИЙ схрон-счётчик.
+      const collected = Math.min(h.count, stashOwned);
       need += h.count;
-      have += collected;
-      const rem = Math.max(0, h.count - collected);
+      hideoutNeed += h.count;
       if (h.fir) needFir += h.count;
-      hideoutNeed += rem;
       sources.push({
         kind: 'hideout',
         label: h.stationName,
@@ -362,14 +360,18 @@ export function NeededMergedClient({
         collected,
         fir: h.fir,
         level: h.level,
-        set: (n) => setHideoutProgress(key, Math.max(0, Math.min(h.count, n))),
-        bump: (d) => bumpHideoutProgress(key, d, h.count),
-        get: () => Math.min(h.count, useHideoutStore.getState().itemProgress[key] ?? 0),
+        set: (n) => setOwned(ni.itemId, Math.max(0, n)),
+        bump: (d) => bumpOwned(ni.itemId, d, STASH_MAX),
+        get: () => useInventoryStore.getState().ownedItems[ni.itemId] ?? 0,
       });
     }
 
-    const stash = ownedItems[ni.itemId] ?? 0;
+    const stash = stashOwned;
     const ov = computeStashOverlay({ stash, hideoutNeed, questSoftNeed: questSoft, questFirNeed: questFir });
+    // «Собрано» для убежища = схрон, фактически выделенный на убежищную нужду. Считаем ОДИН раз из
+    // оверлея (stashToHideout ≤ min(stash, hideoutNeed)), а не на каждый незастроенный уровень —
+    // при едином схроне общий материал (болты для нескольких модулей) иначе завышал бы have.
+    have += ov.stashToHideout;
     return {
       need,
       needFir,
@@ -425,7 +427,7 @@ export function NeededMergedClient({
     for (const ni of data.items) m.set(ni.itemId, stateOf(ni));
     return m;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.items, questProgress, hideoutProgress, hideoutLevels, ownedItems, completed, activeProfile?.edition]);
+  }, [data.items, questProgress, hideoutLevels, ownedItems, completed, activeProfile?.edition]);
 
   // Порядок отображения по выбранному методу. «original» — как отдал ридер. Остальные сортируют
   // копию базового списка. Прогресс-зависимые метрики (remaining/buycost) берутся из statesById

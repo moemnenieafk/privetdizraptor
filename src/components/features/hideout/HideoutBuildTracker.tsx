@@ -16,7 +16,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus, ArrowRight, Hammer, Check, Maximize2 } from 'lucide-react';
-import { useHideoutStore, hideoutItemKey } from '@/store/useHideoutStore';
+import { useHideoutStore } from '@/store/useHideoutStore';
+import { useInventoryStore } from '@/store/useInventoryStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
 import { useManualProfileStore } from '@/store/useManualProfileStore';
@@ -93,11 +94,13 @@ export function HideoutBuildTracker({
   useEffect(() => setMounted(true), []);
 
   const levels = useHideoutStore((s) => s.levels);
-  const itemProgress = useHideoutStore((s) => s.itemProgress);
   const setLevel = useHideoutStore((s) => s.setLevel);
-  const setItemProgress = useHideoutStore((s) => s.setItemProgress);
-  const bumpItemProgress = useHideoutStore((s) => s.bumpItemProgress);
   const clearLevelProgress = useHideoutStore((s) => s.clearLevelProgress);
+  // Владение материалами читаем/пишем в СХРОН (единый пул, итерация 5): «собрано» = ownedItems
+  // по item.id (кламп до нужного count в месте отображения), клик по ячейке = bumpCount.
+  const ownedItems = useInventoryStore((s) => s.ownedItems);
+  const bumpCount = useInventoryStore((s) => s.bumpCount);
+  const setCount = useInventoryStore((s) => s.setCount);
   const resetHideout = useHideoutStore((s) => s.reset);
   const resetStation = useHideoutStore((s) => s.resetStation);
   const [selected, setSelected] = useState<string | null>(null);
@@ -200,14 +203,14 @@ export function HideoutBuildTracker({
   const reqsMet = stationReqsMet && traderReqsMet && skillReqsMet;
 
   // «Бак» выбранного уровня: собрано/нужно по каждому предмету + общий прогресс.
-  const found = (itemId: string) =>
-    sel ? Math.min(mounted ? (itemProgress[hideoutItemKey(sel.normalizedName, nextLevel, itemId)] ?? 0) : 0, Infinity) : 0;
+  // «Собрано» = сколько предмета лежит в СХРОНЕ (ownedItems по item.id).
+  const found = (itemId: string) => (mounted ? (ownedItems[itemId] ?? 0) : 0);
   const tank = useMemo(() => {
     const need = selItems.reduce((n, it) => n + it.count, 0);
     const got = selItems.reduce((n, it) => n + Math.min(found(it.itemId), it.count), 0);
     return { need, got, pct: need > 0 ? Math.round((got / need) * 100) : 0, full: need > 0 && got >= need };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selItems, itemProgress, mounted, selected, nextLevel]);
+  }, [selItems, ownedItems, mounted, selected, nextLevel]);
 
   // Сегментный бак (/modules): деление = категория (предмет) закрыта целиком (got ≥ нужно).
   const matSegments = selItems.map((it) => Math.min(found(it.itemId), it.count) >= it.count);
@@ -605,8 +608,8 @@ export function HideoutBuildTracker({
                   {selItems.length > 0 ? (
                     <div className={moduleTiles ? 'flex flex-wrap gap-3' : 'grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4'}>
                       {selItems.map((it) => {
-                        const key = hideoutItemKey(sel.normalizedName, nextLevel, it.itemId);
-                        const got = Math.min(mounted ? (itemProgress[key] ?? 0) : 0, it.count);
+                        // «Собрано» и запись — в СХРОН по it.itemId (клампим отображение до it.count).
+                        const got = Math.min(found(it.itemId), it.count);
                         const pct = it.count > 0 ? Math.round((got / it.count) * 100) : 0;
                         const done = got >= it.count;
 
@@ -621,8 +624,8 @@ export function HideoutBuildTracker({
                                 need={it.count}
                                 sizeClass="h-28 w-28"
                                 bgColor={getTarkovBackgroundColor(it.backgroundColor)}
-                                onInc={(d) => bumpItemProgress(key, d, it.count)}
-                                onSetTotal={(n) => setItemProgress(key, n)}
+                                onInc={(d) => bumpCount(it.itemId, d, it.count)}
+                                onSetTotal={(n) => setCount(it.itemId, n)}
                                 bottomLeft={
                                   it.fir ? (
                                     <span title="Найдено в рейде" className="flex h-5 w-5 items-center justify-center">
@@ -682,7 +685,7 @@ export function HideoutBuildTracker({
                               className="mx-auto"
                               imgClassName="transition-transform duration-150 group-hover:scale-105"
                               imgLoading="lazy"
-                              onTap={done ? undefined : () => setItemProgress(key, got + 1)}
+                              onTap={done ? undefined : () => bumpCount(it.itemId, 1, it.count)}
                               tapTitle={done ? `${it.name} — собрано` : `${it.name} — клик: +1 материал`}
                             >
                               {/* FIR-галочка на медиаконтейнере */}
@@ -703,7 +706,7 @@ export function HideoutBuildTracker({
                                   title="−1 материал"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setItemProgress(key, got - 1);
+                                    bumpCount(it.itemId, -1, it.count);
                                   }}
                                   className="absolute -left-7 top-1/2 z-20 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded border border-lines-hover bg-(--color-base) text-text-muted opacity-0 transition-opacity hover:border-danger hover:text-danger group-hover:opacity-100"
                                 >
