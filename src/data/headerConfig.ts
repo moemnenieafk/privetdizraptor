@@ -596,7 +596,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             ]
           },
           { id: 'p-needed', label: 'Важные предметы', description: 'Полный список всех предметов, необходимых для выполнения заданий и постройки убежища.', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
-          { id: 'p-stash', label: 'Мой схрон', description: 'Визуальная сетка твоего схрона: всё, что ты отметил «В схрон» по сайту, разложено по ячейкам как в игре.', path: '/eft/progress/stash', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
+          { id: 'p-stash', label: 'Мой схрон', description: 'Визуальная сетка твоего схрона: всё, что ты отметил «В схрон» по сайту, разложено по ячейкам как в игре.', path: '/eft/progress/stash', iconUrl: '/icons/eft/04-progression/hideout-modules/stash.svg' },
           { id: 'p-collector', label: 'Коллекционер', description: 'Все предметы для контейнера Kappa. Отмечай найденные — они уходят вниз, а ненайденные всплывают вверх.', path: '/eft/progress/collector', iconUrl: '/icons/eft/profile-pannel/kappa_icon.svg' }
         ]
       },
