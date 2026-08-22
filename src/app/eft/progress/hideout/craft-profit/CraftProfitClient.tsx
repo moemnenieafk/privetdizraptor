@@ -6,8 +6,7 @@
 // мемо-хелперах (§4.7 — не в JSX). Навыки — read-only индикаторы (уровни из Досье ЧВК), они и
 // тумблер «пустой бак» кормят те же формулы.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import { ArrowDownWideNarrow, Check, ChevronDown, Search, TrendingUp, UserRound } from 'lucide-react';
+import { ArrowDownWideNarrow, Check, ChevronDown, Search, TrendingUp } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
@@ -393,14 +392,6 @@ export function CraftProfitClient({
         <IconToggle on={emptyFuel} onClick={() => setEmptyFuel((v) => !v)} title="Пустой бак">
           <span aria-hidden className="icon-mask icon-eft-crafting-empty-tank h-5 w-5" />
         </IconToggle>
-        <Link
-          href="/eft/hub"
-          title="Мой профиль ЧВК — уровни навыков"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-lines-hover bg-card-menu text-text-muted transition-colors hover:text-text-secondary"
-        >
-          <UserRound className="h-5 w-5" aria-hidden />
-        </Link>
-
         {/* Сортировка. */}
         <SortDropdown sort={sort} onSort={setSort} />
       </div>

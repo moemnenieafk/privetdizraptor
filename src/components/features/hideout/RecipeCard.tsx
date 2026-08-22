@@ -580,7 +580,7 @@ export function RecipeCard({
           <button
             type="button"
             onClick={onStart}
-            className="flex h-7 flex-1 items-center justify-center rounded-sm border border-tactical-amber bg-[color-mix(in_srgb,var(--color-tactical-amber)_12%,transparent)] font-blender-medium text-type-caption uppercase tracking-widest text-tactical-amber transition-colors hover:bg-[color-mix(in_srgb,var(--color-tactical-amber)_20%,transparent)]"
+            className="flex h-7 flex-1 items-center justify-center rounded-sm bg-[color-mix(in_srgb,var(--color-tactical-amber)_20%,transparent)] font-blender-medium text-type-caption uppercase tracking-widest text-tactical-amber transition-colors hover:bg-[color-mix(in_srgb,var(--color-tactical-amber)_30%,transparent)]"
           >
             В производство
           </button>
