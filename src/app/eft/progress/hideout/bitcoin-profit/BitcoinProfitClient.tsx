@@ -10,7 +10,7 @@
 // Профиль-синк «гибрид C»: уровень фермы из useHideoutStore (+editionFloor), навык УУ из
 // resolveSkillLevel (usePmcStatsStore + useManualProfileStore); override поверх.
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Minus, Plus } from 'lucide-react';
+import { Check, Minus, Plus, RussianRuble } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
@@ -50,9 +50,22 @@ const FUEL_ITEM_ID: Record<FuelTankKey, string> = {
   expeditionary: '5d1b371186f774253763a656',
   metal: '5d1b36a186f7742523398433',
 };
+const GPU_ITEM_ID = '57347ca924597744596b4e71'; // Graphics card
 const GPU_MASK = 'url(/icons/eft/04-progression/gpu-icon.svg)';
 const GPU_COLS = 10;
 const GPU_ROWS = 5;
+
+// Рарити-фон EFT-ячеек «что нужно купить» (как в Figma): базовый градиент + тинт редкости.
+const CELL_BASE = 'linear-gradient(180deg, rgb(49,49,54) 0%, rgb(20,20,22) 100%)';
+const rarityCellBg = (tint: string) => `linear-gradient(90deg, ${tint} 0%, ${tint} 100%), ${CELL_BASE}`;
+const GPU_CELL_BG = rarityCellBg('rgba(28,65,86,0.302)'); // синяя редкость видеокарты
+const FUEL_CELL_BG = rarityCellBg('rgba(104,102,40,0.302)'); // оливковая редкость топлива
+
+// Мета баков для карточки «что нужно купить»: имя предмета, подпись, где купить.
+const FUEL_BUY: Record<FuelTankKey, { name: string; trader: string; traderLabel: string }> = {
+  metal: { name: 'Металлическая топливная канистра', trader: 'jaeger', traderLabel: 'Купить у Егеря' },
+  expeditionary: { name: 'Экспедиционная топливная канистра', trader: 'prapor', traderLabel: 'Купить у Прапора' },
+};
 
 const fmt = (n: number) => Math.round(n).toLocaleString('ru-RU');
 const fmtSigned = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n));
@@ -527,21 +540,53 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
         </>
       )}
 
-      {/* 5. Что нужно / вложения. */}
-      <section className="flex flex-col gap-3">
-        <RuleLabel>Что нужно</RuleLabel>
-        <div className="flex flex-wrap gap-2">
-          <Chip label={`GPU × ${gpu}`} value={`${fmt(eco.gpuInvest)} ₽`} note={`по ${fmt(prices.gpuCost)} ₽`} />
-          <Chip label="Цена Bitcoin (Терапевт)" value={`${fmt(prices.btcTherapist)} ₽`} />
+      {/* 5. Что нужно купить (design-to-code Figma 3026:3372): карточка GPU + бак + сноска. */}
+      <section className="flex flex-col gap-3.5">
+        <RuleLabel>Что нужно купить</RuleLabel>
+        <div className="flex flex-wrap items-stretch gap-7">
+          {/* Видеокарты — покупка на барахолке. */}
+          <BuyCard
+            iconUrl={itemIconUrl(GPU_ITEM_ID)}
+            cellBg={GPU_CELL_BG}
+            name="Видеокарта"
+            sub="GPU"
+            count={gpu}
+            total={eco.gpuInvest}
+            perUnit={`х${gpu} по ${fmt(prices.gpuCost)}`}
+            source={
+              <>
+                <RussianRuble aria-hidden className="h-4 w-4 text-text-secondary" />
+                Купить на барахолке
+              </>
+            }
+          />
+          {/* Топливный бак — покупка у трейдера (только если учитываем топливо). */}
           {fuelEnabled && tankPriceRub > 0 && (
-            <Chip label={`Бак ${tankMeta.label}`} value={`${fmt(tankPriceRub)} ₽`} note="дешевейшая закупка" />
+            <BuyCard
+              iconUrl={itemIconUrl(FUEL_ITEM_ID[tank])}
+              cellBg={FUEL_CELL_BG}
+              name={FUEL_BUY[tank].name}
+              sub="топливо"
+              total={tankPriceRub}
+              source={
+                <>
+                  <img
+                    src={traderImg(FUEL_BUY[tank].trader)}
+                    alt=""
+                    loading="lazy"
+                    className="h-4 w-4 shrink-0 rounded-[2px] object-cover"
+                  />
+                  {FUEL_BUY[tank].traderLabel}
+                </>
+              }
+            />
           )}
+          <p className="w-full font-blender-book text-type-caption leading-tight text-text-muted sm:w-87">
+            Ферма копит максимум 3 биткоина и встаёт, пока не заберёшь — не забывай снимать (с элитой
+            «Управление убежищем» влезает 5). Цена биткоина в игре скачет и обновляется каждую ночь —
+            тут показана свежая на данный момент.
+          </p>
         </div>
-        <p className="font-blender-book text-type-micro text-text-muted">
-          Ферма копит максимум 3 биткоина и встаёт, пока не заберёшь — не забывай снимать (с элитой
-          «Управление убежищем» влезает 5). Цена биткоина в игре скачет и обновляется каждую ночь —
-          тут показана свежая на данный момент.
-        </p>
       </section>
     </div>
   );
@@ -616,15 +661,61 @@ function FuelCell({
   );
 }
 
-/** Чип вложения: лейбл + крупное значение + опц. заметка. */
-function Chip({ label, value, note }: { label: string; value: string; note?: string }) {
+/**
+ * Карточка «что нужно купить» (Figma 3026:3372): слева EFT item-ячейка 56px (рарити-фон + иконка +
+ * опц. бейдж кол-ва) и имя/подпись; справа источник покупки, опц. цена за штуку и крупный итог.
+ */
+function BuyCard({
+  iconUrl,
+  cellBg,
+  name,
+  sub,
+  total,
+  count,
+  perUnit,
+  source,
+}: {
+  iconUrl: string;
+  cellBg: string;
+  name: string;
+  sub: string;
+  total: number;
+  count?: number;
+  perUnit?: string;
+  source: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-sm border border-lines-hover bg-(--color-base) px-3 py-2">
-      <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">{label}</span>
-      <span className="font-blender-medium text-type-caption text-text-primary tabular-nums">
-        {value}
-        {note && <span className="ml-1.5 font-blender-book text-type-micro text-text-muted">{note}</span>}
-      </span>
+    <div className="flex w-full items-end justify-between gap-3 rounded-lg border border-lines-hover bg-card-menu p-3.5 sm:w-87">
+      <div className="flex min-w-0 items-center gap-3.5">
+        <div className="relative size-14 shrink-0 overflow-hidden rounded border border-(--color-base)">
+          <span aria-hidden className="absolute inset-0 rounded" style={{ backgroundImage: cellBg }} />
+          <img src={iconUrl} alt="" loading="lazy" className="absolute inset-0 size-full object-contain p-2" />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded shadow-[inset_0_-2.33px_11.67px_5.83px_rgba(0,0,0,0.7)]"
+          />
+          {count !== undefined && (
+            <span className="absolute bottom-0 right-0 rounded-tl-xs rounded-br bg-(--color-base) px-1 font-blender-medium text-type-micro text-text-primary tabular-nums">
+              x{count}
+            </span>
+          )}
+        </div>
+        <div className="flex min-w-0 flex-col gap-1 uppercase leading-none">
+          <span className="font-blender-medium text-type-label text-text-primary">{name}</span>
+          <span className="font-blender-medium text-type-micro text-text-secondary">{sub}</span>
+        </div>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        <span className="flex items-center gap-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
+          {source}
+        </span>
+        {perUnit && (
+          <span className="font-blender-medium text-xs text-text-secondary tabular-nums">{perUnit} ₽</span>
+        )}
+        <span className="font-blender-medium text-2xl leading-none text-text-primary tabular-nums">
+          {fmt(total)} ₽
+        </span>
+      </div>
     </div>
   );
 }
