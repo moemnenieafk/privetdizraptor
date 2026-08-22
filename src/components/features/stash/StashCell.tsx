@@ -14,6 +14,8 @@ import { itemIconUrl } from '@/lib/item-icon';
 import type { StashItemMeta } from '@/lib/stash-types';
 
 const CELL_PX = 56; // одна клетка = 56px (кратно 4)
+const STASH_MAX = 9999; // потолок набора (как в needed). need=count заблокировал бы ЛКМ +1
+                        //  (TrackCell.inc срабатывает только при clampedHave < need).
 
 export interface StashCellProps {
   meta: StashItemMeta;
@@ -44,7 +46,7 @@ export function StashCell({ meta, count, onInc, href }: StashCellProps) {
         iconSrc={itemIconUrl(meta.inGameId)}
         alt={meta.shortName || meta.name}
         have={count}
-        need={count}
+        need={STASH_MAX}
         onInc={onInc}
         noFill
         badge={count}
