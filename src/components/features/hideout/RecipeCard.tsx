@@ -172,26 +172,24 @@ function QuestNodeChip({
   const color = TRADER_COLORS[traderNn ?? ''] ?? TRADER_COLORS.stories;
   return (
     <span
-      className="inline-flex items-center gap-2 rounded-sm border p-1 pr-2"
+      className="flex w-full items-center gap-2 rounded-sm border p-1.5"
       style={{
         borderColor: color,
         background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, ${color} 38%, transparent), #000000)`,
       }}
     >
       {traderNn && (
-        <img src={traderImg(traderNn)} alt="" loading="lazy" className="h-6 w-6 shrink-0 rounded-xs object-cover" />
+        <img src={traderImg(traderNn)} alt="" loading="lazy" className="h-7 w-7 shrink-0 rounded-xs object-cover" />
       )}
-      <span className="flex min-w-0 flex-col leading-tight">
-        <span className="truncate font-blender-medium text-type-micro uppercase tracking-wide text-text-primary">
-          {name}
-        </span>
-        {minLevel != null && minLevel > 0 && (
-          <span className="font-blender-medium text-type-micro tabular-nums" style={{ color }}>
-            Ур. {minLevel}+
-          </span>
-        )}
+      <span className="min-w-0 flex-1 truncate font-blender-medium text-type-micro uppercase tracking-wide text-text-primary">
+        {name}
       </span>
-      {done && <Check className="h-3.5 w-3.5 shrink-0 text-nvg-green" strokeWidth={3} aria-hidden />}
+      {done && <Check className="h-4 w-4 shrink-0 text-nvg-green" strokeWidth={3} aria-hidden />}
+      {minLevel != null && minLevel > 0 && (
+        <span className="shrink-0 font-blender-medium text-type-caption tabular-nums" style={{ color }}>
+          Ур. {minLevel}+
+        </span>
+      )}
     </span>
   );
 }
@@ -457,8 +455,8 @@ export function RecipeCard({
             {questGated && (
               <Link
                 href={`/eft/questmap?quest=${craft.taskUnlock}`}
-                title={questDone ? 'Квест пройден — открыть на карте' : 'Требуется пройти квест — открыть на карте квестов'}
-                className="rounded-sm transition-opacity hover:opacity-80"
+                title={questDone ? 'Квест пройден — открыть на карте квестов' : 'Требуется пройти квест — открыть на карте квестов'}
+                className="block w-full rounded-sm transition-opacity hover:opacity-80"
               >
                 <QuestNodeChip
                   name={craft.taskUnlockName ?? 'Квест-анлок'}
