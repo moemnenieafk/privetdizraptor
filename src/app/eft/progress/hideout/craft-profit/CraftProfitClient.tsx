@@ -1,10 +1,13 @@
 'use client';
 
 // Клиент раздела «Прибыль убежища» (T7 craft-profit-rework): интро-блок + вкладки модулей +
-// контролы + слайдеры навыков + грид карточек RecipeCard. Ридер (page.tsx) отдаёт СЫРЫЕ
-// компоненты цены; всю экономику/фильтр/сортировку считаем реактивно через computeCraftEconomy
-// (T2) в мемо-хелперах (§4.7 — не в JSX). Слайдеры навыков и «пустой бак» кормят те же формулы.
-import { useEffect, useMemo, useState } from 'react';
+// единый ряд контролов + грид карточек RecipeCard. Ридер (page.tsx) отдаёт СЫРЫЕ компоненты
+// цены; всю экономику/фильтр/сортировку считаем реактивно через computeCraftEconomy (T2) в
+// мемо-хелперах (§4.7 — не в JSX). Навыки — read-only индикаторы (уровни из Досье ЧВК), они и
+// тумблер «пустой бак» кормят те же формулы.
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { ArrowDownWideNarrow, Check, ChevronDown, Search, TrendingUp, UserRound } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
@@ -15,10 +18,21 @@ import { editionFloor, ownsAnyEdition } from '@/lib/hideout-edition';
 import { computeCraftEconomy, type CraftEconomy } from '@/lib/craft-profit';
 import { RecipeCard } from '@/components/features/hideout/RecipeCard';
 import { useCraftPinStore } from '@/store/useCraftPinStore';
-import { CraftControls, type CraftSortMode } from '@/components/features/hideout/CraftControls';
 import { ModuleFilterTabs, type ModuleTabDatum } from '@/components/features/hideout/ModuleFilterTabs';
 import { SKILL_ICONS } from '@/components/features/adaptive/skill-icons';
 import type { HideoutStationInfo } from '@/db/hideout';
+
+/** Метод сортировки списка крафтов. Порядок в SORT_OPTIONS = порядок в меню. */
+export type CraftSortMode = 'pph' | 'profit' | 'roi' | 'duration' | 'cost' | 'alpha';
+
+const SORT_OPTIONS: { key: CraftSortMode; label: string }[] = [
+  { key: 'pph', label: '₽/час' },
+  { key: 'profit', label: 'Прибыль ₽' },
+  { key: 'roi', label: 'ROI %' },
+  { key: 'duration', label: 'Время (короче)' },
+  { key: 'cost', label: 'Дешевле вход' },
+  { key: 'alpha', label: 'Алфавит' },
+];
 
 /** Мета предмета слота крафта (общая для входа и выхода). */
 export interface CraftSlotItem {
@@ -93,7 +107,6 @@ export interface ProcessedCraft {
 /** ID навыков в SKILL_CATALOG (resolveSkillLevel читает по ним). */
 const SKILL_CRAFTING = 'Crafting';
 const SKILL_HIDEOUT_MGMT = 'HideoutManagement';
-const SKILL_MAX = 51; // 50 = максимум навыка, 51 — порог Elite-перка (клампится хелпером).
 
 /**
  * Метрика крафта под текущие навыки/тумблеры. Мемоизируется на уровне списка (не в карточке),
@@ -199,26 +212,11 @@ export function CraftProfitClient({
   const builtLevel = (nn: string) =>
     mounted ? Math.max(levels[nn] ?? 0, editionFloor(nn, edition)) : 0;
 
-  // Дефолт слайдеров навыков = уровень из профиля (resolveSkillLevel). Инициализируем нулём,
-  // после маунта подтягиваем профиль (persist доступен только на клиенте).
-  const profileCrafting = mounted ? resolveSkillLevel(skillView, manualSkills, SKILL_CRAFTING) : 0;
-  const profileHideoutMgmt = mounted ? resolveSkillLevel(skillView, manualSkills, SKILL_HIDEOUT_MGMT) : 0;
-
-  const [craftingLevel, setCraftingLevel] = useState(0);
-  const [hideoutMgmtLevel, setHideoutMgmtLevel] = useState(0);
-  const [skillsTouched, setSkillsTouched] = useState(false);
-  // Пока слайдеры не трогали руками — держим их синхронными с профилем (в т.ч. после его загрузки).
-  useEffect(() => {
-    if (skillsTouched) return;
-    setCraftingLevel(profileCrafting);
-    setHideoutMgmtLevel(profileHideoutMgmt);
-  }, [profileCrafting, profileHideoutMgmt, skillsTouched]);
-
-  const resetSkillsToProfile = () => {
-    setSkillsTouched(false);
-    setCraftingLevel(profileCrafting);
-    setHideoutMgmtLevel(profileHideoutMgmt);
-  };
+  // Навыки — read-only индикаторы: уровни берём прямо из профиля (Досье ЧВК) через
+  // resolveSkillLevel. До маунта — 0 (persist читается только на клиенте, иначе hydration).
+  // Эти же значения кормят экономику (metrics) и карточки.
+  const craftingLevel = mounted ? resolveSkillLevel(skillView, manualSkills, SKILL_CRAFTING) : 0;
+  const hideoutMgmtLevel = mounted ? resolveSkillLevel(skillView, manualSkills, SKILL_HIDEOUT_MGMT) : 0;
 
   // Разведцентр ур.3+ построен → скидка налога барахолки.
   const intelCenterBuilt = builtLevel('intelligence-center') >= 3;
@@ -364,62 +362,55 @@ export function CraftProfitClient({
         onSelect={setActiveStation}
       />
 
-      {/* 3. Контролы: поиск + фильтр-чипы + сортировка. */}
-      <CraftControls
-        search={search}
-        onSearch={setSearch}
-        onlyProfitable={onlyProfitable}
-        onToggleProfitable={() => setOnlyProfitable((v) => !v)}
-        onlyAvailable={onlyAvailable}
-        onToggleAvailable={() => setOnlyAvailable((v) => !v)}
-        hideLocked={hideLocked}
-        onToggleHideLocked={() => setHideLocked((v) => !v)}
-        sort={sort}
-        onSort={setSort}
-      />
-
-      {/* 4. Слайдеры навыков + «пустой бак» + сброс к профилю. */}
-      <div className="flex flex-col gap-3 rounded-md border border-lines-hover bg-card-menu/40 p-4 sm:flex-row sm:items-end sm:gap-6">
-        <SkillSlider
-          iconSrc={SKILL_ICONS.Crafting?.src ?? ''}
-          label="Ручное производство"
-          value={craftingLevel}
-          onChange={(v) => {
-            setSkillsTouched(true);
-            setCraftingLevel(v);
-          }}
-        />
-        <SkillSlider
-          iconSrc={SKILL_ICONS.HideoutManagement?.src ?? ''}
-          label="Управление убежищем"
-          value={hideoutMgmtLevel}
-          onChange={(v) => {
-            setSkillsTouched(true);
-            setHideoutMgmtLevel(v);
-          }}
-        />
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setEmptyFuel((v) => !v)}
-            aria-pressed={emptyFuel}
-            className={`h-9 shrink-0 rounded-sm border px-3 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
-              emptyFuel
-                ? 'border-(--primary) bg-(--primary)/15 text-(--primary)'
-                : 'border-lines-hover text-text-muted hover:text-text-secondary'
-            }`}
-          >
-            Пустой бак
-          </button>
-          <button
-            type="button"
-            onClick={resetSkillsToProfile}
-            title="Вернуть уровни навыков к значениям из профиля"
-            className="h-9 shrink-0 rounded-sm border border-lines-hover px-3 font-blender-medium text-type-micro uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
-          >
-            Сбросить к профилю
-          </button>
+      {/* 3. Единый ряд контролов: поиск + read-only скилл-индикаторы + иконки-фильтры +
+          профиль-ссылка + сортировка (Figma 3015-1878). */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Поиск. */}
+        <div className="relative min-w-40 flex-1">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" aria-hidden />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Поиск рецепта производства…"
+            className="h-9 w-full rounded-sm border border-lines-hover bg-(--color-base) pl-10 pr-4 font-blender-book text-type-caption text-text-primary placeholder:text-text-muted focus:border-(--primary) focus:outline-none"
+          />
         </div>
+
+        {/* Read-only индикаторы навыков — уровни из Досье ЧВК. */}
+        <SkillIndicator
+          iconSrc={SKILL_ICONS.Crafting?.src ?? ''}
+          level={craftingLevel}
+          label="Ручное производство"
+        />
+        <SkillIndicator
+          iconSrc={SKILL_ICONS.HideoutManagement?.src ?? ''}
+          level={hideoutMgmtLevel}
+          label="Управление убежищем"
+        />
+
+        {/* Иконки-фильтры (36×36). */}
+        <IconToggle on={onlyProfitable} onClick={() => setOnlyProfitable((v) => !v)} title="Только прибыльные">
+          <TrendingUp className="h-5 w-5" aria-hidden />
+        </IconToggle>
+        <IconToggle on={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)} title="Доступно сейчас">
+          <span aria-hidden className="icon-mask icon-eft-crafting-available-now h-5 w-5" />
+        </IconToggle>
+        <IconToggle on={hideLocked} onClick={() => setHideLocked((v) => !v)} title="Скрыть заблокированные">
+          <span aria-hidden className="icon-mask icon-eft-crafting-hide-locked h-5 w-5" />
+        </IconToggle>
+        <IconToggle on={emptyFuel} onClick={() => setEmptyFuel((v) => !v)} title="Пустой бак">
+          <span aria-hidden className="icon-mask icon-eft-crafting-empty-tank h-5 w-5" />
+        </IconToggle>
+        <Link
+          href="/eft/hub"
+          title="Мой профиль ЧВК — уровни навыков"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-lines-hover bg-card-menu text-text-muted transition-colors hover:text-text-secondary"
+        >
+          <UserRound className="h-5 w-5" aria-hidden />
+        </Link>
+
+        {/* Сортировка. */}
+        <SortDropdown sort={sort} onSort={setSort} />
       </div>
 
       {/* Закреплённые (скрепка) — всегда сверху, вне фильтров/вкладок. */}
@@ -447,41 +438,105 @@ export function CraftProfitClient({
   );
 }
 
-/** Слайдер уровня навыка 0–51 с иконкой, подписью и текущим значением. */
-function SkillSlider({
-  iconSrc,
-  label,
-  value,
-  onChange,
+/** Read-only индикатор навыка: арт-иконка + крупный уровень + двухстрочная подпись (из Досье ЧВК). */
+function SkillIndicator({ iconSrc, level, label }: { iconSrc: string; level: number; label: string }) {
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <img src={iconSrc} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-xs object-contain" />
+      <span className="text-2xl leading-none tabular-nums text-(--primary) font-blender-medium">{level}</span>
+      <span className="max-w-24 font-blender-medium text-type-micro uppercase leading-tight tracking-widest text-text-muted">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/** Иконка-тоггл фильтра (36×36, иконка 22px). Активна — рамка/фон primary; иначе — приглушённая. */
+function IconToggle({
+  on,
+  onClick,
+  title,
+  children,
 }: {
-  iconSrc: string;
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
+  on: boolean;
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
 }) {
   return (
-    <label className="flex min-w-0 flex-1 items-center gap-3">
-      {/* Крупная иконка навыка слева, крутилка справа. */}
-      <img src={iconSrc} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-xs object-contain" />
-      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <span className="flex items-center gap-2">
-          <span className="min-w-0 flex-1 truncate font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">
-            {label}
-          </span>
-          <span className="shrink-0 font-blender-medium text-type-caption tabular-nums text-(--primary)">
-            {value}
-          </span>
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={SKILL_MAX}
-          step={1}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-lines-hover accent-(--primary)"
-        />
-      </span>
-    </label>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      title={title}
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border transition-colors ${
+        on
+          ? 'border-(--primary) bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] text-(--primary)'
+          : 'border-lines-hover bg-card-menu text-text-muted hover:text-text-secondary'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Дропдаун сортировки: кнопка + поповер с 6 методами, закрытие по клику-вне и Esc. */
+function SortDropdown({ sort, onSort }: { sort: CraftSortMode; onSort: (m: CraftSortMode) => void }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as globalThis.Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
+    window.addEventListener('pointerdown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  return (
+    <div ref={menuRef} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setMenuOpen((v) => !v)}
+        aria-expanded={menuOpen}
+        className={`flex h-9 items-center gap-2 rounded-sm border px-3 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
+          menuOpen ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-muted hover:text-text-secondary'
+        }`}
+      >
+        <ArrowDownWideNarrow className="h-4 w-4 shrink-0" aria-hidden />
+        Сортировка
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${menuOpen ? 'rotate-180' : ''}`} aria-hidden />
+      </button>
+
+      {menuOpen && (
+        <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-64 rounded-md border border-lines-hover bg-(--color-base) p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+          {SORT_OPTIONS.map((o) => {
+            const active = sort === o.key;
+            return (
+              <button
+                key={o.key}
+                type="button"
+                onClick={() => {
+                  onSort(o.key);
+                  setMenuOpen(false);
+                }}
+                className={`flex h-8 w-full items-center justify-between rounded-sm px-2.5 font-blender-medium text-type-caption transition-colors ${
+                  active ? 'bg-(--primary)/15 text-(--primary)' : 'text-text-secondary hover:bg-lines-hover/40'
+                }`}
+              >
+                {o.label}
+                {active && <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
