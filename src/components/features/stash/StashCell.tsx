@@ -22,11 +22,12 @@ export interface StashCellProps {
   count: number;
   onInc: (delta: number) => void; // вызывающий кламп через bumpCount
   href?: string; // ссылка на страницу предмета (topRight-линк)
+  cellPx?: number; // размер клетки в px; default CELL_PX (сетка на всю ширину → динамика)
 }
 
-export function StashCell({ meta, count, onInc, href }: StashCellProps) {
-  const width = Math.max(1, meta.gridWidth) * CELL_PX;
-  const height = Math.max(1, meta.gridHeight) * CELL_PX;
+export function StashCell({ meta, count, onInc, href, cellPx = CELL_PX }: StashCellProps) {
+  const width = Math.max(1, meta.gridWidth) * cellPx;
+  const height = Math.max(1, meta.gridHeight) * cellPx;
 
   const link = href ? (
     <a
