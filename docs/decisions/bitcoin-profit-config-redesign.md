@@ -1,6 +1,6 @@
 ---
 type: decision-spec
-status: ⏳ в работе (/autopilot design-to-code, 2026-08-22)
+status: ✅ реализовано и в MAIN (2026-08-22, grillme+/autopilot design-to-code + правки V4DYA). Live 1:1 с Figma. Открытые мелочи: иконка «нет топлива» = fallback (нет своего ассета); учёт топлива истолкован single-select.
 sprint: bitcoin-config-redesign
 owner: V4DYA
 figma: node 3022:1901 (fileKey Z1c9wK3AtqBrBhSwNt8qZz)
