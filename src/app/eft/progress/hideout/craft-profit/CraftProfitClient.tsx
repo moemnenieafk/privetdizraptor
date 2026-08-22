@@ -388,9 +388,7 @@ export function CraftProfitClient({
           <IconToggle on={emptyFuel} onClick={() => setEmptyFuel((v) => !v)} title="Пустой бак">
             <span aria-hidden className="icon-mask icon-eft-crafting-empty-tank h-5 w-5" />
           </IconToggle>
-          <div className="ml-auto">
-            <SortDropdown sort={sort} onSort={setSort} />
-          </div>
+          <SortDropdown sort={sort} onSort={setSort} />
         </div>
       </div>
 
