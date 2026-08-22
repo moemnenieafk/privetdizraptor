@@ -11,6 +11,7 @@ import { PackageOpen } from 'lucide-react';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { packStash, type StashEntry } from '@/lib/stash-packer';
+import { expandToStacks, type OwnedStackInput } from '@/lib/stash-stacks';
 import { stashCapacityCells } from '@/lib/stash-capacity';
 import { StashCell } from '@/components/features/stash/StashCell';
 import type { StashItemMeta } from '@/lib/stash-types';
@@ -75,29 +76,64 @@ export function StashClient() {
     [ownedIds.length, fetched, idsKey],
   );
 
-  // Раскладка футпринтов паккером. Только предметы, чья мета уже пришла.
-  const packed = useMemo(() => {
+  // Раскладка НАСТОЯЩИХ СТЕКОВ. В отличие от прежней витрины уникальных предметов,
+  // раскладка теперь ЗАВИСИТ от количества: добавление юнита может породить новый стек
+  // (ammo с stackMaxSize) → count/ownedItems корректно в депсах этого мемо (§4.7 — вне JSX).
+  const layout = useMemo(() => {
     if (!meta) return null;
-    const entries: StashEntry[] = ownedIds
-      .filter((id) => meta[id])
+
+    // Владение (count>0) + мета → входы для стек-хелпера.
+    const inputs: OwnedStackInput[] = ownedIds
+      .filter((id) => meta[id] && (ownedItems[id] ?? 0) > 0)
       .map((id) => {
         const m = meta[id];
-        // packStash не читает count (раскладка по футпринту+редкости) → count здесь фиксируем 1,
-        // чтобы клик по счётчику не перепаковывал сетку. Живое количество берётся из ownedItems
-        // при рендере ячейки, вне этого мемо.
-        return {
-          id,
-          count: 1,
+        const input: OwnedStackInput = {
+          itemId: id,
+          count: ownedItems[id] ?? 0,
           gridWidth: m.gridWidth,
           gridHeight: m.gridHeight,
-          ...(m.backgroundColor ? { rarity: m.backgroundColor } : {}),
         };
+        if (m.backgroundColor != null) input.rarity = m.backgroundColor;
+        if (m.stackMaxSize !== undefined) input.stackMaxSize = m.stackMaxSize;
+        return input;
       });
-    return packStash(entries, COLUMNS);
-  }, [meta, ownedIds]);
 
-  const loading = meta === null || packed === null;
+    const units = expandToStacks(inputs);
+
+    // Карта key → данные для рендера ячейки. key уникален (`${itemId}#${i}`).
+    const cellByKey = new Map<
+      string,
+      { itemId: string; stackCount: number; meta: StashItemMeta }
+    >();
+    // Агрегат непоместившихся юнитов (обрезка по MAX_STACKS_PER_ITEM) для ненавязчивой заметки.
+    let overflowTotal = 0;
+
+    const entries: StashEntry[] = units.map((unit) => {
+      cellByKey.set(unit.key, {
+        itemId: unit.itemId,
+        stackCount: unit.stackCount,
+        meta: meta[unit.itemId],
+      });
+      if (unit.overflowRemaining && unit.overflowRemaining > 0) {
+        overflowTotal += unit.overflowRemaining;
+      }
+      const entry: StashEntry = {
+        id: unit.key,
+        count: unit.stackCount,
+        gridWidth: unit.gridWidth,
+        gridHeight: unit.gridHeight,
+      };
+      if (unit.rarity !== undefined) entry.rarity = unit.rarity;
+      return entry;
+    });
+
+    return { packed: packStash(entries, COLUMNS), cellByKey, overflowTotal };
+  }, [meta, ownedIds, ownedItems]);
+
+  const loading = meta === null || layout === null;
+  const packed = layout?.packed ?? null;
   const occupied = packed?.occupied ?? 0;
+  const overflowTotal = layout?.overflowTotal ?? 0;
   // Число «Занято X / Y» показываем как есть (X>Y — честный сигнал переполнения),
   // а процент заполнения клампим к 100, чтобы не было «137%».
   const fillPct = capacity > 0 ? Math.min(100, Math.round((occupied / capacity) * 100)) : 0;
@@ -116,22 +152,32 @@ export function StashClient() {
             Занято ячеек · схрон {activeProfile?.edition ?? 'Standard'}
           </p>
         </div>
-        <p className="font-blender-medium text-sm tabular-nums text-text-muted">
-          Заполнено {fillPct}%
-        </p>
+        <div className="flex flex-col items-end gap-0.5">
+          <p className="font-blender-medium text-sm tabular-nums text-text-muted">
+            Заполнено {fillPct}%
+          </p>
+          {overflowTotal > 0 ? (
+            <p className="text-type-micro font-blender-book tabular-nums text-text-muted">
+              часть юнитов не показана: +{overflowTotal}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {loading ? (
         <StashSkeleton />
-      ) : packed && packed.cells.length > 0 && meta ? (
+      ) : layout && packed && packed.cells.length > 0 ? (
         <div className="overflow-x-auto">
           <div
             className="relative"
             style={{ width: GRID_WIDTH_PX, height: gridHeightPx }}
           >
             {packed.cells.map((cell) => {
-              const m = meta[cell.id];
-              if (!m) return null;
+              // cell.id = key стека (`${itemId}#${i}`) → достаём предмет/стек/мету из карты.
+              const unit = layout.cellByKey.get(cell.id);
+              if (!unit) return null;
+              const m = unit.meta;
+              const { itemId } = unit;
               return (
                 <div
                   key={cell.id}
@@ -140,8 +186,8 @@ export function StashClient() {
                 >
                   <StashCell
                     meta={m}
-                    count={ownedItems[cell.id] ?? 0}
-                    onInc={(delta) => bumpCount(cell.id, delta, STASH_MAX)}
+                    count={unit.stackCount}
+                    onInc={(delta) => bumpCount(itemId, delta, STASH_MAX)}
                     {...(m.slug ? { href: `/eft/items/item/${m.slug}` } : {})}
                   />
                 </div>
