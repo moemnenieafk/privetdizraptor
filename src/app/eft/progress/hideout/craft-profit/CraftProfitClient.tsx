@@ -388,9 +388,7 @@ export function CraftProfitClient({
           <IconToggle on={emptyFuel} onClick={() => setEmptyFuel((v) => !v)} title="Пустой бак">
             <span aria-hidden className="icon-mask icon-eft-crafting-empty-tank h-5 w-5" />
           </IconToggle>
-          <div className="ml-auto">
-            <SortDropdown sort={sort} onSort={setSort} />
-          </div>
+          <SortDropdown sort={sort} onSort={setSort} />
         </div>
       </div>
 
@@ -489,18 +487,18 @@ function SortDropdown({ sort, onSort }: { sort: CraftSortMode; onSort: (m: Craft
   }, [menuOpen]);
 
   return (
-    <div ref={menuRef} className="relative shrink-0">
+    <div ref={menuRef} className="relative min-w-0 flex-1">
       <button
         type="button"
         onClick={() => setMenuOpen((v) => !v)}
         aria-expanded={menuOpen}
-        className={`flex h-9 items-center gap-2 rounded-sm border px-3 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
+        className={`flex h-9 w-full items-center gap-2 rounded-sm border px-3 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
           menuOpen ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-muted hover:text-text-secondary'
         }`}
       >
         <ArrowDownWideNarrow className="h-4 w-4 shrink-0" aria-hidden />
-        {SORT_OPTIONS.find((o) => o.key === sort)?.label ?? 'Сортировка'}
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${menuOpen ? 'rotate-180' : ''}`} aria-hidden />
+        <span className="truncate">{SORT_OPTIONS.find((o) => o.key === sort)?.label ?? 'Сортировка'}</span>
+        <ChevronDown className={`ml-auto h-3.5 w-3.5 shrink-0 transition-transform ${menuOpen ? 'rotate-180' : ''}`} aria-hidden />
       </button>
 
       {menuOpen && (
