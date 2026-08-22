@@ -243,14 +243,14 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                     </span>
                     <span className="flex flex-col items-end leading-none">
                       <span
-                        className={`font-blender-medium text-lg tabular-nums ${
+                        className={`font-blender-medium text-lg leading-none tabular-nums ${
                           isSel ? 'text-(--primary)' : 'text-text-secondary'
                         }`}
                       >
                         {isSel ? `${gpu}/${lvlSlots}` : lvlSlots}
                       </span>
                       <span
-                        className={`mt-1 font-blender-medium text-type-micro uppercase tracking-widest ${
+                        className={`mt-0.5 font-blender-medium text-type-micro leading-none uppercase tracking-widest ${
                           isSel ? 'text-(--primary)' : 'text-text-muted'
                         }`}
                       >
