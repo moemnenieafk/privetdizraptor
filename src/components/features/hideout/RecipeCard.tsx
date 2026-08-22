@@ -328,11 +328,13 @@ export function RecipeCard({
         {stationKey && (
           <span
             aria-hidden
-            className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(stationKey)} ${isDone ? 'bg-nvg-green' : 'bg-text-secondary'}`}
+            className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(stationKey)} ${isDone ? 'bg-nvg-green' : isCanCraft ? '' : 'bg-text-secondary'}`}
+            style={isCanCraft ? { backgroundColor: CRAFT_ACCENT } : undefined}
           />
         )}
         <span
-          className={`min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest ${isDone ? 'text-nvg-green' : 'text-text-secondary'}`}
+          className={`min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest ${isDone ? 'text-nvg-green' : isCanCraft ? '' : 'text-text-secondary'}`}
+          style={isCanCraft ? { color: CRAFT_ACCENT } : undefined}
         >
           {craft.stationName}
         </span>
@@ -364,7 +366,10 @@ export function RecipeCard({
 
         {/* Индикатор уровня справа — во всех стейтах КРОМЕ locked (там уровень уже в «требуется построить NN»). */}
         {state !== 'locked' && (
-          <span className={`shrink-0 font-blender-medium text-xl tabular-nums ${isDone ? 'text-nvg-green' : 'text-text-secondary'}`}>
+          <span
+            className={`shrink-0 font-blender-medium text-xl tabular-nums ${isDone ? 'text-nvg-green' : isCanCraft ? '' : 'text-text-secondary'}`}
+            style={isCanCraft ? { color: CRAFT_ACCENT } : undefined}
+          >
             {String(craft.level).padStart(2, '0')}
           </span>
         )}
