@@ -115,6 +115,23 @@ function pphColor(pph: number): string {
   return 'text-text-muted';
 }
 
+// Акцент «крафта» — семантика цвета блока «Производство» (CraftOfferCard): фон-градиент +
+// обводка со свечением на карточке, когда крафт МОЖНО запустить (состояние can-craft).
+// Литерал (не var(--…)): @theme-переменные Tailwind вырезает, color-mix в рантайме отдаёт
+// пустоту — тот же приём, что в BarterOfferCard/QuestNode.
+const CRAFT_ACCENT = '#9A8866';
+function craftAccentStyle(): React.CSSProperties {
+  return {
+    borderColor: CRAFT_ACCENT,
+    boxShadow: `0 0 12px color-mix(in srgb, ${CRAFT_ACCENT} 30%, transparent)`,
+    background: [
+      `radial-gradient(ellipse 50% 100% at 100% 100%, color-mix(in srgb, ${CRAFT_ACCENT} 14%, transparent), transparent 72%)`,
+      `radial-gradient(ellipse 50% 100% at 0% 0%, color-mix(in srgb, ${CRAFT_ACCENT} 28%, transparent), transparent 72%)`,
+      '#000000',
+    ].join(', '),
+  };
+}
+
 /** Состояние карточки — приоритет по спеке §1. */
 type CardState = 'locked' | 'can-craft' | 'busy' | 'producing' | 'done';
 
@@ -296,11 +313,16 @@ export function RecipeCard({
     ? 'border-nvg-green shadow-[0_0_0_1px_var(--color-nvg-green),0_0_18px_-6px_var(--color-nvg-green)]'
     : 'border-lines-hover';
   const cardDim = state === 'producing' ? 'opacity-60' : '';
+  // Можно запустить крафт → перекрашиваем карточку в акцент «крафта» (фон+обводка).
+  const isCanCraft = state === 'can-craft';
 
   const timer = timerParts(ownRemaining);
 
   return (
-    <article className={`flex flex-col gap-2 rounded-lg border bg-card-menu p-4 ${cardBorder} ${cardDim}`}>
+    <article
+      className={`flex flex-col gap-2 rounded-lg border p-4 ${cardDim} ${isCanCraft ? '' : `bg-card-menu ${cardBorder}`}`}
+      style={isCanCraft ? craftAccentStyle() : undefined}
+    >
       {/* 1. Шапка: иконка станции + имя · справа «02» + (locked) «ТРЕБУЕТСЯ ПОСТРОИТЬ NN» + молоток */}
       <header className="flex h-7 items-center gap-2">
         {stationKey && (
