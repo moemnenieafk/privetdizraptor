@@ -1,6 +1,6 @@
 ---
 type: decision-spec
-status: ⏳ в работе (/autopilot, 2026-08-22)
+status: ✅ реализовано (2026-08-22, /autopilot — 2 таска). Ждёт live-verify V4DYA → пуш в main. Ветка feat/important-items-merge, коммиты 43fe2274 (расчёт) + 278f7228 (страница).
 sprint: bitcoin-profit-rework
 owner: V4DYA
 research: docs/research/eft-bitcoin-profit-tarkovdev.md
