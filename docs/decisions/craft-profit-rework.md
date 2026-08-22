@@ -1,6 +1,6 @@
 ---
 type: decision-spec
-status: спека готова (грилл 2026-08-21) — ждёт исполнения /autopilot
+status: ✅ реализовано и в MAIN (2026-08-22, /autopilot + правки V4DYA). Продолжение — трекинг производства (docs/decisions/craft-production-tracker.md)
 sprint: craft-profit-rework
 owner: V4DYA
 research: docs/research/eft-craft-profit-tarkovdev.md
