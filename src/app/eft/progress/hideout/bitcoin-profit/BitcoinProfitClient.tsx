@@ -229,11 +229,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
       {/* 1. КОНФИГУРАТОР — 3-колоночный ряд (Figma 3022:1901): 724 / 196 / 128, gap 28. */}
       <section className="flex flex-col gap-7 lg:flex-row lg:items-start lg:gap-7">
         {/* Колонка 1 — УРОВЕНЬ ФЕРМЫ (724px): плитки-уровни + кликабельный грид GPU. */}
-        <div className="min-w-0 lg:w-[724px] lg:shrink-0">
+        <div className="min-w-0 lg:w-[45.25rem] lg:shrink-0">
           <RuleLabel>Уровень фермы</RuleLabel>
-          <div className="mt-3 flex flex-col gap-[18px] sm:flex-row sm:items-center">
+          <div className="mt-3 flex flex-col gap-[1.125rem] sm:flex-row sm:items-center">
             {/* Плитки L1/L2/L3. */}
-            <div className="flex h-[161px] shrink-0 flex-col justify-between">
+            <div className="flex h-[10.0625rem] shrink-0 flex-col justify-between">
               {[1, 2, 3].map((lvl) => {
                 const isSel = farmLevel === lvl;
                 const isBuilt = mounted && profileFarmLevel >= lvl;
@@ -324,7 +324,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                   >
                     <span
                       aria-hidden
-                      className={`icon-mask h-[21px] w-[42px] max-w-full transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
+                      className={`icon-mask h-[1.3125rem] w-[2.625rem] max-w-full transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
                       style={{ maskImage: GPU_MASK, WebkitMaskImage: GPU_MASK }}
                     />
                   </button>
@@ -335,7 +335,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
         </div>
 
         {/* Колонка 2 — УБЕЖИЩЕ ЧВК (196px): навык УУ + учёт топлива. */}
-        <div className="min-w-0 lg:w-[196px] lg:shrink-0">
+        <div className="min-w-0 lg:w-[12.25rem] lg:shrink-0">
           <RuleLabel>Убежище ЧВК</RuleLabel>
           {/* Навык «Управление убежищем» + степперы — одна строка (как в Figma):
               иконка + подпись в 2 строки (принуд. перенос) слева, [− NN +] справа. */}
@@ -346,7 +346,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                   src={SKILL_ICONS.HideoutManagement.src}
                   alt=""
                   loading="lazy"
-                  className="h-9 w-9 shrink-0 rounded-[3px] border border-lines-hover object-contain"
+                  className="h-9 w-9 shrink-0 rounded-[0.1875rem] border border-lines-hover object-contain"
                 />
               )}
               <span className="min-w-0 font-blender-medium text-type-micro uppercase leading-tight tracking-widest text-text-secondary">
@@ -429,7 +429,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
         </div>
 
         {/* Колонка 3 — ПРОДАЖА BITCOIN (128px): карточка Bitcoin + Терапевт + цена. */}
-        <div className="min-w-0 lg:w-[128px] lg:shrink-0">
+        <div className="min-w-0 lg:w-[8rem] lg:shrink-0">
           <RuleLabel>Продажа Bitcoin</RuleLabel>
           <div
             className="relative mt-3 flex h-32 w-32 items-center justify-center overflow-hidden rounded border border-(--color-base) shadow-[inset_0_-2.33px_11.67px_5.83px_rgba(0,0,0,0.7)]"
@@ -448,7 +448,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               src={traderImg('therapist')}
               alt="Терапевт"
               loading="lazy"
-              className="h-7 w-7 shrink-0 rounded-[2.333px] object-cover"
+              className="h-7 w-7 shrink-0 rounded-[0.14581rem] object-cover"
             />
             <span className="font-blender-medium text-lg tabular-nums text-text-primary">
               {fmt(prices.btcTherapist)} ₽
@@ -635,7 +635,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                     src={traderImg(FUEL_BUY[tank].trader)}
                     alt=""
                     loading="lazy"
-                    className="h-4 w-4 shrink-0 rounded-[2px] object-cover"
+                    className="h-4 w-4 shrink-0 rounded-[0.125rem] object-cover"
                   />
                   {FUEL_BUY[tank].traderLabel}
                 </>
