@@ -17,6 +17,8 @@ import { stashCapacityCells } from '@/lib/stash-capacity';
 import { stackMaxOverride } from '@/lib/stash-stack-overrides';
 import { StashCell } from '@/components/features/stash/StashCell';
 import { StashEmptyCell } from '@/components/features/stash/StashEmptyCell';
+import { StashAddSearch } from '@/components/features/stash/StashAddSearch';
+import { EDITIONS, type EditionType } from '@/components/layout/header-modules/ProfileSettingsModal';
 import type { StashItemMeta } from '@/lib/stash-types';
 
 const CELL = 56; // одна клетка = 56px (кратно 4)
@@ -36,22 +38,28 @@ export function StashClient() {
   const activeProfile = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId));
   const capacity = stashCapacityCells(activeProfile?.edition);
 
-  // Адаптивная ширина: измеряем контейнер сетки и пересчитываем число колонок.
+  // Адаптивная ширина: измеряем контейнер сетки, пересчитываем число колонок и гибкий
+  // размер клетки. columns = round (ячейки в край), cellSize = width/columns (float px,
+  // сетка занимает всю ширину без остатка — точное число в ряд неважно, схрон = визуализация).
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [columns, setColumns] = useState(DEFAULT_COLUMNS);
+  const [gridWidthPx, setGridWidthPx] = useState(DEFAULT_COLUMNS * CELL);
 
   useLayoutEffect(() => {
     const el = gridRef.current;
     if (!el) return;
     const measure = () => {
       const width = el.clientWidth;
-      setColumns(Math.max(1, Math.floor(width / CELL)));
+      setColumns(Math.max(1, Math.round(width / CELL)));
+      setGridWidthPx(width);
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  const cellSize = gridWidthPx / columns;
 
   // Стабильный список id владения (count>0) для запроса меты. Сорт — для стабильного ключа мемо.
   const ownedIds = useMemo(
@@ -163,29 +171,36 @@ export function StashClient() {
   const packedRows = packed?.rows ?? 0;
   const displayRows = Math.max(capacityRows, packedRows, 1);
 
-  const gridWidthPx = columns * CELL;
-  const gridHeightPx = displayRows * CELL;
+  const gridHeightPx = displayRows * cellSize;
+
+  // Индикатор издания активного профиля (иконка-маска + токен цвета, образец из ProfileSettingsForm).
+  const ed = (activeProfile?.edition ?? 'Standard') as EditionType;
+  const e = EDITIONS[ed];
 
   return (
     <section className="flex flex-col gap-6">
-      {/* Индикатор-стат «Занято X / Y ячеек» */}
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-lines-hover pb-4">
-        <div>
-          <p className="font-blender-medium text-2xl tabular-nums text-text-primary">
-            {occupied}
-            <span className="text-text-muted"> / {capacity}</span>
-          </p>
-          <p className="text-type-micro font-blender-medium uppercase tracking-widest text-text-muted">
-            Занято ячеек · схрон {activeProfile?.edition ?? 'Standard'}
-          </p>
+      {/* Шапка: слева поиск/добавление, справа индикатор ёмкости по изданию. */}
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-lines-hover pb-4">
+        {/* Слева — поиск и добавление в схрон (§4.11 — action читает зеркало). */}
+        <div className="min-w-64 max-w-md flex-1">
+          <StashAddSearch onAdd={(id) => bumpCount(id, 1, STASH_MAX)} />
         </div>
-        <div className="flex flex-col items-end gap-0.5">
-          <p className="font-blender-medium text-sm tabular-nums text-text-muted">
+
+        {/* Справа — индикатор: заполнение, издание, занятые ячейки. */}
+        <div className="flex flex-col items-end gap-1">
+          <p className="font-blender-medium text-2xl tabular-nums text-text-primary">
             Заполнено {fillPct}%
+          </p>
+          <div className="flex items-center gap-1.5">
+            <div className={`h-4 w-6 icon-mask ${e.icon} ${e.color}`} />
+            <span className={`font-blender-medium text-sm leading-none ${e.color}`}>{e.name}</span>
+          </div>
+          <p className="text-type-micro font-blender-medium uppercase tracking-widest tabular-nums text-text-muted">
+            Занято {occupied} / {capacity} ячеек
           </p>
           {overflowTotal > 0 ? (
             <p className="text-type-micro font-blender-book tabular-nums text-text-muted">
-              часть юнитов не показана: +{overflowTotal}
+              +{overflowTotal} не показано
             </p>
           ) : null}
         </div>
@@ -194,16 +209,16 @@ export function StashClient() {
       {loading ? (
         <StashSkeleton />
       ) : (
-        // Один relative-контейнер: измеряется под ширину контента, ограничивает 2 слоя.
+        // Один relative-контейнер во всю ширину: ref мерит ширину, ограничивает 2 слоя.
         <div ref={gridRef} className="w-full">
-          <div className="relative" style={{ width: gridWidthPx, height: gridHeightPx }}>
-            {/* Слой 1 — ФОН: пустая сетка схрона (сам схрон, как в игре). */}
+          <div className="relative w-full" style={{ height: gridHeightPx }}>
+            {/* Слой 1 — ФОН: пустая сетка схрона в край (гибкий cellSize, без остатка). */}
             <div
               aria-hidden
               className="grid"
               style={{
-                gridTemplateColumns: `repeat(${columns}, ${CELL}px)`,
-                gridAutoRows: `${CELL}px`,
+                gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
+                gridAutoRows: `${cellSize}px`,
               }}
             >
               {Array.from({ length: columns * displayRows }).map((_, i) => (
@@ -223,12 +238,13 @@ export function StashClient() {
                   <div
                     key={cell.id}
                     className="absolute"
-                    style={{ left: cell.col * CELL, top: cell.row * CELL }}
+                    style={{ left: cell.col * cellSize, top: cell.row * cellSize }}
                   >
                     <StashCell
                       meta={m}
                       count={unit.stackCount}
                       onInc={(delta) => bumpCount(itemId, delta, STASH_MAX)}
+                      cellPx={cellSize}
                       {...(m.slug ? { href: `/eft/items/item/${m.slug}` } : {})}
                     />
                   </div>
