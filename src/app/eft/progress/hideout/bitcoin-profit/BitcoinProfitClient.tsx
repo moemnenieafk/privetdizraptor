@@ -340,8 +340,8 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               />
             </div>
           </div>
-          <p className="mt-2 text-center font-blender-book text-type-caption leading-tight text-text-muted">
-            Уменьшает расход топлива (до −25% на 50 ур.) На скорость добычи не влияет.
+          <p className="mt-1.5 text-center font-blender-book text-type-caption leading-tight text-text-muted">
+            Режет расход топлива (−25% на 50 ур.).
           </p>
 
           {/* Учёт топлива — 3 ячейки single-select. */}
