@@ -40,6 +40,10 @@ export interface TrackCellProps {
   /** Прямой ввод общего числа: клик по бейджу X/Y → инпут, Enter коммитит onSetTotal
    *  (решает «×4500 кликов» — вводишь число, а не жмёшь). Клампинг до need — внутри. */
   onSetTotal?: (n: number) => void;
+  /** Аутентичный full-bleed grid-икон: убирает паддинг иконки (object-contain в край ячейки),
+   *  когда аспект иконки совпадает с футпринтом ячейки (схрон EFT). Default false — не ломает
+   *  прочих потребителей (needed, battlepass) с их p-1.5. */
+  iconFill?: boolean;
   /** Витринный режим: подсветить невидимые мобильные тап-зоны (−/+). */
   revealZones?: boolean;
 }
@@ -62,6 +66,7 @@ export function TrackCell({
   badge,
   onSetTotal,
   revealZones = false,
+  iconFill = false,
 }: TrackCellProps) {
   const [imgFailed, setImgFailed] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -116,7 +121,9 @@ export function TrackCell({
           loading="lazy"
           decoding="async"
           onError={() => setImgFailed(true)}
-          className="pointer-events-none absolute inset-0 z-10 h-full w-full object-contain p-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]"
+          className={`pointer-events-none absolute inset-0 z-10 h-full w-full object-contain ${
+            iconFill ? 'drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]' : 'p-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]'
+          }`}
         />
       ) : (
         <Package
