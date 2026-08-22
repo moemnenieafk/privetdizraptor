@@ -132,6 +132,19 @@ function craftAccentStyle(): React.CSSProperties {
   };
 }
 
+// Оттенок «идёт крафт» — приглушённый nvg-green фон+обводка (Figma 2990-772). Литерал по той же
+// причине, что CRAFT_ACCENT.
+const CRAFTING_GREEN = '#689963';
+function producingStyle(): React.CSSProperties {
+  return {
+    borderColor: `color-mix(in srgb, ${CRAFTING_GREEN} 35%, transparent)`,
+    background: [
+      `radial-gradient(ellipse 70% 90% at 50% 100%, color-mix(in srgb, ${CRAFTING_GREEN} 12%, transparent), transparent 68%)`,
+      'var(--color-card-menu)',
+    ].join(', '),
+  };
+}
+
 /** Состояние карточки — приоритет по спеке §1. */
 type CardState = 'locked' | 'can-craft' | 'busy' | 'producing' | 'done';
 
@@ -312,16 +325,16 @@ export function RecipeCard({
   const cardBorder = isDone
     ? 'border-nvg-green shadow-[0_0_0_1px_var(--color-nvg-green),0_0_18px_-6px_var(--color-nvg-green)]'
     : 'border-lines-hover';
-  const cardDim = state === 'producing' ? 'opacity-60' : '';
-  // Можно запустить крафт → перекрашиваем карточку в акцент «крафта» (фон+обводка).
+  // can-craft → акцент «крафта» (золото); producing → зелёный оттенок (Figma 2990-772).
   const isCanCraft = state === 'can-craft';
+  const isProducing = state === 'producing';
 
   const timer = timerParts(ownRemaining);
 
   return (
     <article
-      className={`flex flex-col gap-2 rounded-lg border p-4 ${cardDim} ${isCanCraft ? '' : `bg-card-menu ${cardBorder}`}`}
-      style={isCanCraft ? craftAccentStyle() : undefined}
+      className={`flex flex-col gap-2 rounded-lg border p-4 ${isCanCraft || isProducing ? '' : `bg-card-menu ${cardBorder}`}`}
+      style={isCanCraft ? craftAccentStyle() : isProducing ? producingStyle() : undefined}
     >
       {/* 1. Шапка: иконка станции + имя · справа «02» + (locked) «ТРЕБУЕТСЯ ПОСТРОИТЬ NN» + молоток */}
       <header className="flex h-7 items-center gap-2">
@@ -420,12 +433,12 @@ export function RecipeCard({
               { v: timer.s, l: 'секунд' },
             ].map((g, i) => (
               <div key={g.l} className="flex items-end gap-1.5">
-                {i > 0 && <span className={`pb-4 text-2xl leading-none ${isDone ? 'text-nvg-green' : 'text-text-muted'}`}>:</span>}
+                {i > 0 && <span className="pb-4 text-2xl leading-none text-nvg-green/60">:</span>}
                 <div className="flex flex-col items-center gap-1">
-                  <span className={`text-2xl font-blender-medium leading-none tabular-nums ${isDone ? 'text-nvg-green' : 'text-text-secondary'}`}>
+                  <span className="text-2xl font-blender-medium leading-none tabular-nums text-nvg-green">
                     {g.v}
                   </span>
-                  <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-muted">{g.l}</span>
+                  <span className="font-blender-medium text-type-micro uppercase tracking-widest text-nvg-green/60">{g.l}</span>
                 </div>
               </div>
             ))}
@@ -438,7 +451,7 @@ export function RecipeCard({
             <button
               type="button"
               onClick={() => cancel(stationKey)}
-              className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors hover:text-text-secondary"
+              className="font-blender-medium text-type-caption uppercase tracking-widest text-nvg-green/70 transition-colors hover:text-nvg-green"
             >
               отменить крафт
             </button>
