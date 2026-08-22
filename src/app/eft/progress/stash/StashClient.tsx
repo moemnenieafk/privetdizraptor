@@ -2,26 +2,26 @@
 
 // Клиент «Мой схрон»: берёт владение из useInventoryStore (localStorage), тянет мету предметов
 // из нашего зеркала (/api/eft/items/meta, §4.11 — наружу не ходим), раскладывает футпринты
-// паккером (§4.7 — расчёт в useMemo, не в JSX) и рисует абсолютно спозиционированную 56px-сетку
-// из StashCell. Ёмкость сетки — по изданию активного профиля (stashCapacityCells).
+// паккером (§4.7 — расчёт в useMemo, не в JSX) и рисует АДАПТИВНУЮ 56px-сетку в два слоя:
+// фон из пустых ячеек StashEmptyCell (сам схрон, как в игре) + предметы StashCell поверх.
+// Ширина сетки динамическая: число колонок = floor(ширины контейнера / 56), пересчёт на ресайзе.
+// Ёмкость сетки — по изданию активного профиля (stashCapacityCells).
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { PackageOpen } from 'lucide-react';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { packStash, type StashEntry } from '@/lib/stash-packer';
 import { expandToStacks, type OwnedStackInput } from '@/lib/stash-stacks';
 import { stashCapacityCells } from '@/lib/stash-capacity';
+import { stackMaxOverride } from '@/lib/stash-stack-overrides';
 import { StashCell } from '@/components/features/stash/StashCell';
+import { StashEmptyCell } from '@/components/features/stash/StashEmptyCell';
 import type { StashItemMeta } from '@/lib/stash-types';
 
-const CELL_PX = 56; // одна клетка = 56px (кратно 4)
-const COLUMNS = 10;
-const GRID_WIDTH_PX = COLUMNS * CELL_PX; // 560px — фикс ширина внутренней сетки (моб. скролл)
+const CELL = 56; // одна клетка = 56px (кратно 4)
+const DEFAULT_COLUMNS = 10; // разумный дефолт до первого измерения контейнера
 const STASH_MAX = 9999; // как в «важных предметах» (needed)
-// Задел на виртуализацию при очень больших схронах (не реализуем в этой итерации).
-const VIRTUALIZE_THRESHOLD = 400;
 
 type MetaMap = Record<string, StashItemMeta>;
 
@@ -35,6 +35,23 @@ export function StashClient() {
 
   const activeProfile = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId));
   const capacity = stashCapacityCells(activeProfile?.edition);
+
+  // Адаптивная ширина: измеряем контейнер сетки и пересчитываем число колонок.
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
+
+  useLayoutEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const measure = () => {
+      const width = el.clientWidth;
+      setColumns(Math.max(1, Math.floor(width / CELL)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Стабильный список id владения (count>0) для запроса меты. Сорт — для стабильного ключа мемо.
   const ownedIds = useMemo(
@@ -76,9 +93,8 @@ export function StashClient() {
     [ownedIds.length, fetched, idsKey],
   );
 
-  // Раскладка НАСТОЯЩИХ СТЕКОВ. В отличие от прежней витрины уникальных предметов,
-  // раскладка теперь ЗАВИСИТ от количества: добавление юнита может породить новый стек
-  // (ammo с stackMaxSize) → count/ownedItems корректно в депсах этого мемо (§4.7 — вне JSX).
+  // Раскладка НАСТОЯЩИХ СТЕКОВ под текущую ширину. Зависит от количества (новый юнит может
+  // породить новый стек), меты и числа колонок (ширина динамическая) — всё в депсах (§4.7, вне JSX).
   const layout = useMemo(() => {
     if (!meta) return null;
 
@@ -87,6 +103,8 @@ export function StashClient() {
       .filter((id) => meta[id] && (ownedItems[id] ?? 0) > 0)
       .map((id) => {
         const m = meta[id];
+        // Стек-лимит: сперва из зеркала (ammo), иначе известный оверрайд денег, иначе 1.
+        const stackMax = m.stackMaxSize ?? stackMaxOverride(m.inGameId);
         const input: OwnedStackInput = {
           itemId: id,
           count: ownedItems[id] ?? 0,
@@ -94,7 +112,7 @@ export function StashClient() {
           gridHeight: m.gridHeight,
         };
         if (m.backgroundColor != null) input.rarity = m.backgroundColor;
-        if (m.stackMaxSize !== undefined) input.stackMaxSize = m.stackMaxSize;
+        if (stackMax !== undefined) input.stackMaxSize = stackMax;
         return input;
       });
 
@@ -127,17 +145,26 @@ export function StashClient() {
       return entry;
     });
 
-    return { packed: packStash(entries, COLUMNS), cellByKey, overflowTotal };
-  }, [meta, ownedIds, ownedItems]);
+    return { packed: packStash(entries, columns), cellByKey, overflowTotal };
+  }, [meta, ownedIds, ownedItems, columns]);
 
   const loading = meta === null || layout === null;
   const packed = layout?.packed ?? null;
   const occupied = packed?.occupied ?? 0;
   const overflowTotal = layout?.overflowTotal ?? 0;
+  const isEmpty = !loading && packed !== null && packed.cells.length === 0;
+
   // Число «Занято X / Y» показываем как есть (X>Y — честный сигнал переполнения),
   // а процент заполнения клампим к 100, чтобы не было «137%».
   const fillPct = capacity > 0 ? Math.min(100, Math.round((occupied / capacity) * 100)) : 0;
-  const gridHeightPx = packed ? Math.max(packed.rows, 1) * CELL_PX : 0;
+
+  // Ряды сетки: до ёмкости издания (под текущую ширину), но растём под контент.
+  const capacityRows = Math.ceil(capacity / columns);
+  const packedRows = packed?.rows ?? 0;
+  const displayRows = Math.max(capacityRows, packedRows, 1);
+
+  const gridWidthPx = columns * CELL;
+  const gridHeightPx = displayRows * CELL;
 
   return (
     <section className="flex flex-col gap-6">
@@ -166,37 +193,53 @@ export function StashClient() {
 
       {loading ? (
         <StashSkeleton />
-      ) : layout && packed && packed.cells.length > 0 ? (
-        <div className="overflow-x-auto">
-          <div
-            className="relative"
-            style={{ width: GRID_WIDTH_PX, height: gridHeightPx }}
-          >
-            {packed.cells.map((cell) => {
-              // cell.id = key стека (`${itemId}#${i}`) → достаём предмет/стек/мету из карты.
-              const unit = layout.cellByKey.get(cell.id);
-              if (!unit) return null;
-              const m = unit.meta;
-              const { itemId } = unit;
-              return (
-                <div
-                  key={cell.id}
-                  className="absolute"
-                  style={{ left: cell.col * CELL_PX, top: cell.row * CELL_PX }}
-                >
-                  <StashCell
-                    meta={m}
-                    count={unit.stackCount}
-                    onInc={(delta) => bumpCount(itemId, delta, STASH_MAX)}
-                    {...(m.slug ? { href: `/eft/items/item/${m.slug}` } : {})}
-                  />
-                </div>
-              );
-            })}
+      ) : (
+        // Один relative-контейнер: измеряется под ширину контента, ограничивает 2 слоя.
+        <div ref={gridRef} className="w-full">
+          <div className="relative" style={{ width: gridWidthPx, height: gridHeightPx }}>
+            {/* Слой 1 — ФОН: пустая сетка схрона (сам схрон, как в игре). */}
+            <div
+              aria-hidden
+              className="grid"
+              style={{
+                gridTemplateColumns: `repeat(${columns}, ${CELL}px)`,
+                gridAutoRows: `${CELL}px`,
+              }}
+            >
+              {Array.from({ length: columns * displayRows }).map((_, i) => (
+                <StashEmptyCell key={i} />
+              ))}
+            </div>
+
+            {/* Слой 2 — ПРЕДМЕТЫ: абсолютно поверх фона по px-координатам ячеек. */}
+            <div className="absolute inset-0">
+              {packed?.cells.map((cell) => {
+                // cell.id = key стека (`${itemId}#${i}`) → достаём предмет/стек/мету из карты.
+                const unit = layout?.cellByKey.get(cell.id);
+                if (!unit) return null;
+                const m = unit.meta;
+                const { itemId } = unit;
+                return (
+                  <div
+                    key={cell.id}
+                    className="absolute"
+                    style={{ left: cell.col * CELL, top: cell.row * CELL }}
+                  >
+                    <StashCell
+                      meta={m}
+                      count={unit.stackCount}
+                      onInc={(delta) => bumpCount(itemId, delta, STASH_MAX)}
+                      {...(m.slug ? { href: `/eft/items/item/${m.slug}` } : {})}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Пустой схрон — ненавязчивый оверлей-хинт поверх самой пустой сетки. */}
+            {isEmpty ? <EmptyHint /> : null}
           </div>
         </div>
-      ) : (
-        <EmptyStash />
       )}
     </section>
   );
@@ -205,33 +248,35 @@ export function StashClient() {
 /** Скелетон формы будущей сетки (§4.8) — ряд плиток, а не спиннер. */
 function StashSkeleton() {
   return (
-    <div className="overflow-x-auto">
-      <div className="grid grid-cols-10 gap-0" style={{ width: GRID_WIDTH_PX }}>
-        {Array.from({ length: 40 }).map((_, i) => (
-          <div key={i} className="h-14 w-14 animate-pulse border border-lines-hover bg-card-menu" />
-        ))}
-      </div>
+    <div
+      className="grid gap-0"
+      style={{
+        gridTemplateColumns: `repeat(${DEFAULT_COLUMNS}, ${CELL}px)`,
+        gridAutoRows: `${CELL}px`,
+      }}
+    >
+      {Array.from({ length: DEFAULT_COLUMNS * 4 }).map((_, i) => (
+        <div key={i} className="animate-pulse border border-lines-hover bg-card-menu" />
+      ))}
     </div>
   );
 }
 
-/** Пустое состояние — щадящее, с путём к «Важным предметам». */
-function EmptyStash() {
+/** Пустое состояние — щадящий оверлей поверх пустой сетки, с путём к «Важным предметам». */
+function EmptyHint() {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-lines-hover py-16 text-center">
-      <PackageOpen aria-hidden strokeWidth={1.5} className="h-12 w-12 text-text-muted" />
-      <div className="flex flex-col gap-1">
-        <p className="font-blender-medium text-base text-text-primary">Схрон пуст</p>
+    <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-8">
+      <div className="pointer-events-auto flex flex-col items-center gap-2 rounded-lg border border-lines-hover bg-(--color-darkbase)/85 px-6 py-4 text-center backdrop-blur-sm">
         <p className="font-blender-book text-sm text-text-muted">
           Добавляйте предметы кнопкой «В схрон» — они разложатся по ячейкам, как в игре.
         </p>
+        <Link
+          href="/eft/progress/needed"
+          className="font-blender-medium text-sm uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
+        >
+          Важные предметы
+        </Link>
       </div>
-      <Link
-        href="/eft/progress/needed"
-        className="font-blender-medium text-sm uppercase tracking-widest text-(--primary) transition-opacity hover:opacity-80"
-      >
-        Важные предметы
-      </Link>
     </div>
   );
 }
