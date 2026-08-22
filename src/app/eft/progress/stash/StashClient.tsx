@@ -206,11 +206,12 @@ export function StashClient() {
         </div>
       </div>
 
-      {loading ? (
-        <StashSkeleton />
-      ) : (
-        // Один relative-контейнер во всю ширину: ref мерит ширину, ограничивает 2 слоя.
-        <div ref={gridRef} className="w-full">
+      {/* Измеряющий контейнер во всю ширину смонтирован ВСЕГДА (и при loading), иначе
+          ResizeObserver не поймал бы реальную ширину и сетка залипла бы на дефолте. */}
+      <div ref={gridRef} className="w-full">
+        {loading ? (
+          <StashSkeleton />
+        ) : (
           <div className="relative w-full" style={{ height: gridHeightPx }}>
             {/* Слой 1 — ФОН: пустая сетка схрона в край (гибкий cellSize, без остатка). */}
             <div
@@ -255,8 +256,8 @@ export function StashClient() {
             {/* Пустой схрон — ненавязчивый оверлей-хинт поверх самой пустой сетки. */}
             {isEmpty ? <EmptyHint /> : null}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
