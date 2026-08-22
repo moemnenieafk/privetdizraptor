@@ -18,7 +18,6 @@ import { usePmcStatsStore } from '@/store/usePmcStatsStore';
 import { useManualProfileStore } from '@/store/useManualProfileStore';
 import { resolveSkillLevel } from '@/lib/tarkov/player-view-merge';
 import { editionFloor } from '@/lib/hideout-edition';
-import { MetricCard } from '@/components/ui/kit/MetricCard';
 import { stationIconClass } from '@/components/features/hideout/HideoutBuildTracker';
 import { SKILL_ICONS } from '@/components/features/adaptive/skill-icons';
 import { itemIconUrl } from '@/lib/item-icon';
@@ -55,6 +54,13 @@ const GPU_ITEM_ID = '57347ca924597744596b4e71'; // Graphics card
 const GPU_SLUG = 'graphics-card'; // normalizedName → карточка предмета
 const GPU_MASK = 'url(/icons/eft/04-progression/gpu-icon.svg)';
 const RUBLE_MASK = 'url(/icons/eft/03-items/currency-ruble.svg)';
+
+// Иконки метрик (маски, красятся по семантике).
+const IC_MINE = 'url(/icons/eft/04-progression/bitcoin-profit.svg)'; // добыча BTC
+const IC_TIME = 'url(/icons/eft/02-quests/ingame-events.svg)'; // время / доход
+const IC_FUEL = 'url(/icons/eft/04-progression/crafting/empty-tank-icon.svg)'; // топливо
+const IC_PROFIT = 'url(/icons/eft/03-items/profit-icon.svg)'; // чистая прибыль
+const IC_ROI = 'url(/icons/eft/03-items/gpcoin-icon.svg)'; // возврат вложений
 const GPU_COLS = 10;
 const GPU_ROWS = 5;
 
@@ -517,29 +523,59 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             </div>
           </section>
 
-          {/* 4. Метрики — грид MetricCard. */}
+          {/* 4. Метрики — иконки из набора + цветовая семантика (прибыль зелёная / убыток красный). */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard label="Добыча BTC / сутки" value={`${eco.coinsPerDay.toFixed(2)} BTC`} subtext={`${(eco.coinsPerDay * 30).toFixed(1)} BTC / месяц`} />
-            <MetricCard label="Время на 1 BTC" value={fmtHms(eco.secPerCoin)} subtext={`при ${gpu} GPU`} />
-            <MetricCard label="Доход / сутки" value={`${fmt(eco.grossPerDay)} ₽`} subtext={`продажа ${fmt(btcSellPrice)} ₽ / BTC`} />
-            <MetricCard
+            <Metric
+              label="Добыча BTC / сутки"
+              value={`${eco.coinsPerDay.toFixed(2)} BTC`}
+              subtext={`${(eco.coinsPerDay * 30).toFixed(1)} BTC / месяц`}
+              icon={<MaskIcon mask={IC_MINE} className="h-5 w-5 bg-(--primary)" />}
+            />
+            <Metric
+              label="Время на 1 BTC"
+              value={fmtHms(eco.secPerCoin)}
+              subtext={`при ${gpu} GPU`}
+              icon={<MaskIcon mask={IC_TIME} className="h-4 w-4 bg-text-muted" />}
+            />
+            <Metric
+              label="Доход / сутки"
+              value={`${fmt(eco.grossPerDay)} ₽`}
+              subtext={`продажа ${fmt(btcSellPrice)} ₽ / BTC`}
+              icon={<MaskIcon mask={IC_TIME} className="h-4 w-4 bg-text-muted" />}
+            />
+            <Metric
               label="Топливо / сутки"
               value={eco.fuelPerDay > 0 ? `−${fmt(eco.fuelPerDay)} ₽` : '—'}
               subtext={fuelEnabled ? `${tankMeta.label} · УУ ${mgmtLevel}` : 'не учитывается'}
-              accent={eco.fuelPerDay > 0 ? 'warning' : 'default'}
+              tone={eco.fuelPerDay > 0 ? 'cost' : 'default'}
+              icon={<MaskIcon mask={IC_FUEL} className={`h-5 w-5 ${eco.fuelPerDay > 0 ? 'bg-tactical-amber' : 'bg-text-muted'}`} />}
             />
-            <MetricCard label="Чистая прибыль / сутки" value={`${fmtSigned(eco.netPerDay)} ₽`} subtext="доход − топливо" accent="primary" />
-            <MetricCard
+            <Metric
+              label="Чистая прибыль / сутки"
+              value={`${fmtSigned(eco.netPerDay)} ₽`}
+              subtext="доход − топливо"
+              tone={gainLoss(eco.netPerDay)}
+              icon={<MaskIcon mask={IC_PROFIT} className={`h-5 w-5 ${eco.netPerDay >= 0 ? 'bg-success' : 'bg-danger'}`} />}
+            />
+            <Metric
               label="Окупаемость GPU"
               value={Number.isFinite(eco.paybackDays) ? `${eco.paybackDays} дн` : '—'}
               subtext={`вложено ${fmt(eco.gpuInvest)} ₽`}
+              icon={<FramedGpu colorClass="bg-text-secondary" />}
             />
-            <MetricCard label="Прибыль на 1 GPU" value={`${fmtSigned(eco.netPerGpu)} ₽`} subtext="в сутки" />
-            <MetricCard
-              label="ROI % / мес"
+            <Metric
+              label="Прибыль на 1 GPU"
+              value={`${fmtSigned(eco.netPerGpu)} ₽`}
+              subtext="в сутки"
+              tone={gainLoss(eco.netPerGpu)}
+              icon={<FramedGpu colorClass={eco.netPerGpu >= 0 ? 'bg-success' : 'bg-danger'} />}
+            />
+            <Metric
+              label="Возврат / мес"
               value={`${eco.roiMonthlyPct > 0 ? '+' : ''}${eco.roiMonthlyPct.toFixed(0)}%`}
-              subtext="от вложений в GPU"
-              accent={eco.roiMonthlyPct > 0 ? 'success' : 'default'}
+              subtext="% вложений в GPU за месяц"
+              tone={gainLoss(eco.roiMonthlyPct)}
+              icon={<MaskIcon mask={IC_ROI} className={`h-5 w-5 ${eco.roiMonthlyPct >= 0 ? 'bg-success' : 'bg-danger'}`} />}
             />
           </div>
         </>
@@ -669,6 +705,57 @@ function FuelCell({
         </span>
       )}
     </button>
+  );
+}
+
+/** Иконка-маска (перекрашивается через bg-*). */
+function MaskIcon({ mask, className }: { mask: string; className: string }) {
+  return (
+    <span aria-hidden className={`icon-mask shrink-0 ${className}`} style={{ maskImage: mask, WebkitMaskImage: mask }} />
+  );
+}
+
+/** Иконка видеокарты в квадратном фрейме (для метрик по GPU). */
+function FramedGpu({ colorClass }: { colorClass: string }) {
+  return (
+    <span className="flex size-7 shrink-0 items-center justify-center rounded-xs border border-lines-hover">
+      <MaskIcon mask={GPU_MASK} className={`h-2.5 w-5 ${colorClass}`} />
+    </span>
+  );
+}
+
+/** Цветовая семантика значения метрики. */
+const METRIC_TONE = {
+  default: 'text-text-primary',
+  primary: 'text-(--primary)',
+  gain: 'text-success', // #8DE736 — прибыль
+  loss: 'text-danger', // убыток
+  cost: 'text-tactical-amber', // расход
+} as const;
+type MetricTone = keyof typeof METRIC_TONE;
+const gainLoss = (n: number): MetricTone => (n > 0 ? 'gain' : n < 0 ? 'loss' : 'default');
+
+/** Карточка метрики: лейбл + иконка (справа сверху) + значение с цветовой семантикой + подпись. */
+function Metric({
+  label,
+  value,
+  subtext,
+  icon,
+  tone = 'default',
+}: {
+  label: string;
+  value: string;
+  subtext?: string;
+  icon?: React.ReactNode;
+  tone?: MetricTone;
+}) {
+  return (
+    <div className="relative flex flex-col justify-between rounded-md border border-lines-hover bg-card-menu/40 p-3">
+      {icon && <span className="absolute right-3 top-3 flex">{icon}</span>}
+      <div className="mb-1 pr-8 text-type-caption uppercase leading-tight tracking-widest text-text-muted">{label}</div>
+      <div className={`font-blender-medium text-lg tracking-tight ${METRIC_TONE[tone]}`}>{value}</div>
+      {subtext && <div className="mt-1 font-blender-book text-type-caption text-text-secondary">{subtext}</div>}
+    </div>
   );
 }
 
