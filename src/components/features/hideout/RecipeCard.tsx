@@ -328,24 +328,20 @@ export function RecipeCard({
         {stationKey && (
           <span
             aria-hidden
-            className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(stationKey)} ${isDone ? 'bg-nvg-green' : isCanCraft ? '' : 'bg-text-secondary'}`}
+            className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(stationKey)} ${isDone ? 'bg-nvg-green' : state === 'locked' ? 'bg-tactical-amber' : isCanCraft ? '' : 'bg-text-secondary'}`}
             style={isCanCraft ? { backgroundColor: CRAFT_ACCENT } : undefined}
           />
         )}
         <span
-          className={`min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest ${isDone ? 'text-nvg-green' : isCanCraft ? '' : 'text-text-secondary'}`}
+          className={`min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest ${isDone ? 'text-nvg-green' : state === 'locked' ? 'text-tactical-amber' : isCanCraft ? '' : 'text-text-secondary'}`}
           style={isCanCraft ? { color: CRAFT_ACCENT } : undefined}
         >
           {craft.stationName}
         </span>
 
         {state === 'locked' && (
-          <span className="flex shrink-0 items-center gap-1.5 font-blender-medium text-type-micro uppercase leading-tight tracking-widest text-tactical-amber">
-            <span className="text-right">
-              Требуется
-              <br />
-              построить
-            </span>
+          <span className="flex shrink-0 items-center gap-1.5 font-blender-medium text-type-caption uppercase leading-none tracking-widest text-tactical-amber">
+            Дострой
             <span className="text-base tabular-nums">{String(craft.level).padStart(2, '0')}</span>
             <span
               aria-hidden
