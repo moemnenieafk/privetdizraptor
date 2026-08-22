@@ -431,7 +431,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
       ) : (
         <>
           {/* 3. ГЕРОЙ — вердикт + шкала масштабирования по GPU. */}
-          <section className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
+          <section className="grid gap-4 lg:grid-cols-2">
             {/* Баннер-вердикт. */}
             <div className="relative flex flex-col justify-center overflow-hidden rounded-md border border-lines-hover bg-(--color-base) p-6">
               <span
