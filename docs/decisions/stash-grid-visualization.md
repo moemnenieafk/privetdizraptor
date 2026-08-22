@@ -1,6 +1,6 @@
 ---
 type: epic-plan
-status: ✅ реализовано (autopilot 2026-08-22, ветка feat/player-stash-grid) — ждёт live-verify+пуш V4DYA
+status: ✅ ЗАПУШЕНО В MAIN (2026-08-23, 30bc2be5) — 5 итераций + связка сторов + Figma-масштаб
 sprint: feat/player-stash-grid
 owner: V4DYA
 related: docs/decisions/important-items-merge.md · docs/research/eft-editions-hideout-bonuses.md
