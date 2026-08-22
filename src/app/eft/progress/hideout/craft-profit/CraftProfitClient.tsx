@@ -355,9 +355,10 @@ export function CraftProfitClient({
       {/* Заголовок/описание раздела — в SectionHubNav (headerConfig p-hideout-craft), не дублируем. */}
       {/* 1. Единый ряд контролов: поиск + read-only скилл-индикаторы + иконки-фильтры +
           профиль-ссылка + сортировка (Figma 3015-1878). Над вкладками станций. */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Поиск. */}
-        <div className="relative min-w-40 flex-1">
+      {/* Фикс-раскладка (Figma): поиск 348 · gap 28 · скиллы 348 · gap 28 · остальное. */}
+      <div className="flex items-center gap-7">
+        {/* Поиск — фикс 348px (w-87). */}
+        <div className="relative w-87 shrink-0">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" aria-hidden />
           <input
             value={search}
@@ -367,33 +368,30 @@ export function CraftProfitClient({
           />
         </div>
 
-        {/* Read-only индикаторы навыков — уровни из Досье ЧВК. */}
-        <SkillIndicator
-          iconSrc={SKILL_ICONS.Crafting?.src ?? ''}
-          level={craftingLevel}
-          label="Ручное производство"
-        />
-        <SkillIndicator
-          iconSrc={SKILL_ICONS.HideoutManagement?.src ?? ''}
-          level={hideoutMgmtLevel}
-          label="Управление убежищем"
-        />
+        {/* Read-only индикаторы навыков (группа 348px, gap 28) — уровни из Досье ЧВК. */}
+        <div className="flex w-87 shrink-0 items-center gap-7">
+          <SkillIndicator iconSrc={SKILL_ICONS.Crafting?.src ?? ''} level={craftingLevel} label="Ручное производство" />
+          <SkillIndicator iconSrc={SKILL_ICONS.HideoutManagement?.src ?? ''} level={hideoutMgmtLevel} label="Управление убежищем" />
+        </div>
 
-        {/* Иконки-фильтры (36×36). */}
-        <IconToggle on={onlyProfitable} onClick={() => setOnlyProfitable((v) => !v)} title="Только прибыльные">
-          <TrendingUp className="h-5 w-5" aria-hidden />
-        </IconToggle>
-        <IconToggle on={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)} title="Доступно сейчас">
-          <span aria-hidden className="icon-mask icon-eft-crafting-available-now h-5 w-5" />
-        </IconToggle>
-        <IconToggle on={hideLocked} onClick={() => setHideLocked((v) => !v)} title="Скрыть заблокированные">
-          <span aria-hidden className="icon-mask icon-eft-crafting-hide-locked h-5 w-5" />
-        </IconToggle>
-        <IconToggle on={emptyFuel} onClick={() => setEmptyFuel((v) => !v)} title="Пустой бак">
-          <span aria-hidden className="icon-mask icon-eft-crafting-empty-tank h-5 w-5" />
-        </IconToggle>
-        {/* Сортировка. */}
-        <SortDropdown sort={sort} onSort={setSort} />
+        {/* Иконки-фильтры + сортировка — остальное (сортировка у правого края). */}
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <IconToggle on={onlyProfitable} onClick={() => setOnlyProfitable((v) => !v)} title="Только прибыльные">
+            <TrendingUp className="h-5 w-5" aria-hidden />
+          </IconToggle>
+          <IconToggle on={onlyAvailable} onClick={() => setOnlyAvailable((v) => !v)} title="Доступно сейчас">
+            <span aria-hidden className="icon-mask icon-eft-crafting-available-now h-5 w-5" />
+          </IconToggle>
+          <IconToggle on={hideLocked} onClick={() => setHideLocked((v) => !v)} title="Скрыть заблокированные">
+            <span aria-hidden className="icon-mask icon-eft-crafting-hide-locked h-5 w-5" />
+          </IconToggle>
+          <IconToggle on={emptyFuel} onClick={() => setEmptyFuel((v) => !v)} title="Пустой бак">
+            <span aria-hidden className="icon-mask icon-eft-crafting-empty-tank h-5 w-5" />
+          </IconToggle>
+          <div className="ml-auto">
+            <SortDropdown sort={sort} onSort={setSort} />
+          </div>
+        </div>
       </div>
 
       {/* 2. Вкладки станций-модулей — под строкой контролов. */}
@@ -432,7 +430,7 @@ export function CraftProfitClient({
 /** Read-only индикатор навыка: арт-иконка + крупный уровень + двухстрочная подпись (из Досье ЧВК). */
 function SkillIndicator({ iconSrc, level, label }: { iconSrc: string; level: number; label: string }) {
   return (
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="flex min-w-0 flex-1 items-center gap-2">
       <img src={iconSrc} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-xs object-contain" />
       <span className="text-2xl leading-none tabular-nums text-(--primary) font-blender-medium">{level}</span>
       <span className="max-w-24 font-blender-medium text-type-micro uppercase leading-tight tracking-widest text-text-muted">
