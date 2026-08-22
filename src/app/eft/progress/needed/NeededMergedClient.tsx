@@ -824,7 +824,6 @@ function ItemRow({
   const hCount = st.sources.filter((s) => s.kind === 'hideout').length;
   // Сброс только этого предмета: обнуляем прогресс всех источников (задания + убежище→схрон)
   // и остаток в схроне (для чисто-квестовых предметов без hideout-источников).
-  const canReset = st.have > 0 || stash > 0;
   const resetItem = () => {
     onSetTotal(0);
     onStash(0);
@@ -832,20 +831,18 @@ function ItemRow({
 
   return (
     <div className={`relative flex flex-col overflow-hidden rounded-sm border border-(--color-card-menu) bg-(--color-darkbase) ${done ? 'opacity-60' : ''}`}>
-      {canReset && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            resetItem();
-          }}
-          title="Сбросить прогресс этого предмета"
-          aria-label="Сбросить прогресс этого предмета"
-          className="absolute right-1.5 top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-sm text-text-muted transition-colors hover:bg-danger/10 hover:text-danger"
-        >
-          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          resetItem();
+        }}
+        title="Сбросить прогресс этого предмета"
+        aria-label="Сбросить прогресс этого предмета"
+        className="absolute right-1.5 top-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-sm text-text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+      >
+        <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+      </button>
       <div className="relative flex items-start gap-3 p-2.5">
         <TrackCell
           iconSrc={item.itemIcon}
