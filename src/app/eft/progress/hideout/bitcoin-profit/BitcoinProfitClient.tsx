@@ -10,7 +10,7 @@
 // Профиль-синк «гибрид C»: уровень фермы из useHideoutStore (+editionFloor), навык УУ из
 // resolveSkillLevel (usePmcStatsStore + useManualProfileStore); override поверх.
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Minus, Plus, RussianRuble } from 'lucide-react';
+import { Check, Minus, Plus } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
@@ -52,6 +52,7 @@ const FUEL_ITEM_ID: Record<FuelTankKey, string> = {
 };
 const GPU_ITEM_ID = '57347ca924597744596b4e71'; // Graphics card
 const GPU_MASK = 'url(/icons/eft/04-progression/gpu-icon.svg)';
+const RUBLE_MASK = 'url(/icons/eft/03-items/currency-ruble.svg)';
 const GPU_COLS = 10;
 const GPU_ROWS = 5;
 
@@ -555,7 +556,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             perUnit={`х${gpu} по ${fmt(prices.gpuCost)}`}
             source={
               <>
-                <RussianRuble aria-hidden className="h-4 w-4 text-text-secondary" />
+                <span
+                  aria-hidden
+                  className="icon-mask h-4 w-4 shrink-0 bg-text-secondary"
+                  style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
+                />
                 Купить на барахолке
               </>
             }
