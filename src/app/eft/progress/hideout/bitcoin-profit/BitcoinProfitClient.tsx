@@ -463,7 +463,6 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
 
             {/* Шкала масштабирования: бары чистой прибыли/сутки по числу GPU. */}
             <div className="flex flex-col gap-3 rounded-md border border-lines-hover bg-(--color-base) p-5">
-              <RuleLabel className="mb-0">Как растёт прибыль от числа видеокарт</RuleLabel>
               <div className="flex flex-col gap-2.5">
                 {scale.rows.map((row) => {
                   const isCurrent = row.gpu === gpu;
