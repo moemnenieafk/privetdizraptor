@@ -620,7 +620,8 @@ export function RecipeCard({
           <button
             type="button"
             disabled
-            className="flex h-7 flex-1 items-center justify-center rounded-sm border border-lines-hover bg-card-menu/40 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted"
+            className="flex h-7 flex-1 items-center justify-center rounded-sm font-blender-medium text-type-caption uppercase tracking-widest"
+            style={{ backgroundColor: `color-mix(in srgb, ${CRAFT_ACCENT} 15%, transparent)`, color: CRAFT_ACCENT }}
           >
             Производится…
           </button>
