@@ -528,7 +528,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
       )}
 
       {/* 5. Что нужно / вложения. */}
-      <section className="flex flex-col gap-3 rounded-md border border-lines-hover bg-card-menu/40 p-4">
+      <section className="flex flex-col gap-3">
         <RuleLabel>Что нужно</RuleLabel>
         <div className="flex flex-wrap gap-2">
           <Chip label={`GPU × ${gpu}`} value={`${fmt(eco.gpuInvest)} ₽`} note={`по ${fmt(prices.gpuCost)} ₽`} />
