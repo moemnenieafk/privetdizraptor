@@ -172,23 +172,9 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 1. Интро-блок (паттерн craft-profit §4.1): иконка фермы + H1 + описание. */}
-      <div className="flex items-center gap-4">
-        <span
-          aria-hidden
-          className={`h-12 w-12 shrink-0 icon-mask ${stationIconClass(FARM_NN)} bg-(--primary)`}
-        />
-        <div className="min-w-0">
-          <h1 className="font-blender-medium text-2xl uppercase tracking-widest text-text-primary">
-            Прибыль Bitcoin
-          </h1>
-          <p className="mt-0.5 font-blender-book text-type-caption text-text-secondary">
-            Стоит ли держать биткоин-ферму — чистая прибыль с учётом топлива, твоих навыков и числа видеокарт.
-          </p>
-        </div>
-      </div>
+      {/* Заголовок/описание раздела — в SectionHubNav (headerConfig p-hideout-btc), не дублируем. */}
 
-      {/* 2. Конфигуратор фермы. */}
+      {/* 1. Конфигуратор фермы. */}
       <section className="flex flex-col gap-5 rounded-md border border-lines-hover bg-card-menu/40 p-4">
         {/* Плитки-уровни L1/L2/L3 (стиль HideoutBuildTracker.moduleTiles). */}
         <div>

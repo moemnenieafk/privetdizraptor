@@ -568,7 +568,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
             children: [
               { id: 'p-hideout-modules', label: 'Модули убежища', description: 'Пошаговая сборка убежища: выбирай модуль, собирай материалы на следующий уровень и отслеживай прогресс постройки всей базы.', path: '/eft/progress/hideout/modules', iconUrl: '/icons/eft/04-progression/hideout-modules.svg' },
               { id: 'p-hideout-craft', label: 'Прибыль убежища', description: 'Что выгодно крафтить сейчас — профит с учётом налога барахолки, твоих навыков и построенных станций.', path: '/eft/progress/hideout/craft-profit', iconUrl: '/icons/eft/04-progression/craft-profit.svg' },
-              { id: 'p-hideout-btc', label: 'Прибыль Bitcoin', path: '/eft/progress/hideout/bitcoin-profit', iconUrl: '/icons/eft/04-progression/bitcoin-profit.svg' }
+              { id: 'p-hideout-btc', label: 'Прибыль Bitcoin', description: 'Стоит ли держать биткоин-ферму — чистая прибыль с учётом топлива, твоих навыков и числа видеокарт.', path: '/eft/progress/hideout/bitcoin-profit', iconUrl: '/icons/eft/04-progression/bitcoin-profit.svg' }
             ]
           },
           {
