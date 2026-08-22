@@ -6,6 +6,7 @@
 import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useQuestStore } from "@/store/useQuestStore";
+import { migrateHideoutProgressIntoStash } from "@/lib/stash-migration";
 import {
   getCtaProgress,
   saveCtaProgress,
@@ -33,6 +34,13 @@ export function ProgressSync() {
   const loggedIn = useRef(false);
   const hydrated = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Одноразовая миграция прогресса убежища в схрон (итерация 5). После гидрации persist на клиенте;
+  // сама функция идемпотентна по флагу hideoutMerged.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    migrateHideoutProgressIntoStash();
+  }, []);
 
   useEffect(() => {
     const supabase = supabaseRef.current;

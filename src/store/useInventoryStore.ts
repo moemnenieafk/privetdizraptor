@@ -3,6 +3,10 @@ import { persist } from 'zustand/middleware';
 
 interface InventoryStore {
   ownedItems: Record<string, number>;
+  /** Одноразовая миграция: прогресс убежища (itemProgress) слит в схрон. persist,
+   *  гарант идемпотентности migrateHideoutProgressIntoStash (src/lib/stash-migration.ts). */
+  hideoutMerged: boolean;
+  setHideoutMerged: (v: boolean) => void;
   getCount: (id: string) => number;
   setCount: (id: string, n: number) => void;
   /** Функциональный ±delta с клампом [0, max] от ЖИВОГО значения стора (против гонки
@@ -17,6 +21,8 @@ export const useInventoryStore = create<InventoryStore>()(
   persist(
     (set, get) => ({
       ownedItems: {},
+      hideoutMerged: false,
+      setHideoutMerged: (v) => set({ hideoutMerged: v }),
       getCount: (id) => get().ownedItems[id] ?? 0,
       setCount: (id, n) =>
         set((state) => ({
