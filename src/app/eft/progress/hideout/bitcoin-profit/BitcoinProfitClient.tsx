@@ -59,8 +59,7 @@ const RUBLE_MASK = 'url(/icons/eft/03-items/currency-ruble.svg)';
 const IC_MINE = 'url(/icons/eft/04-progression/bitcoin-profit.svg)'; // добыча BTC
 const IC_TIME = 'url(/icons/eft/02-quests/ingame-events.svg)'; // время / доход
 const IC_FUEL = 'url(/icons/eft/04-progression/crafting/empty-tank-icon.svg)'; // топливо
-const IC_PROFIT = 'url(/icons/eft/03-items/profit-icon.svg)'; // чистая прибыль
-const IC_ROI = 'url(/icons/eft/03-items/gpcoin-icon.svg)'; // возврат вложений
+const IC_PROFIT = 'url(/icons/eft/03-items/profit-icon.svg)'; // чистая прибыль / профит за месяц
 const GPU_COLS = 10;
 const GPU_ROWS = 5;
 
@@ -571,11 +570,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               icon={<FramedGpu colorClass={eco.netPerGpu >= 0 ? 'bg-success' : 'bg-danger'} />}
             />
             <Metric
-              label="Возврат / мес"
-              value={`${eco.roiMonthlyPct > 0 ? '+' : ''}${eco.roiMonthlyPct.toFixed(0)}%`}
-              subtext="% вложений в GPU за месяц"
-              tone={gainLoss(eco.roiMonthlyPct)}
-              icon={<MaskIcon mask={IC_ROI} className={`h-5 w-5 ${eco.roiMonthlyPct >= 0 ? 'bg-success' : 'bg-danger'}`} />}
+              label="Профит / месяц"
+              value={`${fmtSigned(monthNet)} ₽`}
+              subtext="чистыми за 30 дней"
+              tone={gainLoss(monthNet)}
+              icon={<MaskIcon mask={IC_PROFIT} className={`h-5 w-5 ${monthNet >= 0 ? 'bg-success' : 'bg-danger'}`} />}
             />
           </div>
         </>
