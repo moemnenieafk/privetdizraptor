@@ -46,6 +46,8 @@ export interface TrackCellProps {
   iconFill?: boolean;
   /** Витринный режим: подсветить невидимые мобильные тап-зоны (−/+). */
   revealZones?: boolean;
+  /** Полностью скрыть бейдж (ни X/Y, ни статичный) — напр. одиночный предмет в схроне без «1». */
+  hideBadge?: boolean;
 }
 
 const CELL_SHADOW = 'shadow-[inset_0_-2.33px_11.67px_5.83px_rgba(0,0,0,0.7)]';
@@ -67,6 +69,7 @@ export function TrackCell({
   onSetTotal,
   revealZones = false,
   iconFill = false,
+  hideBadge = false,
 }: TrackCellProps) {
   const [imgFailed, setImgFailed] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -136,8 +139,9 @@ export function TrackCell({
       {/* Внутренняя тень слота */}
       <span aria-hidden className={`pointer-events-none absolute inset-0 z-10 ${CELL_SHADOW}`} />
 
-      {/* Бейдж: статичный display-бейдж (badge) переопределяет трекинг-счётчик X/Y. */}
-      {badge != null ? (
+      {/* Бейдж: статичный display-бейдж (badge) переопределяет трекинг-счётчик X/Y.
+          hideBadge — не рисовать ничего (одиночный предмет схрона без «1»). */}
+      {hideBadge ? null : badge != null ? (
         <span className="absolute bottom-0 right-0 z-20 rounded-tl-xs bg-(--color-darkbase)/90 px-1 py-0.5 font-blender-medium text-[10pt] leading-none text-text-primary">
           {badge}
         </span>

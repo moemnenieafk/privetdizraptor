@@ -52,6 +52,7 @@ export function StashCell({ meta, count, onInc, href, cellPx = CELL_PX }: StashC
         noFill
         iconFill
         badge={count}
+        hideBadge={count <= 1}
         bgColor={getTarkovBackgroundColor(meta.backgroundColor ?? undefined)}
         sizeClass="h-full w-full"
         topRight={link}
