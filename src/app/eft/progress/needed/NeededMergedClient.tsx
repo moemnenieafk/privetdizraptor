@@ -8,7 +8,7 @@
 // Решения: docs/decisions/important-items-merge.md.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowDownWideNarrow, Check, ChevronDown, Grid3x3, RotateCcw, Search } from 'lucide-react';
+import { ArrowDownWideNarrow, Check, ChevronDown, RotateCcw, Search } from 'lucide-react';
 import { TrackCell } from '@/components/ui/kit';
 import { QtyControl } from '@/components/ui/QtyControl';
 import { type HideoutStationInfo } from '@/components/features/hideout/HideoutLevelsPanel';
@@ -550,7 +550,6 @@ export function NeededMergedClient({
         label="Общий прогресс"
         value={summary.have}
         max={summary.need}
-        onReset={() => setConfirmReset(true)}
       />
       <NeededResetModal
         isOpen={confirmReset}
@@ -625,15 +624,16 @@ export function NeededMergedClient({
           )}
         </div>
 
-        {/* Ненавязчивый вход в визуальную сетку схрона */}
-        <Link
-          href="/eft/progress/stash"
-          title="Открыть визуальную сетку схрона"
-          className="flex h-9 shrink-0 items-center gap-2 rounded-sm border border-lines-hover px-3 font-blender-medium text-type-micro uppercase tracking-wider text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
+        {/* Сброс прогресса сбора — деструктивно, через модалку-подтверждение. */}
+        <button
+          type="button"
+          onClick={() => setConfirmReset(true)}
+          title="Сбросить весь прогресс сбора"
+          className="flex h-9 shrink-0 items-center gap-2 rounded-sm border border-lines-hover px-3 font-blender-medium text-type-micro uppercase tracking-wider text-text-muted transition-colors hover:border-danger hover:text-danger"
         >
-          <Grid3x3 className="h-4 w-4 shrink-0" aria-hidden />
-          Мой схрон
-        </Link>
+          <RotateCcw className="h-4 w-4 shrink-0" aria-hidden />
+          Сброс
+        </button>
       </div>
 
       {/* ── Убежище ЧВК ── */}
