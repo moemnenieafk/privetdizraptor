@@ -14,6 +14,7 @@ import { resolveSkillLevel } from '@/lib/tarkov/player-view-merge';
 import { editionFloor, ownsAnyEdition } from '@/lib/hideout-edition';
 import { computeCraftEconomy, type CraftEconomy } from '@/lib/craft-profit';
 import { RecipeCard } from '@/components/features/hideout/RecipeCard';
+import { useCraftPinStore } from '@/store/useCraftPinStore';
 import { CraftControls, type CraftSortMode } from '@/components/features/hideout/CraftControls';
 import { ModuleFilterTabs, type ModuleTabDatum } from '@/components/features/hideout/ModuleFilterTabs';
 import { SKILL_ICONS } from '@/components/features/adaptive/skill-icons';
@@ -172,6 +173,7 @@ export function CraftProfitClient({
   // mounted-гард: persist-сторы читаем только на клиенте (иначе hydration mismatch).
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const pinnedIds = useCraftPinStore((s) => s.pinned);
 
   // Профиль: построенные уровни, издание (даёт floor), навыки (загруженный + ручные оверрайды).
   const levels = useHideoutStore((s) => s.levels);
@@ -315,6 +317,38 @@ export function CraftProfitClient({
     return arr;
   }, [filtered, sort, metrics]);
 
+  // Закреплённые (скрепка) — из ПОЛНОГО списка, независимо от фильтров/вкладок; из основного грида
+  // исключаем (без дублей). Порядок — как закрепляли.
+  const pinnedSet = useMemo(() => new Set(mounted ? pinnedIds : []), [pinnedIds, mounted]);
+  const pinnedCrafts = useMemo(
+    () =>
+      mounted
+        ? pinnedIds
+            .map((id) => crafts.find((c) => c.id === id))
+            .filter((c): c is ProcessedCraft => Boolean(c))
+        : [],
+    [pinnedIds, crafts, mounted],
+  );
+  const visible = useMemo(() => sorted.filter((c) => !pinnedSet.has(c.id)), [sorted, pinnedSet]);
+
+  // Единый рендер карточки — переиспользуется секцией «Закреплённые» и основным гридом.
+  const renderCard = (c: ProcessedCraft) => {
+    const access = accessMap.get(c.id);
+    return (
+      <RecipeCard
+        key={c.id}
+        craft={c}
+        builtStationLevel={builtLevel(c.stationNormalized)}
+        craftingLevel={craftingLevel}
+        hideoutMgmtLevel={hideoutMgmtLevel}
+        intelCenterBuilt={intelCenterBuilt}
+        emptyFuel={emptyFuel}
+        questDone={access?.questDone ?? true}
+        editionOwned={access?.editionOwned ?? true}
+      />
+    );
+  };
+
   return (
     <div className="flex flex-col gap-5">
       {/* Заголовок/описание раздела — в SectionHubNav (headerConfig p-hideout-craft), не дублируем. */}
@@ -384,29 +418,25 @@ export function CraftProfitClient({
         </div>
       </div>
 
-      {/* 5. Грид карточек — 1/2/3 колонки. */}
-      {sorted.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sorted.map((c) => {
-            const access = accessMap.get(c.id);
-            return (
-              <RecipeCard
-                key={c.id}
-                craft={c}
-                builtStationLevel={builtLevel(c.stationNormalized)}
-                craftingLevel={craftingLevel}
-                hideoutMgmtLevel={hideoutMgmtLevel}
-                intelCenterBuilt={intelCenterBuilt}
-                emptyFuel={emptyFuel}
-                questDone={access?.questDone ?? true}
-                editionOwned={access?.editionOwned ?? true}
-              />
-            );
-          })}
+      {/* Закреплённые (скрепка) — всегда сверху, вне фильтров/вкладок. */}
+      {pinnedCrafts.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="flex items-center gap-2 font-blender-medium text-type-micro uppercase tracking-widest text-(--primary)">
+            <span aria-hidden className="h-px w-6 bg-(--primary)/50" />
+            Закреплённые · {pinnedCrafts.length}
+          </span>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{pinnedCrafts.map(renderCard)}</div>
         </div>
+      )}
+
+      {/* 5. Грид карточек — 1/2/3 колонки (закреплённые исключены — они выше). */}
+      {visible.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{visible.map(renderCard)}</div>
       ) : (
         <p className="py-16 text-center text-sm text-text-muted font-blender-book">
-          Ничего не найдено — измените фильтры.
+          {pinnedCrafts.length > 0
+            ? 'Остальные подходящие крафты закреплены выше.'
+            : 'Ничего не найдено — измените фильтры.'}
         </p>
       )}
     </div>

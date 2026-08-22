@@ -17,7 +17,7 @@ import {
   remainingSec,
   productionStatus,
 } from '@/store/useCraftProductionStore';
-import { useShoppingListStore } from '@/store/useShoppingListStore';
+import { useCraftPinStore } from '@/store/useCraftPinStore';
 import { computeCraftEconomy } from '@/lib/craft-profit';
 import { stationIconClass } from '@/components/features/hideout/HideoutBuildTracker';
 import { RequirementChip } from '@/components/features/hideout/RequirementChip';
@@ -173,7 +173,8 @@ export function RecipeCard({
   const start = useCraftProductionStore((s) => s.start);
   const cancel = useCraftProductionStore((s) => s.cancel);
   const collect = useCraftProductionStore((s) => s.collect);
-  const addToList = useShoppingListStore((s) => s.add);
+  const pinnedIds = useCraftPinStore((s) => s.pinned);
+  const togglePin = useCraftPinStore((s) => s.toggle);
 
   const reward = craft.reward[0];
   const stationKey = craft.stationNormalized;
@@ -231,13 +232,9 @@ export function RecipeCard({
   const ownRemaining = isOwnActive ? remainingSec(entry!, now) : 0;
   const siblingRemaining = isSiblingBusy ? remainingSec(entry!, now) : 0;
 
-  // Скрепка: транзиентное «✓ в списке» ~1.5с (тост-утилиты в проекте нет — inline-подтверждение).
-  const [clipDone, setClipDone] = useState(false);
-  const onClip = () => {
-    addToList(craft.required.map((r) => ({ id: r.item.id, count: r.count })));
-    setClipDone(true);
-    setTimeout(() => setClipDone(false), 1500);
-  };
+  // Скрепка: закрепить/открепить крафт (показывается секцией «Закреплённые» сверху страницы).
+  const isPinned = mounted && pinnedIds.includes(craft.id);
+  const onClip = () => togglePin(craft.id);
 
   const onStart = () => {
     start(stationKey, {
@@ -540,17 +537,16 @@ export function RecipeCard({
         <button
           type="button"
           onClick={onClip}
-          title="В список нужного"
-          aria-label="Добавить входы в список нужного"
-          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-lines-hover transition-colors ${
-            clipDone ? 'text-nvg-green' : 'text-text-muted hover:text-text-secondary'
+          title={isPinned ? 'Открепить крафт' : 'Закрепить крафт сверху'}
+          aria-label={isPinned ? 'Открепить крафт' : 'Закрепить крафт'}
+          aria-pressed={isPinned}
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border transition-colors ${
+            isPinned
+              ? 'border-(--primary) text-(--primary)'
+              : 'border-lines-hover text-text-muted hover:text-text-secondary'
           }`}
         >
-          {clipDone ? (
-            <span className="font-blender-medium text-type-micro leading-none">✓</span>
-          ) : (
-            <Paperclip className="h-4 w-4" aria-hidden />
-          )}
+          <Paperclip className="h-4 w-4" aria-hidden />
         </button>
       </div>
     </article>
