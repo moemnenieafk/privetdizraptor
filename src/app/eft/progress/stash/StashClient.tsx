@@ -82,20 +82,25 @@ export function StashClient() {
       .filter((id) => meta[id])
       .map((id) => {
         const m = meta[id];
+        // packStash не читает count (раскладка по футпринту+редкости) → count здесь фиксируем 1,
+        // чтобы клик по счётчику не перепаковывал сетку. Живое количество берётся из ownedItems
+        // при рендере ячейки, вне этого мемо.
         return {
           id,
-          count: ownedItems[id] ?? 0,
+          count: 1,
           gridWidth: m.gridWidth,
           gridHeight: m.gridHeight,
           ...(m.backgroundColor ? { rarity: m.backgroundColor } : {}),
         };
       });
     return packStash(entries, COLUMNS);
-  }, [meta, ownedIds, ownedItems]);
+  }, [meta, ownedIds]);
 
   const loading = meta === null || packed === null;
   const occupied = packed?.occupied ?? 0;
-  const fillPct = capacity > 0 ? Math.round((occupied / capacity) * 100) : 0;
+  // Число «Занято X / Y» показываем как есть (X>Y — честный сигнал переполнения),
+  // а процент заполнения клампим к 100, чтобы не было «137%».
+  const fillPct = capacity > 0 ? Math.min(100, Math.round((occupied / capacity) * 100)) : 0;
   const gridHeightPx = packed ? Math.max(packed.rows, 1) * CELL_PX : 0;
 
   return (
