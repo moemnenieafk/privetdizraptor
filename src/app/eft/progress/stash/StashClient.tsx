@@ -18,6 +18,8 @@ import { stackMaxOverride } from '@/lib/stash-stack-overrides';
 import { StashCell } from '@/components/features/stash/StashCell';
 import { StashEmptyCell } from '@/components/features/stash/StashEmptyCell';
 import { StashAddSearch } from '@/components/features/stash/StashAddSearch';
+import { StashResetModal } from './StashResetModal';
+import { RotateCcw } from 'lucide-react';
 import { EDITIONS, type EditionType } from '@/components/layout/header-modules/ProfileSettingsModal';
 import type { StashItemMeta } from '@/lib/stash-types';
 
@@ -34,6 +36,8 @@ interface MetaResponse {
 export function StashClient() {
   const ownedItems = useInventoryStore((s) => s.ownedItems);
   const bumpCount = useInventoryStore((s) => s.bumpCount);
+  const resetStash = useInventoryStore((s) => s.resetStash);
+  const [resetOpen, setResetOpen] = useState(false);
 
   const activeProfile = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId));
   const capacity = stashCapacityCells(activeProfile?.edition);
@@ -182,8 +186,21 @@ export function StashClient() {
       {/* Шапка: слева поиск/добавление, справа индикатор ёмкости по изданию. */}
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-lines-hover pb-4">
         {/* Слева — поиск и добавление в схрон (§4.11 — action читает зеркало). */}
-        <div className="min-w-64 max-w-md flex-1">
-          <StashAddSearch onAdd={(id) => bumpCount(id, 1, STASH_MAX)} />
+        <div className="flex min-w-64 max-w-md flex-1 items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <StashAddSearch onAdd={(id) => bumpCount(id, 1, STASH_MAX)} />
+          </div>
+          {/* Сброс схрона — деструктивно, через подтверждение. Неактивна при пустом схроне. */}
+          <button
+            type="button"
+            onClick={() => setResetOpen(true)}
+            disabled={ownedIds.length === 0}
+            title="Очистить весь схрон"
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded border border-lines-hover px-3 font-blender-medium text-type-micro uppercase tracking-widest text-text-muted transition-colors hover:border-danger hover:text-danger disabled:pointer-events-none disabled:opacity-40"
+          >
+            <RotateCcw aria-hidden className="h-3.5 w-3.5" />
+            Сброс
+          </button>
         </div>
 
         {/* Справа — индикатор: заполнение, издание, занятые ячейки. */}
@@ -258,6 +275,8 @@ export function StashClient() {
           </div>
         )}
       </div>
+
+      <StashResetModal isOpen={resetOpen} onClose={() => setResetOpen(false)} onConfirm={resetStash} />
     </section>
   );
 }

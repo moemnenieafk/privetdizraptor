@@ -15,6 +15,9 @@ interface InventoryStore {
   bumpCount: (id: string, delta: number, max: number) => void;
   increment: (id: string) => void;
   decrement: (id: string) => void;
+  /** Полный сброс схрона: очищает всё владение. Флаг hideoutMerged НЕ трогаем
+   *  (миграция уже проведена, повторять её не нужно). */
+  resetStash: () => void;
 }
 
 export const useInventoryStore = create<InventoryStore>()(
@@ -44,6 +47,7 @@ export const useInventoryStore = create<InventoryStore>()(
             [id]: Math.max(0, (state.ownedItems[id] ?? 0) - 1),
           },
         })),
+      resetStash: () => set({ ownedItems: {} }),
     }),
     { name: 'cta-inventory' }
   )
