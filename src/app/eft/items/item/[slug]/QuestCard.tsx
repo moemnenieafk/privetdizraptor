@@ -6,6 +6,7 @@ import { TRADER_COLORS } from '@/data/traderColors';
 import { useInventoryStore } from '@/store/useInventoryStore';
 import { useQuestReserveStore, freeForQuest } from '@/store/useQuestReserveStore';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { StashCountBadge } from '@/components/features/stash/StashCountBadge';
 import { cardGradient, cardBorder } from './BarterOfferCard';
 
 export interface QuestCardData {
@@ -165,6 +166,7 @@ export function QuestCard({
               </span>
             )}
           </span>
+          {itemId && <StashCountBadge itemId={itemId} className="shrink-0" />}
           {/* У наград резервировать нечего: там количество выдаваемого, а не цель. */}
           <span
             className={`shrink-0 font-blender-book text-base leading-none ${done ? 'text-nvg-green' : 'text-text-primary'}`}

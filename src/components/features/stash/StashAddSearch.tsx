@@ -5,6 +5,7 @@ import { Search, Plus } from 'lucide-react';
 import { searchEftItemsAction } from '@/actions/search-actions';
 import { itemIconUrl } from '@/lib/item-icon';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { StashCountBadge } from './StashCountBadge';
 import type { SearchItemResult } from '@/types/search';
 
 /**
@@ -145,6 +146,7 @@ export function StashAddSearch({ onAdd }: { onAdd: (inGameId: string) => void })
                         {item.shortName}
                       </span>
                     </span>
+                    <StashCountBadge itemId={item.id} className="shrink-0" />
                     <span className="shrink-0 font-blender-medium text-xs text-text-secondary">
                       {item.width}×{item.height}
                     </span>
