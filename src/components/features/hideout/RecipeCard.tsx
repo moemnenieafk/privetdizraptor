@@ -132,16 +132,11 @@ function craftAccentStyle(): React.CSSProperties {
   };
 }
 
-// Оттенок «идёт крафт» — приглушённый nvg-green фон+обводка (Figma 2990-772). Литерал по той же
-// причине, что CRAFT_ACCENT.
-const CRAFTING_GREEN = '#689963';
+// «Идёт крафт» (Figma 2990-772): чисто чёрная подложка + акцент #9A8866 (таймер/текст/обводка).
 function producingStyle(): React.CSSProperties {
   return {
-    borderColor: `color-mix(in srgb, ${CRAFTING_GREEN} 35%, transparent)`,
-    background: [
-      `radial-gradient(ellipse 70% 90% at 50% 100%, color-mix(in srgb, ${CRAFTING_GREEN} 12%, transparent), transparent 68%)`,
-      'var(--color-card-menu)',
-    ].join(', '),
+    borderColor: `color-mix(in srgb, ${CRAFT_ACCENT} 40%, transparent)`,
+    background: '#000000',
   };
 }
 
@@ -328,6 +323,9 @@ export function RecipeCard({
   // can-craft → акцент «крафта» (золото); producing → зелёный оттенок (Figma 2990-772).
   const isCanCraft = state === 'can-craft';
   const isProducing = state === 'producing';
+  // Producing: таймер/подписи в #9A8866 (инлайн — литерал не токен). Done — зелёный (классы ниже).
+  const producingText = isProducing ? { color: CRAFT_ACCENT } : undefined;
+  const producingTextDim = isProducing ? { color: `color-mix(in srgb, ${CRAFT_ACCENT} 55%, transparent)` } : undefined;
 
   const timer = timerParts(ownRemaining);
 
@@ -433,12 +431,24 @@ export function RecipeCard({
               { v: timer.s, l: 'секунд' },
             ].map((g, i) => (
               <div key={g.l} className="flex items-end gap-1.5">
-                {i > 0 && <span className="pb-4 text-2xl leading-none text-nvg-green/60">:</span>}
+                {i > 0 && (
+                  <span className={`pb-4 text-2xl leading-none ${isDone ? 'text-nvg-green/60' : ''}`} style={producingTextDim}>
+                    :
+                  </span>
+                )}
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-2xl font-blender-medium leading-none tabular-nums text-nvg-green">
+                  <span
+                    className={`text-2xl font-blender-medium leading-none tabular-nums ${isDone ? 'text-nvg-green' : ''}`}
+                    style={producingText}
+                  >
                     {g.v}
                   </span>
-                  <span className="font-blender-medium text-type-micro uppercase tracking-widest text-nvg-green/60">{g.l}</span>
+                  <span
+                    className={`font-blender-medium text-type-micro uppercase tracking-widest ${isDone ? 'text-nvg-green/60' : ''}`}
+                    style={producingTextDim}
+                  >
+                    {g.l}
+                  </span>
                 </div>
               </div>
             ))}
@@ -451,7 +461,8 @@ export function RecipeCard({
             <button
               type="button"
               onClick={() => cancel(stationKey)}
-              className="font-blender-medium text-type-caption uppercase tracking-widest text-nvg-green/70 transition-colors hover:text-nvg-green"
+              className="font-blender-medium text-type-caption uppercase tracking-widest transition-opacity hover:opacity-80"
+              style={producingText}
             >
               отменить крафт
             </button>
