@@ -66,6 +66,8 @@ const GPU_SLUG = 'graphics-card'; // normalizedName → карточка пре�
 const GPU_MASK = 'url(/icons/eft/04-progression/gpu-icon.svg)';
 const FUEL_MASK = 'url(/icons/eft/04-progression/crafting/full-tank-icon.svg)'; // маска слота сетки канистр
 const RUBLE_MASK = 'url(/icons/eft/03-items/currency-ruble.svg)';
+const BARTER_MASK = 'url(/icons/eft/04-progression/barter-profit.svg)';
+const CRAFT_MASK = 'url(/icons/eft/04-progression/craft-profit.svg)';
 const FUEL_GRID_MAX = 6; // максимум ячеек сетки (ёмкость Генератора L3)
 
 // Иконки метрик (маски, красятся по семантике).
@@ -104,6 +106,35 @@ function funnelSourceLabel(node: FunnelNode): string {
     default:
       return 'Источник недоступен';
   }
+}
+
+/**
+ * Иконка типа источника воронки (перед общей суммой): бартер · барахолка (рубль) ·
+ * торговец (аватар) · крафт. Размер 16px. Тултип — человекочитаемый ярлык источника.
+ */
+function SourceIcon({ node }: { node: FunnelNode }) {
+  const title = funnelSourceLabel(node);
+  if (node.source === 'trader' && node.sourceName) {
+    return (
+      <img
+        src={traderImg(node.sourceName)}
+        alt=""
+        title={title}
+        loading="lazy"
+        className="h-4 w-4 shrink-0 rounded-[0.125rem] object-cover"
+      />
+    );
+  }
+  const mask =
+    node.source === 'barter' ? BARTER_MASK : node.source === 'craft' ? CRAFT_MASK : RUBLE_MASK;
+  return (
+    <span
+      aria-hidden
+      title={title}
+      className="icon-mask h-4 w-4 shrink-0 bg-(--primary)"
+      style={{ maskImage: mask, WebkitMaskImage: mask }}
+    />
+  );
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString('ru-RU');
@@ -802,6 +833,13 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             count={gpu}
             total={eco.gpuInvest}
             perUnit={`х${gpu} по ${fmt(prices.gpuCost)}`}
+            totalIcon={
+              <span
+                aria-hidden
+                className="icon-mask h-4 w-4 shrink-0 bg-(--primary)"
+                style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
+              />
+            }
           />
           {/* Топливный бак — цена по воронке (perUnit), число = выбранное N канистр, источник из path.
               Автономность (~M дней) — строкой под карточкой; N не влияет на ₽/сут и профит. */}
@@ -816,16 +854,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                 count={canisters}
                 perUnit={`х${canisters} по ${fmt(tankPriceRub)}`}
                 total={canisters * tankPriceRub}
-                source={
-                  <>
-                    <span
-                      aria-hidden
-                      className="icon-mask h-4 w-4 shrink-0 bg-text-secondary"
-                      style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
-                    />
-                    {funnelSourceLabel(fuelPath)}
-                  </>
-                }
+                totalIcon={<SourceIcon node={fuelPath} />}
               />
               <p className="font-blender-book text-type-caption leading-tight text-text-muted">
                 {autonomyDays < 1
@@ -982,7 +1011,7 @@ function BuyCard({
   total,
   count,
   perUnit,
-  source,
+  totalIcon,
 }: {
   iconUrl: string;
   cellBg: string;
@@ -992,8 +1021,8 @@ function BuyCard({
   total: number;
   count?: number;
   perUnit?: string;
-  /** Строка-источник (у кого/как). Опущена → строки нет, а слева от итога встаёт монета-рубль (node 3054-1320). */
-  source?: React.ReactNode;
+  /** Иконка типа источника перед общей суммой (node 3054-1320): рубль / бартер / торговец / крафт. */
+  totalIcon?: React.ReactNode;
 }) {
   return (
     <div className="flex w-full items-end justify-between gap-3 rounded-lg border border-lines-hover bg-card-menu p-3.5 sm:w-87">
@@ -1012,30 +1041,19 @@ function BuyCard({
             </span>
           )}
         </div>
-        <div className="flex min-w-0 flex-col gap-1 uppercase leading-none">
-          <span className="font-blender-medium text-type-label text-text-primary transition-colors group-hover:text-(--primary)">
+        <div className="flex min-w-0 flex-col gap-1 uppercase leading-tight">
+          <span className="font-blender-medium text-type-caption text-text-primary transition-colors group-hover:text-(--primary)">
             {name}
           </span>
           <span className="font-blender-medium text-type-micro text-text-secondary">{sub}</span>
         </div>
       </Link>
       <div className="flex shrink-0 flex-col items-end gap-1">
-        {source && (
-          <span className="flex items-center gap-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
-            {source}
-          </span>
-        )}
         {perUnit && (
           <span className="font-blender-medium text-xs text-text-secondary tabular-nums">{perUnit} ₽</span>
         )}
         <span className="flex items-center gap-2 font-blender-medium text-2xl leading-none text-text-primary tabular-nums">
-          {!source && (
-            <span
-              aria-hidden
-              className="icon-mask h-4 w-4 shrink-0 bg-(--primary)"
-              style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
-            />
-          )}
+          {totalIcon}
           {fmt(total)} ₽
         </span>
       </div>
