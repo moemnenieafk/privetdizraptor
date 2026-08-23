@@ -111,6 +111,15 @@ export interface FunnelResult {
 export interface FunnelOptions {
   /** Игнорировать барахолку как источник (напр. предмет заблокирован флиа). По умолчанию false. */
   ignoreFlea?: boolean;
+  /**
+   * Прямой путь (1 уровень) вместо полной рекурсии. По умолчанию false.
+   * В flat-режиме инпуты бартера/крафта оцениваются ПО РЫНКУ (min trader/flea, buyLeaf),
+   * без спуска «а его дешевле добыть иначе?». count инпутов — ЦЕЛЫЙ из рецепта (без деления
+   * на outCount → дробей нет). Итог сходится с карточкой бартера/крафта на странице предмета.
+   * Полная рекурсия (flat не задан) даёт идеализированный минимум с дробными количествами —
+   * это для будущей фичи, не для исполнимого «купи столько-то и обменяй».
+   */
+  flat?: boolean;
 }
 
 /** Лист «купить»: min(trader без флиа, флиа) из graph.buy. */
@@ -191,6 +200,72 @@ function evalRecipe(
 }
 
 /**
+ * Оценивает один рецепт в flat-режиме: инпуты берутся ПО РЫНКУ (buyLeaf, min trader/flea),
+ * без рекурсии вглубь. Стоимость = Σ(рыночная цена инпута × ЦЕЛЫЙ count) / outCount.
+ * count в steps — целый из рецепта (никакого деления count на outCount). Недостижимый
+ * инпут (нельзя купить нигде) → рецепт целиком Infinity.
+ */
+function flatEvalRecipe(
+  itemId: string,
+  recipe: FunnelRecipe,
+  source: "barter" | "craft",
+  graph: FunnelGraph,
+  opts: FunnelOptions,
+): FunnelNode {
+  const steps: FunnelStep[] = [];
+  let sum = 0;
+  for (const input of recipe.inputs) {
+    if (input.tool === true) continue; // инструмент возвращается в станок — не стоимость
+    const node = buyLeaf(input.itemId, graph, opts); // рынок, без спуска
+    if (!Number.isFinite(node.perUnit)) {
+      return {
+        itemId,
+        source,
+        perUnit: Infinity,
+        sourceName: recipe.sourceName,
+        ...(recipe.level != null ? { level: recipe.level } : {}),
+        recipeId: recipe.id,
+        outCount: recipe.outCount,
+        reason: `инпут недоступен: ${input.itemId}`,
+      };
+    }
+    sum += node.perUnit * input.count;
+    steps.push({ itemId: input.itemId, count: input.count, node });
+  }
+  const outCount = recipe.outCount > 0 ? recipe.outCount : 1;
+  return {
+    itemId,
+    source,
+    perUnit: sum / outCount,
+    sourceName: recipe.sourceName,
+    ...(recipe.level != null ? { level: recipe.level } : {}),
+    recipeId: recipe.id,
+    outCount,
+    steps,
+  };
+}
+
+/**
+ * Flat-путь (1 уровень) для itemId: сравнивает покупку (buyLeaf) с каждым бартером/крафтом,
+ * чьи инпуты оценены по рынку. Возвращает дешевейший узел. Никакой рекурсии/циклов/кэша —
+ * ровно один уровень. Для исполнимого «купи по рынку и обменяй» (сходится с карточкой).
+ */
+function flatResolve(itemId: string, graph: FunnelGraph, opts: FunnelOptions): FunnelNode {
+  const candidates: FunnelNode[] = [buyLeaf(itemId, graph, opts)];
+  for (const b of graph.bartersByReward.get(itemId) ?? []) {
+    candidates.push(flatEvalRecipe(itemId, b, "barter", graph, opts));
+  }
+  for (const c of graph.craftsByReward.get(itemId) ?? []) {
+    candidates.push(flatEvalRecipe(itemId, c, "craft", graph, opts));
+  }
+  let best = candidates[0];
+  for (const c of candidates) {
+    if (c.perUnit < best.perUnit) best = c;
+  }
+  return best;
+}
+
+/**
  * Рекурсивно находит дешевейший путь для itemId. visited защищает от циклов (предмет
  * уже в текущем пути → ветку не разворачиваем, отдаём buy-лист/недоступно). cache
  * мемоизирует итог по itemId в пределах прогона.
@@ -253,7 +328,10 @@ export function bestAcquisitionCost(
   graph: FunnelGraph,
   opts: FunnelOptions = {},
 ): FunnelResult {
-  const cache = new Map<string, FunnelNode>();
-  const path = resolve(itemId, graph, new Set<string>(), cache, opts);
+  // flat: прямой путь (1 уровень, инпуты по рынку, целые количества) — исполнимый и
+  // сходится с карточкой предмета. Иначе — полная рекурсия (идеализированный минимум).
+  const path = opts.flat
+    ? flatResolve(itemId, graph, opts)
+    : resolve(itemId, graph, new Set<string>(), new Map<string, FunnelNode>(), opts);
   return { total: path.perUnit, perUnit: path.perUnit, path };
 }

@@ -94,9 +94,12 @@ async function fetchBtcPrices(): Promise<BtcPricesExtended> {
       return buys.length ? Math.min(...buys) : 0;
     };
 
-    // Оптимальная добыча бака по воронке (T01). Недоступно (Infinity/нет) → { perUnit:0, path:null }.
+    // Оптимальная добыча бака ПРЯМЫМ путём (flat: 1 уровень, инпуты по рынку, целые
+    // количества) — так perUnit карточки и сумма «отдаю» в «Выгодном источнике» сходятся,
+    // а числа исполнимы. Полная рекурсия дала бы дробный идеализированный минимум (§V4DYA).
+    // Недоступно (Infinity/нет) → { perUnit:0, path:null }.
     const fuelFunnelFor = (itemId: string): BtcFuelInfo => {
-      const result = bestAcquisitionCost(itemId, graph);
+      const result = bestAcquisitionCost(itemId, graph, { flat: true });
       if (!Number.isFinite(result.perUnit)) return { perUnit: 0, path: null };
       return { perUnit: result.perUnit, path: result.path };
     };
