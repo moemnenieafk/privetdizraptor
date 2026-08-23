@@ -9,7 +9,7 @@
 // Экономику считает ТОЛЬКО через computeBtcEconomy (T1) в useMemo (§4.7 — не в JSX).
 // Профиль-синк «гибрид C»: уровень фермы из useHideoutStore (+editionFloor), навык УУ из
 // resolveSkillLevel (usePmcStatsStore + useManualProfileStore); override поверх.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Minus, Plus } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
@@ -27,6 +27,7 @@ import {
   BTC_FARM_SLOTS,
   FUEL_TANKS,
   computeBtcEconomy,
+  fuelAutonomyDays,
   generatorFuelSlots,
   slotsForLevel,
   type BtcEconomy,
@@ -63,7 +64,9 @@ const FUEL_ITEM_ID: Record<FuelTankKey, string> = {
 const GPU_ITEM_ID = '57347ca924597744596b4e71'; // Graphics card
 const GPU_SLUG = 'graphics-card'; // normalizedName → карточка предмета
 const GPU_MASK = 'url(/icons/eft/04-progression/gpu-icon.svg)';
+const FUEL_MASK = 'url(/icons/eft/04-progression/crafting/full-tank-icon.svg)'; // маска слота сетки канистр
 const RUBLE_MASK = 'url(/icons/eft/03-items/currency-ruble.svg)';
+const FUEL_GRID_MAX = 6; // максимум ячеек сетки (ёмкость Генератора L3)
 
 // Иконки метрик (маски, красятся по семантике).
 const IC_MINE = 'url(/icons/eft/04-progression/bitcoin-profit.svg)'; // добыча BTC
@@ -123,6 +126,32 @@ function minLevelForGpu(count: number): number {
   return 3;
 }
 
+/** Минимальный уровень Генератора, чья ёмкость ≥ нужного числа канистр (для клика по locked-слоту сетки). */
+function minLevelForGenerator(count: number): number {
+  for (let lvl = 1; lvl <= 3; lvl++) if (generatorFuelSlots(lvl) >= count) return lvl;
+  return 3;
+}
+
+/** Русское склонение слова «день» по числу: 1 день · 2 дня · 5 дней. */
+function plDay(n: number): string {
+  const d100 = n % 100;
+  if (d100 >= 11 && d100 <= 14) return 'дней';
+  const d10 = n % 10;
+  if (d10 === 1) return 'день';
+  if (d10 >= 2 && d10 <= 4) return 'дня';
+  return 'дней';
+}
+
+/** Русское склонение слова «канистра» по числу: 1 канистра · 2 канистры · 5 канистр. */
+function plCanister(n: number): string {
+  const d100 = n % 100;
+  if (d100 >= 11 && d100 <= 14) return 'канистр';
+  const d10 = n % 10;
+  if (d10 === 1) return 'канистра';
+  if (d10 >= 2 && d10 <= 4) return 'канистры';
+  return 'канистр';
+}
+
 /** Русское склонение слова «видеокарта» по числу (именительный): 1 видеокарта · 2 видеокарты · 5 видеокарт. */
 function plGpu(n: number): string {
   const d100 = n % 100;
@@ -174,9 +203,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   // Модуль Solar Power построен в профиле? (L1 достаточно для ×2). До маунта false.
   const profileSolarBuilt = mounted ? (levels[SOLAR_NN] ?? 0) >= 1 : false;
   // Уровень Генератора из профиля (0..3) — задаёт ёмкость топливных слотов = число канистр. До маунта 0.
-  const generatorLevel = mounted ? clamp(levels[GENERATOR_NN] ?? 0, 0, 3) : 0;
-  // Число канистр в баке = ёмкость слотов Генератора на построенном уровне (T02).
-  const fuelSlots = generatorFuelSlots(generatorLevel);
+  const profileGeneratorLevel = mounted ? clamp(levels[GENERATOR_NN] ?? 0, 0, 3) : 0;
 
   // Локальный стейт «что-если». Уровень фермы: null → следуем профилю (или L1, если ферма не построена).
   const [farmLevelOverride, setFarmLevelOverride] = useState<number | null>(null);
@@ -184,6 +211,30 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   const [mgmtOverride, setMgmtOverride] = useState<number | null>(null);
   const [tankOverride, setTankOverride] = useState<FuelTankKey | null>(null);
   const [solarOverride, setSolarOverride] = useState<boolean | null>(null);
+  // Число выбранных канистр (сетка-зеркало GPU-грида); дефолт ×1. Клампится к максимуму сетки.
+  const [canisterCount, setCanisterCount] = useState(1);
+  // Уровень Генератора «что-если»: null → следуем профилю. Override через клик по locked-слоту сетки.
+  const [generatorOverride, setGeneratorOverride] = useState<number | null>(null);
+  // Открыт ли поповер выбора типа канистры.
+  const [tankMenuOpen, setTankMenuOpen] = useState(false);
+  const tankMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Закрытие поповера типа канистры по клику вне / Escape.
+  useEffect(() => {
+    if (!tankMenuOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (tankMenuRef.current && !tankMenuRef.current.contains(e.target as Node)) setTankMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setTankMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [tankMenuOpen]);
 
   // Эффективный уровень фермы: override, иначе профиль (минимум L1 для конфигуратора).
   const farmLevel = clamp(farmLevelOverride ?? Math.max(profileFarmLevel, 1), 1, 3);
@@ -195,6 +246,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   const solarActive = solarOverride ?? profileSolarBuilt;
   // Активный бак: override, иначе дешевейший по воронке (T03), иначе metal как безопасный дефолт.
   const tank: FuelTankKey = tankOverride ?? prices.cheapestTank ?? 'metal';
+  // Эффективный уровень Генератора: override поверх профиля (гибрид C). Ёмкость = число топливных слотов.
+  const generatorLevel = clamp(generatorOverride ?? profileGeneratorLevel, 0, 3);
+  const fuelSlots = generatorFuelSlots(generatorLevel);
+  // Число выбранных канистр — клампим в 1..максимум сетки (защита при смене профиля/маунте).
+  const canisters = clamp(canisterCount, 1, FUEL_GRID_MAX);
 
   // Продажа — только Терапевт (венью/флиа из UI убраны; §8).
   const btcSellPrice = prices.btcTherapist;
@@ -203,6 +259,8 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   // Цена бака — perUnit по воронке (T03), НЕ старая плоская buyFor. Путь — для блока «что нужно купить».
   const tankPriceRub = prices.fuelFunnel[tank].perUnit;
   const fuelPath = prices.fuelFunnel[tank].path;
+  // Доступен ли выбранный тип по воронке (perUnit>0) — для дизейбла триггера дропдауна.
+  const tankAvailable = tankPriceRub > 0;
 
   // Экономика текущей конфигурации — через computeBtcEconomy (T1), в useMemo (§4.7, не в JSX).
   // Топливо учитывается ВСЕГДА (без него ферма не работает) → fuelEnabled: true.
@@ -246,6 +304,12 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
     return { rows, maxAbs };
   }, [slots, gpu, btcSellPrice, prices.gpuCost, tankPriceRub, tankMeta, mgmtLevel, solarActive]);
 
+  // Автономность выбранного числа канистр (сутки) — чистый хелпер (§4.7), N НЕ входит в eco.
+  const autonomyDays = useMemo(
+    () => fuelAutonomyDays(canisters, tankMeta.durationMs, mgmtLevel, solarActive),
+    [canisters, tankMeta, mgmtLevel, solarActive],
+  );
+
   const noData = prices.btcTherapist <= 0;
   const verdict = verdictOf(eco.netPerDay);
   const monthNet = eco.netPerDay * 30;
@@ -263,6 +327,18 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
     const count = idx + 1;
     if (count > slots) setFarmLevelOverride(minLevelForGpu(count));
     setGpuOverride(count);
+  };
+  // Клик по i-й ячейке сетки канистр → N = i+1. Если i за ёмкостью Генератора — авто-поднять
+  // уровень Генератора до минимального, чья ёмкость вмещает i+1 (what-if, зеркало GPU-грида).
+  const onSelectCanisterSlot = (idx: number) => {
+    const count = idx + 1;
+    if (count > fuelSlots) setGeneratorOverride(minLevelForGenerator(count));
+    setCanisterCount(count);
+  };
+  // Выбор типа канистры из поповера.
+  const onSelectTank = (k: FuelTankKey) => {
+    setTankOverride(k);
+    setTankMenuOpen(false);
   };
 
   return (
@@ -421,11 +497,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             (−25% на 50 уровне).
           </p>
 
-          {/* Учёт топлива — Solar-тумблер + 2 канистры (single-select) с бейджем xN = слоты Генератора. */}
+          {/* Учёт топлива — Solar-тумблер + дропдаун ТИПА канистры + сетка КОЛИЧЕСТВА (зеркало GPU-грида). */}
           <div className="mt-4">
             <RuleLabel>Учёт топлива</RuleLabel>
-            <div className="mt-3 flex gap-3.5">
-              {/* Тумблер Solar Power (НЕ часть single-select канистр) — ×2 длительность бака. */}
+            <div className="mt-3 flex flex-wrap items-start gap-3.5">
+              {/* Тумблер Solar Power (первым) — ×2 длительность бака. */}
               <FuelCell
                 active={solarActive}
                 available
@@ -439,32 +515,105 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                   }`}
                 />
               </FuelCell>
-              {/* Канистры — single-select (всегда одна выбрана). Бейдж xN = слоты Генератора. */}
-              {(Object.keys(FUEL_TANKS) as FuelTankKey[]).map((k) => {
-                const available = prices.fuelFunnel[k].perUnit > 0;
-                const active = tank === k;
-                return (
-                  <FuelCell
-                    key={k}
-                    active={active}
-                    available={available}
-                    onClick={() => {
-                      if (!available) return;
-                      setTankOverride(k);
-                    }}
-                    title={`${FUEL_TANKS[k].label}${available ? '' : ' — цена по воронке недоступна'}`}
-                    bgColor={getTarkovBackgroundColor('yellow')}
-                    badge={mounted ? `x${fuelSlots}` : undefined}
+
+              {/* Дропдаун ТИПА канистры (node 3058-2875): триггер = выбранная канистра + бейдж кол-ва. */}
+              <div ref={tankMenuRef} className="relative">
+                <FuelCell
+                  active={tankMenuOpen}
+                  available={tankAvailable}
+                  onClick={() => setTankMenuOpen((v) => !v)}
+                  title={`Тип канистры: ${tankMeta.label}${tankAvailable ? '' : ' — цена по воронке недоступна'}`}
+                  bgColor={getTarkovBackgroundColor('yellow')}
+                  badge={mounted ? `x${canisters}` : undefined}
+                >
+                  <img
+                    src={itemIconUrl(FUEL_ITEM_ID[tank])}
+                    alt={tankMeta.label}
+                    loading="lazy"
+                    className="pointer-events-none absolute inset-0 h-full w-full object-contain p-1.5"
+                  />
+                </FuelCell>
+                {tankMenuOpen && (
+                  <div
+                    role="listbox"
+                    aria-label="Тип канистры"
+                    className="absolute left-0 top-full z-20 mt-1.5 flex gap-1.5 rounded border border-lines-hover bg-card-menu p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.55)]"
                   >
-                    <img
-                      src={itemIconUrl(FUEL_ITEM_ID[k])}
-                      alt={FUEL_TANKS[k].label}
-                      loading="lazy"
-                      className="pointer-events-none absolute inset-0 h-full w-full object-contain p-1.5"
-                    />
-                  </FuelCell>
-                );
-              })}
+                    {(Object.keys(FUEL_TANKS) as FuelTankKey[]).map((k) => {
+                      const available = prices.fuelFunnel[k].perUnit > 0;
+                      const active = tank === k;
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          role="option"
+                          aria-selected={active}
+                          disabled={!available}
+                          onClick={() => onSelectTank(k)}
+                          title={`${FUEL_TANKS[k].label}${available ? '' : ' — цена по воронке недоступна'}`}
+                          className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded border transition-colors ${
+                            active ? 'border-(--primary) bg-(--primary)/10' : 'border-lines-hover bg-card-menu'
+                          } ${available ? 'hover:brightness-110' : 'opacity-25'}`}
+                        >
+                          <span
+                            aria-hidden
+                            className="absolute inset-0"
+                            style={{ backgroundColor: getTarkovBackgroundColor('yellow') }}
+                          />
+                          <span
+                            aria-hidden
+                            className="pointer-events-none absolute inset-0 shadow-[inset_0_-2.33px_11.67px_5.83px_rgba(0,0,0,0.7)]"
+                          />
+                          <img
+                            src={itemIconUrl(FUEL_ITEM_ID[k])}
+                            alt={FUEL_TANKS[k].label}
+                            loading="lazy"
+                            className="pointer-events-none absolute inset-0 h-full w-full object-contain p-1.5"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Сетка КОЛИЧЕСТВА (node 3054-933): max 6 ячеек full-tank-icon.svg, 3 состояния по цвету. */}
+              <div
+                className="grid grid-cols-3 gap-1.5"
+                role="group"
+                aria-label="Число канистр"
+              >
+                {Array.from({ length: FUEL_GRID_MAX }, (_, idx) => {
+                  const installed = idx < canisters; // выбрано
+                  const free = idx >= canisters && idx < fuelSlots; // свободно в пределах Генератора
+                  const locked = idx >= fuelSlots; // за ёмкостью Генератора
+                  const maskCls = installed
+                    ? 'bg-(--primary)'
+                    : free
+                      ? 'bg-text-muted'
+                      : 'bg-lines-hover/50';
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => onSelectCanisterSlot(idx)}
+                      title={
+                        locked
+                          ? `Слот ${idx + 1} — поднимет уровень Генератора (будет ${idx + 1} ${plCanister(idx + 1)})`
+                          : `Будет ${idx + 1} ${plCanister(idx + 1)}`
+                      }
+                      aria-label={`Слот канистры ${idx + 1}`}
+                      className="group flex h-6 w-6 items-center justify-center rounded-xs transition-colors hover:bg-white/5"
+                    >
+                      <span
+                        aria-hidden
+                        className={`icon-mask h-5 w-5 transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
+                        style={{ maskImage: FUEL_MASK, WebkitMaskImage: FUEL_MASK }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -657,28 +806,37 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               </>
             }
           />
-          {/* Топливный бак — цена по воронке (perUnit), число = слоты Генератора, источник из path. */}
+          {/* Топливный бак — цена по воронке (perUnit), число = выбранное N канистр, источник из path.
+              Автономность (~M дней) — строкой под карточкой; N не влияет на ₽/сут и профит. */}
           {tankPriceRub > 0 && fuelPath && (
-            <BuyCard
-              iconUrl={itemIconUrl(FUEL_ITEM_ID[tank])}
-              cellBg={FUEL_CELL_BG}
-              slug={FUEL_BUY[tank].slug}
-              name={FUEL_BUY[tank].name}
-              sub="топливо"
-              count={fuelSlots > 0 ? fuelSlots : undefined}
-              perUnit={fuelSlots > 0 ? `х${fuelSlots} по ${fmt(tankPriceRub)}` : undefined}
-              total={fuelSlots > 0 ? fuelSlots * tankPriceRub : tankPriceRub}
-              source={
-                <>
-                  <span
-                    aria-hidden
-                    className="icon-mask h-4 w-4 shrink-0 bg-text-secondary"
-                    style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
-                  />
-                  {funnelSourceLabel(fuelPath)}
-                </>
-              }
-            />
+            <div className="flex w-full flex-col gap-1.5 sm:w-87">
+              <BuyCard
+                iconUrl={itemIconUrl(FUEL_ITEM_ID[tank])}
+                cellBg={FUEL_CELL_BG}
+                slug={FUEL_BUY[tank].slug}
+                name={FUEL_BUY[tank].name}
+                sub="топливо"
+                count={canisters}
+                perUnit={`х${canisters} по ${fmt(tankPriceRub)}`}
+                total={canisters * tankPriceRub}
+                source={
+                  <>
+                    <span
+                      aria-hidden
+                      className="icon-mask h-4 w-4 shrink-0 bg-text-secondary"
+                      style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
+                    />
+                    {funnelSourceLabel(fuelPath)}
+                  </>
+                }
+              />
+              <p className="font-blender-book text-type-caption leading-tight text-text-muted">
+                {autonomyDays < 1
+                  ? 'Хватит меньше суток'
+                  : `Хватит на ~${Math.round(autonomyDays)} ${plDay(Math.round(autonomyDays))}`}
+                {solarActive ? ' (с Solar ×2)' : ''}.
+              </p>
+            </div>
           )}
           <p className="w-full font-blender-book text-type-caption leading-tight text-text-muted sm:w-87">
             Ферма копит максимум 3 биткоина и встаёт, пока не заберёшь — не забывай снимать (с элитой

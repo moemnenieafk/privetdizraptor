@@ -41,6 +41,32 @@ export function generatorFuelSlots(level: number): number {
   return clampIndex(GENERATOR_FUEL_SLOTS, level);
 }
 
+/**
+ * Автономность фермы в сутках при `count` установленных канистрах одного типа:
+ *   effDurationMs = tankDurationMs / (1 − rateУУ) × (solarActive ? 2 : 1)   ← та же формула, что в fuelCostPerDay
+ *   M = count × effDurationMs / 86_400_000
+ * Число канистр N масштабирует запас линейно; на ₽/сут расхода НЕ влияет (расход per-бак).
+ * Некорректный вход (count/duration ≤0) → 0.
+ *
+ * Worked-example (ожидание из формулы tarkov.dev, не из кода):
+ *   1 metal-бак (75_789_000 мс), УУ ур.0 (rate=0), Solar off →
+ *     effDurationMs = 75_789_000 / 1 × 1 = 75_789_000; M = 75_789_000 / 86_400_000 ≈ 0.877 дня.
+ *   ×N линейно (2 бака ≈ 1.754); Solar on → ×2 (1 metal ≈ 1.754 дня).
+ */
+export function fuelAutonomyDays(
+  count: number,
+  tankDurationMs: number,
+  hideoutMgmtLevel: number,
+  solarActive: boolean,
+): number {
+  const n = safePos(count);
+  const baseDuration = safePos(tankDurationMs);
+  if (n <= 0 || baseDuration <= 0) return 0;
+  const effectiveDurationMs =
+    (baseDuration / (1 - hideoutMgmtFuelRate(hideoutMgmtLevel))) * (solarActive ? 2 : 1);
+  return (n * effectiveDurationMs) / 86_400_000;
+}
+
 /** Не-число / NaN / Infinity / ≤0 → 0. Страховка от деления на 0 в цепочке. */
 function safePos(n: number | undefined): number {
   return typeof n === "number" && Number.isFinite(n) && n > 0 ? n : 0;
