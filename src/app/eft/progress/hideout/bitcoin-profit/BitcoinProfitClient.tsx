@@ -790,7 +790,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
       {/* 5. Что нужно купить (design-to-code Figma 3026:3372): карточка GPU + бак + сноска. */}
       <section className="flex flex-col gap-3.5">
         <RuleLabel>Что нужно купить</RuleLabel>
-        <div className="flex flex-wrap items-stretch gap-7">
+        <div className="flex flex-wrap items-start gap-7">
           {/* Видеокарты — покупка на барахолке (node 3054-1320): без строки-источника,
               монета-рубль слева от итога. */}
           <BuyCard
