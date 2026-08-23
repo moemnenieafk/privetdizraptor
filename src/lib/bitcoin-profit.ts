@@ -5,6 +5,13 @@
 // Сверка worked-examples (в проекте НЕТ юнит-раннера — §7.2 CLAUDE; проверять руками):
 //   coinsPerDay: 1 GPU → 0.288 · 10 → 0.395 · 25 → 0.573 · 50 → 0.870 (допуск ±0.5%)
 //   secPerCoin:  1 → 300000 · 10 → ≈218814 · 25 → ≈150799 · 50 → ≈99337
+//
+// Топливо (§3 ресёрча, метод tarkov.dev useFuelPricePerDay):
+//   effDurationMs = tankDurationMs / (1 − rateУУ) × (solarActive ? 2 : 1)
+//   ₽/сут        = tankPriceRub / effDurationMs × 86_400_000
+//   Пример: Expeditionary (45 473 000 мс), цена бака 40 000 ₽, УУ ур.0 (rate=0):
+//     без Solar → 40000 / 45_473_000 × 86_400_000 ≈ 76 002 ₽/сут
+//     с  Solar → длительность ×2 (90 946 000 мс) ≈ 38 001 ₽/сут  (ровно вдвое меньше)
 
 /** Базовое время производства одного Physical Bitcoin, сек. Канон 1.1.0 (⚠️ НЕ 145000 — устарело). */
 export const BTC_BASE_SEC = 300000;
@@ -23,9 +30,54 @@ export const FUEL_TANKS = {
 
 export type FuelTankKey = keyof typeof FUEL_TANKS;
 
+/**
+ * Ёмкость топливных слотов Генератора: сколько канистр вмещает модуль на уровне.
+ * Индекс = уровень (0 = не построен). L1:2 / L2:4 / L3:6 (подтверждено V4DYA 2026-08-23).
+ */
+export const GENERATOR_FUEL_SLOTS = [0, 2, 4, 6] as const;
+
+/** Число топливных слотов Генератора для уровня; уровень клампится в 0..3. */
+export function generatorFuelSlots(level: number): number {
+  return clampIndex(GENERATOR_FUEL_SLOTS, level);
+}
+
+/**
+ * Автономность фермы в сутках при `count` установленных канистрах одного типа:
+ *   effDurationMs = tankDurationMs / (1 − rateУУ) × (solarActive ? 2 : 1)   ← та же формула, что в fuelCostPerDay
+ *   M = count × effDurationMs / 86_400_000
+ * Число канистр N масштабирует запас линейно; на ₽/сут расхода НЕ влияет (расход per-бак).
+ * Некорректный вход (count/duration ≤0) → 0.
+ *
+ * Worked-example (ожидание из формулы tarkov.dev, не из кода):
+ *   1 metal-бак (75_789_000 мс), УУ ур.0 (rate=0), Solar off →
+ *     effDurationMs = 75_789_000 / 1 × 1 = 75_789_000; M = 75_789_000 / 86_400_000 ≈ 0.877 дня.
+ *   ×N линейно (2 бака ≈ 1.754); Solar on → ×2 (1 metal ≈ 1.754 дня).
+ */
+export function fuelAutonomyDays(
+  count: number,
+  tankDurationMs: number,
+  hideoutMgmtLevel: number,
+  solarActive: boolean,
+): number {
+  const n = safePos(count);
+  const baseDuration = safePos(tankDurationMs);
+  if (n <= 0 || baseDuration <= 0) return 0;
+  const effectiveDurationMs =
+    (baseDuration / (1 - hideoutMgmtFuelRate(hideoutMgmtLevel))) * (solarActive ? 2 : 1);
+  return (n * effectiveDurationMs) / 86_400_000;
+}
+
 /** Не-число / NaN / Infinity / ≤0 → 0. Страховка от деления на 0 в цепочке. */
 function safePos(n: number | undefined): number {
   return typeof n === "number" && Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+/** Значение из массива по уровню: floor + кламп индекса в 0..(len-1). */
+function clampIndex(arr: readonly number[], level: number): number {
+  const max = arr.length - 1;
+  const lvl = Number.isFinite(level) ? Math.floor(level) : 0;
+  const clamped = lvl < 0 ? 0 : lvl > max ? max : lvl;
+  return arr[clamped];
 }
 
 /**
@@ -44,10 +96,7 @@ export function coinsPerDay(gpu: number): number {
 
 /** Совокупные слоты GPU для уровня фермы; уровень клампится в 0..3. */
 export function slotsForLevel(level: number): number {
-  const max = BTC_FARM_SLOTS.length - 1;
-  const lvl = Number.isFinite(level) ? Math.floor(level) : 0;
-  const clamped = lvl < 0 ? 0 : lvl > max ? max : lvl;
-  return BTC_FARM_SLOTS[clamped];
+  return clampIndex(BTC_FARM_SLOTS, level);
 }
 
 /**
@@ -61,19 +110,22 @@ export function hideoutMgmtFuelRate(level: number): number {
 
 /**
  * Стоимость топлива в сутки (₽) методом tarkov.dev `useFuelPricePerDay`:
- *   эффективная длительность = durationMs / (1 − rate(HM))   // навык растягивает бак
+ *   эффективная длительность = durationMs / (1 − rate(HM)) × (solarActive ? 2 : 1)
  *   ₽/сутки = tankPriceRub / эффективная_длительность_мс · 86_400_000
+ * Solar Power (L1) удваивает длительность бака → ровно вдвое меньше ₽/сут.
  * Цена бака ≤0 (нет оффера / топливо выкл) → 0.
  */
 export function fuelCostPerDay(
   tankPriceRub: number,
   tankDurationMs: number,
   hideoutMgmtLevel: number,
+  solarActive: boolean,
 ): number {
   const price = safePos(tankPriceRub);
   const baseDuration = safePos(tankDurationMs);
   if (price <= 0 || baseDuration <= 0) return 0;
-  const effectiveDurationMs = baseDuration / (1 - hideoutMgmtFuelRate(hideoutMgmtLevel));
+  const effectiveDurationMs =
+    (baseDuration / (1 - hideoutMgmtFuelRate(hideoutMgmtLevel))) * (solarActive ? 2 : 1);
   return (price / effectiveDurationMs) * 86_400_000;
 }
 
@@ -89,6 +141,8 @@ export interface BtcEconomyInput {
   /** Базовая длительность выбранного бака, мс. */
   tankDurationMs: number;
   hideoutMgmtLevel: number;
+  /** Построен ли модуль Solar Power (L1) — удваивает длительность бака. Дефолт false. */
+  solarActive?: boolean;
 }
 
 export interface BtcEconomy {
@@ -118,8 +172,9 @@ export function computeBtcEconomy(i: BtcEconomyInput): BtcEconomy {
   const sec = secPerCoin(i.gpu);
   const perDay = coinsPerDay(i.gpu);
   const grossPerDay = perDay * safePos(i.btcSellPrice);
+  const solar = i.solarActive ?? false;
   const fuelPerDay = i.fuelEnabled
-    ? fuelCostPerDay(i.tankPriceRub, i.tankDurationMs, i.hideoutMgmtLevel)
+    ? fuelCostPerDay(i.tankPriceRub, i.tankDurationMs, i.hideoutMgmtLevel, solar)
     : 0;
   const netPerDay = grossPerDay - fuelPerDay;
 
