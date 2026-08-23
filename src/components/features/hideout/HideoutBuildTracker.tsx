@@ -543,18 +543,35 @@ export function HideoutBuildTracker({
                       <div className="flex flex-wrap items-center gap-2">
                       {selUnlock.stations.map((s) => {
                         const met = built(s.nn) >= s.level;
-                        return (
-                          <span
-                            key={`st-${s.nn}`}
-                            title={`${s.name} — нужен уровень ${s.level}, у вас ${built(s.nn)}`}
-                            className={`inline-flex items-center gap-1.5 rounded-sm px-2 py-1 font-blender-medium text-type-micro uppercase tracking-wide ${
-                              met ? 'bg-nvg-green/10 text-nvg-green' : 'bg-tactical-amber/10 text-tactical-amber'
-                            }`}
-                          >
+                        const badgeClass = `inline-flex items-center gap-1.5 rounded-sm px-2 py-1 font-blender-medium text-type-micro uppercase tracking-wide ${
+                          met ? 'bg-nvg-green/10 text-nvg-green' : 'bg-tactical-amber/10 text-tactical-amber'
+                        }`;
+                        const inner = (
+                          <>
                             <span aria-hidden className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(s.nn)} ${met ? 'bg-nvg-green' : 'bg-tactical-amber'}`} />
                             {s.name} · Ур. {s.level}
                             {met && <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden />}
+                          </>
+                        );
+                        // Не добрано (амбер) → бейдж кликабелен: выбрать этот модуль (перейти к его постройке).
+                        return met ? (
+                          <span
+                            key={`st-${s.nn}`}
+                            title={`${s.name} — нужен уровень ${s.level}, у вас ${built(s.nn)}`}
+                            className={badgeClass}
+                          >
+                            {inner}
                           </span>
+                        ) : (
+                          <button
+                            key={`st-${s.nn}`}
+                            type="button"
+                            onClick={() => setSelected(s.nn)}
+                            title={`${s.name} — нужен уровень ${s.level}, у вас ${built(s.nn)} · перейти к модулю`}
+                            className={`${badgeClass} cursor-pointer transition-colors hover:bg-tactical-amber/20`}
+                          >
+                            {inner}
+                          </button>
                         );
                       })}
                       {selUnlock.traders.map((t) => {
