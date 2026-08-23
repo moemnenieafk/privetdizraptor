@@ -36,7 +36,7 @@ import {
 import type { FunnelNode } from '@/lib/acquisition-funnel';
 import { BarterOfferCard } from '@/app/eft/items/item/[slug]/BarterOfferCard';
 import { CraftOfferCard } from '@/app/eft/items/item/[slug]/CraftOfferCard';
-import type { BtcFuelInfo, BestSource } from './page';
+import type { BtcFuelInfo, BestSource, FunnelBreakdown } from './page';
 
 export interface BtcPrices {
   btcTherapist: number;
@@ -51,6 +51,8 @@ export interface BtcPrices {
   cheapestTank: FuelTankKey | null;
   /** «Выгодный источник» — оптимальный путь получить бак, готовый к рендеру (T05). */
   bestSource: { expeditionary: BestSource; metal: BestSource };
+  /** Полное рекурсивное дерево «откуда взялась сумма» получения бака — для раскрывашки «Подробнее». */
+  bestSourceDeep: { expeditionary: FunnelBreakdown | null; metal: FunnelBreakdown | null };
 }
 
 const FARM_NN = 'bitcoin-farm';
@@ -253,6 +255,8 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   // Открыт ли поповер выбора типа канистры.
   const [tankMenuOpen, setTankMenuOpen] = useState(false);
   const tankMenuRef = useRef<HTMLDivElement | null>(null);
+  // Раскрыто ли рекурсивное дерево «откуда взялась сумма» (кнопка «Подробнее»).
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
 
   // Закрытие поповера типа канистры по клику вне / Escape.
   useEffect(() => {
@@ -296,6 +300,10 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   const fuelPath = prices.fuelFunnel[tank].path;
   // «Выгодный источник» выбранного бака — готовая форма для блока (T05).
   const bestSrc = prices.bestSource[tank];
+  // Дерево «Подробнее» = ТОТ ЖЕ flat-путь headline-карточки (Σ сходится с числом карточки),
+  // обогащённый рекурсивно. null / без шагов (лист-покупка) → кнопки нет.
+  const deepTree = prices.bestSourceDeep[tank];
+  const hasBreakdown = deepTree != null && deepTree.steps.length > 0;
   // Доступен ли выбранный тип по воронке (perUnit>0) — для дизейбла триггера дропдауна.
   const tankAvailable = tankPriceRub > 0;
 
@@ -888,6 +896,30 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             Самый дешёвый способ получить «{FUEL_BUY[tank].name}» прямо сейчас.
           </p>
           <BestSourceView source={bestSrc} />
+
+          {/* «Подробнее» — дерево «откуда взялась сумма» ТОГО ЖЕ пути, что в headline-карточке
+              (flat: рецепт → прямые покупки инпутов по рынку); Σ сходится с ценой карточки.
+              Кнопку показываем только когда есть что разворачивать (путь с шагами, не лист). */}
+          {hasBreakdown && deepTree && (
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => setBreakdownOpen((v) => !v)}
+                aria-expanded={breakdownOpen}
+                className="flex w-fit items-center gap-1.5 rounded-xs font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary transition-colors hover:text-(--primary)"
+              >
+                {breakdownOpen ? 'Свернуть' : 'Подробнее'}
+                <span aria-hidden className="text-[0.75em] leading-none">
+                  {breakdownOpen ? '▾' : '▸'}
+                </span>
+              </button>
+              {breakdownOpen && (
+                <div className="w-full max-w-[45.25rem]">
+                  <FunnelBreakdownView node={deepTree} depth={0} />
+                </div>
+              )}
+            </div>
+          )}
         </section>
       )}
     </div>
@@ -954,6 +986,130 @@ function BestSourceView({ source }: { source: BestSource }) {
         </p>
       );
   }
+}
+
+/** Человекочитаемый ярлык источника узла дерева «Подробнее» (у кого / бартер / крафт). */
+function breakdownSourceLabel(node: FunnelBreakdown): string {
+  const lvl = node.level != null ? ` LL${node.level}` : '';
+  switch (node.source) {
+    case 'trader':
+      return `Купить${node.sourceName ? ` у ${node.sourceName}` : ''}`;
+    case 'flea':
+      return 'Купить на барахолке';
+    case 'barter':
+      return `Бартер${node.sourceName ? ` у ${node.sourceName}` : ''}${lvl}`;
+    case 'craft':
+      return `Крафт${node.sourceName ? `: ${node.sourceName}` : ''}${lvl}`;
+    default:
+      return 'Источник недоступен';
+  }
+}
+
+/** Бейдж источника узла дерева (аватар торговца / маска бартер·крафт·рубль), 16px. */
+function BreakdownSourceIcon({ node }: { node: FunnelBreakdown }) {
+  const title = breakdownSourceLabel(node);
+  if (node.source === 'trader' && node.sourceNn) {
+    return (
+      <img
+        src={traderImg(node.sourceNn)}
+        alt=""
+        title={title}
+        loading="lazy"
+        className="h-4 w-4 shrink-0 rounded-[0.125rem] object-cover"
+      />
+    );
+  }
+  const mask =
+    node.source === 'barter' ? BARTER_MASK : node.source === 'craft' ? CRAFT_MASK : RUBLE_MASK;
+  return (
+    <span
+      aria-hidden
+      title={title}
+      className="icon-mask h-4 w-4 shrink-0 bg-(--primary)"
+      style={{ maskImage: mask, WebkitMaskImage: mask }}
+    />
+  );
+}
+
+/**
+ * Плитка предмета 40px (рарити-фон + иконка, как BarterSlot tileOnly) — тайл узла дерева.
+ * С normalizedName оборачивается ссылкой на карточку предмета.
+ */
+function BreakdownTile({ node }: { node: FunnelBreakdown }) {
+  const tile = (
+    <span
+      className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded border border-lines-hover"
+      style={{ backgroundColor: getTarkovBackgroundColor(node.backgroundColor) }}
+    >
+      <img src={node.iconUrl} alt="" loading="lazy" className="absolute inset-0 size-full object-contain p-1" />
+      <span aria-hidden className="pointer-events-none absolute inset-0 rounded shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
+    </span>
+  );
+  return node.normalizedName ? (
+    <Link
+      href={`/eft/items/item/${node.normalizedName}`}
+      title={`${node.name} — открыть карточку`}
+      className="shrink-0 rounded transition-[border-color]"
+    >
+      {tile}
+    </Link>
+  ) : (
+    tile
+  );
+}
+
+/**
+ * Рекурсивный вид дерева «откуда взялась сумма» (ЧЕРНОВИК — V4DYA доведёт дизайн).
+ * Узел: плитка предмета + имя + бейдж источника + perUnit ₽/шт (+ «партия ×outCount» у крафта).
+ * steps — с отступом (border-left по глубине), подпись ребра «нужно ×count». Листья
+ * (trader/flea) — просто строка узла без детей. truncated — «… глубже (ещё дешевле)».
+ */
+function FunnelBreakdownView({ node, depth }: { node: FunnelBreakdown; depth: number }) {
+  const isRecipe = node.source === 'barter' || node.source === 'craft';
+  return (
+    <div className="flex flex-col gap-2">
+      {/* Строка самого узла. */}
+      <div className="flex items-center gap-3 rounded border border-lines-hover bg-card-menu p-2.5">
+        <BreakdownTile node={node} />
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate font-blender-medium text-type-caption uppercase tracking-wide text-text-primary">
+            {node.name || node.itemId}
+          </span>
+          <span className="flex items-center gap-1.5 font-blender-book text-type-micro uppercase tracking-widest text-text-muted">
+            <BreakdownSourceIcon node={node} />
+            <span className="truncate">{breakdownSourceLabel(node)}</span>
+            {isRecipe && node.outCount != null && node.outCount > 1 && (
+              <span className="shrink-0 text-text-secondary">· партия ×{node.outCount}</span>
+            )}
+          </span>
+        </div>
+        <span className="shrink-0 font-blender-medium text-sm leading-none text-text-primary tabular-nums">
+          {fmt(node.perUnit)} ₽<span className="text-text-muted"> /шт</span>
+        </span>
+      </div>
+
+      {/* Инпуты — вложенно, со сдвигом (border-left + padding по глубине). */}
+      {node.steps.length > 0 && (
+        <div className="ml-3 flex flex-col gap-2 border-l border-lines-hover pl-3">
+          {node.steps.map((step) => (
+            <div key={step.node.itemId} className="flex flex-col gap-1">
+              <span className="font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
+                нужно ×{step.count}
+              </span>
+              <FunnelBreakdownView node={step.node} depth={depth + 1} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Ветка обрезана по глубине. */}
+      {node.truncated && (
+        <div className="ml-3 border-l border-lines-hover pl-3 font-blender-book text-type-micro uppercase tracking-widest text-text-muted">
+          … глубже (ещё дешевле)
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Метка-заголовок блока с линией (rule-micro-labels). */

@@ -40,6 +40,46 @@ export interface BtcFuelInfo {
 }
 
 /**
+ * Сериализуемый узел РЕКУРСИВНОГО дерева «откуда взялась сумма» получения предмета —
+ * для раскрывашки «Подробнее». Обогащён именами/иконками/фоном из зеркала (§4.11), чтобы
+ * клиент рисовал плитки без доступа к БД. Только строки/числа/массивы/undefined —
+ * пересекает границу RSC→client. Форма повторяет FunnelNode, но плоско-сериализуема
+ * (никаких Map/функций), с обогащением слота и рекурсивными steps.
+ */
+export interface FunnelBreakdown {
+  itemId: string;
+  /** display-имя предмета (из каталога). */
+  name: string;
+  /** короткое имя предмета (из каталога). */
+  shortName: string;
+  /** наш ассет-URL иконки (не CDN). */
+  iconUrl: string;
+  /** цвет фона плитки по редкости (из priceMap); undefined если неизвестен. */
+  backgroundColor?: string;
+  /** normalizedName предмета — ссылка на карточку; undefined если неизвестен. */
+  normalizedName?: string;
+  /** источник выбранного пути этого узла. */
+  source: FunnelNode['source'];
+  /** имя торговца/станции ('Барахолка' для flea). */
+  sourceName?: string;
+  /** normalizedName торговца (аватар/тинт) для source==='trader'. */
+  sourceNn?: string;
+  /** уровень лояльности/станции для barter/craft. */
+  level?: number;
+  /** цена за 1 шт выбранного пути (₽). */
+  perUnit: number;
+  /** сколько штук даёт рецепт на выходе (barter/craft). */
+  outCount?: number;
+  /** инпуты выбранного рецепта с их под-путями (целый count из движка). */
+  steps: { count: number; node: FunnelBreakdown }[];
+  /** ветка обрезана по глубине (глубже — ещё дешевле, но дерево не разрастаем). */
+  truncated?: boolean;
+}
+
+/** Максимальная глубина рекурсивного дерева «Подробнее» (глубже — обрезаем, §V4DYA). */
+const FUNNEL_MAX_DEPTH = 4;
+
+/**
  * Форма данных, которую page.tsx отдаёт клиенту. Расширяет BtcPrices (T04) БЕЗ ломки:
  * старое плоское `fuel: { expeditionary; metal }` сохранено (клиент читает его сейчас);
  * добавлены funnel-цены `fuelFunnel` по каждому баку и признак дешевейшего бака `cheapestTank`.
@@ -52,6 +92,12 @@ export interface BtcPricesExtended extends BtcPrices {
   cheapestTank: 'expeditionary' | 'metal' | null;
   /** «Выгодный источник» — оптимальный путь получить бак, готовый к рендеру карточками (T05). */
   bestSource: { expeditionary: BestSource; metal: BestSource };
+  /**
+   * ПОЛНОЕ рекурсивное дерево «откуда взялась сумма» получения бака (БЕЗ flat) — для
+   * раскрывашки «Подробнее». null если путь недоступен ИЛИ это прямой лист (детализировать
+   * нечего). Каждый инпут — свой дешевейший под-путь, вложенно до листьев (глубина ≤4).
+   */
+  bestSourceDeep: { expeditionary: FunnelBreakdown | null; metal: FunnelBreakdown | null };
 }
 
 /** Строка зеркала barters/crafts, нужная для точных normalizedName/level/duration по recipeId. */
@@ -141,6 +187,52 @@ async function fetchBtcPrices(): Promise<BtcPricesExtended> {
       };
     };
 
+    // ── ПОЛНОЕ рекурсивное дерево «Подробнее» (FunnelBreakdown) ─────────────────
+    // Рекурсивно обогащаем FunnelNode → сериализуемый FunnelBreakdown (имена/иконки/фон
+    // из priceMap+catalog, тем же slotItem-приёмом). Глубже FUNNEL_MAX_DEPTH — обрезаем
+    // (truncated:true), чтобы дерево не разрасталось (водосборник→вода). Чистая функция.
+    const enrichFunnel = (node: FunnelNode, depth: number): FunnelBreakdown => {
+      const c = catalogById.get(node.itemId);
+      const p = priceMap.get(node.itemId);
+      const childSteps = node.steps ?? [];
+      // На пороге глубины ветку не разворачиваем — помечаем truncated (если было куда идти).
+      const atCap = depth >= FUNNEL_MAX_DEPTH;
+      const steps =
+        atCap || childSteps.length === 0
+          ? []
+          : childSteps.map((s) => ({ count: s.count, node: enrichFunnel(s.node, depth + 1) }));
+      return {
+        itemId: node.itemId,
+        name: c?.name ?? node.itemId,
+        shortName: c?.shortName ?? '',
+        iconUrl: itemIconUrl(node.itemId),
+        ...(p?.backgroundColor ? { backgroundColor: p.backgroundColor } : {}),
+        ...(p?.normalizedName ? { normalizedName: p.normalizedName } : {}),
+        source: node.source,
+        ...(node.sourceName ? { sourceName: node.sourceName } : {}),
+        ...(node.sourceNn ? { sourceNn: node.sourceNn } : {}),
+        ...(node.level != null ? { level: node.level } : {}),
+        perUnit: node.perUnit,
+        ...(node.outCount != null ? { outCount: node.outCount } : {}),
+        steps,
+        ...(atCap && childSteps.length > 0 ? { truncated: true } : {}),
+      };
+    };
+
+    // Дерево «Подробнее» = обогащённый ТОТ ЖЕ flat-путь, что питает headline-карточку
+    // (fuelFunnel[tank].path / bestSource), а НЕ отдельная глубокая рекурсия. Так Σ дерева
+    // сходится с числом карточки (напр. металл ≈197 392) — без подвоха «под кнопкой другое
+    // число» (решение V4DYA). flat-путь мелкий (рецепт → прямые покупки инпутов); cap 4 всё
+    // равно оставляем страховкой. Лист-покупка (нет steps) / недоступно → null: кнопки нет.
+    const deepFrom = (path: FunnelNode | null): FunnelBreakdown | null => {
+      if (!path || !Number.isFinite(path.perUnit) || !path.steps?.length) return null;
+      return enrichFunnel(path, 0);
+    };
+    const bestSourceDeep: BtcPricesExtended['bestSourceDeep'] = {
+      expeditionary: deepFrom(expeditionaryFunnel.path),
+      metal: deepFrom(metalFunnel.path),
+    };
+
     // Точные normalizedName/level/duration тянем из зеркала по recipeId выбранных путей
     // (в FunnelNode их нет — sourceName это русское имя). Один запрос по id (только зеркало).
     const recipeMetas = await fetchRecipeMetas(
@@ -209,6 +301,7 @@ async function fetchBtcPrices(): Promise<BtcPricesExtended> {
       fuelFunnel: { expeditionary: expeditionaryFunnel, metal: metalFunnel },
       cheapestTank,
       bestSource,
+      bestSourceDeep,
     };
   } catch (e) {
     console.error('[bitcoin-profit] зеркало недоступно:', e);
@@ -224,6 +317,7 @@ async function fetchBtcPrices(): Promise<BtcPricesExtended> {
       },
       cheapestTank: null,
       bestSource: { expeditionary: { kind: 'none' }, metal: { kind: 'none' } },
+      bestSourceDeep: { expeditionary: null, metal: null },
     };
   }
 }

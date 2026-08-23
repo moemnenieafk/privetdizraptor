@@ -72,10 +72,24 @@ export type FunnelSource = "trader" | "flea" | "barter" | "craft" | "unavailable
 /** Один инпут выбранного бартер/крафт-шага — вложенный под-путь (для дерева «что нужно купить»). */
 export interface FunnelStep {
   itemId: string;
-  /** сколько штук инпута требуется на один запуск рецепта. */
+  /**
+   * РЕАЛЬНОЕ ЦЕЛОЕ количество штук инпута на один запуск рецепта — как в зеркале,
+   * без амортизации (деления на outCount). Дробные счётчики зеркала (напр. Водосборник
+   * тратит 0.66 фильтра за цикл деградации) округляются ВВЕРХ: купить/добыть можно только
+   * целый предмет. Амортизация (частичный расход) остаётся ТОЛЬКО в цене (perUnit), не тут.
+   */
   count: number;
   /** оптимальный под-путь добычи этого инпута. */
   node: FunnelNode;
+}
+
+/**
+ * Целое количество инпута для дерева/UI: покупается/добывается только целый предмет,
+ * поэтому дробный счётчик зеркала (частичный расход за цикл) округляем ВВЕРХ. В расчёт
+ * стоимости идёт исходный дробный count (точная амортизация), сюда — целый (честный «нужно ×N»).
+ */
+function stepCount(raw: number): number {
+  return Number.isInteger(raw) ? raw : Math.ceil(raw);
 }
 
 /** Узел дерева выбранного (дешевейшего) пути получения предмета. */
@@ -183,8 +197,10 @@ function evalRecipe(
         reason: `инпут недоступен: ${input.itemId}`,
       };
     }
+    // Стоимость — по ИСХОДНОМУ (возможно дробному) count: точная амортизация частичного
+    // расхода. В дерево кладём ЦЕЛЫЙ count (stepCount): купить можно только целый предмет.
     sum += node.perUnit * input.count;
-    steps.push({ itemId: input.itemId, count: input.count, node });
+    steps.push({ itemId: input.itemId, count: stepCount(input.count), node });
   }
   const outCount = recipe.outCount > 0 ? recipe.outCount : 1;
   return {
@@ -229,8 +245,9 @@ function flatEvalRecipe(
         reason: `инпут недоступен: ${input.itemId}`,
       };
     }
+    // См. evalRecipe: стоимость по исходному дробному count, в дерево — целый (stepCount).
     sum += node.perUnit * input.count;
-    steps.push({ itemId: input.itemId, count: input.count, node });
+    steps.push({ itemId: input.itemId, count: stepCount(input.count), node });
   }
   const outCount = recipe.outCount > 0 ? recipe.outCount : 1;
   return {
