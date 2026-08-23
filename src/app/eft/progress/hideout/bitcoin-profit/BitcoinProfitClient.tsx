@@ -577,9 +577,10 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                 )}
               </div>
 
-              {/* Сетка КОЛИЧЕСТВА (node 3054-933): max 6 ячеек full-tank-icon.svg, 3 состояния по цвету. */}
+              {/* Сетка КОЛИЧЕСТВА (node 3054-933): 6 ячеек 2×3 (фрейм 26×16, gap 4px = квадрат 56×56),
+                  full-tank-icon.svg, 3 состояния по цвету. */}
               <div
-                className="grid grid-cols-3 gap-1.5"
+                className="grid h-14 w-14 grid-cols-2 grid-rows-3 gap-1"
                 role="group"
                 aria-label="Число канистр"
               >
@@ -603,12 +604,17 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                           : `Будет ${idx + 1} ${plCanister(idx + 1)}`
                       }
                       aria-label={`Слот канистры ${idx + 1}`}
-                      className="group flex h-6 w-6 items-center justify-center rounded-xs transition-colors hover:bg-white/5"
+                      className="group flex h-full w-full items-center justify-center rounded-xs transition-colors hover:bg-white/5"
                     >
                       <span
                         aria-hidden
-                        className={`icon-mask h-5 w-5 transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
-                        style={{ maskImage: FUEL_MASK, WebkitMaskImage: FUEL_MASK }}
+                        className={`icon-mask h-full w-full transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
+                        style={{
+                          maskImage: FUEL_MASK,
+                          WebkitMaskImage: FUEL_MASK,
+                          maskSize: 'contain',
+                          WebkitMaskSize: 'contain',
+                        }}
                       />
                     </button>
                   );
