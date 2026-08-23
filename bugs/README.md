@@ -29,9 +29,12 @@ created: 2026-08-18
 
 ## Открытые баги
 <!-- список пополняется по мере приёма -->
-_(пусто)_
+- _(пусто)_
 
 ## Починенные — `done/`
+Сессия 2026-08-23 (grill→code→live-verify, ветка `fix/collector-food-duplicates`):
+- [[bugs/done/2026-08-23-1617--collector-food-eaten-duplicates.md]] — Коллекционер: дубли еды = устаревший ручной оверрайд `eft-collector.ts` (крон синканул objectives), снесён целиком → 44 предмета, 0 дублей
+
 Сессия 2026-08-18 (`/autopilot` grill→code→verify, всё в main, merge `715ce4c0`):
 - [[bugs/done/2026-08-18-0922--maps-marker-floor-invisible.md]] — Карты: подложка этажа гасла после сохранения (single-SVG base-load)
 - [[bugs/done/2026-08-18-0929--marker-item-link-not-shown.md]] — Карты: связанный предмет не виден в карточке

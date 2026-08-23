@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { EFT_QUESTS } from '@/data/quests';
-import { getEftPricesByIds, getEftPriceBySlug } from '@/db/prices';
-import { itemIconUrl } from '@/lib/item-icon';
-import { COLLECTOR_DROP_ITEM_IDS, COLLECTOR_EXTRA_ITEMS } from '@/data/eft-collector';
+import { getEftPricesByIds } from '@/db/prices';
 import { CollectorTracker, type CollectorItem } from '@/components/features/quests/CollectorTracker';
 import type { TaskObjectiveItem } from '@/types/quest';
 
@@ -18,40 +16,22 @@ export const metadata: Metadata = {
 export default async function CollectorTrackerPage() {
   const quest = EFT_QUESTS.find((q) => q.normalizedName === 'collector' || q.id === COLLECTOR_ID);
 
-  // База — item-objectives квеста МИНУС снятые оверрайдом (Evasion-повязка, §4.11 — зеркало устарело).
+  // Источник — item-objectives квеста из зеркала (§4.11). Ранее поверх лежал ручной оверрайд
+  // (снятие Evasion-повязки + 4 стример-предмета патча) на устаревшее по этому квесту зеркало; крон
+  // синканул корректные objectives (все 4 предмета и снятие повязки уже в них) → оверрайд убран,
+  // читаем зеркало напрямую. Дубли еды (полное/съеденное) уходят вместе с оверрайдом.
   const objItems = (quest?.objectives ?? []).filter(
     (o): o is TaskObjectiveItem & { item: NonNullable<TaskObjectiveItem['item']> } =>
-      o.__typename === 'TaskObjectiveItem' && o.item != null && !COLLECTOR_DROP_ITEM_IDS.has(o.item.id),
+      o.__typename === 'TaskObjectiveItem' && o.item != null,
   );
 
   // Цвет редкости ячейки — из нашего зеркала цен (§4.11), НЕ из внешнего API. Джойн по id.
   const priceMap = await getEftPricesByIds(objItems.map((o) => o.item.id));
-  const base: CollectorItem[] = objItems.map((o) => ({
+  const items: CollectorItem[] = objItems.map((o) => ({
     objectiveId: o.id,
     item: o.item,
     backgroundColor: priceMap.get(o.item.id)?.backgroundColor ?? undefined,
   }));
-
-  // Курируемые стример-предметы патча (нет в objectives): резолвим inGameId+редкость по slug из зеркала.
-  // Если предмет ещё не в зеркале — всё равно показываем (name/shortName из docs, плейсхолдер-иконка).
-  const extras: CollectorItem[] = await Promise.all(
-    COLLECTOR_EXTRA_ITEMS.map(async (e) => {
-      const resolved = await getEftPriceBySlug(e.slug);
-      const id = resolved?.id ?? e.slug;
-      return {
-        objectiveId: `extra:${e.slug}`,
-        item: {
-          id,
-          name: e.name,
-          shortName: e.shortName,
-          image512pxLink: resolved?.id ? `https://assets.tarkov.dev/${resolved.id}-512.webp` : itemIconUrl(id),
-        },
-        backgroundColor: resolved?.price.backgroundColor ?? undefined,
-      };
-    }),
-  );
-
-  const items: CollectorItem[] = [...base, ...extras];
 
   // Заголовок/навигацию/крошки даёт layout раздела (SectionLayoutNav). Здесь — только контент трекера.
   return (
