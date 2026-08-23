@@ -420,10 +420,8 @@ export function HideoutBuildTracker({
                       <span
                         aria-hidden
                         // Спрайт 8 кадров (2048×256) → на 16px иконке маска 128px (8×16), кадр 0 статикой.
-                        className={`h-4 w-4 shrink-0 bg-current ${hammering ? 'animate-hammer-hit' : ''}`}
+                        className={`h-4 w-4 shrink-0 bg-current icon-eft-hideout-hammer-anim ${hammering ? 'animate-hammer-hit' : ''}`}
                         style={{
-                          maskImage: 'url(/icons/eft/04-progression/hideout-modules/hammer-anim.svg)',
-                          WebkitMaskImage: 'url(/icons/eft/04-progression/hideout-modules/hammer-anim.svg)',
                           maskSize: '128px 16px',
                           WebkitMaskSize: '128px 16px',
                           maskRepeat: 'no-repeat',
@@ -661,8 +659,7 @@ export function HideoutBuildTracker({
                                     >
                                       <span
                                         aria-hidden
-                                        className="h-3 w-3 mask-contain mask-center mask-no-repeat bg-text-secondary transition-colors group-hover/info:bg-(--primary)"
-                                        style={{ maskImage: 'url(/icons/info-label.svg)', WebkitMaskImage: 'url(/icons/info-label.svg)' }}
+                                        className="h-3 w-3 icon-info-label mask-contain mask-center mask-no-repeat bg-text-secondary transition-colors group-hover/info:bg-(--primary)"
                                       />
                                     </Link>
                                   ) : undefined

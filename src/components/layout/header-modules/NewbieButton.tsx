@@ -27,28 +27,28 @@ export default function NewbieButton({ onClick, label }: NewbieButtonProps) {
           {/* 4. Левый блок: Анимация солдата (26x28px, Отступ слева 14px, прижат к низу) */}
           <div className="absolute bottom-0 left-3.5 h-7 w-6.5">
             {/* Start Frame */}
-            <div 
-              className="icon-mask absolute inset-0 text-text-secondary transition-opacity duration-300 group-hover:opacity-0"
-              style={{ maskImage: 'url(/icons/eft/soldier-animation-start-frame.svg)', WebkitMaskImage: 'url(/icons/eft/soldier-animation-start-frame.svg)', maskSize: 'contain', maskPosition: 'bottom center', maskRepeat: 'no-repeat' }}
+            <div
+              className="icon-mask icon-eft-soldier-animation-start-frame absolute inset-0 text-text-secondary transition-opacity duration-300 group-hover:opacity-0"
+              style={{ maskSize: 'contain', maskPosition: 'bottom center', maskRepeat: 'no-repeat' }}
             />
             {/* End Frame */}
-            <div 
-              className="icon-mask absolute inset-0 opacity-0 text-(--primary) transition-opacity duration-300 group-hover:opacity-100"
-              style={{ maskImage: 'url(/icons/eft/soldier-animation-end-frame.svg)', WebkitMaskImage: 'url(/icons/eft/soldier-animation-end-frame.svg)', maskSize: 'contain', maskPosition: 'bottom center', maskRepeat: 'no-repeat' }}
+            <div
+              className="icon-mask icon-eft-soldier-animation-end-frame absolute inset-0 opacity-0 text-(--primary) transition-opacity duration-300 group-hover:opacity-100"
+              style={{ maskSize: 'contain', maskPosition: 'bottom center', maskRepeat: 'no-repeat' }}
             />
           </div>
 
           {/* 5. Правый блок: Силуэт города (76x28px, прижат вправо и вниз) */}
           <div className="absolute bottom-0 right-0 h-7 w-19">
             {/* Default City */}
-            <div 
-              className="icon-mask absolute inset-0 text-text-secondary transition-opacity duration-300 group-hover:opacity-0"
-              style={{ maskImage: 'url(/icons/eft/tarkov-city-bg-default.svg)', WebkitMaskImage: 'url(/icons/eft/tarkov-city-bg-default.svg)', maskSize: 'contain', maskPosition: 'bottom right', maskRepeat: 'no-repeat' }}
+            <div
+              className="icon-mask icon-eft-tarkov-city-bg-default absolute inset-0 text-text-secondary transition-opacity duration-300 group-hover:opacity-0"
+              style={{ maskSize: 'contain', maskPosition: 'bottom right', maskRepeat: 'no-repeat' }}
             />
             {/* Hover City */}
-            <div 
-              className="icon-mask absolute inset-0 opacity-0 text-(--primary) transition-opacity duration-300 group-hover:opacity-100"
-              style={{ maskImage: 'url(/icons/eft/tarkov-city-bg-hover.svg)', WebkitMaskImage: 'url(/icons/eft/tarkov-city-bg-hover.svg)', maskSize: 'contain', maskPosition: 'bottom right', maskRepeat: 'no-repeat' }}
+            <div
+              className="icon-mask icon-eft-tarkov-city-bg-hover absolute inset-0 opacity-0 text-(--primary) transition-opacity duration-300 group-hover:opacity-100"
+              style={{ maskSize: 'contain', maskPosition: 'bottom right', maskRepeat: 'no-repeat' }}
             />
           </div>
 

@@ -253,6 +253,12 @@
   .icon-eft-weight-carry { mask-image: url('/icons/eft/03-items/meds/weight-carry.svg'); -webkit-mask-image: url('/icons/eft/03-items/meds/weight-carry.svg'); }
 
 /* ═══ EFT Прогрессия (04-progression) ═══ */
+  .icon-eft-gpu { mask-image: url('/icons/eft/04-progression/gpu-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/gpu-icon.svg'); }
+  .icon-eft-full-tank { mask-image: url('/icons/eft/04-progression/crafting/full-tank-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/crafting/full-tank-icon.svg'); }
+  .icon-eft-hideout-hammer-anim { mask-image: url('/icons/eft/04-progression/hideout-modules/hammer-anim.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/hammer-anim.svg'); }
+  .icon-eft-hideout-build { mask-image: url('/icons/eft/04-progression/hideout-modules/hideout-build-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/hideout-build-icon.svg'); }
+  .icon-eft-select-archetype { mask-image: url('/icons/eft/04-progression/cta-profile/select-archetype-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/cta-profile/select-archetype-icon.svg'); }
+  .icon-eft-hex-ring { mask-image: url('/icons/eft/04-progression/hex-ring.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hex-ring.svg'); }
   .icon-eft-air_filtering_unit { mask-image: url('/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg'); -webkit-mask-image: url('/icons/eft/04-progression/hideout-modules/air_filtering_unit.svg'); }
   .icon-eft-arcade { mask-image: url('/icons/eft/04-progression/eft-arcade-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/eft-arcade-icon.svg'); }
   .icon-eft-barter-electronics { mask-image: url('/icons/eft/04-progression/barter-profit/electronics.svg'); -webkit-mask-image: url('/icons/eft/04-progression/barter-profit/electronics.svg'); }
@@ -543,4 +549,5 @@
   .icon-hexagon-right { mask-image: url('/icons/hexagon-right.svg'); -webkit-mask-image: url('/icons/hexagon-right.svg'); }
   .icon-increment-icon { mask-image: url('/icons/increment-icon.svg'); -webkit-mask-image: url('/icons/increment-icon.svg'); }
   .icon-info-label { mask-image: url('/icons/info-label.svg'); -webkit-mask-image: url('/icons/info-label.svg'); }
-  .icon-questnode-connection-line { mask-image: url('/icons/questnode-connection-line.svg'); -webkit-mask-image: url('/icons/questnode-connection-line.svg'); }  
+  .icon-questnode-connection-line { mask-image: url('/icons/questnode-connection-line.svg'); -webkit-mask-image: url('/icons/questnode-connection-line.svg'); }
+  .icon-rotate-screen { mask-image: url('/icons/rotate-screen-icon.svg'); -webkit-mask-image: url('/icons/rotate-screen-icon.svg'); }  

@@ -438,11 +438,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
               className="ml-auto shrink-0"
             >
               <span
-                className="icon-mask size-5 bg-text-muted transition-colors hover:bg-tactical-amber"
-                style={{
-                  WebkitMaskImage: 'url(/icons/eft/04-progression/cta-profile/select-archetype-icon.svg)',
-                  maskImage: 'url(/icons/eft/04-progression/cta-profile/select-archetype-icon.svg)',
-                }}
+                className="icon-mask icon-eft-select-archetype size-5 bg-text-muted transition-colors hover:bg-tactical-amber"
                 aria-hidden
               />
             </button>

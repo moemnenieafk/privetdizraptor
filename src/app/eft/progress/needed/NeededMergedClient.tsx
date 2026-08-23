@@ -82,8 +82,7 @@ function FirMark() {
     >
       <span
         aria-hidden
-        className="h-3 w-3 mask-contain mask-center mask-no-repeat bg-(--color-rarity-legendary)"
-        style={{ maskImage: 'url(/icons/eft/02-quests/side-quests.svg)', WebkitMaskImage: 'url(/icons/eft/02-quests/side-quests.svg)' }}
+        className="icon-eft-quests-side h-3 w-3 mask-contain mask-center mask-no-repeat bg-(--color-rarity-legendary)"
       />
     </span>
   );
@@ -768,8 +767,7 @@ function SourceChip({ s }: { s: SrcState }) {
             <span className="flex items-center gap-1 text-nvg-green">
               <span
                 aria-hidden
-                className="h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-nvg-green"
-                style={{ maskImage: 'url(/icons/eft/02-quests/side-quests.svg)', WebkitMaskImage: 'url(/icons/eft/02-quests/side-quests.svg)' }}
+                className="icon-eft-quests-side h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-nvg-green"
               />
               в рейде
             </span>
@@ -1008,8 +1006,7 @@ function GroupRow({
               <span className="flex items-center gap-1 text-nvg-green">
                 <span
                   aria-hidden
-                  className="h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-nvg-green"
-                  style={{ maskImage: 'url(/icons/eft/02-quests/side-quests.svg)', WebkitMaskImage: 'url(/icons/eft/02-quests/side-quests.svg)' }}
+                  className="icon-eft-quests-side h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-nvg-green"
                 />
                 в рейде
               </span>

@@ -113,12 +113,12 @@ export default function StreamStatus({ mapVariant = false }: { mapVariant?: bool
         {isLive && !isLoading && (
           <>
             <span
-              className="icon-mask hidden sm:block absolute -left-6 top-1/2 -translate-y-1/2 size-6 text-danger transition-opacity duration-300 opacity-80 group-hover:opacity-100"
-              style={{ maskImage: 'url(/icons/hexagon-left.svg)', WebkitMaskImage: 'url(/icons/hexagon-left.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }}
+              className="icon-mask icon-hexagon-left hidden sm:block absolute -left-6 top-1/2 -translate-y-1/2 size-6 text-danger transition-opacity duration-300 opacity-80 group-hover:opacity-100"
+              style={{ maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }}
             />
             <span
-              className="icon-mask hidden sm:block absolute -right-6 top-1/2 -translate-y-1/2 size-6 text-danger transition-opacity duration-300 opacity-80 group-hover:opacity-100"
-              style={{ maskImage: 'url(/icons/hexagon-right.svg)', WebkitMaskImage: 'url(/icons/hexagon-right.svg)', maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }}
+              className="icon-mask icon-hexagon-right hidden sm:block absolute -right-6 top-1/2 -translate-y-1/2 size-6 text-danger transition-opacity duration-300 opacity-80 group-hover:opacity-100"
+              style={{ maskSize: 'contain', maskPosition: 'center', maskRepeat: 'no-repeat' }}
             />
           </>
         )}

@@ -69,18 +69,13 @@ const FUEL_ITEM_ID: Record<FuelTankKey, string> = {
 };
 const GPU_ITEM_ID = '57347ca924597744596b4e71'; // Graphics card
 const GPU_SLUG = 'graphics-card'; // normalizedName → карточка предмета
-const GPU_MASK = 'url(/icons/eft/04-progression/gpu-icon.svg)';
-const FUEL_MASK = 'url(/icons/eft/04-progression/crafting/full-tank-icon.svg)'; // маска слота сетки канистр
-const RUBLE_MASK = 'url(/icons/eft/03-items/currency-ruble.svg)';
-const BARTER_MASK = 'url(/icons/eft/04-progression/barter-profit.svg)';
-const CRAFT_MASK = 'url(/icons/eft/04-progression/craft-profit.svg)';
 const FUEL_GRID_MAX = 6; // максимум ячеек сетки (ёмкость Генератора L3)
 
-// Иконки метрик (маски, красятся по семантике).
-const IC_MINE = 'url(/icons/eft/04-progression/bitcoin-profit.svg)'; // добыча BTC
-const IC_TIME = 'url(/icons/eft/02-quests/ingame-events.svg)'; // время / доход
-const IC_FUEL = 'url(/icons/eft/04-progression/crafting/empty-tank-icon.svg)'; // топливо
-const IC_PROFIT = 'url(/icons/eft/03-items/profit-icon.svg)'; // чистая прибыль / профит за месяц
+// Иконки метрик (классы-маски icons.css, красятся по семантике через bg-*).
+const IC_MINE = 'icon-eft-prog-bitcoin'; // добыча BTC
+const IC_TIME = 'icon-eft-quests-events'; // время / доход
+const IC_FUEL = 'icon-eft-crafting-empty-tank'; // топливо
+const IC_PROFIT = 'icon-eft-profit'; // чистая прибыль / профит за месяц
 const GPU_COLS = 10;
 const GPU_ROWS = 5;
 
@@ -131,15 +126,14 @@ function SourceIcon({ node }: { node: FunnelNode }) {
       />
     );
   }
-  const mask =
-    node.source === 'barter' ? BARTER_MASK : node.source === 'craft' ? CRAFT_MASK : RUBLE_MASK;
+  const iconCls =
+    node.source === 'barter'
+      ? 'icon-eft-prog-barter'
+      : node.source === 'craft'
+        ? 'icon-eft-prog-craft'
+        : 'icon-eft-currency-ruble';
   return (
-    <span
-      aria-hidden
-      title={title}
-      className="icon-mask h-4 w-4 shrink-0 bg-(--primary)"
-      style={{ maskImage: mask, WebkitMaskImage: mask }}
-    />
+    <span aria-hidden title={title} className={`icon-mask h-4 w-4 shrink-0 bg-(--primary) ${iconCls}`} />
   );
 }
 
@@ -489,8 +483,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                   >
                     <span
                       aria-hidden
-                      className={`icon-mask h-[1.3125rem] w-[2.625rem] max-w-full transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
-                      style={{ maskImage: GPU_MASK, WebkitMaskImage: GPU_MASK }}
+                      className={`icon-mask icon-eft-gpu h-[1.3125rem] w-[2.625rem] max-w-full transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
                     />
                   </button>
                 );
@@ -653,13 +646,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                     >
                       <span
                         aria-hidden
-                        className={`icon-mask h-full w-full transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
-                        style={{
-                          maskImage: FUEL_MASK,
-                          WebkitMaskImage: FUEL_MASK,
-                          maskSize: 'contain',
-                          WebkitMaskSize: 'contain',
-                        }}
+                        className={`icon-mask icon-eft-full-tank h-full w-full transition-colors group-hover:bg-(--primary)/70 ${maskCls}`}
                       />
                     </button>
                   );
@@ -779,19 +766,19 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               label="Добыча BTC / сутки"
               value={`${eco.coinsPerDay.toFixed(2)} BTC`}
               subtext={`${(eco.coinsPerDay * 30).toFixed(1)} BTC / месяц`}
-              icon={<MaskIcon mask={IC_MINE} className="h-5 w-5 bg-(--primary)" />}
+              icon={<MaskIcon iconCls={IC_MINE} className="h-5 w-5 bg-(--primary)" />}
             />
             <Metric
               label="Время на 1 BTC"
               value={fmtHms(eco.secPerCoin)}
               subtext={`при ${gpu} ${gpu === 1 ? 'видеокарте' : 'видеокартах'}`}
-              icon={<MaskIcon mask={IC_TIME} className="h-4 w-4 bg-text-muted" />}
+              icon={<MaskIcon iconCls={IC_TIME} className="h-4 w-4 bg-text-muted" />}
             />
             <Metric
               label="Доход / сутки"
               value={`${fmt(eco.grossPerDay)} ₽`}
               subtext={`продажа ${fmt(btcSellPrice)} ₽ / BTC`}
-              icon={<MaskIcon mask={IC_TIME} className="h-4 w-4 bg-text-muted" />}
+              icon={<MaskIcon iconCls={IC_TIME} className="h-4 w-4 bg-text-muted" />}
             />
             <Metric
               label="Топливо / сутки"
@@ -799,34 +786,34 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               subtext={`${FUEL_BUY[tank].name}${solarActive ? ' · Solar ×2' : ''} · УУ ${mgmtLevel}`}
               subtextClass="text-type-micro uppercase leading-tight tracking-wide"
               tone={eco.fuelPerDay > 0 ? 'cost' : 'default'}
-              icon={<MaskIcon mask={IC_FUEL} className={`h-5 w-5 ${eco.fuelPerDay > 0 ? 'bg-tactical-amber' : 'bg-text-muted'}`} />}
+              icon={<MaskIcon iconCls={IC_FUEL} className={`h-5 w-5 ${eco.fuelPerDay > 0 ? 'bg-tactical-amber' : 'bg-text-muted'}`} />}
             />
             <Metric
               label="Чистая прибыль / сутки"
               value={`${fmtSigned(eco.netPerDay)} ₽`}
               subtext="доход − топливо"
               tone={gainLoss(eco.netPerDay)}
-              icon={<MaskIcon mask={IC_PROFIT} className={`h-5 w-5 ${eco.netPerDay >= 0 ? 'bg-success' : 'bg-danger'}`} />}
+              icon={<MaskIcon iconCls={IC_PROFIT} className={`h-5 w-5 ${eco.netPerDay >= 0 ? 'bg-success' : 'bg-danger'}`} />}
             />
             <Metric
               label="Окупаемость видеокарт"
               value={Number.isFinite(eco.paybackDays) ? `${eco.paybackDays} дн` : '—'}
               subtext={`вложено ${fmt(eco.gpuInvest)} ₽`}
-              icon={<MaskIcon mask={GPU_MASK} className="h-4 w-8 bg-text-secondary" />}
+              icon={<MaskIcon iconCls="icon-eft-gpu" className="h-4 w-8 bg-text-secondary" />}
             />
             <Metric
               label="Прибыль с 1 видеокарты"
               value={`${fmtSigned(eco.netPerGpu)} ₽`}
               subtext="в сутки"
               tone={gainLoss(eco.netPerGpu)}
-              icon={<MaskIcon mask={GPU_MASK} className={`h-4 w-8 ${eco.netPerGpu >= 0 ? 'bg-success' : 'bg-danger'}`} />}
+              icon={<MaskIcon iconCls="icon-eft-gpu" className={`h-4 w-8 ${eco.netPerGpu >= 0 ? 'bg-success' : 'bg-danger'}`} />}
             />
             <Metric
               label="Профит / месяц"
               value={`${fmtSigned(monthNet)} ₽`}
               subtext="чистыми за 30 дней"
               tone={gainLoss(monthNet)}
-              icon={<MaskIcon mask={IC_PROFIT} className={`h-5 w-5 ${monthNet >= 0 ? 'bg-success' : 'bg-danger'}`} />}
+              icon={<MaskIcon iconCls={IC_PROFIT} className={`h-5 w-5 ${monthNet >= 0 ? 'bg-success' : 'bg-danger'}`} />}
             />
           </div>
         </>
@@ -848,11 +835,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             total={eco.gpuInvest}
             perUnit={`х${gpu} по ${fmt(prices.gpuCost)}`}
             totalIcon={
-              <span
-                aria-hidden
-                className="icon-mask h-4 w-4 shrink-0 bg-(--primary)"
-                style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
-              />
+              <span aria-hidden className="icon-mask icon-eft-currency-ruble h-4 w-4 shrink-0 bg-(--primary)" />
             }
           />
           {/* Топливный бак — цена по воронке (perUnit), число = выбранное N канистр, источник из path.
@@ -966,11 +949,7 @@ function BestSourceView({ source }: { source: BestSource }) {
     case 'flea':
       return (
         <div className="flex w-full items-center gap-3 rounded-lg border border-lines-hover bg-card-menu p-3.5 sm:w-87">
-          <span
-            aria-hidden
-            className="icon-mask h-9 w-9 shrink-0 bg-(--primary)"
-            style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
-          />
+          <span aria-hidden className="icon-mask icon-eft-currency-ruble h-9 w-9 shrink-0 bg-(--primary)" />
           <span className="min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest text-text-primary">
             Купить на барахолке
           </span>
@@ -1019,15 +998,14 @@ function BreakdownSourceIcon({ node }: { node: FunnelBreakdown }) {
       />
     );
   }
-  const mask =
-    node.source === 'barter' ? BARTER_MASK : node.source === 'craft' ? CRAFT_MASK : RUBLE_MASK;
+  const iconCls =
+    node.source === 'barter'
+      ? 'icon-eft-prog-barter'
+      : node.source === 'craft'
+        ? 'icon-eft-prog-craft'
+        : 'icon-eft-currency-ruble';
   return (
-    <span
-      aria-hidden
-      title={title}
-      className="icon-mask h-4 w-4 shrink-0 bg-(--primary)"
-      style={{ maskImage: mask, WebkitMaskImage: mask }}
-    />
+    <span aria-hidden title={title} className={`icon-mask h-4 w-4 shrink-0 bg-(--primary) ${iconCls}`} />
   );
 }
 
@@ -1189,11 +1167,9 @@ function FuelCell({
   );
 }
 
-/** Иконка-маска (перекрашивается через bg-*). */
-function MaskIcon({ mask, className }: { mask: string; className: string }) {
-  return (
-    <span aria-hidden className={`icon-mask shrink-0 ${className}`} style={{ maskImage: mask, WebkitMaskImage: mask }} />
-  );
+/** Иконка-маска (перекрашивается через bg-*). `iconCls` — класс маски из icons.css. */
+function MaskIcon({ iconCls, className }: { iconCls: string; className: string }) {
+  return <span aria-hidden className={`icon-mask shrink-0 ${iconCls} ${className}`} />;
 }
 
 /** Цветовая семантика значения метрики. */

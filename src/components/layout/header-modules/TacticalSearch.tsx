@@ -259,9 +259,9 @@ export function TacticalSearch() {
       <div className="group flex items-center justify-between w-full h-14 px-3.5 bg-black/20 rounded border border-lines-hover overflow-hidden transition-colors duration-300 focus-within:border-(--primary)">
         
         {/* Левая иконка (Лупа) */}
-        <div 
-          className="icon-mask w-6 h-6 shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary)"
-          style={{ WebkitMaskImage: 'url(/icons/eft/search-icon.svg)', maskImage: 'url(/icons/eft/search-icon.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center' }}
+        <div
+          className="icon-mask icon-eft-search-icon w-6 h-6 shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary)"
+          style={{ maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center' }}
         />
         
         {/* Поле ввода */}
@@ -282,8 +282,8 @@ export function TacticalSearch() {
         
         {/* Правая иконка (Хоткей CTRL+Q) — скрыта на тач/узких экранах */}
         <div
-          className="hidden sm:block icon-mask w-10 h-5 shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary) group-focus-within:opacity-50"
-          style={{ WebkitMaskImage: 'url(/icons/eft/ctrl-q-icon.svg)', maskImage: 'url(/icons/eft/ctrl-q-icon.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center' }}
+          className="hidden sm:block icon-mask icon-eft-ctrl-q-icon w-10 h-5 shrink-0 text-lines-hover transition-colors duration-300 group-focus-within:text-(--primary) group-focus-within:opacity-50"
+          style={{ maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center' }}
         />
       </div>
 

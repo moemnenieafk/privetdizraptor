@@ -129,18 +129,8 @@ export default function SeasonsHubPage() {
               >
                 <span
                   aria-hidden
-                  className="icon-mask h-5 w-5 shrink-0"
-                  style={{
-                    backgroundColor: accent,
-                    WebkitMaskImage: 'url(/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg)',
-                    maskImage: 'url(/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg)',
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                  }}
+                  className="icon-mask icon-eft-battlepass-docs-tracker h-5 w-5 shrink-0"
+                  style={{ backgroundColor: accent }}
                 />
                 Battlepass-трекер
               </Link>

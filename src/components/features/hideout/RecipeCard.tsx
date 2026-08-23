@@ -364,17 +364,7 @@ export function RecipeCard({
             <span className="text-base tabular-nums">{String(craft.level).padStart(2, '0')}</span>
             <span
               aria-hidden
-              className="h-4 w-4 shrink-0 bg-tactical-amber"
-              style={{
-                maskImage: 'url(/icons/eft/04-progression/hideout-modules/hideout-build-icon.svg)',
-                WebkitMaskImage: 'url(/icons/eft/04-progression/hideout-modules/hideout-build-icon.svg)',
-                maskSize: 'contain',
-                WebkitMaskSize: 'contain',
-                maskRepeat: 'no-repeat',
-                WebkitMaskRepeat: 'no-repeat',
-                maskPosition: 'center',
-                WebkitMaskPosition: 'center',
-              }}
+              className="icon-mask icon-eft-hideout-build h-4 w-4 shrink-0 bg-tactical-amber"
             />
           </span>
         )}

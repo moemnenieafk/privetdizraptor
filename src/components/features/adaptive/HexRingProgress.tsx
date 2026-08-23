@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-const HEX_RING_MASK = 'url(/icons/eft/04-progression/hex-ring.svg)';
-
-/** Общие свойства маски-формы гекс-кольца (сегментированный тик-путь V4DYA). */
+/** Общие свойства маски-формы гекс-кольца (сегментированный тик-путь V4DYA). Mask-image несёт класс `icon-eft-hex-ring`. */
 const RING_MASK: React.CSSProperties = {
-  WebkitMaskImage: HEX_RING_MASK,
-  maskImage: HEX_RING_MASK,
   WebkitMaskSize: 'contain',
   maskSize: 'contain',
   WebkitMaskRepeat: 'no-repeat',
@@ -56,7 +52,7 @@ export function HexRingProgress({ progress, accent, iconClass, size = 56 }: HexR
       aria-label={`Уверенность в архетипе ${Math.round(clamped * 100)}%`}
     >
       {/* Трек — форма кольца в lines-hover */}
-      <span className="absolute inset-0" style={{ ...RING_MASK, backgroundColor: 'var(--color-lines-hover)' }} aria-hidden />
+      <span className="absolute inset-0 icon-eft-hex-ring" style={{ ...RING_MASK, backgroundColor: 'var(--color-lines-hover)' }} aria-hidden />
 
       {/* Заливка — внешняя conic-маска (угол) ∩ внутренняя форма кольца */}
       <span
@@ -69,7 +65,7 @@ export function HexRingProgress({ progress, accent, iconClass, size = 56 }: HexR
         }}
         aria-hidden
       >
-        <span className="absolute inset-0" style={{ ...RING_MASK, backgroundColor: accent }} />
+        <span className="absolute inset-0 icon-eft-hex-ring" style={{ ...RING_MASK, backgroundColor: accent }} />
       </span>
 
       {/* Центр — иконка архетипа */}
