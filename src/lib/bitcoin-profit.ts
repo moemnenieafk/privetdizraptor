@@ -32,10 +32,9 @@ export type FuelTankKey = keyof typeof FUEL_TANKS;
 
 /**
  * Ёмкость топливных слотов Генератора: сколько канистр вмещает модуль на уровне.
- * Индекс = уровень (0 = не построен). L1:2 / L2:3 / L3:4.
- * ⚠️ Игровой факт — подтвердить у V4DYA / по wiki; из макета бейдж L3 = x4.
+ * Индекс = уровень (0 = не построен). L1:2 / L2:4 / L3:6 (подтверждено V4DYA 2026-08-23).
  */
-export const GENERATOR_FUEL_SLOTS = [0, 2, 3, 4] as const;
+export const GENERATOR_FUEL_SLOTS = [0, 2, 4, 6] as const;
 
 /** Число топливных слотов Генератора для уровня; уровень клампится в 0..3. */
 export function generatorFuelSlots(level: number): number {
