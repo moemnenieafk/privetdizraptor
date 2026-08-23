@@ -104,8 +104,8 @@ curl -s "https://api.telegram.org/bot${TELEGRAM_IDEAS_BOT_TOKEN}/getUpdates?offs
 - **Отдельный бот = отдельный offset.** Watermark этого бота НЕ связан с bug-ботом.
 
 ## Watermark
-- last_update_id: `794642029` (offset для следующего чтения = `794642030`)
-- last_processed_at: `2026-08-18T19:50Z`
+- last_update_id: `794642036` (offset для следующего чтения = `794642037`)
+- last_processed_at: `2026-08-23T04:05Z`
 
 ## Лог обработанных идей
 <!-- дата | update_id | краткое описание | → карточка | бот-ответ -->
@@ -117,3 +117,4 @@ curl -s "https://api.telegram.org/bot${TELEGRAM_IDEAS_BOT_TOKEN}/getUpdates?offs
 - 2026-08-18 | upd 794642021 / msg 347 | Карты: тоггл «только маркеры этого этажа» | → [[ideas/2026-08-18-1731--maps-floor-only-markers-toggle.md]] | бот-ответ msg 348
 - 2026-08-18 | upd 794642022–794642028 / msg 349–355 | НЕ ветка идей (thread 234 «fixes & features»): служебный rename (349), сводки готовых фич №1–4 от V4DYA (350–353), черновики идеи Kappa от @dudeplease не в той ветке (354, 355). НЕ парсить — карточку завёл по каноничному дублю в ветке 140 (356).
 - 2026-08-18 | upd 794642029 / msg 356 (thread 140, @dudeplease) | Задания: трекер предметов Kappa (Коллекционер), авто-сортировка найденных вниз | → [[ideas/2026-08-18-1947--quests-kappa-collector-found-sort.md]] | бот-ответ msg 357
+- 2026-08-23 | upd 794642034–794642036 / msg 361–363 (thread 140, @v4dyadesign, голосовая, 3 сообщения = 1 идея) | Предметы/Убежище: рекурсивная «воронка» оптимальной добычи предмета (бартер→крафт→инпуты) + топливо-тумблеры калькулятора биткоин-фермы | → [[ideas/2026-08-23-0352--items-acquisition-cost-funnel.md]] | бот-ответ msg 364

@@ -110,8 +110,8 @@ curl -s "https://api.telegram.org/bot${TELEGRAM_BUG_BOT_TOKEN}/getUpdates?offset
 - fixes / ideas / chat — id уточнятся с первым сообщением в них
 
 ## Watermark
-- last_update_id: `386171790` (offset для следующего чтения = `386171791`)
-- last_processed_at: `2026-08-18T09:40Z`
+- last_update_id: `386171820` (offset для следующего чтения = `386171821`)
+- last_processed_at: `2026-08-23T16:20Z`
 
 ## Лог обработанных багов
 <!-- дата | update_id | краткое описание | → карточка -->
@@ -121,3 +121,5 @@ curl -s "https://api.telegram.org/bot${TELEGRAM_BUG_BOT_TOKEN}/getUpdates?offset
 - 2026-08-18 | upd 386171788 / msg 324 | Карты: визард маркеров сбрасывает данные на шаге 2+ | → [[bugs/2026-08-18-0933--marker-wizard-reset-dataloss.md]] | бот-ответ msg 325
 - 2026-08-18 | msg 326 закреплён (правила), msg 327 = служебное «pinned»
 - 2026-08-18 | upd 386171790 / msg 328 | Медиа-библиотека (мультивыбор+управление) + Визард «Далее» неактивна | → [[bugs/2026-08-18-0940--media-library-multiselect-manage.md]] + [[bugs/2026-08-18-0940--marker-wizard-next-disabled-loot-name.md]] | бот-ответ msg 329
+- 2026-08-23 | upd 386171820 / msg 365 (фото+подпись) | Коллекционер: дубли съедобных предметов (полное/съеденное) | → [[bugs/2026-08-23-1617--collector-food-eaten-duplicates.md]] | бот-ответ msg 366
+- 2026-08-23 | msgs 361-363 (thread 140) — идеи (биткоин-ферма/воронка бартер-крафт), НЕ баги; ждут ideas-бота (offset 794642021).
