@@ -23,11 +23,23 @@ export interface StashCellProps {
   onInc: (delta: number) => void; // вызывающий кламп через bumpCount
   href?: string; // ссылка на страницу предмета (topRight-линк)
   cellPx?: number; // размер клетки в px; default CELL_PX (сетка на всю ширину → динамика)
+  /** Предмет помечен «найдено в рейде» (fir > 0) → бейдж FiR в углу. */
+  fir?: boolean;
+  /** Режим пометки FiR: клик по ячейке переключает метку (onToggleFir), не меняя счётчик. */
+  markMode?: boolean;
+  onToggleFir?: () => void;
 }
 
-export function StashCell({ meta, count, onInc, href, cellPx = CELL_PX }: StashCellProps) {
+export function StashCell({ meta, count, onInc, href, cellPx = CELL_PX, fir = false, markMode = false, onToggleFir }: StashCellProps) {
   const width = Math.max(1, meta.gridWidth) * cellPx;
   const height = Math.max(1, meta.gridHeight) * cellPx;
+
+  // Бейдж «найдено в рейде» (низ-лево): аутентичный FiR-глиф в цвете легендарной редкости.
+  const firBadge = fir ? (
+    <span title="Найдено в рейде" className="flex h-5 w-5 items-center justify-center">
+      <span aria-hidden className="h-3 w-3 icon-mask icon-eft-quests-side bg-(--color-rarity-legendary)" />
+    </span>
+  ) : undefined;
 
   const link = href ? (
     <a
@@ -42,7 +54,7 @@ export function StashCell({ meta, count, onInc, href, cellPx = CELL_PX }: StashC
   ) : undefined;
 
   return (
-    <div style={{ width, height }} className="shrink-0">
+    <div style={{ width, height }} className="relative shrink-0">
       <TrackCell
         iconSrc={itemIconUrl(meta.inGameId)}
         alt={meta.shortName || meta.name}
@@ -56,7 +68,32 @@ export function StashCell({ meta, count, onInc, href, cellPx = CELL_PX }: StashC
         bgColor={getTarkovBackgroundColor(meta.backgroundColor ?? undefined)}
         sizeClass="h-full w-full"
         topRight={link}
+        bottomLeft={firBadge}
       />
+
+      {/* Режим пометки: перехватываем клик поверх всей ячейки (z-50 — выше слоёв +/− и ссылки).
+          ЛКМ/ПКМ одинаково переключают FiR-метку. Кольцо-подсветка = «ячейка кликабельна». */}
+      {markMode && (
+        <button
+          type="button"
+          aria-label={`${meta.name} — переключить «найдено в рейде»`}
+          title={fir ? `${meta.name} — снять «найдено в рейде»` : `${meta.name} — отметить «найдено в рейде»`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFir?.();
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFir?.();
+          }}
+          className={`absolute inset-0 z-50 cursor-pointer rounded-sm transition-shadow ${
+            fir
+              ? 'ring-2 ring-(--color-rarity-legendary) ring-inset'
+              : 'ring-1 ring-inset ring-(--primary)/40 hover:ring-2 hover:ring-(--primary)'
+          }`}
+        />
+      )}
     </div>
   );
 }

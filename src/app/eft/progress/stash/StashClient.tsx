@@ -35,9 +35,13 @@ interface MetaResponse {
 
 export function StashClient() {
   const ownedItems = useInventoryStore((s) => s.ownedItems);
+  const firUnits = useInventoryStore((s) => s.firUnits);
   const bumpCount = useInventoryStore((s) => s.bumpCount);
+  const toggleFirUnit = useInventoryStore((s) => s.toggleFirUnit);
   const resetStash = useInventoryStore((s) => s.resetStash);
   const [resetOpen, setResetOpen] = useState(false);
+  // Режим пометки «найдено в рейде»: клик по ячейке переключает FiR-метку ЭТОЙ ячейки (по одной).
+  const [markMode, setMarkMode] = useState(false);
 
   const activeProfile = usePlayerStore((s) => s.profiles.find((p) => p.id === s.activeProfileId));
   const capacity = stashCapacityCells(activeProfile?.edition);
@@ -76,6 +80,9 @@ export function StashClient() {
   );
 
   const idsKey = ownedIds.join(',');
+
+  // Эффективный режим пометки: включён только при непустом схроне (помечать иначе нечего).
+  const markActive = markMode && ownedIds.length > 0;
 
   // Фетч меты кешируем по ключу запрошенных id (fetchedKey), чтобы НЕ звать setState
   // синхронно в эффекте: сам меж-состояние (пусто/загрузка) выводим в рендере ниже.
@@ -186,10 +193,27 @@ export function StashClient() {
       {/* Шапка: слева поиск/добавление, справа индикатор ёмкости по изданию. */}
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-lines-hover pb-4">
         {/* Слева — поиск и добавление в схрон (§4.11 — action читает зеркало). */}
-        <div className="flex min-w-64 max-w-md flex-1 items-center gap-2">
+        <div className="flex min-w-64 max-w-2xl flex-1 items-center gap-2">
           <div className="min-w-0 flex-1">
             <StashAddSearch onAdd={(id) => bumpCount(id, 1, STASH_MAX)} />
           </div>
+          {/* Пометка «найдено в рейде» — режим: клик по предмету в сетке ставит/снимает FiR-метку.
+              Между «Добавить» и «Сброс». Неактивна при пустом схроне (нечего помечать). */}
+          <button
+            type="button"
+            onClick={() => setMarkMode((v) => !v)}
+            disabled={ownedIds.length === 0}
+            aria-pressed={markActive}
+            title="Режим пометки «найдено в рейде»: клик по предмету в сетке ставит/снимает метку"
+            className={`flex h-10 shrink-0 items-center gap-1.5 rounded border px-3 font-blender-medium text-type-micro uppercase tracking-widest transition-colors disabled:pointer-events-none disabled:opacity-40 ${
+              markActive
+                ? 'border-(--color-rarity-legendary) text-(--color-rarity-legendary)'
+                : 'border-lines-hover text-text-muted hover:border-(--color-rarity-legendary) hover:text-(--color-rarity-legendary)'
+            }`}
+          >
+            <span aria-hidden className="h-3.5 w-3.5 icon-mask icon-eft-quests-side bg-current" />
+            Найдено в рейде
+          </button>
           {/* Сброс схрона — деструктивно, через подтверждение. Неактивна при пустом схроне. */}
           <button
             type="button"
@@ -222,6 +246,15 @@ export function StashClient() {
           ) : null}
         </div>
       </div>
+
+      {/* Подсказка режима пометки — показывает намерение (§4.8): что делает клик по ячейке. */}
+      {markActive && !isEmpty ? (
+        <div className="flex items-center gap-2 rounded border border-(--color-rarity-legendary)/40 bg-(--color-rarity-legendary)/8 px-3 py-2 font-blender-book text-sm text-text-secondary">
+          <span aria-hidden className="h-4 w-4 shrink-0 icon-mask icon-eft-quests-side bg-(--color-rarity-legendary)" />
+          Режим пометки: кликните предмет в сетке, чтобы отметить его как{' '}
+          <span className="text-(--color-rarity-legendary)">найдено в рейде</span>. Повторный клик снимает метку.
+        </div>
+      ) : null}
 
       {/* Измеряющий контейнер во всю ширину смонтирован ВСЕГДА (и при loading), иначе
           ResizeObserver не поймал бы реальную ширину и сетка залипла бы на дефолте. */}
@@ -263,6 +296,9 @@ export function StashClient() {
                       count={unit.stackCount}
                       onInc={(delta) => bumpCount(itemId, delta, STASH_MAX)}
                       cellPx={cellSize}
+                      fir={firUnits[cell.id] ?? false}
+                      markMode={markActive}
+                      onToggleFir={() => toggleFirUnit(cell.id)}
                       {...(m.slug ? { href: `/eft/items/item/${m.slug}` } : {})}
                     />
                   </div>
