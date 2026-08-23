@@ -791,7 +791,8 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
       <section className="flex flex-col gap-3.5">
         <RuleLabel>Что нужно купить</RuleLabel>
         <div className="flex flex-wrap items-stretch gap-7">
-          {/* Видеокарты — покупка на барахолке. */}
+          {/* Видеокарты — покупка на барахолке (node 3054-1320): без строки-источника,
+              монета-рубль слева от итога. */}
           <BuyCard
             iconUrl={itemIconUrl(GPU_ITEM_ID)}
             cellBg={GPU_CELL_BG}
@@ -801,16 +802,6 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             count={gpu}
             total={eco.gpuInvest}
             perUnit={`х${gpu} по ${fmt(prices.gpuCost)}`}
-            source={
-              <>
-                <span
-                  aria-hidden
-                  className="icon-mask h-4 w-4 shrink-0 bg-text-secondary"
-                  style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
-                />
-                Купить на барахолке
-              </>
-            }
           />
           {/* Топливный бак — цена по воронке (perUnit), число = выбранное N канистр, источник из path.
               Автономность (~M дней) — строкой под карточкой; N не влияет на ₽/сут и профит. */}
@@ -1001,7 +992,8 @@ function BuyCard({
   total: number;
   count?: number;
   perUnit?: string;
-  source: React.ReactNode;
+  /** Строка-источник (у кого/как). Опущена → строки нет, а слева от итога встаёт монета-рубль (node 3054-1320). */
+  source?: React.ReactNode;
 }) {
   return (
     <div className="flex w-full items-end justify-between gap-3 rounded-lg border border-lines-hover bg-card-menu p-3.5 sm:w-87">
@@ -1028,13 +1020,22 @@ function BuyCard({
         </div>
       </Link>
       <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className="flex items-center gap-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
-          {source}
-        </span>
+        {source && (
+          <span className="flex items-center gap-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
+            {source}
+          </span>
+        )}
         {perUnit && (
           <span className="font-blender-medium text-xs text-text-secondary tabular-nums">{perUnit} ₽</span>
         )}
-        <span className="font-blender-medium text-2xl leading-none text-text-primary tabular-nums">
+        <span className="flex items-center gap-2 font-blender-medium text-2xl leading-none text-text-primary tabular-nums">
+          {!source && (
+            <span
+              aria-hidden
+              className="icon-mask h-4 w-4 shrink-0 bg-(--primary)"
+              style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
+            />
+          )}
           {fmt(total)} ₽
         </span>
       </div>
