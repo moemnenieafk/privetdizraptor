@@ -11,7 +11,7 @@
 // resolveSkillLevel (usePmcStatsStore + useManualProfileStore); override поверх.
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Check, Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
@@ -27,20 +27,30 @@ import {
   BTC_FARM_SLOTS,
   FUEL_TANKS,
   computeBtcEconomy,
+  generatorFuelSlots,
   slotsForLevel,
   type BtcEconomy,
   type FuelTankKey,
 } from '@/lib/bitcoin-profit';
+import type { FunnelNode } from '@/lib/acquisition-funnel';
+import type { BtcFuelInfo } from './page';
 
 export interface BtcPrices {
   btcTherapist: number;
   btcFlea: number;
   btcBase: number;
   gpuCost: number;
+  /** Старая плоская цена бака (buyFor) — оставлена для совместимости page.tsx, клиент читает fuelFunnel. */
   fuel: { expeditionary: number; metal: number };
+  /** Оптимальная цена по воронке + путь для каждого бака (T03). */
+  fuelFunnel: { expeditionary: BtcFuelInfo; metal: BtcFuelInfo };
+  /** Дешевейший бак по воронке — дефолт-выбор; null если оба недоступны. */
+  cheapestTank: FuelTankKey | null;
 }
 
 const FARM_NN = 'bitcoin-farm';
+const SOLAR_NN = 'solar-power'; // модуль Solar Power — удваивает время работы бака (×2)
+const GENERATOR_NN = 'generator'; // Генератор — ёмкость топливных слотов = число канистр
 const SKILL_HIDEOUT_MGMT = 'HideoutManagement';
 const GPU_SCALE_POINTS = [1, 10, 25, 50] as const; // контрольные точки шкалы масштабирования (§9)
 
@@ -69,11 +79,29 @@ const rarityCellBg = (tint: string) => `linear-gradient(90deg, ${tint} 0%, ${tin
 const GPU_CELL_BG = rarityCellBg('rgba(28,65,86,0.302)'); // синяя редкость видеокарты
 const FUEL_CELL_BG = rarityCellBg('rgba(104,102,40,0.302)'); // оливковая редкость топлива
 
-// Мета баков для карточки «что нужно купить»: имя предмета, подпись, где купить.
-const FUEL_BUY: Record<FuelTankKey, { name: string; slug: string; trader: string; traderLabel: string }> = {
-  metal: { name: 'Металлическая топливная канистра', slug: 'metal-fuel-tank', trader: 'jaeger', traderLabel: 'Купить у Егеря' },
-  expeditionary: { name: 'Экспедиционная топливная канистра', slug: 'expeditionary-fuel-tank', trader: 'prapor', traderLabel: 'Купить у Прапора' },
+// Мета баков для карточки «что нужно купить»: имя предмета и slug карточки. Источник (у кого/как) —
+// динамический, из дерева воронки (fuelFunnel[tank].path), а не константа.
+const FUEL_BUY: Record<FuelTankKey, { name: string; slug: string }> = {
+  metal: { name: 'Металлическая топливная канистра', slug: 'metal-fuel-tank' },
+  expeditionary: { name: 'Экспедиционная топливная канистра', slug: 'expeditionary-fuel-tank' },
 };
+
+/** Человекочитаемый ярлык источника воронки: у кого купить / бартер / крафт. */
+function funnelSourceLabel(node: FunnelNode): string {
+  const lvl = node.level != null ? ` LL${node.level}` : '';
+  switch (node.source) {
+    case 'trader':
+      return `Купить${node.sourceName ? ` у ${node.sourceName}` : ''}`;
+    case 'flea':
+      return 'Купить на барахолке';
+    case 'barter':
+      return `Бартер${node.sourceName ? ` у ${node.sourceName}` : ''}${lvl}`;
+    case 'craft':
+      return `Крафт${node.sourceName ? `: ${node.sourceName}` : ''}${lvl}`;
+    default:
+      return 'Источник недоступен';
+  }
+}
 
 const fmt = (n: number) => Math.round(n).toLocaleString('ru-RU');
 const fmtSigned = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n));
@@ -143,13 +171,19 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   const profileFarmLevel = mounted ? Math.max(levels[FARM_NN] ?? 0, editionFloor(FARM_NN, edition)) : 0;
   // Уровень УУ из профиля. До маунта 0.
   const profileMgmtLevel = mounted ? resolveSkillLevel(skillView, manualSkills, SKILL_HIDEOUT_MGMT) : 0;
+  // Модуль Solar Power построен в профиле? (L1 достаточно для ×2). До маунта false.
+  const profileSolarBuilt = mounted ? (levels[SOLAR_NN] ?? 0) >= 1 : false;
+  // Уровень Генератора из профиля (0..3) — задаёт ёмкость топливных слотов = число канистр. До маунта 0.
+  const generatorLevel = mounted ? clamp(levels[GENERATOR_NN] ?? 0, 0, 3) : 0;
+  // Число канистр в баке = ёмкость слотов Генератора на построенном уровне (T02).
+  const fuelSlots = generatorFuelSlots(generatorLevel);
 
   // Локальный стейт «что-если». Уровень фермы: null → следуем профилю (или L1, если ферма не построена).
   const [farmLevelOverride, setFarmLevelOverride] = useState<number | null>(null);
   const [gpuOverride, setGpuOverride] = useState<number | null>(null);
   const [mgmtOverride, setMgmtOverride] = useState<number | null>(null);
-  const [tank, setTank] = useState<FuelTankKey>('metal');
-  const [fuelEnabled, setFuelEnabled] = useState(true);
+  const [tankOverride, setTankOverride] = useState<FuelTankKey | null>(null);
+  const [solarOverride, setSolarOverride] = useState<boolean | null>(null);
 
   // Эффективный уровень фермы: override, иначе профиль (минимум L1 для конфигуратора).
   const farmLevel = clamp(farmLevelOverride ?? Math.max(profileFarmLevel, 1), 1, 3);
@@ -157,26 +191,34 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   // GPU: override клампится к слотам уровня; дефолт — полный слот уровня.
   const gpu = clamp(gpuOverride ?? slots, 1, slots);
   const mgmtLevel = clamp(mgmtOverride ?? profileMgmtLevel, 0, 51);
+  // Solar: override поверх профиля (гибрид C). До маунта false (гард в profileSolarBuilt).
+  const solarActive = solarOverride ?? profileSolarBuilt;
+  // Активный бак: override, иначе дешевейший по воронке (T03), иначе metal как безопасный дефолт.
+  const tank: FuelTankKey = tankOverride ?? prices.cheapestTank ?? 'metal';
 
   // Продажа — только Терапевт (венью/флиа из UI убраны; §8).
   const btcSellPrice = prices.btcTherapist;
 
   const tankMeta = FUEL_TANKS[tank];
-  const tankPriceRub = tank === 'expeditionary' ? prices.fuel.expeditionary : prices.fuel.metal;
+  // Цена бака — perUnit по воронке (T03), НЕ старая плоская buyFor. Путь — для блока «что нужно купить».
+  const tankPriceRub = prices.fuelFunnel[tank].perUnit;
+  const fuelPath = prices.fuelFunnel[tank].path;
 
   // Экономика текущей конфигурации — через computeBtcEconomy (T1), в useMemo (§4.7, не в JSX).
+  // Топливо учитывается ВСЕГДА (без него ферма не работает) → fuelEnabled: true.
   const eco: BtcEconomy = useMemo(
     () =>
       computeBtcEconomy({
         gpu,
         btcSellPrice,
         gpuPriceRub: prices.gpuCost,
-        fuelEnabled,
+        fuelEnabled: true,
         tankPriceRub,
         tankDurationMs: tankMeta.durationMs,
         hideoutMgmtLevel: mgmtLevel,
+        solarActive,
       }),
-    [gpu, btcSellPrice, prices.gpuCost, fuelEnabled, tankPriceRub, tankMeta, mgmtLevel],
+    [gpu, btcSellPrice, prices.gpuCost, tankPriceRub, tankMeta, mgmtLevel, solarActive],
   );
 
   // Шкала масштабирования: чистая прибыль/сутки в контрольных точках GPU (клампятся к слотам уровня),
@@ -193,15 +235,16 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
           gpu: g,
           btcSellPrice,
           gpuPriceRub: prices.gpuCost,
-          fuelEnabled,
+          fuelEnabled: true,
           tankPriceRub,
           tankDurationMs: tankMeta.durationMs,
           hideoutMgmtLevel: mgmtLevel,
+          solarActive,
         }).netPerDay,
       }));
     const maxAbs = Math.max(1, ...rows.map((r) => Math.abs(r.net)));
     return { rows, maxAbs };
-  }, [slots, gpu, btcSellPrice, prices.gpuCost, fuelEnabled, tankPriceRub, tankMeta, mgmtLevel]);
+  }, [slots, gpu, btcSellPrice, prices.gpuCost, tankPriceRub, tankMeta, mgmtLevel, solarActive]);
 
   const noData = prices.btcTherapist <= 0;
   const verdict = verdictOf(eco.netPerDay);
@@ -378,31 +421,28 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             (−25% на 50 уровне).
           </p>
 
-          {/* Учёт топлива — 3 ячейки single-select. */}
+          {/* Учёт топлива — Solar-тумблер + 2 канистры (single-select) с бейджем xN = слоты Генератора. */}
           <div className="mt-4">
             <RuleLabel>Учёт топлива</RuleLabel>
             <div className="mt-3 flex gap-3.5">
-              {/* Нет топлива. */}
+              {/* Тумблер Solar Power (НЕ часть single-select канистр) — ×2 длительность бака. */}
               <FuelCell
-                active={!fuelEnabled}
+                active={solarActive}
                 available
-                onClick={() => setFuelEnabled(false)}
-                title="Не учитывать топливо"
+                onClick={() => setSolarOverride(!solarActive)}
+                title={`Solar Power — удваивает время работы бака${solarActive ? ' (включено)' : ''}`}
               >
                 <span
                   aria-hidden
-                  className={`icon-mask h-6 w-6 ${!fuelEnabled ? 'bg-(--primary)' : 'bg-text-muted'}`}
-                  style={{
-                    maskImage: 'url(/icons/eft/04-progression/hideout-modules/generator.svg)',
-                    WebkitMaskImage: 'url(/icons/eft/04-progression/hideout-modules/generator.svg)',
-                  }}
+                  className={`h-6 w-6 icon-mask ${stationIconClass(SOLAR_NN)} ${
+                    solarActive ? 'bg-(--primary)' : 'bg-text-muted'
+                  }`}
                 />
               </FuelCell>
-              {/* Баки. */}
+              {/* Канистры — single-select (всегда одна выбрана). Бейдж xN = слоты Генератора. */}
               {(Object.keys(FUEL_TANKS) as FuelTankKey[]).map((k) => {
-                const price = k === 'expeditionary' ? prices.fuel.expeditionary : prices.fuel.metal;
-                const available = price > 0;
-                const active = fuelEnabled && tank === k;
+                const available = prices.fuelFunnel[k].perUnit > 0;
+                const active = tank === k;
                 return (
                   <FuelCell
                     key={k}
@@ -410,11 +450,11 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
                     available={available}
                     onClick={() => {
                       if (!available) return;
-                      setTank(k);
-                      setFuelEnabled(true);
+                      setTankOverride(k);
                     }}
-                    title={`${FUEL_TANKS[k].label}${available ? '' : ' — нет оффера в зеркале'}`}
-                    bgColor={getTarkovBackgroundColor('orange')}
+                    title={`${FUEL_TANKS[k].label}${available ? '' : ' — цена по воронке недоступна'}`}
+                    bgColor={getTarkovBackgroundColor('yellow')}
+                    badge={mounted ? `x${fuelSlots}` : undefined}
                   >
                     <img
                       src={itemIconUrl(FUEL_ITEM_ID[k])}
@@ -556,11 +596,7 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
             <Metric
               label="Топливо / сутки"
               value={eco.fuelPerDay > 0 ? `−${fmt(eco.fuelPerDay)} ₽` : '—'}
-              subtext={
-                fuelEnabled
-                  ? `${FUEL_BUY[tank].name} · навык «Управление убежищем» ${mgmtLevel}`
-                  : 'не учитывается'
-              }
+              subtext={`${FUEL_BUY[tank].name}${solarActive ? ' · Solar ×2' : ''} · УУ ${mgmtLevel}`}
               subtextClass="text-type-micro uppercase leading-tight tracking-wide"
               tone={eco.fuelPerDay > 0 ? 'cost' : 'default'}
               icon={<MaskIcon mask={IC_FUEL} className={`h-5 w-5 ${eco.fuelPerDay > 0 ? 'bg-tactical-amber' : 'bg-text-muted'}`} />}
@@ -621,24 +657,25 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
               </>
             }
           />
-          {/* Топливный бак — покупка у трейдера (только если учитываем топливо). */}
-          {fuelEnabled && tankPriceRub > 0 && (
+          {/* Топливный бак — цена по воронке (perUnit), число = слоты Генератора, источник из path. */}
+          {tankPriceRub > 0 && fuelPath && (
             <BuyCard
               iconUrl={itemIconUrl(FUEL_ITEM_ID[tank])}
               cellBg={FUEL_CELL_BG}
               slug={FUEL_BUY[tank].slug}
               name={FUEL_BUY[tank].name}
               sub="топливо"
-              total={tankPriceRub}
+              count={fuelSlots > 0 ? fuelSlots : undefined}
+              perUnit={fuelSlots > 0 ? `х${fuelSlots} по ${fmt(tankPriceRub)}` : undefined}
+              total={fuelSlots > 0 ? fuelSlots * tankPriceRub : tankPriceRub}
               source={
                 <>
-                  <img
-                    src={traderImg(FUEL_BUY[tank].trader)}
-                    alt=""
-                    loading="lazy"
-                    className="h-4 w-4 shrink-0 rounded-[0.125rem] object-cover"
+                  <span
+                    aria-hidden
+                    className="icon-mask h-4 w-4 shrink-0 bg-text-secondary"
+                    style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
                   />
-                  {FUEL_BUY[tank].traderLabel}
+                  {funnelSourceLabel(fuelPath)}
                 </>
               }
             />
@@ -679,13 +716,18 @@ function Stepper({ dir, disabled, onClick }: { dir: 'up' | 'down'; disabled: boo
   );
 }
 
-/** Ячейка учёта топлива 56×56 (EFT item-cell): рамка/бейдж по активности; недоступный — тусклый. */
+/**
+ * Ячейка учёта топлива 56×56 (EFT item-cell): рамка по активности; недоступный — тусклый.
+ * `badge` (напр. «x4») — счётчик канистр в правом-нижнем углу: амбер (bg-primary, чёрный текст)
+ * у активной, чёрный фон у неактивной. Solar-тумблер вызывается без badge (индикатор не нужен).
+ */
 function FuelCell({
   active,
   available,
   onClick,
   title,
   bgColor,
+  badge,
   children,
 }: {
   active: boolean;
@@ -693,6 +735,7 @@ function FuelCell({
   onClick: () => void;
   title: string;
   bgColor?: string;
+  badge?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -711,12 +754,14 @@ function FuelCell({
       )}
       <span aria-hidden className="pointer-events-none absolute inset-0 shadow-[inset_0_-2.33px_11.67px_5.83px_rgba(0,0,0,0.7)]" />
       {children}
-      {active && (
+      {badge !== undefined && (
         <span
           aria-hidden
-          className="absolute bottom-0 right-0 z-10 flex h-4 w-4 items-center justify-center rounded-tl-xs bg-(--primary)"
+          className={`absolute bottom-0 right-0 z-10 flex h-3 items-center justify-center rounded-br rounded-tl-xs px-1 font-blender-medium text-type-micro leading-none tabular-nums ${
+            active ? 'bg-(--primary) text-(--color-base)' : 'bg-(--color-base) text-text-primary'
+          }`}
         >
-          <Check className="h-3 w-3 text-(--color-base)" strokeWidth={3} />
+          {badge}
         </span>
       )}
     </button>
