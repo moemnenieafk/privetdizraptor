@@ -34,7 +34,9 @@ import {
   type FuelTankKey,
 } from '@/lib/bitcoin-profit';
 import type { FunnelNode } from '@/lib/acquisition-funnel';
-import type { BtcFuelInfo } from './page';
+import { BarterOfferCard } from '@/app/eft/items/item/[slug]/BarterOfferCard';
+import { CraftOfferCard } from '@/app/eft/items/item/[slug]/CraftOfferCard';
+import type { BtcFuelInfo, BestSource } from './page';
 
 export interface BtcPrices {
   btcTherapist: number;
@@ -47,6 +49,8 @@ export interface BtcPrices {
   fuelFunnel: { expeditionary: BtcFuelInfo; metal: BtcFuelInfo };
   /** Дешевейший бак по воронке — дефолт-выбор; null если оба недоступны. */
   cheapestTank: FuelTankKey | null;
+  /** «Выгодный источник» — оптимальный путь получить бак, готовый к рендеру (T05). */
+  bestSource: { expeditionary: BestSource; metal: BestSource };
 }
 
 const FARM_NN = 'bitcoin-farm';
@@ -114,10 +118,10 @@ function funnelSourceLabel(node: FunnelNode): string {
  */
 function SourceIcon({ node }: { node: FunnelNode }) {
   const title = funnelSourceLabel(node);
-  if (node.source === 'trader' && node.sourceName) {
+  if (node.source === 'trader' && node.sourceNn) {
     return (
       <img
-        src={traderImg(node.sourceName)}
+        src={traderImg(node.sourceNn)}
         alt=""
         title={title}
         loading="lazy"
@@ -290,6 +294,8 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
   // Цена бака — perUnit по воронке (T03), НЕ старая плоская buyFor. Путь — для блока «что нужно купить».
   const tankPriceRub = prices.fuelFunnel[tank].perUnit;
   const fuelPath = prices.fuelFunnel[tank].path;
+  // «Выгодный источник» выбранного бака — готовая форма для блока (T05).
+  const bestSrc = prices.bestSource[tank];
   // Доступен ли выбранный тип по воронке (perUnit>0) — для дизейбла триггера дропдауна.
   const tankAvailable = tankPriceRub > 0;
 
@@ -871,8 +877,83 @@ export function BitcoinProfitClient({ prices }: { prices: BtcPrices }) {
           </p>
         </div>
       </section>
+
+      {/* 6. Выгодный источник — оптимальный путь получить выбранный бак прямо сейчас (T05).
+          Переиспускает карточки страницы предмета: барахолка/торговец = компактная строка,
+          бартер/крафт = полноценная карточка BarterOfferCard/CraftOfferCard. */}
+      {tankPriceRub > 0 && (
+        <section className="flex flex-col gap-3.5">
+          <RuleLabel>Выгодный источник</RuleLabel>
+          <p className="font-blender-book text-type-caption leading-tight text-text-muted">
+            Самый дешёвый способ получить «{FUEL_BUY[tank].name}» прямо сейчас.
+          </p>
+          <BestSourceView source={bestSrc} />
+        </section>
+      )}
     </div>
   );
+}
+
+/**
+ * Рендер «Выгодного источника»: бартер/крафт — полными карточками страницы предмета
+ * (канистра-награда видна в ряду «Получаю», подсветка не нужна — highlightItemId красит
+ * только инпуты); торговец/барахолка — компактной строкой с источником и ценой за штуку;
+ * недоступный путь (пустое зеркало) — строкой-заглушкой.
+ */
+function BestSourceView({ source }: { source: BestSource }) {
+  switch (source.kind) {
+    case 'barter':
+      return (
+        <div className="w-full max-w-[45.25rem]">
+          <BarterOfferCard offer={source.offer} />
+        </div>
+      );
+    case 'craft':
+      return (
+        <div className="w-full max-w-[45.25rem]">
+          <CraftOfferCard recipe={source.recipe} />
+        </div>
+      );
+    case 'trader':
+      return (
+        <div className="flex w-full items-center gap-3 rounded-lg border border-lines-hover bg-card-menu p-3.5 sm:w-87">
+          <img
+            src={traderImg(source.traderNormalizedName)}
+            alt=""
+            loading="lazy"
+            className="h-9 w-9 shrink-0 rounded-[0.1875rem] object-cover"
+          />
+          <span className="min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest text-text-primary">
+            Купить у {source.traderName}
+          </span>
+          <span className="shrink-0 font-blender-medium text-xl leading-none text-text-primary tabular-nums">
+            {fmt(source.perUnit)} ₽
+          </span>
+        </div>
+      );
+    case 'flea':
+      return (
+        <div className="flex w-full items-center gap-3 rounded-lg border border-lines-hover bg-card-menu p-3.5 sm:w-87">
+          <span
+            aria-hidden
+            className="icon-mask h-9 w-9 shrink-0 bg-(--primary)"
+            style={{ maskImage: RUBLE_MASK, WebkitMaskImage: RUBLE_MASK }}
+          />
+          <span className="min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-widest text-text-primary">
+            Купить на барахолке
+          </span>
+          <span className="shrink-0 font-blender-medium text-xl leading-none text-text-primary tabular-nums">
+            {fmt(source.perUnit)} ₽
+          </span>
+        </div>
+      );
+    default:
+      return (
+        <p className="w-full rounded-lg border border-lines-hover bg-card-menu/40 p-3.5 font-blender-book text-type-caption text-text-muted sm:w-87">
+          Оптимальный источник недоступен (зеркало).
+        </p>
+      );
+  }
 }
 
 /** Метка-заголовок блока с линией (rule-micro-labels). */

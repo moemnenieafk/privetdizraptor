@@ -39,6 +39,8 @@ export interface FunnelBuy {
   flea: number | null;
   /** имя дешевейшего торговца (для листа «купить у …»). */
   traderName?: string;
+  /** normalizedName дешевейшего торговца (для аватара/тинта — traderImg ждёт его, а не display-имя). */
+  traderNormalizedName?: string;
   /** уровень лояльности дешевейшего торговца (в зеркале для buyFor обычно отсутствует). */
   traderLevel?: number;
 }
@@ -85,6 +87,8 @@ export interface FunnelNode {
   perUnit: number;
   /** имя торговца/станции для barter/craft/trader; 'Барахолка' для flea. */
   sourceName?: string;
+  /** normalizedName торговца для source==='trader' (аватар/тинт — traderImg ждёт его, не display-имя). */
+  sourceNn?: string;
   /** уровень лояльности/станции для barter/craft. */
   level?: number;
   /** id рецепта (barter/craft). */
@@ -124,6 +128,7 @@ function buyLeaf(itemId: string, graph: FunnelGraph, opts: FunnelOptions): Funne
       source: "trader",
       perUnit: traderPrice as number,
       ...(buy?.traderName ? { sourceName: buy.traderName } : {}),
+      ...(buy?.traderNormalizedName ? { sourceNn: buy.traderNormalizedName } : {}),
       ...(buy?.traderLevel != null ? { level: buy.traderLevel } : {}),
     };
   }

@@ -1,8 +1,14 @@
 import type { Metadata } from 'next';
+import { and, eq, inArray } from 'drizzle-orm';
+import { db } from '@/db';
+import { barters, crafts } from '@/db/schema';
+import { eftGameId } from '@/db/eft';
 import { getEftPriceMapFromDb } from '@/db/prices';
-import { getEftCatalog } from '@/lib/eft-catalog';
+import { getEftCatalog, type EftCatalogItem } from '@/lib/eft-catalog';
 import { getAcquisitionGraph } from '@/db/acquisition-funnel';
 import { bestAcquisitionCost, type FunnelNode } from '@/lib/acquisition-funnel';
+import { itemIconUrl } from '@/lib/item-icon';
+import type { BarterOffer, CraftRecipe } from '@/app/eft/items/item/[slug]/ItemModules';
 import { BitcoinProfitClient, type BtcPrices } from './BitcoinProfitClient';
 
 export const metadata: Metadata = { title: 'Прибыль Bitcoin | Убежище ЦТА' };
@@ -10,6 +16,20 @@ export const metadata: Metadata = { title: 'Прибыль Bitcoin | Убежи�
 // id зеркала (tarkov.dev) обоих баков — фиксированные, воронка считается по ним напрямую.
 const EXPEDITIONARY_FUEL_ID = '5d1b371186f774253763a656';
 const METAL_FUEL_ID = '5d1b36a186f7742523398433';
+
+/**
+ * Оптимальный источник получения одного бака — «Выгодный источник». Размеченный
+ * union по типу выбранного пути воронки (§глоссарий «Выгодный источник»). barter/craft
+ * несут готовую форму BarterOffer/CraftRecipe → рендерятся ТЕМИ ЖЕ карточками
+ * страницы предмета (переиспользование, а не форк). trader/flea — компактная строка.
+ * none — путь недоступен (пустое зеркало / нет пути): блок показывает заглушку.
+ */
+export type BestSource =
+  | { kind: 'barter'; offer: BarterOffer }
+  | { kind: 'craft'; recipe: CraftRecipe }
+  | { kind: 'trader'; traderName: string; traderNormalizedName: string; perUnit: number }
+  | { kind: 'flea'; perUnit: number }
+  | { kind: 'none' };
 
 /** Оптимальная добыча одного бака по воронке: цена за штуку + дерево пути. */
 export interface BtcFuelInfo {
@@ -30,6 +50,16 @@ export interface BtcPricesExtended extends BtcPrices {
   fuelFunnel: { expeditionary: BtcFuelInfo; metal: BtcFuelInfo };
   /** какой бак дешевле по perUnit воронки — дефолт-выбор клиента; null если оба недоступны. */
   cheapestTank: 'expeditionary' | 'metal' | null;
+  /** «Выгодный источник» — оптимальный путь получить бак, готовый к рендеру карточками (T05). */
+  bestSource: { expeditionary: BestSource; metal: BestSource };
+}
+
+/** Строка зеркала barters/crafts, нужная для точных normalizedName/level/duration по recipeId. */
+interface RecipeMeta {
+  traderNormalizedName?: string | null;
+  stationNormalizedName?: string | null;
+  level: number | null;
+  duration?: number | null;
 }
 
 // Статический маршрут — перекрывает hideout/[metric]. Цены ТОЛЬКО из зеркала.
@@ -88,6 +118,85 @@ async function fetchBtcPrices(): Promise<BtcPricesExtended> {
       metalFunnel.perUnit,
     );
 
+    // ── «Выгодный источник» (T05): собрать BestSource из выбранного пути воронки ──
+    // Обогащение слота — тем же приёмом, что на странице предмета: имя/short/basePrice
+    // из каталога, backgroundColor/normalizedName/marketPrice из priceMap. Иконка —
+    // itemIconUrl(id) (наш ассет, не CDN).
+    const catalogById = new Map<string, EftCatalogItem>(catalog.map((i) => [i.id, i]));
+    const slotItem = (id: string) => {
+      const c = catalogById.get(id);
+      const p = priceMap.get(id);
+      return {
+        id,
+        name: c?.name ?? id,
+        shortName: c?.shortName ?? '',
+        image512pxLink: itemIconUrl(id),
+        basePrice: c?.basePrice ?? 0,
+        backgroundColor: p?.backgroundColor,
+        normalizedName: p?.normalizedName || undefined,
+        marketPrice: p?.lastLowPrice ?? p?.avg24hPrice,
+      };
+    };
+
+    // Точные normalizedName/level/duration тянем из зеркала по recipeId выбранных путей
+    // (в FunnelNode их нет — sourceName это русское имя). Один запрос по id (только зеркало).
+    const recipeMetas = await fetchRecipeMetas(
+      [expeditionaryFunnel.path, metalFunnel.path],
+    );
+
+    const buildBestSource = (path: FunnelNode | null, canisterId: string): BestSource => {
+      if (!path) return { kind: 'none' };
+      switch (path.source) {
+        case 'trader':
+          return {
+            kind: 'trader',
+            traderName: path.sourceName ?? 'Торговец',
+            traderNormalizedName: path.sourceNn ?? '',
+            perUnit: path.perUnit,
+          };
+        case 'flea':
+          return { kind: 'flea', perUnit: path.perUnit };
+        case 'barter': {
+          const steps = path.steps ?? [];
+          const meta = path.recipeId ? recipeMetas.barters.get(path.recipeId) : undefined;
+          const offer: BarterOffer = {
+            id: path.recipeId ?? canisterId,
+            trader: {
+              name: path.sourceName ?? 'Торговец',
+              normalizedName: meta?.traderNormalizedName ?? '',
+            },
+            level: meta?.level ?? path.level ?? 1,
+            requiredItems: steps.map((s) => ({ item: slotItem(s.itemId), count: s.count })),
+            reward: { item: slotItem(canisterId), count: path.outCount ?? 1 },
+          };
+          return { kind: 'barter', offer };
+        }
+        case 'craft': {
+          const steps = path.steps ?? [];
+          const meta = path.recipeId ? recipeMetas.crafts.get(path.recipeId) : undefined;
+          const recipe: CraftRecipe = {
+            id: path.recipeId ?? canisterId,
+            station: {
+              name: path.sourceName ?? 'Станция',
+              normalizedName: meta?.stationNormalizedName ?? '',
+            },
+            level: meta?.level ?? path.level ?? 1,
+            duration: meta?.duration ?? 0,
+            requiredItems: steps.map((s) => ({ item: slotItem(s.itemId), count: s.count })),
+            reward: { item: slotItem(canisterId), count: path.outCount ?? 1 },
+          };
+          return { kind: 'craft', recipe };
+        }
+        default:
+          return { kind: 'none' };
+      }
+    };
+
+    const bestSource: BtcPricesExtended['bestSource'] = {
+      expeditionary: buildBestSource(expeditionaryFunnel.path, EXPEDITIONARY_FUEL_ID),
+      metal: buildBestSource(metalFunnel.path, METAL_FUEL_ID),
+    };
+
     return {
       btcTherapist,
       btcFlea,
@@ -96,6 +205,7 @@ async function fetchBtcPrices(): Promise<BtcPricesExtended> {
       fuel: { expeditionary: cheapestBuy(expedId), metal: cheapestBuy(metalId) },
       fuelFunnel: { expeditionary: expeditionaryFunnel, metal: metalFunnel },
       cheapestTank,
+      bestSource,
     };
   } catch (e) {
     console.error('[bitcoin-profit] зеркало недоступно:', e);
@@ -110,7 +220,69 @@ async function fetchBtcPrices(): Promise<BtcPricesExtended> {
         metal: { perUnit: 0, path: null },
       },
       cheapestTank: null,
+      bestSource: { expeditionary: { kind: 'none' }, metal: { kind: 'none' } },
     };
+  }
+}
+
+/**
+ * Собирает мету рецептов (barters/crafts) по recipeId выбранных путей воронки —
+ * точные normalizedName торговца/станции, level и duration, которых нет в FunnelNode
+ * (sourceName это русское имя). Один запрос по id к зеркалу (§4.11), без внешних вызовов.
+ * Пустой набор id / ошибка → пустые карты (BestSource деградирует к normalizedName '').
+ */
+async function fetchRecipeMetas(
+  paths: (FunnelNode | null)[],
+): Promise<{ barters: Map<string, RecipeMeta>; crafts: Map<string, RecipeMeta> }> {
+  const barterIds: string[] = [];
+  const craftIds: string[] = [];
+  for (const p of paths) {
+    if (!p?.recipeId) continue;
+    if (p.source === 'barter') barterIds.push(p.recipeId);
+    else if (p.source === 'craft') craftIds.push(p.recipeId);
+  }
+  const empty = { barters: new Map<string, RecipeMeta>(), crafts: new Map<string, RecipeMeta>() };
+  if (barterIds.length === 0 && craftIds.length === 0) return empty;
+
+  try {
+    const gameId = await eftGameId();
+    const [barterRows, craftRows] = await Promise.all([
+      barterIds.length
+        ? db
+            .select({
+              id: barters.id,
+              traderNormalizedName: barters.traderNormalizedName,
+              level: barters.level,
+            })
+            .from(barters)
+            .where(and(eq(barters.gameId, gameId), inArray(barters.id, [...new Set(barterIds)])))
+        : Promise.resolve([]),
+      craftIds.length
+        ? db
+            .select({
+              id: crafts.id,
+              stationNormalizedName: crafts.stationNormalizedName,
+              level: crafts.level,
+              duration: crafts.duration,
+            })
+            .from(crafts)
+            .where(and(eq(crafts.gameId, gameId), inArray(crafts.id, [...new Set(craftIds)])))
+        : Promise.resolve([]),
+    ]);
+    return {
+      barters: new Map(
+        barterRows.map((r) => [r.id, { traderNormalizedName: r.traderNormalizedName, level: r.level }]),
+      ),
+      crafts: new Map(
+        craftRows.map((r) => [
+          r.id,
+          { stationNormalizedName: r.stationNormalizedName, level: r.level, duration: r.duration },
+        ]),
+      ),
+    };
+  } catch (e) {
+    console.error('[bitcoin-profit] мета рецептов недоступна:', e);
+    return empty;
   }
 }
 

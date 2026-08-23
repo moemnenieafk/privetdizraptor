@@ -37,6 +37,7 @@ function buildBuyMap(
   for (const r of rows) {
     let trader: number | null = null;
     let traderName: string | undefined;
+    let traderNormalizedName: string | undefined;
     let flea: number | null = null;
     for (const o of r.buyFor ?? []) {
       const rub = offerRub(o);
@@ -46,6 +47,8 @@ function buildBuyMap(
       } else if (trader == null || rub < trader) {
         trader = rub;
         traderName = o.vendor?.name;
+        // normalizedName торговца — для аватара/тинта (traderImg ждёт его, а не display-имя).
+        traderNormalizedName = o.vendor?.normalizedName ?? undefined;
       }
     }
     // Пустой оффер-лист тоже кладём — предмет существует в прайсе (может быть листом воронки).
@@ -53,6 +56,7 @@ function buildBuyMap(
       trader,
       flea,
       ...(traderName ? { traderName } : {}),
+      ...(traderNormalizedName ? { traderNormalizedName } : {}),
     });
   }
   return map;
