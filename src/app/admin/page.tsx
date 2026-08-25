@@ -58,6 +58,11 @@ const ADMIN_LINKS: CmsLink[] = [
     title: "Предметы",
     hint: "Каталог EFT: названия, цены, категории",
   },
+  {
+    href: "/admin/billing",
+    title: "Биллинг и подписки",
+    hint: "Тиры, пэйвол на разделы и фичи, выдача подписок",
+  },
 ];
 
 function LinkCard({ href, title, hint }: CmsLink) {

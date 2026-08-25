@@ -218,19 +218,35 @@ export interface SetUserTierInput {
   source?: string;
   provider?: string;
   type?: BillingEventType;
+  /**
+   * true → продление: срок наращивается от МАХ(текущий valid_until, now())+months, а не
+   * перезаписывается. Дефолт false = старое поведение (замена срока). При months=0 режим
+   * не имеет смысла — трактуется как бессрочно (null), как и при grant.
+   */
+  extend?: boolean;
 }
 
 /**
  * Выдать/сменить тир пользователю: upsert subscriptions + запись в леджер. Валидность
- * как в текущем set-tier: months>0 → now()+interval, 0 → null. Пишет billing_events
+ * как в текущем set-tier: months>0 → now()+interval, 0 → null. При extend=true срок
+ * продлевается от текущего (greatest(coalesce(valid_until, now()), now())+months), а не
+ * заменяется — на INSERT продлять не от чего, поэтому база = now(). Пишет billing_events
  * (по умолчанию type='grant').
  */
 export async function setUserTier(input: SetUserTierInput): Promise<void> {
-  const validUntil =
-    input.months > 0
-      ? sql`now() + (${input.months} || ' months')::interval`
-      : sql`null`;
   const source = input.source ?? "manual";
+  // Срок для первичной вставки: продлять не от чего (строки ещё нет) → от now().
+  const insertValidUntil =
+    input.months > 0
+      ? sql`now() + make_interval(months => ${input.months})`
+      : sql`null`;
+  // Срок при конфликте: extend → наращиваем от max(текущий, now()); иначе замена.
+  const updateValidUntil =
+    input.months > 0
+      ? input.extend
+        ? sql`greatest(coalesce(${subscriptions.validUntil}, now()), now()) + make_interval(months => ${input.months})`
+        : sql`now() + make_interval(months => ${input.months})`
+      : sql`null`;
 
   await db
     .insert(subscriptions)
@@ -238,21 +254,21 @@ export async function setUserTier(input: SetUserTierInput): Promise<void> {
       userId: input.userId,
       tier: input.tier,
       source,
-      validUntil,
+      validUntil: insertValidUntil,
     })
     .onConflictDoUpdate({
       target: subscriptions.userId,
       set: {
         tier: input.tier,
         source,
-        validUntil,
+        validUntil: updateValidUntil,
         updatedAt: new Date(),
       },
     });
 
   await writeBillingEvent({
     userId: input.userId,
-    type: input.type ?? "grant",
+    type: input.type ?? (input.extend ? "renewal" : "grant"),
     tier: input.tier,
     provider: input.provider ?? "manual",
   });
