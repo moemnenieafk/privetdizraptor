@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { isTierId, type TierId } from '@/data/subscription-tiers';
+import type { TierId } from '@/data/subscription-tiers';
 
 // Ожидаемая схема (создать через db:sql — ручной пункт):
 //   subscriptions ( user_id uuid pk/fk -> auth.users, tier text check in
@@ -21,7 +21,8 @@ export async function fetchTier(userId: string | null): Promise<TierId> {
       .maybeSingle();
     if (error || !data) return 'free';
     const row = data as { tier?: unknown };
-    return isTierId(row.tier) ? row.tier : 'free';
+    // TierId открыт (string): возвращаем слаг как есть; ранг посчитается из снимка тиров.
+    return typeof row.tier === 'string' && row.tier.length > 0 ? row.tier : 'free';
   } catch {
     return 'free';
   }

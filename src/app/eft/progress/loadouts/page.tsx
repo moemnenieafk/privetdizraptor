@@ -1,5 +1,14 @@
 import React from 'react';
+import { notFound } from 'next/navigation';
 import { HubCard } from '@/components/ui/HubCard';
+import { requireTier, serverEntitlementsSnapshot } from '@/lib/gating/resolve';
+import { SectionPaywall } from '@/components/features/subscription/SectionPaywall';
+
+// Демо серверного энфорса раздела (R09i/R05.1). Section-ключ детерминирован из маршрута.
+// Пока раздел free (дефолт) — gate.ok=true, страница как обычно. Админ ставит тир в матрице →
+// без деплоя: hide→404 по прямой ссылке, lock→апселл вместо контента.
+// Подключить энфорс на ЛЮБОЙ RSC-раздел = эти 3 строки с его path (см. enforceLoadoutsSection).
+const SECTION_PATH = '/eft/progress/loadouts';
 
 // Данные для карточек навигации раздела "Сборки оружия"
 const LOADOUTS_HUB_CARDS = [
@@ -29,7 +38,15 @@ const LOADOUTS_HUB_CARDS = [
   },
 ];
 
-export default function LoadoutsHubPage() {
+export default async function LoadoutsHubPage() {
+  // Серверный гейт раздела: не обойти прямым запросом (R09i). hide→notFound, lock→апселл.
+  const gate = await requireTier(`sec:eft:${SECTION_PATH}`, { game: 'eft' });
+  if (!gate.ok) {
+    if (gate.behavior === 'hide') notFound();
+    const { tiers } = await serverEntitlementsSnapshot('eft');
+    return <SectionPaywall need={gate.need} needTier={tiers.find((t) => t.slug === gate.need)} />;
+  }
+
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
       <div className="w-full max-w-275 px-4 xl:px-0">

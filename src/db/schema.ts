@@ -4,6 +4,7 @@ import {
   text,
   integer,
   bigint,
+  numeric,
   real,
   boolean,
   jsonb,
@@ -1300,11 +1301,81 @@ export const subscriptions = pgTable("subscriptions", {
   userId: uuid("user_id")
     .primaryKey()
     .references(() => profiles.id, { onDelete: "cascade" }),
-  tier: text("tier").notNull().default("free"), // 'free' | 'operative' | 'veteran' (см. TierId)
+  tier: text("tier").notNull().default("free"), // slug из public.tiers (CHECK снят — тиры динамические)
   validUntil: timestamp("valid_until", { withTimezone: true }),
   source: text("source").notNull().default("manual"),
+  // Задел per-game (billing-subscription-mgmt): игровая подписка применима только к своей
+  // игре, портальная (null) — везде. На запуске всегда null. Additive через migrate-billing.
+  scopeGameId: uuid("scope_game_id").references(() => games.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type SubscriptionRow = typeof subscriptions.$inferSelect;
+export type NewSubscriptionRow = typeof subscriptions.$inferInsert;
+
+/* ─────────────────────── tiers / feature_gates / billing_events (биллинг) ───────────────────────
+ * Динамические уровни подписки + маппинг «фича/раздел → мин.тир» + леджер начислений.
+ * Схема-канон — DDL-модули src/db/{tiers,feature-gates,billing-events}-ddl.ts (накат
+ * роутом /api/cron/migrate-billing). Здесь — Drizzle-объекты, чтобы src/db/billing.ts
+ * писал owner-клиентом. RLS: tiers публичны на чтение, feature_gates — authenticated,
+ * billing_events — own-строки; запись везде owner-роль. См. spec billing-subscription-mgmt. */
+
+// Уровни подписки. rank — лестница доступа (доступ = rank(userTier) >= rank(gateTier)).
+// game_id null = портальный тир (применим ко всему порталу). free защищён логикой
+// (src/lib/gating/tiers.ts): нельзя archived/удалить/price>0/rank≠0.
+export const tiers = pgTable("tiers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  price: integer("price").notNull().default(0), // ₽/мес
+  rank: integer("rank").notNull().default(0),
+  gameId: uuid("game_id").references(() => games.id, { onDelete: "cascade" }),
+  archived: boolean("archived").notNull().default(false),
+  perks: jsonb("perks").$type<string[]>(), // буллеты витрины
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Оверрайд дефолтов гейта из GATE_REGISTRY. Отсутствие строки → дефолт из реестра.
+// behavior: 'lock' (апселл) | 'hide' (спрятать) | 'teaser' (CHECK в DDL).
+export const featureGates = pgTable("feature_gates", {
+  featureKey: text("feature_key").primaryKey(),
+  minTier: text("min_tier").notNull().default("free"), // ссылка на tiers.slug (без FK — slug может переименоваться)
+  behavior: text("behavior").notNull().default("lock"),
+  enabled: boolean("enabled").notNull().default(true),
+  updatedBy: uuid("updated_by").references(() => profiles.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Леджер начислений/платежей (аудит + идемпотентность вебхука). type: 'grant' |
+// 'payment' | 'refund' | 'renewal' | 'downgrade'. unique(provider, external_id) частичный.
+export const billingEvents = pgTable(
+  "billing_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    provider: text("provider").notNull().default("manual"),
+    externalId: text("external_id"),
+    type: text("type").notNull(),
+    tier: text("tier"),
+    amount: numeric("amount"),
+    currency: text("currency").notNull().default("RUB"),
+    status: text("status"),
+    raw: jsonb("raw").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("billing_events_provider_ext").on(t.provider, t.externalId),
+    index("billing_events_user_idx").on(t.userId, t.createdAt),
+  ],
+);
+
+export type TierRow = typeof tiers.$inferSelect;
+export type NewTierRow = typeof tiers.$inferInsert;
+export type FeatureGateRow = typeof featureGates.$inferSelect;
+export type NewFeatureGateRow = typeof featureGates.$inferInsert;
+export type BillingEventRow = typeof billingEvents.$inferSelect;
+export type NewBillingEventRow = typeof billingEvents.$inferInsert;

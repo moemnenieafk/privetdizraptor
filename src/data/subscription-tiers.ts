@@ -3,10 +3,17 @@
 // docs/decisions/monetization-subscriptions.md. Track-1 (трекер позиции) НЕ гейтим:
 // у конкурентов он бесплатный (паритет) — см. deep-research-subscription-monetization.
 
-export type TierId = 'free' | 'operative' | 'veteran';
+// Тир — открытый slug (string): динамические тиры живут в БД (таблица tiers). Базовые
+// три (free/operative/veteran) остаются дефолтом/сидом и fail-safe-лестницей на случай
+// пустой БД. Рантайм-ранг считается через чистые функции src/lib/gating/tiers.ts из
+// снимка tiers; хелперы ниже (tierMeets/requiredTier/buildLimit) — fallback по дефолту.
+export type TierId = string;
+
+/** Базовые слаги, зашитые в код (сид + fallback-лестница). */
+export type BaseTierId = 'free' | 'operative' | 'veteran';
 
 export interface Tier {
-  id: TierId;
+  id: BaseTierId;
   /** Отображаемое имя. */
   name: string;
   /** ₽/мес (0 для free). Предварительно, на утв. */
@@ -15,13 +22,13 @@ export interface Tier {
   rank: number;
 }
 
-export const TIERS: Record<TierId, Tier> = {
+export const TIERS: Record<BaseTierId, Tier> = {
   free: { id: 'free', name: 'Боец', price: 0, rank: 0 },
   operative: { id: 'operative', name: 'Оперативник', price: 199, rank: 1 },
   veteran: { id: 'veteran', name: 'Ветеран', price: 449, rank: 2 },
 };
 
-export const TIER_ORDER: TierId[] = ['free', 'operative', 'veteran'];
+export const TIER_ORDER: BaseTierId[] = ['free', 'operative', 'veteran'];
 
 /** Гейтируемые фичи (уточнённый список от Димы + T2-аналитика). */
 export type GatedFeature =
@@ -36,7 +43,7 @@ export type GatedFeature =
   | 'role_insights'
   | 'game_changes';
 
-export const FEATURE_MIN_TIER: Record<GatedFeature, TierId> = {
+export const FEATURE_MIN_TIER: Record<GatedFeature, BaseTierId> = {
   favorites: 'operative',
   flea_price_sync: 'operative',
   trader_vs_flea: 'operative',
@@ -49,21 +56,37 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, TierId> = {
   game_changes: 'operative',
 };
 
+/**
+ * Fallback-ранг слага по дефолтной лестнице TIERS. Незнакомый slug (динамический тир,
+ * которого нет в базовом сиде) → 0 (free-эквивалент, fail-safe). Основной путь ранга —
+ * рантайм через src/lib/gating/tiers.ts из БД-снимка; это только на случай пустой карты.
+ */
 export function tierRank(id: TierId): number {
-  return TIERS[id].rank;
+  const base = TIERS[id as BaseTierId];
+  return base ? base.rank : 0;
 }
 
-/** Достаточно ли тира `have` для доступа к `need`. */
+/** Достаточно ли тира `have` для доступа к `need` (fallback по дефолтной лестнице). */
 export function tierMeets(have: TierId, need: TierId): boolean {
   return tierRank(have) >= tierRank(need);
 }
 
-/** Мин. тир, нужный для фичи. */
-export function requiredTier(feature: GatedFeature): TierId {
+/**
+ * Мета дефолтного тира по слагу (для показа имени/цены в UI). Незнакомый slug
+ * (динамический тир, которого нет в базовом сиде) → free (fail-safe). Безопасная
+ * замена прямой индексации `TIERS[slug]` открытым TierId.
+ */
+export function tierMeta(slug: TierId): Tier {
+  return TIERS[slug as BaseTierId] ?? TIERS.free;
+}
+
+/** Мин. тир, нужный для фичи (дефолт реестра; БД-оверрайд — через gate-карту). */
+export function requiredTier(feature: GatedFeature): BaseTierId {
   return FEATURE_MIN_TIER[feature];
 }
 
-export function isTierId(v: unknown): v is TierId {
+/** Является ли значение одним из БАЗОВЫХ слагов (сид). Открытые slug'и не проверяет. */
+export function isTierId(v: unknown): v is BaseTierId {
   return typeof v === 'string' && v in TIERS;
 }
 
@@ -74,12 +97,19 @@ export function isTierId(v: unknown): v is TierId {
  * и в облаке. Прецедент: TarkovBOT гейтит ровно число пресетов (200 у Patreon).
  * Серверная проверка дублируется в POST /api/eft/builds — клиентский лимит это UX.
  */
-export const BUILD_LIMITS: Record<TierId, number> = {
+export const BUILD_LIMITS: Record<BaseTierId, number> = {
   free: 3,
   operative: Number.POSITIVE_INFINITY,
   veteran: Number.POSITIVE_INFINITY,
 };
 
+/**
+ * Лимит сборок по слагу. Базовые тиры — из BUILD_LIMITS; любой платный тир (rank>0,
+ * динамический) — без лимита; незнакомый/free-эквивалент → безопасный дефолт free (3).
+ */
 export function buildLimit(tier: TierId): number {
-  return BUILD_LIMITS[tier];
+  const known = BUILD_LIMITS[tier as BaseTierId];
+  if (known !== undefined) return known;
+  // Динамический платный тир (rank>0) → без лимита; иначе fallback на free.
+  return tierRank(tier) > 0 ? Number.POSITIVE_INFINITY : BUILD_LIMITS.free;
 }

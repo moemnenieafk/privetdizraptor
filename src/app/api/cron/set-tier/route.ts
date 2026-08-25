@@ -1,18 +1,32 @@
-// Ручная выдача тира подписки без SQL Editor (телефон/отпуск) — до подключения
-// биллинга. Паттерн set-role: GET за CRON_SECRET, дёргается из GitHub Actions
-// (workflow «set-tier»). Матч пользователя по profiles.username (регистр не важен).
+// Ручная выдача тира подписки без SQL Editor (телефон/отпуск). Паттерн set-role:
+// GET за CRON_SECRET, дёргается из GitHub Actions (workflow «set-tier»). Матч
+// пользователя по profiles.username (регистр не важен).
 //
-// Временный инструмент: когда появится вебхук платёжки, тир будет писаться им;
+// Пишет и подписку, и леджер (billing_events type='grant') через setUserTier —
+// единая точка выдачи тира. Валидация тира — по таблице tiers (тиры динамические),
+// с деградацией на дефолтные слаги, если таблица пуста (fail-safe).
+//
+// Временный инструмент: когда вебхук платёжки заработает, тир будет писаться им;
 // этот роут остаётся для бета-тестеров/ручной компенсации.
 import { NextResponse } from "next/server";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "@/db";
-import { profiles, subscriptions } from "@/db/schema";
-import { isTierId } from "@/data/subscription-tiers";
+import { profiles } from "@/db/schema";
+import { getTiersFromDb, setUserTier } from "@/db/billing";
 import { revalidateProfileByUsername } from "@/lib/revalidate-profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** Дефолтные слаги на случай пустой/недоступной таблицы tiers (fail-safe). */
+const DEFAULT_TIER_SLUGS = ["free", "operative", "veteran"] as const;
+
+/** Разрешённые слаги тиров: из БД, иначе дефолтные. */
+async function allowedTierSlugs(): Promise<string[]> {
+  const rows = await getTiersFromDb();
+  const fromDb = rows.map((r) => r.slug);
+  return fromDb.length > 0 ? fromDb : [...DEFAULT_TIER_SLUGS];
+}
 
 export async function GET(req: Request): Promise<NextResponse> {
   const secret = process.env.CRON_SECRET;
@@ -29,12 +43,15 @@ export async function GET(req: Request): Promise<NextResponse> {
   if (!username) {
     return NextResponse.json({ error: "username required" }, { status: 400 });
   }
-  if (!isTierId(tier)) {
+
+  const allowed = await allowedTierSlugs();
+  if (!allowed.includes(tier)) {
     return NextResponse.json(
-      { error: "tier must be one of: free, operative, veteran" },
+      { error: `tier must be one of: ${allowed.join(", ")}` },
       { status: 400 },
     );
   }
+
   const months = Number.parseInt(monthsRaw, 10);
   if (!Number.isFinite(months) || months < 0 || months > 120) {
     return NextResponse.json({ error: "months must be 0..120 (0 = бессрочно)" }, { status: 400 });
@@ -52,30 +69,15 @@ export async function GET(req: Request): Promise<NextResponse> {
       return NextResponse.json({ ok: false, reason: "user not found", username }, { status: 404 });
     }
 
-    // months>0 → срок от текущего момента; 0 → бессрочно (null).
-    const validUntil =
-      months > 0 ? sql`now() + make_interval(months => ${months})` : sql`null`;
-
-    const [row] = await db
-      .insert(subscriptions)
-      .values({ userId: user.id, tier, source, validUntil })
-      .onConflictDoUpdate({
-        target: subscriptions.userId,
-        set: { tier, source, validUntil, updatedAt: sql`now()` },
-      })
-      .returning({
-        userId: subscriptions.userId,
-        tier: subscriptions.tier,
-        validUntil: subscriptions.validUntil,
-        source: subscriptions.source,
-      });
+    // upsert subscriptions + запись billing_events (type='grant') — атомарно в примитиве.
+    await setUserTier({ userId: user.id, tier, months, source });
 
     revalidateProfileByUsername(user.username);
 
     return NextResponse.json({
       ok: true,
       user: { id: user.id, username: user.username },
-      subscription: row,
+      subscription: { tier, months, source },
       at: new Date().toISOString(),
     });
   } catch (e) {

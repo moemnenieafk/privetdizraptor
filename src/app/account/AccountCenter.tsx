@@ -15,7 +15,7 @@ import type { HideoutNeed, HideoutStationInfo } from '@/db/hideout';
 import { PROGRESS_KEYS } from '@/lib/progress-storage';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 import { TrackingPanel } from './TrackingPanel';
-import { TIERS, type TierId } from '@/data/subscription-tiers';
+import { tierMeta, type TierId } from '@/data/subscription-tiers';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // зеркалит серверный EMAIL_RE
@@ -818,7 +818,7 @@ function GameResetCard({ game }: { game: (typeof GAMES)[number] }) {
 
 function ProfilePanel({ onNavigate, me, stats, tier }: { onNavigate: (v: ViewId) => void; me: Me; stats: AccountStats; tier: TierId }) {
   const isPro = tier !== 'free';
-  const tierName = TIERS[tier].name;
+  const tierName = tierMeta(tier).name;
 
   return (
     <div className="flex flex-col gap-4">
@@ -1034,7 +1034,7 @@ function ProStatusPanel({
   onNavigate: (v: ViewId) => void;
 }) {
   const isPro = tier !== 'free';
-  const tierName = TIERS[tier].name;
+  const tierName = tierMeta(tier).name;
   const until = validUntil ? new Date(validUntil).toLocaleDateString('ru-RU') : null;
 
   if (!isPro) {
