@@ -269,6 +269,7 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
       rooms: 'Меченые комнаты',
       gunsmith: 'Оружейник',
       map: 'Карта',
+      'raid-scan': 'Разбор рейда',
     },
     // Контекстные лейблы по полному пути (приоритет над breadcrumbNames).
     // Уроки «Путь Новобранца» — слаги, которые могут значить иное в других ветках (напр. secure).
@@ -673,6 +674,22 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           { id: 'cl-masterclasses', label: 'Мастер-классы', description: 'Разборы, обучающие сессии и гайды от профи.', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/07-comlink/masterclasses.svg' },
           { id: 'cl-blog', label: 'Новостной блог', description: 'Новости проекта ЦТА, статьи и объявления.', path: '/eft/comlink/blog', iconUrl: '/icons/eft/07-comlink/blog.svg' }
         ]
+      },
+      // ВЕТКА: ИНСТРУМЕНТЫ — утилиты поверх зеркала (разбор рейда по скриншоту и т.п.).
+      {
+        id: 'tools',
+        label: 'Инструменты',
+        path: '/eft/tools',
+        iconUrl: '/icons/eft/raid-scan-icon.svg',
+        children: [
+          {
+            id: 't-raid-scan',
+            label: 'Разбор рейда',
+            description: 'Загрузи скриншот инвентаря — распознаем предметы поверх сетки и покажем цены.',
+            path: '/eft/tools/raid-scan',
+            iconUrl: '/icons/eft/raid-scan-icon.svg',
+          },
+        ],
       },
     ],
     currencySymbol: '₽',
