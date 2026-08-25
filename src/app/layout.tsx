@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { ViewTransition } from "react";
+import { Suspense, ViewTransition } from "react";
 import "./globals.css";
+import { GatingBoundary } from "@/components/features/subscription/GatingBoundary";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ProgressSync } from "@/components/providers/ProgressSync";
 import { AchievementSync } from "@/components/providers/AchievementSync";
@@ -91,7 +92,11 @@ export default function RootLayout({
             <RoleAutoWire />
             <FeedbackProvider>
               <ConditionalLayout>
-                <ViewTransition>{children}</ViewTransition>
+                <Suspense fallback={<ViewTransition>{children}</ViewTransition>}>
+                  <GatingBoundary>
+                    <ViewTransition>{children}</ViewTransition>
+                  </GatingBoundary>
+                </Suspense>
               </ConditionalLayout>
             </FeedbackProvider>
             <ScrollToTop />

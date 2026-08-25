@@ -32,7 +32,7 @@ import {
   RollUpCounter,
   usePlayerStandingSignals,
 } from '@/components/features/profile';
-import { TIERS } from '@/data/subscription-tiers';
+import { tierMeta, isTierId } from '@/data/subscription-tiers';
 import { useGamificationStore } from '@/store/useGamificationStore';
 import { useXpStore } from '@/store/useXpStore';
 import { subTrackLevel } from '@/lib/xp';
@@ -236,7 +236,8 @@ export function AdaptiveHubClient(props: HubServerProps = {
   // Сигналы standing (карма — с сервера, иначе вклад 0). Хук читает существующие сторы.
   const signals = usePlayerStandingSignals({ karmaComlink, karmaCompanion });
   const standing = computeStanding(signals);
-  const unlocks = dossierUnlocks(standing, tier);
+  // dossierUnlocks ждёт базовый AccessTier; незнакомый динамический slug → free (fail-safe).
+  const unlocks = dossierUnlocks(standing, isTierId(tier) ? tier : 'free');
 
   if (!hydrated) {
     // Скелетон показывает форму будущего досье (§8) + скан-тик поверх пульса (критерий приёмки).
@@ -485,7 +486,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="text-sm font-blender-medium uppercase tracking-widest text-(--primary)">
-                {TIERS[tier].name}
+                {tierMeta(tier).name}
               </span>
               {isPro && (
                 <span

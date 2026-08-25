@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { isTierId, type TierId } from '@/data/subscription-tiers';
+import { type TierId } from '@/data/subscription-tiers';
 
 export interface SubscriptionInfo {
   tier: TierId;
@@ -26,7 +26,10 @@ export async function getSubscription(userId: string | null): Promise<Subscripti
     const row = data as { tier?: unknown; valid_until?: unknown };
     const validUntil = typeof row.valid_until === 'string' ? row.valid_until : null;
     const expired = validUntil !== null && new Date(validUntil).getTime() < Date.now();
-    const tier = !expired && isTierId(row.tier) ? row.tier : 'free';
+    // Пропускаем ЛЮБОЙ непустой строковый slug (динамические, админ-созданные тиры тоже):
+    // ранг посчитает снимок tiers. Сужение до базовых трёх занижало платника до free.
+    const slug = typeof row.tier === 'string' ? row.tier.trim() : '';
+    const tier: TierId = !expired && slug !== '' ? slug : 'free';
     return { tier, validUntil };
   } catch {
     return { tier: 'free', validUntil: null };
