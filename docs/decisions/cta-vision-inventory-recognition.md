@@ -68,6 +68,22 @@ AS13335 → Google принимает локацию (проверено жив�
 3. `/eft/tools` без индекс-страницы (не требование; при желании — хаб-карточки).
 4. Пуш в main и live-verify — за V4DYA (ветка готова, tsc зелёный).
 
+## Дополнение: генерация картинок Nano Banana + Open WebUI (по запросу V4DYA)
+
+После основной фичи — два пути доступа к Gemini image («Nano Banana»):
+
+- **Path A — эндпоинт в CTA** (`e232d1bc`): `POST /api/ai/image` (+ `src/lib/ai/gemini-image.ts`),
+  auth-гейт + rate-limit, через Worker-прокси. Подтверждённая модель — **`gemini-3-pro-image`**
+  (Nano Banana Pro; `gemini-2.5-flash-image` тоже валиден). Живой вызов = 429 prepay (инфра ок).
+- **Worker расширен** (`afbd94da`): проксирует ещё и OpenAI-совместимый путь `/v1beta/openai/*`
+  (Bearer-auth) — для Open WebUI. Живой тест `/v1beta/openai/models` = HTTP 200.
+- **Path B — Open WebUI на VPS**: `https://ai.cta.quest` (DNS proxied → VPS; TLS через wildcard
+  origin-cert `*.cta.quest`; за Coolify-Traefik, живые сервисы не тронуты). Контейнер `open-webui`,
+  настроен на Worker-прокси + Gemini-ключ. Авторизация: первый регистрант = админ, остальные `pending`.
+  Чат и `images/generations` проксируются (429 = только биллинг). **Инфра НЕ в git** (docker на VPS).
+
+Обе фичи (портальный эндпоинт и веб-чат) оживают после пополнения prepay-баланса Gemini.
+
 ## Гочи на будущее
 - Timeweb-IP «грязный» для Google-геолокации несмотря на физический Амстердам → Worker обязателен.
 - `gemini.ts` дефолт-модель держать в env, Google ротирует линейку (2.5→3.6).
