@@ -1,6 +1,8 @@
 'use client';
 import { usePathname } from 'next/navigation';
-import { getSectionHubNav } from '@/lib/section-hub-nav';
+import { getSectionHubNav, type SectionHubNavTab } from '@/lib/section-hub-nav';
+import { useEntitlements } from '@/components/features/subscription/GatingProvider';
+import { visibleForGate } from '@/lib/gating/nav-visibility';
 import { SectionNavTab } from './SectionNavTab';
 
 const MASK_BASE = {
@@ -50,9 +52,20 @@ export function SectionHubNav({
   className,
 }: SectionHubNavProps) {
   const pathname = usePathname();
+  const snapshot = useEntitlements();
   if (pathname === rootPath) return null;
 
-  const { sections, sub } = getSectionHubNav(rootPath, pathname);
+  const raw = getSectionHubNav(rootPath, pathname);
+  // Гейт-фильтр: 'hide'+нет доступа → пункт выпадает; 'lock' → остаётся, но с бейджем-замком
+  // (SectionNavTab сам его рисует по tab.locked); 'show' → как обычно. Всё free → без изменений.
+  const gateTabs = (tabs: SectionHubNavTab[]): SectionHubNavTab[] =>
+    tabs
+      .map((tab) => ({ tab, verdict: visibleForGate({ path: tab.href, gateKey: tab.gateKey }, snapshot) }))
+      .filter(({ verdict }) => verdict !== 'hide')
+      .map(({ tab, verdict }) => (verdict === 'lock' ? { ...tab, locked: true } : tab));
+
+  const sections = gateTabs(raw.sections);
+  const sub = raw.sub ? { ...raw.sub, tabs: gateTabs(raw.sub.tabs) } : null;
   if (sections.length === 0) return null;
 
   if (variant === 'full') {

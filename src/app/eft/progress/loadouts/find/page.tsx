@@ -1,6 +1,9 @@
+import { notFound } from 'next/navigation';
 import { getGunsmithList } from '@/db/gunsmith-list';
 import { getPresetList } from '@/db/preset-list';
 import { FindLoadoutsClient } from '@/components/features/loadouts/FindLoadoutsClient';
+import { requireTier, serverEntitlementsSnapshot } from '@/lib/gating/resolve';
+import { SectionPaywall } from '@/components/features/subscription/SectionPaywall';
 
 // Каталог сборок. Четыре источника, четыре вкладки:
 //   Оружейник  — 30 квестовых спек с порогами (наш козырь: конкуренты дают либо
@@ -12,10 +15,20 @@ import { FindLoadoutsClient } from '@/components/features/loadouts/FindLoadoutsC
 //
 // Данные тянет сервер и отдаёт клиенту целиком: 30 + 463 записи это меньше 100 КБ,
 // а взамен получаем мгновенные фильтры и поиск без единого запроса.
-
-export const revalidate = 86400; // сутки: меняется только синком
+//
+// revalidate НЕ ставим: серверный гейт раздела (requireTier) читает cookies/сессию →
+// ответ user-специфичен, статический revalidate вводил бы в заблуждение (кэша ответа нет).
+// Данные раздела (gunsmith/preset) сами кешируются в своём слое (getGunsmithList/getPresetList).
 
 export default async function FindLoadoutsPage() {
+  // Серверный гейт раздела (демо, R09i). Пока free — ok=true, ниже обычный контент.
+  const gate = await requireTier('sec:eft:/eft/progress/loadouts/find', { game: 'eft' });
+  if (!gate.ok) {
+    if (gate.behavior === 'hide') notFound();
+    const { tiers } = await serverEntitlementsSnapshot('eft');
+    return <SectionPaywall need={gate.need} needTier={tiers.find((t) => t.slug === gate.need)} />;
+  }
+
   const [gunsmith, presets] = await Promise.all([getGunsmithList(), getPresetList()]);
 
   return (

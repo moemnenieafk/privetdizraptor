@@ -10,6 +10,13 @@ export interface MenuItem {
   iconUrlUsec?: string;
   iconClass?: string;
   coloredIcon?: boolean;
+  /**
+   * Явное переопределение gate-ключа раздела. По умолчанию НЕ заполняется: если у узла
+   * есть `path`, его section-ключ детерминирован как `sec:<game>:<path>` и вычисляется
+   * на лету (см. sectionKeyOf/sectionGatesFromHeader). Указывать только для нестандартных
+   * ключей (напр. привязка узла к чужому разделу/фиче).
+   */
+  gateKey?: string;
   children?: MenuItem[];
   subItems?: MenuItem[];
 }

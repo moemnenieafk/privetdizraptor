@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Lock } from 'lucide-react';
 import type { SectionHubNavTab } from '@/lib/section-hub-nav';
 
 const MASK_BASE = {
@@ -30,6 +31,7 @@ export function SectionNavTab({ tab, activeHref }: SectionNavTabProps) {
   const isRaster = /\.(webp|png|jpe?g)$/i.test(tab.iconUrl ?? '');
 
   return (
+    <div className="relative">
     <Link
       href={tab.href}
       title={tab.menuTitle ?? tab.label}
@@ -54,5 +56,16 @@ export function SectionNavTab({ tab, activeHref }: SectionNavTabProps) {
         />
       )}
     </Link>
+      {tab.locked && (
+        // Раздел за пэйволом: малый бейдж-замок в углу, но пункт остаётся кликабельным
+        // (страница сама покажет апселл). NIGHTFALL-токены, без литерального hex.
+        <span
+          aria-hidden="true"
+          className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-card-menu border border-lines-hover"
+        >
+          <Lock className="h-2 w-2 text-(--primary)" />
+        </span>
+      )}
+    </div>
   );
 }

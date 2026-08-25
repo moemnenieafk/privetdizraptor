@@ -7,6 +7,10 @@ export interface SectionHubNavTab {
   menuTitle?: string;
   href: string;
   iconUrl?: string;
+  /** Явное переопределение gate-ключа раздела (иначе выводится из href). */
+  gateKey?: string;
+  /** Проставляется навигацией: раздел за пэйволом (behavior='lock', нет доступа) → бейдж-замок. */
+  locked?: boolean;
 }
 
 export interface SectionHubNavData {
@@ -21,6 +25,7 @@ function toTabs(items: MenuItem[] | undefined): SectionHubNavTab[] {
     menuTitle: c.menuTitle,
     href: c.path || '#',
     iconUrl: c.iconUrl || '',
+    gateKey: c.gateKey,
   }));
 }
 
