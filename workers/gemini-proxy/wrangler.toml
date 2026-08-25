@@ -1,0 +1,6 @@
+name = "gemini-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-08-25"
+
+# account_id is supplied via the CLOUDFLARE_ACCOUNT_ID env var at deploy time.
+# No secrets live in this file — the Gemini API key is passed per-request by the caller.
