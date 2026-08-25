@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { SectionHubNav } from '@/components/features/navigation/SectionHubNav';
 import { getEftPriceMapFromDb } from '@/db/prices';
 import { RaidScanClient } from '@/components/features/raid-scan/RaidScanClient';
 import type { RaidScanPriceMap } from '@/components/features/raid-scan/raid-scan-prices';
@@ -30,14 +29,6 @@ export default async function RaidScanPage() {
 
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">
-      <SectionHubNav
-        rootPath="/eft/tools"
-        variant="full"
-        title="Разбор рейда"
-        description="Загрузи скриншот инвентаря — распознаем предметы поверх сетки и покажем цены."
-        iconUrl="/icons/eft/raid-scan-icon.svg"
-        className="mb-7"
-      />
       <div className="w-full max-w-275 px-4 xl:px-0">
         <RaidScanClient prices={prices} />
       </div>
