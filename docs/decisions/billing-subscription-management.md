@@ -1,5 +1,5 @@
 ---
-status: 🟡 построено (ветка feat/billing-subscription-mgmt) + БД накатана на прод (migrate-all+db:sql+audit-rls, 2026-08-25); ждёт live-verify + merge в main
+status: ✅ в main (merge 1ad928d8, 2026-08-25) + БД накатана на прод (migrate-all+db:sql+audit-rls, RLS 66/66); ждёт live-verify после деплоя + провайдер оплаты (Дима)
 affects: monetization, billing, db, account, admin, gating
 date: 2026-08-25
 parent: [[monetization-subscriptions]]
@@ -33,7 +33,10 @@ build: autopilot (полный автомат), .autopilot/billing-subscription-
 - **Админка:** `/admin/billing` (гард getAdmin) — матрица гейтов (тир+behavior+enabled, оптимистик, invalidateGating), редактор тиров (CRUD, free защищён), подписки юзеров (grant/extend/revoke по username), леджер (read-only). Роуты `/api/admin/{gates,tiers,subscriptions}`. Ссылка в `/admin` под `canManageCatalog`.
 
 ## Что осталось V4DYA
-1. ✅ **Накат схемы — СДЕЛАНО** (2026-08-25, аддитивно без db:push --force): `db:migrate-all` (таблицы+сид тиров free/operative/veteran+альтер subscriptions) → `db:sql` (RLS) → `db:audit-rls` (66/66 таблиц с RLS). Проверено на проде: тиры засеяны, scope_game_id есть, CHECK снят.
+1. ✅ **Накат схемы — СДЕЛАНО на ОБЕИХ базах** (2026-08-25, аддитивно, без db:push --force):
+   - **Хостед-Supabase (Vercel-резерв, `.env.local`)**: `db:migrate-all`(209 ok)→`db:sql`→`db:audit-rls`(66/66 RLS). Тиры засеяны, scope_game_id, CHECK снят. ✓
+   - **⚠️ Self-hosted Supabase (ЖИВОЙ `cta.quest`, `201.51.20.217:5432`)**: `.env.local` указывает на ХОСТЕД, не на self-hosted → пришлось катить отдельно (гоча (е) хостинг-дока «схему менять на self-hosted»). Наши 3 таблицы+RLS+сид тиров создались ролью `postgres` (owner), но **альтер `subscriptions` (owner=`supabase_admin`) требует суперюзера** — `postgres` не owner/не super, 155 ALTER на чужих таблицах упали (безвредно — RLS уже из дампа). Два нужных ALTER (`drop constraint subscriptions_tier_chk`, `add scope_game_id`) добиты ролью **`supabase_admin`** (суперюзер, пароль = тот же POSTGRES). Итог self-hosted: 3 таблицы RLS+политики ✓, тиры засеяны ✓, subscriptions доработана ✓.
+   - **УРОК:** любые правки схемы для `cta.quest` — на self-hosted (`201.51.20.217:5432`); ALTER чужих (supabase_admin-owned: profiles/subscriptions/…) таблиц — только ролью `supabase_admin`, `db:sql`/`db:migrate-all` из-под `postgres` их не осилят.
 2. **Live-verify:** задеплоить ветку (или смёржить) → `/admin/billing` под admin, матрица меняет тир → `<Paywall>` реагирует без деплоя; прямой запрос к гейтнутому API без тира → 403; вебхук-заглушка на неизвестный провайдер → 501.
 3. **Merge в main** ветки `feat/billing-subscription-mgmt` (Vercel задеплоит прод).
 4. **Платёжный провайдер** (Дима): один адаптер в `ADAPTERS` (ЮKassa/Prodamus/…), ключи в `.env`. Роут+леджер готовы.
