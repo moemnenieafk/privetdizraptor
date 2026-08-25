@@ -3,14 +3,54 @@
 // Резолвит username→profiles.id, пишет через setUserTier (леджер type='grant') и
 // ревалидирует публичный профиль /u/[username] (тир там виден).
 import { NextResponse } from "next/server";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { profiles } from "@/db/schema";
+import { profiles, subscriptions } from "@/db/schema";
 import { getAdmin } from "@/lib/auth/admin";
 import { setUserTier, getTiersFromDb } from "@/db/billing";
 import { revalidateProfileByUsername } from "@/lib/revalidate-profile";
 
 export const runtime = "nodejs";
+
+// GET /api/admin/subscriptions?username=<login> — текущий тир/срок юзера для панели
+// админки (показать состояние до действия). Резолв username→profiles.id регистронезависимо
+// (как в POST). Нет строки subscriptions → free/бессрочно. Юзер не найден → { found:false }.
+export async function GET(req: Request): Promise<NextResponse> {
+  const admin = await getAdmin();
+  if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+
+  const username = new URL(req.url).searchParams.get("username")?.trim() ?? "";
+  if (!username) return NextResponse.json({ error: "bad payload" }, { status: 422 });
+
+  const [user] = await db
+    .select({ id: profiles.id, username: profiles.username })
+    .from(profiles)
+    .where(sql`lower(${profiles.username}) = lower(${username})`)
+    .limit(1);
+  if (!user) return NextResponse.json({ found: false });
+
+  const [sub] = await db
+    .select({
+      tier: subscriptions.tier,
+      validUntil: subscriptions.validUntil,
+      source: subscriptions.source,
+    })
+    .from(subscriptions)
+    .where(eq(subscriptions.userId, user.id))
+    .limit(1);
+
+  return NextResponse.json({
+    found: true,
+    user: { id: user.id, username: user.username },
+    subscription: sub
+      ? {
+          tier: sub.tier,
+          validUntil: sub.validUntil ? sub.validUntil.toISOString() : null,
+          source: sub.source,
+        }
+      : { tier: "free", validUntil: null, source: "manual" },
+  });
+}
 
 const ACTIONS = ["grant", "extend", "revoke"] as const;
 type Action = (typeof ACTIONS)[number];
