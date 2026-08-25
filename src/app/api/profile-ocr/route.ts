@@ -37,9 +37,11 @@ const ALLOWED_MIME = new Set(['image/png', 'image/jpeg', 'image/webp']);
 //
 // Модель: мультимодальная flash со structured output. При смене линейки Google —
 // поменять одну строку ниже (например на более новую flash-модель).
-const GEMINI_MODEL = 'gemini-2.5-flash';
-const geminiUrl = (model: string, key: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+const GEMINI_MODEL = process.env.GEMINI_VISION_MODEL ?? 'gemini-3.6-flash';
+// Egress-фикс (§4.11): бьём в Cloudflare Worker-прокси, не напрямую в googleapis.
+// Прокси пробрасывает только заголовок x-goog-api-key (query ?key= не поддерживается).
+const geminiUrl = (base: string, model: string) =>
+  `${base}/v1beta/models/${model}:generateContent`;
 
 // Жёсткая схема ответа (Gemini structured output) — модель физически не вернёт мусор.
 const RESPONSE_SCHEMA = {
@@ -96,6 +98,14 @@ export async function POST(req: Request) {
     );
   }
 
+  const proxyBase = process.env.GEMINI_PROXY_BASE;
+  if (!proxyBase) {
+    return NextResponse.json(
+      { error: 'Распознавание не настроено: задайте GEMINI_PROXY_BASE в .env.local' },
+      { status: 503 },
+    );
+  }
+
   let body: { image?: string; mimeType?: string };
   try {
     body = await req.json();
@@ -121,9 +131,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const res = await fetch(geminiUrl(GEMINI_MODEL, apiKey), {
+    const res = await fetch(geminiUrl(proxyBase, GEMINI_MODEL), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         contents: [
           {

@@ -50,7 +50,7 @@ export async function resolveSlots(slots: VisionRequestSlot[]): Promise<VisionVe
   // Egress-фикс (§4.11): бьём в Cloudflare Worker-прокси, не напрямую в googleapis.
   const apiBase = process.env.GEMINI_PROXY_BASE;
   if (!apiBase) throw new Error('GEMINI_PROXY_BASE is not configured');
-  const model = process.env.GEMINI_VISION_MODEL ?? 'gemini-2.5-flash';
+  const model = process.env.GEMINI_VISION_MODEL ?? 'gemini-3.6-flash';
 
   const parts: GeminiPart[] = [];
   for (const slot of slots) {
