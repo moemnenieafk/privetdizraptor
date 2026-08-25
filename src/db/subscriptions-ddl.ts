@@ -16,10 +16,15 @@ export const SUBSCRIPTIONS_DDL: string[] = [
     updated_at  timestamptz not null default now()
   )`,
 
-  // Защита от мусора на уровне БД: тир только из трёх допустимых значений.
+  // CHECK на tier СНЯТ: тиры уехали в таблицу public.tiers (динамические, админ
+  // создаёт/переименовывает их без деплоя). CHECK по фикс-списку блокировал бы новый
+  // тир → валидация slug теперь в коде (src/lib/gating/tiers.ts). Не воссоздаём.
   `alter table public.subscriptions drop constraint if exists subscriptions_tier_chk`,
+
+  // Задел per-game: игровая подписка (scope_game_id != null) применима только к своей
+  // игре, портальная (null) — везде. На запуске всегда null. Additive, идемпотентно.
   `alter table public.subscriptions
-     add constraint subscriptions_tier_chk check (tier in ('free', 'operative', 'veteran'))`,
+     add column if not exists scope_game_id uuid references public.games(id)`,
 
   `alter table public.subscriptions enable row level security`,
   `drop policy if exists subscriptions_read on public.subscriptions`,
