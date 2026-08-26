@@ -49,6 +49,11 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const decrementItem = useQuestStore(s => s.decrementItem);
   const checkedObjectives = useQuestStore(s => s.checkedObjectives);
   const toggleCheckedObjective = useQuestStore(s => s.toggleCheckedObjective);
+  const setQuestDone = useQuestStore(s => s.setQuestDone);
+
+  // У квеста одна цель → клик по ней завершает ВЕСЬ квест (нода зеленеет), ПКМ — отменяет.
+  const dedupObjs = task.objectives.filter((obj, i, arr) => arr.findIndex(o => o.id === obj.id) === i);
+  const singleObjective = dedupObjs.length === 1;
 
   const nn         = task.trader.normalizedName;
   // Цвет берём из JS-палитры, а не из var(--trader-*): Tailwind v4 вырезает неиспользуемые
@@ -211,7 +216,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
         )}
 
         <ul className="px-4 flex flex-col gap-2">
-          {task.objectives.filter((obj, i, arr) => arr.findIndex(o => o.id === obj.id) === i).slice(0, 5).map(obj => {
+          {dedupObjs.slice(0, 5).map(obj => {
             const done    = itemProgress[task.id]?.[obj.id] ?? 0;
             const total   = obj.__typename === 'TaskObjectiveItem'
               ? ((obj as TaskObjectiveItem).count ?? 0) : 0;
@@ -225,16 +230,18 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
                 data-no-pan
                 onClick={e => {
                   e.stopPropagation();
+                  if (singleObjective) { setQuestDone(task, true); return; }
                   if (isItem) incrementItem(task.id, obj.id, total);
                   else if (!checked) toggleCheckedObjective(task.id, obj.id);
                 }}
                 onContextMenu={e => {
                   e.preventDefault();
                   e.stopPropagation();
+                  if (singleObjective) { setQuestDone(task, false); return; }
                   if (isItem) decrementItem(task.id, obj.id);
                   else if (checked) toggleCheckedObjective(task.id, obj.id);
                 }}
-                title="ЛКМ — отметить / +1 · ПКМ — отменить / −1"
+                title={singleObjective ? 'ЛКМ — завершить квест · ПКМ — отменить' : 'ЛКМ — отметить / +1 · ПКМ — отменить / −1'}
                 className="flex items-center gap-2 py-1 cursor-pointer select-none"
               >
                 {isItem && obj.item && (
