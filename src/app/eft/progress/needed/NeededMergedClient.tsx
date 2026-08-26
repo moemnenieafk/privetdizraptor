@@ -309,6 +309,7 @@ export function NeededMergedClient({
     let have = 0;
     let questSoft = 0;
     let questFir = 0;
+    let questFirCollected = 0; // FiR-квест-собранное (синкнуто в схрон) — исключаем из оверлея, чтобы не считать дважды
     let hideoutNeed = 0;
 
     for (const q of ni.quests) {
@@ -320,6 +321,7 @@ export function NeededMergedClient({
       if (q.fir) {
         needFir += q.count;
         questFir += rem;
+        questFirCollected += collected;
       } else {
         questSoft += rem;
       }
@@ -366,7 +368,10 @@ export function NeededMergedClient({
     }
 
     const stash = stashOwned;
-    const ov = computeStashOverlay({ stash, hideoutNeed, questSoftNeed: questSoft, questFirNeed: questFir });
+    // FiR-квест-собранное синкнуто в схрон и уже учтено как квест-collected → исключаем его
+    // из доступного оверлею схрона, иначе тот же предмет засчитается и убежищу (двойной учёт).
+    const overlayStash = Math.max(0, stashOwned - questFirCollected);
+    const ov = computeStashOverlay({ stash: overlayStash, hideoutNeed, questSoftNeed: questSoft, questFirNeed: questFir });
     // «Собрано» для убежища = схрон, фактически выделенный на убежищную нужду. Считаем ОДИН раз из
     // оверлея (stashToHideout ≤ min(stash, hideoutNeed)), а не на каждый незастроенный уровень —
     // при едином схроне общий материал (болты для нескольких модулей) иначе завышал бы have.
