@@ -994,15 +994,19 @@ function GroupRow({
   onToggle: () => void;
 }) {
   const rep = group.accepted[0];
+  // Прогресс any-of цели — по её objectiveId (group.key) в общем квест-сторе.
+  const collected = useQuestStore((s) => Math.min(group.count, s.itemProgress[group.questId]?.[group.key] ?? 0));
+  const incrementItem = useQuestStore((s) => s.incrementItem);
+  const decrementItem = useQuestStore((s) => s.decrementItem);
   return (
     <div className="relative flex flex-col overflow-hidden rounded-sm border border-(--color-card-menu) bg-(--color-darkbase)">
       <div className="relative flex items-center gap-3 p-2.5">
         <TrackCell
           iconSrc={rep?.icon ?? itemIconUrl('')}
           alt="Набор"
-          have={0}
+          have={collected}
           need={group.count}
-          onInc={() => {}}
+          onInc={(d) => (d > 0 ? incrementItem(group.questId, group.key, group.count) : decrementItem(group.questId, group.key))}
           noFill
           sizeClass="h-28 w-28"
           topLeft={
