@@ -94,21 +94,22 @@ export function QuestItemTracker({ task }: Props) {
               </span>
             </div>
 
-            {/* Кнопки +/− вертикальным стеком у края (Figma 3151:16859): + сверху, − снизу. */}
+            {/* Кнопки +/− вертикальным стеком у края (Figma 3151:16859): + сверху, − снизу.
+                SVG-глифы без фона, цвет text-secondary (#9696A1), ярче на ховере. */}
             <div className="flex shrink-0 flex-col gap-1">
               <button
-                className="flex h-6 w-6 items-center justify-center rounded-xs bg-text-secondary transition-colors hover:bg-text-primary"
+                className="flex h-6 w-6 items-center justify-center text-text-secondary transition-colors hover:text-text-primary"
                 onClick={() => incRow(row)}
                 aria-label="Увеличить"
               >
-                <span className="icon-increment-icon icon-mask h-4 w-4 bg-(--color-darkbase)" />
+                <span className="icon-increment-icon icon-mask h-4 w-4" />
               </button>
               <button
-                className="flex h-6 w-6 items-center justify-center rounded-xs bg-text-secondary transition-colors hover:bg-text-primary"
+                className="flex h-6 w-6 items-center justify-center text-text-secondary transition-colors hover:text-text-primary"
                 onClick={() => decRow(row)}
                 aria-label="Уменьшить"
               >
-                <span className="icon-decrement-icon icon-mask h-4 w-4 bg-(--color-darkbase)" />
+                <span className="icon-decrement-icon icon-mask h-4 w-4" />
               </button>
             </div>
           </div>

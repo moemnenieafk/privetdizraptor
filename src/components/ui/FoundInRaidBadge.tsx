@@ -23,7 +23,7 @@ export function FoundInRaidBadge({ compact = false, className = '' }: Props) {
   }
   return (
     <span
-      className={`inline-flex h-5 items-center gap-2 rounded border-[0.5px] border-fir bg-fir/10 px-2.5 font-blender-medium text-[0.625rem] uppercase leading-none tracking-wide text-fir ${className}`}
+      className={`inline-flex h-5 w-fit items-center gap-2 rounded border-[0.5px] border-fir bg-fir/10 px-2.5 font-blender-medium text-[0.625rem] uppercase leading-none tracking-wide text-fir ${className}`}
     >
       <span className="icon-eft-find-in-raid icon-mask h-3 w-3 shrink-0 bg-fir" />
       Найдено в рейде
