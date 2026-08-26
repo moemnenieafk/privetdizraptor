@@ -15,14 +15,23 @@ import { join } from 'node:path';
 import type { MaterialFamily, Matte } from './types';
 import { OUTLINE_HEX, FACTORY_PALETTE } from './palette';
 
-export const GEMINI_VISION_MODEL = 'gemini-2.5-flash';
-export const GEMINI_IMAGE_MODEL = 'gemini-3-pro-image';
+// gemini-2.5-flash снята Google → vision-модель актуализирована на gemini-3.6-flash (env-override).
+export const GEMINI_VISION_MODEL = process.env.GEMINI_VISION_MODEL ?? 'gemini-3.6-flash';
+export const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL ?? 'gemini-3-pro-image';
 
-const ENDPOINT = (model: string, key: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-
+// Запросы идут через наш Cloudflare Worker-прокси (обход регионального egress-блока Gemini):
+// база — GEMINI_PROXY_BASE, ключ уходит заголовком x-goog-api-key, а не query ?key=.
 export class GeminiBillingError extends Error {}
 export class GeminiError extends Error {}
+
+function proxyBase(): string {
+  const b = process.env.GEMINI_PROXY_BASE;
+  if (!b) throw new GeminiError('GEMINI_PROXY_BASE не задан (.env.local) — нужен Worker-прокси Gemini');
+  return b.replace(/\/+$/, '');
+}
+
+const ENDPOINT = (model: string) =>
+  `${proxyBase()}/v1beta/models/${model}:generateContent`;
 
 function apiKey(): string {
   const k = process.env.GEMINI_API_KEY;
@@ -37,9 +46,9 @@ interface GeminiPart {
 }
 
 async function callGemini(model: string, body: unknown): Promise<GeminiPart[]> {
-  const res = await fetch(ENDPOINT(model, apiKey()), {
+  const res = await fetch(ENDPOINT(model), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey() },
     body: JSON.stringify(body),
   });
   const json = await res.json().catch(() => ({}));
