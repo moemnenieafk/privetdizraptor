@@ -261,20 +261,22 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
                   </div>
                 )}
                 <div className="flex flex-col flex-1 min-w-0">
-                  <span className="text-sm font-blender-book text-text-secondary truncate">
+                  <span className={`text-sm font-blender-book truncate transition-colors duration-150 ${
+                    checked ? 'line-through text-success' : 'text-text-secondary'
+                  }`}>
                     {obj.description}
                   </span>
                   {isItem && obj.foundInRaid && <FoundInRaidBadge className="mt-0.5 self-start" />}
                 </div>
                 {isItem && total > 0 && (
-                  <span className="text-xs font-blender-medium text-text-secondary shrink-0">
+                  <span className={`text-xs font-blender-medium shrink-0 tabular-nums ${checked ? 'text-success' : 'text-text-secondary'}`}>
                     {done}/{total}
                   </span>
                 )}
                 <span
                   aria-hidden
-                  className={`icon-mask ${iconCls} shrink-0 w-4 h-4 text-text-secondary transition-opacity ${
-                    checked ? 'opacity-100' : 'opacity-40'
+                  className={`icon-mask ${iconCls} shrink-0 w-4 h-4 transition-opacity ${
+                    checked ? 'opacity-100 text-success' : 'opacity-40 text-text-secondary'
                   }`}
                 />
               </li>
