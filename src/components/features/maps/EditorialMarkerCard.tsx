@@ -25,6 +25,7 @@ import type { SearchItemResult } from '@/types/search';
 import { MediaPicker } from '@/components/features/media/MediaPicker';
 import { useQuestStore } from '@/store/useQuestStore';
 import { useMapUiStore } from '@/store/useMapUiStore';
+import { QuestRow } from './QuestRow';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
 
 // Типы маркера (как в редакторе Ледокола) + POI без категории. Иконка резолвится markerIconUrl.
@@ -298,6 +299,8 @@ interface Props {
   marker: EditorialMarkerView;
   /** Разрешённый связанный квест (linkKind='quest') — для ряда трейдер/уровень/каппа. */
   linkedQuest?: LinkedQuestInfo | null;
+  /** Открыть деталь привязанного квеста (клик по строке QuestRow в показе). */
+  onOpenQuest?: (questId: string) => void;
   /** Название привязанной истории (linkKind='story') — для чипа связи в показе. */
   linkedStory?: { title: string } | null;
   /** Связанный предмет (linkKind='item') — для чипа связи в показе. */
@@ -354,6 +357,7 @@ export function EditorialMarkerCard({
   onBatchSave,
   batchCount,
   batchCreate = false,
+  onOpenQuest,
 }: Props) {
   const [sel, setSel] = useState(0);
   // Якорь для боковой панели медиа-библиотеки (пикер встаёт справа от карточки).
@@ -1168,21 +1172,26 @@ export function EditorialMarkerCard({
               )}
             </div>
 
-            {/* Ряд привязки: трейдер/имя (слева) · уровень+каппа (справа) */}
-            {linkedQuest && (
-              <div className="flex w-full items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <img src={traderImg(linkedQuest.traderNn)} alt="" className="size-4 shrink-0 rounded-[1px] border-[0.5px] border-black/50 object-cover" />
-                  <span className="font-blender-medium text-xs text-text-primary">{linkedQuest.name}</span>
+            {/* Ряд привязки квеста: кликабельная строка QuestRow (как в «Поиске на локации») */}
+            {linkedQuest && marker.linkId ? (
+              <QuestRow
+                q={{
+                  id: marker.linkId,
+                  name: linkedQuest.name,
+                  trader: linkedQuest.traderNn,
+                  minPlayerLevel: linkedQuest.minPlayerLevel ?? 0,
+                  kappaRequired: !!linkedQuest.kappaRequired,
+                  lightkeeperRequired: !!linkedQuest.lightkeeperRequired,
+                }}
+                onSelect={onOpenQuest ?? (() => {})}
+              />
+            ) : (
+              marker.linkKind === 'quest' && (
+                /* Фолбэк (R10): привязка к квесту есть, данных нет — мягкая заглушка. */
+                <div className="flex h-9 w-full items-center rounded border-[0.5px] border-lines-hover px-3.5 font-blender-medium text-xs text-text-muted">
+                  Задание недоступно
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {linkedQuest.minPlayerLevel != null && (
-                    <span className="font-blender-medium text-[0.625rem] uppercase text-text-secondary">ур. {linkedQuest.minPlayerLevel}+</span>
-                  )}
-                  {linkedQuest.lightkeeperRequired && <span className="icon-mask icon-eft-profile-lightkeeper size-4 text-(--color-lightkeeper)" />}
-                  {linkedQuest.kappaRequired && <span className="icon-mask icon-eft-profile-kappa size-4 text-(--color-kappa)" />}
-                </div>
-              </div>
+              )
             )}
 
             {/* Заголовок */}
