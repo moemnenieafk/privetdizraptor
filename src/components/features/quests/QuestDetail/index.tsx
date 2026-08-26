@@ -45,15 +45,18 @@ function getObjIcon(typename?: string, type?: string): string {
   return typename ? (TYPENAME_ICON[typename] ?? 'icon-eft-quests-investigate') : 'icon-eft-quests-investigate';
 }
 
-function ObjectiveRow({ obj, checked, onToggle, onLocate }: { obj: TaskObjective; checked: boolean; onToggle: () => void; onLocate?: () => void }) {
+function ObjectiveRow({ obj, checked, onComplete, onReverse, onLocate }: { obj: TaskObjective; checked: boolean; onComplete: () => void; onReverse: () => void; onLocate?: () => void }) {
   const iconCls = getObjIcon(obj.__typename, obj.type);
+  const reverse = (e: { preventDefault: () => void }) => { e.preventDefault(); onReverse(); };
   return (
     <li className={`flex items-start gap-3 ${obj.optional ? 'opacity-50 italic' : ''}`}>
       <div className="flex flex-col flex-1 min-w-0">
         <div className="flex items-start gap-3">
           <span
-            onClick={onToggle}
-            className={`text-base font-blender-book leading-snug flex-1 cursor-pointer transition-colors duration-150 ${
+            onClick={onComplete}
+            onContextMenu={reverse}
+            title="ЛКМ — выполнить · ПКМ — отменить"
+            className={`text-base font-blender-book leading-snug flex-1 cursor-pointer select-none transition-colors duration-150 ${
               checked ? 'line-through text-success' : 'text-text-primary'
             }`}
           >
@@ -78,7 +81,9 @@ function ObjectiveRow({ obj, checked, onToggle, onLocate }: { obj: TaskObjective
               </button>
             ) : (
               <span
-                onClick={onToggle}
+                onClick={onComplete}
+                onContextMenu={reverse}
+                title="ЛКМ — выполнить · ПКМ — отменить"
                 className={`${iconCls} icon-mask w-4 h-4 shrink-0 cursor-pointer transition-colors duration-150 ${
                   checked ? 'text-success' : 'text-text-secondary'
                 }`}
@@ -171,14 +176,19 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
   const setItemCount           = useQuestStore((s) => s.setItemCount);
   const toggleCheckedObjective = useQuestStore((s) => s.toggleCheckedObjective);
 
-  // Прожать цель: item — заполнить/обнулить счётчик (двусторонняя связка с трекером);
-  // прочие — галка в checkedObjectives. Завершённость выводит isObjectiveComplete.
-  const handleToggleObjective = (obj: TaskObjective) => {
+  // Направленно (как в QuestNode): ЛКМ — выполнить цель, ПКМ — отменить.
+  // item — заполнить/обнулить счётчик (двусторонняя связка с трекером); прочие — галка.
+  const completeObjective = (obj: TaskObjective) => {
     if (obj.__typename === 'TaskObjectiveItem') {
-      const count = (obj as TaskObjectiveItem).count ?? 0;
-      const done = count > 0 && (itemProgress[task.id]?.[obj.id] ?? 0) >= count;
-      setItemCount(task.id, obj.id, done ? 0 : count);
-    } else {
+      setItemCount(task.id, obj.id, (obj as TaskObjectiveItem).count ?? 0);
+    } else if (!(checkedObjectives[task.id]?.includes(obj.id))) {
+      toggleCheckedObjective(task.id, obj.id);
+    }
+  };
+  const reverseObjective = (obj: TaskObjective) => {
+    if (obj.__typename === 'TaskObjectiveItem') {
+      setItemCount(task.id, obj.id, 0);
+    } else if (checkedObjectives[task.id]?.includes(obj.id)) {
       toggleCheckedObjective(task.id, obj.id);
     }
   };
@@ -317,7 +327,8 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
             key={obj.id}
             obj={obj}
             checked={isObjectiveComplete(obj, task.id, itemProgress, checkedObjectives)}
-            onToggle={() => handleToggleObjective(obj)}
+            onComplete={() => completeObjective(obj)}
+            onReverse={() => reverseObjective(obj)}
             onLocate={!isPage && onLocate ? onLocate : undefined}
           />
         ))}
