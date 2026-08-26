@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { Minus, Plus, ArrowRight, Hammer, Check, Maximize2 } from 'lucide-react';
 import { useHideoutStore } from '@/store/useHideoutStore';
 import { useInventoryStore } from '@/store/useInventoryStore';
+import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { usePmcStatsStore } from '@/store/usePmcStatsStore';
 import { useManualProfileStore } from '@/store/useManualProfileStore';
@@ -750,9 +751,7 @@ export function HideoutBuildTracker({
                             </p>
                             {it.fir && (
                               <p className="mt-1 flex justify-center">
-                                <span className="inline-flex items-center whitespace-nowrap rounded-xs border border-(--primary)/50 bg-primary/10 px-1 py-px text-type-micro uppercase tracking-wider text-(--primary)">
-                                  Найдено в рейде
-                                </span>
+                                <FoundInRaidBadge />
                               </p>
                             )}
 

@@ -14,6 +14,7 @@ import { useQuestStore } from '@/store/useQuestStore';
 import { itemIconUrl } from '@/lib/item-icon';
 import type { QuestItemReq } from '@/lib/tracking-digest';
 import { ResetControl } from '@/components/features/tracking/ResetControl';
+import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 
 const TOP_QUEST_ITEMS = 6;
 
@@ -147,11 +148,7 @@ export function TrackingItemsDigest({ itemRequirements }: { itemRequirements: Qu
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
                     <span className="truncate font-blender-medium text-sm text-text-primary">{a.name}</span>
-                    {a.fir && (
-                      <span className="shrink-0 rounded-xs border border-tactical-amber/40 px-1 text-type-micro uppercase tracking-widest text-tactical-amber">
-                        Найдено в рейде
-                      </span>
-                    )}
+                    {a.fir && <FoundInRaidBadge className="shrink-0" />}
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-xs bg-card-menu">
                     <div className="h-full rounded-xs bg-(--primary) transition-[width] duration-300" style={{ width: `${pct}%` }} />

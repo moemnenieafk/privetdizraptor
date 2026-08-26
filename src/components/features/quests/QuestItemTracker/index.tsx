@@ -2,6 +2,7 @@
 
 import type { TaskRaw, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
+import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 
 interface Props {
   task: TaskRaw;
@@ -80,11 +81,7 @@ export function QuestItemTracker({ task }: Props) {
               <span className="text-base font-blender-book text-text-primary truncate">
                 {row.item.shortName}
               </span>
-              {row.foundInRaid && (
-                <span className="text-type-caption font-blender-medium uppercase tracking-widest text-(--primary)">
-                  НАЙДЕНО В РЕЙДЕ
-                </span>
-              )}
+              {row.foundInRaid && <FoundInRaidBadge className="mt-0.5" />}
             </div>
 
             {/* Counter */}

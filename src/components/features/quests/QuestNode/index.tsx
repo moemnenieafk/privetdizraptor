@@ -9,6 +9,7 @@ import { traderImg } from '@/lib/trader-utils';
 import { TRADER_COLORS } from '@/data/traderColors';
 import { getQuestHeroImg } from '@/lib/quest-utils';
 import { isCollectorTask, COLLECTOR_TRACKER_HREF } from '@/lib/quest-constants';
+import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import { Paperclip, ArrowLeftRight, ListChecks } from 'lucide-react';
 
 function getObjectiveIcon(obj: TaskObjective): string {
@@ -226,11 +227,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
                   <span className="text-sm font-blender-book text-text-secondary truncate">
                     {obj.description}
                   </span>
-                  {isItem && obj.foundInRaid && (
-                    <span className="text-type-caption font-blender-medium uppercase tracking-widest text-(--primary)">
-                      НАЙДЕНО В РЕЙДЕ
-                    </span>
-                  )}
+                  {isItem && obj.foundInRaid && <FoundInRaidBadge className="mt-0.5 self-start" />}
                 </div>
                 {isItem && total > 0 && (
                   <span className="text-xs font-blender-medium text-text-secondary shrink-0">

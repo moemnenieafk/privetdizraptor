@@ -41,8 +41,9 @@ interface ItemDetailLayoutProps {
 }
 
 // ─── Статус-бейдж: иконка (как в EftItemTile/Indicator) + текст ──────────────
-// Чипы БАРТЕР / КРАФТ / ЗАДАНИЕ — точные цвета макета через @theme-токены
-// (не raw HEX, не var() в инлайне): kappa #BDA550, mode-pve #0095E2, tactical-amber #E68E25.
+// Чипы БАРТЕР / КРАФТ / ЗАДАНИЕ — цвет = тип (семантика узнаваема) через @theme-токены
+// (не raw HEX, не var() в инлайне): бартер nvg-green #689963, крафт mode-pve #0095E2,
+// задание tactical-amber #E68E25.
 type BadgeVariant = 'primary' | 'danger' | 'barter' | 'craft' | 'quest';
 
 interface StatusBadgeData {
@@ -54,7 +55,7 @@ interface StatusBadgeData {
 const BADGE_STYLES: Record<BadgeVariant, { box: string; icon: string }> = {
   primary: { box: 'border-(--primary) bg-primary/10 text-(--primary)', icon: 'bg-(--primary)' },
   danger:  { box: 'border-red-500/30 bg-red-500/10 text-red-400', icon: 'bg-red-400' },
-  barter:  { box: 'border-kappa/40 bg-kappa/10 text-kappa', icon: 'bg-kappa' },
+  barter:  { box: 'border-nvg-green/40 bg-nvg-green/10 text-nvg-green', icon: 'bg-nvg-green' },
   craft:   { box: 'border-mode-pve/40 bg-mode-pve/10 text-mode-pve', icon: 'bg-mode-pve' },
   quest:   { box: 'border-tactical-amber/40 bg-tactical-amber/10 text-tactical-amber', icon: 'bg-tactical-amber' },
 };

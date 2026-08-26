@@ -6,6 +6,7 @@ import { Paperclip, Maximize2, Map as MapIcon, MapPin, ArrowLeftRight, ChevronRi
 import { useQuestStore, isObjectiveComplete } from '@/store/useQuestStore';
 import { isCollectorTask, COLLECTOR_TRACKER_HREF } from '@/lib/quest-constants';
 import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker';
+import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem, QuestBarterLite } from '@/types/quest';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { getQuestHeroImg } from '@/lib/quest-utils';
@@ -87,12 +88,7 @@ function ObjectiveRow({ obj, checked, onToggle, onLocate }: { obj: TaskObjective
             {obj.count != null && obj.count > 1 && (
               <span className="text-xs font-blender-medium text-text-secondary">× {obj.count}</span>
             )}
-            {obj.foundInRaid && (
-              <span className="flex items-center gap-1 text-xs font-blender-medium text-(--primary)">
-                <span className="icon-eft-find-in-raid icon-mask w-3 h-3 shrink-0" />
-                найдено в рейде
-              </span>
-            )}
+            {obj.foundInRaid && <FoundInRaidBadge />}
           </div>
         )}
 

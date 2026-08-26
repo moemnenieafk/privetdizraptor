@@ -7,6 +7,7 @@ import { useInventoryStore } from '@/store/useInventoryStore';
 import { useQuestReserveStore, freeForQuest } from '@/store/useQuestReserveStore';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { StashCountBadge } from '@/components/features/stash/StashCountBadge';
+import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import { cardGradient, cardBorder } from './BarterOfferCard';
 
 export interface QuestCardData {
@@ -160,11 +161,7 @@ export function QuestCard({
             <span className="truncate font-blender-book text-base leading-none text-text-primary">
               {itemShortName ?? countLabel}
             </span>
-            {foundInRaid && (
-              <span className="inline-flex h-5 w-fit items-center gap-1 rounded-sm border border-tactical-amber/40 bg-tactical-amber/10 px-1.5 font-blender-medium text-[0.625rem] uppercase tracking-widest text-tactical-amber">
-                найдено в рейде
-              </span>
-            )}
+            {foundInRaid && <FoundInRaidBadge className="w-fit" />}
           </span>
           {itemId && <StashCountBadge itemId={itemId} className="shrink-0" />}
           {/* У наград резервировать нечего: там количество выдаваемого, а не цель. */}
