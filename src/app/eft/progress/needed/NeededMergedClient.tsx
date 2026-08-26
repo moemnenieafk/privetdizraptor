@@ -580,13 +580,13 @@ export function NeededMergedClient({
             className="h-9 w-full rounded-sm border border-lines-hover bg-(--color-base) pl-10 pr-4 font-blender-book text-type-caption text-text-primary placeholder:text-text-muted focus:border-(--primary) focus:outline-none"
           />
         </div>
-        <FilterChip on={hideDone} onClick={() => setHideDone((v) => !v)} lucide={<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}>
+        <FilterChip on={hideDone} onClick={() => setHideDone((v) => !v)} accent="success" lucide={<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}>
           Скрыть готовые
         </FilterChip>
         <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)} icon="/icons/eft/02-quests/side-quests.svg" accent="fir">
           Найдено в рейде
         </FilterChip>
-        <FilterChip on={onlyHideout} onClick={() => setOnlyHideout((v) => !v)} icon="/icons/eft/04-progression/hideout-modules.svg">
+        <FilterChip on={onlyHideout} onClick={() => setOnlyHideout((v) => !v)} accent="hideout" icon="/icons/eft/04-progression/hideout-modules.svg">
           Строю Убежище
         </FilterChip>
         <FilterChip on={onlyQuests} onClick={() => setOnlyQuests((v) => !v)} icon="/icons/eft/quests-icon.svg">
@@ -685,11 +685,14 @@ export function NeededMergedClient({
 }
 
 /** Кнопка-фильтр списка (тоггл). Иконка-маска ИЛИ lucide-нода + подпись; активна — рамка/фон primary. */
-// Акценты активного чипа: дефолт — --primary; 'fir' — золото «Найдено в рейде» (--color-fir).
+// Акценты активного чипа: дефолт — --primary; 'fir' — золото «Найдено в рейде» (--color-fir);
+// 'success' — зелёный «Скрыть готовые»; 'hideout' — #9A8866 «Строю убежище».
 // Классы статические (Tailwind JIT), не конкатенируются динамически.
-const CHIP_ON: Record<'primary' | 'fir', { box: string; icon: string }> = {
+const CHIP_ON: Record<'primary' | 'fir' | 'success' | 'hideout', { box: string; icon: string }> = {
   primary: { box: 'border-(--primary) bg-(--primary)/15 text-(--primary)', icon: 'bg-(--primary)' },
   fir:     { box: 'border-fir bg-fir/15 text-fir', icon: 'bg-fir' },
+  success: { box: 'border-success bg-success/15 text-success', icon: 'bg-success' },
+  hideout: { box: 'border-(--color-hideout) bg-(--color-hideout)/15 text-(--color-hideout)', icon: 'bg-(--color-hideout)' },
 };
 
 function FilterChip({
@@ -705,7 +708,7 @@ function FilterChip({
   icon?: string;
   lucide?: React.ReactNode;
   children: React.ReactNode;
-  accent?: 'primary' | 'fir';
+  accent?: 'primary' | 'fir' | 'success' | 'hideout';
 }) {
   const acc = CHIP_ON[accent];
   return (
