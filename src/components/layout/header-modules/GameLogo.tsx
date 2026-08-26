@@ -13,13 +13,19 @@ interface GameLogoProps {
 export function GameLogo({ gameId }: GameLogoProps) {
   const pathname = usePathname();
   const segments = (pathname || '').split('/').filter(Boolean);
-  const currentGameId = gameId || (segments.length > 0 ? segments[0] : 'eft');
-
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Шаг 1: Фильтрация только активных игр
   const activeGames = GAMES_DATA.filter((game) => !game.isInactive);
+
+  // Первый сегмент — id игры ТОЛЬКО если он совпадает с реальной игрой.
+  // На не-игровых страницах (/login, /account, /u, /admin…) он им не является,
+  // иначе маска целила в несуществующий /games/login/login-logo.svg → пустая рамка.
+  const segmentGameId =
+    segments.length > 0 && activeGames.some((g) => g.id === segments[0]) ? segments[0] : undefined;
+  const currentGameId = gameId ?? segmentGameId ?? 'eft';
+
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Логика закрытия выпадающего списка при клике вне его области (click outside)
   useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);

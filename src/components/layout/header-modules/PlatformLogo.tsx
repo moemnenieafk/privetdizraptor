@@ -4,7 +4,8 @@ import Image from 'next/image';
 export function PlatformLogo() {
   return (
     <div className="shrink-0 animate-[fade-in_0.5s_ease-out]">
-      <Link href="/" className="block transition-transform hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
+      {/* ⏸️ ВРЕМЕННО: логотип ведёт на /eft (главная = EFT), а не на мультиигровой хаб «/». Вернуть на «/» вместе с восстановлением хаба в app/page.tsx. */}
+      <Link href="/eft" className="block transition-transform hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm">
         {/* Мобилка (ниже xl): компактный лого 72×40 */}
         <div className="relative h-10 w-18 xl:hidden">
           <Image
