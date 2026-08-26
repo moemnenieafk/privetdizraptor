@@ -11,7 +11,12 @@ import { getQuestHeroImg } from '@/lib/quest-utils';
 import { isCollectorTask, COLLECTOR_TRACKER_HREF } from '@/lib/quest-constants';
 import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import { BarterCountBadge } from '@/components/ui/BarterCountBadge';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import ITEM_BG from '@/data/quests/item-backgrounds.json';
 import { Paperclip, ListChecks } from 'lucide-react';
+
+// Тарковский фон ячейки предмета: обычные — свой цвет, квест-предметы → #686628 (yellow).
+const itemBg = (id: string): string => getTarkovBackgroundColor((ITEM_BG as Record<string, string>)[id] ?? 'yellow');
 
 function getObjectiveIcon(obj: TaskObjective): string {
   if (obj.__typename === 'TaskObjectiveTraderLevel') return 'icon-eft-quests-rep';
@@ -215,6 +220,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
                   <div className="relative w-7 h-7 shrink-0">
                     <div className="absolute inset-0 overflow-hidden rounded-xs border border-lines-hover">
                       <div className="absolute inset-0 bg-(--color-darkbase)" />
+                      <div className="absolute inset-0" style={{ backgroundColor: itemBg(obj.item.id) }} />
                       <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]" />
                       <img
                         src={obj.item.image512pxLink}

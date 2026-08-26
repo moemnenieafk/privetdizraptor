@@ -3,6 +3,11 @@
 import type { TaskRaw, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
 import { TrackCell } from '@/components/ui/kit/TrackCell';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import ITEM_BG from '@/data/quests/item-backgrounds.json';
+
+// Тарковский фон ячейки по id предмета: обычные — свой цвет, квест-предметы → #686628 (yellow).
+const itemBg = (id: string): string => getTarkovBackgroundColor((ITEM_BG as Record<string, string>)[id] ?? 'yellow');
 
 interface Props {
   task: TaskRaw;
@@ -76,6 +81,7 @@ export function QuestItemTracker({ task }: Props) {
             need={row.count}
             onInc={(delta) => (delta > 0 ? incRow(row) : decRow(row))}
             onSetTotal={(n) => setRow(row, n)}
+            bgColor={itemBg(row.item.id)}
             bottomLeft={row.foundInRaid ? FIR_CORNER : undefined}
           />
           <span className="min-w-0 flex-1 truncate text-base font-blender-book text-text-primary">
