@@ -337,6 +337,8 @@ export default async function MapPage({ params, searchParams }: Props) {
             m.type === 'lock' && m.linkedItemId
               ? (priceIndex.get(m.linkedItemId)?.avg24hPrice ?? priceIndex.get(m.linkedItemId)?.lastLowPrice ?? null)
               : null,
+          // Синканные зоны квестов несут questId (= linkedQuestId) на клиент → клик открывает карточку.
+          questId: m.type === 'quest_zone' ? (m.linkedQuestId ?? null) : null,
           meta: m.meta ?? null,
         }));
 

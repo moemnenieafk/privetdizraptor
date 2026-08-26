@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import type { MapView, MapViewMarker } from './map-types';
-import type { MapViewerApi } from './map-frame-types';
+import type { MapViewerApi, MapQuestLite } from './map-frame-types';
 import type { EditorialMarkerData, QuestIndexItem, StoryIndexItem } from './EditorialMarkerCard';
 import type { HeatPoint } from '@/db/loot-heat';
 
@@ -26,6 +26,7 @@ export function MapViewerLoader({
   onReady,
   activeFloor,
   onRequestFloor,
+  quests,
   editorialMarkers,
   editorialBridge,
   heatPoints,
@@ -38,6 +39,8 @@ export function MapViewerLoader({
   onReady?: (api: MapViewerApi) => void;
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
+  /** Квесты карты (MapQuestLite) — резолв LinkedQuestInfo для клика по квест-маркеру (таск 03). */
+  quests?: MapQuestLite[];
   editorialMarkers?: EditorialMarkerData[];
   editorialBridge?: MapViewMarker[];
   heatPoints?: HeatPoint[];
@@ -52,6 +55,7 @@ export function MapViewerLoader({
       onReady={onReady}
       activeFloor={activeFloor}
       onRequestFloor={onRequestFloor}
+      quests={quests}
       editorialMarkers={editorialMarkers}
       editorialBridge={editorialBridge}
       heatPoints={heatPoints}

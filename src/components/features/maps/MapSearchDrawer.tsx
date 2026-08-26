@@ -9,19 +9,18 @@ import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { useMyKeysStore } from '@/store/useMyKeysStore';
 import { useLootFilterStore } from '@/store/useLootFilterStore';
 import { useStoryFilterStore } from '@/store/useStoryFilterStore';
-import { QuestDetail } from '@/components/features/quests/QuestDetail';
+import { QuestRow } from './QuestRow';
 import { markerIconUrl, markerColor, LINK_KIND_COLOR, containerFile, type MarkerIconInput } from '@/data/map-marker-icons';
 import { LOOT_15 } from '@/data/map-markers/loot-15';
 import { storiesForMap, type StoryOnMap } from '@/lib/story-map-link';
 import type { EditorialMarkerData } from './EditorialMarkerCard';
-import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { traderImg } from '@/lib/trader-utils';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { SheetCloseButton } from '@/components/ui/SheetCloseButton';
 import { useMapViewStore } from '@/store/useMapViewStore';
 import { useQuestStore } from '@/store/useQuestStore';
 import type { MapViewMarker } from './map-types';
 import type { MapViewerApi, MapQuestLite } from './map-frame-types';
-import type { TaskRaw } from '@/types/quest';
 
 /**
  * Левый drawer «ПОИСК НА ЛОКАЦИИ» (десктоп, GRILL-3). Зеркалит правый «ЛЕГЕНДА КАРТЫ»:
@@ -78,7 +77,6 @@ interface Props {
   slug: string;
   markers: MapViewMarker[];
   quests: MapQuestLite[];
-  questTasks: TaskRaw[];
   editorialMarkers?: EditorialMarkerData[];
   /** ФАЗА 0 единой системы (unified-markers.md): editorial на языке MapViewMarker — подмешиваем
    *  в деривации секций «Контейнеры»/«Случайная добыча», чтобы Wizard-маркеры давали свои тайлы. */
@@ -88,7 +86,7 @@ interface Props {
   apiRef: React.RefObject<MapViewerApi | null>;
 }
 
-export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMarkers, editorialBridge, markedRooms, apiRef }: Props) {
+export function MapSearchDrawer({ slug, markers, quests, editorialMarkers, editorialBridge, markedRooms, apiRef }: Props) {
   const open = useMapUiStore((s) => s.searchOpen);
   const setOpen = useMapUiStore((s) => s.setSearchOpen);
   // Видимость слоёв — общий стор: тогглы фильтруют карту и синхронны с правой легендой (GRILL-2 §3).
@@ -150,13 +148,10 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   const [qQuests, setQQuests] = useState('');
   const [qf, setQf] = useState<QuestFilter>('all');
   const [traderFilter, setTraderFilter] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  // Полный таск выбранного квеста для master-detail панели (QuestDetail).
-  // Панель гейтится на `open && selectedTask`; selectedTask сам null-ится, если квеста нет
-  // в текущей карте (смена карты) — отдельный сброс не нужен.
-  const taskById = useMemo(() => new Map(questTasks.map((t) => [t.id, t])), [questTasks]);
-  const selectedTask = selectedId ? (taskById.get(selectedId) ?? null) : null;
+  // Выбор квеста → общий канал стора (openQuestDetail): деталь рисует MapQuestDetailDesktop
+  // (десктоп) / MapQuestDetailSheet (мобилка), одна панель на брейкпоинт.
+  const selectedQuestId = useMapUiStore((s) => s.selectedQuestId);
+  const openQuestDetail = useMapUiStore((s) => s.openQuestDetail);
 
   // Группировка маркеров по label (поиск по предмету): дедуп + позиции для подлёта.
   const groups = useMemo(() => {
@@ -268,8 +263,7 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
   const pickFilter = (key: QuestFilter) => setQf((cur) => (cur === key ? 'all' : key));
 
   return (
-    <>
-    {/* Адаптив (по образу десктопа): десктоп — левый drawer, мобилка — bottom-sheet (тот же контент). */}
+    /* Адаптив (по образу десктопа): десктоп — левый drawer, мобилка — bottom-sheet (тот же контент). */
     <div
       className={`absolute inset-x-0 bottom-0 z-[540] flex max-h-[85svh] flex-col rounded-t-xl border-t border-lines-hover bg-(--color-base)/95 backdrop-blur-md transition-transform duration-200 lg:inset-x-auto lg:top-0 lg:left-0 lg:bottom-auto lg:h-full lg:max-h-none lg:w-87 lg:rounded-t-none lg:border-t-0 lg:border-r ${
         open ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-y-0 lg:-translate-x-full'
@@ -591,26 +585,13 @@ export function MapSearchDrawer({ slug, markers, quests, questTasks, editorialMa
               <p className="px-1 py-4 text-center font-blender-book text-xs text-text-muted">Заданий не найдено</p>
             ) : (
               shownQuests.map((q) => (
-                <QuestRow key={q.id} q={q} query={qQuests} active={selectedId === q.id} onSelect={setSelectedId} />
+                <QuestRow key={q.id} q={q} query={qQuests} active={selectedQuestId === q.id} onSelect={openQuestDetail} />
               ))
             )}
           </div>
         </section>
       </div>
     </div>
-
-      {/* «Подробности задания» — master-detail: десктоп рядом (left+348), мобилка боттом-шитом поверх. */}
-      {open && selectedTask && (
-        <div
-          className="absolute inset-x-0 bottom-0 z-[545] flex max-h-[92svh] flex-col rounded-t-xl border-t border-lines-hover backdrop-blur-md lg:inset-x-auto lg:top-0 lg:left-87 lg:bottom-auto lg:h-full lg:max-h-none lg:w-87 lg:rounded-t-none lg:border-t-0 lg:border-l"
-          style={{
-            background: `radial-gradient(circle at 0% 0%, color-mix(in srgb, var(${traderCssVar(selectedTask.trader.normalizedName)}, transparent) 15%, transparent), rgba(0,0,0,0.92))`,
-          }}
-        >
-          <QuestDetail task={selectedTask} variant="drawer" onClose={() => setSelectedId(null)} />
-        </div>
-      )}
-    </>
   );
 }
 
@@ -648,37 +629,6 @@ function FilterChip({
   );
 }
 
-function QuestRow({ q, query, active, onSelect }: { q: MapQuestLite; query: string; active: boolean; onSelect: (id: string) => void }) {
-  const tint = `var(${traderCssVar(q.trader)}, var(--color-lines-hover))`;
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(q.id)}
-      title={q.name}
-      className={`flex h-9 w-full items-center justify-between rounded border-[0.5px] px-3.5 text-left transition-shadow ${active ? 'ring-1 ring-(--primary)' : ''}`}
-      style={{
-        borderColor: tint,
-        background: `radial-gradient(140% 160% at 0% 50%, color-mix(in srgb, ${tint} 38%, transparent), transparent 55%)`,
-      }}
-    >
-      <span className="flex min-w-0 items-center gap-2">
-        <img src={traderImg(q.trader)} alt="" className="size-4 shrink-0 rounded-xs border border-black/50 object-cover" />
-        <span className="min-w-0 truncate font-blender-medium text-xs text-text-primary">
-          {query ? <HighlightedText text={q.name} query={query} /> : q.name}
-        </span>
-      </span>
-      <span className="flex shrink-0 items-center gap-2">
-        <span className="font-blender-medium text-[0.625rem] uppercase text-text-secondary">ур. {q.minPlayerLevel}+</span>
-        {q.lightkeeperRequired && (
-          <span className="flex size-4 items-center justify-center rounded-xs" style={{ backgroundColor: 'color-mix(in srgb, var(--color-lightkeeper) 12%, transparent)' }}>
-            <span className="icon-mask icon-eft-profile-lightkeeper h-3 w-3" />
-          </span>
-        )}
-        {q.kappaRequired && <span className="icon-mask icon-eft-profile-kappa h-4 w-4" />}
-      </span>
-    </button>
-  );
-}
 
 // ЧЕРНОВИК строки сюжетной истории (по образцу QuestRow — для итерации в Figma).
 // Тинт = стальной STORY_TINT; слева иконка-маска истории, справа сложность (черепа) +

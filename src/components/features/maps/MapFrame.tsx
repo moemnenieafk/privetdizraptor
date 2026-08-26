@@ -5,6 +5,7 @@ import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 import { MapPickerSheet } from '@/components/features/maps/MapPickerSheet';
 import { MapQuestSheet } from '@/components/features/maps/MapQuestSheet';
 import { MapQuestDetailSheet } from '@/components/features/maps/MapQuestDetailSheet';
+import { MapQuestDetailDesktop } from '@/components/features/maps/MapQuestDetailDesktop';
 import { MapRaidSheet } from '@/components/features/maps/MapRaidSheet';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -246,7 +247,11 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
 
       {/* Левый drawer «ПОИСК НА ЛОКАЦИИ» (десктоп) — оверлей поверх карты, карту не двигает.
           Только интерактивные карты (у статик-карт нет слоёв/таксономии добычи). */}
-      {(!data.config.staticMap || data.config.editorial) && <MapSearchDrawer slug={data.slug} markers={data.markers} quests={quests} questTasks={questTasks} editorialMarkers={editorialMarkers} editorialBridge={editorialBridge} markedRooms={data.markedRooms} apiRef={apiRef} />}
+      {(!data.config.staticMap || data.config.editorial) && <MapSearchDrawer slug={data.slug} markers={data.markers} quests={quests} editorialMarkers={editorialMarkers} editorialBridge={editorialBridge} markedRooms={data.markedRooms} apiRef={apiRef} />}
+
+      {/* Десктопная панель «Подробности задания» — сиблинг MapQuestDetailSheet (мобилка),
+          store-driven из общего канала (selectedQuestId). Одна панель на брейкпоинт. */}
+      <MapQuestDetailDesktop questTasks={questTasks} />
 
       {/* MOBILE-ONLY шиты — открываются панелью из вьюера (MobileMapBar) / нижнего бара */}
       <MapPickerSheet maps={mobileMaps} activeMapId={data.slug} onSelect={(slug) => router.push(mapHref(slug))} />
@@ -264,6 +269,7 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
           onReady={handleReady}
           activeFloor={activeFloor}
           onRequestFloor={setActiveFloor}
+          quests={quests}
           editorialMarkers={editorialMarkers}
           editorialBridge={editorialBridge}
           heatPoints={heatPoints}

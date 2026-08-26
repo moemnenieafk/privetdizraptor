@@ -36,7 +36,7 @@ import { EditorialMarkerCard, type EditorialMarkerData, type QuestIndexItem, typ
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
-import type { MapViewerApi } from './map-frame-types';
+import type { MapViewerApi, MapQuestLite } from './map-frame-types';
 
 /* ───────────────── проекция (порт из open-source tarkov-dev, MIT) ───────────────── */
 // Кастомный CRS зашивает transform + поворот в проекцию: маркеры ставятся в сырых
@@ -279,6 +279,7 @@ export function MapViewerClient({
   onReady,
   activeFloor = 0,
   onRequestFloor,
+  quests,
   editorialMarkers,
   editorialBridge,
   heatPoints,
@@ -291,6 +292,8 @@ export function MapViewerClient({
   onReady?: (api: MapViewerApi) => void;
   activeFloor?: number;
   onRequestFloor?: (idx: number) => void;
+  /** Квесты карты (MapQuestLite) — резолв LinkedQuestInfo для клика по квест-маркеру (использование — таск 03). */
+  quests?: MapQuestLite[];
   editorialMarkers?: EditorialMarkerData[];
   editorialBridge?: MapViewMarker[];
   heatPoints?: HeatPoint[];
