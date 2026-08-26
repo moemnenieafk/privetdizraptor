@@ -779,7 +779,7 @@ function SourceChip({ s }: { s: SrcState }) {
                 aria-hidden
                 className="icon-eft-quests-side h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-fir"
               />
-              в рейде
+              Найдено в рейде
             </span>
           )}
           {s.maps?.map((m) =>
@@ -1018,7 +1018,7 @@ function GroupRow({
                   aria-hidden
                   className="icon-eft-quests-side h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-fir"
                 />
-                в рейде
+                Найдено в рейде
               </span>
             )}
           </span>
