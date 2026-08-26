@@ -317,7 +317,11 @@ export function MapViewerClient({
   const imgBoundsRef = useRef<L.LatLngBounds | null>(null);
   const highlightRef = useRef<L.Polygon | null>(null);
   const objectivePinsRef = useRef<L.LayerGroup | null>(null);
-  const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null }[]>([]);
+  const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null; questId?: string | null }[]>([]);
+  // Изоляция карты на выбранный квест (drawer «Подробности задания»): когда задан questId,
+  // видимы ТОЛЬКО его маркеры, прочие слои/маркеры скрыты (фильтры пользователя не трогаем —
+  // переопределяем видимость в applyLayerVis/applyFloor). null = обычный режим.
+  const isolatedQuestRef = useRef<string | null>(null);
   // Синканые маркеры по их source-id → для класса .cta-mk-del без пересборки слоя (режим удаления).
   const sourceMarkerElsRef = useRef<Map<string, L.Marker>>(new Map());
   // Editorial-маркеры по id → тоже императивная пометка (капля/центроид + приглушение полигона),
@@ -1828,9 +1832,18 @@ export function MapViewerClient({
       }
       const range = fl?.height ?? null;
       const isGround = idx === 0;
-      for (const { marker, top, bottom, floor } of markersRef.current) {
+      const iso = isolatedQuestRef.current;
+      for (const { marker, top, bottom, floor, questId } of markersRef.current) {
         const el = marker.getElement();
         if (!el) continue;
+        // Изоляция квеста: видны ТОЛЬКО его маркеры (прочие — скрыты, поверх этажной логики).
+        if (iso) {
+          const match = questId === iso;
+          el.style.display = match ? '' : 'none';
+          if (!match) continue;
+        } else if (el.style.display === 'none') {
+          el.style.display = '';
+        }
         let visible: boolean;
         if (floor != null) visible = floor === idx;
         else if (top == null && bottom == null) visible = isGround;
@@ -1849,6 +1862,17 @@ export function MapViewerClient({
     activeFloorRef.current = activeFloor;
     onRequestFloorRef.current = onRequestFloor;
   });
+
+  // Изоляция карты на выбранный квест (drawer «Подробности задания» открыт) → показываем ТОЛЬКО
+  // его маркеры (прочие слои/маркеры скрыты). Снятие выбора / закрытие drawer → обычный режим.
+  const isoSelectedQuestId = useMapUiStore((s) => s.selectedQuestId);
+  const isoQuestSheetOpen = useMapUiStore((s) => s.activeSheet === 'questDetail');
+  useEffect(() => {
+    if (!mapInst) return; // гейт: карта и слои готовы (иначе addTo бьёт по неготовым панам)
+    isolatedQuestRef.current = isoQuestSheetOpen && isoSelectedQuestId ? isoSelectedQuestId : null;
+    applyLayerVisRef.current();                        // интерактивные карты: видимость слоёв
+    applyFloorRef.current(activeFloorRef.current);     // статик-карты + переприменить маркеры
+  }, [isoSelectedQuestId, isoQuestSheetOpen, mapInst]);
 
   useEffect(() => {
     // Bug 1: svgReadyTick в зависимостях — как только группы SVG готовы (loadImage бампнул тик),
@@ -2111,7 +2135,7 @@ export function MapViewerClient({
           marker.on('click', () => window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener'));
         }
         marker.addTo(manualGroup);
-        markersRef.current.push({ marker, top: null, bottom: null, floor: m.floor ?? null });
+        markersRef.current.push({ marker, top: null, bottom: null, floor: m.floor ?? null, questId: (m.type === 'quest' || m.type === 'quest_zone') ? (m.questId ?? null) : null });
       }
     } else {
       // Интерактивная карта: под-слой на каждый ключ таксономии (loose loot — кластер отдельно).
@@ -2158,7 +2182,7 @@ export function MapViewerClient({
           marker.on('mouseout', () => poly.remove());
         }
         marker.addTo(grp);
-        markersRef.current.push({ marker, top: m.top, bottom: m.bottom });
+        markersRef.current.push({ marker, top: m.top, bottom: m.bottom, questId: (m.type === 'quest' || m.type === 'quest_zone') ? (m.questId ?? null) : null });
       }
       looseGroupsRef.current = looseGroups;
       looseMarkersRef.current = looseMarkers;
@@ -2214,8 +2238,11 @@ export function MapViewerClient({
       const applyLayerVis = () => {
         const v = visRef.current;
         const frac = zoomFrac();
+        // Изоляция квеста: показываем ТОЛЬКО quest-слои (quest-target/quest-item), прочие + loose off.
+        // Внутри quest-слоёв applyFloor прячет маркеры чужих квестов. Фильтры пользователя не трогаем.
+        const iso = isolatedQuestRef.current;
         for (const [key, grp] of Object.entries(groups)) {
-          const on = v[key] && lodVisibleAt(key, frac);
+          const on = iso ? key.startsWith('quest-') : (v[key] && lodVisibleAt(key, frac));
           if (on) {
             if (!map.hasLayer(grp)) grp.addTo(map);
           } else if (map.hasLayer(grp)) {
@@ -2223,7 +2250,7 @@ export function MapViewerClient({
           }
         }
         for (const [key, grp] of Object.entries(looseGroups)) {
-          const on = v[key] && lodVisibleAt(key, frac);
+          const on = iso ? false : (v[key] && lodVisibleAt(key, frac));
           if (on) {
             if (!map.hasLayer(grp)) grp.addTo(map);
             rebuildLoose(key); // кластер зависит от зума — пересобираем, пока слой виден
