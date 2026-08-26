@@ -32,7 +32,14 @@ import { applyAffine, invertAffine } from '@/lib/map-calibration';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
 import { markerColor, isItemId, LINK_KIND_COLOR } from '@/data/map-marker-icons';
-import { EditorialMarkerCard, type EditorialMarkerData, type QuestIndexItem, type StoryIndexItem } from './EditorialMarkerCard';
+import {
+  EditorialMarkerCard,
+  type EditorialMarkerData,
+  type EditorialMarkerView,
+  type LinkedQuestInfo,
+  type QuestIndexItem,
+  type StoryIndexItem,
+} from './EditorialMarkerCard';
 import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
@@ -1538,6 +1545,85 @@ export function MapViewerClient({
     };
   }, [infoMarker]);
 
+  // ── Read-only карточка квеста (клик по quest_zone / quest / editorial-квест-маркеру) — тот же поповер-механизм. ──
+  const [questCard, setQuestCard] = useState<{ anchor: { x: number; z: number }; view: EditorialMarkerView; linkedQuest: LinkedQuestInfo | null } | null>(null);
+  const questCardRef = useRef<HTMLDivElement | null>(null);
+  const openQuestCardRef = useRef<(m: MapViewMarker) => void>(() => {});
+  useEffect(() => {
+    openQuestCardRef.current = (m: MapViewMarker) => {
+      if (!m.questId || !m.position) return;
+      const q = quests?.find((x) => x.id === m.questId);
+      setQuestCard({
+        anchor: { x: m.position.x, z: m.position.z },
+        view: {
+          mapId: mapId ?? '',
+          x: m.position.x,
+          z: m.position.z,
+          y: m.position.y ?? null,
+          floor: m.floor ?? null,
+          type: 'quest_zone',
+          category: (m.meta?.objectiveKind as string) ?? null,
+          title: m.label ?? 'Зона задания',
+          description: null,
+          screenshots: [],
+          linkKind: 'quest',
+          linkId: m.questId,
+          sourceMarkerId: m.id,
+        },
+        linkedQuest: q
+          ? { name: q.name, traderNn: q.trader, minPlayerLevel: q.minPlayerLevel, kappaRequired: q.kappaRequired, lightkeeperRequired: q.lightkeeperRequired }
+          : null,
+      });
+    };
+  }, [quests, mapId]);
+  // Карточка держится НАД меткой квеста (как info-card): пересчёт при пане/зуме.
+  useEffect(() => {
+    const map = mapInst;
+    if (!map || !questCard) return;
+    const latlng = ll({ x: questCard.anchor.x, z: questCard.anchor.z });
+    const place = () => {
+      const el = questCardRef.current;
+      if (!el) return;
+      const pt = map.latLngToContainerPoint(latlng);
+      const size = map.getSize();
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      const M = 8;
+      const left = Math.min(Math.max(pt.x, w / 2 + M), size.x - w / 2 - M);
+      let top = pt.y - 22 - h;
+      top = Math.max(M, Math.min(top, size.y - h - M));
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    };
+    place();
+    map.on('move zoom', place);
+    const ro = new ResizeObserver(place);
+    if (questCardRef.current) ro.observe(questCardRef.current);
+    return () => {
+      map.off('move zoom', place);
+      ro.disconnect();
+    };
+  }, [mapInst, questCard]);
+  // Закрытие карточки квеста: клик вне / Esc.
+  useEffect(() => {
+    if (!questCard) return;
+    const onDown = (e: MouseEvent) => {
+      if (!questCardRef.current?.contains(e.target as Node)) setQuestCard(null);
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setQuestCard(null);
+    };
+    const t = setTimeout(() => {
+      document.addEventListener('mousedown', onDown);
+      document.addEventListener('keydown', onEsc);
+    }, 0);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [questCard]);
+
   // ── Реверс Ключ→Двери: постоянная подсветка дверей «моих ключей» (вне LOD/фильтра слоя замков). ──
   const myKeys = useMyKeysStore((s) => s.keys);
   const myKeyDoors = useMemo(() => {
@@ -2019,8 +2105,8 @@ export function MapViewerClient({
         const marker = L.marker(ll(m.position), { icon: manualMarkerIcon(m), riseOnHover: true });
         const tip = m.label || (m.category ? categoryLabel(m.category) : null) || m.type;
         marker.bindTooltip(tip, { className: 'cta-tip', direction: 'top', offset: [0, -8], opacity: 1 });
-        if (m.type === 'quest' && m.questId) {
-          marker.on('click', () => window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener'));
+        if ((m.type === 'quest' || m.type === 'quest_zone') && m.questId) {
+          marker.on('click', () => openQuestCardRef.current(m));
         } else if (m.itemSlug) {
           marker.on('click', () => window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener'));
         }
@@ -2056,8 +2142,8 @@ export function MapViewerClient({
         marker.on('click', () => {
           if (overrideModeRef.current || deleteOpenRef.current) return openOverrideRef.current(m);
           if (m.type === 'lock' || m.type === 'extract') return openInfoCardRef.current(m); // read-only инфо-карточка
-          if (m.type === 'quest' && m.questId) window.open(`/eft/quests/task/${m.questId}`, '_blank', 'noopener');
-          else if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
+          if ((m.type === 'quest' || m.type === 'quest_zone') && m.questId) return openQuestCardRef.current(m); // read-only карточка квеста
+          if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
         });
         // Регистрируем для класса пометки + применяем стартовое состояние.
         sourceMarkerElsRef.current.set(m.id, marker);
@@ -2539,6 +2625,7 @@ export function MapViewerClient({
             linkedQuest={activeMarker.linkedQuest}
             linkedStory={activeMarker.linkedStory}
             linkedItem={activeMarker.linkedItem}
+            onOpenQuest={(id) => useMapUiStore.getState().openQuestDetail(id)}
             canEdit={canEditMarkers}
             defaultEditing={!activeMarker.id && !activeMarker.sourceMarkerId}
             questIndex={questIndex}
@@ -2571,6 +2658,22 @@ export function MapViewerClient({
               onClose={() => setInfoMarker(null)}
             />
           )}
+        </div>
+      )}
+
+      {/* Read-only карточка квеста — popup НАД меткой (клик по quest_zone / quest). Позиция ставится эффектом. */}
+      {questCard && (
+        <div ref={questCardRef} className="absolute z-[520] w-87" style={{ transform: 'translateX(-50%)' }}>
+          <EditorialMarkerCard
+            marker={questCard.view}
+            linkedQuest={questCard.linkedQuest}
+            canEdit={false}
+            mapSlug={data.slug}
+            onOpenQuest={(id) => {
+              setQuestCard(null);
+              useMapUiStore.getState().openQuestDetail(id);
+            }}
+          />
         </div>
       )}
 
@@ -2758,6 +2861,7 @@ export function MapViewerClient({
               linkedQuest={markedForEdit[0].linkedQuest}
               linkedStory={markedForEdit[0].linkedStory}
               linkedItem={markedForEdit[0].linkedItem}
+              onOpenQuest={(id) => useMapUiStore.getState().openQuestDetail(id)}
               canEdit={canEditMarkers}
               defaultEditing
               questIndex={questIndex}
