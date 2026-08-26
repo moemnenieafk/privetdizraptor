@@ -605,7 +605,8 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           },
           { id: 'p-needed', label: 'Важные предметы', description: 'Полный список всех предметов, необходимых для выполнения заданий и постройки убежища.', path: '/eft/progress/needed', iconUrl: '/icons/eft/04-progression/items-needed.svg' },
           { id: 'p-stash', label: 'Мой схрон', description: 'Визуальная сетка твоего схрона: всё, что ты отметил «В схрон» по сайту, разложено по ячейкам как в игре.', path: '/eft/progress/stash', iconUrl: '/icons/eft/04-progression/hideout-modules/stash.svg' },
-          { id: 'p-collector', label: 'Коллекционер', description: 'Все предметы для контейнера Kappa. Отмечай найденные — они уходят вниз, а ненайденные всплывают вверх.', path: '/eft/progress/collector', iconUrl: '/icons/eft/profile-pannel/kappa_icon.svg' }
+          { id: 'p-collector', label: 'Коллекционер', description: 'Все предметы для контейнера Kappa. Отмечай найденные — они уходят вниз, а ненайденные всплывают вверх.', path: '/eft/progress/collector', iconUrl: '/icons/eft/profile-pannel/kappa_icon.svg' },
+          { id: 'p-raid-scan', label: 'Разбор рейда', description: 'Загрузи скриншот инвентаря — распознаем предметы поверх сетки и покажем цены.', path: '/eft/progress/raid-scan', iconUrl: '/icons/eft/raid-scan-icon.svg' }
         ]
       },
       { 
@@ -674,22 +675,6 @@ export const HEADER_DICTIONARY: Record<string, HeaderConfig> = {
           { id: 'cl-masterclasses', label: 'Мастер-классы', description: 'Разборы, обучающие сессии и гайды от профи.', path: '/eft/comlink/masterclasses', iconUrl: '/icons/eft/07-comlink/masterclasses.svg' },
           { id: 'cl-blog', label: 'Новостной блог', description: 'Новости проекта ЦТА, статьи и объявления.', path: '/eft/comlink/blog', iconUrl: '/icons/eft/07-comlink/blog.svg' }
         ]
-      },
-      // ВЕТКА: ИНСТРУМЕНТЫ — утилиты поверх зеркала (разбор рейда по скриншоту и т.п.).
-      {
-        id: 'tools',
-        label: 'Инструменты',
-        path: '/eft/tools',
-        iconUrl: '/icons/eft/raid-scan-icon.svg',
-        children: [
-          {
-            id: 't-raid-scan',
-            label: 'Разбор рейда',
-            description: 'Загрузи скриншот инвентаря — распознаем предметы поверх сетки и покажем цены.',
-            path: '/eft/tools/raid-scan',
-            iconUrl: '/icons/eft/raid-scan-icon.svg',
-          },
-        ],
       },
     ],
     currencySymbol: '₽',

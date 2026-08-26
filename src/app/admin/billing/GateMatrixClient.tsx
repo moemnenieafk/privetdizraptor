@@ -168,7 +168,7 @@ export function GateMatrixClient({
     const row = node.key ? byKey.get(node.key) : undefined;
     if (!row) return null;
     return (
-      <div className="tactical-card-base p-4 flex flex-col gap-3">
+      <div className="bg-card-menu border border-lines-hover rounded-lg p-4 flex flex-col gap-3">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 shrink-0 flex items-center justify-center rounded-md bg-(--color-darkbase)">
             <NodeIcon node={node} size="sm" />
@@ -239,7 +239,7 @@ export function GateMatrixClient({
         const total = countGates(group);
         const groupRow = group.key ? byKey.get(group.key) : undefined;
         return (
-          <div key={group.label} className="tactical-card-base is-inactive flex flex-col">
+          <div key={group.label} className="bg-card-menu border border-lines-hover rounded-lg flex flex-col">
             {/* Шапка группы: иконка + название + счётчик + (контролы «весь раздел») + шеврон. */}
             <div className="flex items-center gap-4 p-4">
               <button
