@@ -10,7 +10,8 @@ import { TRADER_COLORS } from '@/data/traderColors';
 import { getQuestHeroImg } from '@/lib/quest-utils';
 import { isCollectorTask, COLLECTOR_TRACKER_HREF } from '@/lib/quest-constants';
 import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
-import { Paperclip, ArrowLeftRight, ListChecks } from 'lucide-react';
+import { BarterCountBadge } from '@/components/ui/BarterCountBadge';
+import { Paperclip, ListChecks } from 'lucide-react';
 
 function getObjectiveIcon(obj: TaskObjective): string {
   if (obj.__typename === 'TaskObjectiveTraderLevel') return 'icon-eft-quests-rep';
@@ -197,13 +198,7 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
 
         {barterCount > 0 && (
           <div className="px-4 pb-2">
-            <span
-              title={`Открывает ${barterCount} бартеров`}
-              className="inline-flex items-center gap-1 rounded-xs border border-lines-hover px-1.5 py-0.5 font-blender-medium text-type-caption uppercase tracking-wide text-text-muted"
-            >
-              <ArrowLeftRight className="h-2.5 w-2.5 text-(--primary)" />
-              {barterCount} бартер{barterCount % 10 === 1 && barterCount % 100 !== 11 ? '' : barterCount % 10 >= 2 && barterCount % 10 <= 4 && (barterCount % 100 < 10 || barterCount % 100 >= 20) ? 'а' : 'ов'}
-            </span>
+            <BarterCountBadge count={barterCount} />
           </div>
         )}
 
