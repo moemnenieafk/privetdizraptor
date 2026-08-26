@@ -1,10 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem } from '@/types/quest';
-import { useInventoryStore } from '@/store/useInventoryStore';
-
-// Квест-предметы — НЕ реальные предметы инвентаря, в схрон не идут.
-const QUEST_ITEM_TYPES = new Set(['findQuestItem', 'giveQuestItem', 'plantQuestItem']);
+import { isFirStashObjective, syncStashDelta } from '@/lib/quest-stash-sync';
 
 interface QuestStore {
   // Runtime cache — populated by QuestMapClient on mount, not persisted
@@ -68,15 +65,14 @@ export const useQuestStore = create<QuestStore>()(
           };
         }),
       setQuestDone: (task, done) => {
-        // Зеркалим FiR-предметы (найдено в рейде, не квест-предметы) в схрон: done → заполнить
-        // до нужного, отмена → убрать собранное. Побочка снаружи set (чистый апдейтер ниже).
+        // Зеркалим FiR-предметы (найдено в рейде, не квест-предметы) в схрон с FiR-меткой:
+        // done → заполнить до нужного, отмена → убрать собранное. Побочка снаружи set.
         const prev = get().itemProgress[task.id] ?? {};
-        const inv = useInventoryStore.getState();
         for (const o of task.objectives ?? []) {
-          if (o.__typename !== 'TaskObjectiveItem' || !o.item?.id || !o.foundInRaid || QUEST_ITEM_TYPES.has(o.type)) continue;
+          if (!isFirStashObjective(o) || !o.item) continue;
           const cur = prev[o.id] ?? 0;
           const delta = (done ? ((o as TaskObjectiveItem).count ?? 0) : 0) - cur;
-          if (delta) inv.bumpCount(o.item.id, delta, Number.MAX_SAFE_INTEGER);
+          syncStashDelta(o.item.id, delta);
         }
         set((s) => {
           const id = task.id;

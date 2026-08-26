@@ -24,6 +24,9 @@ interface InventoryStore {
   decrement: (id: string) => void;
   /** Переключить FiR-метку ОДНОЙ ячейки схрона по её юнит-ключу (cell.id `${itemId}#${i}`). */
   toggleFirUnit: (unitKey: string) => void;
+  /** Явно установить/снять FiR-метку ячейки (для авто-синка из квестов: собранный в рейде
+   *  предмет попадает в схрон уже помеченным «найдено в рейде»). */
+  setFirUnit: (unitKey: string, value: boolean) => void;
   /** Полный сброс схрона: очищает всё владение и FiR-метки. Флаг hideoutMerged НЕ трогаем
    *  (миграция уже проведена, повторять её не нужно). */
   resetStash: () => void;
@@ -62,6 +65,14 @@ export const useInventoryStore = create<InventoryStore>()(
           const copy = { ...state.firUnits };
           if (copy[unitKey]) delete copy[unitKey];
           else copy[unitKey] = true;
+          return { firUnits: copy };
+        }),
+      setFirUnit: (unitKey, value) =>
+        set((state) => {
+          if (!!state.firUnits[unitKey] === value) return state; // без изменений — не дёргаем подписчиков
+          const copy = { ...state.firUnits };
+          if (value) copy[unitKey] = true;
+          else delete copy[unitKey];
           return { firUnits: copy };
         }),
       resetStash: () => set({ ownedItems: {}, firUnits: {} }),
