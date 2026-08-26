@@ -519,7 +519,12 @@ export function NeededMergedClient({
       const g = groupById.get(id.slice(2));
       if (!g) continue;
       if (onlyHideout) continue; // any-of группы — квестовые, не убежище
-      if (q && !g.questName.toLowerCase().includes(q)) continue;
+      // Поиск матчит и имя квеста, И имена принимаемых предметов (ВФильтр и пр. в наборе «N любых»).
+      if (
+        q &&
+        !g.questName.toLowerCase().includes(q) &&
+        !g.accepted.some((a) => a.name.toLowerCase().includes(q) || a.shortName.toLowerCase().includes(q))
+      ) continue;
       if (hideDone) {
         /* группы прогресс не трекают в v1 — показываем всегда, если не done-фильтр не режет */
       }
