@@ -73,7 +73,7 @@ const SORT_OPTIONS: { key: SortMode; label: string }[] = [
   { key: 'original', label: 'Исходный' },
 ];
 
-/** FiR-маркер (найдено в рейде) — фрейм 36×36 в углу ячейки + иконка side-quests 22×22 (#BDA550). */
+/** FiR-маркер (найдено в рейде) — фрейм в углу ячейки + иконка side-quests, золото FiR (--color-fir). */
 function FirMark() {
   return (
     <span
@@ -82,7 +82,7 @@ function FirMark() {
     >
       <span
         aria-hidden
-        className="icon-eft-quests-side h-3 w-3 mask-contain mask-center mask-no-repeat bg-(--color-rarity-legendary)"
+        className="icon-eft-quests-side h-3 w-3 mask-contain mask-center mask-no-repeat bg-fir"
       />
     </span>
   );
@@ -95,7 +95,7 @@ function FirMark() {
 const META_BADGE: Record<'quest' | 'hideout' | 'fir', { box: string; icon: string }> = {
   quest: { box: 'border-tactical-amber/40 bg-tactical-amber/10 text-tactical-amber', icon: 'bg-tactical-amber' },
   hideout: { box: 'border-hideout/40 bg-hideout/10 text-hideout', icon: 'bg-hideout' },
-  fir: { box: 'border-nvg-green/40 bg-nvg-green/10 text-nvg-green', icon: 'bg-nvg-green' },
+  fir: { box: 'border-fir/40 bg-fir/10 text-fir', icon: 'bg-fir' },
 };
 function MetaBadge({ variant, icon, children }: { variant: keyof typeof META_BADGE; icon: string; children: React.ReactNode }) {
   const s = META_BADGE[variant];
@@ -573,7 +573,7 @@ export function NeededMergedClient({
         <FilterChip on={hideDone} onClick={() => setHideDone((v) => !v)} lucide={<Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}>
           Скрыть готовые
         </FilterChip>
-        <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)} icon="/icons/eft/02-quests/side-quests.svg">
+        <FilterChip on={firOnly} onClick={() => setFirOnly((v) => !v)} icon="/icons/eft/02-quests/side-quests.svg" accent="fir">
           Найдено в рейде
         </FilterChip>
         <FilterChip on={onlyHideout} onClick={() => setOnlyHideout((v) => !v)} icon="/icons/eft/04-progression/hideout-modules.svg">
@@ -675,32 +675,42 @@ export function NeededMergedClient({
 }
 
 /** Кнопка-фильтр списка (тоггл). Иконка-маска ИЛИ lucide-нода + подпись; активна — рамка/фон primary. */
+// Акценты активного чипа: дефолт — --primary; 'fir' — золото «Найдено в рейде» (--color-fir).
+// Классы статические (Tailwind JIT), не конкатенируются динамически.
+const CHIP_ON: Record<'primary' | 'fir', { box: string; icon: string }> = {
+  primary: { box: 'border-(--primary) bg-(--primary)/15 text-(--primary)', icon: 'bg-(--primary)' },
+  fir:     { box: 'border-fir bg-fir/15 text-fir', icon: 'bg-fir' },
+};
+
 function FilterChip({
   on,
   onClick,
   icon,
   lucide,
   children,
+  accent = 'primary',
 }: {
   on: boolean;
   onClick: () => void;
   icon?: string;
   lucide?: React.ReactNode;
   children: React.ReactNode;
+  accent?: 'primary' | 'fir';
 }) {
+  const acc = CHIP_ON[accent];
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={on}
       className={`flex h-9 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm border px-3 font-blender-medium text-type-micro uppercase tracking-wider transition-colors ${
-        on ? 'border-(--primary) bg-(--primary)/15 text-(--primary)' : 'border-lines-hover text-text-muted hover:text-text-secondary'
+        on ? acc.box : 'border-lines-hover text-text-muted hover:text-text-secondary'
       }`}
     >
       {icon && (
         <span
           aria-hidden
-          className={`h-4 w-4 shrink-0 mask-contain mask-center mask-no-repeat transition-colors ${on ? 'bg-(--primary)' : 'bg-text-muted'}`}
+          className={`h-4 w-4 shrink-0 mask-contain mask-center mask-no-repeat transition-colors ${on ? acc.icon : 'bg-text-muted'}`}
           style={{ maskImage: `url(${icon})`, WebkitMaskImage: `url(${icon})` }}
         />
       )}
@@ -764,10 +774,10 @@ function SourceChip({ s }: { s: SrcState }) {
             </span>
           )}
           {s.fir && (
-            <span className="flex items-center gap-1 text-nvg-green">
+            <span className="flex items-center gap-1 text-fir">
               <span
                 aria-hidden
-                className="icon-eft-quests-side h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-nvg-green"
+                className="icon-eft-quests-side h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-fir"
               />
               в рейде
             </span>
@@ -1003,10 +1013,10 @@ function GroupRow({
           <span className="flex items-center gap-x-2 font-blender-medium text-type-micro uppercase tracking-wide text-text-muted">
             {group.trader}
             {group.fir && (
-              <span className="flex items-center gap-1 text-nvg-green">
+              <span className="flex items-center gap-1 text-fir">
                 <span
                   aria-hidden
-                  className="icon-eft-quests-side h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-nvg-green"
+                  className="icon-eft-quests-side h-3 w-3 shrink-0 mask-contain mask-center mask-no-repeat bg-fir"
                 />
                 в рейде
               </span>
