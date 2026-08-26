@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem } from '@/types/quest';
+import { useInventoryStore } from '@/store/useInventoryStore';
+
+// Квест-предметы — НЕ реальные предметы инвентаря, в схрон не идут.
+const QUEST_ITEM_TYPES = new Set(['findQuestItem', 'giveQuestItem', 'plantQuestItem']);
 
 interface QuestStore {
   // Runtime cache — populated by QuestMapClient on mount, not persisted
@@ -46,7 +50,7 @@ interface QuestStore {
 
 export const useQuestStore = create<QuestStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       tasks: [],
       setTasks: (tasks) => set({ tasks }),
 
@@ -63,7 +67,17 @@ export const useQuestStore = create<QuestStore>()(
               : s.pinnedQuests,
           };
         }),
-      setQuestDone: (task, done) =>
+      setQuestDone: (task, done) => {
+        // Зеркалим FiR-предметы (найдено в рейде, не квест-предметы) в схрон: done → заполнить
+        // до нужного, отмена → убрать собранное. Побочка снаружи set (чистый апдейтер ниже).
+        const prev = get().itemProgress[task.id] ?? {};
+        const inv = useInventoryStore.getState();
+        for (const o of task.objectives ?? []) {
+          if (o.__typename !== 'TaskObjectiveItem' || !o.item?.id || !o.foundInRaid || QUEST_ITEM_TYPES.has(o.type)) continue;
+          const cur = prev[o.id] ?? 0;
+          const delta = (done ? ((o as TaskObjectiveItem).count ?? 0) : 0) - cur;
+          if (delta) inv.bumpCount(o.item.id, delta, Number.MAX_SAFE_INTEGER);
+        }
         set((s) => {
           const id = task.id;
           if (done) {
@@ -96,7 +110,8 @@ export const useQuestStore = create<QuestStore>()(
             itemProgress: itemRest,
             checkedObjectives: checkRest,
           };
-        }),
+        });
+      },
       resetProgress: () => set({ completedQuests: [], itemProgress: {}, checkedObjectives: {} }),
 
       kappaObjectiveIds: [],

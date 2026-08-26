@@ -4,6 +4,7 @@ import type { TaskRaw, TaskObjectiveItem } from '@/types/quest';
 import { useQuestStore } from '@/store/useQuestStore';
 import { TrackCell } from '@/components/ui/kit/TrackCell';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { isFirStashObjective, syncStashDelta } from '@/lib/quest-stash-sync';
 import ITEM_BG from '@/data/quests/item-backgrounds.json';
 
 // Тарковский фон ячейки по id предмета: обычные — свой цвет, квест-предметы → #686628 (yellow).
@@ -79,8 +80,18 @@ export function QuestItemTracker({ task }: Props) {
             alt={row.item.shortName}
             have={rowFound(row)}
             need={row.count}
-            onInc={(delta) => (delta > 0 ? incRow(row) : decRow(row))}
-            onSetTotal={(n) => setRow(row, n)}
+            onInc={(delta) => {
+              const before = rowFound(row);
+              if (delta > 0) incRow(row); else decRow(row);
+              const after = delta > 0 ? Math.min(row.count, before + 1) : Math.max(0, before - 1);
+              // FiR-предмет (найдено в рейде, не квест-предмет) → зеркалим сбор в Схрон.
+              if (isFirStashObjective(row.objs[0])) syncStashDelta(row.item.id, after - before);
+            }}
+            onSetTotal={(n) => {
+              const before = rowFound(row);
+              setRow(row, n);
+              if (isFirStashObjective(row.objs[0])) syncStashDelta(row.item.id, Math.min(row.count, Math.max(0, n)) - before);
+            }}
             bgColor={itemBg(row.item.id)}
             bottomLeft={row.foundInRaid ? FIR_CORNER : undefined}
           />

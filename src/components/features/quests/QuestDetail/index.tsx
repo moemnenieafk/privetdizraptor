@@ -10,6 +10,7 @@ import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem, QuestBarterLite } from '@/types/quest';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { isFirStashObjective, syncStashDelta } from '@/lib/quest-stash-sync';
 import ITEM_BG from '@/data/quests/item-backgrounds.json';
 import { getQuestHeroImg } from '@/lib/quest-utils';
 
@@ -180,14 +181,19 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
   // item — заполнить/обнулить счётчик (двусторонняя связка с трекером); прочие — галка.
   const completeObjective = (obj: TaskObjective) => {
     if (obj.__typename === 'TaskObjectiveItem') {
-      setItemCount(task.id, obj.id, (obj as TaskObjectiveItem).count ?? 0);
+      const cur = itemProgress[task.id]?.[obj.id] ?? 0;
+      const count = (obj as TaskObjectiveItem).count ?? 0;
+      setItemCount(task.id, obj.id, count);
+      if (obj.item && isFirStashObjective(obj)) syncStashDelta(obj.item.id, count - cur); // FiR → в схрон
     } else if (!(checkedObjectives[task.id]?.includes(obj.id))) {
       toggleCheckedObjective(task.id, obj.id);
     }
   };
   const reverseObjective = (obj: TaskObjective) => {
     if (obj.__typename === 'TaskObjectiveItem') {
+      const cur = itemProgress[task.id]?.[obj.id] ?? 0;
       setItemCount(task.id, obj.id, 0);
+      if (obj.item && isFirStashObjective(obj)) syncStashDelta(obj.item.id, -cur); // убрать из схрона
     } else if (checkedObjectives[task.id]?.includes(obj.id)) {
       toggleCheckedObjective(task.id, obj.id);
     }

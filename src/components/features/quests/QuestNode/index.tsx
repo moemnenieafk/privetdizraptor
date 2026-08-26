@@ -12,6 +12,7 @@ import { isCollectorTask, COLLECTOR_TRACKER_HREF } from '@/lib/quest-constants';
 import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import { BarterCountBadge } from '@/components/ui/BarterCountBadge';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import { isFirStashObjective, syncStashDelta } from '@/lib/quest-stash-sync';
 import ITEM_BG from '@/data/quests/item-backgrounds.json';
 import { Paperclip, ListChecks } from 'lucide-react';
 
@@ -231,15 +232,19 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
                 onClick={e => {
                   e.stopPropagation();
                   if (singleObjective) { setQuestDone(task, true); return; }
-                  if (isItem) incrementItem(task.id, obj.id, total);
-                  else if (!checked) toggleCheckedObjective(task.id, obj.id);
+                  if (isItem) {
+                    incrementItem(task.id, obj.id, total);
+                    if (obj.item && isFirStashObjective(obj)) syncStashDelta(obj.item.id, Math.min(total, done + 1) - done);
+                  } else if (!checked) toggleCheckedObjective(task.id, obj.id);
                 }}
                 onContextMenu={e => {
                   e.preventDefault();
                   e.stopPropagation();
                   if (singleObjective) { setQuestDone(task, false); return; }
-                  if (isItem) decrementItem(task.id, obj.id);
-                  else if (checked) toggleCheckedObjective(task.id, obj.id);
+                  if (isItem) {
+                    decrementItem(task.id, obj.id);
+                    if (obj.item && isFirStashObjective(obj)) syncStashDelta(obj.item.id, Math.max(0, done - 1) - done);
+                  } else if (checked) toggleCheckedObjective(task.id, obj.id);
                 }}
                 title={singleObjective ? 'ЛКМ — завершить квест · ПКМ — отменить' : 'ЛКМ — отметить / +1 · ПКМ — отменить / −1'}
                 className="flex items-center gap-2 py-1 cursor-pointer select-none"
