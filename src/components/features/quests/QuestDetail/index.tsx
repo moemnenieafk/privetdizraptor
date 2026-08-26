@@ -9,6 +9,7 @@ import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker'
 import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem, QuestBarterLite } from '@/types/quest';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
+import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
 import { getQuestHeroImg } from '@/lib/quest-utils';
 import { firstInteractiveMapSlug } from '@/lib/quest-map-link';
 import questGuides from '@/data/quest-guides.json';
@@ -391,31 +392,42 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
         Открывает бартеры
         <span className="text-text-muted">· {barters.length}</span>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {barters.map((b) => (
-          <div key={b.id} className="flex flex-wrap items-center gap-2 rounded-xs border border-lines-hover bg-(--color-darkbase) p-2">
-            <img src={traderImg(b.trader.normalizedName)} alt={b.trader.name} width={18} height={18} className="shrink-0 rounded-xs" />
+          <div key={b.id} className="flex items-center gap-2.5">
+            {/* Крупнее: аватар торговца 32px + иконка лояльности 20px (без подложки/обводки строки) */}
+            <img src={traderImg(b.trader.normalizedName)} alt={b.trader.name} width={32} height={32} className="h-8 w-8 shrink-0 rounded-xs object-cover" />
             <span
-              className={`icon-eft-profile-rep-${Math.min(Math.max(b.level, 1), 4)} h-3.5 w-3.5 shrink-0 bg-text-muted mask-contain mask-center mask-no-repeat`}
+              className={`icon-eft-profile-rep-${Math.min(Math.max(b.level, 1), 4)} h-5 w-5 shrink-0 bg-text-muted mask-contain mask-center mask-no-repeat`}
               title={`Уровень лояльности ${b.level}`}
               aria-label={`Уровень лояльности ${b.level}`}
             />
-            <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
+            <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
             {b.rewardItems.map((rw) => {
-              const tile = (
-                <span className="relative flex h-9 w-9 items-center justify-center rounded-xs border border-lines-hover bg-(--color-base) transition-colors group-hover:border-(--primary)">
-                  <img src={rw.image} alt={rw.shortName} className="h-8 w-8 object-contain p-0.5" />
-                  {rw.count > 1 && (
-                    <span className="absolute bottom-0 right-0.5 font-blender-medium text-type-caption leading-none text-(--primary)">×{rw.count}</span>
-                  )}
-                </span>
+              const inner = (
+                <>
+                  {/* Тайл предмета с тарковским фоном (редкость) + ×N в углу */}
+                  <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xs border border-(--color-base)">
+                    <span aria-hidden className="absolute inset-0 bg-(--color-darkbase)" />
+                    <span aria-hidden className="absolute inset-0" style={{ backgroundColor: getTarkovBackgroundColor(rw.backgroundColor) }} />
+                    <span aria-hidden className="pointer-events-none absolute inset-0 shadow-[inset_0_0_8px_rgba(0,0,0,0.7)]" />
+                    <img src={rw.image} alt={rw.shortName} className="relative z-10 h-full w-full object-contain p-1" />
+                    {rw.count > 1 && (
+                      <span className="absolute bottom-0 right-0 z-20 rounded-tl-xs bg-(--color-darkbase)/90 px-1 font-blender-medium text-[0.625rem] leading-tight tabular-nums text-text-primary">×{rw.count}</span>
+                    )}
+                  </span>
+                  {/* Короткое имя предмета справа */}
+                  <span className="min-w-0 flex-1 truncate font-blender-medium text-type-caption uppercase tracking-wide text-text-secondary group-hover:text-(--primary)">
+                    {rw.shortName}
+                  </span>
+                </>
               );
               return rw.normalizedName ? (
-                <Link key={rw.id} href={`/eft/items/item/${rw.normalizedName}`} title={rw.name} className="group">
-                  {tile}
+                <Link key={rw.id} href={`/eft/items/item/${rw.normalizedName}`} title={rw.name} className="group flex min-w-0 flex-1 items-center gap-2">
+                  {inner}
                 </Link>
               ) : (
-                <span key={rw.id} title={rw.name}>{tile}</span>
+                <div key={rw.id} title={rw.name} className="flex min-w-0 flex-1 items-center gap-2">{inner}</div>
               );
             })}
           </div>

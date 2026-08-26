@@ -37,6 +37,7 @@ export async function getBartersByQuest(): Promise<Record<string, QuestBarterLit
             normalizedName: priceIndex.get(s.itemId)?.normalizedName ?? undefined,
             image: itemIconUrl(s.itemId),
             count: s.count,
+            backgroundColor: priceIndex.get(s.itemId)?.backgroundColor ?? undefined,
           };
         }),
       });

@@ -95,6 +95,8 @@ export interface QuestBarterRewardItem {
   normalizedName?: string;
   image: string;
   count: number;
+  /** Тарковский цвет фона ячейки (редкость) из зеркала цен — для тайла предмета. */
+  backgroundColor?: string;
 }
 export interface QuestBarterLite {
   id: string;
