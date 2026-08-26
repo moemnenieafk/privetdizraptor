@@ -46,6 +46,9 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
 
   const itemProgress  = useQuestStore(s => s.itemProgress);
   const incrementItem = useQuestStore(s => s.incrementItem);
+  const decrementItem = useQuestStore(s => s.decrementItem);
+  const checkedObjectives = useQuestStore(s => s.checkedObjectives);
+  const toggleCheckedObjective = useQuestStore(s => s.toggleCheckedObjective);
 
   const nn         = task.trader.normalizedName;
   // Цвет берём из JS-палитры, а не из var(--trader-*): Tailwind v4 вырезает неиспользуемые
@@ -214,8 +217,26 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
               ? ((obj as TaskObjectiveItem).count ?? 0) : 0;
             const isItem  = obj.__typename === 'TaskObjectiveItem';
             const iconCls = getObjectiveIcon(obj);
+            // Готовность цели: предмет — счётчик≥нужного; прочие — прожата галка (checkedObjectives).
+            const checked = isItem ? (total > 0 && done >= total) : (checkedObjectives[task.id]?.includes(obj.id) ?? false);
             return (
-              <li key={obj.id} className="flex items-center gap-2 py-1">
+              <li
+                key={obj.id}
+                data-no-pan
+                onClick={e => {
+                  e.stopPropagation();
+                  if (isItem) incrementItem(task.id, obj.id, total);
+                  else if (!checked) toggleCheckedObjective(task.id, obj.id);
+                }}
+                onContextMenu={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (isItem) decrementItem(task.id, obj.id);
+                  else if (checked) toggleCheckedObjective(task.id, obj.id);
+                }}
+                title="ЛКМ — отметить / +1 · ПКМ — отменить / −1"
+                className="flex items-center gap-2 py-1 cursor-pointer select-none"
+              >
                 {isItem && obj.item && (
                   <div className="relative w-7 h-7 shrink-0">
                     <div className="absolute inset-0 overflow-hidden rounded-xs border border-lines-hover">
@@ -243,11 +264,10 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
                     {done}/{total}
                   </span>
                 )}
-                <button
-                  data-no-pan
-                  onClick={e => { e.stopPropagation(); if (isItem) incrementItem(task.id, obj.id, total); }}
+                <span
+                  aria-hidden
                   className={`icon-mask ${iconCls} shrink-0 w-4 h-4 text-text-secondary transition-opacity ${
-                    done === total && total > 0 ? 'opacity-100' : 'opacity-40'
+                    checked ? 'opacity-100' : 'opacity-40'
                   }`}
                 />
               </li>
