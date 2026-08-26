@@ -20,6 +20,7 @@ import { QuestPinnedSheet } from '@/components/features/quests/QuestPinnedSheet'
 import { MAP_ICON_CSS as MAP_CSS } from '@/data/map-icons';
 import { useQuestStore, exportProgress, importProgress } from '@/store/useQuestStore';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { dedupeQuestsForMap } from '@/lib/quest-map-dedup';
 import { TraderNode } from '@/components/features/quests/TraderNode';
 import { TRADER_COLORS } from '@/data/traderColors';
 import {
@@ -279,15 +280,22 @@ function computeFilteredIds(
 export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest }: Props) {
   const searchParams = useSearchParams();
 
-  // Story quests excluded; btr-driver normalizedName normalized to btrdriver
-  const initialTasks = useMemo(
-    () => rawTasks
+  // Фракция игрока (USEC/BEAR) — для фракция-aware дедупа заданий (см. ниже).
+  const faction = usePlayerStore(s => s.profiles.find(p => p.id === s.activeProfileId)?.faction ?? 'BEAR');
+
+  // Story quests excluded; btr-driver normalizedName normalized to btrdriver;
+  // затем фракция-aware дедуп: фракционные USEC/BEAR по фракции игрока, настоящие дубли
+  // схлопнуть, легит-повторы (одно задание N раз в цепочке) пометить «этап i/N».
+  // Решение: docs/decisions/quest-map-dedup.md.
+  const { initialTasks, repeatMarks } = useMemo(() => {
+    const cleaned = rawTasks
       .filter(t => t.trader.normalizedName !== 'stories')
       .map(t => t.trader.normalizedName !== 'btr-driver' ? t : {
         ...t, trader: { ...t.trader, normalizedName: 'btrdriver' },
-      }),
-    [rawTasks],
-  );
+      });
+    const res = dedupeQuestsForMap(cleaned, faction);
+    return { initialTasks: res.tasks, repeatMarks: res.repeatMarks };
+  }, [rawTasks, faction]);
 
   const [selectedTask, setSelectedTask]       = useState<TaskRaw | null>(null);
   const [filterKappa, setFilterKappa]         = useState(false);
@@ -1411,6 +1419,7 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
                     traderLevels,
                     chainRole:        getChainRole(task.id),
                     barterCount:      bartersByQuest?.[task.id]?.length ?? 0,
+                    repeatMark:       repeatMarks.get(task.id) ?? null,
                     onToggle:         handleToggle,
                     onPin:            togglePin,
                     onSelect:         (t) => { clearGuardSoft(); setSelectedTask(t); },

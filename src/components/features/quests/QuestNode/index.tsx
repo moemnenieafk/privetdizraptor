@@ -30,7 +30,7 @@ function getObjectiveIcon(obj: TaskObjective): string {
 function QuestNodeComponent({ data }: { data: QuestNodeData }) {
   const {
     task, status, dimmed, isSubgraphTarget, isMapTarget, freshlyUnlocked, pinned, chainRole, barterCount = 0,
-    headerIconClass, hidePin,
+    headerIconClass, hidePin, repeatMark,
     onToggle, onSelect, onHover, onPin,
   } = data;
 
@@ -142,6 +142,14 @@ function QuestNodeComponent({ data }: { data: QuestNodeData }) {
             {task.trader.name}
           </span>
           <div className="ml-auto flex items-center gap-1.5">
+            {repeatMark && (
+              <span
+                title={`Задание повторяется в цепочке — этап ${repeatMark.index} из ${repeatMark.total}`}
+                className="flex h-5 shrink-0 items-center rounded-xs border-[0.5px] border-(--primary)/40 bg-(--primary)/10 px-1.5 font-blender-medium text-[0.625rem] uppercase tracking-wider tabular-nums text-(--primary)"
+              >
+                Этап {repeatMark.index}/{repeatMark.total}
+              </span>
+            )}
             {task.minPlayerLevel > 0 && (
               <span className="text-xs font-blender-medium text-text-secondary shrink-0">
                 УР. {task.minPlayerLevel}+

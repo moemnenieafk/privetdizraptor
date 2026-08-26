@@ -116,6 +116,8 @@ export interface QuestNodeData {
   chainRole?: 'ancestor' | 'descendant' | 'self' | null;
   pinned?: boolean;
   barterCount?: number; // сколько бартеров открывает квест
+  /** Легит-повтор: задание делается несколько раз в цепочке — метка «этап i/N» (не дубль). */
+  repeatMark?: { index: number; total: number } | null;
   /** Иконка-маска шапки вместо фото трейдера (карты сюжетных историй: убежище/барахолка/локации). */
   headerIconClass?: string;
   /** Спрятать кнопку-скрепку (карты сюжетных историй — пины не поддерживаются). */
