@@ -84,32 +84,32 @@ export function QuestItemTracker({ task }: Props) {
               {row.foundInRaid && <FoundInRaidBadge className="mt-0.5" />}
             </div>
 
-            {/* Counter */}
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                className="flex items-center justify-center w-6 h-6 text-text-secondary hover:text-text-primary transition-colors duration-150"
-                onClick={() => decRow(row)}
-                aria-label="Уменьшить"
-              >
-                <span className="icon-decrement-icon icon-mask w-3.5 h-3.5" />
-              </button>
-              <span className="text-xs font-blender-medium w-9 text-center text-text-primary">
+            {/* Счётчик + галочка «готово» */}
+            <div className="flex shrink-0 items-center gap-1.5">
+              {done && (
+                <span className="icon-bg icon-eft-quests-complete h-3.5 w-3.5 shrink-0" style={{ color: 'var(--color-success)' }} />
+              )}
+              <span className={`text-xs font-blender-medium tabular-nums ${done ? 'text-success' : 'text-text-primary'}`}>
                 {found}/{row.count}
               </span>
+            </div>
+
+            {/* Кнопки +/− вертикальным стеком у края (Figma 3151:16859): + сверху, − снизу. */}
+            <div className="flex shrink-0 flex-col gap-1">
               <button
-                className="flex items-center justify-center w-6 h-6 text-text-secondary hover:text-text-primary transition-colors duration-150"
+                className="flex h-6 w-6 items-center justify-center rounded-xs bg-text-secondary transition-colors hover:bg-text-primary"
                 onClick={() => incRow(row)}
                 aria-label="Увеличить"
               >
-                <span className="icon-increment-icon icon-mask w-3.5 h-3.5" />
+                <span className="icon-increment-icon icon-mask h-4 w-4 bg-(--color-darkbase)" />
               </button>
-            </div>
-
-            {/* Done check */}
-            <div className="w-3.5 h-3.5 shrink-0 flex items-center justify-center">
-              {done && (
-                <span className="icon-bg icon-eft-quests-complete w-3.5 h-3.5" style={{ color: 'var(--color-success)' }} />
-              )}
+              <button
+                className="flex h-6 w-6 items-center justify-center rounded-xs bg-text-secondary transition-colors hover:bg-text-primary"
+                onClick={() => decRow(row)}
+                aria-label="Уменьшить"
+              >
+                <span className="icon-decrement-icon icon-mask h-4 w-4 bg-(--color-darkbase)" />
+              </button>
             </div>
           </div>
         );
