@@ -166,30 +166,6 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
     else if (z?.position) apiRef.current?.flyTo(z.position, 4);
   }, [ready, focusQuestId, questZones, objectivePoints]);
 
-  // Выбор квеста в drawer «Подробности задания» → изоляция карты на этот квест: гасим ВСЕ прочие
-  // слои-маркеры и подсвечиваем зону выбранного квеста (тот же приём, что дип-линк ?quest=).
-  // Закрыли drawer / у квеста нет зоны → восстанавливаем прежние фильтры и снимаем подсветку.
-  const selectedQuestId = useMapUiStore((s) => s.selectedQuestId);
-  const questSheetOpen = useMapUiStore((s) => s.activeSheet === 'questDetail');
-  const preQuestFiltersRef = useRef<Record<string, boolean> | null>(null);
-  useEffect(() => {
-    if (!ready) return;
-    const zone = questSheetOpen && selectedQuestId ? questZones.find((q) => q.questId === selectedQuestId) : undefined;
-    if (zone) {
-      // Входим в изоляцию: один раз сохраняем текущие фильтры, гасим все слои, подсвечиваем зону.
-      if (!preQuestFiltersRef.current) preQuestFiltersRef.current = { ...useMapViewStore.getState().activeFilters };
-      const keys = Object.keys(useMapViewStore.getState().activeFilters);
-      useMapViewStore.getState().setGroupFilters(keys, false);
-      if (zone.outline.length >= 3) apiRef.current?.highlightZone(zone.outline);
-      else if (zone.position) apiRef.current?.flyTo(zone.position, 4);
-    } else if (preQuestFiltersRef.current) {
-      // Выходим: восстанавливаем прежние фильтры и снимаем подсветку зоны.
-      useMapViewStore.getState().hydrate({ activeFilters: preQuestFiltersRef.current });
-      preQuestFiltersRef.current = null;
-      apiRef.current?.highlightZone(null);
-    }
-  }, [ready, selectedQuestId, questSheetOpen, questZones]);
-
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
