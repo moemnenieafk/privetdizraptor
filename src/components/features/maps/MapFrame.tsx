@@ -148,19 +148,16 @@ export function MapFrame({ data, navMaps, quests, questTasks, bosses, questZones
     setActiveFloor(0);
   }
 
-  // Дип-линк «Посмотреть на карте»: ?quest=id → изоляция + перелёт + подсветка зоны квеста.
-  // Изоляция (слайс C): гасим ВСЕ слои-маркеры (бартер/ключи/лут/спавны) — остаётся только
-  // зона-цель квеста (highlightZone рисует полигон напрямую, вне фильтра слоёв). Гасим лишь
-  // когда зона найдена, иначе карта осталась бы пустой. Вернуть слои — группами в правой легенде.
+  // Дип-линк «Показать зону на карте»: ?quest=id → открыть карточку квеста + строгая изоляция
+  // его маркеров (per-marker override во вьюере, ФИЛЬТРЫ НЕ ТРОГАЕМ — легенда восстановима,
+  // закрытие карточки возвращает всё). Раньше здесь гасили ВСЕ слои через setGroupFilters —
+  // это ломало восстановление и падало 500; теперь переиспользуем рабочий канал openQuestDetail.
+  // Камера: пообъектные пины (possibleLocations) или зона рисуются своим слоем вне изоляции.
   useEffect(() => {
     if (!ready || !focusQuestId) return;
+    useMapUiStore.getState().openQuestDetail(focusQuestId);
     const pts = objectivePoints;
     const z = questZones.find((q) => q.questId === focusQuestId);
-    if (!pts?.length && !z) return;
-    // Изоляция (слайс C): гасим чужие слои-маркеры, остаётся только цель квеста.
-    const keys = Object.keys(useMapViewStore.getState().activeFilters);
-    useMapViewStore.getState().setGroupFilters(keys, false);
-    // Пообъектные ТОЧКИ вместо зоны, если у квеста есть possibleLocations; иначе — зона.
     if (pts?.length) apiRef.current?.showObjectivePoints(pts);
     else if (z && z.outline.length >= 3) apiRef.current?.highlightZone(z.outline);
     else if (z?.position) apiRef.current?.flyTo(z.position, 4);

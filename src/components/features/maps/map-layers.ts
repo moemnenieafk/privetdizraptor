@@ -213,45 +213,27 @@ export const LAYER_GROUPS: LayerGroup[] = [
   },
 ];
 
-/* ─────────────── LOD: тир видимости по зуму (§4 споки E11) ───────────────
- * Тир маркера считаем по ключу слоя. Порог — ДОЛЯ зум-спана карты [minZoom,maxZoom]
- * (абсолютные z-уровни непереносимы: у карт разный диапазон, от −5…2 до 2…6).
- * §4-таблица с поправкой GRILL-1 (спавны = z4-тир целей; якоря = только выходы/переходы):
- *   тир 0 (якорь) — всегда: выходы, переходы
- *   тир 1 (≈z3)   — цели/опасности: зоны квестов, боссы, hazard
- *   тир 2 (≈z4)   — спавны, замки, рычаги, стационарки
- *   тир 3 (≈z5+)  — фон: контейнеры, случайная добыча
- * Пороги эмпирические — тюнятся визуально. */
-export type LodTier = 0 | 1 | 2 | 3;
-
-export function lodTierForKey(key: string): LodTier {
-  if (key.startsWith('bp-doc-')) return 0; // документы BP — всегда видны (как контейнеры/loose)
-  // Контейнеры/добыча по дефолту выключены и включаются точечно из drawer'а → показываем СРАЗУ
-  // (тир 0, без зум-порога), иначе тоггл на общем зуме «не срабатывает» до приближения (V4DYA).
-  if (key.startsWith('container-') || key.startsWith('loose-')) return 0;
-  if (key.startsWith('extract-') || key === 'transit') return 0;
-  if (key.startsWith('quest') || key.startsWith('hazard') || key === 'spawn-boss') return 1;
-  if (key.startsWith('spawn-') || key.startsWith('lock') || key === 'switch' || key.startsWith('stationary')) return 2;
-  return 2;
-}
-
-/** Доля зум-спана, с которой тир начинает показываться. Тир 0 — всегда. */
-const LOD_TIER_MIN_FRAC: Record<LodTier, number> = { 0: 0, 1: 0.34, 2: 0.56, 3: 0.78 };
-
-/** Виден ли слой на данной доле зум-спана (0..1). */
-export const lodVisibleAt = (key: string, zoomFrac: number): boolean =>
-  zoomFrac >= LOD_TIER_MIN_FRAC[lodTierForKey(key)];
-
 /** Плоский список листьев (реальные слои). */
 export const ALL_LAYER_ITEMS: LayerItem[] = LAYER_GROUPS.flatMap((g) =>
   g.items.flatMap((i) => i.children ?? [i]),
 );
 
 /**
- * Начальная видимость слоёв (V4DYA): МИНИМУМ на входе, чтобы не грузить лишние маркеры —
- * выходы ЧВК + Платный, спавны ЧВК, все опасности. Остальное выключено (юзер включает точечно
- * из легенды/drawer'а). Так снимаем нагрузку и лишнюю подгрузку.
+ * Начальная видимость слоёв на ВСЕХ картах (V4DYA, 2026-08-27). Ровно 4 группы включены,
+ * маркер виден сразу на любом зуме (LOD-гейтинг снят). Остальное — точечно из легенды/drawer'а:
+ *   • Выходы — все (+ переходы)
+ *   • Спавны — только ЧВК (spawn-pmc)
+ *   • Добыча — Документация Terragroup (BP S1) = все департаменты (bp-doc-*)
+ *   • Задания — все (quest-target/quest-item)
  */
-const DEFAULT_ON = new Set(['extract-pmc', 'extract-paidcar', 'spawn-pmc']);
 export const defaultLayerVisibility = (): Record<string, boolean> =>
-  Object.fromEntries(ALL_LAYER_ITEMS.map((i) => [i.key, DEFAULT_ON.has(i.key) || i.key.startsWith('hazard')]));
+  Object.fromEntries(
+    ALL_LAYER_ITEMS.map((i) => {
+      const on =
+        i.key.startsWith('extract-') || i.key === 'transit' || // Выходы (все) + переходы
+        i.key === 'spawn-pmc' ||                               // Спавны — только ЧВК
+        i.key.startsWith('bp-doc-') ||                         // Добыча — Документация Terragroup (BP S1)
+        i.key.startsWith('quest');                             // Задания (все)
+      return [i.key, on];
+    }),
+  );

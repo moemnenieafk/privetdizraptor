@@ -40,7 +40,7 @@ import {
   type QuestIndexItem,
   type StoryIndexItem,
 } from './EditorialMarkerCard';
-import { ALL_LAYER_ITEMS, layerKeyForMarker, lodVisibleAt } from './map-layers';
+import { ALL_LAYER_ITEMS, layerKeyForMarker } from './map-layers';
 import { categoryLabel } from '@/data/map-markers/categories';
 import type { MapView, MapViewMarker } from './map-types';
 import type { MapViewerApi, MapQuestLite } from './map-frame-types';
@@ -2228,21 +2228,21 @@ export function MapViewerClient({
           }
         }
       };
-      // LOD-гейт (§4): слой на карте только если включён фильтром И зум дорос до его тира.
-      // Долю зум-спана нормируем на [minZoom,maxZoom] карты (как --marker-scale) — абсолютные
-      // z-уровни непереносимы меж карт. Пересчёт на zoomend и при смене фильтра (vis-эффект).
-      const zoomFrac = () => {
-        const span = Math.max(0.001, cfg.maxZoom - cfg.minZoom);
-        return Math.max(0, Math.min(1, (map.getZoom() - cfg.minZoom) / span));
-      };
+      // Видимость слоя = только состояние фильтра легенды (LOD-гейтинг по зуму снят, V4DYA
+      // 2026-08-27: маркер выбранного слоя виден сразу на дальнем зуме, без «подгрузки» по зуму).
+      // Пересчёт на zoomend оставлен — loose-кластеры зависят от зума (rebuildLoose ниже).
       const applyLayerVis = () => {
+        // Гард от мёртвой карты: во время StrictMode-remount / быстрой навигации init-эффект
+        // уже сделал map.remove() (паны снесены), но applyLayerVisRef ещё зовётся из изоляции/
+        // zoomend → grp.addTo(map) бил по map._panes=undefined (_initIcon → appendChild → 500).
+        // Та же идиома-страж, что в rAF/ResizeObserver ниже.
+        if (mapRef.current !== map) return;
         const v = visRef.current;
-        const frac = zoomFrac();
         // Изоляция квеста: показываем ТОЛЬКО quest-слои (quest-target/quest-item), прочие + loose off.
         // Внутри quest-слоёв applyFloor прячет маркеры чужих квестов. Фильтры пользователя не трогаем.
         const iso = isolatedQuestRef.current;
         for (const [key, grp] of Object.entries(groups)) {
-          const on = iso ? key.startsWith('quest-') : (v[key] && lodVisibleAt(key, frac));
+          const on = iso ? key.startsWith('quest-') : v[key];
           if (on) {
             if (!map.hasLayer(grp)) grp.addTo(map);
           } else if (map.hasLayer(grp)) {
@@ -2250,7 +2250,7 @@ export function MapViewerClient({
           }
         }
         for (const [key, grp] of Object.entries(looseGroups)) {
-          const on = iso ? false : (v[key] && lodVisibleAt(key, frac));
+          const on = iso ? false : v[key];
           if (on) {
             if (!map.hasLayer(grp)) grp.addTo(map);
             rebuildLoose(key); // кластер зависит от зума — пересобираем, пока слой виден
@@ -2361,6 +2361,7 @@ export function MapViewerClient({
       },
       cycleToLayer: (keys) => cycleToLayer(keys),
       highlightZone: (outline) => {
+        if (mapRef.current !== map) return; // карта снесена (remount/навигация) — не рисуем в мёртвые паны
         if (highlightRef.current) {
           highlightRef.current.remove();
           highlightRef.current = null;
@@ -2378,6 +2379,7 @@ export function MapViewerClient({
       showObjectivePoints: (points) => {
         // Пообъектные пины ВМЕСТО зоны (?quest= с possibleLocations): свой layerGroup вне фильтра/
         // LOD (гоча №2 скилла map-interactions), квест-иконка на каждой возможной позиции.
+        if (mapRef.current !== map) return; // карта снесена (remount/навигация) — не рисуем в мёртвые паны
         // Снимаем и зону, и прошлые пины.
         if (highlightRef.current) { highlightRef.current.remove(); highlightRef.current = null; }
         if (objectivePinsRef.current) { objectivePinsRef.current.remove(); objectivePinsRef.current = null; }
