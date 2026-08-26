@@ -839,9 +839,12 @@ export default function QuestMapClient({ initialTasks: rawTasks, bartersByQuest 
 
   const handleToggle = useCallback((taskId: string) => {
     clearGuardSoft();   // юзер вовлечён в квест — не откатывать
-    const { completedQuests: nowCompleted, toggleQuest } = useQuestStore.getState();
+    const { completedQuests: nowCompleted, toggleQuest, setQuestDone } = useQuestStore.getState();
     const wasCompleted = nowCompleted.includes(taskId);
-    toggleQuest(taskId);
+    const toggledTask = initialTasks.find((t) => t.id === taskId);
+    // Полная синхронизация: заполнить/сбросить все цели и предметы квеста (не только флаг).
+    if (toggledTask) setQuestDone(toggledTask, !wasCompleted);
+    else toggleQuest(taskId);
     localStorage.setItem(LAST_QUEST_KEY, taskId);
 
     if (!wasCompleted) {

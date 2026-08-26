@@ -10,7 +10,11 @@ import { FoundInRaidBadge } from '@/components/ui/FoundInRaidBadge';
 import type { TaskRaw, TaskObjective, TaskObjectiveItem, QuestBarterLite } from '@/types/quest';
 import { traderImg, traderCssVar } from '@/lib/trader-utils';
 import { getTarkovBackgroundColor } from '@/lib/tarkov-colors';
+import ITEM_BG from '@/data/quests/item-backgrounds.json';
 import { getQuestHeroImg } from '@/lib/quest-utils';
+
+// Тарковский фон ячейки предмета по id (награды/цели): обычные — свой цвет, квест → #686628.
+const questItemBg = (id: string): string => getTarkovBackgroundColor((ITEM_BG as Record<string, string>)[id]);
 import { firstInteractiveMapSlug } from '@/lib/quest-map-link';
 import questGuides from '@/data/quest-guides.json';
 
@@ -159,6 +163,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
 
   const completedQuests        = useQuestStore((s) => s.completedQuests);
   const toggleQuest            = useQuestStore((s) => s.toggleQuest);
+  const setQuestDone           = useQuestStore((s) => s.setQuestDone);
   const pinnedQuests           = useQuestStore((s) => s.pinnedQuests);
   const togglePin              = useQuestStore((s) => s.togglePin);
   const itemProgress           = useQuestStore((s) => s.itemProgress);
@@ -373,8 +378,12 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
         ))}
         {task.finishRewards.items.map((ri, i) => (
           <div key={`it-${i}`} className={rewardRow}>
-            <span className={rewardTile}>
-              <img src={ri.item.image512pxLink} alt={ri.item.shortName} className="h-9 w-9 object-contain p-0.5" />
+            {/* Тайл награды с тарковским фоном ячейки (редкость предмета) */}
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xs border border-(--color-base)">
+              <span aria-hidden className="absolute inset-0 bg-(--color-darkbase)" />
+              <span aria-hidden className="absolute inset-0" style={{ backgroundColor: questItemBg(ri.item.id) }} />
+              <span aria-hidden className="pointer-events-none absolute inset-0 shadow-[inset_0_0_8px_rgba(0,0,0,0.7)]" />
+              <img src={ri.item.image512pxLink} alt={ri.item.shortName} className="relative z-10 h-full w-full object-contain p-1" />
             </span>
             <span className="min-w-0 flex-1 truncate font-blender-book text-sm text-text-primary">{ri.item.name}</span>
             {ri.count > 1 && <span className="shrink-0 font-blender-medium text-sm text-text-secondary">×{ri.count.toLocaleString('ru-RU')}</span>}
@@ -493,7 +502,7 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
             ? 'bg-lines-hover/50 text-text-secondary hover:text-text-primary hover:bg-lines-hover'
             : 'bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 border border-(--primary)/30'
         }`}
-        onClick={() => toggleQuest(task.id)}
+        onClick={() => setQuestDone(task, !isCompleted)}
       >
         {isCompleted ? 'ОТМЕНИТЬ' : 'ВЫПОЛНЕНО'}
       </button>

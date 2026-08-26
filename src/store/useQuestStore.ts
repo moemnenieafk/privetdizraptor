@@ -9,6 +9,9 @@ interface QuestStore {
 
   completedQuests: string[];
   toggleQuest: (id: string) => void;
+  /** Полная синхронизация «Выполнено»: done=true — отметить квест + заполнить ВСЕ предметы
+   *  и прожать ВСЕ галки-цели; done=false — снять отметку и сбросить весь прогресс квеста. */
+  setQuestDone: (task: TaskRaw, done: boolean) => void;
   resetProgress: () => void;
 
   // Каппа-мета: objective-id'ы предметов контейнера Kappa. Засеваются сервером (RSC Досье и
@@ -58,6 +61,40 @@ export const useQuestStore = create<QuestStore>()(
             pinnedQuests: isCompleting
               ? s.pinnedQuests.filter((p) => p !== id)
               : s.pinnedQuests,
+          };
+        }),
+      setQuestDone: (task, done) =>
+        set((s) => {
+          const id = task.id;
+          if (done) {
+            // Заполнить все предметы (счётчик = нужное) + прожать все не-предметные цели.
+            const items: Record<string, number> = {};
+            const checks: string[] = [];
+            for (const o of task.objectives ?? []) {
+              if (o.__typename === 'TaskObjectiveItem') {
+                const c = (o as TaskObjectiveItem).count ?? 0;
+                if (c > 0) items[o.id] = c;
+              } else {
+                checks.push(o.id);
+              }
+            }
+            const nextChecks = { ...s.checkedObjectives };
+            if (checks.length) nextChecks[id] = checks;
+            else delete nextChecks[id];
+            return {
+              completedQuests: s.completedQuests.includes(id) ? s.completedQuests : [...s.completedQuests, id],
+              pinnedQuests: s.pinnedQuests.filter((p) => p !== id),
+              itemProgress: { ...s.itemProgress, [id]: items },
+              checkedObjectives: nextChecks,
+            };
+          }
+          // done=false: снять отметку + сбросить весь прогресс квеста.
+          const { [id]: _i, ...itemRest } = s.itemProgress;
+          const { [id]: _c, ...checkRest } = s.checkedObjectives;
+          return {
+            completedQuests: s.completedQuests.filter((q) => q !== id),
+            itemProgress: itemRest,
+            checkedObjectives: checkRest,
           };
         }),
       resetProgress: () => set({ completedQuests: [], itemProgress: {}, checkedObjectives: {} }),

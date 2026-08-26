@@ -80,7 +80,13 @@ export function QuestTraderList({ tasks, traderNormalized, title, navSections, n
     { key: 'locked' as const, label: 'Заблокировано', count: counts.locked, on: 'bg-neutral-500 text-(--color-base)', off: 'text-text-muted border-lines-hover' },
   ];
 
-  const handleToggle = (id: string) => useQuestStore.getState().toggleQuest(id);
+  const handleToggle = (id: string) => {
+    const { completedQuests: done, setQuestDone, toggleQuest } = useQuestStore.getState();
+    const t = tasks.find((x) => x.id === id);
+    // Полная синхронизация целей/предметов квеста (не только флаг «выполнено»).
+    if (t) setQuestDone(t, !done.includes(id));
+    else toggleQuest(id);
+  };
   const noop = () => {};
 
   const hasNav = (navSections?.length ?? 0) > 0 || (navTraders?.length ?? 0) > 0;

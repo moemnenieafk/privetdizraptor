@@ -35,6 +35,8 @@ async function main() {
       if (o.item?.id) ids.add(o.item.id);
       if (o.markerItem?.id) ids.add(o.markerItem.id);
     }
+    // Предметы-награды (блок «Награды» в QuestDetail) — тоже с тарковским фоном ячейки.
+    for (const ri of t.finishRewards?.items ?? []) if (ri?.item?.id) ids.add(ri.item.id);
   }
 
   const out = {};
