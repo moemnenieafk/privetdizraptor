@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Paperclip, Maximize2, Map as MapIcon, MapPin, ArrowLeftRight, ChevronRight, ListChecks } from 'lucide-react';
+import { Paperclip, Maximize2, Map as MapIcon, MapPin, ChevronRight, ListChecks } from 'lucide-react';
 import { useQuestStore, isObjectiveComplete } from '@/store/useQuestStore';
 import { isCollectorTask, COLLECTOR_TRACKER_HREF } from '@/lib/quest-constants';
 import { QuestItemTracker } from '@/components/features/quests/QuestItemTracker';
@@ -386,8 +386,8 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
   // ── Открывает бартеры (кросс-линк Quest → Barter → Item) ──────────────────
   const bartersBlock = barters && barters.length > 0 && (
     <div className={isPage ? 'px-6 py-6' : 'px-5 py-5'}>
-      <div className="mb-3 flex items-center gap-2 text-type-caption font-blender-medium uppercase tracking-widest text-text-secondary">
-        <ArrowLeftRight className="h-3.5 w-3.5" />
+      <div className="mb-3 flex items-center gap-2 text-type-caption font-blender-medium uppercase tracking-widest text-nvg-green">
+        <span className="icon-eft-prog-barter h-3.5 w-3.5 shrink-0 bg-nvg-green mask-contain mask-center mask-no-repeat" />
         Открывает бартеры
         <span className="text-text-muted">· {barters.length}</span>
       </div>
@@ -395,8 +395,11 @@ export function QuestDetail({ task, variant = 'drawer', onClose, barters, unlock
         {barters.map((b) => (
           <div key={b.id} className="flex flex-wrap items-center gap-2 rounded-xs border border-lines-hover bg-(--color-darkbase) p-2">
             <img src={traderImg(b.trader.normalizedName)} alt={b.trader.name} width={18} height={18} className="shrink-0 rounded-xs" />
-            <span className="font-blender-medium text-type-caption uppercase tracking-wide text-text-secondary">{b.trader.name}</span>
-            <span className="font-blender-medium text-type-caption text-text-muted">LL{b.level}</span>
+            <span
+              className={`icon-eft-profile-rep-${Math.min(Math.max(b.level, 1), 4)} h-3.5 w-3.5 shrink-0 bg-text-muted mask-contain mask-center mask-no-repeat`}
+              title={`Уровень лояльности ${b.level}`}
+              aria-label={`Уровень лояльности ${b.level}`}
+            />
             <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
             {b.rewardItems.map((rw) => {
               const tile = (
