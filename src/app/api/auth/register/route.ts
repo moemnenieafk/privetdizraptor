@@ -10,6 +10,7 @@ import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { validatePassword } from "@/lib/auth/password-policy";
 
 export const runtime = "nodejs";
 
@@ -44,7 +45,8 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   if (!EMAIL_RE.test(email) || email.length > 254) return err(422, "Введите корректный e-mail");
   if (!USERNAME_RE.test(username)) return err(422, "Логин: 3–15 символов, латиница, цифры, _ и -");
-  if (password.length < 8 || password.length > 128) return err(422, "Пароль: 8–128 символов");
+  const pwError = validatePassword(password);
+  if (pwError) return err(422, pwError);
 
   // Капча обязательна на регистрации (чистый бот-таргет + шлёт письма).
   if (!(await verifyTurnstile(captchaToken, clientIp(req)))) {

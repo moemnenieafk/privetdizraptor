@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, MailCheck, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { safeNext } from "@/lib/auth/safe-next";
+import { isPasswordValid, PASSWORD_HINT } from "@/lib/auth/password-policy";
 import { Turnstile } from "@/components/ui/Turnstile";
 import { DiscordIcon, TwitchIcon } from "@/components/ui/BrandIcons";
 
@@ -192,13 +193,13 @@ export function LoginForm() {
   }
 
   const regValid =
-    EMAIL_RE.test(email) && USERNAME_RE.test(username) && regPw.length >= 8 && regPw === regPw2;
+    EMAIL_RE.test(email) && USERNAME_RE.test(username) && isPasswordValid(regPw) && regPw === regPw2;
 
   async function register(e: React.FormEvent) {
     e.preventDefault();
     setRegError(null);
     if (!regValid) {
-      setRegError("Проверьте поля: e-mail, логин (3–15), пароль ≥8 и совпадение.");
+      setRegError(`Проверьте поля: e-mail, логин (3–15), совпадение паролей. ${PASSWORD_HINT}`);
       return;
     }
     if (siteKey && !captchaToken) {
@@ -361,13 +362,18 @@ export function LoginForm() {
                   3–15 символов: латиница, цифры, _ и -
                 </span>
               </div>
-              <Field
-                type="password"
-                value={regPw}
-                onChange={setRegPw}
-                placeholder="Пароль (мин. 8)"
-                autoComplete="new-password"
-              />
+              <div className="flex flex-col gap-1">
+                <Field
+                  type="password"
+                  value={regPw}
+                  onChange={setRegPw}
+                  placeholder="Пароль"
+                  autoComplete="new-password"
+                />
+                <span className="px-1 font-blender-book text-type-micro text-text-muted">
+                  {PASSWORD_HINT}
+                </span>
+              </div>
               <Field
                 type="password"
                 value={regPw2}
