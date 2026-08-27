@@ -88,12 +88,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    // Нативные View Transitions React 19.2 (App Router бандлит свой canary — доп. зависимости
-    // не нужны). Экспериментально: деградирует бесшумно — без поддержки браузера навигация
-    // работает как обычно, анимации просто нет. Тюнинг/reduced-motion — в globals.css.
-    viewTransition: true,
-  },
+  // Нативные View Transitions React 19.2 (App Router бандлит свой canary): в Next 16.3
+  // экспериментальный флаг `experimental.viewTransition` выпущен — фича работает по умолчанию.
+  // Деградирует бесшумно: без поддержки браузера навигация обычная, анимаций нет.
+  // Тюнинг/reduced-motion — в globals.css.
   reactCompiler: true,
 };
 
