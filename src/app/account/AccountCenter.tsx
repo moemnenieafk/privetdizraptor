@@ -1,11 +1,12 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronDown, Check, LogOut, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { changeEmail, saveSocials, saveNotifications, changeUsername, uploadAvatar, resetCtaProgress } from '@/lib/cta-api';
 import type { Me, SocialPlatform, AccountStats } from '@/lib/auth/me';
+import { validatePassword, isPasswordValid, PASSWORD_HINT } from '@/lib/auth/password-policy';
 import { OAuthLogins } from './OAuthLogins';
 import { DiscordIcon, TwitchIcon, YouTubeIcon, SteamIcon } from '@/components/ui/BrandIcons';
 import type { AchievementView } from '@/lib/achievement-visuals';
@@ -144,6 +145,7 @@ function FormInput({
   readOnly,
   maxLength,
   autoComplete,
+  inputMode,
 }: {
   placeholder: string;
   type?: string;
@@ -153,6 +155,7 @@ function FormInput({
   readOnly?: boolean;
   maxLength?: number;
   autoComplete?: string;
+  inputMode?: 'numeric' | 'text' | 'email';
 }) {
   const [reveal, setReveal] = useState(false);
   const isPassword = type === 'password';
@@ -168,6 +171,7 @@ function FormInput({
         readOnly={readOnly}
         maxLength={maxLength}
         autoComplete={autoComplete}
+        inputMode={inputMode}
         className={`w-full rounded border border-lines-hover bg-(--color-base) px-4 py-3 ${isPassword ? 'pr-11' : ''} font-blender-book text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-(--primary) focus:outline-none disabled:opacity-50 read-only:opacity-70`}
       />
       {isPassword && (
@@ -622,8 +626,9 @@ function PasswordView({ onBack }: { onBack: () => void }) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (password.length < 8) {
-      setError('Пароль не короче 8 символов');
+    const pwError = validatePassword(password);
+    if (pwError) {
+      setError(pwError);
       return;
     }
     if (password !== confirm) {
@@ -652,7 +657,7 @@ function PasswordView({ onBack }: { onBack: () => void }) {
         <div className="flex flex-col items-center gap-2 text-center">
           <SubTitle>Сменить пароль</SubTitle>
           <p className="font-blender-book text-xs leading-relaxed text-text-muted max-w-xs">
-            Задайте пароль для входа на сайт по e-mail и паролю. Не короче 8 символов.
+            Задайте пароль для входа на сайт по e-mail и паролю. {PASSWORD_HINT}
           </p>
         </div>
         <div className="flex w-full max-w-md flex-col gap-3">
@@ -678,7 +683,7 @@ function PasswordView({ onBack }: { onBack: () => void }) {
           <FormActions
             onCancel={onBack}
             submitting={status === 'saving'}
-            disabled={password.length < 8 || password !== confirm}
+            disabled={!isPasswordValid(password) || password !== confirm}
             label="Сохранить"
           />
         )}
@@ -687,13 +692,76 @@ function PasswordView({ onBack }: { onBack: () => void }) {
   );
 }
 
+// Реальная 2FA через TOTP (Supabase Auth MFA). Приложение-аутентификатор
+// (Google Authenticator / Aegis / 1Password): enroll → QR+секрет → код → verify.
+// Для админов вход требует второй фактор (серверный гард getAdmin/getCmsUser, AAL2).
+type TotpState = 'loading' | 'off' | 'enrolling' | 'on';
+
 function TwoFAView({ onBack }: { onBack: () => void }) {
-  const methods = [
-    { label: 'Резервный e-mail',           status: null,       action: 'Настроить' },
-    { label: 'Одноразовые коды',           status: 'Включено', action: null },
-    { label: 'Секретный вопрос',           status: 'Включено', action: null },
-    { label: 'Приложение аутентификатор',  status: 'Включено', action: null },
-  ];
+  const supabase = useMemo(() => createClient(), []);
+  const [state, setState] = useState<TotpState>('loading');
+  const [factorId, setFactorId] = useState<string | null>(null);
+  const [qr, setQr] = useState<string | null>(null);
+  const [secret, setSecret] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Определяем, есть ли уже подтверждённый TOTP-фактор.
+  const refresh = useCallback(async () => {
+    const { data, error: e } = await supabase.auth.mfa.listFactors();
+    if (e) { setError('Не удалось загрузить статус 2FA'); setState('off'); return; }
+    const verified = (data?.totp ?? []).find((f) => f.status === 'verified');
+    if (verified) { setFactorId(verified.id); setState('on'); }
+    else { setState('off'); }
+  }, [supabase]);
+
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  // Старт привязки: чистим недоподтверждённые факторы, затем enroll → QR.
+  const startEnroll = async () => {
+    setBusy(true); setError(null);
+    try {
+      const { data: list } = await supabase.auth.mfa.listFactors();
+      for (const f of list?.all ?? []) {
+        if (f.status !== 'verified') await supabase.auth.mfa.unenroll({ factorId: f.id });
+      }
+      const { data, error: e } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: 'CTA Authenticator',
+      });
+      if (e || !data) { setError('Не удалось начать привязку. Повторите позже.'); return; }
+      setFactorId(data.id);
+      setQr(data.totp.qr_code);
+      setSecret(data.totp.secret);
+      setState('enrolling');
+      setCode('');
+    } finally { setBusy(false); }
+  };
+
+  // Подтверждение кода из приложения → фактор verified, сессия поднимается до AAL2.
+  const confirmEnroll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!factorId) return;
+    setBusy(true); setError(null);
+    const { error: verr } = await supabase.auth.mfa.challengeAndVerify({
+      factorId,
+      code: code.trim(),
+    });
+    setBusy(false);
+    if (verr) { setError('Неверный код. Проверьте время на устройстве и повторите.'); return; }
+    await refresh();
+  };
+
+  // Отключение 2FA.
+  const disable = async () => {
+    if (!factorId) return;
+    setBusy(true); setError(null);
+    const { error: e } = await supabase.auth.mfa.unenroll({ factorId });
+    setBusy(false);
+    if (e) { setError('Не удалось отключить. Возможно, нужен свежий вход.'); return; }
+    setFactorId(null); setQr(null); setSecret(null); setState('off');
+  };
 
   return (
     <div className="flex flex-col">
@@ -702,40 +770,82 @@ function TwoFAView({ onBack }: { onBack: () => void }) {
         <SubTitle>Двухфакторная аутентификация</SubTitle>
 
         <div className="flex w-full max-w-md flex-col gap-4">
-          <div>
-            <p className="mb-2 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
-              Текущий способ защиты учётной записи
-            </p>
-            <div className="flex items-center justify-between rounded border border-(--primary) bg-(--primary)/5 px-4 py-3">
-              <span className="font-blender-medium text-sm text-(--primary)">Приложение аутентификатор</span>
-              <RowBtn label="Изменить" variant="active" />
-            </div>
-          </div>
+          {state === 'loading' && (
+            <div className="h-24 animate-pulse rounded border border-lines-hover bg-card-menu" />
+          )}
 
-          <div>
-            <p className="mb-2 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
-              Доступные способы защиты учётной записи
-            </p>
-            <div className="flex flex-col divide-y divide-lines-hover rounded border border-lines-hover">
-              {methods.map((m) => (
-                <div key={m.label} className="flex items-center justify-between px-4 py-3">
-                  <span className="font-blender-book text-sm text-text-secondary">{m.label}</span>
-                  {m.status && (
-                    <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">
-                      {m.status}
-                    </span>
-                  )}
-                  {m.action && <RowBtn label={m.action} />}
-                </div>
-              ))}
-            </div>
-          </div>
+          {state === 'off' && (
+            <>
+              <p className="font-blender-book text-xs leading-relaxed text-text-muted text-center">
+                Приложение-аутентификатор (Google Authenticator, Aegis, 1Password) добавит
+                второй шаг ко входу — украденного пароля станет недостаточно.
+                Для администраторов второй фактор обязателен.
+              </p>
+              <Feedback error={error} success={null} />
+              <button
+                type="button"
+                onClick={startEnroll}
+                disabled={busy}
+                className="mx-auto w-full max-w-45 rounded border border-(--primary) bg-(--primary)/10 px-6 py-2.5 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-all hover:bg-(--primary)/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? 'Готовлю…' : 'Включить 2FA'}
+              </button>
+            </>
+          )}
 
-          <div className="rounded border border-accent-frago/20 bg-accent-frago/5 px-4 py-3 text-center">
-            <p className="font-blender-book text-xs leading-relaxed text-accent-frago/80">
-              Вы не можете выбрать другой способ входа, пока активен текущий метод защиты учётной записи.
-            </p>
-          </div>
+          {state === 'enrolling' && (
+            <form onSubmit={confirmEnroll} className="flex flex-col items-center gap-4">
+              <p className="font-blender-book text-xs leading-relaxed text-text-muted text-center">
+                Отсканируйте QR-код приложением-аутентификатором, затем введите
+                6-значный код из приложения.
+              </p>
+              {qr && (
+                <img src={qr} alt="QR для 2FA" className="h-44 w-44 rounded bg-white p-2" />
+              )}
+              {secret && (
+                <p className="font-blender-book text-type-caption text-text-muted text-center break-all">
+                  Или введите ключ вручную:{' '}
+                  <span className="font-blender-medium text-text-secondary">{secret}</span>
+                </p>
+              )}
+              <FormInput
+                placeholder="6-значный код"
+                value={code}
+                onChange={setCode}
+                autoComplete="one-time-code"
+                inputMode="numeric"
+              />
+              <Feedback error={error} success={null} />
+              <FormActions
+                onCancel={onBack}
+                submitting={busy}
+                disabled={busy || code.trim().length < 6}
+                label="Подтвердить"
+              />
+            </form>
+          )}
+
+          {state === 'on' && (
+            <>
+              <div className="flex items-center justify-between rounded border border-(--primary) bg-(--primary)/5 px-4 py-3">
+                <span className="font-blender-medium text-sm text-(--primary)">
+                  Приложение-аутентификатор
+                </span>
+                <span className="font-blender-medium text-type-caption uppercase tracking-widest text-(--primary)">
+                  Включено
+                </span>
+              </div>
+              <Feedback error={error} success={null} />
+              <button
+                type="button"
+                onClick={disable}
+                disabled={busy}
+                className="rounded-xs border border-danger/40 px-3 py-2 font-blender-medium text-xs uppercase tracking-widest text-danger transition-colors hover:bg-danger/10 disabled:opacity-50"
+              >
+                {busy ? 'Отключаю…' : 'Отключить 2FA'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

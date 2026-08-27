@@ -136,6 +136,11 @@ export function LoginForm() {
   const [signing, setSigning] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [magic, setMagic] = useState<MagicStatus>("idle");
+  // ── второй фактор (TOTP) ──
+  const [mfaStep, setMfaStep] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaError, setMfaError] = useState<string | null>(null);
 
   // ── регистрация ──
   const [email, setEmail] = useState("");
@@ -173,6 +178,34 @@ export function LoginForm() {
         setLoginCaptchaRequired(true); // показать капчу со след. попытки
         resetCaptcha(); // токен одноразовый — свежий челлендж
       }
+      return;
+    }
+    const ok = (await res.json().catch(() => null)) as
+      | { ok?: boolean; mfaRequired?: boolean; factorId?: string | null }
+      | null;
+    setSigning(false);
+    // 2FA включена: пароль принят (сессия aal1), просим код из приложения.
+    if (ok?.mfaRequired && ok.factorId) {
+      setMfaFactorId(ok.factorId);
+      setMfaStep(true);
+      return;
+    }
+    window.location.assign(next);
+  }
+
+  // Второй шаг входа: код TOTP → поднимаем сессию до aal2 → редирект.
+  async function verifyMfa(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mfaFactorId) return;
+    setMfaError(null);
+    setSigning(true);
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: mfaFactorId,
+      code: mfaCode.trim(),
+    });
+    setSigning(false);
+    if (error) {
+      setMfaError("Неверный код. Проверьте время на устройстве и повторите.");
       return;
     }
     window.location.assign(next);
@@ -286,7 +319,23 @@ export function LoginForm() {
           key={mode}
           className="flex animate-[fade-in-up_0.3s_ease-out_both] flex-col gap-4 px-7 pb-7 pt-5"
         >
-          {mode === "login" ? (
+          {mode === "login" && mfaStep ? (
+            <form onSubmit={verifyMfa} className="flex flex-col gap-3">
+              <p className="font-blender-book text-xs leading-relaxed text-text-secondary">
+                Введите 6-значный код из приложения-аутентификатора.
+              </p>
+              <Field
+                value={mfaCode}
+                onChange={setMfaCode}
+                placeholder="6-значный код"
+                autoComplete="one-time-code"
+              />
+              <PrimaryButton disabled={signing || mfaCode.trim().length < 6}>
+                {signing ? "Проверяю…" : "Подтвердить вход"}
+              </PrimaryButton>
+              {mfaError && <p className="font-blender-book text-xs text-danger">{mfaError}</p>}
+            </form>
+          ) : mode === "login" ? (
             <>
               <form onSubmit={signInPassword} className="flex flex-col gap-3">
                 <Field

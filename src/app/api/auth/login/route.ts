@@ -97,5 +97,16 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   await clearEvent(failKey); // успех → снять требование капчи с этого IP
+
+  // 2FA: пароль верен, но у пользователя есть подтверждённый TOTP-фактор —
+  // сессия сейчас aal1, вход не завершён. Сигналим клиенту дозапросить код
+  // (клиент вызовет mfa.challengeAndVerify, подняв сессию до aal2).
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const totp = (factors?.totp ?? []).find((f) => f.status === "verified");
+    return NextResponse.json({ mfaRequired: true, factorId: totp?.id ?? null });
+  }
+
   return NextResponse.json({ ok: true });
 }
