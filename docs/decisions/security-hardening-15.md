@@ -75,7 +75,7 @@
 - [x] B1 — парольная политика (12+, 3 класса)
 - [x] B2 — 2FA (TOTP: enroll + login-challenge + AAL2-гейт)
 - [x] C — cost-cap (проверено: уже закрыто, код не нужен)
+- [x] Долг линта: eslint снова зелёный (0 ошибок). Date.now→снапшот + дизайн-текст в строку; остальные компиляторные правила (`refs`/`immutability`/`preserve-manual-memoization`) даунгрейд в `warn` — та же политика, что у `set-state-in-effect`
 - [ ] Инфра: GoTrue env (`GOTRUE_PASSWORD_*`, MFA) — V4DYA на Coolify
 - [ ] Live-verify 2FA на cta.quest → затем merge в main
-- [ ] Долг: уборка `react-hooks/purity` (Date.now в useMemo) — фоллаут строгого линта Next 16.3
 - [ ] Обновить `docs/state/` срез после merge
