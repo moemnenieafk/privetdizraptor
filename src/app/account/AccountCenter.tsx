@@ -405,16 +405,18 @@ function UsernameView({ onBack, me }: { onBack: () => void; me: Me }) {
   const [value, setValue] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'done'>('idle');
   const [error, setError] = useState<string | null>(null);
+  // Снимок «сейчас» на маунте — чистый рендер (Date.now в теле нарушает react-hooks/purity).
+  const [now] = useState(() => Date.now());
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   // Кулдаун — зеркалит серверный (60 дней от usernameChangedAt). 0 = можно менять.
   const daysLeft = useMemo(() => {
     if (!me.usernameChangedAt) return 0;
-    const elapsed = Date.now() - new Date(me.usernameChangedAt).getTime();
+    const elapsed = now - new Date(me.usernameChangedAt).getTime();
     const left = USERNAME_COOLDOWN_DAYS * DAY_MS - elapsed;
     return left > 0 ? Math.ceil(left / DAY_MS) : 0;
-  }, [me.usernameChangedAt]);
+  }, [me.usernameChangedAt, now]);
 
   const valid = USERNAME_RE.test(value.trim());
 
