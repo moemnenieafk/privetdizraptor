@@ -28,7 +28,30 @@
 | 14 | Счёт за платный API | 🟡 Частично | Gemini (OCR+image) — per-user 10/час + auth-gate + cap размера (`api/profile-ocr`, `api/ai/image`). YouTube/Twitch — без per-user лимита (но бесплатные квоты, низкий риск). Общего cost-cap kill-switch нет |
 | 15 | Промпт-инъекция (скиллы) | ✅ N/A для кода | Организационное: скиллы держим локально (`feedback-skills-local`), не тянем мусор с GitHub. §7 CLAUDE.md уже регламентирует |
 
-## Что реально делаем (3 гэпа, по приоритету)
+## ✅ ИСПОЛНЕНО (ветка `feat/security-hardening`, 2026-08-27)
+
+**A. п.8 — Зависимости.** `npm audit fix` + `sharp@0.35.4` → закрыты все 6 HIGH (postcss XSS/path-traversal, next SSRF/DoS/middleware-bypass, sharp/libvips CVE). Осталось 4 moderate — dev-only `drizzle-kit`, не в рантайме. Билд webpack + tsc зелёные, sharp webp-encode проверен. Побочка: бамп Next 16.2.7→16.3.3 подтянул строгий `eslint-config-next` → всплыл пред-существующий `react-hooks/purity` (Date.now в useMemo, ~несколько мест) — **не блокирует билд/деплой**, отдельная уборка (см. долг).
+
+**B1. п.2 — Парольная политика.** Единый `src/lib/auth/password-policy.ts` (12–128 + минимум 3 класса символов). Подключён: сервер `register`, клиент формы регистрации, `reset-password`, смена пароля в кабинете. Подсказка `PASSWORD_HINT` в UI.
+
+**B2. п.2 — 2FA (TOTP).** Реальная двухфакторка вместо мокапа:
+- Кабинет → Безопасность → 2FA: enroll (QR + ручной ключ) → verify → включено/отключить.
+- Логин: после верного пароля при наличии фактора — шаг ввода 6-значного кода (`challengeAndVerify` → AAL2).
+- Гарды `getAdmin`/`getCmsUser` требуют AAL2, если у пользователя включён фактор (`src/lib/auth/mfa.ts`, fail-open на сбое провайдера).
+
+**C. п.14 — Cost-cap.** Проверено: изменений НЕ требуется. Gemini — per-user 10/час + auth-gate + cap размера; YouTube — `unstable_cache` (CATALOG_TTL) + фиксированные плейлисты; Twitch — `revalidate:30` + кэш токена. Все три уже ограничены по квоте/стоимости.
+
+### Требует ручного шага на инфре (self-hosted Supabase / Coolify env)
+- `GOTRUE_PASSWORD_MIN_LENGTH=12` + `GOTRUE_PASSWORD_REQUIRED_CHARACTERS=...` — единственный серверный гейт на пароль при reset (updateUser идёт мимо наших ручек).
+- Проверить, что MFA включён в GoTrue (`GOTRUE_MFA_ENABLED`/factor TOTP), иначе enroll вернёт ошибку.
+
+### Требует live-verify V4DYA перед пушем в main
+- Пройти enroll 2FA на своём аккаунте (Google Authenticator/Aegis), выйти, войти с кодом.
+- Убедиться, что админ-действия под 2FA работают (AAL2-гейт не залочил).
+
+---
+
+## (архив) Первичный план — 3 гэпа
 
 ### A. п.8 — Зависимости (высокий приоритет, но осторожно с деплоем)
 - `npm audit fix` — закрывает `postcss` (non-breaking). Безопасно.
@@ -48,8 +71,11 @@
 3. Парольная политика (12+сложность) меняет форму регистрации — ок?
 
 ## Замыкание петли
-- [ ] A — deps (branch `feat/security-hardening`, verify build, потом пуш)
-- [ ] B1 — парольная политика (после ok V4DYA)
-- [ ] B2 — 2FA (после UX-дизайна)
-- [ ] C — cost-cap (бэклог)
-- [ ] Обновить `docs/state/` срез после исполнения
+- [x] A — deps (6 HIGH закрыты, билд зелёный)
+- [x] B1 — парольная политика (12+, 3 класса)
+- [x] B2 — 2FA (TOTP: enroll + login-challenge + AAL2-гейт)
+- [x] C — cost-cap (проверено: уже закрыто, код не нужен)
+- [ ] Инфра: GoTrue env (`GOTRUE_PASSWORD_*`, MFA) — V4DYA на Coolify
+- [ ] Live-verify 2FA на cta.quest → затем merge в main
+- [ ] Долг: уборка `react-hooks/purity` (Date.now в useMemo) — фоллаут строгого линта Next 16.3
+- [ ] Обновить `docs/state/` срез после merge
