@@ -1,13 +1,35 @@
 import type { NextConfig } from "next";
 
-// Безопасные security-заголовки (defense-in-depth). Enforcing-CSP не ставим здесь —
-// её надо подбирать/тестить отдельно (inline-стили, Supabase, Leaflet), чтобы не сломать UI.
+// CSP: строгие директивы против инъекций/кликджекинга (object/base/frame-ancestors/form-action),
+// но РАЗРЕШИТЕЛЬНАЯ на источники ресурсов (https:/wss:/data:/blob:), чтобы не сломать живой UI —
+// Supabase realtime (wss), R2-иконки, Leaflet-тайлы, Turnstile, YouTube-эмбеды, inline-стили Next.
+// script-src допускает 'unsafe-inline'/'unsafe-eval' (гидрация React + Turnstile). Реальная защита
+// здесь — не script-allowlist (её съедает unsafe-inline), а base-uri/object-src/frame-ancestors/
+// form-action: закрывают base-tag-инъекцию, <object>/<embed>, обрамление и угон формы.
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+  "style-src 'self' 'unsafe-inline' https:",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data: https:",
+  "connect-src 'self' https: wss:",
+  "frame-src 'self' https:",
+  "media-src 'self' https: blob:",
+  "worker-src 'self' blob:",
+].join('; ');
+
+// Безопасные security-заголовки (defense-in-depth).
 const SECURITY_HEADERS = [
   { key: 'X-Frame-Options', value: 'DENY' }, // анти-clickjacking (/account, /login)
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'Content-Security-Policy', value: CSP },
 ];
 
 // Анти-хотлинк для собственных ассетов (SVG-иконки и пр.). CORP=same-origin: браузер
