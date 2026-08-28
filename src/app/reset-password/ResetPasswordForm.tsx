@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { validatePassword, PASSWORD_HINT } from "@/lib/auth/password-policy";
 
 type Status = "idle" | "saving" | "done" | "error";
-
-const MIN_LEN = 8;
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -33,8 +32,9 @@ export function ResetPasswordForm() {
     e.preventDefault();
     setError(null);
 
-    if (password.length < MIN_LEN) {
-      setError(`Пароль не короче ${MIN_LEN} символов`);
+    const pwError = validatePassword(password);
+    if (pwError) {
+      setError(pwError);
       return;
     }
     if (password !== confirm) {
@@ -76,6 +76,9 @@ export function ResetPasswordForm() {
             placeholder="Новый пароль"
             className="rounded-xs border border-lines-hover bg-(--color-base) px-3 py-2 font-blender-book text-sm text-text-primary outline-none focus:border-(--primary)"
           />
+          <span className="px-1 font-blender-book text-type-micro text-text-muted">
+            {PASSWORD_HINT}
+          </span>
           <input
             type="password"
             required

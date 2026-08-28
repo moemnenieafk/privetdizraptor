@@ -42,6 +42,8 @@ const emptyDraft = (kind: Exclude<ArticleKind, 'patch'>): EditorInitial => ({
 export function ArticleFeedClient({ kind, items, canEdit, emptyText }: ArticleFeedClientProps) {
   const [editing, setEditing] = useState<EditorInitial | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  // Снимок «сейчас» на маунте — Date.now в теле рендера нарушает react-hooks/purity.
+  const [now] = useState(() => Date.now());
 
   // Лента не тащит тела материалов (они до 40к символов), поэтому перед правкой
   // догружаем полный материал. Раньше форма открывалась с пустым bodyRu и
@@ -102,7 +104,7 @@ export function ArticleFeedClient({ kind, items, canEdit, emptyText }: ArticleFe
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((a) => {
-            const upcoming = a.eventAt !== null && new Date(a.eventAt).getTime() > Date.now();
+            const upcoming = a.eventAt !== null && new Date(a.eventAt).getTime() > now;
 
             return (
               <article

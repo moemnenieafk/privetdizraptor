@@ -28,7 +28,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
           <div className="hidden md:block h-px flex-1 bg-linear-to-r from-lines-hover to-transparent" />
         </div>
         <p className="text-center font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted mb-8">
-          // КВЕСТЫ КАППА · МАРШРУТИЗАЦИЯ РЕЙДА
+          {'// КВЕСТЫ КАППА · МАРШРУТИЗАЦИЯ РЕЙДА'}
         </p>
 
         {/* Split layout */}
@@ -116,7 +116,7 @@ export function TacticalCartographyClient({ tasks, maps }: TacticalCartographyCl
                     {hoveredTask.mapName}
                   </h4>
                   <p className="font-blender-medium text-type-caption tracking-[0.3em] uppercase text-text-muted mt-1">
-                    // {hoveredTask.mapNormalizedName}
+                    {'// '}{hoveredTask.mapNormalizedName}
                   </p>
                 </div>
 

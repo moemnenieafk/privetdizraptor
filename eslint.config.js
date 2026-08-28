@@ -30,6 +30,14 @@ module.exports = [
       // or mount-detection (useEffect -> setState). Compiler just skips memoizing.
       'react-hooks/set-state-in-effect': 'warn',
 
+      // Строгий eslint-config-next 16.3 промоутнул ещё три компиляторных правила
+      // в ошибки на давно рабочем коде (чтение ref.current при измерении layout,
+      // порядок объявлений, пропуск мемоизации). Билд webpack проходит — компилятор
+      // просто не мемоизирует такие места. Держим политику как у set-state-in-effect.
+      'react-hooks/refs': 'warn',
+      'react-hooks/immutability': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
+
       // TanStack Virtual's useVirtualizer is intentionally used without memoization.
       'react-hooks/incompatible-library': 'off',
 

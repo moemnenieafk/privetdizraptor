@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, MailCheck, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { safeNext } from "@/lib/auth/safe-next";
+import { isPasswordValid, PASSWORD_HINT } from "@/lib/auth/password-policy";
 import { Turnstile } from "@/components/ui/Turnstile";
 import { DiscordIcon, TwitchIcon } from "@/components/ui/BrandIcons";
 
@@ -135,6 +136,11 @@ export function LoginForm() {
   const [signing, setSigning] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [magic, setMagic] = useState<MagicStatus>("idle");
+  // ── второй фактор (TOTP) ──
+  const [mfaStep, setMfaStep] = useState(false);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaError, setMfaError] = useState<string | null>(null);
 
   // ── регистрация ──
   const [email, setEmail] = useState("");
@@ -174,6 +180,34 @@ export function LoginForm() {
       }
       return;
     }
+    const ok = (await res.json().catch(() => null)) as
+      | { ok?: boolean; mfaRequired?: boolean; factorId?: string | null }
+      | null;
+    setSigning(false);
+    // 2FA включена: пароль принят (сессия aal1), просим код из приложения.
+    if (ok?.mfaRequired && ok.factorId) {
+      setMfaFactorId(ok.factorId);
+      setMfaStep(true);
+      return;
+    }
+    window.location.assign(next);
+  }
+
+  // Второй шаг входа: код TOTP → поднимаем сессию до aal2 → редирект.
+  async function verifyMfa(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mfaFactorId) return;
+    setMfaError(null);
+    setSigning(true);
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: mfaFactorId,
+      code: mfaCode.trim(),
+    });
+    setSigning(false);
+    if (error) {
+      setMfaError("Неверный код. Проверьте время на устройстве и повторите.");
+      return;
+    }
     window.location.assign(next);
   }
 
@@ -192,13 +226,13 @@ export function LoginForm() {
   }
 
   const regValid =
-    EMAIL_RE.test(email) && USERNAME_RE.test(username) && regPw.length >= 8 && regPw === regPw2;
+    EMAIL_RE.test(email) && USERNAME_RE.test(username) && isPasswordValid(regPw) && regPw === regPw2;
 
   async function register(e: React.FormEvent) {
     e.preventDefault();
     setRegError(null);
     if (!regValid) {
-      setRegError("Проверьте поля: e-mail, логин (3–15), пароль ≥8 и совпадение.");
+      setRegError(`Проверьте поля: e-mail, логин (3–15), совпадение паролей. ${PASSWORD_HINT}`);
       return;
     }
     if (siteKey && !captchaToken) {
@@ -285,7 +319,23 @@ export function LoginForm() {
           key={mode}
           className="flex animate-[fade-in-up_0.3s_ease-out_both] flex-col gap-4 px-7 pb-7 pt-5"
         >
-          {mode === "login" ? (
+          {mode === "login" && mfaStep ? (
+            <form onSubmit={verifyMfa} className="flex flex-col gap-3">
+              <p className="font-blender-book text-xs leading-relaxed text-text-secondary">
+                Введите 6-значный код из приложения-аутентификатора.
+              </p>
+              <Field
+                value={mfaCode}
+                onChange={setMfaCode}
+                placeholder="6-значный код"
+                autoComplete="one-time-code"
+              />
+              <PrimaryButton disabled={signing || mfaCode.trim().length < 6}>
+                {signing ? "Проверяю…" : "Подтвердить вход"}
+              </PrimaryButton>
+              {mfaError && <p className="font-blender-book text-xs text-danger">{mfaError}</p>}
+            </form>
+          ) : mode === "login" ? (
             <>
               <form onSubmit={signInPassword} className="flex flex-col gap-3">
                 <Field
@@ -361,13 +411,18 @@ export function LoginForm() {
                   3–15 символов: латиница, цифры, _ и -
                 </span>
               </div>
-              <Field
-                type="password"
-                value={regPw}
-                onChange={setRegPw}
-                placeholder="Пароль (мин. 8)"
-                autoComplete="new-password"
-              />
+              <div className="flex flex-col gap-1">
+                <Field
+                  type="password"
+                  value={regPw}
+                  onChange={setRegPw}
+                  placeholder="Пароль"
+                  autoComplete="new-password"
+                />
+                <span className="px-1 font-blender-book text-type-micro text-text-muted">
+                  {PASSWORD_HINT}
+                </span>
+              </div>
               <Field
                 type="password"
                 value={regPw2}

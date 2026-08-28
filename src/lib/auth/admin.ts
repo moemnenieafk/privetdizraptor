@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { canAccessCms, canEditContent, canManageCatalog, type Role } from "@/lib/auth/roles";
+import { mfaSatisfied } from "@/lib/auth/mfa";
 
 export interface AdminUser {
   id: string;
@@ -37,6 +38,8 @@ export async function getCmsUser(): Promise<CmsUser | null> {
 
   const role = (p?.role ?? "user") as Role;
   if (!canAccessCms(role)) return null;
+  // Привилегированная зона: если у пользователя включён 2FA — требуем AAL2.
+  if (!(await mfaSatisfied())) return null;
 
   return {
     id: user.id,
@@ -62,5 +65,7 @@ export async function getAdmin(): Promise<AdminUser | null> {
     .limit(1);
 
   if (p?.role !== "admin") return null;
+  // Админ-зона: если у админа включён 2FA — требуем пройденный второй фактор.
+  if (!(await mfaSatisfied())) return null;
   return { id: user.id, email: user.email };
 }
