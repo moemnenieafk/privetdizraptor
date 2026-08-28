@@ -328,9 +328,14 @@ html {
 
   @media (min-width: 768px) {
     .tactical-grid {
-      grid-template-columns: repeat(auto-fill, 160px);
-      grid-auto-rows: 160px;
-      gap: 28px;
+      /* rem, НЕ px: и ячейка (10rem), и контейнер (max-w-275=68.75rem) масштабируются
+         одним пропорциональным root → число колонок ИНВАРИАНТНО (≈6 на 1920/2K/4K),
+         карточки растут ×2 к 4К вместе с макетом. Раньше был фикс 160px+auto-fill →
+         на 4К влезало ~11 мелких колонок (рефлоу «вёрстка едет»). На 1920 тождественно:
+         10rem=160px, 1.75rem=28px. */
+      grid-template-columns: repeat(auto-fill, 10rem);
+      grid-auto-rows: 10rem;
+      gap: 1.75rem;
       justify-content: center;
     }
   }
