@@ -1,6 +1,6 @@
 # Security Hardening — аудит по «15 способов взлома вайб-проекта»
 
-Статус: 🔎 аудит проведён · дата: 2026-08-27 · источник: `docs/15 способов, которыми ломают проект вайб-кодера..md`
+Статус: ✅ исполнено и в main (merge `0b1d46fb`, 2026-08-27) · источник: `docs/15 способов, которыми ломают проект вайб-кодера..md`
 
 ## TL;DR
 Прогнал проект по всем 15 типовым дырам вайб-кодинга тремя независимыми агентами-ревьюверами + прямой проверкой.
@@ -76,6 +76,8 @@
 - [x] B2 — 2FA (TOTP: enroll + login-challenge + AAL2-гейт)
 - [x] C — cost-cap (проверено: уже закрыто, код не нужен)
 - [x] Долг линта: eslint снова зелёный (0 ошибок). Date.now→снапшот + дизайн-текст в строку; остальные компиляторные правила (`refs`/`immutability`/`preserve-manual-memoization`) даунгрейд в `warn` — та же политика, что у `set-state-in-effect`
-- [ ] Инфра: GoTrue env (`GOTRUE_PASSWORD_*`, MFA) — V4DYA на Coolify
-- [ ] Live-verify 2FA на cta.quest → затем merge в main
-- [ ] Обновить `docs/state/` срез после merge
+- [x] Live-verify 2FA (V4DYA, локально на живой Supabase) → пройдено
+- [x] Merge в main + push (Coolify auto-deploy)
+- [ ] Опц. инфра: `GOTRUE_PASSWORD_MIN_LENGTH=12` на Coolify (серверный пояс на пароль при reset). MFA в GoTrue уже включён — 2FA заработала
+- [ ] Вернуть правки по картам на main: `git stash pop stash@{0}`
+- [ ] Обновить `docs/state/` срез (следующая сессия)
