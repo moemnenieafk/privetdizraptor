@@ -29,7 +29,8 @@ created: 2026-08-18
 
 ## Открытые баги
 <!-- список пополняется по мере приёма -->
-- _(пусто)_
+- [[bugs/2026-08-28-1148--perks-constructor-share-broken.md]] — Конструктор перков: сломана кнопка «Поделиться» (permalink сборки) (`new`)
+- [[bugs/2026-08-28-1158--perks-constructor-hero-images.md]] — Конструктор перков: не грузятся hero-изображения билдов (`in-progress` — фикс готов, ждёт пуша+verify)
 
 ## Починенные — `done/`
 Сессия 2026-08-23 (grill→code→live-verify, ветка `fix/collector-food-duplicates`):

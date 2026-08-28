@@ -279,9 +279,19 @@ const KORD_BREACH: CuratedBuild[] = [
   },
 ];
 
-// Hero-баннеры сезона 1 (webp в /public/images/seasons/season01/builds) + короткие
-// тайтлы. Имена файлов заданы при генерации (NN-vibe-id) и не равны id — маппинг явный.
-const S1_BUILD_DIR = '/images/seasons/season01/builds';
+// Hero-баннеры сезона 1 (webp) + короткие тайтлы. Имена файлов заданы при генерации
+// (NN-vibe-id) и не равны id — маппинг явный.
+//
+// ⚠️ Прямой R2-URL, НЕ локальный /images/... Баннеры вынесены на R2 (offload fceaba09),
+// локальные копии в image-archive. Редирект next.config `/images/seasons→R2` спасает
+// только прямые <img>/CSS url(); эти баннеры рендерятся через <Image> (next/image),
+// а его оптимизатор дёргает ЛОКАЛЬНЫЙ путь и мимо редиректа получает 404. Поэтому,
+// как у item/achievement/quest-иконок, при заданном R2-базе бьём в R2 напрямую
+// (`**.r2.dev` уже в images.remotePatterns), иначе — локальный фолбэк для dev.
+const R2_BASE = process.env.NEXT_PUBLIC_ICON_BASE_URL;
+const S1_BUILD_DIR = R2_BASE
+  ? `${R2_BASE}/seasons/season01/builds`
+  : '/images/seasons/season01/builds';
 const S1_BUILD_BANNER: Record<string, { file: string; short: string }> = {
   'kappa-doorstep': { file: '01-meta-kappa-doorstep', short: 'Каппа с порога' },
   'all-in': { file: '02-meta-all-in', short: 'Всё и сразу' },
@@ -317,3 +327,13 @@ export const SEASON_BUILDS: Record<string, CuratedBuild[]> = {
 };
 
 export const getSeasonBuilds = (slug: string): CuratedBuild[] => SEASON_BUILDS[slug] ?? [];
+
+// Канон-код сборки (сорт-джойн id перков) — совпадает с encodeBuild из season-points.
+// Дублируем формулу локально, чтобы data-файл не тянул lib (и не ловил цикл импорта).
+const codeOf = (perks: string[]): string => [...perks].sort().join('.');
+
+/** Курируемый билд, совпадающий с расшаренной сборкой по набору перков. undefined — кастом. */
+export const findCuratedBuildByCode = (
+  slug: string,
+  canonCode: string,
+): CuratedBuild | undefined => getSeasonBuilds(slug).find((b) => codeOf(b.perks) === canonCode);

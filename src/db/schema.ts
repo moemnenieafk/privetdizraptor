@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   integer,
+  smallint,
   bigint,
   numeric,
   real,
@@ -1077,11 +1078,16 @@ export const entityComments = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     targetType: text("target_type").$type<CommentTargetType>().notNull(),
     targetId: text("target_id").notNull(),
+    // Ответ в ветке: parent = верхнеуровневый комментарий той же цели (1 уровень
+    // вложенности). null — сам верхнеуровневый.
+    parentId: uuid("parent_id"),
     userId: uuid("user_id")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
     body: text("body").notNull(),
     score: integer("score").notNull().default(0),
+    // Проставляется при правке автором — метка «изменено» в UI.
+    editedAt: timestamp("edited_at", { withTimezone: true }),
     hiddenAt: timestamp("hidden_at", { withTimezone: true }),
     hiddenBy: uuid("hidden_by").references(() => profiles.id, { onDelete: "set null" }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
@@ -1092,6 +1098,7 @@ export const entityComments = pgTable(
     index("entity_comments_target_idx").on(t.targetType, t.targetId, t.createdAt),
     index("entity_comments_score_idx").on(t.targetType, t.targetId, t.score),
     index("entity_comments_recent_idx").on(t.createdAt),
+    index("entity_comments_parent_idx").on(t.parentId),
     // FK-индексы (гигиена БД 2026-07-23): ускоряют джойны и delete-каскад при удалении юзера.
     index("entity_comments_user_idx").on(t.userId),
     index("entity_comments_hidden_by_idx").on(t.hiddenBy),
@@ -1120,6 +1127,53 @@ export const entityCommentVotes = pgTable(
 export type EntityCommentRow = typeof entityComments.$inferSelect;
 export type NewEntityCommentRow = typeof entityComments.$inferInsert;
 export type EntityCommentVoteRow = typeof entityCommentVotes.$inferSelect;
+
+/* ───────────────── соц-слой сборок сезонных перков ───────────────── */
+/**
+ * Канонизация расшаренной сборки перков (stateless — весь билд в URL-коде) как строки:
+ * короткий url-safe `slug` ↔ канон `code` (encodeBuild). slug служит target_id ветки
+ * обсуждения (сырой код с точками не проходит TARGET_ID_RE реестра целей) и ключом реакций.
+ * Денорм-счётчики up/down пересчитываются при тогле реакции. DDL-зеркало: season-builds-ddl.ts.
+ */
+export const seasonBuilds = pgTable(
+  "season_builds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").unique().notNull(), // /eft/progress/seasons/b/{slug}
+    code: text("code").unique().notNull(), // encodeBuild — сорт-джойн id перков
+    seasonSlug: text("season_slug").notNull(),
+    up: integer("up").notNull().default(0),
+    down: integer("down").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("season_builds_season_idx").on(t.seasonSlug)],
+);
+
+/**
+ * Реакции на сборку: лайк/дизлайк. Дедуп — одна реакция на пользователя (составной PK).
+ * value ∈ {+1,-1}; денорм-счётчики живут в season_builds.up/down.
+ */
+export const seasonBuildReactions = pgTable(
+  "season_build_reactions",
+  {
+    buildId: uuid("build_id")
+      .notNull()
+      .references(() => seasonBuilds.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    value: smallint("value").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.buildId, t.userId] }),
+    index("season_build_reactions_user_idx").on(t.userId),
+  ],
+);
+
+export type SeasonBuildRow = typeof seasonBuilds.$inferSelect;
+export type NewSeasonBuildRow = typeof seasonBuilds.$inferInsert;
+export type SeasonBuildReactionRow = typeof seasonBuildReactions.$inferSelect;
 
 /* ───────────────── inferred types (оружейный слой) ───────────────── */
 export type WeaponBaseRow = typeof weaponBases.$inferSelect;

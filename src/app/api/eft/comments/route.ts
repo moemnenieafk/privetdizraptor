@@ -13,11 +13,12 @@ import { canModerate } from "@/lib/auth/roles";
 import { getSubscription } from "@/lib/subscription.server";
 import { bodyTooLarge, JSON_BODY_CAP } from "@/lib/http";
 import { rateLimit } from "@/lib/rate-limit";
-import { isCommentTargetType, isValidTargetId } from "@/lib/comment-targets";
+import { isCommentTargetType, isValidTargetId, type CommentTargetType } from "@/lib/comment-targets";
 import { targetExists } from "@/lib/comment-targets.server";
 import {
   createComment,
   deleteOwnComment,
+  editOwnComment,
   getEntityComments,
   hideComment,
   type CommentSort,
@@ -29,9 +30,19 @@ export const dynamic = "force-dynamic";
 const err = (status: number, error: string) => NextResponse.json({ error }, { status });
 const UUID_RE = /^[0-9a-f-]{36}$/i;
 
-/** Право писать: платный тир ИЛИ модератор/админ (им нужно отвечать в ветке). */
-async function canWriteComments(userId: string, role: string): Promise<boolean> {
+/**
+ * Право писать: платный тир ИЛИ модератор/админ (им нужно отвечать в ветке).
+ * Исключение — сборки перков (`season-build`): их обсуждение открыто ЛЮБОМУ
+ * залогиненному (решение V4DYA 2026-08-28) — сознательный рассинхрон с остальным
+ * порталом ради вовлечения вокруг шаринга сборок.
+ */
+async function canWriteComments(
+  userId: string,
+  role: string,
+  type: CommentTargetType,
+): Promise<boolean> {
   if (canModerate(role)) return true;
+  if (type === "season-build") return true;
   const sub = await getSubscription(userId);
   return sub.tier !== "free";
 }
@@ -57,7 +68,7 @@ export async function GET(req: Request): Promise<NextResponse> {
         userId: me.id,
         canVote: true,
         canModerate: moderator,
-        canWrite: await canWriteComments(me.id, me.role),
+        canWrite: await canWriteComments(me.id, me.role, type),
       }
     : null;
 
@@ -69,7 +80,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (!me) return err(401, "Войдите, чтобы комментировать");
 
   if (bodyTooLarge(req, JSON_BODY_CAP)) return err(413, "Слишком большой запрос");
-  let body: { type?: unknown; id?: unknown; body?: unknown };
+  let body: { type?: unknown; id?: unknown; body?: unknown; parentId?: unknown };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -79,8 +90,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   const { type, id } = body;
   if (!isCommentTargetType(type) || !isValidTargetId(id)) return err(422, "Некорректная цель");
   const text = typeof body.body === "string" ? body.body : "";
+  const parentId = typeof body.parentId === "string" && UUID_RE.test(body.parentId) ? body.parentId : null;
 
-  if (!(await canWriteComments(me.id, me.role))) {
+  if (!(await canWriteComments(me.id, me.role, type))) {
     return err(403, "Комментарии доступны с подпиской «Оперативник» и выше");
   }
 
@@ -90,7 +102,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   if (!(await targetExists(type, id))) return err(404, "Страница не найдена");
 
-  const res = await createComment({ type, id }, me.id, text);
+  const res = await createComment({ type, id }, me.id, text, parentId);
   if (!res.ok) return err(422, res.error ?? "Не удалось отправить");
 
   return NextResponse.json({ ok: true, id: res.id });
@@ -111,9 +123,8 @@ export async function DELETE(req: Request): Promise<NextResponse> {
 export async function PATCH(req: Request): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return err(401, "Не авторизован");
-  if (!canModerate(me.role)) return err(403, "Недостаточно прав");
 
-  let body: { id?: unknown; hidden?: unknown };
+  let body: { id?: unknown; hidden?: unknown; body?: unknown };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -122,6 +133,19 @@ export async function PATCH(req: Request): Promise<NextResponse> {
 
   const id = typeof body.id === "string" ? body.id.trim() : "";
   if (!UUID_RE.test(id)) return err(422, "Некорректный id");
+
+  // Правка своего текста (автор) — если пришло поле body. Скрытие/возврат (модератор) —
+  // если пришло hidden. Разводим по payload: у правки и модерации разные права.
+  if (typeof body.body === "string") {
+    if (!(await rateLimit(`comment-edit:${me.id}`, 60, 3600))) {
+      return err(429, "Слишком часто. Передохни");
+    }
+    const res = await editOwnComment(id, me.id, body.body);
+    if (!res.ok) return err(422, res.error ?? "Не удалось сохранить правку");
+    return NextResponse.json({ ok: true });
+  }
+
+  if (!canModerate(me.role)) return err(403, "Недостаточно прав");
   const hidden = body.hidden !== false;
 
   const ok = await hideComment(id, me.id, hidden);

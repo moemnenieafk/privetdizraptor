@@ -24,6 +24,13 @@ const COMMENT_KARMA_DELTA = 3;
 export const COMMENT_MAX_LEN = 1500;
 export const COMMENT_MIN_LEN = 2;
 
+// Колонки ветки/правки (parent_id, edited_at) добавляются миграцией. Таблица
+// entity_comments принадлежит supabase_admin — ALTER идёт отдельным привилегированным
+// путём (см. docs/decisions/comments-modernization.md). Пока их нет, деградируем к
+// плоскому режиму, НЕ роняя обсуждения. Флаг гасится при первой ошибке и самолечится
+// после рестарта (следующий холодный старт снова пробует полный режим).
+let threadReady = true;
+
 export type CommentSort = "best" | "new";
 
 export interface EntityComment {
@@ -31,6 +38,10 @@ export interface EntityComment {
   body: string;
   score: number;
   createdAt: string;
+  /** Ответ в ветке: id верхнеуровневого комментария, иначе null. */
+  parentId: string | null;
+  /** Момент последней правки автором (ISO) — метка «изменено». null — не правили. */
+  editedAt: string | null;
   authorId: string;
   authorName: string;
   authorAvatar: string | null;
@@ -65,25 +76,29 @@ export async function getEntityComments(
   target: { type: CommentTargetType; id: string },
   opts: { sort: CommentSort; viewerId: string | null; viewerCanModerate: boolean },
 ): Promise<EntityComment[]> {
-  try {
-    const { sort, viewerId, viewerCanModerate } = opts;
+  const { sort, viewerId, viewerCanModerate } = opts;
 
-    const voteCond = viewerId
-      ? and(eq(entityCommentVotes.commentId, entityComments.id), eq(entityCommentVotes.userId, viewerId))
-      : sql`false`;
+  const voteCond = viewerId
+    ? and(eq(entityCommentVotes.commentId, entityComments.id), eq(entityCommentVotes.userId, viewerId))
+    : sql`false`;
 
-    const karmaSub = sql<number>`(
-      select coalesce(sum(${karmaEvents.delta}), 0)::int
-      from ${karmaEvents}
-      where ${karmaEvents.userId} = ${entityComments.userId}
-    )`;
+  const karmaSub = sql<number>`(
+    select coalesce(sum(${karmaEvents.delta}), 0)::int
+    from ${karmaEvents}
+    where ${karmaEvents.userId} = ${entityComments.userId}
+  )`;
 
-    const rows = await db
+  // withThread=false подставляет NULL-литералы вместо реальных колонок — тот же shape
+  // строки, без ссылки на возможно-отсутствующие поля.
+  const fetchRows = (withThread: boolean) =>
+    db
       .select({
         id: entityComments.id,
         body: entityComments.body,
         score: entityComments.score,
         createdAt: entityComments.createdAt,
+        parentId: withThread ? entityComments.parentId : sql<string | null>`null`,
+        editedAt: withThread ? entityComments.editedAt : sql<Date | null>`null`,
         hiddenAt: entityComments.hiddenAt,
         authorId: entityComments.userId,
         authorName: profiles.username,
@@ -109,13 +124,16 @@ export async function getEntityComments(
       )
       .limit(200);
 
-    return rows
+  const mapRows = (rows: Awaited<ReturnType<typeof fetchRows>>): EntityComment[] =>
+    rows
       .filter((r) => r.hiddenAt === null || viewerCanModerate || r.authorId === viewerId)
       .map((r) => ({
         id: r.id,
         body: r.body,
         score: r.score,
         createdAt: r.createdAt.toISOString(),
+        parentId: r.parentId ?? null,
+        editedAt: r.editedAt ? r.editedAt.toISOString() : null,
         authorId: r.authorId,
         authorName: r.authorName ?? "Боец",
         authorAvatar: r.authorAvatar,
@@ -124,7 +142,19 @@ export async function getEntityComments(
         votedByMe: r.votedUserId != null,
         hidden: r.hiddenAt !== null,
       }));
+
+  try {
+    return mapRows(await fetchRows(threadReady));
   } catch {
+    if (threadReady) {
+      // Колонок ветки нет → гасим флаг и повторяем в плоском режиме.
+      threadReady = false;
+      try {
+        return mapRows(await fetchRows(false));
+      } catch {
+        return [];
+      }
+    }
     return [];
   }
 }
@@ -133,6 +163,7 @@ export async function createComment(
   target: { type: CommentTargetType; id: string },
   userId: string,
   bodyRaw: string,
+  parentIdRaw?: string | null,
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   const body = bodyRaw.trim();
   if (body.length < COMMENT_MIN_LEN) return { ok: false, error: "Слишком короткий комментарий" };
@@ -140,13 +171,85 @@ export async function createComment(
     return { ok: false, error: `Максимум ${COMMENT_MAX_LEN} символов` };
   }
   try {
-    const [row] = await db
-      .insert(entityComments)
-      .values({ targetType: target.type, targetId: target.id, userId, body })
-      .returning({ id: entityComments.id });
-    return { ok: true, id: row?.id };
+    // Ответ: parent должен принадлежать той же цели и не быть удалённым. Держим ОДИН
+    // уровень вложенности — ответ на ответ подшивается к его верхнеуровневому предку.
+    // Без колонки parent_id (миграция ещё не применена) ответы недоступны — пишем топ-левел.
+    let parentId: string | null = null;
+    if (parentIdRaw && threadReady) {
+      const [p] = await db
+        .select({ id: entityComments.id, parentId: entityComments.parentId })
+        .from(entityComments)
+        .where(
+          and(
+            eq(entityComments.id, parentIdRaw),
+            eq(entityComments.targetType, target.type),
+            eq(entityComments.targetId, target.id),
+            isNull(entityComments.deletedAt),
+          ),
+        )
+        .limit(1);
+      if (!p) return { ok: false, error: "Комментарий для ответа не найден" };
+      parentId = p.parentId ?? p.id;
+    }
+
+    const base = { targetType: target.type, targetId: target.id, userId, body };
+    try {
+      const [row] = await db
+        .insert(entityComments)
+        .values(threadReady ? { ...base, parentId } : base)
+        .returning({ id: entityComments.id });
+      return { ok: true, id: row?.id };
+    } catch {
+      // Колонки нет → повторяем без parent_id, чтобы обычный коммент прошёл.
+      if (threadReady) {
+        threadReady = false;
+        const [row] = await db.insert(entityComments).values(base).returning({ id: entityComments.id });
+        return { ok: true, id: row?.id };
+      }
+      throw new Error("insert failed");
+    }
   } catch {
     return { ok: false, error: "Не удалось отправить комментарий" };
+  }
+}
+
+/** Правка своего комментария. Ставит edited_at. Возвращает false, если не автор/удалён. */
+export async function editOwnComment(
+  commentId: string,
+  userId: string,
+  bodyRaw: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const body = bodyRaw.trim();
+  if (body.length < COMMENT_MIN_LEN) return { ok: false, error: "Слишком короткий комментарий" };
+  if (body.length > COMMENT_MAX_LEN) return { ok: false, error: `Максимум ${COMMENT_MAX_LEN} символов` };
+  const where = and(
+    eq(entityComments.id, commentId),
+    eq(entityComments.userId, userId),
+    isNull(entityComments.deletedAt),
+  );
+  try {
+    // edited_at может отсутствовать (миграция не применена) → правим без метки.
+    const res = await db
+      .update(entityComments)
+      .set(threadReady ? { body, editedAt: new Date(), updatedAt: new Date() } : { body, updatedAt: new Date() })
+      .where(where)
+      .returning({ id: entityComments.id });
+    return res.length > 0 ? { ok: true } : { ok: false, error: "Комментарий не найден" };
+  } catch {
+    if (threadReady) {
+      threadReady = false;
+      try {
+        const res = await db
+          .update(entityComments)
+          .set({ body, updatedAt: new Date() })
+          .where(where)
+          .returning({ id: entityComments.id });
+        return res.length > 0 ? { ok: true } : { ok: false, error: "Комментарий не найден" };
+      } catch {
+        return { ok: false, error: "Не удалось сохранить правку" };
+      }
+    }
+    return { ok: false, error: "Не удалось сохранить правку" };
   }
 }
 
@@ -283,13 +386,16 @@ export interface ModerationComment extends EntityComment {
  * модератору нужно видеть, что он уже разобрал.
  */
 export async function getRecentComments(limit = 100): Promise<ModerationComment[]> {
-  try {
-    const rows = await db
+  const cap = Math.min(Math.max(limit, 1), 200);
+  const fetchRows = (withThread: boolean) =>
+    db
       .select({
         id: entityComments.id,
         body: entityComments.body,
         score: entityComments.score,
         createdAt: entityComments.createdAt,
+        parentId: withThread ? entityComments.parentId : sql<string | null>`null`,
+        editedAt: withThread ? entityComments.editedAt : sql<Date | null>`null`,
         hiddenAt: entityComments.hiddenAt,
         targetType: entityComments.targetType,
         targetId: entityComments.targetId,
@@ -302,13 +408,16 @@ export async function getRecentComments(limit = 100): Promise<ModerationComment[
       .innerJoin(profiles, eq(profiles.id, entityComments.userId))
       .where(isNull(entityComments.deletedAt))
       .orderBy(desc(entityComments.createdAt))
-      .limit(Math.min(Math.max(limit, 1), 200));
+      .limit(cap);
 
-    return rows.map((r) => ({
+  const mapRows = (rows: Awaited<ReturnType<typeof fetchRows>>): ModerationComment[] =>
+    rows.map((r) => ({
       id: r.id,
       body: r.body,
       score: r.score,
       createdAt: r.createdAt.toISOString(),
+      parentId: r.parentId ?? null,
+      editedAt: r.editedAt ? r.editedAt.toISOString() : null,
       authorId: r.authorId,
       authorName: r.authorName ?? "Боец",
       authorAvatar: r.authorAvatar,
@@ -319,7 +428,18 @@ export async function getRecentComments(limit = 100): Promise<ModerationComment[
       targetType: r.targetType,
       targetId: r.targetId,
     }));
+
+  try {
+    return mapRows(await fetchRows(threadReady));
   } catch {
+    if (threadReady) {
+      threadReady = false;
+      try {
+        return mapRows(await fetchRows(false));
+      } catch {
+        return [];
+      }
+    }
     return [];
   }
 }

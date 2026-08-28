@@ -330,6 +330,9 @@
   .icon-eft-season1-badge { mask-image: url('/icons/eft/04-progression/seasons/season01/season1-badge-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/season01/season1-badge-icon.svg'); }
   .icon-eft-kord-breach-logo-short { mask-image: url('/icons/eft/04-progression/seasons/season01/kord-breach-logo-short-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/season01/kord-breach-logo-short-icon.svg'); }
   .icon-eft-build-constructor { mask-image: url('/icons/eft/04-progression/seasons/build-constructor.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/build-constructor.svg'); }
+  /* — реакции на сборки перков (лайк/дизлайк) — */
+  .icon-eft-like { mask-image: url('/icons/eft/04-progression/seasons/like-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/like-icon.svg'); }
+  .icon-eft-dislike { mask-image: url('/icons/eft/04-progression/seasons/dislike-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/dislike-icon.svg'); }
   /* — BATTLEPASS трекер (редизайн 2026-08-14): глифы наград/документов — */
   .icon-eft-battlepass-docs-tracker { mask-image: url('/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/battlepass-docs-tracker-icon.svg'); }
   .icon-eft-battlepass-docs-coin { mask-image: url('/icons/eft/04-progression/seasons/battlepass-docs-coin.svg'); -webkit-mask-image: url('/icons/eft/04-progression/seasons/battlepass-docs-coin.svg'); }

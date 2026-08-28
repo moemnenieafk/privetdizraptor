@@ -31,6 +31,20 @@ export const COMMENTS_DDL: string[] = [
     updated_at  timestamptz not null default now()
   )`,
 
+  // ─── ветки-ответы + метка правки (модернизация обсуждений 2026-08-28). Аддитивно:
+  // добавляем колонки к существующей таблице, если их ещё нет.
+  `alter table public.entity_comments add column if not exists parent_id uuid`,
+  `alter table public.entity_comments add column if not exists edited_at timestamptz`,
+  `do $$ begin
+     if not exists (select 1 from pg_constraint where conname = 'entity_comments_parent_fk') then
+       alter table public.entity_comments
+         add constraint entity_comments_parent_fk
+         foreign key (parent_id) references public.entity_comments(id) on delete cascade;
+     end if;
+   end $$`,
+  `create index if not exists entity_comments_parent_idx
+     on public.entity_comments (parent_id, created_at)`,
+
   // Лента сущности: сорт «новые» и «лучшие».
   `create index if not exists entity_comments_target_idx
      on public.entity_comments (target_type, target_id, created_at desc)`,
