@@ -38,7 +38,7 @@ const EMPTY_SELECTION: string[] = [];
 const EMPTY_HISTORY: string[][] = [];
 
 // Сетка перков: карточки по 160px (авто-заполнение ряда), высота фиксирована на карточке.
-const PERK_GRID = 'grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2';
+const PERK_GRID = 'grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-2';
 
 function PerkCard({
   perk,
