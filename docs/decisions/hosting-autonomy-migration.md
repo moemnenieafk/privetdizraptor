@@ -1,5 +1,5 @@
 ---
-status: 🟢 ядро сделано (cta.quest live), остался полиш
+status: 🟢 ядро сделано (cta.quest live); Ф4 декоммишн резерва — план записан (2026-08-29), ждёт исполнения
 affects: инфраструктура, деплой, БД, Auth, домен cta.quest
 date: 2026-08-19
 updated: 2026-08-25
@@ -32,7 +32,7 @@ updated: 2026-08-25
 **⏭️ ОСТАЛОСЬ (полиш, не блокеры) — по приоритету:**
 1. ✅ **Крон — СДЕЛАНО (2026-08-25).** 12 расписаний в **host crontab** root'а на VPS (не Coolify Scheduled Tasks — V4DYA выбрал host-crontab: проще/надёжнее, всё так же на нашем VPS). Обёртка `/root/cta-cron/run.sh <endpoint>` дёргает `https://cta.quest/api/cron/<endpoint>` с `Bearer CRON_SECRET`; **секрет НЕ на диске** — читается из env живого app-контейнера (`docker ps --filter name=4jbtkym4uhunjymh3e2hk5kf` → `docker exec … printenv CRON_SECRET`), следует за редеплоями/ротацией. Расписания перенесены из `.github/workflows/*.yml`(11)+`vercel.json`(detect-anomalies); `sync-prices` был дублем Vercel(05:00)+GHA(почасовой) → взят почасовой. Лог `/root/cta-cron/cron.log`, конфиг `/root/cta-cron/crontab.txt`. Проверено вживую: sync-traders/sync-prices/sync-silent-changes = http 200 (цены разморожены: 5312 предметов, 789 бартеров, 214 крафтов). Ручные `migrate-*`/`set-*`/`backfill`/`sync-weapons` — не расписание, не переносил. **Долг:** GHA-воркфлоу пока живы (Vercel-резерв) → синки дублируются; вычистить `schedule:` из `.github/workflows/*.yml` при гашении Vercel (идемпотентны, дубль безвреден).
 2. ✅ **Origin-cert Full strict — СДЕЛАНО (2026-08-25).** SSL mode = **Full (strict)**, проверено end-to-end (cta.quest 200, /eft/items 200, supabase.cta.quest GoTrue 401-без-ключа = отвечает, ошибок 525/526 нет). Реальность оказалась гибридной: для `cta.quest` origin отдаёт **Let's Encrypt** cert (Coolify ACME сам получил, публично доверенный) → strict валиден; для `supabase.cta.quest` (LE его SAN не покрывает) отдаётся **мой CF Origin CA cert** (wildcard `*.cta.quest`+`cta.quest`, до 2041). Origin-cert сделан безопасно: приватный ключ **сгенерён на VPS** (`/root/cta-origin/origin.key`, никогда не покидал сервер), в CF ушёл только CSR, CF подписал. Cert+key на Traefik: `/data/coolify/proxy/dynamic/certs/origin.{crt,key}` (ключ chown 9999:root 600), dynamic-конфиг `/data/coolify/proxy/dynamic/origin-tls.yaml` (default certificate + certificates list). Мелкий долг: в CF Origin Server остался 1-й orphan-cert (генерил с CF-ключом, ключ не забирал → бесполезен/безвреден) — при желании revoke в дашборде.
-3. **Firewall БД (порт 5432 открыт наружу)** — iptables НЕ берёт (Docker userland-proxy маскирует источник; правила сняты). Чистый фикс = **firewall в панели Timeweb** (открыть 22/80/443, закрыть 5432; проверить, что hairpin app→БД не сломался). Защита сейчас — 32-симв. пароль (как у managed Postgres).
+3. ✅ **Порт БД 5432 ЗАКРЫТ снаружи — СДЕЛАНО (2026-08-29).** Не через firewall (он бесполезен против docker-publish), а **устранением самой публикации**: билд перестал ходить в БД (код-фикс) → форвардер `cta-db-forward` пересоздан без `-p 5432:5432`, рантайм ушёл на внутреннюю сеть. Порт больше не слушается на хосте. Разбор — в журнале ниже (2026-08-29).
 4. **SMTP** (magic-link/письма) — GoTrue `SMTP_*` в override. `docker login` в Docker Hub (durability 429 при редеплоях/сборках). www→apex редирект (www DNS ещё на reg.ru 31.31.196.206). Погасить Vercel после обкатки.
 
 **⚠️ Ключевые гочи:** (а) сборка `next build` ходит в БД (SSG) → `DATABASE_URL` = публичный `201.51.20.217:5432` (форвардер-контейнер `cta-db-forward` socat), потому порт и открыт. (б) Docker Hub 429 на бурст-пулах → пулить последовательно / `docker login`. (в) на одном сервере Coolify-деплой = UICompose/браузер, API=только чтение. (г) стейдж-дамп бери СВЕЖИЙ (схема прода дрейфует). (д) NEXT_PUBLIC_* инлайнятся при билде (менять URL → ребилд). (е) схему БД менять на self-hosted.
@@ -160,6 +160,65 @@ Hetzner CPX31 ~€13–14/мес · Cloudflare €0 · R2 как сейчас ·
 - **2026-08-26 — ✅ SMTP через Resend (письма работают).** Домен `cta.quest` верифицирован в Resend (V4DYA, sending enabled, eu-west-1). GoTrue-SMTP вшит отдельным `override-smtp.yml` (не трогая twitch-override): `GOTRUE_SMTP_HOST=smtp.resend.com`, `USER=resend`, `PASS=<RESEND_API_KEY>`, `ADMIN_EMAIL=noreply@cta.quest`, `SENDER_NAME=CTA`, `MAILER_AUTOCONFIRM=false`. Пересоздание: `docker compose -p <uuid> --env-file .env -f docker-compose.yml -f override-twitch.yml -f override-smtp.yml up -d --no-build --no-deps supabase-auth`. Ключ передан на сервер через stdin (не в транскрипт), лежит в override (600). **🛡️ ГОЧА (важная): Timeweb блокирует исходящие стандартные SMTP-порты 25/465/587** (recover давал 504-таймаут) → **Resend альт-порты 2587/2465 ОТКРЫТЫ** (для обхода ISP-блокировок), поставил `GOTRUE_SMTP_PORT=2587` (STARTTLS). Проверено end-to-end: `/auth/v1/recover` → 200, Resend API `last_event=delivered`, письмо реально пришло. Мелочь: лог-варнинг про `GOTRUE_MAILER_EXTERNAL_HOSTS` (X-Forwarded-Host `supabase.cta.quest` игнорится — GoTrue берёт SITE_URL/API_EXTERNAL_URL, ссылки корректны; безвредно). Скрипт-хелпер `/root/setup-smtp.sh` (без секрета).
 
 - **2026-08-26 — Timeweb-firewall создан, но 5432 НЕ закрыл (упёрлись в Docker-publish).** Через панель Timeweb создана группа `Reasonable Bittern` (id `f9ca4d87…`), привязана к `cta-prod`: **вход** TCP 22/80/443/8000 (отовсюду) + TCP 5432 (только `201.51.20.217/32` — страховка hairpin); **выход** TCP+UDP всё (allowlist → «остальное заблокировано»; исходящее ОБЯЗАТЕЛЬНО разрешать явно, иначе умрут синки/бэкап/почта — портов «all» нет, поэтому 2 правила TCP+UDP). Сайт/SSH/сборка не сломались (hairpin к БД жив). **НО: 5432 снаружи остался открыт даже после reboot сервера.** Причина: 5432 публикует `cta-db-forward` (socat, `0.0.0.0:5432` → DNAT в PREROUTING на `supabase-db`), трафик идёт в FORWARD/DOCKER, **минуя host-INPUT** (та же гоча, что с ufw). На хосте Timeweb-агента/правил НЕТ (их firewall сетевой), но по факту он этот порт не фильтрует (нужен их саппорт для объяснения). **Итог: панельный firewall цель (закрыть 5432) НЕ достиг.** Чистый фикс (follow-up, отдельная сессия): убрать публикацию 5432 на 0.0.0.0 — либо перевести Coolify-**сборку** на внутренний адрес БД (`supabase-db:5432` через сеть), либо `force-dynamic` на ~нескольких DB-роутах, чтобы билд вообще не ходил в БД → тогда порт не нужен наружу вовсе. Пока: 5432 держит **32-симв. пароль** (как managed-Postgres, не аварийно). Группа firewall оставлена (безвредна; заработает, если Timeweb начнёт фильтровать/саппорт подскажет). Reboot-гоча: все контейнеры `unless-stopped` + docker enabled → после ребута поднялись сами за ~30-45с.
+
+- **2026-08-29 — ✅✅ ПОРТ 5432 ЗАКРЫТ СНАРУЖИ (уязвимость устранена).** Firewall (ufw/iptables/Timeweb-панель) бессилен: docker-publish идёт через docker-proxy/DNAT мимо host-INPUT (доказано прошлыми попытками). Единственный чистый путь — **убрать саму публикацию порта**, а её держал `next build`: билд SSG-пререндерит страницы и читал БД по публичному `201.51.20.217:5432` (buildkit достаёт БД только через интернет-хоп на публичный IP — внутренние docker-сети ему по имени недоступны). Значит закрыть порт = сделать сборку БД-free, затем снять publish и увести рантайм на внутреннюю сеть.
+  - **Код-фикс (2 коммита в main: 822fc08e, 71c1c4a0 + хотфикс 77df150f).** (1) Build-guard в `src/db/index.ts`: при `NEXT_PHASE==='phase-production-build'` любой запрос к БД кидает явную ошибку — делает промахи детерминированными. (2) Статические страницы, читающие БД (barters, items, maps, questmap, progress/*, admin/*, stash + auth/персонализированные) → `export const dynamic='force-dynamic'`. (3) API GET-роуты с БД (+companion/catalog) → `force-dynamic` (кэш через Cache-Control/CDN, не SSG). (4) `[param]`-страницы, читающие БД (items/[...category], loot-containers/[slug], gamesetting/bosses/[slug]) → тоже `force-dynamic`. (5) billing `getTiersFromDb`/`getGatesFromDb` → молчаливый build-short-circuit `[]` (штатный fail-safe R09i.1; root-layout резолвит гейтинг на КАЖДОЙ статической странице) + `revalidate:3600` на `getTiers`/`getGateMap` (страховка: дефолт со сборки освежается в рантайме).
+  - **Инфра-переключение.** `docker network connect coolify cta-db-forward` (форвардер теперь в обеих сетях: coolify+supabase) → app резолвит `cta-db-forward:5432` внутренне (проверено node-TCP из контейнера). `DATABASE_URL`/`_SESSION` сменены с публичного IP на `cta-db-forward:5432` через **Coolify API** (`PATCH /api/v1/applications/<uuid>/envs`, host-swap, пароль не светился) — редеплой (`POST /api/v1/deploy` — публичный API ДЕПЛОИТ, вопреки старой заметке). Форвардер пересоздан **без `-p 5432:5432`** на обеих сетях. Итог: `ss -ltnp` на хосте — 5432 не слушается; app читает БД внутренней сетью (**5266 предметов** через `/api/companion/catalog`), сайт 200 по всем разделам.
+  - **🛡️ ГОЧИ (в реестр):** (а) **инкрементальный `.next`-кэш маскирует build-DB** — локальная сборка давала ложный «зелёный» (подсовывала старый пререндер), а Coolify падал на `bosses/killa`. Верифицировать только **чистой сборкой (`rm -rf .next`)** с недоступным `DATABASE_URL`. (б) **grep пропускает 2-прыжковые цепочки** (page→BossDetail→BossItemLoadout через ОТНОСИТЕЛЬНЫЙ импорт) — полный список дал граф-аудит импортов (резолвить и `@/`, и `./`). (в) **SSG-on-demand несовместим с cookies() в root-layout**: `generateStaticParams→[]` дал 500 `DYNAMIC_SERVER_USAGE` в рантайме (гейтинг-снапшот зовёт cookies(), запрещённый в статическом ISR-контексте; на сборке cookies() молча пуст, в рантайм-ISR — кидает) → такие страницы должны быть `force-dynamic`, НЕ SSG-on-demand. (г) **`Test-NetConnection`/`/dev/tcp` дают ЛОЖНОЕ «порт открыт»** отсюда — сеть Timeweb/провайдера ACK'ает SYN на ЛЮБОЙ порт (5433/5999 «открыты» тоже). Достоверный тест закрытости — **реальный протокол** (psql): открытый Postgres ответил бы ошибкой аутентификации, а закрытый — `timeout expired` (идентично заведомо-закрытому порту).
+  - **Компромисс:** ~40 страниц/роутов из статики/SSG стали `force-dynamic` (рендер в рантайме). Цена — БД-нагрузка/TTFB на этих разделах вместо статики; приемлемо (за Cloudflare, трафик пока малый). Долг-развилка: если items/[...category] или хабы станут горячими — либо `unstable_cache` на горячих ридерах, либо вынести гейтинг-снапшот root-layout в динамический Suspense-бандл, чтобы вернуть SSG-on-demand. **Форвардер `unless-stopped` на обеих сетях — переживает редеплой (независим от app) и ребут (docker enabled).**
+
+## Ф4 — Декоммишн резерва (Vercel + облачный Supabase) — план, 2026-08-29
+
+**Выбор V4DYA:** **ступенчато с грейсом** — сначала прекратить использование (обратимо), затем, после грейса и финального холодного дампа, удалить (необратимо). Не «руби сразу».
+
+**Состояние на старт Ф4:** прод полностью на VPS ~с 25.08 (окно наблюдения ≈4 дня закрыто). Vercel + облачный Supabase (`swcjyvztljokdycpviio.supabase.co`) — простаивающий резерв, боевого трафика не видят (DNS `cta.quest` → Cloudflare → VPS). Discord-секрет уже сброшен → Discord-вход на Vercel-проде уже мёртв (резерв частично деградировал).
+
+**⚠️ Главный риск.** Переезд был через **public-only дамп** и уже дал класс багов (осиротевшие профили, потерянные триггеры на `auth.users`, пустой Storage — чинились по ходу). Облачный Supabase сейчас — **страховочная сеть и документированный источник любых потерянных Storage-ассетов** (аватары/медиатека/иконки БП; карты-SVG уже зеркалили). Удалить раньше проверенного паритета = потерять источник восстановления. Поэтому удаление облака — последним, после холодного дампа + инвентаризации Storage.
+
+**Связки, которые ещё цепляют резерв (аудит кода 2026-08-29):**
+- `src/lib/site.ts` — `VERCEL_*` только фолбэк после `NEXT_PUBLIC_SITE_URL`; на VPS не срабатывает, безвреден (косметика).
+- `vercel.json` — крон `sync-prices`/`detect-anomalies` (актуален только при живом Vercel; на VPS уже в host-crontab).
+- **13 GHA-воркфлоу с `schedule:`** (`sync-prices`, `sync-traders`, `sync-silent-changes`, `snapshot-prices`, `check-arena-rates`, `detect-events`, `sync-patches`, `sync-game-changes`, `sync-trader-changes`, `sync-craft-changes`, `sync-quest-changes`, …) — тикают и **дублируют** VPS-крон. Перед гашением проверить, куда бьют (cta.quest vs Vercel), снять `schedule:` (оставить `workflow_dispatch`).
+- Локальный `.env.local` разработки ещё указывает на облачный Supabase → переключить на self-hosted.
+
+### Чек-лист (порядок: обратимое → необратимое)
+**Шаг 1 — прекратить писать в облако (обратимо):**
+- [ ] Аудит 13 GHA-воркфлоу: куда бьёт `curl` (cta.quest или Vercel-URL) и в какой Supabase пишет.
+- [ ] Снять `schedule:` в GHA (оставить `workflow_dispatch`) — убрать дубль синков.
+- [ ] Vercel: отключить авто-деплой (отцепить Git-интеграцию), проект пока не удалять.
+- [ ] Убедиться, что ни один вебхук/интеграция не пишет в облачный Supabase.
+
+**Шаг 2 — грейс-обкатка без резерва (несколько дней):**
+- [ ] Наблюдение: трафик только на VPS, ничего не сломалось, зависимостей от облака нет.
+
+**Шаг 3 — паритет данных и ассетов (перед удалением):**
+- [ ] Инвентаризация облачного Storage `cta-media` → зеркалить недостающие ассеты (аватары/медиатека) в self-hosted/R2 (приём как с 10 картами-SVG).
+- [ ] **Финальный полный дамп облачного Supabase** суперюзером (`pg_dump -Fc`, НЕ public-only) → R2 `cta-db-backups/archive/`, проверить `pg_restore -l`. Холодный архив.
+
+**Шаг 4 — погасить Vercel (почти обратимо):**
+- [ ] Удалить/выключить Vercel-проект (DNS уже не на нём → трафик не заденет).
+- [ ] Код: вычистить крон из `vercel.json`, снять `VERCEL_*`-фолбэки в `site.ts`, убрать `schedule:` из GHA.
+- [ ] OAuth: убрать vercel-URL из redirect-allowlist Twitch/Discord.
+
+**Шаг 5 — погасить облачный Supabase (необратимо, только после Шага 3):**
+- [ ] Сначала **pause**, грейс, затем **delete**.
+- [ ] Ротировать ключи, если где-то шарились с VPS-стеком.
+
+**Шаг 6 — замкнуть петлю (§8):**
+- [ ] Статус решения → ✅, перенести в `docs/decisions/done/`.
+- [ ] Срез инфры в `docs/state/` (актуальный автономный стек).
+- [ ] Обновить MEMORY (`sprint-hosting-autonomy`: резерв погашен).
+- [ ] Переключить локальный dev `.env.local` с облака на self-hosted.
+
+### §5 — необратимое (требует подтверждения одной строкой перед выполнением)
+Удаление Vercel-проекта (Шаг 4) и удаление облачного Supabase (Шаг 5). Оба — только после проверенного холодного дампа/зеркала Storage. «Прекратить использование» (Шаги 1–2) — обратимо, подтверждения не требует.
+
+### Критерий «резерв погашен»
+- [ ] `git push` собирает только VPS (Vercel не деплоит); синки не дублируются.
+- [ ] Холодный дамп облака проверен restore-пробой и лежит offsite.
+- [ ] Vercel-проект удалён/выключен; облачный Supabase paused→deleted.
+- [ ] Локальный dev работает на self-hosted; в коде нет активных `VERCEL_*`/облачных ссылок.
+- [ ] Решение ✅ в `done/`, срез в `docs/state/`, MEMORY обновлён.
 
 ## Вывод
 Переезжаем целиком на автономный стек **Hetzner CPX31 + Cloudflare + Coolify + self-hosted Supabase**, R2 остаётся. Поэтапно через стейдж с Vercel-резервом. i18n и биллинг — отдельными воркстримами после.
