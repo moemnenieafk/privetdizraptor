@@ -41,7 +41,7 @@ export function ModuleFilterTabs({ tabs, topCount, active, onSelect }: ModuleFil
         <span className="flex items-center gap-2">
           <span aria-hidden className="h-7 w-7 shrink-0 icon-mask icon-eft-profit bg-(--primary)" />
           <span
-            className={`font-blender-medium text-[22px] leading-none tabular-nums ${
+            className={`font-blender-medium text-[1.375rem] leading-none tabular-nums ${
               topActive ? 'text-(--primary)' : 'text-text-secondary'
             }`}
           >
@@ -81,7 +81,7 @@ export function ModuleFilterTabs({ tabs, topCount, active, onSelect }: ModuleFil
                 aria-hidden
                 className={`h-7 w-7 shrink-0 icon-mask ${stationIconClass(t.normalizedName)} ${iconTone}`}
               />
-              <span className={`font-blender-medium text-[22px] leading-none tabular-nums ${lvlTone}`}>
+              <span className={`font-blender-medium text-[1.375rem] leading-none tabular-nums ${lvlTone}`}>
                 {String(t.builtLevel).padStart(2, '0')}
               </span>
             </span>

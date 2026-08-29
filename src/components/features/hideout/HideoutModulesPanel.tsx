@@ -54,7 +54,7 @@ function ModuleTile({ station, edition }: { station: HideoutStationInfo; edition
           style={{ maskImage: `url(${moduleIcon(station.normalizedName)})`, WebkitMaskImage: `url(${moduleIcon(station.normalizedName)})` }}
         />
         <span
-          className={`font-blender-medium text-[22px] leading-none tabular-nums ${
+          className={`font-blender-medium text-[1.375rem] leading-none tabular-nums ${
             done ? 'text-success' : active ? 'text-(--primary)' : 'text-text-muted'
           }`}
         >
