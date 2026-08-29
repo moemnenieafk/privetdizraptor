@@ -1,5 +1,5 @@
 ---
-status: ✅ ЗАВЕРШЕНО (2026-08-30). cta.quest live на автономном VPS-стеке; Ф4 резерв ПОГАШЕН: Vercel на паузе, облачный Supabase удалён (архив в R2), биллинг обеих орг переведён на Free/отменён + карты отвязаны (V4DYA). Остаток — мелкая код-гигиена (стухшие .env-бэкапы, VERCEL_*-фолбэки в site.ts, vercel-URL в OAuth-allowlist)
+status: ✅ ЗАВЕРШЕНО (2026-08-30). cta.quest live на автономном VPS-стеке; Ф4 резерв ПОГАШЕН: Vercel на паузе, облачный Supabase удалён (архив в R2), биллинг обеих орг переведён на Free/отменён + карты отвязаны (V4DYA). Код-гигиена сделана (2026-08-30, d47a1100+3866e4f5): убраны VERCEL_*-фолбэки (site.ts/cta-api.ts), vercel.app-ссылки (silent-changes UA/login-link) → cta.quest, удалены vercel.json/vercel-ignore.sh + стухшие локальные .env-бэкапы. Осталось опц.: vercel-URL в OAuth-allowlist Twitch/Discord (безвредно, Vercel на паузе), docker login(429), www→apex
 affects: инфраструктура, деплой, БД, Auth, домен cta.quest
 date: 2026-08-19
 updated: 2026-08-25
@@ -198,12 +198,12 @@ Hetzner CPX31 ~€13–14/мес · Cloudflare €0 · R2 как сейчас ·
 
 **Шаг 4 — погасить Vercel — ✅ 2026-08-30 (браузером в дашборде V4DYA):**
 - [x] Vercel-проект `privetdizraptor` → **Pause Project** (не delete — Pause обратим, останавливает production-деплой и метрические расходы, данные/настройки целы). Git-интеграция была отцеплена ранее (Шаг 1).
-- [ ] Код: `vercel.json` крон уже убран (Шаг 1). `VERCEL_*`-фолбэки в `site.ts` — безвредны, косметика; долг.
-- [ ] OAuth: vercel-URL в redirect-allowlist Twitch/Discord — вычистить (Vercel на паузе, callback не сработает; долг).
+- [x] Код (2026-08-30): `VERCEL_*`-фолбэки убраны (site.ts/cta-api.ts), vercel.app-ссылки→cta.quest (silent-changes UA/login-link), `vercel.json`+`vercel-ignore.sh` удалены.
+- [ ] OAuth: vercel-URL в redirect-allowlist Twitch/Discord — опц. (Vercel на паузе, callback не сработает; безвредно).
 
 **Шаг 5 — погасить облачный Supabase — ✅ 2026-08-30 (браузером):**
 - [x] Проект `swcjyvztljokdycpviio` **УДАЛЁН** (pause на PRO-плане недоступен — фича free-tier; выбор V4DYA — delete). Перед удалением: холодный дамп в R2 (940 объектов, проверен) + Storage-инвентаризация (уникального нет). Проверено: боевой сайт 200 (не задет — он на VPS), облачный session-коннект → FATAL (проект мёртв).
-- [ ] Ключи: облачные anon/service-role умерли вместе с проектом; в проде используются VPS-ключи (не облачные) → ротация не требуется. `.env.local.cloud-bak`/`.env.production.local` — стухли (ссылаются на удалённый облачный ref), безвредны; можно удалить (долг).
+- [x] Ключи: облачные anon/service-role умерли вместе с проектом; в проде VPS-ключи → ротация не требуется. Стухшие `.env.local.cloud-bak`/`.env.production.local` **удалены** (2026-08-30).
 
 **Шаг 6 — замкнуть петлю (§8):**
 - [x] Локальный dev уже на self-hosted (SSH-туннель `127.0.0.1:5432`, см. раздел «Локальная разработка»); `.env.local` не на облаке.
