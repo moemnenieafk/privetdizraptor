@@ -7,14 +7,10 @@ import { getEftPricesByIds } from '@/db/prices';
 import type { EftPriceInfo } from '@/lib/eft-prices';
 import { itemIconUrl } from '@/lib/item-icon';
 
-// ISR on-demand: не пререндерим на сборке (рендер читает цены из БД, а порт 5432
-// закрыт наружу → БД на билде недоступна, §4.11). Слуг рендерится по первому
-// запросу и кэшируется на час; dynamicParams=true (дефолт).
-export const revalidate = 3600;
-
-export function generateStaticParams(): { slug: string }[] {
-  return [];
-}
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11),
+// а SSG-on-demand невозможен — root-layout резолвит гейтинг через cookies()
+// (DYNAMIC_SERVER_USAGE в статическом ISR). force-dynamic → cookies() и БД в рантайме.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

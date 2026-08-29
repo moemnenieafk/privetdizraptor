@@ -8,14 +8,11 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// ISR on-demand: не пререндерим на сборке (рендер тянет цены лоадаута босса из БД
-// через BossDetail→BossItemLoadout, а порт 5432 закрыт наружу → БД на билде нет,
-// §4.11). Слуг рендерится по первому запросу и кэшируется на час.
-export const revalidate = 3600;
-
-export function generateStaticParams(): { slug: string }[] {
-  return [];
-}
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11),
+// а SSG-on-demand невозможен — root-layout резолвит гейтинг через cookies(), что
+// запрещено в статическом ISR-контексте (DYNAMIC_SERVER_USAGE). force-dynamic даёт
+// динамический контекст: cookies() работает, БД читается в рантайме.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

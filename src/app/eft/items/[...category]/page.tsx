@@ -17,15 +17,10 @@ interface Props {
   params: Promise<{ category: string[] }>;
 }
 
-// ISR on-demand: категории НЕ пререндерятся на сборке (порт 5432 закрыт наружу → БД
-// на билде недоступна, §4.11). generateStaticParams возвращает [] → каждая категория
-// рендерится по первому запросу и кэшируется на час; dynamicParams=true (дефолт).
-export const revalidate = 3600;
-
-// [] — на сборке в БД не ходим. Пути отрендерятся on-demand при первом обращении.
-export function generateStaticParams(): { category: string[] }[] {
-  return [];
-}
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11),
+// а SSG-on-demand невозможен — root-layout резолвит гейтинг через cookies()
+// (DYNAMIC_SERVER_USAGE в статическом ISR). force-dynamic → cookies() и БД в рантайме.
+export const dynamic = "force-dynamic";
 
 // Рекурсивный поиск узла в дереве меню
 function findNodeByPath(items: MenuItem[], targetPath: string): MenuItem | null {
