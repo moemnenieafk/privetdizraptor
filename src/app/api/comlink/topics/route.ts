@@ -18,6 +18,9 @@ const CAP = 3;
 const MAX_TITLE = 120;
 const MAX_BODY = 4000;
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return err(401, "Не авторизован");

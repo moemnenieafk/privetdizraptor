@@ -38,6 +38,9 @@ const entry = (o?: OfferRaw): EftPriceEntry | undefined =>
       }
     : undefined;
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request): Promise<NextResponse> {
   // Публичная ручка без сессии: до 200 предметов с ценами за запрос → лимит по IP.
   if (!(await rateLimit(`eft-prices:ip:${clientIp(req)}`, 120, 300))) {

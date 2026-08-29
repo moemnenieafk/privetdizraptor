@@ -11,6 +11,9 @@ export const runtime = "nodejs";
 const GOALS = new Set<ComlinkGoal>(["partner", "team", "student", "sherpa"]);
 const VALID_MAPS = new Set(Object.keys(EFT_MAP_CONFIG));
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return NextResponse.json({ error: "Не авторизован" }, { status: 401 });

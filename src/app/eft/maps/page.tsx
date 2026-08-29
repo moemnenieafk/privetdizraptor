@@ -6,6 +6,9 @@ import { mapIconClass, mapOrderIndex } from '@/data/map-icons';
 
 // Динамический индекс: список карт = интерактивные карты из БД (imageKey задан).
 // Добавили/убрали карту серверным кроном → страница сама обновилась.
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function MapsPage() {
   const dbMaps = await getEftInteractiveMapsWithNames();
   // + статичные карты (наш арт, не в БД), без дублей по slug.

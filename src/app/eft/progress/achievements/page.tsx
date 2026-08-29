@@ -3,6 +3,9 @@ import { AchievementsClient } from './AchievementsClient';
 import { getEftAchievements } from '@/db/landing';
 import { PveNotice } from '@/components/features/adaptive/PveNotice';
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function AchievementsPage() {
   // Достижения зеркалятся из tarkov.dev кроном; читаем нашу БД (рантайм без внешнего API).
   const achievements = await getEftAchievements();

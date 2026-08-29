@@ -48,6 +48,9 @@ async function loadServerSignals(): Promise<HubServerProps> {
   }
 }
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function AdaptiveHubPage() {
   const server = await loadServerSignals();
   // Набор id'ов Каппы (статичен, из EFT_QUESTS) — чтобы блок и инференс жили на холодном хабе (факт B).

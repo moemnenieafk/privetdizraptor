@@ -4,6 +4,9 @@ import { HideoutBuildTracker } from '@/components/features/hideout/HideoutBuildT
 // «Модули убежища» — геймифицированный трекер постройки (единый дизайн с вкладкой
 // «Трекинг» Аккаунт Центра, wide-раскладка). Данные — наше зеркало hideout_upgrades (RSC).
 // unlockMap — требования разблокировки уровня (станции/торговцы/навыки) из того же зеркала.
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function HideoutModulesHubPage({
   searchParams,
 }: {

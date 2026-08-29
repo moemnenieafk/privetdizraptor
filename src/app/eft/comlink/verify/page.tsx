@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function VerifyQueuePage() {
   const me = await getMe();
   if (!me || !canModerate(me.role)) notFound();

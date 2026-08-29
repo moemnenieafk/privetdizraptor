@@ -393,6 +393,9 @@ function pickCheapestTank(exped: number, metal: number): 'expeditionary' | 'meta
   return null;
 }
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function BitcoinProfitPage() {
   const prices = await fetchBtcPrices();
 

@@ -173,6 +173,9 @@ async function fetchCrafts(): Promise<ProcessedCraft[]> {
     });
 }
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function CraftProfitPage() {
   const [crafts, stations] = await Promise.all([fetchCrafts(), getHideoutStations()]);
 

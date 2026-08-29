@@ -3,6 +3,9 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
   const supabase = await createClient();
   const {

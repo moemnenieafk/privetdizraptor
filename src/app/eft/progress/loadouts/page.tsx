@@ -38,6 +38,9 @@ const LOADOUTS_HUB_CARDS = [
   },
 ];
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function LoadoutsHubPage() {
   // Серверный гейт раздела: не обойти прямым запросом (R09i). hide→notFound, lock→апселл.
   const gate = await requireTier(`sec:eft:${SECTION_PATH}`, { game: 'eft' });

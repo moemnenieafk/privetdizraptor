@@ -10,6 +10,9 @@ export const revalidate = 3600;
 
 // Индекс раздела «Аркады» = зал автоматов (мини-игры). Туториал «Путь Новобранца»
 // переехал в подраздел /eft/progress/rookie/path (инверсия прежней вложенности).
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function ArcadeHubPage() {
   const barterDeck = await getRushDeck();
   return (

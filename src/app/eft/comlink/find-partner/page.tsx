@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function FindPartnerPage() {
   const me = await getMe();
 

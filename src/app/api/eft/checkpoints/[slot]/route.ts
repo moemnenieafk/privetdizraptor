@@ -23,6 +23,9 @@ function parseSlot(raw: string): number | null {
   return Number.isInteger(n) && n >= 0 && n <= 3 ? n : null;
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _req: Request,
   ctx: { params: Promise<{ slot: string }> },

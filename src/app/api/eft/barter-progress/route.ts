@@ -84,6 +84,9 @@ function parsePayload(body: unknown): BarterProgressPayload | null {
   };
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(): Promise<NextResponse> {
   const userId = await currentUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

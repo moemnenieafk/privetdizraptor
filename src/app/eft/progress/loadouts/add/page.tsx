@@ -24,7 +24,9 @@ interface Props {
   searchParams: Promise<{ base?: string }>;
 }
 
-export const revalidate = 3600; // час: оружейный слой статичен, но цены живут своей жизнью
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+// (Страница и так динамична — читает searchParams; помечаем явно.)
+export const dynamic = "force-dynamic";
 
 export default async function AddLoadoutPage({ searchParams }: Props) {
   const { base } = await searchParams;

@@ -51,6 +51,9 @@ async function getItemsData(): Promise<CategoryItem[]> {
   });
 }
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function ItemsHubPage() {
   const eftMenu = HEADER_DICTIONARY['eft'].menuItems;
   const itemsNode = findNodeByPath(eftMenu, '/eft/items');

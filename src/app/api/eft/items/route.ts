@@ -10,6 +10,9 @@ import type { CtaItemsResponse } from "@/lib/cta-api";
 
 export const runtime = "nodejs";
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request): Promise<NextResponse> {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search")?.trim();

@@ -11,6 +11,9 @@ import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request): Promise<NextResponse> {
   if (!(await rateLimit(`eft-restock:ip:${clientIp(req)}`, 120, 300))) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });

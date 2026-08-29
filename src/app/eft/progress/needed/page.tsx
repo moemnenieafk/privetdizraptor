@@ -14,6 +14,9 @@ export const metadata: Metadata = { title: 'Важные предметы | Пр
 // требования торговцев/станций/навыков). Поэтому таблица `hideout_upgrades` без mode-колонки —
 // это не долг, а корректность. Payload квестов ~2× осознанно: дешевле, чем куки-плоскость через
 // middleware/auth. Спека: docs/decisions/important-items-merge.md.
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function NeededItemsPage() {
   const [regular, pve, hideoutStations] = await Promise.all([
     buildNeededItems('regular'),

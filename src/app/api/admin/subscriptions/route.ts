@@ -15,6 +15,9 @@ export const runtime = "nodejs";
 // GET /api/admin/subscriptions?username=<login> — текущий тир/срок юзера для панели
 // админки (показать состояние до действия). Резолв username→profiles.id регистронезависимо
 // (как в POST). Нет строки subscriptions → free/бессрочно. Юзер не найден → { found:false }.
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request): Promise<NextResponse> {
   const admin = await getAdmin();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });

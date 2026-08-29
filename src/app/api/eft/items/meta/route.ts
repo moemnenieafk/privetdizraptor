@@ -17,6 +17,9 @@ interface MetaResponse {
   items: Record<string, StashItemMeta>;
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request): Promise<NextResponse<MetaResponse>> {
   const idsParam = new URL(req.url).searchParams.get("ids") ?? "";
   const ids = [...new Set(idsParam.split(",").filter((s) => BSG_ID_RE.test(s)))].slice(0, MAX_IDS);

@@ -1,14 +1,19 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { LOOT_CONTAINERS, containerBySlug, containerImage } from '@/data/loot-containers';
+import { containerBySlug, containerImage } from '@/data/loot-containers';
 import { getContainerLoot } from '@/data/loot/container-loot';
 import { getEftPricesByIds } from '@/db/prices';
 import type { EftPriceInfo } from '@/lib/eft-prices';
 import { itemIconUrl } from '@/lib/item-icon';
 
-export function generateStaticParams() {
-  return LOOT_CONTAINERS.map((c) => ({ slug: c.slug }));
+// ISR on-demand: не пререндерим на сборке (рендер читает цены из БД, а порт 5432
+// закрыт наружу → БД на билде недоступна, §4.11). Слуг рендерится по первому
+// запросу и кэшируется на час; dynamicParams=true (дефолт).
+export const revalidate = 3600;
+
+export function generateStaticParams(): { slug: string }[] {
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

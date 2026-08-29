@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     'Трекер контейнера Kappa в Escape from Tarkov: все предметы квеста «Коллекционер» в одном чек-листе — отмечайте найденные, ненайденные всплывают вверх.',
 };
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function CollectorTrackerPage() {
   const quest = EFT_QUESTS.find((q) => q.normalizedName === 'collector' || q.id === COLLECTOR_ID);
 

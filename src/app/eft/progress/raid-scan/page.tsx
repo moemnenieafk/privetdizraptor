@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     'Загрузите скриншот инвентаря из рейда — ЦТА распознает предметы поверх сетки и покажет их цены на барахолке.',
 };
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function RaidScanPage() {
   const priceMap = await getEftPriceMapFromDb();
 

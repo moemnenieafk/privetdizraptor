@@ -35,6 +35,9 @@ const strArr = (v: unknown, allowed: ReadonlySet<string>, cap: number): string[]
     ? [...new Set(v.filter((x): x is string => typeof x === "string" && allowed.has(x)))].slice(0, cap)
     : [];
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function GET(): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return err(401, "Не авторизован");

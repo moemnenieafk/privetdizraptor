@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   description: 'Управление профилем, безопасностью и подпиской CTA.',
 };
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function AccountPage() {
   // Server-гард: кабинет только для залогиненных.
   const me = await getMe();

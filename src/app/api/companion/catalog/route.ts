@@ -5,7 +5,10 @@ import { NextResponse } from "next/server";
 import { getEftCatalog } from "@/lib/eft-catalog";
 
 export const runtime = "nodejs";
-export const revalidate = 3600; // каталог статичен в пределах патча
+// force-dynamic: GET без аргумента req Next пытается пререндерить на сборке, а он
+// читает каталог из БД (порт 5432 закрыт наружу → БД на билде недоступна, §4.11).
+// Кэш сохраняется на CDN через Cache-Control (s-maxage) ниже — не через SSG.
+export const dynamic = "force-dynamic";
 
 export async function GET(): Promise<NextResponse> {
   const catalog = await getEftCatalog();

@@ -17,6 +17,9 @@ export const metadata: Metadata = {
  * Индекс внутриигровых событий. Данные статичные → серверный рендер;
  * ссылки на квесты резолвятся здесь, чтобы база квестов не уехала в клиентский бандл.
  */
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function EventsPage() {
   const { sections } = getQuestsNav('/eft/quests/events');
   const pageContent = PAGE_CONTENT_DICTIONARY['eft-quests-events'];

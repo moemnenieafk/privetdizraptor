@@ -20,6 +20,9 @@ import { SectionPaywall } from '@/components/features/subscription/SectionPaywal
 // ответ user-специфичен, статический revalidate вводил бы в заблуждение (кэша ответа нет).
 // Данные раздела (gunsmith/preset) сами кешируются в своём слое (getGunsmithList/getPresetList).
 
+// Рендер в рантайме: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function FindLoadoutsPage() {
   // Серверный гейт раздела (демо, R09i). Пока free — ok=true, ниже обычный контент.
   const gate = await requireTier('sec:eft:/eft/progress/loadouts/find', { game: 'eft' });
