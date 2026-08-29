@@ -7,7 +7,7 @@
 // Добавить новую поверхность = добавить сюда запись + проверку в .server.ts
 // + смонтировать <EntityComments> на странице. Таблицу трогать не нужно.
 
-export const COMMENT_TARGET_TYPES = ["build", "patch", "codex", "boss", "trader"] as const;
+export const COMMENT_TARGET_TYPES = ["build", "season-build", "patch", "codex", "boss", "trader"] as const;
 
 export type CommentTargetType = (typeof COMMENT_TARGET_TYPES)[number];
 
@@ -22,6 +22,10 @@ export const COMMENT_TARGETS: Record<CommentTargetType, TargetMeta> = {
   build: {
     label: "Сборка",
     url: (id) => `/eft/progress/loadouts/b/${id}`,
+  },
+  "season-build": {
+    label: "Сборка перков",
+    url: (id) => `/eft/progress/seasons/b/${id}`,
   },
   patch: {
     label: "Обновление игры",

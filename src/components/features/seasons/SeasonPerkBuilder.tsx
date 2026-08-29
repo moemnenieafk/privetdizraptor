@@ -22,7 +22,7 @@ import { perkIconColor, perkMaskStyle } from './perkVisual';
 
 interface Props {
   season: Season;
-  /** Билд из ссылки (/seasons/[slug]/b/[code]) — подставляется один раз при заходе. */
+  /** Билд из ссылки (/seasons/b/[code]) — подставляется один раз при заходе. */
   initialSelection?: string[];
 }
 
@@ -167,7 +167,25 @@ export function SeasonPerkBuilder({ season, initialSelection }: Props) {
   const forced = seasonPerks(season);
 
   const share = async () => {
-    const url = `${window.location.origin}/eft/progress/seasons/${season.slug}/b/${encodeBuild(selected)}`;
+    // Роут билда — /eft/progress/seasons/b/[code|slug]. Просим у сервера короткий slug
+    // (season_builds), чтобы ссылка была компактной; при сбое — длинный dot-код (тоже
+    // валиден, страница принимает оба). Оба пути читают CURRENT_SEASON.
+    const code = encodeBuild(selected);
+    const base = `${window.location.origin}/eft/progress/seasons/b`;
+    let url = `${base}/${code}`;
+    try {
+      const res = await fetch('/api/eft/seasons/build-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { slug?: string };
+        if (data.slug) url = `${base}/${data.slug}`;
+      }
+    } catch {
+      /* фолбэк на длинный код */
+    }
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);

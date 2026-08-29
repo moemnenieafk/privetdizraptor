@@ -9,12 +9,15 @@ import { getCodex } from "@/db/codex";
 import { getBoss } from "@/data/bosses";
 import { getTrader } from "@/data/traders";
 import { buildIdBySlug } from "@/db/entity-comments";
+import { seasonBuildExists } from "@/db/season-build-social";
 import type { CommentTargetType } from "@/lib/comment-targets";
 
 export async function targetExists(type: CommentTargetType, id: string): Promise<boolean> {
   switch (type) {
     case "build":
       return (await buildIdBySlug(id)) !== null;
+    case "season-build":
+      return await seasonBuildExists(id);
     case "patch": {
       const a = await getArticle(id);
       return a !== null && a.kind === "patch";
