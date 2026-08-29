@@ -317,7 +317,7 @@ export function HideoutBuildTracker({
                         }`}
                       />
                       <span
-                        className={`font-blender-medium text-[22px] leading-none tabular-nums ${
+                        className={`font-blender-medium text-[1.375rem] leading-none tabular-nums ${
                           isMax ? 'text-success' : lvl > 0 ? 'text-(--primary)' : 'text-text-muted'
                         }`}
                       >
