@@ -21,16 +21,16 @@ sharp.cache(false);
 const SPECS = {
   factory: {
     configSlug: 'factory',                    // ключ в EFT_MAP_CONFIG, где бампать tileVersion (промоут 2026-08-13)
-    src: 'public/maps/factory/16384px/jpg',   // папка JPG-мастеров
+    src: 'public/maps/factory/16384px',       // папка JPG-мастеров
     out: 'public/maps/factory/tiles',         // корень пирамиды (folder на этаж)
     tileSize: 256,
     quality: 88,
     expect: 16384,                            // ожидаемая сторона мастера (квадрат)
     floors: [
-      { file: 'basement.jpg', folder: 'basement' },
-      { file: 'ground.jpg', folder: 'ground' },
-      { file: '2nd-floor.jpg', folder: 'second' },
-      { file: '3rd-floor.jpg', folder: 'third' },
+      { file: '-01-factory-01-underground-basement.jpg', folder: 'basement' },
+      { file: '00-01-ground-floor.jpg', folder: 'ground' },
+      { file: '02nd-floor.jpg', folder: 'second' },
+      { file: '03rd-floor.jpg', folder: 'third' },
     ],
   },
 };

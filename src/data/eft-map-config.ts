@@ -255,7 +255,7 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     groundTile: "ground",
     tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64 без добивки; bounds через unproject во вьюере
     tileExt: "jpg", // непрозрачные JPG (цветной фон #141416) — тайлы сплошные, без «пустых» прозрачных
-    tileVersion: 9, // cache-bust: бампать при каждой перенарезке тех же URL (v7: перерезка ground 2026-08-15)
+    tileVersion: 10, // cache-bust: бампать при каждой перенарезке тех же URL (v7: перерезка ground 2026-08-15)
     // game→canvas для «Позиция по Скриншоту» (scripts/calibrate-factory.ts, 11 опор, макс. невязка 1.13 ед ≈ 0.7 м,
     // 2026-08-15). Почти поворот 90° + масштаб ~1.70: canvasX≈−1.704·gameZ+125.18, canvasY≈1.705·gameX−135.21.
     worldTransform: [0.004147, -1.704051, 125.176689, 1.704821, -0.002845, -135.213025],
