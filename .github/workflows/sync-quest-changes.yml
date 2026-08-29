@@ -2,8 +2,6 @@
 name: sync-quest-changes
 on:
   workflow_dispatch: {}
-  schedule:
-    - cron: "55 9 * * *" # 09:55 UTC ежедневно (после крафтов 09:50)
 jobs:
   sync:
     runs-on: ubuntu-latest

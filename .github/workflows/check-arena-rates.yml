@@ -9,8 +9,6 @@
 name: check-arena-rates
 
 on:
-  schedule:
-    - cron: "30 6 * * *" # ежедневно 06:30 UTC, после ночного sync-prices
   workflow_dispatch: {}
 
 concurrency:

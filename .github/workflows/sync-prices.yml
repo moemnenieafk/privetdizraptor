@@ -9,8 +9,6 @@
 name: sync-prices
 
 on:
-  schedule:
-    - cron: "0 * * * *" # каждый час (UTC)
   workflow_dispatch: {} # + ручной запуск из вкладки Actions
 
 # Чтобы параллельные/наслаивающиеся запуски не толкались

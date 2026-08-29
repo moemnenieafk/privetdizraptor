@@ -12,8 +12,6 @@
 name: detect-events
 
 on:
-  schedule:
-    - cron: "0 8 * * 1" # понедельник 08:00 UTC — еженедельный дайджест
   workflow_dispatch: {} # + ручной запуск из вкладки Actions
 
 concurrency:

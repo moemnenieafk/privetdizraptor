@@ -10,8 +10,6 @@
 name: sync-traders
 
 on:
-  schedule:
-    - cron: "*/15 * * * *" # каждые 15 минут (UTC)
   workflow_dispatch: {} # + ручной запуск из вкладки Actions
 
 concurrency:

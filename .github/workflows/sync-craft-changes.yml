@@ -2,8 +2,6 @@
 name: sync-craft-changes
 on:
   workflow_dispatch: {}
-  schedule:
-    - cron: "50 9 * * *" # 09:50 UTC ежедневно (после трейдеров 09:45)
 jobs:
   sync:
     runs-on: ubuntu-latest

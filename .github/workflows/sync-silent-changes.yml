@@ -9,8 +9,6 @@
 name: sync-silent-changes
 
 on:
-  schedule:
-    - cron: "20 */3 * * *" # каждые 3 часа (UTC), смещение :20 чтобы не толкаться с прайсами
   workflow_dispatch: {}
 
 concurrency:

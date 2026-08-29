@@ -4,8 +4,6 @@ name: sync-trader-changes
 
 on:
   workflow_dispatch: {}
-  schedule:
-    - cron: "45 9 * * *" # 09:45 UTC ежедневно (после sync-game-changes 09:30)
 
 jobs:
   sync:

@@ -4,8 +4,6 @@ name: sync-game-changes
 
 on:
   workflow_dispatch: {}
-  schedule:
-    - cron: "30 9 * * *" # 09:30 UTC ежедневно (после sync-patches 09:00)
 
 jobs:
   sync:
