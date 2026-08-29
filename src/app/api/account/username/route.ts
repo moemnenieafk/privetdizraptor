@@ -33,6 +33,9 @@ function isUniqueViolation(e: unknown): boolean {
   return code === "23505" || causeCode === "23505";
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function PUT(req: Request): Promise<NextResponse> {
   const userId = await currentUserId();
   if (!userId) return err(401, "Не авторизован");

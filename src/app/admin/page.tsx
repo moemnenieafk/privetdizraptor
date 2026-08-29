@@ -79,6 +79,9 @@ function LinkCard({ href, title, hint }: CmsLink) {
   );
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default async function AdminHome() {
   const cms = await getCmsUser();
   if (!cms) return null; // layout уже увёл на /login — тут только для типов

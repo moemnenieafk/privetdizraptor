@@ -29,6 +29,9 @@ async function currentUserId(): Promise<string | null> {
   }
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request): Promise<NextResponse> {
   // Роут ПУБЛИЧНЫЙ (форму видит и аноним) и принимает вложения → без лимита это
   // вектор спама и раздувания БД. Лимитим по IP ДО чтения тела.

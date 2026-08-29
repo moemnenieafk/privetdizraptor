@@ -39,6 +39,9 @@ function parsePatch(body: unknown): GatePatch | null {
   };
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function PATCH(req: Request): Promise<NextResponse> {
   const admin = await getAdmin();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });

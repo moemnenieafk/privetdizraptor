@@ -24,6 +24,9 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 
 const err = (status: number, error: string) => NextResponse.json({ error }, { status });
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request): Promise<NextResponse> {
   // Rate-limit по IP — против масс-регистрации/расхода квоты писем.
   if (!(await rateLimit(`register:ip:${clientIp(req)}`, 5, 600))) return err(429, TOO_MANY);

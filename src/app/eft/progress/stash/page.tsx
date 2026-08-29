@@ -8,6 +8,9 @@ import { StashClient } from './StashClient';
 // (localStorage-стор владения), мета предметов тянется из нашего зеркала через /api (§4.11).
 export const metadata: Metadata = { title: 'Мой схрон | Прогресс ЦТА' };
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export default function StashPage() {
   return (
     <main className="flex w-full flex-col items-center justify-start animate-[fade-in_0.5s_ease-out_both] pt-7 pb-14">

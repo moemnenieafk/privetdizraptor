@@ -22,8 +22,15 @@ export type { TierRow, FeatureGateRow };
 
 /* ───────────────── чтение (fail-safe: ошибка → пусто) ───────────────── */
 
+// Сборка не ходит в БД (порт 5432 закрыт наружу, §4.11). Гейтинг — штатный fail-safe:
+// пустой результат → дефолты GATE_REGISTRY. На сборке деградируем МОЛЧА (без guard-логов);
+// рантайм читает реальные данные. getTiers/getGateMap (resolve.ts) держат revalidate,
+// поэтому дефолт со сборки в рантайме освежается к реальным строкам БД.
+const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
+
 /** Все тиры (включая архивные — витрина/лестница решает сама). Ошибка → []. */
 export async function getTiersFromDb(): Promise<TierRow[]> {
+  if (IS_BUILD) return [];
   try {
     return await db.select().from(tiers);
   } catch (e) {
@@ -34,6 +41,7 @@ export async function getTiersFromDb(): Promise<TierRow[]> {
 
 /** Все строки-оверрайды гейтов. Ошибка → [] (дефолты берутся из GATE_REGISTRY). */
 export async function getGatesFromDb(): Promise<FeatureGateRow[]> {
+  if (IS_BUILD) return [];
   try {
     return await db.select().from(featureGates);
   } catch (e) {

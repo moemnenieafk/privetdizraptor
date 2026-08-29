@@ -22,6 +22,9 @@ const MAX_BYTES = 500 * 1024; // 500 КБ
 
 const err = (status: number, error: string) => NextResponse.json({ error }, { status });
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request): Promise<NextResponse> {
   const supabase = await createClient();
   const {

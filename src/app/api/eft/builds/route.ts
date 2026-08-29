@@ -40,6 +40,9 @@ function collectIds(node: BuildNode, acc: Set<string>): void {
   for (const child of Object.values(node.mods)) collectIds(child, acc);
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return err(401, "Не авторизован");

@@ -85,7 +85,10 @@ export const getTiers = unstable_cache(
     }));
   },
   ['billing-tiers'],
-  { tags: [TAG_TIERS] },
+  // revalidate — страховка: если сборка (порт 5432 закрыт → БД недоступна) закэшировала
+  // дефолт-тиры, рантайм освежит их к реальным строкам БД в течение часа. Админка сбрасывает
+  // тег мгновенно через invalidateGating().
+  { tags: [TAG_TIERS], revalidate: 3600 },
 );
 
 /**
@@ -116,7 +119,8 @@ export const getGateMap = unstable_cache(
     return map;
   },
   ['billing-gates'],
-  { tags: [TAG_GATES] },
+  // revalidate — страховка от дефолт-карты, закэшированной на сборке (см. getTiers).
+  { tags: [TAG_GATES], revalidate: 3600 },
 );
 
 function isBehavior(v: string): v is GateBehavior {

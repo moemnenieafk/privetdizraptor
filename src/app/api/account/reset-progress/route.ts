@@ -13,6 +13,9 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function POST(): Promise<NextResponse> {
   const supabase = await createClient();
   const {

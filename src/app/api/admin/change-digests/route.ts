@@ -16,6 +16,9 @@ const err = (status: number, error: string) => NextResponse.json({ error }, { st
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_NOTE = 20_000;
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request): Promise<NextResponse> {
   const me = await getMe();
   if (!me) return err(401, "Не авторизован");

@@ -18,6 +18,9 @@ interface DefsBody {
   itemIds?: unknown;
 }
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request): Promise<NextResponse> {
   // Публичная ручка без сессии: запрос стоит БД-джойна на сотни id → лимит по IP.
   if (!(await rateLimit(`builds-defs:ip:${clientIp(req)}`, 120, 300))) {

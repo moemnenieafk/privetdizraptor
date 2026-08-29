@@ -73,6 +73,9 @@ const PROMPT = `Распознай профиль игрока Escape from Tarko
 - survivalRate: процент выживаемости (число 0–100) или null.
 Если поле не видно или ты не уверен — верни null. Ничего не выдумывай.`;
 
+// Динамический рендер: на сборке БД недоступна (порт 5432 закрыт наружу, §4.11).
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   // Гейт авторизации — раньше эндпоинт был открыт (любой спамил платный Gemini).
   const userId = await currentUserId();
