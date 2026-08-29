@@ -13,7 +13,7 @@ import { items, silentChanges } from "./schema";
 import { classify, extractItemId } from "../lib/silent-changes-format";
 
 const BASE = "https://changes.tarkov-changes.com";
-const UA = "CTA-portal silent-changes sync (+https://privetdizraptor.vercel.app)";
+const UA = "CTA-portal silent-changes sync (+https://cta.quest)";
 
 /* ───────────────────────── HTTP ───────────────────────── */
 

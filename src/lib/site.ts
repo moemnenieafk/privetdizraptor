@@ -1,13 +1,7 @@
 // Единая точка правды по адресу сайта: metadataBase, sitemap, robots, OG-ссылки.
-// Приоритет: NEXT_PUBLIC_SITE_URL (прод-домен из Vercel env) → VERCEL_URL (превью) → localhost.
+// Прод-домен из NEXT_PUBLIC_SITE_URL (Coolify env = https://cta.quest), иначе localhost.
 
-const RAW =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000');
+const RAW = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 /** Абсолютный origin без завершающего слэша. */
 export const SITE_URL = RAW.replace(/\/+$/, '');

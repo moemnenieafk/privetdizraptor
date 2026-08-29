@@ -23,7 +23,7 @@ async function main() {
   const base =
     process.env.LOGIN_LINK_BASE ||
     process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://privetdizraptor.vercel.app";
+    "https://cta.quest";
 
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(
