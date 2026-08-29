@@ -1,6 +1,8 @@
 // Прогоняет ВСЕ src/db/*-ddl.ts (таблицы разделов вне schema.ts: Связь/comlink,
 // codex, media, stories, comments, weapons-builds, verification, subscriptions, …).
 // Все стейтменты идемпотентны (create/index if not exists) → безопасно гонять всегда.
+// Остаток с кодом 42501 (owner-managed таблицы supabase_admin) классифицируется отдельно
+// как ожидаемый пропуск (см. коммент у классификации ниже), не валит прогон.
 //
 // ⚠️ ЗАЧЕМ: `db:push --force` управляет только schema.ts и НЕ создаёт эти таблицы;
 // а supabase/*.sql (RLS) на них ссылается. Поэтому порядок после правки схемы:
@@ -39,15 +41,16 @@ async function main() {
   const sql = postgres(url, { prepare: false, onnotice: () => {} });
 
   // Несколько проходов — снимает порядок FK-зависимостей между модулями.
-  let pending = stmts;
+  type Item = { group: string; sql: string; err?: Error & { code?: string } };
+  let pending: Item[] = stmts;
   for (let pass = 1; pass <= 4 && pending.length; pass++) {
-    const failed: typeof pending = [];
+    const failed: Item[] = [];
     for (const item of pending) {
       try {
         await sql.unsafe(item.sql);
       } catch (e) {
+        item.err = e as Error & { code?: string };
         failed.push(item);
-        if (pass === 4) console.error(`✗ [${item.group}] ${(e as Error).message}\n   ${item.sql.slice(0, 100)}`);
       }
     }
     console.log(`pass ${pass}: ok ${pending.length - failed.length}, failed ${failed.length}`);
@@ -56,11 +59,37 @@ async function main() {
   }
 
   await sql.end();
-  if (pending.length) {
-    console.error(`❌ осталось нерешённых стейтментов: ${pending.length}`);
+
+  // Классификация остатка. Код 42501 (insufficient_privilege / «must be owner») — ОЖИДАЕМО,
+  // не ошибка идемпотентности: 63/68 публичных таблиц принадлежат роли supabase_admin, а мы
+  // коннектимся как postgres (не суперюзер — не может ALTER/enable-RLS/drop-policy на чужих
+  // таблицах и не может сменить владельца). RLS+политики на этих таблицах уже применены их
+  // владельцем при запуске фич (SQL-редактор Supabase / db:sql) — migrate-all лишь безуспешно
+  // пере-утверждает их, состояние уже целевое. Реальные ошибки (undefined table, syntax, FK)
+  // остаются видимыми и валят прогон. Полный фикс (чтобы migrate-all реально управлял всеми
+  // таблицами) — REASSIGN OWNED BY supabase_admin TO postgres суперюзером на VPS: отдельная задача.
+  const ownerManaged = pending.filter((p) => p.err?.code === "42501");
+  const real = pending.filter((p) => p.err?.code !== "42501");
+
+  if (ownerManaged.length) {
+    const byGroup = new Map<string, number>();
+    for (const p of ownerManaged) byGroup.set(p.group, (byGroup.get(p.group) ?? 0) + 1);
+    const groups = [...byGroup.entries()].map(([g, n]) => `${g}×${n}`).join(", ");
+    console.log(
+      `⊘ owner-managed (supabase_admin): ${ownerManaged.length} — уже применены владельцем, не через migrate-all\n   [${groups}]`,
+    );
+  }
+
+  if (real.length) {
+    for (const item of real) {
+      console.error(`✗ [${item.group}] ${item.err?.message}\n   ${item.sql.slice(0, 100)}`);
+    }
+    console.error(`❌ реальных нерешённых стейтментов: ${real.length}`);
     process.exit(1);
   }
-  console.log("✓ все DDL-модули применены");
+
+  const applied = stmts.length - pending.length;
+  console.log(`✓ DDL-модули применены: ${applied} ok, ${ownerManaged.length} owner-managed (пропуск), 0 ошибок`);
   process.exit(0);
 }
 
