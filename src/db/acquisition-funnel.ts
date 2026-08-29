@@ -14,6 +14,12 @@ import { barters, crafts, prices, type PriceVendorOffer, type TradeSlot } from "
 import { eftGameId } from "./eft";
 import { FLEA_NORMALIZED_NAME, FLEA_VENDOR_RU } from "@/lib/tarkov-labels";
 import type { FunnelGraph, FunnelBuy, FunnelRecipe } from "@/lib/acquisition-funnel";
+import { memoTTL } from "@/lib/server-cache";
+
+// Граф собирается из barters/crafts/prices (цены освежаются часовым кроном) — кэшируем
+// в памяти инстанса на час. Страница bitcoin-profit стала force-dynamic после закрытия
+// порта 5432 (§4.11), memoTTL гасит три полнотабличных чтения на каждый запрос.
+const ACQUISITION_GRAPH_TTL_MS = 60 * 60 * 1000;
 
 /** Оффер = барахолка? (normalizedName 'flea-market' либо имя 'Flea Market'/'Барахолка'). */
 function isFleaOffer(o: PriceVendorOffer): boolean {
@@ -92,6 +98,7 @@ function indexByReward(
 
 /** Собирает FunnelGraph из зеркала (barters/crafts/prices, gameId EFT). RSC-only. */
 export async function getAcquisitionGraph(): Promise<FunnelGraph> {
+  return memoTTL("eft-acquisition-graph", ACQUISITION_GRAPH_TTL_MS, async () => {
   const gameId = await eftGameId();
 
   const [priceRows, barterRows, craftRows] = await Promise.all([
@@ -142,4 +149,5 @@ export async function getAcquisitionGraph(): Promise<FunnelGraph> {
       })),
     ),
   };
+  });
 }

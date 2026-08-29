@@ -6,6 +6,7 @@ import { barters as bartersTable, items } from '@/db/schema';
 import { eftGameId } from '@/db/eft';
 import { getEftPriceMapFromDb } from '@/db/prices';
 import { itemIconUrl } from '@/lib/item-icon';
+import { memoTTL } from '@/lib/server-cache';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,7 +31,16 @@ export interface ProcessedBarter {
 
 // ─── Сборка из НАШЕЙ БД (бартеры + items + цены). В tarkov.dev не ходим. ────────
 
-async function fetchBarters(): Promise<ProcessedBarter[]> {
+// Кэш результата на час: страница стала force-dynamic после закрытия порта 5432
+// (§4.11), а прайс-карта и так освежается часовым кроном — memoTTL гасит чтение
+// barters+items и пересчёт profit/roi на каждый запрос (свежесть цен ≤ 1ч, как и была).
+const BARTERS_TTL_MS = 60 * 60 * 1000;
+
+function fetchBarters(): Promise<ProcessedBarter[]> {
+  return memoTTL('eft-barters-processed', BARTERS_TTL_MS, fetchBartersUncached);
+}
+
+async function fetchBartersUncached(): Promise<ProcessedBarter[]> {
   const gameId = await eftGameId();
   const [barterRows, itemRows, priceMap] = await Promise.all([
     db.select().from(bartersTable).where(eq(bartersTable.gameId, gameId)),
