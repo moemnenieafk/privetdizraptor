@@ -1,5 +1,5 @@
 ---
-status: ✅ ЗАВЕРШЕНО (2026-08-30). cta.quest live на автономном VPS-стеке; Ф4 резерв ПОГАШЕН: Vercel на паузе, облачный Supabase удалён (архив в R2), биллинг обеих орг переведён на Free/отменён + карты отвязаны (V4DYA). Код-гигиена сделана (2026-08-30, d47a1100+3866e4f5): убраны VERCEL_*-фолбэки (site.ts/cta-api.ts), vercel.app-ссылки (silent-changes UA/login-link) → cta.quest, удалены vercel.json/vercel-ignore.sh + стухшие локальные .env-бэкапы. Осталось опц.: vercel-URL в OAuth-allowlist Twitch/Discord (безвредно, Vercel на паузе), docker login(429), www→apex
+status: ✅ ЗАВЕРШЕНО (2026-08-30). cta.quest live на автономном VPS-стеке; Ф4 резерв ПОГАШЕН: Vercel на паузе, облачный Supabase удалён (архив в R2), биллинг обеих орг переведён на Free/отменён + карты отвязаны (V4DYA). Код-гигиена сделана (2026-08-30, d47a1100+3866e4f5): убраны VERCEL_*-фолбэки (site.ts/cta-api.ts), vercel.app-ссылки (silent-changes UA/login-link) → cta.quest, удалены vercel.json/vercel-ignore.sh + стухшие локальные .env-бэкапы. www→apex СДЕЛАНО (2026-08-30): CF Redirect Rule «www→root» (301, путь+query сохр.); попутно исправлено — www A-запись указывала на СТАРЫЙ reg.ru (31.31.196.206) → перевёл на VPS `201.51.20.217`, удалил мёртвую www AAAA (reg.ru IPv6). Осталось опц.: `docker login` на VPS против 429 (нужны Docker Hub креды V4DYA — сервер не залогинен, кредов нет); vercel-URL/ctamedia в OAuth Twitch/Discord (безвредно — живое Twitch-приложение уже чистое, мёртвое `ctamedia` можно удалить)
 affects: инфраструктура, деплой, БД, Auth, домен cta.quest
 date: 2026-08-19
 updated: 2026-08-25
@@ -199,7 +199,7 @@ Hetzner CPX31 ~€13–14/мес · Cloudflare €0 · R2 как сейчас ·
 **Шаг 4 — погасить Vercel — ✅ 2026-08-30 (браузером в дашборде V4DYA):**
 - [x] Vercel-проект `privetdizraptor` → **Pause Project** (не delete — Pause обратим, останавливает production-деплой и метрические расходы, данные/настройки целы). Git-интеграция была отцеплена ранее (Шаг 1).
 - [x] Код (2026-08-30): `VERCEL_*`-фолбэки убраны (site.ts/cta-api.ts), vercel.app-ссылки→cta.quest (silent-changes UA/login-link), `vercel.json`+`vercel-ignore.sh` удалены.
-- [ ] OAuth: vercel-URL в redirect-allowlist Twitch/Discord — опц. (Vercel на паузе, callback не сработает; безвредно).
+- [~] OAuth: **живое Twitch-приложение (a3mky) УЖЕ чистое** (единственный redirect = supabase.cta.quest). Стухшее — отдельное МЁРТВОЕ приложение `ctamedia` (callback на удалённый облачный supabase.co, GoTrue его не использует); удаление упёрлось в нативный confirm-диалог браузера — опц., безвредно. Discord — по аналогии (не проверял, callback тоже на supabase.cta.quest в проде).
 
 **Шаг 5 — погасить облачный Supabase — ✅ 2026-08-30 (браузером):**
 - [x] Проект `swcjyvztljokdycpviio` **УДАЛЁН** (pause на PRO-плане недоступен — фича free-tier; выбор V4DYA — delete). Перед удалением: холодный дамп в R2 (940 объектов, проверен) + Storage-инвентаризация (уникального нет). Проверено: боевой сайт 200 (не задет — он на VPS), облачный session-коннект → FATAL (проект мёртв).
