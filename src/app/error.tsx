@@ -18,7 +18,7 @@ export default function Error({
 
   return (
     <main className="flex min-h-[70vh] w-full flex-col items-center justify-center pt-20 pb-25 animate-[fade-in_0.5s_ease-out_both]">
-      <div className="flex w-full max-w-[800px] flex-col items-center px-4 text-center">
+      <div className="flex w-full max-w-[50rem] flex-col items-center px-4 text-center">
 
         <div className="relative mb-8 flex w-full items-center justify-center">
           <span className="select-none font-blender-medium text-[7.5rem] leading-none text-lines-hover opacity-50 md:text-[12.5rem]">

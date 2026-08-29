@@ -282,7 +282,7 @@ export function BartersClient({ barters }: BartersClientProps) {
       </div>
 
       {/* ── Заголовок таблицы ── */}
-      <div className="grid grid-cols-[180px_1fr_32px_1fr_120px_80px] items-center gap-3 border-b border-lines-hover pb-2 pl-2">
+      <div className="grid grid-cols-[11.25rem_1fr_2rem_1fr_7.5rem_5rem] items-center gap-3 border-b border-lines-hover pb-2 pl-2">
         <SortableHeader label="Торговец / Ур." k="trader" />
         <SortableHeader label="Нужные предметы" k="cost" />
         <span />
@@ -311,7 +311,7 @@ export function BartersClient({ barters }: BartersClientProps) {
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${vRow.start}px)` }}
                 >
                   <div
-                    className={`grid grid-cols-[180px_1fr_32px_1fr_120px_80px] items-center gap-3 border-b border-lines-hover/40 px-2 py-3 transition-colors hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)] ${
+                    className={`grid grid-cols-[11.25rem_1fr_2rem_1fr_7.5rem_5rem] items-center gap-3 border-b border-lines-hover/40 px-2 py-3 transition-colors hover:bg-[color-mix(in_srgb,var(--color-card-menu)_60%,transparent)] ${
                       isProfit ? 'hover:border-lines-hover' : ''
                     }`}
                   >

@@ -449,7 +449,7 @@ export function StoryWalkthroughView({
       </div>
 
       {/* ── Лестница | Контент шага ── */}
-      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[348px_1fr]">
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[21.75rem_1fr]">
         {/* Лестница шагов: вложенные под-шаги и ветки раскрываются под активным шагом */}
         <div className="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--color-lines-hover)_55%,transparent)_transparent]">
           {story.steps.map((s) => {
