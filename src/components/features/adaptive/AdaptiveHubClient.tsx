@@ -251,7 +251,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
             style={{ background: 'linear-gradient(180deg, color-mix(in srgb, var(--primary) 30%, transparent), transparent)' }}
           />
         </div>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_21.25rem]">
           <div className="h-96 w-full animate-pulse rounded-xs bg-lines-hover" />
           <div className="h-96 w-full animate-pulse rounded-xs bg-lines-hover" />
         </div>
@@ -320,7 +320,7 @@ export function AdaptiveHubClient(props: HubServerProps = {
       )}
 
       {/* ── ВЕРХНЯЯ СЕТКА: [портрет+статы | центр-карта+разделы] · правая панель ── */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_21.25rem]">
         {/* ЛЕВО+ЦЕНТР */}
         <div className="flex flex-col gap-8">
           {/* Верхний ряд: [портрет 160 · жетон 288 · блок загрузки 208] — все 160px, переносятся на узких. */}

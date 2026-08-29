@@ -82,7 +82,10 @@ export function CompetencyRadar({
 
   return (
     <div className={`flex flex-col items-center gap-2 ${className}`}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Радар эффективности">
+      {/* Рендер-размер в rem (viewBox — фикс user-units): SVG масштабируется с root
+          на 2K/4K вместе со всей раскладкой Досье; внутренняя геометрия и подписи тянутся
+          за viewBox. Раньше width/height={size} = сырой px → радар застывал на 4K. */}
+      <svg width={`${size / 16}rem`} height={`${size / 16}rem`} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Радар эффективности">
         {/* Кольца-сетка */}
         {rings.map((r) => (
           <polygon
