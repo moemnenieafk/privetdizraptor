@@ -359,7 +359,7 @@ export function MapSearchDrawer({ slug, markers, quests, editorialMarkers, edito
             <>
               <div className="flex flex-col gap-2">
                 <p className={SECTION}>Контейнеры</p>
-                <div className="flex flex-wrap gap-[9px]">
+                <div className="flex flex-wrap gap-[0.5625rem]">
                   {containerGroups.map((c) => {
                     const on = c.fileKeys.every((k) => activeFilters[k]);
                     return (

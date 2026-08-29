@@ -204,7 +204,7 @@ function SummaryProgress({
       <div className="relative h-6">
         {/* Бегунок-указатель со значением над шкалой */}
         <div className="absolute top-0 z-10 flex -translate-x-1/2 flex-col items-center transition-[left] duration-500 ease-out" style={{ left: `${ptr}%` }}>
-          <span className="rounded-xs bg-(--primary) px-1.5 py-0.5 font-blender-medium text-[10px] leading-none tabular-nums text-(--color-base) shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_50%,transparent)]">
+          <span className="rounded-xs bg-(--primary) px-1.5 py-0.5 font-blender-medium text-[0.625rem] leading-none tabular-nums text-(--color-base) shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_50%,transparent)]">
             <AnimatedNumber value={value} />
           </span>
           <span aria-hidden className="h-1.5 w-px bg-(--primary)" />
@@ -809,7 +809,7 @@ function SourceChip({ s }: { s: SrcState }) {
       {/* Итого нужно на этот квест/модуль + разделитель у минуса */}
       <span className="flex shrink-0 flex-col items-center leading-none" title={`Нужно всего: ${s.count}`}>
         <span className="font-blender-medium text-sm tabular-nums text-text-primary">{s.count}</span>
-        <span className="text-[9px] uppercase tracking-wide text-text-muted">нужно</span>
+        <span className="text-[0.5625rem] uppercase tracking-wide text-text-muted">нужно</span>
       </span>
       <span aria-hidden className="h-8 w-px shrink-0 bg-lines-hover" />
       <QtyControl value={s.collected} max={s.count} onChange={s.set} onDelta={s.bump} size="sm" />

@@ -93,7 +93,7 @@ function LevelHex({ required }: { required: number }) {
       title={`Требуемый уровень игрока: ${required}`}
       className="inline-flex h-7 w-7 shrink-0 items-center justify-center"
     >
-      <svg width="28" height="28" viewBox="0 0 16 16" aria-hidden="true">
+      <svg width="1.75rem" height="1.75rem" viewBox="0 0 16 16" aria-hidden="true">
         <polygon points="8,1.5 14,4.75 14,11.25 8,14.5 2,11.25 2,4.75" fill="none" stroke={color} strokeWidth="1.2" />
         <text x="8" y="10.4" textAnchor="middle" fontSize="6.5" fill={color} fontFamily="var(--font-blender-medium)">
           {required}

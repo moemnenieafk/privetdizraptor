@@ -58,7 +58,7 @@ export function PlaceholderPage({ themeClass, logoSrc, logoAlt, description, bgI
           В разработке
         </h1>
         
-        <p className="text-text-muted text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-8 md:mb-10 max-w-[280px] sm:max-w-md animate-[fade-in-up_1s_both]" style={{ animationDelay: '200ms' }}>
+        <p className="text-text-muted text-xs sm:text-sm tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-8 md:mb-10 max-w-[17.5rem] sm:max-w-md animate-[fade-in-up_1s_both]" style={{ animationDelay: '200ms' }}>
           {description}
         </p>
 

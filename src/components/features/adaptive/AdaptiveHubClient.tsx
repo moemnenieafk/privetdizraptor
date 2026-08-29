@@ -99,8 +99,8 @@ function SurvivalRing({ percent, accent }: { percent: number | null; accent: str
   const dash = (pct / 100) * circ;
 
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Выживаемость">
+    <div className="relative shrink-0" style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}>
+      <svg width={`${size / 16}rem`} height={`${size / 16}rem`} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Выживаемость">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-lines-hover)" strokeWidth={stroke} />
         {percent != null && (
           <circle

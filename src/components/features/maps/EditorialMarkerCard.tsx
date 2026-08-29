@@ -660,7 +660,7 @@ export function EditorialMarkerCard({
                 key={i}
                 type="button"
                 onClick={() => setSel(i)}
-                className={`relative h-7 w-[49px] shrink-0 overflow-hidden rounded-xs border transition-colors ${
+                className={`relative h-7 w-[3.0625rem] shrink-0 overflow-hidden rounded-xs border transition-colors ${
                   i === sel ? 'border-(--color-tactical-amber)' : 'border-[0.5px] border-lines-hover'
                 }`}
               >
@@ -686,7 +686,7 @@ export function EditorialMarkerCard({
                 type="button"
                 onClick={() => setPicking(true)}
                 title="Добавить скриншот"
-                className="flex h-7 w-[49px] shrink-0 items-center justify-center rounded-xs border-[0.5px] border-lines-hover text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
+                className="flex h-7 w-[3.0625rem] shrink-0 items-center justify-center rounded-xs border-[0.5px] border-lines-hover text-text-muted transition-colors hover:border-(--primary) hover:text-(--primary)"
               >
                 <Plus className="h-4 w-4" />
               </button>

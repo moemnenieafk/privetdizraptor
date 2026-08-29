@@ -4,7 +4,7 @@ import Link from 'next/link';
 export default function NotFound() {
   return (
     <main className="flex w-full flex-col items-center justify-center pt-20 pb-25 animate-[fade-in_0.5s_ease-out_both] min-h-[70vh]">
-      <div className="w-full max-w-[800px] px-4 flex flex-col items-center text-center">
+      <div className="w-full max-w-[50rem] px-4 flex flex-col items-center text-center">
         
         {/* Декоративный 404 на заднем плане с наложением заголовка */}
         <div className="relative w-full flex items-center justify-center mb-8">
@@ -15,7 +15,7 @@ export default function NotFound() {
             <h1 className="text-3xl md:text-5xl font-blender-medium uppercase tracking-widest text-(--primary) drop-shadow-[0_0_15px_rgba(230,142,37,0.4)]">
               Сектор в разработке
             </h1>
-            <div className="h-[1px] w-[200px] bg-linear-to-r from-transparent via-(--primary) to-transparent mt-4 opacity-50"></div>
+            <div className="h-[1px] w-[12.5rem] bg-linear-to-r from-transparent via-(--primary) to-transparent mt-4 opacity-50"></div>
           </div>
         </div>
 

@@ -58,7 +58,7 @@ function LevelBadge({ required }: { required: number }) {
       title={`Требуемый уровень игрока: ${required}`}
       className="inline-flex h-4 w-4 shrink-0 items-center justify-center"
     >
-      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <svg width="1rem" height="1rem" viewBox="0 0 16 16" aria-hidden="true">
         <polygon
           points="8,1.5 14,4.75 14,11.25 8,14.5 2,11.25 2,4.75"
           fill="none"
@@ -93,7 +93,7 @@ function QuestUnlockIcon() {
 function ModerateHex({ n }: { n: number }) {
   return (
     <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center">
-      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <svg width="1rem" height="1rem" viewBox="0 0 16 16" aria-hidden="true">
         <polygon points="8,1.5 14,4.75 14,11.25 8,14.5 2,11.25 2,4.75" fill="none" stroke="var(--color-moderate)" strokeWidth="1.5" />
         <text x="8" y="10.5" textAnchor="middle" fontSize="6" fill="var(--color-moderate)" fontFamily="var(--font-blender-medium)">{n}</text>
       </svg>

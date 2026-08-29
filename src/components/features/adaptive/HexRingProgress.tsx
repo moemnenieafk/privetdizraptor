@@ -47,7 +47,7 @@ export function HexRingProgress({ progress, accent, iconClass, size = 56 }: HexR
   return (
     <span
       className="relative inline-flex shrink-0 items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: `${size / 16}rem`, height: `${size / 16}rem` }}
       role="img"
       aria-label={`Уверенность в архетипе ${Math.round(clamped * 100)}%`}
     >
@@ -72,8 +72,8 @@ export function HexRingProgress({ progress, accent, iconClass, size = 56 }: HexR
       <span
         className="relative"
         style={{
-          width: iconSize,
-          height: iconSize,
+          width: `${iconSize / 16}rem`,
+          height: `${iconSize / 16}rem`,
           backgroundColor: accent,
           WebkitMaskImage: `url(${iconClass})`,
           maskImage: `url(${iconClass})`,
