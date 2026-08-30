@@ -1,5 +1,5 @@
 <svg width="16384" height="16384" viewBox="0 0 16384 16384" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g data-room="sklad-terragroup" data-floor="3" class="cta-room">
+<g data-room="sklad-terragroup" data-floor="3" class="cta-room cta-room-link">
 <g filter="url(#filter0_i_2847_8887)">
 <rect x="2590.54" y="10556.3" width="627.122" height="826.256" fill="black" fill-opacity="0.01"/>
 </g>

@@ -4,13 +4,28 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "▶ Dev-сервер (REVIEW диффа)",
-      "detail": "npm run dev — поднять Next.js, визуально сверить изменения перед коммитом",
+      "label": "▶ Dev + туннель БД",
+      "detail": "scripts/dev.sh — SSH-туннель к БД VPS + npm run dev. НУЖЕН для страниц с БД (иначе 500). Ctrl+Shift+B.",
+      "type": "shell",
+      "command": "bash scripts/dev.sh",
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "review" },
+      "options": {
+        "shell": {
+          "executable": "C:\\Program Files\\Git\\bin\\bash.exe",
+          "args": ["-lc"]
+        }
+      }
+    },
+    {
+      "label": "▶ Dev-сервер (без туннеля)",
+      "detail": "npm run dev без туннеля — только для страниц БЕЗ БД (иначе 500). Обычно бери «Dev + туннель БД».",
       "type": "shell",
       "command": "npm run dev",
       "isBackground": true,
       "problemMatcher": [],
-      "group": { "kind": "build", "isDefault": true },
       "presentation": { "reveal": "always", "panel": "dedicated", "group": "review" }
     },
     {

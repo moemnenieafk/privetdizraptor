@@ -27,6 +27,7 @@ import { useQuestStore } from '@/store/useQuestStore';
 import { useMapUiStore } from '@/store/useMapUiStore';
 import { QuestRow } from './QuestRow';
 import type { EditorialLinkKind } from '@/db/schema-editorial';
+import { toGameEditorialBody, type WorldTransform } from '@/lib/map-calibration';
 
 // Типы маркера (как в редакторе Ледокола) + POI без категории. Иконка резолвится markerIconUrl.
 const MARKER_TYPES: { key: string; label: string }[] = [
@@ -335,6 +336,12 @@ interface Props {
   batchCount?: number;
   /** Батч-ПОСТАНОВКА (шаблон меток): визард настраивает общие поля, финал → «К постановке →». */
   batchCreate?: boolean;
+  /**
+   * СИНканная тайл-карта (Таможня): editorial хранятся в БД в game-координатах, а визард работает
+   * в canvas-latlng. worldTransform → перед POST разворачиваем x/z/polygon latlng→game
+   * (toGameEditorialBody). null/undefined (SVG, editorial-static карты) → запись как есть.
+   */
+  storeWt?: WorldTransform | null;
 }
 
 export function EditorialMarkerCard({
@@ -358,6 +365,7 @@ export function EditorialMarkerCard({
   batchCount,
   batchCreate = false,
   onOpenQuest,
+  storeWt,
 }: Props) {
   const [sel, setSel] = useState(0);
   // Якорь для боковой панели медиа-библиотеки (пикер встаёт справа от карточки).
@@ -540,28 +548,34 @@ export function EditorialMarkerCard({
       const res = await fetch('/api/admin/editorial-markers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: marker.id,
-          mapId: marker.mapId,
-          slug: mapSlug,
-          x: marker.x,
-          z: marker.z,
-          y: marker.y,
-          floor: marker.floor,
-          type: draft.type,
-          category: draft.category,
-          faction: draft.faction,
-          title: draft.title,
-          description: draft.description,
-          screenshots: draft.screenshots,
-          linkKind: draft.linkKind,
-          linkId: draft.linkId,
-          linkStep: draft.linkStep,
-          polygon: draft.polygon,
-          sourceMarkerId: marker.sourceMarkerId,
-          hidden: marker.hidden,
-          lootItems: draft.lootItems,
-        }),
+        // storeWt (тайл-Таможня) → разворот x/z/polygon latlng→game перед записью; иначе no-op.
+        body: JSON.stringify(
+          toGameEditorialBody(
+            {
+              id: marker.id,
+              mapId: marker.mapId,
+              slug: mapSlug,
+              x: marker.x,
+              z: marker.z,
+              y: marker.y,
+              floor: marker.floor,
+              type: draft.type,
+              category: draft.category,
+              faction: draft.faction,
+              title: draft.title,
+              description: draft.description,
+              screenshots: draft.screenshots,
+              linkKind: draft.linkKind,
+              linkId: draft.linkId,
+              linkStep: draft.linkStep,
+              polygon: draft.polygon,
+              sourceMarkerId: marker.sourceMarkerId,
+              hidden: marker.hidden,
+              lootItems: draft.lootItems,
+            },
+            storeWt ?? null,
+          ),
+        ),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? `HTTP ${res.status}`);
       setEditing(false);

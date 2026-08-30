@@ -19,6 +19,21 @@ sharp.cache(false);
 
 // Реестр карт: файл-мастер → папка-этаж. Новую карту заводим одним блоком здесь + npm-шорткатом.
 const SPECS = {
+  customs: {
+    configSlug: 'customs',                    // промоут SVG→тайлы (гибрид B): арт тайлами, маркеры поверх
+    src: 'public/maps/customs/16384px',       // папка JPG-мастеров (5 этажей)
+    out: 'public/maps/customs/tiles',
+    tileSize: 256,
+    quality: 88,
+    expect: 16384,
+    floors: [
+      { file: '-01_customs_-01-underground-basement-floor.jpg', folder: 'basement' },
+      { file: '00_01_customs_ground_floor.jpg', folder: 'ground' },
+      { file: '02_customs_02-floor.jpg', folder: 'second' },
+      { file: '03_customs_03-floor.jpg', folder: 'third' },
+      { file: '04_customs_04-floor.jpg', folder: 'fourth' },
+    ],
+  },
   factory: {
     configSlug: 'factory',                    // ключ в EFT_MAP_CONFIG, где бампать tileVersion (промоут 2026-08-13)
     src: 'public/maps/factory/16384px',       // папка JPG-мастеров

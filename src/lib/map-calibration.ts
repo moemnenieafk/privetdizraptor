@@ -35,6 +35,31 @@ export function invertAffine(t: WorldTransform, canvasX: number, canvasY: number
   return { x: (e * px - b * py) / det, z: (-d * px + a * py) / det };
 }
 
+/**
+ * Развернуть POST-тело editorial-метки latlng→game (canvas→игровые) для СИНканных ТАЙЛ-карт
+ * (Таможня): визард работает в canvas-latlng, а БД хранит editorial в game-координатах (как
+ * синканные; рендер проецирует их обратно через applyAffine в page.tsx). Разворачивает x/z и
+ * все точки polygon. wt=null → тело без изменений (SVG- и editorial-static карты: editorial там
+ * уже в нужном пространстве, разворот не нужен). Общий для MapViewerClient и EditorialMarkerCard.
+ */
+export function toGameEditorialBody<T extends { x?: unknown; z?: unknown; polygon?: unknown }>(
+  body: T,
+  wt: WorldTransform | null,
+): T {
+  if (!wt) return body;
+  const conv = (x: number, z: number) => invertAffine(wt, x, z) ?? { x, z };
+  const hasXZ = typeof body.x === 'number' && typeof body.z === 'number';
+  const g = hasXZ ? conv(body.x as number, body.z as number) : null;
+  const poly = body.polygon;
+  return {
+    ...body,
+    ...(g ? { x: g.x, z: g.z } : {}),
+    polygon: Array.isArray(poly)
+      ? poly.map((p: { x: number; z: number }) => ({ ...p, ...conv(p.x, p.z) }))
+      : poly,
+  };
+}
+
 // Решить 3×3 систему методом Гаусса (частичный выбор ведущего). null — вырожденная (точки коллинеарны).
 function solve3(m: number[][], v: number[]): [number, number, number] | null {
   const A = m.map((r, i) => [...r, v[i]]);

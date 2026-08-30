@@ -9,6 +9,11 @@ import { bossIconUrl, bossPortraitKey, GOONS_FILES, isItemId } from '@/data/map-
 import { getMapConfig, getStaticMaps } from '@/data/eft-map-config';
 import { getManualMarkers } from '@/data/map-markers';
 import { classifyLoot15 } from '@/data/map-markers/loot-15';
+import { applyAffine } from '@/lib/map-calibration';
+// Этаж каждого синканного маркера Таможни (externalId → idx этажа): синканные лут/контейнеры/спавны НЕ
+// несут высоту → game-Y их не разложит. Правда об этаже — из курированных пофлоорных файлов V4DYA
+// (матч ближайшей точкой, см. .tmp-customs/build-floormap.mjs). Индексы = порядок floors: g0/basement1/2nd2/3rd3/4th4.
+import customsFloors from '@/data/maps/customs-floors.json';
 import { mapImageUrl } from '@/lib/map-image';
 import { MapFrame } from '@/components/features/maps/MapFrame';
 import { buildEditorialBridge } from '@/components/features/maps/editorial-bridge';
@@ -339,6 +344,11 @@ export default async function MapPage({ params, searchParams }: Props) {
               : null,
           // Синканные зоны квестов несут questId (= linkedQuestId) на клиент → клик открывает карточку.
           questId: m.type === 'quest_zone' ? (m.linkedQuestId ?? null) : null,
+          // Этаж (тайл-карта): синканные лут/контейнеры/спавны без высоты → индекс этажа из floor-карты
+          // (курированная правда V4DYA). В карте нет → земля (0). НЕ-тайл синканные: null → гейт по game-Y.
+          floor: config.tileBase
+            ? ((customsFloors as Record<string, number>)[m.id] ?? 0)
+            : null,
           meta: m.meta ?? null,
         }));
 
@@ -383,6 +393,21 @@ export default async function MapPage({ params, searchParams }: Props) {
       // Контейнеры в heat: позиция из наших маркеров × EV пула типа (loot_container_pools) → мержим с loose.
       const heatPoints = [...looseHeat, ...containerHeatPoints(markers, containerPools, priceIndex)];
 
+      // ТАЙЛ-ПОДЛОЖКА (Таможня): карта синканная (весь инструментарий), но арт — HD-тайлы, не Shebuka-SVG.
+      // Всё, что рисует вьюер через ll() (маркеры/зоны/heat/спавны боссов), проецируем game→canvas-latlng
+      // тайлов через worldTransform. Высоты top/bottom НЕ трогаем — гейт этажа по game-Y (как на SVG-customs).
+      // editorial-маркеры уже в map-пространстве (клик-визард), их не проецируем.
+      const wt = config.tileBase && config.worldTransform ? config.worldTransform : null;
+      const pXZ = <T extends { x: number; z: number }>(p: T): T => (wt ? { ...p, ...applyAffine(wt, p.x, p.z) } : p);
+      const viewMarkers = wt
+        ? markers.map((m) => ({ ...m, position: m.position ? pXZ(m.position) : null, outline: m.outline?.map(pXZ) ?? null }))
+        : markers;
+      const viewQuestZones = wt
+        ? questZones.map((z) => ({ ...z, position: z.position ? pXZ(z.position) : null, outline: z.outline.map(pXZ) }))
+        : questZones;
+      const viewHeat = wt ? heatPoints.map(pXZ) : heatPoints;
+      const viewBosses = wt ? bosses.map((b) => ({ ...b, spawns: b.spawns.map(pXZ) })) : bosses;
+
       const view: MapView = {
         slug,
         name: data.name,
@@ -394,7 +419,7 @@ export default async function MapPage({ params, searchParams }: Props) {
         minPlayerLevel: data.asset.minPlayerLevel,
         maxPlayerLevel: data.asset.maxPlayerLevel,
         config,
-        markers,
+        markers: viewMarkers,
       };
 
       // Дедуп навигации (см. статик-ветку выше): БД-карта выигрывает над одноимённой статик-конфиг.
@@ -466,10 +491,26 @@ export default async function MapPage({ params, searchParams }: Props) {
         };
       });
 
+      // ТАЙЛ-Таможня: editorial-метки лежат в БД в game-координатах (как синканные, вставлены
+      // скриптом BP-спринта, не клик-визардом). Проецируем на рендере через worldTransform —
+      // так же, как синканные (см. pXZ выше). БД остаётся канон-game; визард разворачивает
+      // latlng→game при сохранении (invertAffine в MapViewerClient). На SVG-картах wt=null → no-op.
+      const viewEditorial = wt
+        ? editorialMarkers.map((m) => {
+            const p = applyAffine(wt, m.x, m.z);
+            return {
+              ...m,
+              x: p.x,
+              z: p.z,
+              polygon: m.polygon ? m.polygon.map((q) => ({ ...q, ...applyAffine(wt, q.x, q.z) })) : m.polygon,
+            };
+          })
+        : editorialMarkers;
+
       // ФАЗА 0 «единой системы маркеров» (docs/decisions/unified-markers.md): мост на чтении.
       // Editorial-маркеры на языке MapViewMarker → drawer-секции/фильтр/ПКМ-цикл видят их как
       // синканные. lootCat считаем тем же классификатором, что и синканный loose-лут.
-      const editorialBridge = buildEditorialBridge(editorialMarkers, (id) =>
+      const editorialBridge = buildEditorialBridge(viewEditorial, (id) =>
         classifyLoot15(lootCatById.get(id), priceIndex.get(id)?.bsgCategoryId),
       );
 
@@ -480,11 +521,11 @@ export default async function MapPage({ params, searchParams }: Props) {
             navMaps={navMaps}
             quests={quests}
             questTasks={questTasks}
-            bosses={bosses}
-            questZones={questZones}
-            editorialMarkers={editorialMarkers}
+            bosses={viewBosses}
+            questZones={viewQuestZones}
+            editorialMarkers={viewEditorial}
             editorialBridge={editorialBridge}
-            heatPoints={heatPoints}
+            heatPoints={viewHeat}
             canEditMarkers={canEditMarkers}
             mapId={data.asset.mapId}
             questIndex={questIndex}

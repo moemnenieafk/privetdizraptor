@@ -28,7 +28,7 @@ import { SquadDrawer } from './SquadDrawer';
 import { LockKeyCard } from './LockKeyCard';
 import { ExtractCard } from './ExtractCard';
 import { floorIndexForHeight, parseScreenshotName } from '@/lib/eft-screenshot';
-import { applyAffine, invertAffine } from '@/lib/map-calibration';
+import { applyAffine, invertAffine, toGameEditorialBody } from '@/lib/map-calibration';
 import { useRouter } from 'next/navigation';
 import { manualMarkerIcon } from './manual-marker-icon';
 import { markerColor, isItemId, LINK_KIND_COLOR } from '@/data/map-marker-icons';
@@ -83,16 +83,6 @@ const ll = (p: { x: number; z: number }): [number, number] => [p.z, p.x];
 
 // Тайловая карта: тип метки (из ручной разметки, ключ = цвет) → цвет + RU-подпись.
 // Совпадает с палитрой сайта; keydoor — жёлтая дверь-ключ V4DYA (ключ привяжем позже).
-const HD_MARKER_STYLE: Record<string, { color: string; label: string }> = {
-  extract: { color: '#5FB85B', label: 'Выход' },
-  transit: { color: '#FF7724', label: 'Переход' },
-  spawn: { color: '#E6A23C', label: 'Спавн' },
-  loot: { color: '#E68E25', label: 'Лут' },
-  container: { color: '#9A8866', label: 'Контейнер' },
-  lock: { color: '#BDA550', label: 'Замок' },
-  keydoor: { color: '#FFCF00', label: 'Дверь-ключ' },
-};
-
 /* ───────────────── маркеры ───────────────── */
 const esc = (s: string): string =>
   s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
@@ -131,6 +121,10 @@ function roomOverlayHasFloor(svgEl: SVGSVGElement, floor: number): boolean {
 // Бейдж-подсказка «метка на другом этаже»: 16×16 иконка лестницы рядом с полупрозрачной каплей.
 const UPSTAIRS_ICON = '/icons/eft/01-maps/markers/upstairs-icon.svg';
 const DOWNSTAIRS_ICON = '/icons/eft/01-maps/markers/downstairs-icon.svg';
+// Синканые типы, которым на ЧУЖОМ этаже даём up/down-стрелку + клик-прыжок (как у editorial). Только
+// «точки интереса» (замки/выходы/переходы/квест-зоны/рубильники/опасности) — НЕ лут/контейнеры/спавны
+// (их на чужом этаже просто скрываем, иначе на верхних этажах вся земля = море стрелок). V4DYA 2026-08-31.
+const POI_FLOOR_TYPES = new Set(['lock', 'extract', 'transit', 'quest_zone', 'switch', 'hazard']);
 
 function editorialIcon(m: EditorialMarkerData): L.DivIcon {
   const meta =
@@ -175,6 +169,29 @@ function syncImageOffBadge(el: HTMLElement | null | undefined, show: boolean): v
     }
   } else if (b) {
     b.remove();
+  }
+}
+
+/** Добавить/обновить/убрать бейдж-стрелку «метка этажом выше/ниже» (клик по капле → прыжок на этаж).
+ *  dir=null убирает бейдж. Общий для editorial-слоя и синканых POI-маркеров (applyFloor). */
+function syncFloorHint(el: HTMLElement | null | undefined, dir: 'up' | 'down' | null): void {
+  if (!el) return;
+  let hint = el.querySelector('img.cta-floor-hint') as HTMLImageElement | null;
+  if (dir) {
+    const up = dir === 'up';
+    const src = up ? UPSTAIRS_ICON : DOWNSTAIRS_ICON;
+    if (!hint) {
+      hint = document.createElement('img');
+      hint.className = 'cta-floor-hint';
+      el.appendChild(hint);
+    }
+    if (hint.getAttribute('src') !== src) hint.setAttribute('src', src);
+    hint.classList.toggle('is-up', up);
+    hint.classList.toggle('is-down', !up);
+    hint.alt = up ? 'этажом выше' : 'этажом ниже';
+    hint.title = up ? 'Метка этажом выше — клик, чтобы перейти' : 'Метка этажом ниже — клик, чтобы перейти';
+  } else if (hint) {
+    hint.remove();
   }
 }
 
@@ -317,7 +334,7 @@ export function MapViewerClient({
   const imgBoundsRef = useRef<L.LatLngBounds | null>(null);
   const highlightRef = useRef<L.Polygon | null>(null);
   const objectivePinsRef = useRef<L.LayerGroup | null>(null);
-  const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null; questId?: string | null }[]>([]);
+  const markersRef = useRef<{ marker: L.Marker; top: number | null; bottom: number | null; floor?: number | null; questId?: string | null; type?: string | null }[]>([]);
   // Изоляция карты на выбранный квест (drawer «Подробности задания»): когда задан questId,
   // видимы ТОЛЬКО его маркеры, прочие слои/маркеры скрыты (фильтры пользователя не трогаем —
   // переопределяем видимость в applyLayerVis/applyFloor). null = обычный режим.
@@ -412,8 +429,6 @@ export function MapViewerClient({
   const roomOverlayMultiFloorRef = useRef(false);
   // Слой маркеров поверх тайлов (поэтажный SVG из /markers): выходы/спавны/замки и т.п.
   // Интерактивные метки HD-карты (из распарсенной разметки): слой + датасет по этажам.
-  const hdMarkerLayerRef = useRef<L.LayerGroup | null>(null);
-  const hdMarkerDataRef = useRef<Record<string, { type: string; x: number; y: number }[]> | null>(null);
   const setTileFloorRef = useRef<((idx: number) => void) | null>(null);
 
   // Слой редакторских маркеров (editorial_markers) — изолированный эффект (не трогает init).
@@ -556,6 +571,21 @@ export function MapViewerClient({
     }
     return out;
   }, [editMarks, editorialById]);
+
+  // ── Запись editorial-меток: единый POST-канал.
+  // На СИНканной ТАЙЛ-карте (Таможня: !editorial + worldTransform) editorial хранятся в БД в
+  // game-координатах (как синканные) и проецируются на рендере (page.tsx). Визард же работает в
+  // canvas-latlng, поэтому x/z/polygon перед записью РАЗВОРАЧИВАЕМ latlng→game (invertAffine).
+  // На editorial-static картах (Завод: config.editorial) editorial живут в canvas — разворот не нужен.
+  const editorialStoreWt =
+    !data.config.editorial && data.config.worldTransform ? data.config.worldTransform : null;
+  const postEditorial = (body: Record<string, unknown>) =>
+    fetch('/api/admin/editorial-markers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(toGameEditorialBody(body, editorialStoreWt)),
+    });
+
   const confirmDeleteMarks = async () => {
     if (markedForDelete.length === 0) return;
     setDeleteBusy(true);
@@ -567,10 +597,7 @@ export function MapViewerClient({
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
         } else if (m.sourceMarkerId) {
           // синканый — override hidden=true (страница подавит оригинал на рендере).
-          const res = await fetch('/api/admin/editorial-markers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          const res = await postEditorial({
               mapId: m.mapId,
               slug: data.slug,
               x: m.x,
@@ -589,7 +616,6 @@ export function MapViewerClient({
               polygon: m.polygon,
               sourceMarkerId: m.sourceMarkerId,
               hidden: true,
-            }),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
         }
@@ -617,10 +643,7 @@ export function MapViewerClient({
     setEditBusy(true);
     try {
       for (const m of markedForEdit) {
-        const res = await fetch('/api/admin/editorial-markers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const res = await postEditorial({
             id: m.id,
             mapId: m.mapId,
             slug: data.slug,
@@ -641,7 +664,6 @@ export function MapViewerClient({
             sourceMarkerId: m.sourceMarkerId,
             hidden: m.hidden,
             lootItems: fields.lootItems ?? null,
-          }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       }
@@ -665,10 +687,7 @@ export function MapViewerClient({
     setBatchBusy(true);
     try {
       for (const pt of batchPoints) {
-        const res = await fetch('/api/admin/editorial-markers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const res = await postEditorial({
             mapId,
             slug: data.slug,
             x: pt.x,
@@ -688,7 +707,6 @@ export function MapViewerClient({
             sourceMarkerId: null,
             hidden: false,
             lootItems: batchTemplate.lootItems ?? null,
-          }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       }
@@ -774,10 +792,7 @@ export function MapViewerClient({
     if (!moveMarker || !movePos) return;
     setMoveBusy(true);
     try {
-      const res = await fetch('/api/admin/editorial-markers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await postEditorial({
           id: moveMarker.id,
           mapId: moveMarker.mapId,
           slug: data.slug,
@@ -798,7 +813,6 @@ export function MapViewerClient({
           sourceMarkerId: moveMarker.sourceMarkerId,
           hidden: moveMarker.hidden,
           lootItems: moveMarker.lootItems, // без этого поля API затрёт пул → пропадёт фон редкости
-        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       cancelMove();
@@ -853,10 +867,7 @@ export function MapViewerClient({
     const dz = batchDelta.z;
     try {
       for (const m of markedForEdit) {
-        const res = await fetch('/api/admin/editorial-markers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const res = await postEditorial({
             id: m.id,
             mapId: m.mapId,
             slug: data.slug,
@@ -878,7 +889,6 @@ export function MapViewerClient({
             sourceMarkerId: m.sourceMarkerId,
             hidden: m.hidden,
             lootItems: m.lootItems,
-          }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       }
@@ -912,10 +922,7 @@ export function MapViewerClient({
   const hideMarker = async () => {
     if (!activeMarker?.sourceMarkerId || !confirm('Скрыть этот синканный маркер?')) return;
     try {
-      const res = await fetch('/api/admin/editorial-markers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await postEditorial({
           id: activeMarker.id,
           mapId: activeMarker.mapId,
           slug: data.slug,
@@ -935,7 +942,6 @@ export function MapViewerClient({
           polygon: activeMarker.polygon,
           sourceMarkerId: activeMarker.sourceMarkerId,
           hidden: true,
-        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       closeCard();
@@ -1833,7 +1839,7 @@ export function MapViewerClient({
       const range = fl?.height ?? null;
       const isGround = idx === 0;
       const iso = isolatedQuestRef.current;
-      for (const { marker, top, bottom, floor, questId } of markersRef.current) {
+      for (const { marker, top, bottom, floor, questId, type } of markersRef.current) {
         const el = marker.getElement();
         if (!el) continue;
         // Изоляция квеста: видны ТОЛЬКО его маркеры (прочие — скрыты, поверх этажной логики).
@@ -1849,11 +1855,16 @@ export function MapViewerClient({
         else if (top == null && bottom == null) visible = isGround;
         else if (!range) visible = true;
         else visible = (top ?? bottom ?? 0) >= range[0] && (bottom ?? top ?? 0) <= range[1];
-        // §8: чужой этаж не исчезает, а гаснет до контекста (класс). soloFloors прячет через CSS.
-        el.classList.toggle('cta-mk-offfloor', !visible);
+        // POI чужого этажа (тайл-карта, floor задан): НЕ скрываем — приглушаем + стрелка up/down (клик =
+        // прыжок на этаж). Прочие синканые чужого этажа — скрыты (§8). Лут/контейнеры/спавны без стрелок,
+        // иначе на верхних этажах вся земля = море стрелок (V4DYA: только замки/выходы/квесты).
+        const poiOffFloor = !visible && floor != null && type != null && POI_FLOOR_TYPES.has(type);
+        el.classList.toggle('cta-mk-otherfloor', poiOffFloor);
+        el.classList.toggle('cta-mk-offfloor', !visible && !poiOffFloor);
+        syncFloorHint(el, poiOffFloor ? ((floorLevels[floor] ?? 0) > (floorLevels[idx] ?? 0) ? 'up' : 'down') : null);
       }
     },
-    [floors],
+    [floors, floorLevels],
   );
 
   const applyFloorRef = useRef(applyFloor);
@@ -1878,6 +1889,8 @@ export function MapViewerClient({
     // Bug 1: svgReadyTick в зависимостях — как только группы SVG готовы (loadImage бампнул тик),
     // применяем ТЕКУЩИЙ activeFloor из рендера (не из рефа). Снимает гонку порядка при ?floor=N.
     applyFloor(activeFloor);
+    // Тайл-карты с этаж-гейтом loose-лута: пересобрать кластеры под активный этаж (no-op на статик-simple).
+    applyLayerVisRef.current();
   }, [activeFloor, applyFloor, svgReadyTick]);
 
   useEffect(() => {
@@ -1894,8 +1907,10 @@ export function MapViewerClient({
       scrollWheelZoom: true,
       wheelPxPerZoomLevel: 120,
       minZoom: cfg.minZoom,
-      // +2 уровня к максимальному зуму (карта векторная — остаётся резкой); «зазумить максимально».
-      maxZoom: cfg.maxZoom + 2,
+      // SVG-карта векторная → +2 уровня оверзума остаются резкими («зазумить максимально»).
+      // ТАЙЛОВАЯ (растр): оверзум за нативный уровень = растяжение тайлов (мыло, особенно на 2K/4K DPR≥2).
+      // Кап на нативном maxZoom → макс-зум = честные 1:1 пиксели мастера, без фейкового увеличения.
+      maxZoom: cfg.maxZoom + (isTiled ? 0 : 2),
     });
     mapRef.current = map;
     setMapInst(map);
@@ -2018,48 +2033,10 @@ export function MapViewerClient({
 
       if (cfg.tileVector) loadOverlay(`/maps/${cfg.tileBase}/vector/${folder}.svg`, vectorOverlayRef, vectorTokenRef, 'cta-map-tiles-vec');
       else if (vectorOverlayRef.current) { vectorOverlayRef.current.remove(); vectorOverlayRef.current = null; }
-
-      // 3) Интерактивные метки из распарсенной разметки (цвет по типу, тултип, клик).
-      if (cfg.tileMarkers) renderHdMarkers(idx);
     };
     setTileFloorRef.current = setTileFloor;
-
-    // Рендер интерактивных меток HD-карты для этажа: circleMarker по пиксель-позиции
-    // (unproject на native-макс-зуме), цвет/подпись по типу. Данные — из hdMarkerDataRef.
-    const renderHdMarkers = (idx: number) => {
-      if (!imgBounds || !mapRef.current) return;
-      if (!hdMarkerLayerRef.current) hdMarkerLayerRef.current = L.layerGroup().addTo(map);
-      const grp = hdMarkerLayerRef.current;
-      grp.clearLayers();
-      const folder = floors[idx]?.tile ?? floors[0]?.tile;
-      const data = (folder && hdMarkerDataRef.current?.[folder]) || [];
-      for (const m of data) {
-        const st = HD_MARKER_STYLE[m.type];
-        if (!st) continue;
-        const cm = L.circleMarker(map.unproject([m.x, m.y], cfg.maxZoom), {
-          radius: 7,
-          fillColor: st.color,
-          fillOpacity: 0.9,
-          color: '#0D0D0F',
-          weight: 2,
-          className: 'cta-hd-marker',
-        });
-        cm.bindTooltip(st.label, { direction: 'top', offset: [0, -6], className: 'cta-tip', opacity: 1 });
-        grp.addLayer(cm);
-      }
-    };
-
-    // Датасет меток грузим один раз (fetch), затем рисуем активный этаж.
-    if (isTiled && cfg.tileMarkers) {
-      fetch(`/maps/${cfg.tileBase}/markers/${cfg.tileBase}-markers.json`)
-        .then((r) => (r.ok ? r.json() : Promise.reject(new Error('нет датасета маркеров'))))
-        .then((d) => {
-          if (!mapRef.current) return;
-          hdMarkerDataRef.current = d;
-          renderHdMarkers(activeFloorRef.current);
-        })
-        .catch(() => {});
-    }
+    // Тайл-карта может быть синканной (Таможня): маркеры/слои/поиск рендерит интерактивная ветка ниже
+    // из data.markers (game-координаты спроецированы сервером через worldTransform), гейт этажа — applyFloor.
 
     // permalink вида (после нашего full-reload при мутации метки): ?z&cx&cy → вернуть карту
     // ровно туда, где юзер редактировал (иначе fitBounds сбросил бы зум/центр в общий вид).
@@ -2099,7 +2076,10 @@ export function MapViewerClient({
           // Многоэтажная карта: показать оверлей только если на активном этаже есть комната этого этажа.
           if (!multiFloorMap || roomOverlayHasFloor(svgEl, activeFloorRef.current)) overlay.addTo(map);
           svgEl.addEventListener('click', (e) => {
-            const room = (e.target as Element | null)?.closest?.('[data-room]')?.getAttribute('data-room');
+            // Навигация только у кликабельных комнат (класс cta-room-link) — декоративные контуры
+            // (напр. Таможня: только меченая 314 ведёт на страницу) не уводят в 404.
+            const g = (e.target as Element | null)?.closest?.('[data-room]');
+            const room = g?.classList.contains('cta-room-link') ? g.getAttribute('data-room') : null;
             if (room) router.push(`/eft/maps/${data.slug}/rooms/${room}`);
           });
         })
@@ -2165,6 +2145,8 @@ export function MapViewerClient({
         // иначе кросс-линк (квест-зона→задача, лут→предмет).
         marker.on('click', () => {
           if (overrideModeRef.current || deleteOpenRef.current) return openOverrideRef.current(m);
+          // Метка чужого этажа (тайл-карта, POI-стрелка вверх/вниз) → клик = прыжок на её этаж.
+          if (m.floor != null && m.floor !== activeFloorRef.current) return onRequestFloorRef.current?.(m.floor);
           if (m.type === 'lock' || m.type === 'extract') return openInfoCardRef.current(m); // read-only инфо-карточка
           if ((m.type === 'quest' || m.type === 'quest_zone') && m.questId) return openQuestCardRef.current(m); // read-only карточка квеста
           if (m.itemSlug) window.open(`/eft/items/item/${m.itemSlug}`, '_blank', 'noopener');
@@ -2182,7 +2164,9 @@ export function MapViewerClient({
           marker.on('mouseout', () => poly.remove());
         }
         marker.addTo(grp);
-        markersRef.current.push({ marker, top: m.top, bottom: m.bottom, questId: (m.type === 'quest' || m.type === 'quest_zone') ? (m.questId ?? null) : null });
+        // floor — явный индекс этажа (тайл-карты: курированный набор); null → гейт по game-Y top/bottom (SVG).
+        // type — для up/down-стрелок на POI-маркерах чужого этажа (замки/выходы/квесты), см. applyFloor.
+        markersRef.current.push({ marker, top: m.top, bottom: m.bottom, floor: m.floor ?? null, questId: (m.type === 'quest' || m.type === 'quest_zone') ? (m.questId ?? null) : null, type: m.type });
       }
       looseGroupsRef.current = looseGroups;
       looseMarkersRef.current = looseMarkers;
@@ -2197,6 +2181,8 @@ export function MapViewerClient({
           const buckets = new Map<string, MapViewMarker[]>();
           for (const m of looseMarkers[key] ?? []) {
             if (!m.position) continue;
+            // Явный этаж (тайл-карты) → кластеризуем только лут активного этажа. null (SVG) — как раньше.
+            if (m.floor != null && m.floor !== activeFloorRef.current) continue;
             const p = map.latLngToLayerPoint(ll(m.position));
             const k = `${Math.floor(p.x / CLUSTER_CELL)}_${Math.floor(p.y / CLUSTER_CELL)}`;
             const arr = buckets.get(k);
@@ -2432,21 +2418,20 @@ export function MapViewerClient({
       staticLayerRef.current = null;
       tileLayerRef.current = null;
       vectorOverlayRef.current = null;
-      hdMarkerLayerRef.current = null;
-      hdMarkerDataRef.current = null;
       setTileFloorRef.current = null;
       roomOverlayRef.current = null;
       setMapInst(null);
     };
   }, [data, onReady, floors, isStatic, router]);
 
-  // Статичная мульти-этажная карта: смена подложки текущего этажа (тайл-слой или SVG).
+  // Мульти-этажная карта: смена подложки текущего этажа (тайл-слой или SVG-картинка).
   useEffect(() => {
-    if (!isStatic) return;
+    // Тайловая карта (в т.ч. СИНканная Таможня, !isStatic): всегда перегружаем тайлы этажа.
     if (isTiled) {
       setTileFloorRef.current?.(activeFloor);
       return;
     }
+    if (!isStatic) return; // SVG-синканная карта: этаж — затемнение <g>-групп (applyFloor), без перезагрузки
     const img = floors[activeFloor]?.image;
     if (img) {
       loadImageRef.current?.(img);
@@ -2660,6 +2645,7 @@ export function MapViewerClient({
             questIndex={questIndex}
             storyIndex={storyIndex}
             mapSlug={data.slug}
+            storeWt={editorialStoreWt}
             onCancel={closeCard}
             onEditGuardChange={handleEditGuard}
             onDrawArea={startAreaDraw}

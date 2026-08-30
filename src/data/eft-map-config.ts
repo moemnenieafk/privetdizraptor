@@ -108,30 +108,47 @@ const SHEBUKA_LINK = "https://github.com/the-hideout/tarkov-dev-svg-maps/";
 
 export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
   customs: {
+    // ПРОМОУТ HD-Таможни (docs/decisions/customs-tile-promote.md, 2026-08-30): арт = наш HD-растр
+    // (16384² на этаж, 5 этажей), нарезанный тайлами (skill map-stitch), вместо Shebuka-SVG. Тайлы:
+    // /public/maps/customs/tiles/{этаж}/{z}/{y}/{x}.jpg (public/maps в .gitignore → на проде с R2,
+    // префикс NEXT_PUBLIC_MAP_TILE_BASE_URL, см. src/lib/map-image.ts). tile-z == map-zoom (CRS.Simple).
+    // ⚠️ КАРТА ОСТАЁТСЯ СИНКАННОЙ (НЕ staticMap): весь инструментарий (слои/поиск/боссы/зоны/heat/визард)
+    // висит на `!staticMap` — тайлы это лишь ПОДЛОЖКА (tileBase), маркеры и tooling как на любой карте.
+    // page.tsx проецирует синканные game-координаты → canvas-latlng тайлов через worldTransform, и
+    // проставляет каждому маркеру ЯВНЫЙ этаж из floor-карты (customs-floors.json): синканные лут/
+    // контейнеры/спавны БЕЗ высоты → game-Y их не разложит, этаж берём из курированных файлов V4DYA.
+    // Этажи: tile = арт этажа; гейт маркеров — по явному floor-индексу (applyFloor), не по height.
     slug: "customs",
-    // Подложка kord-map (Metadvij) — тот же the-hideout-арт (viewBox идентичен → transform/bounds
-    // не меняются, метки на местах 1:1), но с дробной нарезкой этажей Склада 17 (floor-1/2/3).
-    // Слои — числовые группы kord (floor-0 земля, floor--1 тоннели, floor-1..3 этажи здания).
-    // ⚠️ НЕ гнать `npm run db:upload-maps` по customs — перезатрёт CDN-версией без этих этажей.
-    svgFile: "Customs.svg",
+    svgFile: "customs", // dummy-truthy: роутит через синканную ветку page.tsx; подложка — тайлы (tileBase)
+    tileBase: "customs",
+    groundTile: "ground",
+    tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64; bounds через unproject во вьюере
+    tileExt: "jpg", // непрозрачные JPG (сплошной фон) — как у Завода
+    tileVersion: 1, // cache-bust: бампать при каждой перенарезке тех же URL
+    // game→canvas(16384) калибровка (5 замков, ошибка 0.5–2 м): canvasX=10803.5−15.313·gx, canvasY=8723.5+15.171·gz.
+    // worldTransform = game→latlng (canvas/64 при maxZoom=6): lng=canvasX/64, lat=−canvasY/64. Проверено.
+    worldTransform: [-0.23927, 0, 168.8, 0, -0.23705, -136.3],
+    displayName: "Таможня",
+    groundName: "1-й этаж (земля)",
     author: SHEBUKA,
     authorLink: SHEBUKA_LINK,
-    minZoom: 2,
+    minZoom: 0,
     maxZoom: 6,
-    transform: [0.239, 168.65, 0.239, 136.35],
-    coordinateRotation: 180,
+    transform: [1, 0, 1, 0], // не используется (isTiled → CRS.Simple); нужен truthy для роутинга синканной ветки
+    coordinateRotation: 0,
     bounds: [
-      [698, -307],
-      [-372, 237],
+      [0, 0],
+      [256, 256],
     ],
-    heightRange: [-1000, 1000],
-    // Поверхность = floor-0 + floor-1 (уличная земля + 1-й этаж зданий) — floor-1 сведён в floor-0
-    // в SVG (см. kord-import/_recolor). Выше — floor-2/floor-3 (2-й/3-й этаж, вкл. верх Склада 17).
-    svgLayer: "floor-0",
+    // Этаж маркеров — явный (floor-карта), height не используется. Порядок layers = индекс этажа
+    // (ground=0, далее): floor-карта нумерует ими же (basement1/second2/third3/fourth4).
+    heightRange: null,
+    svgLayer: null,
     layers: [
-      { name: "Подземелье", svgLayer: "floor--1", show: false, height: [-1000, 0.5] },
-      { name: "2-й этаж", svgLayer: "floor-2", show: false, height: [4, 7] },
-      { name: "3-й этаж", svgLayer: "floor-3", show: false, height: [7, 1000] },
+      { name: "Тоннели", show: false, tile: "basement" },
+      { name: "2-й этаж", show: false, tile: "second" },
+      { name: "3-й этаж", show: false, tile: "third" },
+      { name: "4-й этаж", show: false, tile: "fourth" },
     ],
   },
   woods: {

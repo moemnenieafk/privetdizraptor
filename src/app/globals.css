@@ -798,15 +798,21 @@ html {
 .cta-map-svg [data-floor].is-dimmed { display: none; }
 .cta-map-svg [data-floor].cta-floor-base-dim { opacity: 0.2; }
 
-/* Маркеры/editorial-метки чужого этажа — по умолчанию скрыты (метки только активного этажа). */
-.cta-mk-offfloor { display: none; }
-.cta-editorial-offfloor { display: none; }
-/* Тоггл «показать все этажи» (панель слоёв): чужие этажи возвращаются приглушённо + бейдж-прыжок.
-   Синканые — некликабельны (пространственный контекст); editorial остаются кликабельными
-   (клик → прыжок на этаж), поэтому прозрачность вешаем на .cta-mk-scale, чтобы бейдж-подсказка не блёк. */
-.cta-show-all-floors .cta-mk-offfloor { display: block; opacity: 0.2; pointer-events: none; }
-.cta-show-all-floors .cta-editorial-offfloor { display: block; }
-.cta-show-all-floors .cta-editorial-offfloor .cta-mk-scale { opacity: 0.35; }
+/* СИНканые метки чужого этажа — скрыты (пространственный гейт этажа: видны только метки активного).
+   ⚠️ !important — Leaflet-CSS `.leaflet-marker-icon { display: block }` грузится ПОЗЖЕ и при равной
+   специфичности перебивал скрытие (метки чужого этажа не пропадали — гейт этажа не работал). */
+.cta-mk-offfloor { display: none !important; }
+/* EDITORIAL-метки чужого этажа — НЕ скрываем (в отличие от синканых): видны приглушённо + up/down-бейдж
+   (клик → прыжок на нужный этаж). Это кураторские метки-«точки интереса», их присутствие на др. этажах —
+   навигационная подсказка, а не шум. Прозрачность вешаем на .cta-mk-scale (тело капли), чтобы бейдж-
+   подсказка (.cta-floor-hint) оставался чётким и кликабельным. */
+.cta-editorial-offfloor .cta-mk-scale { opacity: 0.35; }
+/* СИНканые POI-метки (замки/выходы/квесты) чужого этажа — тоже НЕ скрываем: приглушённая капля +
+   up/down-бейдж, клик = прыжок на этаж. Тело гасим (.cta-mk-scale), стрелка (.cta-floor-hint) — чёткая. */
+.cta-mk-otherfloor .cta-mk-scale { opacity: 0.35; }
+/* Тоггл «показать все этажи»: возвращает и СИНканые метки чужих этажей — приглушённо и некликабельно
+   (пространственный контекст). editorial и POI-стрелки и так видны всегда (правила выше). */
+.cta-show-all-floors .cta-mk-offfloor { display: block !important; opacity: 0.2; pointer-events: none; }
 /* бейдж up/down (16×16) ВСЕГДА справа от капли (корень divIcon позиционирован → absolute от него).
    По вертикали направление кодирует этаж: метка выше → сверху-справа, ниже → снизу-справа. */
 .cta-floor-hint {

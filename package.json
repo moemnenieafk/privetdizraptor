@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:tunnel": "bash scripts/dev.sh",
     "build": "next build --webpack",
     "build:turbo": "next build --turbopack",
     "start": "next start",

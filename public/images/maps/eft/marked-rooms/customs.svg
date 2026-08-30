@@ -1,17 +1,71 @@
-<svg width="1063" height="536" viewBox="0 0 1063 536" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g filter="url(#filter0_i_2483_47022)" data-room="komnaty-314-obshchezhitiya" class="cta-room"><path d="M507.192 484.35L507.398 482.86L510.419 483.278L513.44 483.697L513.233 485.187L513.026 486.678L510.006 486.259L506.986 485.841L507.192 484.35Z" fill="#BDA550" fill-opacity="0.2"/>
-</g>
-<path d="M507.405 482.81L510.426 483.229L513.447 483.647L513.497 483.654L513.49 483.704L513.283 485.194L513.076 486.685L513.069 486.734L513.019 486.727L509.999 486.309L506.979 485.89L506.929 485.883L506.936 485.834L507.142 484.343L507.349 482.853L507.356 482.803L507.405 482.81Z" stroke="#BDA550" stroke-width="0.1"/>
-<defs>
-<filter id="filter0_i_2483_47022" x="506.873" y="482.747" width="6.67969" height="4.04346" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset/>
-<feGaussianBlur stdDeviation="0.5"/>
-<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0.741176 0 0 0 0 0.647059 0 0 0 0 0.313726 0 0 0 1 0"/>
-<feBlend mode="normal" in2="shape" result="effect1_innerShadow_2483_47022"/>
-</filter>
-</defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16384 16384">
+  <g data-room="vremyanki" data-floor="0" class="cta-room">
+    <rect x="14597" y="5285" width="50" height="101" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="vremyanki-treylernogo-parka" data-floor="0" class="cta-room">
+    <rect x="13728" y="5510" width="45" height="99" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="vykhoda-s-zavoda (1-2)" data-floor="0" class="cta-room">
+    <rect x="5257" y="8492" width="111" height="113" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="reshalas-bunkhouse-key" data-floor="0" class="cta-room">
+    <rect x="9588" y="7059" width="67" height="112" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-103-obshchezhitiya" data-floor="0" class="cta-room">
+    <rect x="8011" y="10982" width="102" height="62" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-108-obshchezhitiya" data-floor="0" class="cta-room">
+    <rect x="8089" y="11427" width="102" height="62" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-118-obshchezhitiya" data-floor="0" class="cta-room">
+    <rect x="7822" y="11301" width="61" height="101" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="sklada-usec" data-floor="0" class="cta-room">
+    <rect x="2093" y="7910" width="96" height="101" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="sklada-usec-2" data-floor="0" class="cta-room">
+    <rect x="2128" y="7820" width="75" height="96" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="neizvestnyy-klyuch" data-floor="0" class="cta-room">
+    <rect x="5140" y="7908" width="54" height="101" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-203-obshchezhitiya" data-floor="2" class="cta-room">
+    <rect x="8010" y="10983" width="102" height="60" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-204-obshchezhitiya" data-floor="2" class="cta-room">
+    <rect x="8148" y="11002" width="98" height="59" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-214-obshchezhitiya" data-floor="2" class="cta-room">
+    <rect x="8171" y="11535" width="100" height="62" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-218-obshchezhitiya" data-floor="2" class="cta-room">
+    <rect x="7822" y="11301" width="61" height="101" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-220-obshchezhitiya" data-floor="2" class="cta-room">
+    <rect x="7871" y="11307" width="59" height="101" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-zaveduyushchego-obshchezhitiya" data-floor="2" class="cta-room">
+    <rect x="8076" y="11210" width="103" height="82" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="ofisa-tamozhni" data-floor="2" class="cta-room">
+    <rect x="13859" y="7043" width="100" height="186" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="kabineta-direktora-predpriyatiya" data-floor="3" class="cta-room">
+    <rect x="9321" y="7815" width="123" height="146" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-303-obshchezhitiya" data-floor="3" class="cta-room">
+    <rect x="8010" y="10982" width="102" height="61" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-306-obshchezhitiya" data-floor="3" class="cta-room">
+    <rect x="8136" y="11096" width="98" height="61" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-308-obshchezhitiya" data-floor="3" class="cta-room">
+    <rect x="8184" y="11440" width="100" height="59" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-315-obshchezhitiya" data-floor="3" class="cta-room">
+    <rect x="8056" y="11374" width="102" height="66" rx="4" fill="none" stroke="#BDA550" stroke-opacity="0.55" stroke-width="6"/>
+  </g>
+  <g data-room="komnaty-314-obshchezhitiya" data-floor="3" class="cta-room cta-room-link">
+    <rect x="7971" y="11445" width="130" height="130" rx="4" fill="#BDA550" fill-opacity="0.22" stroke="#BDA550" stroke-opacity="0.9" stroke-width="6"/>
+  </g>
 </svg>
