@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:tunnel": "bash scripts/dev.sh",
+    "deploy": "bash scripts/deploy.sh",
     "build": "next build --webpack",
     "build:turbo": "next build --turbopack",
     "start": "next start",
