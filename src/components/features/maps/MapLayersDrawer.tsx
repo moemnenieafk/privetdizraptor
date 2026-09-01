@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, Flame, Layers, Layers3, Minus, X } from 'lucide-react';
+import { Check, ChevronDown, Eye, EyeOff, Flame, Layers, Minus, X } from 'lucide-react';
 import { LAYER_GROUPS, type LayerItem } from './map-layers';
 import { markerIconUrl, markerColor } from '@/data/map-marker-icons';
 import { useHeatmapStore } from '@/store/useHeatmapStore';
@@ -74,6 +74,8 @@ export function MapLayersDrawer({
   multiFloor = false,
   showAllFloors = false,
   onToggleAllFloors,
+  hideAllFloors = false,
+  onToggleHideAllFloors,
 }: {
   vis: Record<string, boolean>;
   counts: Record<string, number>;
@@ -93,6 +95,9 @@ export function MapLayersDrawer({
   /** Состояние тоггла «показать все этажи» (метки чужих этажей). */
   showAllFloors?: boolean;
   onToggleAllFloors?: () => void;
+  /** Состояние режима «скрыть все этажи» (метки всех этажей скрыты). Взаимоисключающ с showAllFloors. */
+  hideAllFloors?: boolean;
+  onToggleHideAllFloors?: () => void;
 }) {
   const heatActive = useHeatmapStore((s) => s.active);
   const heatToggle = useHeatmapStore((s) => s.toggle);
@@ -230,22 +235,42 @@ export function MapLayersDrawer({
           </p>
         </div>
 
-        {/* Тоггл «показать все этажи»: по умолчанию метки чужих этажей скрыты; ВКЛ — видны приглушённо
-            + up/down бейджи-прыжки. Только мульти-этажные не-soloFloors карты. Виден на десктопе И мобилке. */}
-        {multiFloor && onToggleAllFloors && (
-          <button
-            type="button"
-            onClick={onToggleAllFloors}
-            aria-pressed={showAllFloors}
-            className={`mx-3 mb-1 flex h-9 shrink-0 items-center gap-2 rounded-xs border px-2.5 transition-colors ${
-              showAllFloors ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-secondary'
-            }`}
-            title="По умолчанию видны метки только текущего этажа. Включи, чтобы увидеть метки всех этажей приглушённо."
-          >
-            <Layers3 className="h-4 w-4 shrink-0" strokeWidth={2} />
-            <span className="flex-1 text-left font-blender-medium text-type-caption uppercase tracking-widest">Показать все этажи</span>
-            <Box state={showAllFloors ? 'on' : 'off'} />
-          </button>
+        {/* Режимы этажей — два взаимоисключающих тоггла (оба могут быть off = обычный вид, только
+            текущий этаж): «Показать все» (метки чужих этажей приглушённо + up/down бейджи) и
+            «Скрыть все» (метки чужих этажей — выше/ниже текущего — скрыты, остаётся только текущий).
+            Глазик открыт/закрыт, без галочки.
+            Только мульти-этажные не-soloFloors карты. Виден на десктопе И мобилке. */}
+        {multiFloor && (onToggleAllFloors || onToggleHideAllFloors) && (
+          <div className="mx-3 mb-1 flex shrink-0 items-center gap-2">
+            {onToggleAllFloors && (
+              <button
+                type="button"
+                onClick={onToggleAllFloors}
+                aria-pressed={showAllFloors}
+                className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xs border px-2 transition-colors ${
+                  showAllFloors ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-secondary hover:border-(--primary) hover:text-(--primary)'
+                }`}
+                title="Показать метки всех этажей приглушённо (+ up/down бейджи-прыжки)."
+              >
+                <Eye className="h-4 w-4 shrink-0" strokeWidth={2} />
+                <span className="font-blender-medium text-type-micro uppercase tracking-widest">Показать все этажи</span>
+              </button>
+            )}
+            {onToggleHideAllFloors && (
+              <button
+                type="button"
+                onClick={onToggleHideAllFloors}
+                aria-pressed={hideAllFloors}
+                className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xs border px-2 transition-colors ${
+                  hideAllFloors ? 'border-(--primary) text-(--primary)' : 'border-lines-hover text-text-secondary hover:border-(--primary) hover:text-(--primary)'
+                }`}
+                title="Скрыть метки чужих этажей (выше/ниже текущего) — остаётся только текущий этаж."
+              >
+                <EyeOff className="h-4 w-4 shrink-0" strokeWidth={2} />
+                <span className="font-blender-medium text-type-micro uppercase tracking-widest">Скрыть все этажи</span>
+              </button>
+            )}
+          </div>
         )}
 
         {/* Тепловая карта денег (EV лута) — на мобилке живёт тут (зум-кластер с этим тогглом скрыт <lg). */}

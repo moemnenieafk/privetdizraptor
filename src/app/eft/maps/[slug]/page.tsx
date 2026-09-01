@@ -444,8 +444,20 @@ export default async function MapPage({ params, searchParams }: Props) {
       const storyTitle = new Map(Object.values(STORY_WALKTHROUGHS).map((s) => [s.slug, s.title]));
       // Имена предметов (linkKind='item') — из уже загруженного каталога; slug/bg из priceIndex.
       const itemNameById = new Map(catalog.map((i) => [i.id, i.name]));
+      // ВОССТАНОВЛЕНИЕ КЛЮЧА перемещённых замков: ранний syncedToEditorial не сохранял ключ
+      // (linkKind='none') → user-замки без linkId, карточка комнаты без кнопок. Ключ берём из ИСХОДНОГО
+      // синканого замка по sourceMarkerId (= синтетический id синканого маркера, напр. `lock_xxx`).
+      const syncKeyById = new Map<string, string>();
+      for (const m of data.markers) if (m.type === 'lock' && m.linkedItemId) syncKeyById.set(m.id, m.linkedItemId);
       const editorialMarkers: EditorialMarkerData[] = editorialRows.filter((r) => !r.hidden).map((r) => {
-        const q = r.linkKind === 'quest' && r.linkId ? questById.get(r.linkId) : undefined;
+        // Замок без item-привязки, но с источником-синканым замком → подставляем его ключ.
+        const recoveredKey =
+          r.type === 'lock' && (r.linkKind !== 'item' || !r.linkId) && r.sourceMarkerId
+            ? (syncKeyById.get(r.sourceMarkerId) ?? null)
+            : null;
+        const effLinkKind = recoveredKey ? 'item' : r.linkKind;
+        const effLinkId = recoveredKey ?? r.linkId;
+        const q = effLinkKind === 'quest' && effLinkId ? questById.get(effLinkId) : undefined;
         // Фон редкости/имена для loose-loot ячейки: пул lootItems + сам category-предмет (см. lootIdsOf).
         const lootIds = lootIdsOf(r.type, r.category, r.lootItems ?? null);
         return {
@@ -461,8 +473,8 @@ export default async function MapPage({ params, searchParams }: Props) {
           title: r.title,
           description: r.description,
           screenshots: r.screenshots ?? [],
-          linkKind: r.linkKind,
-          linkId: r.linkId,
+          linkKind: effLinkKind,
+          linkId: effLinkId,
           linkStep: r.linkStep,
           polygon: r.polygon ?? null,
           sourceMarkerId: r.sourceMarkerId,
@@ -483,10 +495,10 @@ export default async function MapPage({ params, searchParams }: Props) {
                 lightkeeperRequired: q.lightkeeperRequired,
               }
             : null,
-          linkedStory: r.linkKind === 'story' && r.linkId ? { title: storyTitle.get(r.linkId) ?? r.linkId } : null,
+          linkedStory: effLinkKind === 'story' && effLinkId ? { title: storyTitle.get(effLinkId) ?? effLinkId } : null,
           linkedItem:
-            r.linkKind === 'item' && r.linkId
-              ? { id: r.linkId, name: itemNameById.get(r.linkId) ?? r.linkId, slug: priceIndex.get(r.linkId)?.normalizedName ?? null, bg: priceIndex.get(r.linkId)?.backgroundColor ?? null }
+            effLinkKind === 'item' && effLinkId
+              ? { id: effLinkId, name: itemNameById.get(effLinkId) ?? effLinkId, slug: priceIndex.get(effLinkId)?.normalizedName ?? null, bg: priceIndex.get(effLinkId)?.backgroundColor ?? null }
               : null,
         };
       });
@@ -510,8 +522,23 @@ export default async function MapPage({ params, searchParams }: Props) {
       // ФАЗА 0 «единой системы маркеров» (docs/decisions/unified-markers.md): мост на чтении.
       // Editorial-маркеры на языке MapViewMarker → drawer-секции/фильтр/ПКМ-цикл видят их как
       // синканные. lootCat считаем тем же классификатором, что и синканный loose-лут.
-      const editorialBridge = buildEditorialBridge(viewEditorial, (id) =>
+      const editorialBridgeRaw = buildEditorialBridge(viewEditorial, (id) =>
         classifyLoot15(lootCatById.get(id), priceIndex.get(id)?.bsgCategoryId),
+      );
+      // Обогащаем editorial-ЗАМКИ теми же полями ключа, что и синканые (itemSlug/keyPrice/roomHref/itemBg).
+      // Иначе перемещённые визардом замки, найденные кликом по комнате, дают LockKeyCard БЕЗ кнопок
+      // (нет slug → «Где взять ключ», нет roomHref → «Лут комнаты»). См. решение lock-key-mapping.
+      const editorialBridge = editorialBridgeRaw.map((m) =>
+        m.type === 'lock' && m.linkedItemId
+          ? {
+              ...m,
+              itemBg: priceIndex.get(m.linkedItemId)?.backgroundColor ?? null,
+              itemSlug: priceIndex.get(m.linkedItemId)?.normalizedName ?? null,
+              keyPrice:
+                priceIndex.get(m.linkedItemId)?.avg24hPrice ?? priceIndex.get(m.linkedItemId)?.lastLowPrice ?? null,
+              roomHref: roomByKey.has(m.linkedItemId) ? `/eft/maps/${slug}/rooms/${roomByKey.get(m.linkedItemId)}` : null,
+            }
+          : m,
       );
 
       return (

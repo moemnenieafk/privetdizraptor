@@ -1,5 +1,5 @@
 ---
-status: 🟢 build готов на ветке feat/customs-tile-promote — ждёт живой сверки V4DYA + промоут в прод (push)
+status: ✅ ЗАКРЫТО — в проде (V4DYATV смёржил в main 370008df + задеплоил 838a91dd, 2026-08-30; https://cta.quest/eft/maps/customs 200, тайлы+worldTransform живьём)
 affects: scripts/build-map-tiles.mjs, src/data/eft-map-config.ts, src/components/features/maps/MapViewerClient.tsx, src/app/eft/maps/[slug]/page.tsx, src/data/maps/customs-markers.json (new), public/images/maps/eft/marked-rooms/customs.svg (new), public/images/maps/eft/marked-rooms/factory.svg
 date: 2026-08-30
 ---
@@ -135,3 +135,21 @@ worldTransform для конфига (marker-latlng space, /64 при maxZoom=6)
 
 ## Как продолжить
 Новый чат: «подними customs-промоут из docs/decisions/customs-tile-promote.md» — прочитать этот файл + `.tmp-customs/*.json`, выполнить build-пункты. Туннель БД: `bash ~/cta-provision/dev.sh` (CLAUDE.md §13) — нужен для матчинга к синканным маркерам.
+
+---
+
+## ✅ ЗАКРЫТИЕ ПЕТЛИ (§8) — 2026-09-01
+
+**В проде.** V4DYATV смёржил ветку в `main` (`370008df feat(maps): промоут Таможни на HD-тайлы (синканная карта) + фикс editorial-координат`) и задеплоил (`838a91dd chore(deploy): npm run deploy`), 2026-08-30. `origin/main` = local (синк). Живая сверка `https://cta.quest/eft/maps/customs` (2026-09-01): 200, HD-тайлы z0–z6 рендерятся, легенда со счётчиками (выходы 31 / спавны 90 / интерактив 39, меченые 1), оверлей комнат (23 группы), переключатель этажей, editorial-тулбар. Маркеры по умолчанию OFF (слои сняты — штатный declutter); по включению слоя рисуются и выравнены по тайлам (калибровка держит). Регрессий нет.
+
+**Что вошло сверх исходного build (последующие сессии):**
+- **Резкость на макс-зуме:** тайл-карты ограничены нативным макс-зумом (без оверзума +2, который растягивал тайлы 4× → мыло). SVG-карты оставлены с +2. `MapViewerClient` (init `L.map`).
+- **Поэтажный гейт — 3 бага починены:** (1) смена тайла этажа больше не под `if(!isStatic)` → работает для любой `isTiled`; (2) синканным маркерам этаж проставляется по ближайшей курированной точке (`.tmp-customs/build-floormap.mjs`, распределение 1124/172/34 совпало с курацией V4DYA) → `applyFloor` гейтит по явному floor-индексу; (3) **глобальный CSS-фикс:** `.leaflet-marker-icon{display:block}` перебивал `.cta-mk-offfloor{display:none}` (равная спец., Leaflet позже в каскаде) → off-floor маркеры не скрывались НИ НА ОДНОЙ мультиэтажной карте; поправлено `!important`.
+- **up/down на СИНканных маркерах Таможни (POI):** off-floor замки/выходы/квесты не скрываются, а показываются приглушённо + кликабельная стрелка вверх/вниз (прыжок на этаж) — как у editorial. Лут/контейнеры/спавны чужого этажа скрываются (иначе шум ~150 стрелок). Классы `.cta-mk-otherfloor` + хелпер `syncFloorHint` + `POI_FLOOR_TYPES`.
+- **editorial up/down + image-off восстановлены:** промежуточный `!important` на `.cta-editorial-offfloor` их скрыл (глобально, и Завод); разведено — синканные off-floor скрываются, editorial показываются приглушённо + бейдж.
+
+**Остаточные долги (не блокеры):**
+- **Тюнинг высот этажей** — гейт синканных теперь по явному floor-индексу (не по game-Y), так что для Таможни это неактуально; height-диапазоны в конфиге оставлены как фолбэк.
+- **Меченая 314** — кликабельный бокс по позиции замка (точный полигон восстановим из git-истории старого `customs.svg`, viewBox 1063×536).
+- **Тип-микс** синканных «прочее» (w=130) мог дать единичные мис-типы — визуальная сверка при случае.
+- **`stash@{0}` "wip-maps-and-scratch"** (On main) — отдельный незакоммиченный WIP (ExtractCard, map-marker-icons +27, figma-agent-prompts.md), НЕ связан с этим промоутом. Разобрать/применить или дропнуть отдельно.

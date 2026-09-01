@@ -216,6 +216,9 @@ function syncedToEditorial(m: MapViewMarker, mapId: string): EditorialMarkerData
   const type =
     m.type === 'loot_loose' ? 'loot' : m.type === 'loot_container' ? 'container' : m.type === 'quest' ? 'quest_zone' : m.type;
   const category = m.type === 'loot_loose' && m.linkedItemId ? m.linkedItemId : m.category ?? null;
+  // Замок/выход несут привязку к предмету в linkedItemId (ключ / пропуск) — сохраняем её как
+  // linkKind='item'+linkId, иначе override/перемещение ТЕРЯЕТ ключ → карточка комнаты без кнопок.
+  const itemLink = (m.type === 'lock' || m.type === 'extract') && m.linkedItemId ? m.linkedItemId : null;
   return {
     mapId,
     x: m.position?.x ?? 0,
@@ -228,8 +231,8 @@ function syncedToEditorial(m: MapViewMarker, mapId: string): EditorialMarkerData
     title: m.label ?? '',
     description: null,
     screenshots: [],
-    linkKind: 'none',
-    linkId: null,
+    linkKind: itemLink ? 'item' : 'none',
+    linkId: itemLink,
     linkStep: null,
     polygon: null,
     sourceMarkerId: m.id,
@@ -374,6 +377,7 @@ export function MapViewerClient({
   const vis = useMapViewStore((s) => s.activeFilters);
   // Тоггл «показать все этажи» — вешает класс на корень, CSS возвращает метки чужих этажей приглушённо.
   const showAllFloors = useMapViewStore((s) => s.showAllFloors);
+  const hideAllFloors = useMapViewStore((s) => s.hideAllFloors);
   const visRef = useRef(vis);
   useEffect(() => {
     visRef.current = vis;
@@ -2076,11 +2080,29 @@ export function MapViewerClient({
           // Многоэтажная карта: показать оверлей только если на активном этаже есть комната этого этажа.
           if (!multiFloorMap || roomOverlayHasFloor(svgEl, activeFloorRef.current)) overlay.addTo(map);
           svgEl.addEventListener('click', (e) => {
-            // Навигация только у кликабельных комнат (класс cta-room-link) — декоративные контуры
-            // (напр. Таможня: только меченая 314 ведёт на страницу) не уводят в 404.
+            // Клик по контуру комнаты → read-only карточка её ЗАМКА (LockKeyCard): кнопки
+            // «Где взять Ключ?» (страница ключа) + «Что можно найти? / Лут комнаты» (roomHref,
+            // только у курируемых — 314 и др.). Замок ищем ближайший на активном этаже.
             const g = (e.target as Element | null)?.closest?.('[data-room]');
-            const room = g?.classList.contains('cta-room-link') ? g.getAttribute('data-room') : null;
-            if (room) router.push(`/eft/maps/${data.slug}/rooms/${room}`);
+            if (!g) return;
+            const map = mapRef.current;
+            if (!map) return;
+            const clickLL = map.mouseEventToLatLng(e as MouseEvent);
+            let best: MapViewMarker | null = null;
+            let bestD = Infinity;
+            // Ищем замок среди синканых И editorial (перемещённые визардом замки живут в editorialBridge
+            // с правильным этажом + обогащены ключом в page.tsx) — иначе после перемещения замка карточка
+            // комнаты не находит его и кнопки пропадают.
+            for (const m of [...data.markers, ...(editorialBridge ?? [])]) {
+              if (m.type !== 'lock' || !m.position) continue;
+              if (m.floor != null && m.floor !== activeFloorRef.current) continue;
+              const d = clickLL.distanceTo(ll(m.position));
+              if (d < bestD) {
+                bestD = d;
+                best = m;
+              }
+            }
+            if (best) openInfoCardRef.current(best);
           });
         })
         .catch(() => {});
@@ -2487,6 +2509,7 @@ export function MapViewerClient({
     'cta-map-root absolute inset-0 overflow-hidden bg-(--color-base)',
     data.config.soloFloors ? 'solo-floors' : '',
     showAllFloors ? 'cta-show-all-floors' : '',
+    hideAllFloors ? 'cta-hide-all-floors' : '',
     rulerActive ? 'cta-ruler-mode' : '',
   ]
     .filter(Boolean)
@@ -2824,6 +2847,8 @@ export function MapViewerClient({
           multiFloor={(isTiled || floors.length > 1) && !data.config.soloFloors}
           showAllFloors={showAllFloors}
           onToggleAllFloors={() => useMapViewStore.getState().toggleShowAllFloors()}
+          hideAllFloors={hideAllFloors}
+          onToggleHideAllFloors={() => useMapViewStore.getState().toggleHideAllFloors()}
         />
       ) : (
         // Старый статик-редактор ручных маркеров (git-данные) — только на НЕ-editorial статике.

@@ -22,6 +22,10 @@ interface MapViewState {
    * on → чужие этажи возвращаются приглушённо + up/down бейджи-прыжки (старое поведение до 547415de).
    * Эфемерно, не персистится и не в URL — чисто вид текущей сессии. */
   showAllFloors: boolean;
+  /** Тоггл «скрыть все этажи»: on → метки чужих этажей (выше/ниже текущего) скрыты полностью,
+   * включая приглушённые editorial/POI со стрелками up/down; остаётся ТОЛЬКО текущий этаж.
+   * Взаимоисключающ с showAllFloors (одновременно не бывают on). Эфемерно, как и showAllFloors. */
+  hideAllFloors: boolean;
 
   setFloor: (floor: number) => void;
   setView: (v: { zoom?: number; centerX?: number; centerY?: number }) => void;
@@ -36,6 +40,8 @@ interface MapViewState {
   setPreset: (id: string | null) => void;
   /** Переключить видимость меток чужих этажей (тоггл «показать все этажи»). */
   toggleShowAllFloors: () => void;
+  /** Переключить режим «скрыть все этажи» (метки всех этажей скрыты). */
+  toggleHideAllFloors: () => void;
   /** Гидрация из URL при маунте (только присутствующие ключи). */
   hydrate: (partial: Partial<MapViewState>) => void;
 }
@@ -49,6 +55,7 @@ export const useMapViewStore = create<MapViewState>((set) => ({
   activeFilters: defaultLayerVisibility(),
   activePresetId: null,
   showAllFloors: false,
+  hideAllFloors: false,
 
   setFloor: (floor) => set({ floor }),
   setView: (v) => set((s) => ({ ...s, ...v })),
@@ -65,6 +72,8 @@ export const useMapViewStore = create<MapViewState>((set) => ({
       return { activeFilters: next };
     }),
   setPreset: (activePresetId) => set({ activePresetId }),
-  toggleShowAllFloors: () => set((s) => ({ showAllFloors: !s.showAllFloors })),
+  // Взаимоисключение: включая один режим — гасим другой (оба могут быть off = обычный вид).
+  toggleShowAllFloors: () => set((s) => ({ showAllFloors: !s.showAllFloors, hideAllFloors: false })),
+  toggleHideAllFloors: () => set((s) => ({ hideAllFloors: !s.hideAllFloors, showAllFloors: false })),
   hydrate: (partial) => set(partial),
 }));

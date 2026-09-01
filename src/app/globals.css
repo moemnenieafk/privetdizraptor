@@ -813,6 +813,12 @@ html {
 /* Тоггл «показать все этажи»: возвращает и СИНканые метки чужих этажей — приглушённо и некликабельно
    (пространственный контекст). editorial и POI-стрелки и так видны всегда (правила выше). */
 .cta-show-all-floors .cta-mk-offfloor { display: block !important; opacity: 0.2; pointer-events: none; }
+/* Режим «скрыть все этажи»: прячем ВСЕ метки чужих этажей (выше/ниже текущего) — включая те, что по
+   умолчанию видны приглушённо со стрелками up/down (editorial + синканые POI). Остаётся ТОЛЬКО текущий
+   этаж. Взаимоисключающ с show-all (стор гасит другой режим). */
+.cta-hide-all-floors .cta-mk-offfloor,
+.cta-hide-all-floors .cta-editorial-offfloor,
+.cta-hide-all-floors .cta-mk-otherfloor { display: none !important; }
 /* бейдж up/down (16×16) ВСЕГДА справа от капли (корень divIcon позиционирован → absolute от него).
    По вертикали направление кодирует этаж: метка выше → сверху-справа, ниже → снизу-справа. */
 .cta-floor-hint {

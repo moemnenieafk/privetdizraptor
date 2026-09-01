@@ -118,7 +118,7 @@ export function LockKeyCard({ marker, sameKeyCount, onHighlightSiblings, onClose
           href={marker.roomHref}
           className="flex items-center justify-center gap-1.5 rounded-xs bg-(--primary) py-2 font-blender-medium text-type-micro uppercase tracking-widest text-(--color-base) transition-opacity hover:opacity-90"
         >
-          <DoorOpen className="h-3.5 w-3.5" /> Открыть комнату
+          <DoorOpen className="h-3.5 w-3.5" /> Что можно найти? / Лут комнаты
         </Link>
       )}
 
@@ -134,7 +134,7 @@ export function LockKeyCard({ marker, sameKeyCount, onHighlightSiblings, onClose
               : 'bg-(--primary) text-(--color-base) hover:opacity-90'
           }`}
         >
-          <ExternalLink className="h-3.5 w-3.5" /> Открыть ключ
+          <ExternalLink className="h-3.5 w-3.5" /> Где взять Ключ?
         </a>
       )}
     </div>
