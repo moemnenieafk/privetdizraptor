@@ -19,7 +19,10 @@
  * Everything else → 404. The API key is never stored — it always arrives from the client.
  */
 
-const UPSTREAM = "https://generativelanguage.googleapis.com";
+// Native Gemini calls go through ProxyAPI (RU-payable, ruble billing, no geoblock).
+// ProxyAPI mirrors Google's native path under /google and auths via Authorization: Bearer.
+const UPSTREAM = "https://generativelanguage.googleapis.com"; // OpenAI-compat path (Open WebUI) — TODO: repoint to ProxyAPI
+const PROXYAPI_UPSTREAM = "https://api.proxyapi.ru/google";
 const NATIVE_RE = /^\/v1beta\/.+:(generateContent|streamGenerateContent)$/;
 const OPENAI_RE = /^\/v1beta\/openai\/.+$/;
 
@@ -35,7 +38,8 @@ export default {
       return new Response("Not found", { status: 404 });
     }
 
-    const upstreamUrl = UPSTREAM + pathname + url.search;
+    const base = isNative ? PROXYAPI_UPSTREAM : UPSTREAM;
+    const upstreamUrl = base + pathname + url.search;
 
     const headers = new Headers();
     const contentType = request.headers.get("content-type");
@@ -46,9 +50,12 @@ export default {
       const auth = request.headers.get("authorization");
       if (auth) headers.set("authorization", auth);
     } else {
-      // Native API authenticates via x-goog-api-key.
-      const apiKey = request.headers.get("x-goog-api-key");
-      if (apiKey) headers.set("x-goog-api-key", apiKey);
+      // Native path → ProxyAPI, which authenticates via Authorization: Bearer <ProxyAPI key>.
+      // Clients still send the key in x-goog-api-key; translate it to a Bearer token.
+      const apiKey =
+        request.headers.get("x-goog-api-key") ??
+        (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+      if (apiKey) headers.set("authorization", `Bearer ${apiKey}`);
     }
 
     // GET has no body; Response.body would be null anyway, but keep it explicit.
