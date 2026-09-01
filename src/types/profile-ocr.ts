@@ -9,7 +9,7 @@ export interface ProfileOcrResult {
   prestige: number | null;
   edition: ProfileEdition | null;
   faction: 'USEC' | 'BEAR' | null;
-  mode: 'PVP' | 'PVE' | null;
+  mode: 'PVP' | 'PVE' | 'SEASON' | null;
   hoursPlayed: number | null;
   raids: number | null;
   survivalRate: number | null;

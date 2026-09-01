@@ -10,7 +10,9 @@ export type GameMode = 'PVP' | 'PVE';
 export function useGameMode(): GameMode {
   return usePlayerStore((s) => {
     const active = s.profiles.find((p) => p.id === s.activeProfileId) ?? s.profiles[0];
-    return active?.mode ?? 'PVP';
+    // Глобальный режим сайта — бинарный (PvP/PvE). Season — режим профиля, но для сайт-логики
+    // (цены/плоскость) сводится к PvP (per-season-плоскости нет).
+    return active?.mode === 'PVE' ? 'PVE' : 'PVP';
   });
 }
 

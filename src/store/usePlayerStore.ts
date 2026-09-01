@@ -9,7 +9,7 @@ export interface PlayerProfile {
   prestige: string;
   faction: 'USEC' | 'BEAR';
   edition: EditionType;
-  mode: 'PVP' | 'PVE';
+  mode: 'PVP' | 'PVE' | 'SEASON';
   hoursPlayed: number | null;
   raids: number | null;
   survivalRate: number | null;

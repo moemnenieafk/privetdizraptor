@@ -170,6 +170,19 @@ function SubEditor({
   const [months, setMonths] = useState("1");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Защита от случайного клика: первый клик «взводит» действие, второй — исполняет.
+  const [pending, setPending] = useState<null | "grant" | "extend" | "revoke">(null);
+
+  // Клик по действию: 1-й раз — взвести подтверждение, 2-й раз (то же действие) — выполнить.
+  function arm(action: "grant" | "extend" | "revoke") {
+    if (pending === action) {
+      setPending(null);
+      void submit(action);
+    } else {
+      setErr(null);
+      setPending(action);
+    }
+  }
 
   async function submit(action: "grant" | "extend" | "revoke") {
     setBusy(true);
@@ -204,7 +217,10 @@ function SubEditor({
         <span className="font-blender-medium text-type-caption uppercase tracking-widest text-text-muted">Тир</span>
         <select
           value={tier}
-          onChange={(e) => setTier(e.target.value)}
+          onChange={(e) => {
+            setTier(e.target.value);
+            setPending(null);
+          }}
           className="rounded border border-lines-hover bg-(--color-base) px-2 py-1.5 font-blender-book text-sm text-text-primary focus:border-(--primary) focus:outline-none"
         >
           {paid.map((t) => (
@@ -220,34 +236,56 @@ function SubEditor({
           type="number"
           min={1}
           value={months}
-          onChange={(e) => setMonths(e.target.value)}
+          onChange={(e) => {
+            setMonths(e.target.value);
+            setPending(null);
+          }}
           className="w-20 rounded border border-lines-hover bg-(--color-base) px-2 py-1.5 font-blender-book text-sm text-text-primary focus:border-(--primary) focus:outline-none"
         />
       </label>
       <button
         type="button"
         disabled={busy || !tier}
-        onClick={() => submit("grant")}
-        className="rounded-xs border border-(--primary) bg-(--primary)/10 px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest text-(--primary) transition-colors hover:bg-(--primary)/20 disabled:opacity-40"
+        onClick={() => arm("grant")}
+        className={`rounded-xs border px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest transition-colors disabled:opacity-40 ${
+          pending === "grant"
+            ? "border-(--primary) bg-(--primary)/25 text-(--primary)"
+            : "border-(--primary) bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20"
+        }`}
       >
-        Выдать
+        {pending === "grant" ? "Подтвердить?" : "Выдать"}
       </button>
       <button
         type="button"
         disabled={busy || !tier}
-        onClick={() => submit("extend")}
-        className="rounded-xs border border-lines-hover px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest text-text-secondary transition-colors hover:border-(--primary) hover:text-(--primary) disabled:opacity-40"
+        onClick={() => arm("extend")}
+        className={`rounded-xs border px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest transition-colors disabled:opacity-40 ${
+          pending === "extend"
+            ? "border-(--primary) bg-(--primary)/25 text-(--primary)"
+            : "border-lines-hover text-text-secondary hover:border-(--primary) hover:text-(--primary)"
+        }`}
       >
-        Продлить
+        {pending === "extend" ? "Подтвердить?" : "Продлить"}
       </button>
       <button
         type="button"
         disabled={busy || currentTier === "free"}
-        onClick={() => submit("revoke")}
-        className="rounded-xs border border-danger/40 px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest text-danger transition-colors hover:bg-danger/10 disabled:opacity-40"
+        onClick={() => arm("revoke")}
+        className={`rounded-xs border px-3 py-2 font-blender-medium text-type-caption uppercase tracking-widest text-danger transition-colors disabled:opacity-40 ${
+          pending === "revoke" ? "border-danger bg-danger/20" : "border-danger/40 hover:bg-danger/10"
+        }`}
       >
-        Снять
+        {pending === "revoke" ? "Подтвердить?" : "Снять"}
       </button>
+      {pending && !busy && (
+        <button
+          type="button"
+          onClick={() => setPending(null)}
+          className="font-blender-book text-xs text-text-muted underline decoration-dotted underline-offset-2 transition-colors hover:text-text-secondary"
+        >
+          отмена
+        </button>
+      )}
       {err && <span className="font-blender-book text-xs text-danger">{err}</span>}
       {busy && <span className="font-blender-book text-xs text-text-muted">…</span>}
     </div>

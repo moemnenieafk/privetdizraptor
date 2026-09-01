@@ -40,7 +40,7 @@ export function RoleAutoWire() {
         raids: active?.raids ?? null,
         level: numOrNull(active?.level),
         prestige: active ? Number(active.prestige) || null : null,
-        mode: active?.mode ?? null,
+        mode: active?.mode === 'PVP' || active?.mode === 'PVE' ? active.mode : null,
         traderLevelAvg: active ? traderLevelAvg(active.traderLevels) : null,
         kappaProgress: kappa.total > 0 ? kappa.ratio : null,
       };

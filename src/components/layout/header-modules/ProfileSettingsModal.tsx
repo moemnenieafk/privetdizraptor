@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { ProfileResetModal } from './ProfileResetModal';
@@ -22,8 +22,8 @@ export interface ProfileSettingsFields {
   setEdition: (val: EditionType) => void;
   faction: 'USEC' | 'BEAR';
   setFaction: (val: 'USEC' | 'BEAR') => void;
-  mode: 'PVP' | 'PVE';
-  setMode: (val: 'PVP' | 'PVE') => void;
+  mode: 'PVP' | 'PVE' | 'SEASON';
+  setMode: (val: 'PVP' | 'PVE' | 'SEASON') => void;
   nickname: string;
   setNickname: (val: string) => void;
   level: string;
@@ -63,6 +63,74 @@ const getLevelGroup = (level: number) => {
   if (level < 5) return 1;
   return Math.min(16, Math.floor(level / 5) + 1);
 };
+
+// Кнопка «Загрузить скриншот для распознавания» скрыта до решения по Gemini/Google AI API
+// (код + логика OCR остаются рабочими — включить обратно = сменить флаг на true).
+const SCREENSHOT_OCR_ENABLED = false;
+
+// Режимы игры (иконки из Досье — /icons/eft/04-progression/seasons). Season — настоящий
+// третий режим (в игре их теперь три); per-mode статы придут волной 2.
+const MODE_ICON_BASE = '/icons/eft/04-progression/seasons';
+const MODE_OPTIONS: { value: 'PVP' | 'PVE' | 'SEASON'; label: string; icon: string; text: string; bg: string; border: string; bgAlpha: string }[] = [
+  { value: 'PVP', label: 'PvP', icon: 'pvp-mode-icon', text: 'text-edition-pfe', bg: 'bg-edition-pfe', border: 'border-edition-pfe', bgAlpha: 'bg-edition-pfe/10' },
+  { value: 'PVE', label: 'PvE', icon: 'pve-mode-icon', text: 'text-edition-tue', bg: 'bg-edition-tue', border: 'border-edition-tue', bgAlpha: 'bg-edition-tue/10' },
+  { value: 'SEASON', label: 'Сезон', icon: 'seasons-icon', text: 'text-season-01', bg: 'bg-season-01', border: 'border-season-01', bgAlpha: 'bg-season-01/10' },
+];
+
+// Одна опция дропдауна: значение, подпись, готовый JSX-иконки, цвет активной подписи.
+interface DropOpt {
+  value: string;
+  label: string;
+  icon: ReactNode;
+  color: string; // text-* активной подписи
+}
+
+/**
+ * Кастомный NIGHTFALL-дропдаун (издание/фракция/режим). Кнопка h-14 flex-1 показывает
+ * выбранное (иконка + название + шеврон); клик → список опций под кнопкой. Закрытие по клику вне.
+ */
+function ProfileDropdown({ value, options, onChange, ariaLabel }: {
+  value: string;
+  options: DropOpt[];
+  onChange: (v: string) => void;
+  ariaLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useClickOutside(ref, () => setOpen(false), open);
+  const active = options.find((o) => o.value === value) ?? options[0];
+  return (
+    <div ref={ref} className="relative min-w-0 flex-1">
+      {/* Свёрнуто: крупная иконка сверху + подпись micro под ней; шеврон — в углу. */}
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        onClick={() => setOpen((o) => !o)}
+        className="relative flex h-14 w-full flex-col items-center justify-center gap-1 rounded border border-lines-hover bg-(--color-base) px-1 transition-colors hover:border-(--primary)/50"
+      >
+        <span className="flex h-7 items-center justify-center">{active.icon}</span>
+        <span className={`max-w-full truncate text-type-micro font-blender-medium leading-none ${active.color}`}>{active.label}</span>
+        <ChevronDown className={`absolute right-1 top-1 h-2.5 w-2.5 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {/* Раскрыто: иконка + ПОЛНАЯ подпись сбоку (без обрезки). */}
+      {open && (
+        <div className="absolute left-0 top-[calc(100%+0.25rem)] z-50 w-max min-w-full overflow-hidden rounded border border-lines-hover bg-card-menu shadow-xl">
+          {options.map((o) => (
+            <button
+              type="button"
+              key={o.value}
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              className={`flex w-full items-center gap-2 px-2.5 py-2 text-left transition-colors hover:bg-lines-hover ${o.value === value ? 'bg-lines-hover' : ''}`}
+            >
+              <span className="flex h-6 w-7 shrink-0 items-center justify-center">{o.icon}</span>
+              <span className={`whitespace-nowrap text-sm font-blender-medium leading-none ${o.value === value ? o.color : 'text-text-secondary'}`}>{o.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * ФОРМА настроек профиля ЧВК — весь функционал (ник/уровень/престиж/издание/фракция/
@@ -173,8 +241,7 @@ export function ProfileSettingsForm({
     <div className="flex w-full flex-col items-center justify-center gap-7">
 
       {/* ИМЯ ЧВК */}
-      <div className="flex w-full flex-col items-start justify-start gap-2">
-        <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Имя ЧВК</div>
+      <div className="flex w-full flex-col items-start justify-start">
         <div className={`flex h-10 w-full items-center justify-start gap-2 rounded border bg-(--color-base) px-2 py-3.5 transition-all duration-300 ${nickname.length >= 15 ? 'border-danger shadow-[0_0_12px_rgba(194,67,57,0.3)]' : 'border-lines-hover'}`}>
           <div className="flex w-6 items-center justify-center">
             <div className={`h-4 w-4 icon-mask ${activeEd.icon} ${activeEd.color}`} />
@@ -183,7 +250,8 @@ export function ProfileSettingsForm({
             type="text"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
-          maxLength={15}
+            maxLength={15}
+            placeholder="Имя ЧВК"
             className={`flex-1 w-full bg-transparent text-xl font-blender-medium leading-5 ${activeEd.color} outline-none ${activeEd.placeholder}`}
             spellCheck={false}
           />
@@ -203,8 +271,7 @@ export function ProfileSettingsForm({
 
       {/* УРОВЕНЬ И ПРЕСТИЖ */}
       <div className="flex w-full items-start justify-start gap-7">
-        <div className="flex flex-1 flex-col items-start justify-start gap-2">
-          <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Уровень ЧВК</div>
+        <div className="flex flex-1 flex-col items-start justify-start">
           <div className="flex h-10 w-full items-center justify-between rounded border border-lines-hover bg-(--color-base) px-2 py-1">
             <img className="h-7 w-7 object-contain" src={`/icons/eft/lvl-icons/player-level-group-${getLevelGroup(Number(level) || 1)}.webp`} alt={`Level ${level}`} />
             <input
@@ -217,8 +284,8 @@ export function ProfileSettingsForm({
                 setLevel(val);
               }}
               onKeyDown={handleLevelKeyDown}
-              className="flex-1 w-full bg-transparent px-1 text-center text-2xl font-blender-medium leading-6 text-zinc-100 outline-none placeholder:text-zinc-100/30"
-              placeholder="1"
+              className="flex-1 w-full bg-transparent px-1 text-center text-2xl font-blender-medium leading-6 text-zinc-100 outline-none placeholder:text-type-caption placeholder:tracking-tight placeholder:text-zinc-100/40"
+              placeholder="Уровень"
             />
             <div className="flex flex-col items-center justify-center gap-0.5">
               <button onClick={() => handleLevelChange(1)} className="flex h-3 w-4 items-center justify-center text-text-muted hover:text-(--primary) transition-colors focus:outline-none">
@@ -230,8 +297,7 @@ export function ProfileSettingsForm({
             </div>
           </div>
         </div>
-        <div className="flex flex-1 flex-col items-start justify-start gap-2">
-          <div className="text-base font-blender-medium uppercase leading-4 text-text-secondary">Престиж</div>
+        <div className="flex flex-1 flex-col items-start justify-start">
           <div className="flex h-10 w-full items-center justify-between rounded border border-lines-hover bg-(--color-base) px-2 py-1">
             {!prestige || prestige === '0' ? (
               <div className="flex h-7 w-7 shrink-0 items-center justify-center">
@@ -269,8 +335,7 @@ export function ProfileSettingsForm({
         // фикс-высоты min-h-8, чтобы длинные названия при переносе не разъезжали инпуты).
         <div className="flex w-full items-start gap-2">
           {setHoursPlayed && (
-            <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2">
-              <div className="w-full truncate text-type-micro font-blender-medium uppercase leading-4 text-text-secondary">Часов в игре</div>
+            <div className="flex min-w-0 flex-1 flex-col items-start justify-start">
               <div className="flex h-10 w-full min-w-0 items-center rounded border border-lines-hover bg-(--color-base) px-3">
                 <input
                   type="text"
@@ -281,7 +346,7 @@ export function ProfileSettingsForm({
                     setHoursPlayed?.(digits === '' ? null : Number(digits));
                   }}
                   className="min-w-0 flex-1 bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
-                  placeholder="—"
+                  placeholder="Часов в рейдах"
                   spellCheck={false}
                 />
                 <span className="text-type-label font-blender-medium uppercase text-text-secondary">ч</span>
@@ -289,8 +354,7 @@ export function ProfileSettingsForm({
             </div>
           )}
           {setRaids && (
-            <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2">
-              <div className="w-full truncate text-type-micro font-blender-medium uppercase leading-4 text-text-secondary">Рейдов</div>
+            <div className="flex min-w-0 flex-1 flex-col items-start justify-start">
               <div className="flex h-10 w-full min-w-0 items-center rounded border border-lines-hover bg-(--color-base) px-3">
                 <input
                   type="text"
@@ -298,15 +362,14 @@ export function ProfileSettingsForm({
                   value={raids != null ? String(raids) : ''}
                   onChange={(e) => setRaids?.(e.target.value.replace(/\D/g, '').slice(0, 5) === '' ? null : Number(e.target.value.replace(/\D/g, '').slice(0, 5)))}
                   className="min-w-0 flex-1 bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
-                  placeholder="—"
+                  placeholder="Рейдов"
                   spellCheck={false}
                 />
               </div>
             </div>
           )}
           {setSurvivalRate && (
-            <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2">
-              <div className="w-full truncate text-type-micro font-blender-medium uppercase leading-4 text-text-secondary">Выживаемость</div>
+            <div className="flex min-w-0 flex-1 flex-col items-start justify-start">
               <div className="flex h-10 w-full min-w-0 items-center rounded border border-lines-hover bg-(--color-base) px-3">
                 <input
                   type="text"
@@ -317,7 +380,7 @@ export function ProfileSettingsForm({
                     setSurvivalRate?.(digits === '' ? null : Math.min(100, Number(digits)));
                   }}
                   className="min-w-0 flex-1 bg-transparent text-lg font-blender-medium leading-5 text-zinc-100 outline-none placeholder:text-type-caption placeholder:text-zinc-100/40"
-                  placeholder="—"
+                  placeholder="Выживаемость"
                   spellCheck={false}
                 />
                 <span className="text-type-label font-blender-medium uppercase text-text-secondary">%</span>
@@ -327,58 +390,53 @@ export function ProfileSettingsForm({
         </div>
       )}
 
-      {/* ИЗДАНИЕ */}
-      <div className="flex w-full flex-col items-start justify-start gap-2">
-        <div className="flex w-full items-start justify-start gap-2">
-          <div className="flex-1 text-base font-blender-medium uppercase leading-4 text-text-secondary">Издание</div>
-          <div className="flex flex-col items-end justify-start">
-            <div className={`text-lg font-blender-medium leading-4 ${activeEd.color}`}>{activeEd.name}</div>
-            <div className={`text-type-caption font-blender-medium leading-2.5 ${activeEd.color}`}>{activeEd.sub}</div>
-          </div>
-        </div>
-
-        {/* Кнопки изданий */}
-        <div className="flex w-full items-start justify-between">
-          {(['Standard', 'LB', 'PFE', 'EOD', 'TUE'] as EditionType[]).map((key) => {
+      {/* ИЗДАНИЕ · ФРАКЦИЯ · РЕЖИМ — три равные кнопки-дропдауна в один ряд */}
+      <div className="flex w-full items-start gap-2">
+        <ProfileDropdown
+          ariaLabel="Издание"
+          value={edition}
+          onChange={(v) => setEdition(v as EditionType)}
+          options={(['Standard', 'LB', 'PFE', 'EOD', 'TUE'] as EditionType[]).map((key) => {
             const ed = EDITIONS[key];
-            const isActive = edition === ed.id;
-            return (
-              <button
-                key={ed.id}
-                onClick={() => setEdition(ed.id)}
-                className={`flex h-10 w-12 items-center justify-center rounded border transition-colors ${
-                  isActive ? `${ed.border} ${ed.bgAlpha}` : 'border-transparent bg-lines-hover hover:border-text-secondary'
-                }`}
-              >
-                <div className={`h-4 w-6 icon-mask ${ed.icon} ${isActive ? ed.color : 'text-text-secondary opacity-50'}`} />
-              </button>
-            );
+            return {
+              value: ed.id,
+              label: ed.name,
+              color: ed.color,
+              icon: <span className={`h-6 w-7 icon-mask ${ed.icon} ${ed.color}`} />,
+            };
           })}
-        </div>
-      </div>
-
-      {/* ФРАКЦИИ И РЕЖИМЫ (В один ряд) */}
-      <div className="flex w-full items-start justify-between gap-2">
-        {/* Фракции */}
-        <div className="flex flex-1 gap-1">
-          <button onClick={() => setFaction('USEC')} className={`flex flex-1 flex-col items-center justify-center rounded border h-14 transition-all ${faction === 'USEC' ? 'border-sky-500 bg-linear-to-t from-sky-500/20 to-transparent' : 'border-lines-hover bg-(--color-base) hover:border-sky-500/50'}`}>
-            <img src="/icons/eft/profile-pannel/USEC-logo-sign.svg" alt="USEC" className={`h-10 w-10 object-contain transition-opacity ${faction === 'USEC' ? 'opacity-100' : 'opacity-40'}`} />
-          </button>
-          <button onClick={() => setFaction('BEAR')} className={`flex flex-1 flex-col items-center justify-center rounded border h-14 transition-all ${faction === 'BEAR' ? 'border-orange-700 bg-linear-to-t from-orange-700/20 to-transparent' : 'border-lines-hover bg-(--color-base) hover:border-orange-700/50'}`}>
-            <img src="/icons/eft/profile-pannel/BEAR-logo-sign.svg" alt="BEAR" className={`h-10 w-10 object-contain transition-opacity ${faction === 'BEAR' ? 'opacity-100' : 'opacity-40'}`} />
-          </button>
-        </div>
-        {/* Режимы */}
-        <div className="flex flex-1 gap-1">
-          <button onClick={() => setMode('PVP')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-14 transition-all ${mode === 'PVP' ? 'border-edition-pfe bg-edition-pfe/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-pfe/50'}`}>
-            <div className={`w-5 h-5 icon-bg icon-eft-profile-pvp transition-opacity ${mode === 'PVP' ? 'opacity-100' : 'opacity-40'}`} />
-            <div className={`text-sm font-blender-medium leading-none ${mode === 'PVP' ? 'text-edition-pfe' : 'text-text-secondary opacity-40'}`}>PvP</div>
-          </button>
-          <button onClick={() => setMode('PVE')} className={`flex flex-1 items-center justify-center gap-1.5 rounded border h-14 transition-all ${mode === 'PVE' ? 'border-edition-tue bg-edition-tue/10' : 'border-lines-hover bg-(--color-base) hover:border-edition-tue/50'}`}>
-            <div className={`w-5 h-5 icon-bg icon-eft-profile-pve transition-opacity ${mode === 'PVE' ? 'opacity-100' : 'opacity-40'}`} />
-            <div className={`text-sm font-blender-medium leading-none ${mode === 'PVE' ? 'text-edition-tue' : 'text-text-secondary opacity-40'}`}>PvE</div>
-          </button>
-        </div>
+        />
+        <ProfileDropdown
+          ariaLabel="Фракция"
+          value={faction}
+          onChange={(v) => setFaction(v as 'USEC' | 'BEAR')}
+          options={[
+            { value: 'USEC', label: 'USEC', color: 'text-sky-400', icon: <img src="/icons/eft/profile-pannel/USEC-logo-sign.svg" alt="" className="h-7 w-7 object-contain" /> },
+            { value: 'BEAR', label: 'BEAR', color: 'text-orange-500', icon: <img src="/icons/eft/profile-pannel/BEAR-logo-sign.svg" alt="" className="h-7 w-7 object-contain" /> },
+          ]}
+        />
+        <ProfileDropdown
+          ariaLabel="Режим"
+          value={mode}
+          onChange={(v) => setMode(v as 'PVP' | 'PVE' | 'SEASON')}
+          options={MODE_OPTIONS.map((m) => ({
+            value: m.value,
+            label: m.label,
+            color: m.text,
+            icon: (
+              <span
+                className={`h-6 w-6 icon-mask ${m.bg}`}
+                style={{
+                  maskImage: `url(${MODE_ICON_BASE}/${m.icon}.svg)`,
+                  WebkitMaskImage: `url(${MODE_ICON_BASE}/${m.icon}.svg)`,
+                  maskSize: 'contain', WebkitMaskSize: 'contain',
+                  maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat',
+                  maskPosition: 'center', WebkitMaskPosition: 'center',
+                }}
+              />
+            ),
+          }))}
+        />
       </div>
 
       {/* УРОВНИ ТОРГОВЦЕВ (Grid) */}
@@ -435,7 +493,9 @@ export function ProfileSettingsForm({
         </div>
       </div>
 
-      {/* АВТООПРЕДЕЛЕНИЕ ПРОФИЛЯ ПО СКРИНШОТУ (Gemini OCR) */}
+      {/* АВТООПРЕДЕЛЕНИЕ ПРОФИЛЯ ПО СКРИНШОТУ (Gemini OCR) — СКРЫТО до решения по Gemini/Google AI API
+          (SCREENSHOT_OCR_ENABLED). Логика OCR цела — включить обратно = сменить флаг на true. */}
+      {SCREENSHOT_OCR_ENABLED && (
       <div className="flex w-full flex-col gap-1.5">
         <input
           ref={fileInputRef}
@@ -467,6 +527,7 @@ export function ProfileSettingsForm({
           </span>
         )}
       </div>
+      )}
 
       {/* КНОПКА СБРОСА ПРОГРЕССА */}
       <div className="flex w-full items-start justify-center gap-2 opacity-60 transition-opacity hover:opacity-100">
