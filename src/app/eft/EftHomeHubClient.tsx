@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Settings2, Check, RotateCcw, Plus, Pin, X, Square, RectangleHorizontal, LayoutGrid, Lock } from 'lucide-react';
+import { Settings2, Check, RotateCcw, Plus, Pin, X, Square, RectangleHorizontal, LayoutGrid } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useRoleStore, effectiveRoleFor } from '@/store/useRoleStore';
@@ -149,13 +149,13 @@ export function EftHomeHubClient() {
       </button>
     </div>
   ) : (
-    // free → апселл-CTA (стиль ProLockTooltip): PRO-бейдж, клик → /account.
+    // free → апселл-CTA: текст + PRO-бейдж справа (крупный), без обводки/заливки, клик → /account.
     <Link
       href="/account"
-      className="inline-flex items-center gap-2 rounded-sm border border-tactical-amber/40 bg-tactical-amber/10 px-3 h-9 font-blender-medium text-type-caption uppercase tracking-widest text-tactical-amber transition-colors hover:bg-tactical-amber/20"
+      className="inline-flex items-center gap-2 h-9 font-blender-medium text-type-caption uppercase tracking-widest text-tactical-amber transition-opacity hover:opacity-80"
     >
-      <Lock className="h-4 w-4 shrink-0 text-tactical-amber" />
-      Настрой главную под себя — открой в PRO
+      Настроить главную
+      <span className="h-6 w-6 shrink-0 icon-mask icon-account_prostatus_icon bg-tactical-amber" />
     </Link>
   );
 
