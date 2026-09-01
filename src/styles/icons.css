@@ -525,6 +525,7 @@
   .icon-account_linking_icon { mask-image: url('/icons/account_center/account_linking_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_linking_icon.svg'); }
   .icon-account_profile_icon { mask-image: url('/icons/account_center/account_profile_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_profile_icon.svg'); }
   .icon-account_prostatus_icon { mask-image: url('/icons/account_center/account_prostatus_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_prostatus_icon.svg'); }
+  .icon-account_pro-subscribe-icon { mask-image: url('/icons/account_center/pro-subscribe-icon.svg'); -webkit-mask-image: url('/icons/account_center/pro-subscribe-icon.svg'); }
   .icon-account_security_icon { mask-image: url('/icons/account_center/account_security_icon.svg'); -webkit-mask-image: url('/icons/account_center/account_security_icon.svg'); }
 
   /* ═══ Соц-сети ═══ */

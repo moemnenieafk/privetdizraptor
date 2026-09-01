@@ -6,9 +6,10 @@ import Footer from './Footer';
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAccountRoute = pathname?.startsWith('/account');
+  // Собственная «голая» хром-зона (свой хедер, без глобального навбара/футера): Аккаунт-центр и CMS-панель.
+  const isBareChrome = pathname?.startsWith('/account') || pathname?.startsWith('/admin');
 
-  if (isAccountRoute) {
+  if (isBareChrome) {
     return <>{children}</>;
   }
 
