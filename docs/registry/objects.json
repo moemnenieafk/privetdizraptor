@@ -3248,7 +3248,7 @@
       "id": "customs:main:r0c2-tank-complex-sw",
       "map": "customs",
       "layer": "main",
-      "typeId": "T-0082",
+      "typeId": "T-0093",
       "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r0c2-tank-complex-sw.png",
       "bboxZ6": [
@@ -3448,7 +3448,7 @@
       "id": "customs:main:r0c0-concrete-slab-pipes",
       "map": "customs",
       "layer": "main",
-      "typeId": "T-0089",
+      "typeId": "T-0094",
       "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r0c0-concrete-slab-pipes.png",
       "bboxZ6": [

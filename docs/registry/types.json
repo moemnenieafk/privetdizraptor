@@ -1743,27 +1743,6 @@
       "kind": "landmark"
     },
     {
-      "typeId": "T-0082",
-      "slug": "boiler-house",
-      "name": "Бойлерная",
-      "category": "buildings",
-      "materials": [
-        "rust",
-        "concrete",
-        "cnt-blue"
-      ],
-      "canonical": "customs:main:r0c2-tank-complex-sw",
-      "vector": {
-        "kind": "none"
-      },
-      "maps": [
-        "customs"
-      ],
-      "status": "confirmed",
-      "sheet": "customs-1",
-      "kind": "landmark"
-    },
-    {
       "typeId": "T-0083",
       "slug": "warehouse-3",
       "name": "Склад 3",
@@ -1847,11 +1826,12 @@
     },
     {
       "typeId": "T-0087",
-      "slug": "warehouse-17",
-      "name": "Склад 17",
+      "slug": "gas-station-old",
+      "name": "Старая заправка (Old Gas Station)",
       "category": "buildings",
       "materials": [
         "concrete",
+        "cnt-red",
         "rust"
       ],
       "canonical": "customs:main:r0c2-building-complex-south",
@@ -1887,13 +1867,13 @@
     },
     {
       "typeId": "T-0089",
-      "slug": "tank-complex",
-      "name": "Ёмкости с обвязкой",
-      "category": "structures",
+      "slug": "crackhouse",
+      "name": "Crackhouse (1 этаж)",
+      "category": "buildings",
       "materials": [
-        "rust",
         "concrete",
-        "cnt-blue"
+        "rust",
+        "dirt"
       ],
       "canonical": "customs:main:r0c2-tank-complex-sw",
       "vector": {
@@ -1904,7 +1884,7 @@
       ],
       "status": "confirmed",
       "sheet": "customs-1",
-      "kind": "asset"
+      "kind": "landmark"
     },
     {
       "typeId": "T-0090",
@@ -1965,6 +1945,47 @@
       "status": "confirmed",
       "sheet": "customs-1",
       "kind": "asset"
+    },
+    {
+      "typeId": "T-0093",
+      "slug": "boiler-room",
+      "name": "Бойлерная (комплекс)",
+      "category": "structures",
+      "materials": [
+        "rust",
+        "concrete",
+        "cnt-blue"
+      ],
+      "canonical": "customs:main:r0c2-tank-complex-sw",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "kind": "landmark",
+      "sheet": "customs-1"
+    },
+    {
+      "typeId": "T-0094",
+      "slug": "boiler-house-building",
+      "name": "Здание бойлерной (две трубы)",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:r0c0-concrete-slab-pipes",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "kind": "landmark",
+      "sheet": "customs-1"
     }
   ]
 }
