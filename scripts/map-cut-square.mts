@@ -2,7 +2,6 @@
 // Запуск: npx tsx scripts/map-cut-square.mts [--only slug,slug] [--map woods]
 // Читает .tmp-<map>/objects/r*.json (поле z6 = [x, y, w, h] в пикселях исходника), пропускает outOfBounds,
 // режет квадрат стороной max(w,h)×1.5 вокруг центра bbox из z6-растра → cut/<map>/<category>/<slug>.png.
-// Старый кроп (впритык) сохраняется как <slug>.tight.png при первом прогоне.
 
 import fs from 'node:fs';
 import sharp from 'sharp';
@@ -11,6 +10,7 @@ const args = process.argv.slice(2);
 const MAP = args.includes('--map') ? args[args.indexOf('--map') + 1] : 'woods';
 const only = args.includes('--only') ? new Set(args[args.indexOf('--only') + 1].split(',')) : null;
 const PAD = 1.5;
+const MASK = args.includes('--mask'); // маджентовый воздух — ТОЛЬКО по флагу (V4DYA 2026-09-02: в кропе не должно быть мадженты)
 
 const ROOT = 'C:/cta-project';
 const OBJ = `${ROOT}/.tmp-${MAP}/objects`;
@@ -34,11 +34,10 @@ for (const f of files) {
     left = Math.max(0, Math.min(left, offsets.W - side)); top = Math.max(0, Math.min(top, offsets.H - side));
     const s = Math.min(side, offsets.W - left, offsets.H - top);
     const out = `${CUT}/${o.category}/${o.slug}.png`;
-    if (fs.existsSync(out) && !fs.existsSync(out.replace(/\.png$/, '.tight.png'))) fs.renameSync(out, out.replace(/\.png$/, '.tight.png'));
-    // Воздух вокруг bbox — маджента #C000C0 (канон §2): объект целиком с полями, но без соседей.
+    // Воздух вокруг bbox — реальный растр (канон §2, V4DYA); маджента только с --mask.
     const raw = await sharp(offsets.src, { limitInputPixels: false }).extract({ left, top, width: s, height: s }).ensureAlpha().raw().toBuffer();
     const bx0 = x - left, by0 = y - top, bx1 = bx0 + w, by1 = by0 + h;
-    for (let py = 0; py < s; py++) for (let px = 0; px < s; px++) {
+    if (MASK) for (let py = 0; py < s; py++) for (let px = 0; px < s; px++) {
       if (px >= bx0 && px < bx1 && py >= by0 && py < by1) continue;
       const i = (py * s + px) * 4; raw[i] = 0xc0; raw[i + 1] = 0; raw[i + 2] = 0xc0; raw[i + 3] = 255;
     }

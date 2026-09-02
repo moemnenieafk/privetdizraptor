@@ -1,0 +1,323 @@
+{
+  "version": 1,
+  "updated": "2026-09-02",
+  "types": [
+    {
+      "typeId": "T-0001",
+      "slug": "tires-pile",
+      "name": "Куча покрышек",
+      "category": "objects",
+      "materials": [
+        "rubber"
+      ],
+      "canonical": "customs:main:tires-pile01",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "tires-pile",
+        "count": 5
+      },
+      "maps": [
+        "customs"
+      ]
+    },
+    {
+      "typeId": "T-0002",
+      "slug": "trash-container-orange",
+      "name": "Мусорный контейнер (оранжевый)",
+      "category": "objects",
+      "materials": [
+        "mach-orange"
+      ],
+      "canonical": "customs:main:container-trash-orange",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "blue-trash-container-alone",
+        "count": 4,
+        "note": "вектор есть в синем — перекраска триады"
+      },
+      "maps": [
+        "customs"
+      ]
+    },
+    {
+      "typeId": "T-0003",
+      "slug": "power-pylon",
+      "name": "Опора ЛЭП",
+      "category": "structures",
+      "materials": [
+        "rust",
+        "concrete"
+      ],
+      "canonical": "customs:main:electricity-tower-lines",
+      "vector": {
+        "kind": "figma-frame",
+        "name": "power-pylon-*",
+        "count": 2
+      },
+      "maps": [
+        "customs",
+        "woods"
+      ]
+    },
+    {
+      "typeId": "T-0004",
+      "slug": "train-tank-green",
+      "name": "Ж/д цистерна (зелёная)",
+      "category": "vehicles",
+      "materials": [
+        "veh-green"
+      ],
+      "canonical": "customs:main:green-train-tank",
+      "vector": {
+        "kind": "figma-rect",
+        "name": "green-train-tank",
+        "count": 16
+      },
+      "maps": [
+        "customs"
+      ]
+    },
+    {
+      "typeId": "T-0005",
+      "slug": "truck-oiltank",
+      "name": "Бензовоз",
+      "category": "vehicles",
+      "materials": [
+        "veh-khaki",
+        "concrete"
+      ],
+      "canonical": "customs:main:truck-oiltank-01",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ]
+    },
+    {
+      "typeId": "T-0006",
+      "slug": "rock-spire",
+      "name": "Скальный шпиль / монолит",
+      "category": "landmarks",
+      "materials": [
+        "rock",
+        "soil"
+      ],
+      "canonical": "woods:main:r0c2-rock-spire",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0007",
+      "slug": "rock-massif",
+      "name": "Скальный массив / гряда",
+      "category": "landmarks",
+      "materials": [
+        "rock",
+        "soil",
+        "foliage"
+      ],
+      "canonical": "woods:main:r1c1-central-rock-massif",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0008",
+      "slug": "boulder-field",
+      "name": "Валунное поле",
+      "category": "landmarks",
+      "materials": [
+        "rock",
+        "soil"
+      ],
+      "canonical": "woods:main:r1c3-boulder-outcrop",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0009",
+      "slug": "bridge-wooden-dome",
+      "name": "Деревянный мост с купольным основанием",
+      "category": "structures",
+      "materials": [
+        "wood",
+        "concrete"
+      ],
+      "canonical": "woods:main:r0c1-wooden-bridge",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0010",
+      "slug": "usec-camp",
+      "name": "Лагерь USEC (верх/низ)",
+      "category": "camps",
+      "materials": [
+        "cnt-green",
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r1c0-usec-camp-upper",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0011",
+      "slug": "scav-camp",
+      "name": "Лагерь диких (огороженный)",
+      "category": "camps",
+      "materials": [
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r3c0-fenced-camp",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0012",
+      "slug": "sawmill",
+      "name": "Лесопилка (комплекс)",
+      "category": "buildings",
+      "materials": [
+        "rust",
+        "concrete",
+        "wood"
+      ],
+      "canonical": "woods:main:r3c2-sawmill-complex",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0013",
+      "slug": "warehouse-ne",
+      "name": "Склады северо-востока",
+      "category": "buildings",
+      "materials": [
+        "rust",
+        "concrete",
+        "cnt-blue"
+      ],
+      "canonical": "woods:main:r3c3-large-warehouses-ne",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0014",
+      "slug": "rail-yard",
+      "name": "Ж/д тупик / платформа",
+      "category": "structures",
+      "materials": [
+        "rust",
+        "concrete",
+        "gravel-sand"
+      ],
+      "canonical": "woods:main:r2c3-south-rail-yard",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0015",
+      "slug": "lake",
+      "name": "Озеро / пруд (зона, не объект)",
+      "category": "zones",
+      "materials": [
+        "water",
+        "swamp"
+      ],
+      "canonical": "woods:main:r1c1-lake-central",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    },
+    {
+      "typeId": "T-0016",
+      "slug": "quarry-basin",
+      "name": "Карьер (зона, не объект)",
+      "category": "zones",
+      "materials": [
+        "gravel-sand",
+        "rock"
+      ],
+      "canonical": "woods:main:r0c0-rocky-quarry-basin",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "candidate",
+      "proposedBy": "claude",
+      "sheet": "woods-1"
+    }
+  ]
+}

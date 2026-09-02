@@ -1,0 +1,540 @@
+{
+  "version": 1,
+  "objects": [
+    {
+      "id": "customs:main:tires-pile01",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0001",
+      "status": "confirmed",
+      "crop": "cut/customs/objects/tires-pile01.jpg",
+      "bboxZ6": null,
+      "sizeM": null,
+      "source": "V4DYA-named cut (2026-08)"
+    },
+    {
+      "id": "customs:main:container-trash-orange",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0002",
+      "status": "confirmed",
+      "crop": "cut/customs/objects/container-trash-orange.jpg",
+      "bboxZ6": null,
+      "sizeM": null,
+      "source": "V4DYA-named cut (2026-08)"
+    },
+    {
+      "id": "customs:main:electricity-tower-lines",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0003",
+      "status": "confirmed",
+      "crop": "cut/customs/objects/electricity-tower-lines.jpg",
+      "bboxZ6": null,
+      "sizeM": null,
+      "source": "V4DYA-named cut (2026-08)"
+    },
+    {
+      "id": "customs:main:green-train-tank",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0004",
+      "status": "confirmed",
+      "crop": "cut/customs/objects/green-train-tank.jpg",
+      "bboxZ6": null,
+      "sizeM": null,
+      "source": "V4DYA-named cut (2026-08)"
+    },
+    {
+      "id": "customs:main:truck-oiltank-01",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0005",
+      "status": "confirmed",
+      "crop": "cut/customs/objects/truck-oiltank-01.jpg",
+      "bboxZ6": null,
+      "sizeM": null,
+      "source": "V4DYA-named cut (2026-08)"
+    },
+    {
+      "id": "woods:main:r0c2-rock-spire",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c2-rock-spire.png",
+      "bboxZ6": [
+        9727,
+        2610,
+        652,
+        1275
+      ],
+      "sizeM": [
+        57,
+        106
+      ],
+      "sheet": "woods-1",
+      "n": 7
+    },
+    {
+      "id": "woods:main:r2c2-rock-spine-ridge",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c2-rock-spine-ridge.png",
+      "bboxZ6": [
+        9076,
+        8937,
+        460,
+        1393
+      ],
+      "sizeM": [
+        40,
+        115
+      ],
+      "sheet": "woods-1",
+      "n": 11
+    },
+    {
+      "id": "woods:main:r2c3-central-rock-spire",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c3-central-rock-spire.png",
+      "bboxZ6": [
+        13677,
+        9253,
+        653,
+        979
+      ],
+      "sizeM": [
+        57,
+        81
+      ],
+      "sheet": "woods-1",
+      "n": 13
+    },
+    {
+      "id": "woods:main:r1c2-rock-cluster-tall",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c2-rock-cluster-tall.png",
+      "bboxZ6": [
+        9181,
+        5194,
+        533,
+        742
+      ],
+      "sizeM": [
+        46,
+        61
+      ],
+      "sheet": "woods-1",
+      "n": 17
+    },
+    {
+      "id": "woods:main:r1c1-central-rock-massif",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c1-central-rock-massif.png",
+      "bboxZ6": [
+        5116,
+        6020,
+        1897,
+        1542
+      ],
+      "sizeM": [
+        165,
+        128
+      ],
+      "sheet": "woods-1",
+      "n": 2
+    },
+    {
+      "id": "woods:main:r1c2-rock-massif-central",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c2-rock-massif-central.png",
+      "bboxZ6": [
+        9368,
+        6476,
+        860,
+        1008
+      ],
+      "sizeM": [
+        75,
+        83
+      ],
+      "sheet": "woods-1",
+      "n": 5
+    },
+    {
+      "id": "woods:main:r0c1-rock-massif",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c1-rock-massif.png",
+      "bboxZ6": [
+        5175,
+        1752,
+        431,
+        889
+      ],
+      "sizeM": [
+        37,
+        74
+      ],
+      "sheet": "woods-1",
+      "n": 18
+    },
+    {
+      "id": "woods:main:r2c1-rock-massif-north",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c1-rock-massif-north.png",
+      "bboxZ6": [
+        5791,
+        8792,
+        682,
+        445
+      ],
+      "sizeM": [
+        59,
+        37
+      ],
+      "sheet": "woods-1",
+      "n": 22
+    },
+    {
+      "id": "woods:main:r3c1-northeast-rock-massif",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c1-northeast-rock-massif.png",
+      "bboxZ6": [
+        7523,
+        12369,
+        566,
+        512
+      ],
+      "sizeM": [
+        49,
+        42
+      ],
+      "sheet": "woods-1",
+      "n": 23
+    },
+    {
+      "id": "woods:main:r1c3-boulder-outcrop",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c3-boulder-outcrop.png",
+      "bboxZ6": [
+        13014,
+        7231,
+        1009,
+        742
+      ],
+      "sizeM": [
+        88,
+        61
+      ],
+      "sheet": "woods-1",
+      "n": 9
+    },
+    {
+      "id": "woods:main:r1c0-central-rock-massif",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c0-central-rock-massif.png",
+      "bboxZ6": [
+        2104,
+        6822,
+        563,
+        504
+      ],
+      "sizeM": [
+        49,
+        42
+      ],
+      "sheet": "woods-1",
+      "n": 24
+    },
+    {
+      "id": "woods:main:r0c1-wooden-bridge",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0009",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r0c1-wooden-bridge.png",
+      "bboxZ6": [
+        5916,
+        0,
+        687,
+        714
+      ],
+      "sizeM": [
+        60,
+        59
+      ],
+      "sheet": "woods-1",
+      "n": 14
+    },
+    {
+      "id": "woods:main:r0c1-bridge-dome-base",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0009",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r0c1-bridge-dome-base.png",
+      "bboxZ6": [
+        5808,
+        323,
+        512,
+        593
+      ],
+      "sizeM": [
+        45,
+        49
+      ],
+      "sheet": "woods-1",
+      "n": 21
+    },
+    {
+      "id": "woods:main:r1c0-usec-camp-upper",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0010",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r1c0-usec-camp-upper.png",
+      "bboxZ6": [
+        3024,
+        4352,
+        1067,
+        600
+      ],
+      "sizeM": [
+        93,
+        50
+      ],
+      "sheet": "woods-1",
+      "n": 12
+    },
+    {
+      "id": "woods:main:r1c0-usec-camp-lower",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0010",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r1c0-usec-camp-lower.png",
+      "bboxZ6": [
+        3024,
+        5102,
+        1067,
+        800
+      ],
+      "sizeM": [
+        93,
+        66
+      ],
+      "sheet": "woods-1",
+      "n": 6
+    },
+    {
+      "id": "woods:main:r3c0-fenced-camp",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0011",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r3c0-fenced-camp.png",
+      "bboxZ6": [
+        2079,
+        13103,
+        1097,
+        741
+      ],
+      "sizeM": [
+        95,
+        61
+      ],
+      "sheet": "woods-1",
+      "n": 8
+    },
+    {
+      "id": "woods:main:r0c2-scav-camp",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0011",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r0c2-scav-camp.png",
+      "bboxZ6": [
+        8419,
+        2323,
+        978,
+        474
+      ],
+      "sizeM": [
+        85,
+        39
+      ],
+      "sheet": "woods-1",
+      "n": 15
+    },
+    {
+      "id": "woods:main:r0c1-rock-camp-cluster",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0011",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r0c1-rock-camp-cluster.png",
+      "bboxZ6": [
+        5323,
+        1604,
+        553,
+        687
+      ],
+      "sizeM": [
+        48,
+        57
+      ],
+      "sheet": "woods-1",
+      "n": 19
+    },
+    {
+      "id": "woods:main:r0c0-fenced-work-compound",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0011",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r0c0-fenced-work-compound.png",
+      "bboxZ6": [
+        2722,
+        755,
+        620,
+        566
+      ],
+      "sizeM": [
+        54,
+        47
+      ],
+      "sheet": "woods-1",
+      "n": 20
+    },
+    {
+      "id": "woods:main:r3c2-sawmill-complex",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0012",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r3c2-sawmill-complex.png",
+      "bboxZ6": [
+        9056,
+        12975,
+        660,
+        1038
+      ],
+      "sizeM": [
+        57,
+        86
+      ],
+      "sheet": "woods-1",
+      "n": 10
+    },
+    {
+      "id": "woods:main:r3c3-large-warehouses-ne",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0013",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r3c3-large-warehouses-ne.png",
+      "bboxZ6": [
+        14896,
+        12265,
+        831,
+        504
+      ],
+      "sizeM": [
+        72,
+        42
+      ],
+      "sheet": "woods-1",
+      "n": 16
+    },
+    {
+      "id": "woods:main:r2c3-south-rail-yard",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0014",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r2c3-south-rail-yard.png",
+      "bboxZ6": [
+        14192,
+        11866,
+        1982,
+        442
+      ],
+      "sizeM": [
+        172,
+        37
+      ],
+      "sheet": "woods-1",
+      "n": 4
+    },
+    {
+      "id": "woods:main:r1c1-lake-central",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0015",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c1-lake-central.png",
+      "bboxZ6": [
+        5687,
+        4353,
+        1186,
+        860
+      ],
+      "sizeM": [
+        103,
+        71
+      ],
+      "sheet": "woods-1",
+      "n": 3
+    },
+    {
+      "id": "woods:main:r0c0-rocky-quarry-basin",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0016",
+      "status": "candidate",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c0-rocky-quarry-basin.png",
+      "bboxZ6": [
+        2507,
+        1968,
+        1455,
+        2102
+      ],
+      "sizeM": [
+        127,
+        174
+      ],
+      "sheet": "woods-1",
+      "n": 1
+    }
+  ]
+}
