@@ -671,6 +671,89 @@
       ],
       "status": "confirmed",
       "sheet": "woods-3"
+    },
+    {
+      "typeId": "T-0033",
+      "slug": "excavator",
+      "name": "Экскаватор (жёлтый)",
+      "category": "vehicles",
+      "materials": [
+        "mach-yellow",
+        "rubber",
+        "dirt"
+      ],
+      "canonical": "woods:main:r0c0-yellow-excavator",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-4"
+    },
+    {
+      "typeId": "T-0034",
+      "slug": "car",
+      "name": "Легковой автомобиль",
+      "category": "vehicles",
+      "materials": [
+        "plastic-white",
+        "rubber"
+      ],
+      "canonical": "woods:main:r3c2-lakeshore-car",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "factory-car",
+        "count": 11
+      },
+      "maps": [
+        "woods",
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-4"
+    },
+    {
+      "typeId": "T-0035",
+      "slug": "rail-boxcar",
+      "name": "Ж/д вагон / цистерна на путях",
+      "category": "vehicles",
+      "materials": [
+        "veh-green",
+        "rust"
+      ],
+      "canonical": "woods:main:r3c2-rail-boxcar-platform",
+      "vector": {
+        "kind": "figma-rect",
+        "name": "green-train-tank",
+        "count": 16
+      },
+      "maps": [
+        "woods",
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-4"
+    },
+    {
+      "typeId": "T-0036",
+      "slug": "lake-dock",
+      "name": "Деревянный пирс",
+      "category": "structures",
+      "materials": [
+        "wood",
+        "water"
+      ],
+      "canonical": "woods:main:r2c1-lake-dock",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-4"
     }
   ]
 }

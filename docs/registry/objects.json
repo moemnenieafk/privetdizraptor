@@ -1495,6 +1495,486 @@
       ],
       "sheet": "woods-3",
       "n": 6
+    },
+    {
+      "id": "woods:main:r1c1-power-pylon-central",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0003",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r1c1-power-pylon-central.png",
+      "bboxZ6": [
+        6122,
+        5810,
+        208,
+        237
+      ],
+      "sizeM": [
+        18,
+        20
+      ],
+      "sheet": "woods-4",
+      "n": 8
+    },
+    {
+      "id": "woods:main:r1c0-riverside-platform",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0003",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r1c0-riverside-platform.png",
+      "bboxZ6": [
+        3076,
+        7226,
+        222,
+        222
+      ],
+      "sizeM": [
+        19,
+        18
+      ],
+      "sheet": "woods-4",
+      "n": 9
+    },
+    {
+      "id": "woods:main:r1c1-power-pylon-east",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0003",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r1c1-power-pylon-east.png",
+      "bboxZ6": [
+        7699,
+        5609,
+        208,
+        222
+      ],
+      "sizeM": [
+        18,
+        18
+      ],
+      "sheet": "woods-4",
+      "n": 11
+    },
+    {
+      "id": "woods:main:r1c3-redroof-house",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0027",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r1c3-redroof-house.png",
+      "bboxZ6": [
+        12964,
+        5853,
+        326,
+        208
+      ],
+      "sizeM": [
+        28,
+        17
+      ],
+      "sheet": "woods-4",
+      "n": 5
+    },
+    {
+      "id": "woods:main:r2c3-nw-wood-cabin",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0022",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r2c3-nw-wood-cabin.png",
+      "bboxZ6": [
+        13032,
+        8559,
+        297,
+        222
+      ],
+      "sizeM": [
+        26,
+        18
+      ],
+      "sheet": "woods-4",
+      "n": 6
+    },
+    {
+      "id": "woods:main:r1c0-green-roof-shed-lower",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0020",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r1c0-green-roof-shed-lower.png",
+      "bboxZ6": [
+        3330,
+        5192,
+        267,
+        208
+      ],
+      "sizeM": [
+        23,
+        17
+      ],
+      "sheet": "woods-4",
+      "n": 7
+    },
+    {
+      "id": "woods:main:r2c1-log-piles-yard",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0025",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r2c1-log-piles-yard.png",
+      "bboxZ6": [
+        6927,
+        9134,
+        593,
+        326
+      ],
+      "sizeM": [
+        52,
+        27
+      ],
+      "sheet": "woods-4",
+      "n": 21
+    },
+    {
+      "id": "woods:main:r2c0-rock-outcrop-river",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c0-rock-outcrop-river.png",
+      "bboxZ6": [
+        2561,
+        10496,
+        296,
+        296
+      ],
+      "sizeM": [
+        26,
+        24
+      ],
+      "sheet": "woods-4",
+      "n": 3
+    },
+    {
+      "id": "woods:main:r3c0-west-rock-cluster",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c0-west-rock-cluster.png",
+      "bboxZ6": [
+        844,
+        13862,
+        415,
+        356
+      ],
+      "sizeM": [
+        36,
+        29
+      ],
+      "sheet": "woods-4",
+      "n": 22
+    },
+    {
+      "id": "woods:main:r2c2-boulder-outcrop-e",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c2-boulder-outcrop-e.png",
+      "bboxZ6": [
+        11098,
+        10374,
+        445,
+        326
+      ],
+      "sizeM": [
+        39,
+        27
+      ],
+      "sheet": "woods-4",
+      "n": 23
+    },
+    {
+      "id": "woods:main:r2c2-boulder-outcrop-sw",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c2-boulder-outcrop-sw.png",
+      "bboxZ6": [
+        9350,
+        11343,
+        356,
+        341
+      ],
+      "sizeM": [
+        31,
+        28
+      ],
+      "sheet": "woods-4",
+      "n": 24
+    },
+    {
+      "id": "woods:main:r2c3-sw-boulder-field",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c3-sw-boulder-field.png",
+      "bboxZ6": [
+        12556,
+        11071,
+        682,
+        742
+      ],
+      "sizeM": [
+        59,
+        61
+      ],
+      "sheet": "woods-4",
+      "n": 16
+    },
+    {
+      "id": "woods:main:r1c2-rock-cluster-right",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c2-rock-cluster-right.png",
+      "bboxZ6": [
+        11296,
+        6984,
+        533,
+        504
+      ],
+      "sizeM": [
+        46,
+        42
+      ],
+      "sheet": "woods-4",
+      "n": 17
+    },
+    {
+      "id": "woods:main:r0c2-rock-outcrop-sw",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c2-rock-outcrop-sw.png",
+      "bboxZ6": [
+        8643,
+        3169,
+        489,
+        548
+      ],
+      "sizeM": [
+        43,
+        45
+      ],
+      "sheet": "woods-4",
+      "n": 18
+    },
+    {
+      "id": "woods:main:r1c1-rock-outcrop-west",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c1-rock-outcrop-west.png",
+      "bboxZ6": [
+        4104,
+        5390,
+        445,
+        593
+      ],
+      "sizeM": [
+        39,
+        49
+      ],
+      "sheet": "woods-4",
+      "n": 19
+    },
+    {
+      "id": "woods:main:r1c2-rock-outcrop-mid",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c2-rock-outcrop-mid.png",
+      "bboxZ6": [
+        9949,
+        6019,
+        533,
+        386
+      ],
+      "sizeM": [
+        46,
+        32
+      ],
+      "sheet": "woods-4",
+      "n": 20
+    },
+    {
+      "id": "woods:main:r0c0-yellow-excavator",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0033",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/vehicles/r0c0-yellow-excavator.png",
+      "bboxZ6": [
+        2992,
+        579,
+        243,
+        202
+      ],
+      "sizeM": [
+        21,
+        17
+      ],
+      "sheet": "woods-4",
+      "n": 10
+    },
+    {
+      "id": "woods:main:r2c1-excavator",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0033",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/vehicles/r2c1-excavator.png",
+      "bboxZ6": [
+        6877,
+        9465,
+        208,
+        163
+      ],
+      "sizeM": [
+        18,
+        13
+      ],
+      "sheet": "woods-4",
+      "n": 12
+    },
+    {
+      "id": "woods:main:r3c2-lakeshore-car",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0034",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/vehicles/r3c2-lakeshore-car.png",
+      "bboxZ6": [
+        8086,
+        13218,
+        270,
+        350
+      ],
+      "sizeM": [
+        23,
+        29
+      ],
+      "sheet": "woods-4",
+      "n": 1
+    },
+    {
+      "id": "woods:main:r3c2-rail-boxcar-platform",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0035",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r3c2-rail-boxcar-platform.png",
+      "bboxZ6": [
+        11293,
+        14134,
+        243,
+        310
+      ],
+      "sizeM": [
+        21,
+        26
+      ],
+      "sheet": "woods-4",
+      "n": 4
+    },
+    {
+      "id": "woods:main:r2c1-lake-dock",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0036",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r2c1-lake-dock.png",
+      "bboxZ6": [
+        6752,
+        11843,
+        282,
+        326
+      ],
+      "sizeM": [
+        25,
+        27
+      ],
+      "sheet": "woods-4",
+      "n": 2
+    },
+    {
+      "id": "woods:main:r3c1-lake-dock",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0036",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r3c1-lake-dock.png",
+      "bboxZ6": [
+        4906,
+        13245,
+        216,
+        121
+      ],
+      "sizeM": [
+        19,
+        10
+      ],
+      "sheet": "woods-4",
+      "n": 13
+    },
+    {
+      "id": "woods:main:r1c0-stream-bend",
+      "map": "woods",
+      "layer": "main",
+      "typeId": null,
+      "status": "skip",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c0-stream-bend.png",
+      "bboxZ6": [
+        2748,
+        7429,
+        1216,
+        801
+      ],
+      "sizeM": [
+        106,
+        66
+      ],
+      "sheet": "woods-4",
+      "n": 14
+    },
+    {
+      "id": "woods:main:r1c1-road-junction-mid",
+      "map": "woods",
+      "layer": "main",
+      "typeId": null,
+      "status": "skip",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r1c1-road-junction-mid.png",
+      "bboxZ6": [
+        5388,
+        5953,
+        1245,
+        652
+      ],
+      "sizeM": [
+        108,
+        54
+      ],
+      "sheet": "woods-4",
+      "n": 15
     }
   ]
 }
