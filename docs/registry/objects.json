@@ -1975,6 +1975,306 @@
       ],
       "sheet": "woods-4",
       "n": 15
+    },
+    {
+      "id": "woods:main:r2c2-boulder-cluster-s",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c2-boulder-cluster-s.png",
+      "bboxZ6": [
+        10268,
+        11479,
+        326,
+        326
+      ],
+      "sizeM": [
+        28,
+        27
+      ],
+      "sheet": "woods-5",
+      "n": 1
+    },
+    {
+      "id": "woods:main:r3c2-rock-spire",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c2-rock-spire.png",
+      "bboxZ6": [
+        10417,
+        13353,
+        256,
+        310
+      ],
+      "sizeM": [
+        22,
+        26
+      ],
+      "sheet": "woods-5",
+      "n": 8
+    },
+    {
+      "id": "woods:main:r2c1-rock-outcrop-se",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c1-rock-outcrop-se.png",
+      "bboxZ6": [
+        7643,
+        11992,
+        267,
+        296
+      ],
+      "sizeM": [
+        23,
+        24
+      ],
+      "sheet": "woods-5",
+      "n": 9
+    },
+    {
+      "id": "woods:main:r2c0-solitary-boulder-east",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c0-solitary-boulder-east.png",
+      "bboxZ6": [
+        3373,
+        9126,
+        208,
+        208
+      ],
+      "sizeM": [
+        18,
+        17
+      ],
+      "sheet": "woods-5",
+      "n": 14
+    },
+    {
+      "id": "woods:main:r0c0-rock-outcrop-cluster",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c0-rock-outcrop-cluster.png",
+      "bboxZ6": [
+        2655,
+        2021,
+        296,
+        350
+      ],
+      "sizeM": [
+        26,
+        29
+      ],
+      "sheet": "woods-5",
+      "n": 2
+    },
+    {
+      "id": "woods:main:r3c0-east-rock-cluster",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c0-east-rock-cluster.png",
+      "bboxZ6": [
+        3207,
+        13757,
+        311,
+        296
+      ],
+      "sizeM": [
+        27,
+        24
+      ],
+      "sheet": "woods-5",
+      "n": 4
+    },
+    {
+      "id": "woods:main:r2c2-boulder-cluster-w",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c2-boulder-cluster-w.png",
+      "bboxZ6": [
+        8408,
+        10132,
+        326,
+        311
+      ],
+      "sizeM": [
+        28,
+        26
+      ],
+      "sheet": "woods-5",
+      "n": 3
+    },
+    {
+      "id": "woods:main:r3c1-west-rock-cluster",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c1-west-rock-cluster.png",
+      "bboxZ6": [
+        4246,
+        13097,
+        296,
+        296
+      ],
+      "sizeM": [
+        26,
+        24
+      ],
+      "sheet": "woods-5",
+      "n": 6
+    },
+    {
+      "id": "woods:main:r1c0-small-rock-outcrop-east",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c0-small-rock-outcrop-east.png",
+      "bboxZ6": [
+        3127,
+        6902,
+        282,
+        222
+      ],
+      "sizeM": [
+        25,
+        18
+      ],
+      "sheet": "woods-5",
+      "n": 12
+    },
+    {
+      "id": "woods:main:r0c1-lake-dock",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0036",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/misc/r0c1-lake-dock.png",
+      "bboxZ6": [
+        7345,
+        2480,
+        243,
+        229
+      ],
+      "sizeM": [
+        21,
+        19
+      ],
+      "sheet": "woods-5",
+      "n": 13
+    },
+    {
+      "id": "woods:main:r0c1-shore-hut-rock",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0022",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r0c1-shore-hut-rock.png",
+      "bboxZ6": [
+        7062,
+        1617,
+        283,
+        296
+      ],
+      "sizeM": [
+        25,
+        24
+      ],
+      "sheet": "woods-5",
+      "n": 7
+    },
+    {
+      "id": "woods:main:r1c1-timber-pile-east",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0037",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/misc/r1c1-timber-pile-east.png",
+      "bboxZ6": [
+        6858,
+        6243,
+        326,
+        208
+      ],
+      "sizeM": [
+        28,
+        17
+      ],
+      "sheet": "woods-5",
+      "n": 11
+    },
+    {
+      "id": "woods:main:r1c1-timber-pile-north",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0037",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/misc/r1c1-timber-pile-north.png",
+      "bboxZ6": [
+        5812,
+        5586,
+        222,
+        133
+      ],
+      "sizeM": [
+        19,
+        11
+      ],
+      "sheet": "woods-5",
+      "n": 15
+    },
+    {
+      "id": "woods:main:r3c2-debris-wreckage",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0038",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/misc/r3c2-debris-wreckage.png",
+      "bboxZ6": [
+        9312,
+        14377,
+        256,
+        270
+      ],
+      "sizeM": [
+        22,
+        22
+      ],
+      "sheet": "woods-5",
+      "n": 10
+    },
+    {
+      "id": "woods:main:r1c0-southern-rock-outcrop",
+      "map": "woods",
+      "layer": "main",
+      "typeId": null,
+      "status": "skip",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c0-southern-rock-outcrop.png",
+      "bboxZ6": [
+        1253,
+        7842,
+        296,
+        296
+      ],
+      "sizeM": [
+        26,
+        24
+      ],
+      "sheet": "woods-5",
+      "n": 5
     }
   ]
 }

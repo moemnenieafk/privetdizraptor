@@ -754,6 +754,45 @@
       ],
       "status": "confirmed",
       "sheet": "woods-4"
+    },
+    {
+      "typeId": "T-0037",
+      "slug": "timber-pile",
+      "name": "Штабель брёвен (у дороги)",
+      "category": "misc",
+      "materials": [
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r1c1-timber-pile-east",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-5"
+    },
+    {
+      "typeId": "T-0038",
+      "slug": "debris-pile",
+      "name": "Груда обломков / щебня",
+      "category": "misc",
+      "materials": [
+        "concrete",
+        "rust",
+        "dirt"
+      ],
+      "canonical": "woods:main:r3c2-debris-wreckage",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-5"
     }
   ]
 }
