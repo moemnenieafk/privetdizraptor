@@ -67,6 +67,29 @@ public static class TerrainExporter
                 for (int z = 0; z < res; z++)
                     for (int x = 0; x < res; x++) bw.Write(h[z, x]);
 
+                // Splatmap: веса слоёв поверхности + имена текстур — это и есть карта материала
+                try
+                {
+                    int aw = td.alphamapWidth, ah = td.alphamapHeight, al = td.alphamapLayers;
+                    var names = new List<string>();
+                    foreach (var lay in td.terrainLayers)
+                        names.Add(lay == null ? "?" : (lay.diffuseTexture == null ? lay.name : lay.diffuseTexture.name));
+                    Debug.Log($"  SPLAT {t.name}: {aw}x{ah} слоёв={al} [{string.Join(", ", names)}]");
+                    var alpha = td.GetAlphamaps(0, 0, aw, ah);
+                    var sp = Path.Combine(Path.GetDirectoryName(outPath), $"splat_{t.name}.bin");
+                    using (var sfs = new FileStream(sp, FileMode.Create))
+                    using (var sbw = new BinaryWriter(sfs))
+                    {
+                        sbw.Write(aw); sbw.Write(ah); sbw.Write(al);
+                        foreach (var n in names) { var nb = Encoding.UTF8.GetBytes(n); sbw.Write(nb.Length); sbw.Write(nb); }
+                        for (int z = 0; z < ah; z++)
+                            for (int x = 0; x < aw; x++)
+                                for (int l = 0; l < al; l++) sbw.Write(alpha[z, x, l]);
+                    }
+                    Debug.Log($"  SPLAT saved: {sp}");
+                }
+                catch (Exception e) { Debug.LogWarning($"  splat fail {t.name}: {e.Message}"); }
+
                 written++;
                 Debug.Log($"  TERRAIN {t.name}: res={res} pos=({pos.x:F1},{pos.y:F1},{pos.z:F1}) " +
                           $"size=({size.x:F0},{size.y:F0},{size.z:F0}) высоты=[{pos.y + mn * size.y:F1},{pos.y + mx * size.y:F1}] м " +
