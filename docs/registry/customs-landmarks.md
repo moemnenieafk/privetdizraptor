@@ -56,3 +56,41 @@ tags: [maps, customs, registry, landmarks]
 - [WeMod Maps — Customs place-of-interest checklist](https://wand.com/maps/escape-from-tarkov/customs/checklist/place-of-interest/location)
 - [Timesaver — Full Tarkov Customs Map Guide 2026](https://timesaver.gg/blog/tarkov-customs-map-guide)
 - [EFT Wiki — Customs](https://escapefromtarkov.fandom.com/wiki/Customs)
+
+---
+
+## 🎯 Имена сцен от разработчика (BSG) — точнее вики
+
+Извлечено из `globalgamemanagers` → `BuildSettings.scenes` (714 сцен, полный список по всем
+локациям: `docs/registry/eft-scenes.json`). Это **внутренние имена BSG** — самый достоверный
+источник семантики карты.
+
+| level | Сцена | Что это |
+|---|---|---|
+| 4 | `custom_AI` | навигация ботов |
+| 5 | `custom_multiScene` | общая сборка |
+| 6 | `custom_AZS` | **Новая заправка** (АЗС) |
+| 7 | `custom_AZS_old` | **Старая заправка** |
+| 8 | `custom_DesignStuff` | дизайнерский реквизит |
+| 9 | `custom_Garage` | **Гаражи** |
+| 10 | `custom_Obshezhitie` | **Общаги** (внешка) |
+| 11 | `custom_Obshezhitie_1_indoor` | **Общага 2-этажка**, интерьеры |
+| 12 | `custom_Obshezhitie_2_indoor` | **Общага 3-этажка**, интерьеры |
+| 13 | `custom_Light` | свет |
+| 14 | `custom_Road` | **дороги** |
+| 15 | `custom_Scripts` | логика |
+| 16 | `custom_Tamozhnya` | **Здание таможни** (Tarcone / офисы) |
+| 17 | `custom_Terrain` | **РЕЛЬЕФ** (меш-террейн + деревья) |
+| 18 | `custom_TrailerPark` | **Трейлерный парк** |
+| 19 | `custom_background` | фон-декорации за границей карты |
+| 20 | `custom_city` | **городская часть** |
+| 21 | `custom_factoryStorageZone` | **складская зона** (Склады 3/4/17, Биг Ред) |
+| 22 | `custom_mazuto` | **мазутка** — Бойлерная / топливное хозяйство |
+| 170–176 | `Custom_Expansion_*` | расширение: Abandoned Lab, Abandoned Plant, ChemicalFactory, Construction Factory, Pump Station, RepairBox |
+
+**Следствия:**
+- Расширение Таможни даёт ещё 6 именованных зон, которых нет в вики-чек-листе.
+- `custom_background` = та самая **размытая зона вне игры** (мы её отсекаем детектором Лапласиана) —
+  подтверждение, что отсечка верна.
+- Для любой карты портала: сначала смотреть `eft-scenes.json` — имена сцен дают структуру локации
+  бесплатно и точнее любых гайдов.
