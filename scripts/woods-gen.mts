@@ -62,13 +62,8 @@ const JOBS: Job[] = [
     materials: ['cnt-green', 'wood', 'dirt'],
     subject: 'a compact encampment of six to eight small huts with painted green pitched metal roofs, wooden plank walls visible at the eaves, standing on a bare grey-brown dirt clearing, with a few wooden crates and a low timber fence between them',
   },
-  {
-    slug: 'large-brown-hall', cut: 'buildings/r3c3-large-brown-hall.png', mode: 'polygon',
-    materials: ['wood', 'rust', 'dirt'],
-    subject: 'a very large rectangular industrial hall with a long dark rusted metal gable roof, two rows of rectangular skylight strips running along the ridge, timber-clad end walls, standing on bare packed earth',
-  },
+  // Вне игровой зоны (размытые на исходнике) исключены: large-brown-hall, blue-hangars — см. cut/woods/_out-of-bounds
   // Ночные (до анкера) — PNG уже есть, только перетрасса против сабсета (грилл, вопрос 7.3)
-  { slug: 'r0c3-blue-hangars-triple', cut: 'buildings/r0c3-blue-hangars-triple.png', mode: 'polygon', materials: ['cnt-blue', 'concrete', 'dirt'], subject: 'three identical blue metal storage hangars in a row' },
   { slug: 'r2c2-plane-wreck', cut: 'vehicles/r2c2-plane-wreck.png', mode: 'spline', materials: ['plastic-white', 'concrete', 'dirt'], subject: 'crashed twin-engine aircraft wreck' },
 ];
 
