@@ -17,7 +17,7 @@ const CUT = `${ROOT}/map-exports/OBJECTS-MAPS/cut/woods`;
 const GEN = `${ROOT}/map-exports/OBJECTS-MAPS/gen/woods`;
 const SVG = `${GEN}/svg`;
 const LOG = `${ROOT}/.tmp-woods/gen-log.json`;
-const CAP = 12; // кап поднят V4DYA 2026-09-02: перегон 5 объектов на квадратных кропах 1:1
+const CAP = 18; // +4: faithful-финал 4 объектов (V4DYA 2026-09-02)
 
 const require = createRequire(import.meta.url);
 // vtracer 1.0.0-alpha.3 живёт в смоук-папке (см. docs/img-promt-help/vtracer-settings.md)
@@ -89,7 +89,23 @@ function paletteText(materials: string[]): string {
     .join('; ');
 }
 
+function buildFaithfulPrompt(job: Job, hasAnchor: boolean): string {
+  return [
+    'CLEAN-UP TASK, NOT A REDRAW. The attached image is a top-down render of a game-map object, captured straight down. Produce the SAME image as a clean flat vector imprint: identical geometry, identical position of every part, identical rotation and proportions, pixel-for-pixel layout. Do not add anything, do not remove anything, do not reinterpret, do not beautify, do not change the camera. The magenta field is empty space — leave it magenta and draw nothing there. Any ground, grass, gravel or terrain inside the frame that is NOT part of the object itself is ALSO empty space: paint it magenta, do not turn it into a slab or a base plate — the object must float on pure magenta with only its own footprint.',
+    '',
+    `WHAT IT IS (for colour assignment only): ${job.subject}`,
+    '',
+    'WHAT TO CHANGE: (1) flatten every surface into solid uniform colour areas — remove photographic texture, noise, grain, dirt streaks and soft shading; (2) each material gets at most three flat tones (base, one shadow toward the lower right, one highlight toward the upper left), exactly the values in PALETTE; (3) a thin dark outline of constant weight around the outer silhouette and around each major part; (4) details smaller than 1/40 of the image width merge into the flat colour of the part that contains them.',
+    '',
+    `PALETTE: ${paletteText(job.materials)}. Every area is one of these colours exactly, assigned by material.`,
+    hasAnchor ? 'The second attached image shows the target line weight and fill flatness — match them; do not copy its object.' : '',
+    '',
+    'Flat inks, hard edges. No gradient, no soft shadow, no texture, no perspective change, no lettering, no border.',
+  ].join('\n');
+}
+
 function buildPrompt(job: Job, hasAnchor: boolean): string {
+  if (faithful) return buildFaithfulPrompt(job, hasAnchor);
   const refs = hasAnchor
     ? [
         'REFERENCES',
@@ -140,7 +156,7 @@ async function generate(prompt: string, crop: Buffer, anchor: Buffer | null): Pr
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env('GEMINI_API_KEY') },
     body: JSON.stringify({
       contents: [{ parts }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], imageConfig: { aspectRatio: '1:1', imageSize: '2K' } },
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], maxOutputTokens: 4096, imageConfig: { aspectRatio: '1:1', imageSize: '2K' } },
     }),
   });
   if (res.status === 429 || res.status === 402) throw new BillingStop(`${res.status}: ${(await res.text()).slice(0, 300)}`);
@@ -194,15 +210,16 @@ const args = process.argv.slice(2);
 const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
 const retrace = args.includes('--retrace');
 const force = args.includes('--force');
+const faithful = args.includes('--faithful');
 
-fs.mkdirSync(SVG, { recursive: true });
+fs.mkdirSync(SVG, { recursive: true }); fs.mkdirSync(`${GEN}/faithful/svg`, { recursive: true });
 const anchorJob = JOBS.find((j) => j.role === 'anchor')!;
 const anchorPng = `${GEN}/${anchorJob.slug}.png`;
 let spent = log.filter((e) => e.gen).length;
 
 for (const job of JOBS) {
   if (only && job.slug !== only) continue;
-  const out = `${GEN}/${job.slug}.png`;
+  const out = faithful ? `${GEN}/faithful/${job.slug}.png` : `${GEN}/${job.slug}.png`;
   console.log(`\n▶ ${job.slug} [${job.materials.join('+')}]`);
   for (const w of collisionWarnings(job.materials)) console.log('   ⚠', w);
   try {
@@ -228,7 +245,7 @@ for (const job of JOBS) {
     }
     // cleanStrip отключён: с маджентовым воздухом в кропе полос нет, а на объектах во всю ширину он резал сам объект.
     const t = trace(png, job);
-    fs.writeFileSync(`${SVG}/${job.slug}.svg`, t.svg);
+    fs.writeFileSync(faithful ? `${GEN}/faithful/svg/${job.slug}.svg` : `${SVG}/${job.slug}.svg`, t.svg);
     const entry = log.find((e) => e.slug === job.slug && e.gen) ?? (log.push({ slug: job.slug, at: new Date().toISOString(), gen: false }), log[log.length - 1]);
     Object.assign(entry, { paths: t.paths, colors: t.colors.length, locked: t.locked }); save();
     console.log(`   SVG ${(t.svg.length / 1024).toFixed(0)} KB | ${t.paths} paths | ${t.colors.length} colors | palette-locked=${t.locked}`);
