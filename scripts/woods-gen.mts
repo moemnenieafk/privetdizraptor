@@ -93,7 +93,7 @@ function buildPrompt(job: Job, hasAnchor: boolean): string {
   const refs = hasAnchor
     ? [
         'REFERENCES',
-        'The first attached image is the GEOMETRY SOURCE. Reproduce its silhouette, proportions, internal part layout and rotation exactly, matching them precisely even where they differ from the real object. It is a low-resolution map crop — do NOT copy its colours, lighting or rendering; treat it purely as a shape guide.',
+        'The first attached image is the GEOMETRY SOURCE: the object sits in the middle of a flat magenta field — the magenta is empty space, not part of the object; draw nothing there. Reproduce the object silhouette, proportions, internal part layout and rotation exactly. It is a low-resolution map crop — do NOT copy its colours, lighting or rendering; treat it purely as a shape guide.',
         'The second attached image is the STYLE ANCHOR for this entire set. Match its outline weight, fill flatness, number of shading steps, palette and contrast. Only the depicted object differs.',
       ]
     : [
@@ -226,8 +226,7 @@ for (const job of JOBS) {
       log.push({ slug: job.slug, at: new Date().toISOString(), gen: true }); save();
       console.log(`   PNG ${(png.length / 1024).toFixed(0)} KB → ${out}`);
     }
-    const cleaned = await cleanStrip(png, `${GEN}/_${job.slug}-raw.png`);
-    if (cleaned !== png) { fs.writeFileSync(out + '.tmp', cleaned); fs.renameSync(out + '.tmp', out); png = cleaned; }
+    // cleanStrip отключён: с маджентовым воздухом в кропе полос нет, а на объектах во всю ширину он резал сам объект.
     const t = trace(png, job);
     fs.writeFileSync(`${SVG}/${job.slug}.svg`, t.svg);
     const entry = log.find((e) => e.slug === job.slug && e.gen) ?? (log.push({ slug: job.slug, at: new Date().toISOString(), gen: false }), log[log.length - 1]);

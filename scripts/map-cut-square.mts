@@ -35,7 +35,14 @@ for (const f of files) {
     const s = Math.min(side, offsets.W - left, offsets.H - top);
     const out = `${CUT}/${o.category}/${o.slug}.png`;
     if (fs.existsSync(out) && !fs.existsSync(out.replace(/\.png$/, '.tight.png'))) fs.renameSync(out, out.replace(/\.png$/, '.tight.png'));
-    await sharp(offsets.src, { limitInputPixels: false }).extract({ left, top, width: s, height: s }).png().toFile(out);
+    // Воздух вокруг bbox — маджента #C000C0 (канон §2): объект целиком с полями, но без соседей.
+    const raw = await sharp(offsets.src, { limitInputPixels: false }).extract({ left, top, width: s, height: s }).ensureAlpha().raw().toBuffer();
+    const bx0 = x - left, by0 = y - top, bx1 = bx0 + w, by1 = by0 + h;
+    for (let py = 0; py < s; py++) for (let px = 0; px < s; px++) {
+      if (px >= bx0 && px < bx1 && py >= by0 && py < by1) continue;
+      const i = (py * s + px) * 4; raw[i] = 0xc0; raw[i + 1] = 0; raw[i + 2] = 0xc0; raw[i + 3] = 255;
+    }
+    await sharp(raw, { raw: { width: s, height: s, channels: 4 } }).png().toFile(out);
     o.square = [left, top, s]; o.path = out; touched = true; done++;
     console.log(`${o.slug.padEnd(36)} ${w}x${h} → ${s}² @ ${left},${top}`);
   }
