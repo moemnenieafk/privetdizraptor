@@ -340,6 +340,179 @@
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02"
+    },
+    {
+      "typeId": "T-0017",
+      "slug": "plane-wreck",
+      "name": "Самолёт (обломки)",
+      "category": "vehicles",
+      "materials": [
+        "plastic-white",
+        "concrete",
+        "dirt"
+      ],
+      "canonical": "woods:main:r2c2-plane-wreck",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02",
+      "sheet": "woods-2"
+    },
+    {
+      "typeId": "T-0018",
+      "slug": "warehouse-north",
+      "name": "Складской комплекс (север)",
+      "category": "buildings",
+      "materials": [
+        "rust",
+        "concrete",
+        "cnt-red"
+      ],
+      "canonical": "woods:main:r3c3-warehouse-complex-north",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02",
+      "sheet": "woods-2"
+    },
+    {
+      "typeId": "T-0019",
+      "slug": "industrial-hangar",
+      "name": "Промышленный ангар с двором",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust",
+        "dirt"
+      ],
+      "canonical": "woods:main:r2c3-north-wood-compound",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02",
+      "sheet": "woods-2"
+    },
+    {
+      "typeId": "T-0020",
+      "slug": "green-roof-huts",
+      "name": "Домики с зелёными крышами",
+      "category": "buildings",
+      "materials": [
+        "cnt-green",
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r1c0-green-roof-buildings",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02",
+      "sheet": "woods-2"
+    },
+    {
+      "typeId": "T-0021",
+      "slug": "road-checkpoint",
+      "name": "КПП на дороге (контейнеры)",
+      "category": "camps",
+      "materials": [
+        "cnt-green",
+        "cnt-blue",
+        "concrete"
+      ],
+      "canonical": "woods:main:r3c3-road-checkpoint",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02",
+      "sheet": "woods-2"
+    },
+    {
+      "typeId": "T-0022",
+      "slug": "wooden-hut",
+      "name": "Изба с ограждением",
+      "category": "buildings",
+      "materials": [
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r3c0-wooden-hut",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02",
+      "sheet": "woods-2"
+    },
+    {
+      "typeId": "T-0023",
+      "slug": "red-roof-shed",
+      "name": "Сарай с красной крышей",
+      "category": "structures",
+      "materials": [
+        "cnt-red",
+        "wood"
+      ],
+      "canonical": "woods:main:r1c2-red-roof-shed",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02",
+      "sheet": "woods-2"
+    },
+    {
+      "typeId": "T-0024",
+      "slug": "river-bend",
+      "name": "Излучина реки (зона)",
+      "category": "zones",
+      "materials": [
+        "water",
+        "gravel-sand"
+      ],
+      "canonical": "woods:main:r0c2-river-bend",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02",
+      "sheet": "woods-2"
     }
   ]
 }
