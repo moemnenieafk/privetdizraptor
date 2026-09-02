@@ -9,6 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import sharp from 'sharp';
 import { FACTORY_PALETTE, MATTE_HEX, OUTLINE_HEX, tracePalette, collisionWarnings, familyById } from '../src/lib/mapper/palette';
 
 const ROOT = 'C:/cta-project';
@@ -131,7 +132,10 @@ function buildPrompt(job: Job, hasAnchor: boolean): string {
 class BillingStop extends Error {}
 
 async function generate(prompt: string, crop: Buffer, anchor: Buffer | null): Promise<Buffer> {
-  const parts: Array<Record<string, unknown>> = [{ text: prompt }, { inline_data: { mime_type: 'image/png', data: crop.toString('base64') } }];
+  // ProxyAPI отдаёт 402 «Insufficient balance» на тяжёлый payload (кроп 7 МБ / анкер 2 МБ) — это не баланс.
+  // Кроп = гид по форме → ≤1024 px JPEG; анкер ≤1024 px PNG (ANCHOR_PX).
+  const cropSmall = await sharp(crop).resize({ width: 1024, height: 1024, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 90 }).toBuffer();
+  const parts: Array<Record<string, unknown>> = [{ text: prompt }, { inline_data: { mime_type: 'image/jpeg', data: cropSmall.toString('base64') } }];
   if (anchor) parts.push({ inline_data: { mime_type: 'image/png', data: anchor.toString('base64') } });
   const res = await fetch(`${env('GEMINI_PROXY_BASE')}/v1beta/models/${env('GEMINI_IMAGE_MODEL')}:generateContent`, {
     method: 'POST',
@@ -150,6 +154,25 @@ async function generate(prompt: string, crop: Buffer, anchor: Buffer | null): Pr
   const img = cparts.map((p) => p.inlineData?.data ?? p.inline_data?.data).find(Boolean);
   if (!img) throw new Error(`нет картинки, finishReason=${json.candidates?.[0]?.finishReason}`);
   return Buffer.from(img, 'base64');
+}
+
+// --- чистка: модель дорисовывает снизу полосу исходного кропа (земля/трава) — маскируем маджентой.
+// Полоса = ряд, где >90% ширины не-маджента (объект по промпту всегда с полями ~5% и пустыми углами,
+// поэтому >90% может дать только сплошная лента фона), в нижних 40% кадра; всё ниже неё — тоже.
+async function cleanStrip(png: Buffer, rawBackup: string): Promise<Buffer> {
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height;
+  const isMag = (i: number) => Math.abs(data[i] - 0xc0) < 40 && data[i + 1] < 60 && Math.abs(data[i + 2] - 0xc0) < 40;
+  let cut = H;
+  for (let y = H - 1; y >= H * 0.6; y--) {
+    let n = 0; for (let x = 0; x < W; x += 4) if (!isMag((y * W + x) * 4)) n++;
+    if (n / (W / 4) > 0.9) cut = y; else if (cut < H) break;
+  }
+  if (cut === H) return png;
+  if (!fs.existsSync(rawBackup)) fs.writeFileSync(rawBackup, png);
+  for (let y = cut - 6; y < H; y++) for (let x = 0; x < W; x++) { const i = (y * W + x) * 4; data[i] = 0xc0; data[i + 1] = 0; data[i + 2] = 0xc0; data[i + 3] = 255; }
+  console.log(`   полоса снизу с y=${cut} → маджента (сырьё: ${path.basename(rawBackup)})`);
+  return sharp(data, { raw: { width: W, height: H, channels: 4 } }).png().toBuffer();
 }
 
 // --- trace ---------------------------------------------------------------------------
@@ -196,7 +219,7 @@ for (const job of JOBS) {
       if (spent >= CAP) { console.log(`   КАП ${CAP} исчерпан — стоп`); break; }
       const isAnchor = job.role === 'anchor';
       if (!isAnchor && !fs.existsSync(anchorPng)) { console.log('   анкера нет — сначала утверди boulder-sm'); break; }
-      const anchor = isAnchor ? null : fs.readFileSync(anchorPng);
+      const anchor = isAnchor ? null : await sharp(anchorPng).resize(Number(process.env.ANCHOR_PX ?? 1024)).png().toBuffer();
       console.log(`   POST 2K ${isAnchor ? '(анкер, без style-ref)' : '(+анкер)'} …`);
       png = await generate(buildPrompt(job, !isAnchor), fs.readFileSync(`${CUT}/${job.cut}`), anchor);
       fs.writeFileSync(out, png);
@@ -205,6 +228,8 @@ for (const job of JOBS) {
       log.push({ slug: job.slug, at: new Date().toISOString(), gen: true }); save();
       console.log(`   PNG ${(png.length / 1024).toFixed(0)} KB → ${out}`);
     }
+    const cleaned = await cleanStrip(png, `${GEN}/_${job.slug}-raw.png`);
+    if (cleaned !== png) { fs.writeFileSync(out + '.tmp', cleaned); fs.renameSync(out + '.tmp', out); png = cleaned; }
     const t = trace(png, job);
     fs.writeFileSync(`${SVG}/${job.slug}.svg`, t.svg);
     const entry = log.find((e) => e.slug === job.slug && e.gen) ?? (log.push({ slug: job.slug, at: new Date().toISOString(), gen: false }), log[log.length - 1]);
