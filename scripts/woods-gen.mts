@@ -17,7 +17,7 @@ const CUT = `${ROOT}/map-exports/OBJECTS-MAPS/cut/woods`;
 const GEN = `${ROOT}/map-exports/OBJECTS-MAPS/gen/woods`;
 const SVG = `${GEN}/svg`;
 const LOG = `${ROOT}/.tmp-woods/gen-log.json`;
-const CAP = 6; // остаток капа после двух ночных генераций
+const CAP = 12; // кап поднят V4DYA 2026-09-02: перегон 5 объектов на квадратных кропах 1:1
 
 const require = createRequire(import.meta.url);
 // vtracer 1.0.0-alpha.3 живёт в смоук-папке (см. docs/img-promt-help/vtracer-settings.md)
@@ -60,11 +60,14 @@ const JOBS: Job[] = [
   {
     slug: 'hilltop-settlement', cut: 'camps/r1c0-hilltop-settlement.png', mode: 'polygon',
     materials: ['cnt-green', 'wood', 'dirt'],
-    subject: 'a compact encampment of six to eight small huts with painted green pitched metal roofs, wooden plank walls visible at the eaves, standing on a bare grey-brown dirt clearing, with a few wooden crates and a low timber fence between them',
+    subject: 'a compact encampment of six to eight small huts with painted green pitched metal roofs, seen from directly above so ONLY the roofs are visible — no walls, no doors, no facades — standing on a bare grey-brown dirt clearing, with a few wooden crates and a low timber fence between them',
   },
   // Вне игровой зоны (размытые на исходнике) исключены: large-brown-hall, blue-hangars — см. cut/woods/_out-of-bounds
-  // Ночные (до анкера) — PNG уже есть, только перетрасса против сабсета (грилл, вопрос 7.3)
-  { slug: 'r2c2-plane-wreck', cut: 'vehicles/r2c2-plane-wreck.png', mode: 'spline', materials: ['plastic-white', 'concrete', 'dirt'], subject: 'crashed twin-engine aircraft wreck' },
+  {
+    slug: 'r2c2-plane-wreck', cut: 'vehicles/r2c2-plane-wreck.png', mode: 'spline',
+    materials: ['plastic-white', 'concrete', 'dirt'],
+    subject: 'a crashed twin-engine propeller aircraft wreck seen from directly above, fuselage broken in two, both wings still attached, bare aluminium skin, lying on a scar of churned dirt',
+  },
 ];
 
 // --- env -----------------------------------------------------------------------
