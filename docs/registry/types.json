@@ -18,7 +18,8 @@
       },
       "maps": [
         "customs"
-      ]
+      ],
+      "figmaInstances": 5
     },
     {
       "typeId": "T-0002",
@@ -37,7 +38,8 @@
       },
       "maps": [
         "customs"
-      ]
+      ],
+      "figmaInstances": 4
     },
     {
       "typeId": "T-0003",
@@ -651,7 +653,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "woods-3"
+      "sheet": "woods-3",
+      "figmaInstances": 34
     },
     {
       "typeId": "T-0032",
@@ -712,7 +715,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "woods-4"
+      "sheet": "woods-4",
+      "figmaInstances": 11
     },
     {
       "typeId": "T-0035",
@@ -789,10 +793,718 @@
         "kind": "none"
       },
       "maps": [
-        "woods"
+        "woods",
+        "customs"
       ],
       "status": "confirmed",
       "sheet": "woods-5"
+    },
+    {
+      "typeId": "T-0039",
+      "slug": "garage",
+      "name": "Гараж (бокс)",
+      "category": "buildings",
+      "materials": [
+        "cnt-red",
+        "concrete"
+      ],
+      "canonical": "customs:figma:garage",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "garage",
+        "count": 61
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 61
+    },
+    {
+      "typeId": "T-0040",
+      "slug": "water-tank",
+      "name": "Водонапорный бак",
+      "category": "structures",
+      "materials": [
+        "rust",
+        "concrete"
+      ],
+      "canonical": "customs:main:riged-tanks",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "water-tank",
+        "count": 37
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 37
+    },
+    {
+      "typeId": "T-0041",
+      "slug": "plastic-barrels-blue",
+      "name": "Синие пластиковые бочки (пара)",
+      "category": "objects",
+      "materials": [
+        "cnt-blue",
+        "rubber"
+      ],
+      "canonical": "customs:figma:plastic-barrels-blue",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "two-blue-plastic-barrels",
+        "count": 25
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 25
+    },
+    {
+      "typeId": "T-0042",
+      "slug": "oil-barrel",
+      "name": "Металлическая бочка",
+      "category": "objects",
+      "materials": [
+        "rust",
+        "concrete"
+      ],
+      "canonical": "customs:main:green-metal-barrels-pile",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "metal-oilbarrel",
+        "count": 25
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 25
+    },
+    {
+      "typeId": "T-0043",
+      "slug": "diesel-generator",
+      "name": "Дизель-генератор (жёлтый)",
+      "category": "objects",
+      "materials": [
+        "mach-yellow",
+        "rubber"
+      ],
+      "canonical": "customs:figma:diesel-generator",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "yellow-portable-diesel-generator",
+        "count": 10
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 10
+    },
+    {
+      "typeId": "T-0044",
+      "slug": "metal-stairs",
+      "name": "Металлическая лестница",
+      "category": "structures",
+      "materials": [
+        "rust",
+        "concrete"
+      ],
+      "canonical": "customs:figma:metal-stairs",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "rust-metal-stairs",
+        "count": 10
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 10
+    },
+    {
+      "typeId": "T-0045",
+      "slug": "cargo-loader",
+      "name": "Погрузчик",
+      "category": "vehicles",
+      "materials": [
+        "mach-yellow",
+        "rubber"
+      ],
+      "canonical": "customs:main:red-micro-loader",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "factory-cargo-loader",
+        "count": 9
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 9
+    },
+    {
+      "typeId": "T-0046",
+      "slug": "cargo-container",
+      "name": "Грузовой контейнер",
+      "category": "objects",
+      "materials": [
+        "cnt-red",
+        "rust"
+      ],
+      "canonical": "customs:main:autotrain-truck-blue-container01",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "cargo-container",
+        "count": 9
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 9
+    },
+    {
+      "typeId": "T-0047",
+      "slug": "debris-container-blue",
+      "name": "Синий мусорный контейнер (открытый)",
+      "category": "objects",
+      "materials": [
+        "cnt-blue",
+        "rust"
+      ],
+      "canonical": "customs:main:container-trash-empty01",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "blue-debree-container",
+        "count": 6
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 6
+    },
+    {
+      "typeId": "T-0048",
+      "slug": "trash-container-boxes",
+      "name": "Мусорный контейнер с коробками",
+      "category": "objects",
+      "materials": [
+        "cnt-blue",
+        "wood"
+      ],
+      "canonical": "customs:figma:trash-container-boxes",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "blue-trash-container-with-boxes",
+        "count": 5
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 5
+    },
+    {
+      "typeId": "T-0049",
+      "slug": "container-tire",
+      "name": "Синий контейнер с покрышкой",
+      "category": "objects",
+      "materials": [
+        "cnt-blue",
+        "rubber"
+      ],
+      "canonical": "customs:figma:container-tire",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "blue-metalcontainer-tire",
+        "count": 5
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 5
+    },
+    {
+      "typeId": "T-0050",
+      "slug": "engine-part",
+      "name": "Деталь двигателя / агрегат",
+      "category": "objects",
+      "materials": [
+        "rust",
+        "concrete"
+      ],
+      "canonical": "customs:figma:engine-part",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "engine-part01",
+        "count": 5
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 5
+    },
+    {
+      "typeId": "T-0051",
+      "slug": "box-yellow-stripes",
+      "name": "Ящик с жёлтыми полосами",
+      "category": "objects",
+      "materials": [
+        "wood",
+        "mach-yellow"
+      ],
+      "canonical": "customs:main:two-yellow-wooden-boxes",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "box-two-yellow-stripes",
+        "count": 3
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 3
+    },
+    {
+      "typeId": "T-0052",
+      "slug": "terragroup-box",
+      "name": "Ящик TerraGroup (деревянный)",
+      "category": "objects",
+      "materials": [
+        "wood"
+      ],
+      "canonical": "customs:figma:terragroup-box",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "terragroup-wooden-box",
+        "count": 3
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 3
+    },
+    {
+      "typeId": "T-0053",
+      "slug": "trash-scatter",
+      "name": "Мусор вокруг контейнера",
+      "category": "misc",
+      "materials": [
+        "rubber",
+        "plastic-white"
+      ],
+      "canonical": "customs:figma:trash-scatter",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "trash-around-container",
+        "count": 2
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed",
+      "figmaInstances": 2
+    },
+    {
+      "typeId": "T-0054",
+      "slug": "rocks-boulders",
+      "name": "Валуны / скалы (Таможня)",
+      "category": "landmarks",
+      "materials": [
+        "rock",
+        "soil"
+      ],
+      "canonical": "customs:main:big-rocks",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0055",
+      "slug": "bus",
+      "name": "Автобус",
+      "category": "vehicles",
+      "materials": [
+        "plastic-white",
+        "rubber"
+      ],
+      "canonical": "customs:main:white-buss-and-van",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0056",
+      "slug": "bus-stop",
+      "name": "Автобусная остановка",
+      "category": "structures",
+      "materials": [
+        "concrete",
+        "cnt-blue"
+      ],
+      "canonical": "customs:main:buss-stop",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0057",
+      "slug": "open-yard",
+      "name": "Пустая площадка",
+      "category": "zones",
+      "materials": [
+        "concrete",
+        "dirt"
+      ],
+      "canonical": "customs:main:empty-ploshadka",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0058",
+      "slug": "smuggler-boat",
+      "name": "Лодка контрабандистов (выход)",
+      "category": "vehicles",
+      "materials": [
+        "wood",
+        "water"
+      ],
+      "canonical": "customs:main:exit-secret-kontrabandit-boat",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0059",
+      "slug": "road-block",
+      "name": "Дорожный блок / баррикада",
+      "category": "structures",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:garage-road-block",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0060",
+      "slug": "train-tank-gray",
+      "name": "Ж/д цистерна (серая)",
+      "category": "vehicles",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:gray-train-tank",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0061",
+      "slug": "checkpoint-canopy",
+      "name": "КПП с навесом",
+      "category": "structures",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:kpp-naves",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0062",
+      "slug": "pipes-pile",
+      "name": "Штабель труб",
+      "category": "objects",
+      "materials": [
+        "rust"
+      ],
+      "canonical": "customs:main:metal-pipes-pile",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0063",
+      "slug": "oil-tank-red",
+      "name": "Нефтяной резервуар (красный)",
+      "category": "structures",
+      "materials": [
+        "cnt-red",
+        "rust"
+      ],
+      "canonical": "customs:main:oil-tank-red",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0064",
+      "slug": "kamaz-orange",
+      "name": "КамАЗ (оранжевый)",
+      "category": "vehicles",
+      "materials": [
+        "mach-orange",
+        "rubber"
+      ],
+      "canonical": "customs:main:orange-kamaz-ULTRA",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0065",
+      "slug": "tank-russian",
+      "name": "Танк",
+      "category": "vehicles",
+      "materials": [
+        "veh-green",
+        "rubber"
+      ],
+      "canonical": "customs:main:russian-tank",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0066",
+      "slug": "guard-booth",
+      "name": "Будка охраны (СМК)",
+      "category": "structures",
+      "materials": [
+        "concrete",
+        "cnt-blue"
+      ],
+      "canonical": "customs:main:smk-budki",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0067",
+      "slug": "shelving",
+      "name": "Стеллаж",
+      "category": "objects",
+      "materials": [
+        "rust",
+        "wood"
+      ],
+      "canonical": "customs:main:stelage-01",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0068",
+      "slug": "tree-single",
+      "name": "Одиночное дерево",
+      "category": "misc",
+      "materials": [
+        "foliage",
+        "wood"
+      ],
+      "canonical": "customs:main:tree01",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0069",
+      "slug": "truck-white",
+      "name": "Грузовик (белый)",
+      "category": "vehicles",
+      "materials": [
+        "plastic-white",
+        "rubber"
+      ],
+      "canonical": "customs:main:truck-white01",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0070",
+      "slug": "un-tiger",
+      "name": "Бронеавтомобиль «Тигр» ООН",
+      "category": "vehicles",
+      "materials": [
+        "plastic-white",
+        "rubber"
+      ],
+      "canonical": "customs:main:un-tiger",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0071",
+      "slug": "vehicle-crane",
+      "name": "Автокран",
+      "category": "vehicles",
+      "materials": [
+        "mach-yellow",
+        "rubber"
+      ],
+      "canonical": "customs:main:vehicle-crane",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0072",
+      "slug": "wc-portable",
+      "name": "Биотуалет",
+      "category": "objects",
+      "materials": [
+        "cnt-blue"
+      ],
+      "canonical": "customs:main:wc-portable-blue",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
+    },
+    {
+      "typeId": "T-0073",
+      "slug": "wrecked-car",
+      "name": "Разбитая машина",
+      "category": "vehicles",
+      "materials": [
+        "rust",
+        "rubber"
+      ],
+      "canonical": "customs:main:blue-car-wrecked-01",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-seed"
     }
   ]
 }
