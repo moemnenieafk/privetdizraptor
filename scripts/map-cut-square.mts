@@ -33,6 +33,7 @@ for (const f of files) {
     let left = Math.round(x + w / 2 - side / 2), top = Math.round(y + h / 2 - side / 2);
     left = Math.max(0, Math.min(left, offsets.W - side)); top = Math.max(0, Math.min(top, offsets.H - side));
     const s = Math.min(side, offsets.W - left, offsets.H - top);
+    fs.mkdirSync(`${CUT}/${o.category}`, { recursive: true });
     const out = `${CUT}/${o.category}/${o.slug}.png`;
     // Воздух вокруг bbox — реальный растр (канон §2, V4DYA); маджента только с --mask.
     const raw = await sharp(offsets.src, { limitInputPixels: false }).extract({ left, top, width: s, height: s }).ensureAlpha().raw().toBuffer();

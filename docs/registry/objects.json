@@ -2983,6 +2983,566 @@
       "sizeM": null,
       "sheet": "customs-seed",
       "source": "V4DYA cut 2026-08"
+    },
+    {
+      "id": "customs:main:r0c1-container-stack-rows",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0046",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/objects/r0c1-container-stack-rows.png",
+      "bboxZ6": [
+        7086,
+        3140,
+        464,
+        997
+      ],
+      "sizeM": [
+        30,
+        66
+      ],
+      "sheet": "customs-1",
+      "n": 13
+    },
+    {
+      "id": "customs:main:r1c0-rock-massif-west",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0054",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/landmarks/r1c0-rock-massif-west.png",
+      "bboxZ6": [
+        505,
+        4684,
+        546,
+        983
+      ],
+      "sizeM": [
+        36,
+        65
+      ],
+      "sheet": "customs-1",
+      "n": 7
+    },
+    {
+      "id": "customs:main:r1c0-rock-ridge-south",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0054",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/landmarks/r1c0-rock-ridge-south.png",
+      "bboxZ6": [
+        1693,
+        7333,
+        710,
+        655
+      ],
+      "sizeM": [
+        46,
+        43
+      ],
+      "sheet": "customs-1",
+      "n": 12
+    },
+    {
+      "id": "customs:main:r1c0-rock-massif-east",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0054",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/landmarks/r1c0-rock-massif-east.png",
+      "bboxZ6": [
+        3181,
+        5326,
+        601,
+        519
+      ],
+      "sizeM": [
+        39,
+        34
+      ],
+      "sheet": "customs-1",
+      "n": 20
+    },
+    {
+      "id": "customs:main:r0c1-train-tank-gray-diagonal",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0035",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/vehicles/r0c1-train-tank-gray-diagonal.png",
+      "bboxZ6": [
+        6513,
+        1666,
+        519,
+        669
+      ],
+      "sizeM": [
+        34,
+        44
+      ],
+      "sheet": "customs-1",
+      "n": 17
+    },
+    {
+      "id": "customs:main:r1c1-dorms-three-story",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0074",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r1c1-dorms-three-story.png",
+      "bboxZ6": [
+        7728,
+        6841,
+        464,
+        655
+      ],
+      "sizeM": [
+        30,
+        43
+      ],
+      "sheet": "customs-1",
+      "n": 21
+    },
+    {
+      "id": "customs:main:r1c1-construction-site",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0075",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r1c1-construction-site.png",
+      "bboxZ6": [
+        4151,
+        4670,
+        860,
+        792
+      ],
+      "sizeM": [
+        56,
+        52
+      ],
+      "sheet": "customs-1",
+      "n": 2
+    },
+    {
+      "id": "customs:main:r0c0-construction-complex-east",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0076",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r0c0-construction-complex-east.png",
+      "bboxZ6": [
+        3236,
+        3250,
+        765,
+        792
+      ],
+      "sizeM": [
+        50,
+        52
+      ],
+      "sheet": "customs-1",
+      "n": 3
+    },
+    {
+      "id": "customs:main:r0c3-fenced-vehicle-yard",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0077",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/camps/r0c3-fenced-vehicle-yard.png",
+      "bboxZ6": [
+        13462,
+        1024,
+        1038,
+        560
+      ],
+      "sizeM": [
+        68,
+        37
+      ],
+      "sheet": "customs-1",
+      "n": 4
+    },
+    {
+      "id": "customs:main:r0c1-ruined-complex-east",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0078",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r0c1-ruined-complex-east.png",
+      "bboxZ6": [
+        7400,
+        2253,
+        587,
+        983
+      ],
+      "sizeM": [
+        38,
+        65
+      ],
+      "sheet": "customs-1",
+      "n": 5
+    },
+    {
+      "id": "customs:main:r0c1-big-ruined-building-center",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0079",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r0c1-big-ruined-building-center.png",
+      "bboxZ6": [
+        5401,
+        3222,
+        587,
+        915
+      ],
+      "sizeM": [
+        38,
+        60
+      ],
+      "sheet": "customs-1",
+      "n": 6
+    },
+    {
+      "id": "customs:main:r1c1-ruined-industrial-yard",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0080",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r1c1-ruined-industrial-yard.png",
+      "bboxZ6": [
+        7236,
+        4138,
+        956,
+        560
+      ],
+      "sizeM": [
+        62,
+        37
+      ],
+      "sheet": "customs-1",
+      "n": 8
+    },
+    {
+      "id": "customs:main:r1c2-road-bridge-domes",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0081",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r1c2-road-bridge-domes.png",
+      "bboxZ6": [
+        11332,
+        4488,
+        956,
+        519
+      ],
+      "sizeM": [
+        62,
+        34
+      ],
+      "sheet": "customs-1",
+      "n": 9
+    },
+    {
+      "id": "customs:main:r0c2-tank-complex-sw",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0082",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r0c2-tank-complex-sw.png",
+      "bboxZ6": [
+        8465,
+        3550,
+        901,
+        546
+      ],
+      "sizeM": [
+        59,
+        36
+      ],
+      "sheet": "customs-1",
+      "n": 10
+    },
+    {
+      "id": "customs:main:r0c1-blue-barrel-yard",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0083",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r0c1-blue-barrel-yard.png",
+      "bboxZ6": [
+        4369,
+        2900,
+        901,
+        519
+      ],
+      "sizeM": [
+        59,
+        34
+      ],
+      "sheet": "customs-1",
+      "n": 11
+    },
+    {
+      "id": "customs:main:r0c1-container-stack-rows",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0084",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/objects/r0c1-container-stack-rows.png",
+      "bboxZ6": [
+        7086,
+        3140,
+        464,
+        997
+      ],
+      "sizeM": [
+        30,
+        66
+      ],
+      "sheet": "customs-1",
+      "n": 13
+    },
+    {
+      "id": "customs:main:r0c3-big-warehouse-roofless",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0085",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r0c3-big-warehouse-roofless.png",
+      "bboxZ6": [
+        13866,
+        2329,
+        388,
+        934
+      ],
+      "sizeM": [
+        25,
+        61
+      ],
+      "sheet": "customs-1",
+      "n": 16
+    },
+    {
+      "id": "customs:main:r0c1-train-tank-gray-diagonal",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0086",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/vehicles/r0c1-train-tank-gray-diagonal.png",
+      "bboxZ6": [
+        6513,
+        1666,
+        519,
+        669
+      ],
+      "sizeM": [
+        34,
+        44
+      ],
+      "sheet": "customs-1",
+      "n": 17
+    },
+    {
+      "id": "customs:main:r0c2-building-complex-south",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0087",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r0c2-building-complex-south.png",
+      "bboxZ6": [
+        9667,
+        3550,
+        437,
+        546
+      ],
+      "sizeM": [
+        29,
+        36
+      ],
+      "sheet": "customs-1",
+      "n": 24
+    },
+    {
+      "id": "customs:main:r0c0-tank-farm-compound",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0088",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r0c0-tank-farm-compound.png",
+      "bboxZ6": [
+        806,
+        2813,
+        1038,
+        1038
+      ],
+      "sizeM": [
+        68,
+        68
+      ],
+      "sheet": "customs-1",
+      "n": 1
+    },
+    {
+      "id": "customs:main:r1c1-tank-farm",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0088",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r1c1-tank-farm.png",
+      "bboxZ6": [
+        6417,
+        4138,
+        587,
+        451
+      ],
+      "sizeM": [
+        38,
+        30
+      ],
+      "sheet": "customs-1",
+      "n": 23
+    },
+    {
+      "id": "customs:main:r0c2-tank-complex-sw",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0089",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r0c2-tank-complex-sw.png",
+      "bboxZ6": [
+        8465,
+        3550,
+        901,
+        546
+      ],
+      "sizeM": [
+        59,
+        36
+      ],
+      "sheet": "customs-1",
+      "n": 10
+    },
+    {
+      "id": "customs:main:r0c1-tank-farm-building-south",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0089",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r0c1-tank-farm-building-south.png",
+      "bboxZ6": [
+        6439,
+        3408,
+        505,
+        729
+      ],
+      "sizeM": [
+        33,
+        48
+      ],
+      "sheet": "customs-1",
+      "n": 15
+    },
+    {
+      "id": "customs:main:r0c0-concrete-slab-pipes",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0089",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r0c0-concrete-slab-pipes.png",
+      "bboxZ6": [
+        1952,
+        2608,
+        655,
+        423
+      ],
+      "sizeM": [
+        43,
+        28
+      ],
+      "sheet": "customs-1",
+      "n": 22
+    },
+    {
+      "id": "customs:main:r0c1-blue-barrel-yard",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0090",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/structures/r0c1-blue-barrel-yard.png",
+      "bboxZ6": [
+        4369,
+        2900,
+        901,
+        519
+      ],
+      "sizeM": [
+        59,
+        34
+      ],
+      "sheet": "customs-1",
+      "n": 11
+    },
+    {
+      "id": "customs:main:r1c1-big-warehouse-concrete-slab",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0091",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r1c1-big-warehouse-concrete-slab.png",
+      "bboxZ6": [
+        4096,
+        4138,
+        997,
+        410
+      ],
+      "sizeM": [
+        65,
+        27
+      ],
+      "sheet": "customs-1",
+      "n": 14
+    },
+    {
+      "id": "customs:main:r1c0-concrete-warehouse-north",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0091",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/buildings/r1c0-concrete-warehouse-north.png",
+      "bboxZ6": [
+        2853,
+        4138,
+        1242,
+        273
+      ],
+      "sizeM": [
+        81,
+        18
+      ],
+      "sheet": "customs-1",
+      "n": 18
+    },
+    {
+      "id": "customs:main:r1c1-bus-lot-fenced",
+      "map": "customs",
+      "layer": "main",
+      "typeId": "T-0092",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/customs/camps/r1c1-bus-lot-fenced.png",
+      "bboxZ6": [
+        6704,
+        5244,
+        819,
+        396
+      ],
+      "sizeM": [
+        53,
+        26
+      ],
+      "sheet": "customs-1",
+      "n": 19
     }
   ]
 }

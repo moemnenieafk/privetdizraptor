@@ -19,7 +19,8 @@
       "maps": [
         "customs"
       ],
-      "figmaInstances": 5
+      "figmaInstances": 5,
+      "kind": "asset"
     },
     {
       "typeId": "T-0002",
@@ -39,7 +40,8 @@
       "maps": [
         "customs"
       ],
-      "figmaInstances": 4
+      "figmaInstances": 4,
+      "kind": "asset"
     },
     {
       "typeId": "T-0003",
@@ -59,7 +61,8 @@
       "maps": [
         "customs",
         "woods"
-      ]
+      ],
+      "kind": "asset"
     },
     {
       "typeId": "T-0004",
@@ -77,7 +80,8 @@
       },
       "maps": [
         "customs"
-      ]
+      ],
+      "kind": "asset"
     },
     {
       "typeId": "T-0005",
@@ -94,7 +98,8 @@
       },
       "maps": [
         "customs"
-      ]
+      ],
+      "kind": "asset"
     },
     {
       "typeId": "T-0006",
@@ -116,7 +121,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0007",
@@ -139,7 +145,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0008",
@@ -161,7 +168,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0009",
@@ -183,7 +191,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0010",
@@ -206,7 +215,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0011",
@@ -228,7 +238,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0012",
@@ -251,7 +262,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0013",
@@ -274,7 +286,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0014",
@@ -297,7 +310,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0015",
@@ -319,7 +333,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0016",
@@ -341,7 +356,8 @@
       "proposedBy": "claude",
       "sheet": "woods-1",
       "confirmedBy": "V4DYA",
-      "confirmedAt": "2026-09-02"
+      "confirmedAt": "2026-09-02",
+      "kind": "asset"
     },
     {
       "typeId": "T-0017",
@@ -363,7 +379,8 @@
       "status": "confirmed",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
-      "sheet": "woods-2"
+      "sheet": "woods-2",
+      "kind": "asset"
     },
     {
       "typeId": "T-0018",
@@ -385,7 +402,8 @@
       "status": "confirmed",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
-      "sheet": "woods-2"
+      "sheet": "woods-2",
+      "kind": "asset"
     },
     {
       "typeId": "T-0019",
@@ -407,7 +425,8 @@
       "status": "confirmed",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
-      "sheet": "woods-2"
+      "sheet": "woods-2",
+      "kind": "asset"
     },
     {
       "typeId": "T-0020",
@@ -429,7 +448,8 @@
       "status": "confirmed",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
-      "sheet": "woods-2"
+      "sheet": "woods-2",
+      "kind": "asset"
     },
     {
       "typeId": "T-0021",
@@ -451,7 +471,8 @@
       "status": "confirmed",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
-      "sheet": "woods-2"
+      "sheet": "woods-2",
+      "kind": "asset"
     },
     {
       "typeId": "T-0022",
@@ -472,7 +493,8 @@
       "status": "confirmed",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
-      "sheet": "woods-2"
+      "sheet": "woods-2",
+      "kind": "asset"
     },
     {
       "typeId": "T-0023",
@@ -493,7 +515,8 @@
       "status": "confirmed",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
-      "sheet": "woods-2"
+      "sheet": "woods-2",
+      "kind": "asset"
     },
     {
       "typeId": "T-0024",
@@ -514,7 +537,8 @@
       "status": "confirmed",
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
-      "sheet": "woods-2"
+      "sheet": "woods-2",
+      "kind": "asset"
     },
     {
       "typeId": "T-0025",
@@ -533,7 +557,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-3"
+      "sheet": "woods-3",
+      "kind": "asset"
     },
     {
       "typeId": "T-0026",
@@ -552,7 +577,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-3"
+      "sheet": "woods-3",
+      "kind": "asset"
     },
     {
       "typeId": "T-0027",
@@ -572,7 +598,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-3"
+      "sheet": "woods-3",
+      "kind": "asset"
     },
     {
       "typeId": "T-0028",
@@ -592,7 +619,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-3"
+      "sheet": "woods-3",
+      "kind": "asset"
     },
     {
       "typeId": "T-0029",
@@ -612,7 +640,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-3"
+      "sheet": "woods-3",
+      "kind": "asset"
     },
     {
       "typeId": "T-0030",
@@ -631,7 +660,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-3"
+      "sheet": "woods-3",
+      "kind": "asset"
     },
     {
       "typeId": "T-0031",
@@ -654,7 +684,8 @@
       ],
       "status": "confirmed",
       "sheet": "woods-3",
-      "figmaInstances": 34
+      "figmaInstances": 34,
+      "kind": "asset"
     },
     {
       "typeId": "T-0032",
@@ -673,7 +704,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-3"
+      "sheet": "woods-3",
+      "kind": "asset"
     },
     {
       "typeId": "T-0033",
@@ -693,7 +725,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-4"
+      "sheet": "woods-4",
+      "kind": "asset"
     },
     {
       "typeId": "T-0034",
@@ -716,7 +749,8 @@
       ],
       "status": "confirmed",
       "sheet": "woods-4",
-      "figmaInstances": 11
+      "figmaInstances": 11,
+      "kind": "asset"
     },
     {
       "typeId": "T-0035",
@@ -738,7 +772,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "woods-4"
+      "sheet": "woods-4",
+      "kind": "asset"
     },
     {
       "typeId": "T-0036",
@@ -757,7 +792,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-4"
+      "sheet": "woods-4",
+      "kind": "asset"
     },
     {
       "typeId": "T-0037",
@@ -776,7 +812,8 @@
         "woods"
       ],
       "status": "confirmed",
-      "sheet": "woods-5"
+      "sheet": "woods-5",
+      "kind": "asset"
     },
     {
       "typeId": "T-0038",
@@ -797,7 +834,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "woods-5"
+      "sheet": "woods-5",
+      "kind": "asset"
     },
     {
       "typeId": "T-0039",
@@ -819,7 +857,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 61
+      "figmaInstances": 61,
+      "kind": "asset"
     },
     {
       "typeId": "T-0040",
@@ -841,7 +880,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 37
+      "figmaInstances": 37,
+      "kind": "asset"
     },
     {
       "typeId": "T-0041",
@@ -863,7 +903,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 25
+      "figmaInstances": 25,
+      "kind": "asset"
     },
     {
       "typeId": "T-0042",
@@ -885,7 +926,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 25
+      "figmaInstances": 25,
+      "kind": "asset"
     },
     {
       "typeId": "T-0043",
@@ -907,7 +949,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 10
+      "figmaInstances": 10,
+      "kind": "asset"
     },
     {
       "typeId": "T-0044",
@@ -929,7 +972,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 10
+      "figmaInstances": 10,
+      "kind": "asset"
     },
     {
       "typeId": "T-0045",
@@ -951,7 +995,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 9
+      "figmaInstances": 9,
+      "kind": "asset"
     },
     {
       "typeId": "T-0046",
@@ -973,7 +1018,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 9
+      "figmaInstances": 9,
+      "kind": "asset"
     },
     {
       "typeId": "T-0047",
@@ -995,7 +1041,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 6
+      "figmaInstances": 6,
+      "kind": "asset"
     },
     {
       "typeId": "T-0048",
@@ -1017,7 +1064,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 5
+      "figmaInstances": 5,
+      "kind": "asset"
     },
     {
       "typeId": "T-0049",
@@ -1039,7 +1087,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 5
+      "figmaInstances": 5,
+      "kind": "asset"
     },
     {
       "typeId": "T-0050",
@@ -1061,7 +1110,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 5
+      "figmaInstances": 5,
+      "kind": "asset"
     },
     {
       "typeId": "T-0051",
@@ -1083,7 +1133,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 3
+      "figmaInstances": 3,
+      "kind": "asset"
     },
     {
       "typeId": "T-0052",
@@ -1104,7 +1155,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 3
+      "figmaInstances": 3,
+      "kind": "asset"
     },
     {
       "typeId": "T-0053",
@@ -1126,7 +1178,8 @@
       ],
       "status": "confirmed",
       "sheet": "customs-seed",
-      "figmaInstances": 2
+      "figmaInstances": 2,
+      "kind": "asset"
     },
     {
       "typeId": "T-0054",
@@ -1145,7 +1198,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0055",
@@ -1164,7 +1218,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0056",
@@ -1183,7 +1238,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0057",
@@ -1202,7 +1258,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0058",
@@ -1221,7 +1278,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0059",
@@ -1240,7 +1298,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0060",
@@ -1259,7 +1318,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0061",
@@ -1278,7 +1338,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0062",
@@ -1296,7 +1357,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0063",
@@ -1315,7 +1377,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0064",
@@ -1334,7 +1397,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0065",
@@ -1353,7 +1417,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0066",
@@ -1372,7 +1437,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0067",
@@ -1391,7 +1457,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0068",
@@ -1410,7 +1477,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0069",
@@ -1429,7 +1497,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0070",
@@ -1448,7 +1517,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0071",
@@ -1467,7 +1537,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0072",
@@ -1485,7 +1556,8 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
     },
     {
       "typeId": "T-0073",
@@ -1504,7 +1576,395 @@
         "customs"
       ],
       "status": "confirmed",
-      "sheet": "customs-seed"
+      "sheet": "customs-seed",
+      "kind": "asset"
+    },
+    {
+      "typeId": "T-0074",
+      "slug": "dorms-three-story",
+      "name": "Общага (трёхэтажка)",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "cnt-red",
+        "dirt"
+      ],
+      "canonical": "customs:main:r1c1-dorms-three-story",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0075",
+      "slug": "gas-station-new",
+      "name": "Новая заправка",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "cnt-red",
+        "rust"
+      ],
+      "canonical": "customs:main:r1c1-construction-site",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0076",
+      "slug": "warehouse-east",
+      "name": "Склад (восточный)",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:r0c0-construction-complex-east",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0077",
+      "slug": "trailer-park",
+      "name": "Трейлерный парк (стоянка)",
+      "category": "zones",
+      "materials": [
+        "concrete",
+        "dirt"
+      ],
+      "canonical": "customs:main:r0c3-fenced-vehicle-yard",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0078",
+      "slug": "fortress-reshaly",
+      "name": "Fortress Решалы",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust",
+        "dirt"
+      ],
+      "canonical": "customs:main:r0c1-ruined-complex-east",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0079",
+      "slug": "warehouse-4",
+      "name": "Склад 4",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:r0c1-big-ruined-building-center",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0080",
+      "slug": "skeleton",
+      "name": "Скелетон",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:r1c1-ruined-industrial-yard",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0081",
+      "slug": "main-bridge",
+      "name": "Главный мост",
+      "category": "structures",
+      "materials": [
+        "concrete",
+        "water"
+      ],
+      "canonical": "customs:main:r1c2-road-bridge-domes",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0082",
+      "slug": "boiler-house",
+      "name": "Бойлерная",
+      "category": "buildings",
+      "materials": [
+        "rust",
+        "concrete",
+        "cnt-blue"
+      ],
+      "canonical": "customs:main:r0c2-tank-complex-sw",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0083",
+      "slug": "warehouse-3",
+      "name": "Склад 3",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "cnt-blue",
+        "rust"
+      ],
+      "canonical": "customs:main:r0c1-blue-barrel-yard",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0084",
+      "slug": "depot-reshaly",
+      "name": "Депо Решалы",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust",
+        "cnt-red"
+      ],
+      "canonical": "customs:main:r0c1-container-stack-rows",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0085",
+      "slug": "tarkon-office-hangar",
+      "name": "Ангар офисов Таркон",
+      "category": "buildings",
+      "materials": [
+        "rust",
+        "concrete"
+      ],
+      "canonical": "customs:main:r0c3-big-warehouse-roofless",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0086",
+      "slug": "rail-extract",
+      "name": "Выход на ж/д путях",
+      "category": "zones",
+      "materials": [
+        "rust",
+        "gravel-sand"
+      ],
+      "canonical": "customs:main:r0c1-train-tank-gray-diagonal",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0087",
+      "slug": "warehouse-17",
+      "name": "Склад 17",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:r0c2-building-complex-south",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0088",
+      "slug": "tank-farm",
+      "name": "Резервуарный парк",
+      "category": "structures",
+      "materials": [
+        "rust",
+        "concrete"
+      ],
+      "canonical": "customs:main:r0c0-tank-farm-compound",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "landmark"
+    },
+    {
+      "typeId": "T-0089",
+      "slug": "tank-complex",
+      "name": "Ёмкости с обвязкой",
+      "category": "structures",
+      "materials": [
+        "rust",
+        "concrete",
+        "cnt-blue"
+      ],
+      "canonical": "customs:main:r0c2-tank-complex-sw",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "asset"
+    },
+    {
+      "typeId": "T-0090",
+      "slug": "barrel-yard",
+      "name": "Площадка с бочками",
+      "category": "zones",
+      "materials": [
+        "cnt-blue",
+        "concrete"
+      ],
+      "canonical": "customs:main:r0c1-blue-barrel-yard",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "asset"
+    },
+    {
+      "typeId": "T-0091",
+      "slug": "warehouse-concrete",
+      "name": "Бетонный склад (длинный)",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust"
+      ],
+      "canonical": "customs:main:r1c1-big-warehouse-concrete-slab",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "asset"
+    },
+    {
+      "typeId": "T-0092",
+      "slug": "bus-lot",
+      "name": "Стоянка автобусов",
+      "category": "zones",
+      "materials": [
+        "plastic-white",
+        "concrete"
+      ],
+      "canonical": "customs:main:r1c1-bus-lot-fenced",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "customs-1",
+      "kind": "asset"
     }
   ]
 }
