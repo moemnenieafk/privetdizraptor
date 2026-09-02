@@ -110,9 +110,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0007",
@@ -131,9 +133,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0008",
@@ -151,9 +155,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0009",
@@ -171,9 +177,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0010",
@@ -192,9 +200,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0011",
@@ -212,9 +222,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0012",
@@ -233,9 +245,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0013",
@@ -254,9 +268,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0014",
@@ -275,9 +291,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0015",
@@ -295,9 +313,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     },
     {
       "typeId": "T-0016",
@@ -315,9 +335,11 @@
       "maps": [
         "woods"
       ],
-      "status": "candidate",
+      "status": "confirmed",
       "proposedBy": "claude",
-      "sheet": "woods-1"
+      "sheet": "woods-1",
+      "confirmedBy": "V4DYA",
+      "confirmedAt": "2026-09-02"
     }
   ]
 }

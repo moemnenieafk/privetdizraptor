@@ -61,7 +61,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0006",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c2-rock-spire.png",
       "bboxZ6": [
         9727,
@@ -81,7 +81,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0006",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c2-rock-spine-ridge.png",
       "bboxZ6": [
         9076,
@@ -101,7 +101,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0006",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c3-central-rock-spire.png",
       "bboxZ6": [
         13677,
@@ -121,7 +121,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0006",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c2-rock-cluster-tall.png",
       "bboxZ6": [
         9181,
@@ -141,7 +141,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0007",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c1-central-rock-massif.png",
       "bboxZ6": [
         5116,
@@ -161,7 +161,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0007",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c2-rock-massif-central.png",
       "bboxZ6": [
         9368,
@@ -181,7 +181,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0007",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c1-rock-massif.png",
       "bboxZ6": [
         5175,
@@ -201,7 +201,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0007",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c1-rock-massif-north.png",
       "bboxZ6": [
         5791,
@@ -221,7 +221,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0007",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c1-northeast-rock-massif.png",
       "bboxZ6": [
         7523,
@@ -241,7 +241,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0008",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c3-boulder-outcrop.png",
       "bboxZ6": [
         13014,
@@ -261,7 +261,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0008",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c0-central-rock-massif.png",
       "bboxZ6": [
         2104,
@@ -281,7 +281,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0009",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r0c1-wooden-bridge.png",
       "bboxZ6": [
         5916,
@@ -301,7 +301,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0009",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r0c1-bridge-dome-base.png",
       "bboxZ6": [
         5808,
@@ -321,7 +321,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0010",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r1c0-usec-camp-upper.png",
       "bboxZ6": [
         3024,
@@ -341,7 +341,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0010",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r1c0-usec-camp-lower.png",
       "bboxZ6": [
         3024,
@@ -361,7 +361,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0011",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r3c0-fenced-camp.png",
       "bboxZ6": [
         2079,
@@ -381,7 +381,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0011",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r0c2-scav-camp.png",
       "bboxZ6": [
         8419,
@@ -401,7 +401,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0011",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r0c1-rock-camp-cluster.png",
       "bboxZ6": [
         5323,
@@ -421,7 +421,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0011",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r0c0-fenced-work-compound.png",
       "bboxZ6": [
         2722,
@@ -441,7 +441,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0012",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r3c2-sawmill-complex.png",
       "bboxZ6": [
         9056,
@@ -461,7 +461,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0013",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r3c3-large-warehouses-ne.png",
       "bboxZ6": [
         14896,
@@ -481,7 +481,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0014",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r2c3-south-rail-yard.png",
       "bboxZ6": [
         14192,
@@ -501,7 +501,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0015",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c1-lake-central.png",
       "bboxZ6": [
         5687,
@@ -521,7 +521,7 @@
       "map": "woods",
       "layer": "main",
       "typeId": "T-0016",
-      "status": "candidate",
+      "status": "confirmed",
       "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c0-rocky-quarry-basin.png",
       "bboxZ6": [
         2507,
