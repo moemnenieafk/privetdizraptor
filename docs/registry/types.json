@@ -513,6 +513,164 @@
       "confirmedBy": "V4DYA",
       "confirmedAt": "2026-09-02",
       "sheet": "woods-2"
+    },
+    {
+      "typeId": "T-0025",
+      "slug": "log-pen",
+      "name": "Загон с брёвнами (лесопилка)",
+      "category": "structures",
+      "materials": [
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r2c1-log-pen-lower",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-3"
+    },
+    {
+      "typeId": "T-0026",
+      "slug": "fenced-pens",
+      "name": "Огороженные загоны / площадки",
+      "category": "structures",
+      "materials": [
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r0c1-fenced-pens",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-3"
+    },
+    {
+      "typeId": "T-0027",
+      "slug": "redroof-house",
+      "name": "Дом с красной крышей",
+      "category": "buildings",
+      "materials": [
+        "cnt-red",
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r0c1-redroof-hut",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-3"
+    },
+    {
+      "typeId": "T-0028",
+      "slug": "rail-level-crossing",
+      "name": "Ж/д переезд",
+      "category": "structures",
+      "materials": [
+        "rust",
+        "concrete",
+        "gravel-sand"
+      ],
+      "canonical": "woods:main:r3c2-rail-level-crossing",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-3"
+    },
+    {
+      "typeId": "T-0029",
+      "slug": "ruined-building",
+      "name": "Руина (без крыши)",
+      "category": "buildings",
+      "materials": [
+        "concrete",
+        "rust",
+        "dirt"
+      ],
+      "canonical": "woods:main:r3c3-ruined-building-nw",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-3"
+    },
+    {
+      "typeId": "T-0030",
+      "slug": "cabin-complex",
+      "name": "Комплекс изб",
+      "category": "buildings",
+      "materials": [
+        "wood",
+        "dirt"
+      ],
+      "canonical": "woods:main:r1c3-cabin-complex",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-3"
+    },
+    {
+      "typeId": "T-0031",
+      "slug": "green-truck",
+      "name": "Грузовик (зелёный) — на перекрёстке",
+      "category": "vehicles",
+      "materials": [
+        "veh-khaki",
+        "concrete"
+      ],
+      "canonical": "woods:main:r3c2-road-junction-trucks",
+      "vector": {
+        "kind": "figma-instance",
+        "name": "green-truck",
+        "count": 34
+      },
+      "maps": [
+        "woods",
+        "customs"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-3"
+    },
+    {
+      "typeId": "T-0032",
+      "slug": "burnt-crater",
+      "name": "Воронка / выжженное",
+      "category": "zones",
+      "materials": [
+        "dirt",
+        "soil"
+      ],
+      "canonical": "woods:main:r1c3-burnt-crater",
+      "vector": {
+        "kind": "none"
+      },
+      "maps": [
+        "woods"
+      ],
+      "status": "confirmed",
+      "sheet": "woods-3"
     }
   ]
 }

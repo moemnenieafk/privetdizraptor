@@ -1015,6 +1015,486 @@
       ],
       "sheet": "woods-2",
       "n": 18
+    },
+    {
+      "id": "woods:main:r2c2-cliff-mass-ne",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c2-cliff-mass-ne.png",
+      "bboxZ6": [
+        11775,
+        8459,
+        371,
+        652
+      ],
+      "sizeM": [
+        32,
+        54
+      ],
+      "sheet": "woods-3",
+      "n": 5
+    },
+    {
+      "id": "woods:main:r0c0-tall-rock-spire",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r0c0-tall-rock-spire.png",
+      "bboxZ6": [
+        3369,
+        2776,
+        323,
+        512
+      ],
+      "sizeM": [
+        28,
+        42
+      ],
+      "sheet": "woods-3",
+      "n": 11
+    },
+    {
+      "id": "woods:main:r3c0-rock-pillar",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c0-rock-pillar.png",
+      "bboxZ6": [
+        1604,
+        13859,
+        296,
+        430
+      ],
+      "sizeM": [
+        26,
+        36
+      ],
+      "sheet": "woods-3",
+      "n": 18
+    },
+    {
+      "id": "woods:main:r2c3-nw-rock-monolith",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0006",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c3-nw-rock-monolith.png",
+      "bboxZ6": [
+        12543,
+        8474,
+        386,
+        326
+      ],
+      "sizeM": [
+        34,
+        27
+      ],
+      "sheet": "woods-3",
+      "n": 20
+    },
+    {
+      "id": "woods:main:r3c0-large-rock-massif",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c0-large-rock-massif.png",
+      "bboxZ6": [
+        1132,
+        14694,
+        593,
+        445
+      ],
+      "sizeM": [
+        52,
+        37
+      ],
+      "sheet": "woods-3",
+      "n": 3
+    },
+    {
+      "id": "woods:main:r3c1-east-rock-ridge",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c1-east-rock-ridge.png",
+      "bboxZ6": [
+        7521,
+        14795,
+        351,
+        539
+      ],
+      "sizeM": [
+        31,
+        45
+      ],
+      "sheet": "woods-3",
+      "n": 7
+    },
+    {
+      "id": "woods:main:r2c3-west-rock-outcrop",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c3-west-rock-outcrop.png",
+      "bboxZ6": [
+        13268,
+        9927,
+        445,
+        386
+      ],
+      "sizeM": [
+        39,
+        32
+      ],
+      "sheet": "woods-3",
+      "n": 10
+    },
+    {
+      "id": "woods:main:r3c1-southeast-rock-cluster",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0007",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r3c1-southeast-rock-cluster.png",
+      "bboxZ6": [
+        7630,
+        15659,
+        404,
+        350
+      ],
+      "sizeM": [
+        35,
+        29
+      ],
+      "sheet": "woods-3",
+      "n": 16
+    },
+    {
+      "id": "woods:main:r2c0-rocky-mound",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c0-rocky-mound.png",
+      "bboxZ6": [
+        2086,
+        10980,
+        356,
+        326
+      ],
+      "sizeM": [
+        31,
+        27
+      ],
+      "sheet": "woods-3",
+      "n": 23
+    },
+    {
+      "id": "woods:main:r2c0-stone-outcrop-sw",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0008",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r2c0-stone-outcrop-sw.png",
+      "bboxZ6": [
+        1710,
+        11413,
+        326,
+        296
+      ],
+      "sizeM": [
+        28,
+        24
+      ],
+      "sheet": "woods-3",
+      "n": 24
+    },
+    {
+      "id": "woods:main:r1c3-south-camp",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0011",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/camps/r1c3-south-camp.png",
+      "bboxZ6": [
+        12356,
+        7785,
+        638,
+        427
+      ],
+      "sizeM": [
+        56,
+        35
+      ],
+      "sheet": "woods-3",
+      "n": 2
+    },
+    {
+      "id": "woods:main:r0c2-huts-sw-corner",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0022",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r0c2-huts-sw-corner.png",
+      "bboxZ6": [
+        8068,
+        3300,
+        385,
+        326
+      ],
+      "sizeM": [
+        33,
+        27
+      ],
+      "sheet": "woods-3",
+      "n": 21
+    },
+    {
+      "id": "woods:main:r0c2-hut-west",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0023",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r0c2-hut-west.png",
+      "bboxZ6": [
+        8137,
+        2748,
+        356,
+        326
+      ],
+      "sizeM": [
+        31,
+        27
+      ],
+      "sheet": "woods-3",
+      "n": 22
+    },
+    {
+      "id": "woods:main:r2c1-log-pen-lower",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0025",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r2c1-log-pen-lower.png",
+      "bboxZ6": [
+        6210,
+        10948,
+        356,
+        741
+      ],
+      "sizeM": [
+        31,
+        61
+      ],
+      "sheet": "woods-3",
+      "n": 4
+    },
+    {
+      "id": "woods:main:r2c1-log-pen-upper",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0025",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r2c1-log-pen-upper.png",
+      "bboxZ6": [
+        6009,
+        10605,
+        637,
+        282
+      ],
+      "sizeM": [
+        55,
+        23
+      ],
+      "sheet": "woods-3",
+      "n": 9
+    },
+    {
+      "id": "woods:main:r0c1-fenced-pens",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0026",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r0c1-fenced-pens.png",
+      "bboxZ6": [
+        7345,
+        1819,
+        633,
+        472
+      ],
+      "sizeM": [
+        55,
+        39
+      ],
+      "sheet": "woods-3",
+      "n": 1
+    },
+    {
+      "id": "woods:main:r1c3-fenced-compound",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0026",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r1c3-fenced-compound.png",
+      "bboxZ6": [
+        12366,
+        6411,
+        415,
+        386
+      ],
+      "sizeM": [
+        36,
+        32
+      ],
+      "sheet": "woods-3",
+      "n": 12
+    },
+    {
+      "id": "woods:main:r0c1-redroof-hut",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0027",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r0c1-redroof-hut.png",
+      "bboxZ6": [
+        4326,
+        2143,
+        391,
+        472
+      ],
+      "sizeM": [
+        34,
+        39
+      ],
+      "sheet": "woods-3",
+      "n": 8
+    },
+    {
+      "id": "woods:main:r3c2-rail-level-crossing",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0028",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r3c2-rail-level-crossing.png",
+      "bboxZ6": [
+        11253,
+        14660,
+        391,
+        391
+      ],
+      "sizeM": [
+        34,
+        32
+      ],
+      "sheet": "woods-3",
+      "n": 13
+    },
+    {
+      "id": "woods:main:r3c3-ruined-building-nw",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0029",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r3c3-ruined-building-nw.png",
+      "bboxZ6": [
+        12995,
+        12423,
+        533,
+        282
+      ],
+      "sizeM": [
+        46,
+        23
+      ],
+      "sheet": "woods-3",
+      "n": 14
+    },
+    {
+      "id": "woods:main:r1c3-cabin-complex",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0030",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/buildings/r1c3-cabin-complex.png",
+      "bboxZ6": [
+        12961,
+        6048,
+        386,
+        371
+      ],
+      "sizeM": [
+        34,
+        31
+      ],
+      "sheet": "woods-3",
+      "n": 15
+    },
+    {
+      "id": "woods:main:r3c2-road-junction-trucks",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0031",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/vehicles/r3c2-road-junction-trucks.png",
+      "bboxZ6": [
+        8612,
+        15590,
+        364,
+        364
+      ],
+      "sizeM": [
+        32,
+        30
+      ],
+      "sheet": "woods-3",
+      "n": 17
+    },
+    {
+      "id": "woods:main:r1c3-burnt-crater",
+      "map": "woods",
+      "layer": "main",
+      "typeId": "T-0032",
+      "status": "confirmed",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/landmarks/r1c3-burnt-crater.png",
+      "bboxZ6": [
+        13338,
+        6009,
+        386,
+        326
+      ],
+      "sizeM": [
+        34,
+        27
+      ],
+      "sheet": "woods-3",
+      "n": 19
+    },
+    {
+      "id": "woods:main:r2c3-checkpoint-structures",
+      "map": "woods",
+      "layer": "main",
+      "typeId": null,
+      "status": "skip",
+      "crop": "map-exports/OBJECTS-MAPS/cut/woods/structures/r2c3-checkpoint-structures.png",
+      "bboxZ6": [
+        13581,
+        9756,
+        386,
+        593
+      ],
+      "sizeM": [
+        34,
+        49
+      ],
+      "sheet": "woods-3",
+      "n": 6
     }
   ]
 }
