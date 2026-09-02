@@ -1,0 +1,362 @@
+{
+ "sharedassets136.assets": [
+  {
+   "name": "AI_Terrain_Reserv_Base_3_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AI_Terrain_Reserv_Base_3_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AI_Terrain_Reserv_Base_4_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AI_Terrain_Reserv_Base_4_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  }
+ ],
+ "sharedassets140.assets": [
+  {
+   "name": "Slice_3_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  }
+ ],
+ "sharedassets165.assets": [
+  {
+   "name": "Slice_1_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_1_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_2_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_2_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  }
+ ],
+ "sharedassets17.assets": [
+  {
+   "name": "Slice_3_2",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_3_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  }
+ ],
+ "sharedassets200.assets": [
+  {
+   "name": "Slice_3_5",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_4_5",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_5_5",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  }
+ ],
+ "sharedassets24.assets": [
+  {
+   "name": "AI_Shoreline_5_2",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AI_Terrain_Shoreline_4_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AI_Terrain_Shoreline_4_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AI_Terrain_Shoreline_5_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AI_Terrain_Shoreline_5_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  }
+ ],
+ "sharedassets25.assets": [
+  {
+   "name": "Slice_4_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_4_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_5_2",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_5_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_5_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  }
+ ],
+ "sharedassets4.assets": [
+  {
+   "name": "AI_Terrain_Custom_2",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AI_Terrain_Customs1",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  }
+ ],
+ "sharedassets42.assets": [
+  {
+   "name": "AITerrainGrass_2_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "AITerrainWoods2_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "TerrainGrassAI_Wood_1_3",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  },
+  {
+   "name": "TerrainGrassAI_Wood_1_4",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 0
+  }
+ ],
+ "sharedassets63.assets": [
+  {
+   "name": "Slice_1_1",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_1_2",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_2_1",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  },
+  {
+   "name": "Slice_2_2",
+   "res": 1025,
+   "scale": [
+    0.68359375,
+    180.0,
+    0.68359375
+   ],
+   "layers": 12
+  }
+ ]
+}
