@@ -16,6 +16,7 @@ tags: [maps, terrain, unity, assetripper, extraction, checkpoint]
 | Высоты | `gen/customs/ground/customs-height-16bit.png` + `-height-meters.npy` | 4096×2082, перепад **53 м** (−26.7…+26.3) |
 | Рельеф (отмывка) | `customs-hillshade.png` | свет 315°/45° |
 | Материал | `customs-material.png` + `-material-index.npy` | 7 семейств: soil 59.5 / gravel-sand 28.0 / rock 6.3 / dirt 6.2 % |
+| Растительность | `customs-vegetation.json` / `.csv` / `-veg-density.png` | **7237 экземпляров поштучно**: хвоя 2106 / лиственные 2238 / кусты 1626 / трава 1166 |
 
 Проверка привязки: отмывка совпала с растром z6 — река, дороги, площадки зданий на местах.
 Значит **`manifest.boundsFromConfig` = мировые координаты Unity**, отдельная калибровка не нужна.
@@ -69,6 +70,25 @@ Ground-слои карты EFT — это **Unity Terrain**:
 Unity.exe -batchmode -quit -projectPath <proj> -executeMethod TerrainExporter.Run \
           -scenes "Assets/Content/Locations/<Map>/<map>_Terrain.unity" -out <bin> -logFile -
 ```
+
+## 🌲 Растительность — поштучно, а не плотностью
+
+`TerrainData.m_DetailDatabase.m_TreeInstances` — **готовая раскладка от дизайнера BSG**:
+позиция (нормализованная 0…1 внутри слайса), **поворот**, **масштаб по ширине и высоте**,
+индекс прототипа. `m_TreePrototypes` → pathID префаба → человеческое имя
+(`pine01`, `filbert_big01`, `brush_dry01`, `plant_wolf02`, `tree02`, `grass_dry3`…).
+
+Мировые координаты: `world = terrainPos + normalized * terrainSize`.
+
+**Следствие для скаттера:** маска плотности из растра больше не нужна. Штамп ставится в свою
+точку с родным поворотом и размером — на карте будет тот же лес, что в игре, а не «похожий».
+Плотность при этом считается из точек одной строкой (`extract-vegetation.py` её и рисует).
+
+⚠️ `m_DetailPrototypes` у Таможни **пуст** — мелкий газон через detail-патчи не размечен, его
+кладёт GPU Instancer. То, что в группе `grass` — крупные травяные кусты из `TreeInstances`.
+
+Скрипт: `scripts/eft-terrain/extract-vegetation.py` (UnityPy, без Unity).
+Группы для скаттера: `conifer` / `broadleaf` / `bush` / `grass` — по именам видов.
 
 ## 🚀 Прорыв: Unity больше не нужен
 
