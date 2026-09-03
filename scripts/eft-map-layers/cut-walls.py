@@ -56,13 +56,15 @@
 #          customs D:/Games/raster/customs/manifest.json map-exports/OBJECTS-MAPS/gen/customs/walls
 #
 # Зависимости: UnityPy 1.25, numpy, Pillow. Новых не заводится.
+# Общее с другими слоями (сцены, меши, рамка, земля, сечение, сшивка) — в `mapgeom.py`.
 
 import sys, os, re, json, math, time, collections
 
 import numpy as np
 from PIL import Image, ImageDraw
-import UnityPy
-from UnityPy.helpers.MeshHelper import MeshHandler
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mapgeom as mg
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -92,13 +94,6 @@ os.makedirs(OUTDIR, exist_ok=True)
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SCENES_JSON = os.path.join(REPO, 'docs', 'registry', 'eft-scenes.json')
-
-MAP2GROUP = {
-    'customs': 'Custom', 'factory': 'Factory', 'woods': 'Woods', 'shoreline': 'shorline',
-    'lighthouse': 'Lighthouse', 'interchange': 'Shopping_Mall', 'reserve': 'Reserve_Base',
-    'the-lab': 'Laboratory', 'streets-of-tarkov': 'City', 'ground-zero': 'Sandbox',
-    'labyrinth': 'Labyrinth', 'terminal': 'Terminal',
-}
 
 # ─────────────────────────────────────────── настройки
 
@@ -142,26 +137,17 @@ def log(*a):
     print(f'[{time.time() - t_start:6.1f}s]', *a, flush=True)
 
 
-def fmt(v):
-    return f'{v:,.0f}'.replace(',', ' ')
+fmt = mg.fmt
 
 
 # ─────────────────────────────────────────── кадр: мир (метры) -> пиксель растра
 
-man = json.load(open(MAN_PATH, encoding='utf-8'))
-(_ax, _az), (_bx, _bz) = man['boundsFromConfig']
-XMIN, XMAX = min(_ax, _bx), max(_ax, _bx)
-ZMIN, ZMAX = min(_az, _bz), max(_az, _bz)
-RW = man['crop']['width']
-RH = man['crop']['height']
-MIRROR_X = (man.get('coordinateRotation', 0) == 180)
-SX = (RW - 1) / (XMAX - XMIN)
-SZ = (RH - 1) / (ZMAX - ZMIN)
-AFF = dict(px_from_x=[(RW - 1) + XMIN * SX, -SX] if MIRROR_X else [-XMIN * SX, SX],
-           py_from_z=[-ZMIN * SZ, SZ])
+FR = mg.Frame(MAN_PATH)
+man = FR.man
+XMIN, XMAX, ZMIN, ZMAX = FR.XMIN, FR.XMAX, FR.ZMIN, FR.ZMAX
+RW, RH, MIRROR_X, MPP, AFF = FR.W, FR.H, FR.mirror_x, FR.mpp, FR.affine
 A0, A1 = AFF['px_from_x']
 B0, B1 = AFF['py_from_z']
-MPP = (XMAX - XMIN) / (RW - 1)
 
 log(f'рамка {MAP_ID}: {RW}x{RH} px, {MPP * 100:.2f} см/px, отражение по X: '
     f'{"да" if MIRROR_X else "нет"}')
@@ -169,188 +155,28 @@ log(f'  px = {A0:.3f}{A1:+.6f}*gx     py = {B0:.3f}{B1:+.6f}*gz')
 
 # сверка с эталонной аффиной слоя комнат — привязка обязана совпасть до 0.01 px
 _frame = os.path.join(os.path.dirname(os.path.abspath(OUTDIR)), 'rooms', f'{MAP_ID}-rooms-frame.json')
-if os.path.exists(_frame):
-    ref = json.load(open(_frame, encoding='utf-8')).get('affine') or {}
-    bad = [k for k in ('px_from_x', 'py_from_z')
-           if k in ref and max(abs(a - b) for a, b in zip(ref[k], AFF[k])) > 0.01]
-    if bad:
-        sys.exit(f'привязка разошлась с {_frame}: {bad} — резать стены нельзя')
-    log(f'  привязка сверена с {os.path.basename(_frame)}: совпадает')
-else:
-    log(f'  ! эталонной аффины {_frame} нет — сверить не с чем')
+log('  ' + FR.verify(_frame))
 
 
 # ─────────────────────────────────────────── чтение сцен
 
-def qmul(a, b):
-    ax, ay, az, aw = a; bx, by, bz, bw = b
-    return (aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx,
-            aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz)
-
-
-def qrot(q, v):
-    x, y, z, w = q; vx, vy, vz = v
-    tx, ty, tz = 2 * (y * vz - z * vy), 2 * (z * vx - x * vz), 2 * (x * vy - y * vx)
-    return (vx + w * tx + y * tz - z * ty, vy + w * ty + z * tx - x * tz, vz + w * tz + x * ty - y * tx)
-
-
-class Scene:
-    """Сцена levelN: иерархия, мировой TRS, компоненты, ссылки на меши."""
-
-    def __init__(self, level):
-        self.level = level
-        self.env = UnityPy.load(os.path.join(DATA, level))
-        f = next(iter(self.env.files.values()))
-        self.ext = [os.path.basename(x.path) for x in f.externals]
-        self.objs = {o.path_id: o for o in self.env.objects}
-        self._tt = {}
-        self._trs = {}
-        self._path = {}
-        self.go_tr = {}
-        self.go_comps = collections.defaultdict(list)
-        self.go_name = {}
-        for o in self.env.objects:
-            if o.type.name != 'GameObject':
-                continue
-            t = o.read_typetree()
-            self.go_name[o.path_id] = t['m_Name']
-            for c in t['m_Component']:
-                pid = c['component']['m_PathID']
-                co = self.objs.get(pid)
-                if co is None:
-                    continue
-                self.go_comps[o.path_id].append((co.type.name, pid))
-                if co.type.name in ('Transform', 'RectTransform'):
-                    self.go_tr[o.path_id] = pid
-
-    def T(self, pid):
-        if pid not in self._tt:
-            self._tt[pid] = self.objs[pid].read_typetree()
-        return self._tt[pid]
-
-    def parent_go(self, go):
-        trp = self.go_tr.get(go)
-        if trp is None:
-            return None
-        fa = self.T(trp)['m_Father']['m_PathID']
-        return self.T(fa)['m_GameObject']['m_PathID'] if (fa and fa in self.objs) else None
-
-    def trs(self, pid):
-        if pid in self._trs:
-            return self._trs[pid]
-        t = self.T(pid)
-        p, r, s = t['m_LocalPosition'], t['m_LocalRotation'], t['m_LocalScale']
-        lp = (p['x'], p['y'], p['z'])
-        lr = (r['x'], r['y'], r['z'], r['w'])
-        ls = (s['x'], s['y'], s['z'])
-        fa = t['m_Father']['m_PathID']
-        if fa == 0 or fa not in self.objs:
-            res = (lp, lr, ls)
-        else:
-            fp, fr, fs = self.trs(fa)
-            rp = qrot(fr, (lp[0] * fs[0], lp[1] * fs[1], lp[2] * fs[2]))
-            res = ((fp[0] + rp[0], fp[1] + rp[1], fp[2] + rp[2]), qmul(fr, lr),
-                   (fs[0] * ls[0], fs[1] * ls[1], fs[2] * ls[2]))
-        self._trs[pid] = res
-        return res
-
-    def path(self, go):
-        if go in self._path:
-            return self._path[go]
-        parts, cur, guard = [], go, 0
-        while cur is not None and guard < 64:
-            parts.append(self.go_name.get(cur, '?'))
-            guard += 1
-            cur = self.parent_go(cur)
-        res = '/'.join(reversed(parts))
-        self._path[go] = res
-        return res
-
-    def mesh_ref(self, go):
-        """PPtr меша GameObject-а -> (файл, path_id) в терминах внешних ссылок сцены."""
-        for tn, pid in self.go_comps.get(go, []):
-            if tn == 'MeshFilter':
-                m = self.T(pid)['m_Mesh']
-                fid, mp = m['m_FileID'], m['m_PathID']
-                if mp == 0:
-                    return None
-                return (self.ext[fid - 1] if fid else self.level, mp)
-        return None
-
-
-LOD_RE = re.compile(r'^(?:\w+\[(\d+)\]\s+)?lod\[(\d+)\]$', re.I)
-
-
-def classify(path):
+def classify(path, name):
     for rx, cls in BRANCH_RULES:
         if rx.search(path):
-            return cls
+            return None if cls is None else (None if (cls == 'props' and not WANT_PROPS) else cls)
     return None
 
 
-def collect(scene):
-    """Меш-узлы сцены после разбора LOD -> список экземпляров с мировым TRS и классом."""
-    own = {}
-    for go in scene.go_name:
-        mr = scene.mesh_ref(go)
-        if mr:
-            own[go] = mr
-
-    lod_kids = collections.defaultdict(list)
-    plain = []
-    for go in own:
-        m = LOD_RE.match(scene.go_name.get(go) or '')
-        if m:
-            lod_kids[scene.parent_go(go)].append((int(m.group(2)), go))
-        else:
-            plain.append(go)
-    plain_set = set(plain)
-    take = list(plain)
-    for par, kids in lod_kids.items():
-        if par in plain_set:
-            continue                 # у сущности есть свой (полный) меш — дети lod лишние
-        take += [go for lvl, go in kids if lvl == 0]
-
-    out = []
-    for go in take:
-        p = scene.path(go)
-        if SKIP_MESH.search(p):
-            continue
-        cls = classify(p)
-        if cls is None or (cls == 'props' and not WANT_PROPS):
-            continue
-        trp = scene.go_tr.get(go)
-        if trp is None:
-            continue
-        pos, rot, sc = scene.trs(trp)
-        name = scene.go_name.get(go) or ''
-        if LOD_RE.match(name):
-            name = scene.go_name.get(scene.parent_go(go)) or name
-        src, pid = own[go]
-        out.append((src, pid, pos, rot, sc, cls, name, p.split('/')[1:3]))
-    return out
-
-
-groups = json.load(open(SCENES_JSON, encoding='utf-8'))
-group = MAP2GROUP.get(MAP_ID)
-if group is None or group not in groups:
-    sys.exit(f'карта {MAP_ID}: группы сцен нет в {SCENES_JSON}')
+SCENES, skipped_scenes = mg.scene_list(SCENES_JSON, MAP_ID, DATA, SKIP_SCENE)
 
 inst = []
-skipped_scenes = []
-for e in groups[group]:
-    lvl, nm = f"level{e['level']}", e['scene']
-    if not os.path.exists(os.path.join(DATA, lvl)):
-        continue
-    if SKIP_SCENE.search(nm):
-        skipped_scenes.append(f'{lvl} ({nm})')
-        continue
+for lvl, nm in SCENES:
     try:
-        sc = Scene(lvl)
+        sc = mg.Scene(DATA, lvl)
     except Exception as ex:
         log(f'  {lvl} ({nm}): ОШИБКА чтения — {ex}')
         continue
-    got = collect(sc)
+    got = mg.collect_meshes(sc, classify, SKIP_MESH)
     inst += got
     by = collections.Counter(g[5] for g in got)
     log(f'  {lvl:9s} {nm:48s} экземпляров {len(got):6d}  ' +
@@ -360,64 +186,9 @@ log(f'сцен пропущено: {len(skipped_scenes)} {skipped_scenes}')
 by_cls = collections.Counter(g[5] for g in inst)
 log(f'экземпляров всего {fmt(len(inst))}: ' + ', '.join(f'{k}={fmt(v)}' for k, v in sorted(by_cls.items())))
 
-# ─────────────────────────────────────────── меши: чтение без export()
-
-_mesh_files = {}
-
-
-def load_mesh(src, pid):
-    """(верш. Nx3 float32 в ЛОКАЛЬНЫХ координатах Unity, треуг. Mx3 int32).
-
-    Читается MeshHandler-ом напрямую. Mesh.export() здесь НЕ используется сознательно:
-    он пишет -pos[0] и зеркалит X у каждого меша по отдельности.
-    """
-    if src not in _mesh_files:
-        try:
-            _mesh_files[src] = {o.path_id: o for o in UnityPy.load(os.path.join(DATA, src)).objects
-                                if o.type.name == 'Mesh'}
-        except Exception:
-            _mesh_files[src] = {}
-    o = _mesh_files[src].get(pid)
-    if o is None:
-        return None
-    try:
-        h = MeshHandler(o.read())
-        h.process()
-        V = np.asarray(h.m_Vertices, dtype=np.float32).reshape(-1, 3)
-        F = [t for sub in h.get_triangles() for t in sub]
-        if not len(F) or not len(V):
-            return None
-        return V, np.asarray(F, dtype=np.int32).reshape(-1, 3)
-    except Exception:
-        return None
-
-
-_aabb = {}
-
-
-def local_aabb(src, pid):
-    """m_LocalAABB меша: (центр, полуразмер). Вершины не читаем — Unity уже посчитала."""
-    key = (src, pid)
-    if key in _aabb:
-        return _aabb[key]
-    r = None
-    if src not in _mesh_files:
-        try:
-            _mesh_files[src] = {o.path_id: o for o in UnityPy.load(os.path.join(DATA, src)).objects
-                                if o.type.name == 'Mesh'}
-        except Exception:
-            _mesh_files[src] = {}
-    o = _mesh_files[src].get(pid)
-    if o is not None:
-        try:
-            a = o.read_typetree()['m_LocalAABB']
-            r = ((a['m_Center']['x'], a['m_Center']['y'], a['m_Center']['z']),
-                 (a['m_Extent']['x'], a['m_Extent']['y'], a['m_Extent']['z']))
-        except Exception:
-            r = None
-    _aabb[key] = r
-    return r
-
+MESHES = mg.MeshCache(DATA, keep=3)
+load_mesh = MESHES.mesh
+local_aabb = MESHES.aabb
 
 log('считаю габариты экземпляров по m_LocalAABB…')
 boxes = np.full((len(inst), 6), np.nan, dtype=np.float64)   # xlo,ylo,zlo,xhi,yhi,zhi
@@ -425,18 +196,7 @@ for i, (src, pid, pos, rot, sc, cls, name, br) in enumerate(inst):
     a = local_aabb(src, pid)
     if a is None:
         continue
-    (cx, cy, cz), (ex, ey, ez) = a
-    lo = [1e18] * 3
-    hi = [-1e18] * 3
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            for sz in (-1, 1):
-                r = qrot(rot, ((cx + sx * ex) * sc[0], (cy + sy * ey) * sc[1], (cz + sz * ez) * sc[2]))
-                for k, v in enumerate((pos[0] + r[0], pos[1] + r[1], pos[2] + r[2])):
-                    lo[k] = min(lo[k], v)
-                    hi[k] = max(hi[k], v)
-    boxes[i, :3] = lo
-    boxes[i, 3:] = hi
+    boxes[i] = mg.world_box(a, pos, rot, sc)
     if i and i % 20000 == 0:
         log(f'  {fmt(i)} / {fmt(len(inst))}')
 ok_box = ~np.isnan(boxes[:, 0])
@@ -446,25 +206,17 @@ log(f'габариты есть у {fmt(int(ok_box.sum()))} из {fmt(len(inst))
 
 HEIGHT_NPY = HEIGHT_ARG or os.path.join(os.path.dirname(os.path.abspath(OUTDIR)), 'ground',
                                         f'{MAP_ID}-height-meters.npy')
-Hgrid = np.load(HEIGHT_NPY) if os.path.exists(HEIGHT_NPY) else None
-if Hgrid is not None:
-    log(f'земля: {os.path.basename(HEIGHT_NPY)} {Hgrid.shape}, '
-        f'{np.nanmin(Hgrid):.1f}..{np.nanmax(Hgrid):.1f} м')
+GROUND = mg.Ground(HEIGHT_NPY, FR) if os.path.exists(HEIGHT_NPY) else None
+Hgrid = GROUND.G if GROUND is not None else None
+if GROUND is not None:
+    log(f'земля: {GROUND}')
 else:
     log(f'! карты высот {HEIGHT_NPY} нет — этаж main будет резаться по медиане низов зданий')
 
 
 def ground_at(x, z):
     """Высота земли по террейну слоя ground (та же рамка карты, но с отражением по X)."""
-    gh, gw = Hgrid.shape
-    u = (x - XMIN) / (XMAX - XMIN) * (gw - 1)
-    if MIRROR_X:
-        u = (gw - 1) - u
-    v = (z - ZMIN) / (ZMAX - ZMIN) * (gh - 1)
-    c = int(round(u)); r = int(round(v))
-    if not (0 <= c < gw and 0 <= r < gh):
-        return float('nan')
-    return float(Hgrid[r, c])
+    return GROUND.at(x, z)
 
 
 # ─────────────────────────────────────────── высоты реза по этажам
@@ -546,44 +298,9 @@ log('резов запланировано: ' + ', '.join(f'{k}={fmt(v)}' for k,
 # ─────────────────────────────────────────── сечение меша плоскостью
 
 def slice_mesh(V, F, pos, rot, sc, h):
-    """Отрезки пересечения мировой геометрии с плоскостью y = h. -> (M,4) float64 [x0,z0,x1,z1]."""
-    qx, qy, qz, qw = rot
-    S = V * np.array(sc, dtype=np.float32)
-    x, y, z = S[:, 0], S[:, 1], S[:, 2]
-    tx = 2 * (qy * z - qz * y); ty = 2 * (qz * x - qx * z); tz = 2 * (qx * y - qy * x)
-    wx = (x + qw * tx + qy * tz - qz * ty) + pos[0]
-    wy = (y + qw * ty + qz * tx - qx * tz) + pos[1]
-    wz = (z + qw * tz + qx * ty - qy * tx) + pos[2]
-
-    Yt = wy[F]                                   # (n,3)
-    s = Yt > h
-    cnt = s.sum(1)
-    sel = (cnt == 1) | (cnt == 2)
-    if not sel.any():
-        return None
-    Ft = F[sel]
-    st = s[sel]
-    yt = Yt[sel]
-    apex = np.where(st.sum(1)[:, None] == 1, st, ~st).argmax(1)
-    o1 = (apex + 1) % 3
-    o2 = (apex + 2) % 3
-    r = np.arange(len(Ft))
-    ia, i1, i2 = Ft[r, apex], Ft[r, o1], Ft[r, o2]
-    ya, y1, y2 = yt[r, apex], yt[r, o1], yt[r, o2]
-    d1 = y1 - ya
-    d2 = y2 - ya
-    d1 = np.where(np.abs(d1) < 1e-9, 1e-9, d1)
-    d2 = np.where(np.abs(d2) < 1e-9, 1e-9, d2)
-    t1 = np.clip((h - ya) / d1, 0.0, 1.0)
-    t2 = np.clip((h - ya) / d2, 0.0, 1.0)
-    xa, za = wx[ia], wz[ia]
-    out = np.empty((len(Ft), 4), dtype=np.float64)
-    out[:, 0] = xa + t1 * (wx[i1] - xa)
-    out[:, 1] = za + t1 * (wz[i1] - za)
-    out[:, 2] = xa + t2 * (wx[i2] - xa)
-    out[:, 3] = za + t2 * (wz[i2] - za)
-    keep = (np.abs(out[:, 0] - out[:, 2]) > 1e-6) | (np.abs(out[:, 1] - out[:, 3]) > 1e-6)
-    return out[keep] if keep.any() else None
+    """Отрезки пересечения мировой геометрии с плоскостью y = h. -> (M,4) [x0,z0,x1,z1]."""
+    wx, wy, wz = mg.world_xyz(V, pos, rot, sc)
+    return mg.slice_plane(wx, wy, wz, F, h)
 
 
 segs = {L['id']: {c: [] for c in CLASSES} for L in LAYERS}
@@ -609,10 +326,7 @@ for k, (key, jobs) in enumerate(order):
         log(f'  сечение {fmt(k)} / {fmt(len(tasks))} мешей, '
             f'{fmt(sum(len(a) for d in segs.values() for v in d.values() for a in v))} блоков '
             f'[{time.time() - t_slice:.0f}s]')
-    if len(_mesh_files) > 3:
-        keep = {key[0]: _mesh_files[key[0]]} if key[0] in _mesh_files else {}
-        _mesh_files.clear()
-        _mesh_files.update(keep)
+    MESHES.evict(key[0])
 
 seg_arr = {}
 for lid in segs:
@@ -631,110 +345,11 @@ for lid in seg_arr:
 # ─────────────────────────────────────────── сшивка отрезков в полилинии
 
 def stitch(S, weld=WELD):
-    """Отрезки -> полилинии. Концы склеиваются по решётке `weld` с пробой соседей."""
-    if len(S) == 0:
-        return []
-    q = np.round(S / weld).astype(np.int64)
-    key = np.empty((len(S), 2), dtype=np.int64)
-    pts = {}
-    node_xy = []
-    # словарь узлов: квантованная точка -> id; при промахе пробуем 8 соседей
-    for col, (qa, qb) in enumerate(((q[:, 0], q[:, 1]), (q[:, 2], q[:, 3]))):
-        for r in range(len(S)):
-            a, b = int(qa[r]), int(qb[r])
-            nid = pts.get((a, b))
-            if nid is None:
-                for da in (-1, 0, 1):
-                    for db in (-1, 0, 1):
-                        nid = pts.get((a + da, b + db))
-                        if nid is not None:
-                            break
-                    if nid is not None:
-                        break
-            if nid is None:
-                nid = len(node_xy)
-                node_xy.append((S[r, 0 + 2 * col], S[r, 1 + 2 * col]))
-                pts[(a, b)] = nid
-            key[r, col] = nid
-
-    adj = collections.defaultdict(list)
-    for r in range(len(S)):
-        a, b = int(key[r, 0]), int(key[r, 1])
-        if a == b:
-            continue
-        adj[a].append((b, r))
-        adj[b].append((a, r))
-    used = np.zeros(len(S), bool)
-    ptr = collections.defaultdict(int)
-
-    def walk(start):
-        chain = [start]
-        cur = prev_edge = None
-        cur = start
-        while True:
-            lst = adj[cur]
-            i = ptr[cur]
-            while i < len(lst) and used[lst[i][1]]:
-                i += 1
-            ptr[cur] = i
-            if i >= len(lst):
-                break
-            nb, e = lst[i]
-            used[e] = True
-            chain.append(nb)
-            cur = nb
-        return chain
-
-    order = sorted(adj.keys(), key=lambda n: len(adj[n]))   # сначала концы (степень 1)
-    out = []
-    for n in order:
-        while True:
-            lst = adj[n]
-            i = ptr[n]
-            while i < len(lst) and used[lst[i][1]]:
-                i += 1
-            ptr[n] = i
-            if i >= len(lst):
-                break
-            ch = walk(n)
-            if len(ch) >= 2:
-                out.append(np.array([node_xy[c] for c in ch], dtype=np.float64))
-    return out
+    return mg.stitch(S, weld)
 
 
-def rdp(P, eps):
-    """Рамер–Дуглас–Пекер, итеративно."""
-    n = len(P)
-    if n <= 3:
-        return P
-    keep = np.zeros(n, bool)
-    keep[0] = keep[-1] = True
-    half = n // 2
-    keep[half] = True
-    stack = [(0, half), (half, n - 1)]
-    while stack:
-        i, j = stack.pop()
-        if j <= i + 1:
-            continue
-        a, b = P[i], P[j]
-        d = b - a
-        L2 = d[0] * d[0] + d[1] * d[1]
-        seg = P[i + 1:j]
-        if L2 < 1e-12:
-            dist = np.hypot(seg[:, 0] - a[0], seg[:, 1] - a[1])
-        else:
-            dist = np.abs(d[0] * (a[1] - seg[:, 1]) - (a[0] - seg[:, 0]) * d[1]) / math.sqrt(L2)
-        k = int(np.argmax(dist))
-        if dist[k] > eps:
-            k += i + 1
-            keep[k] = True
-            stack.append((i, k))
-            stack.append((k, j))
-    return P[keep]
-
-
-def plen(P):
-    return float(np.hypot(np.diff(P[:, 0]), np.diff(P[:, 1])).sum())
+rdp = mg.rdp
+plen = mg.plen
 
 
 paths = {lid: {c: [] for c in CLASSES} for lid in seg_arr}
@@ -760,8 +375,7 @@ for lid in seg_arr:
 
 # ─────────────────────────────────────────── наружные / внутренние стены
 
-def to_px(P):
-    return np.stack([A0 + A1 * P[:, 0], B0 + B1 * P[:, 1]], axis=1)
+to_px = FR.to_px
 
 
 def flood_runs(free, seed):

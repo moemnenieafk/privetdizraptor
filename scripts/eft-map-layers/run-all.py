@@ -36,6 +36,7 @@
 #   roads       dump-roads.py         — дорожное полотно (ест аффину рамки, не манифест карты!)
 #   stones      dump-stones.py        — камни и скалы поштучно
 #   walls       cut-walls.py          — стены зданий сечением по этажам
+#   obstacles   cut-obstacles.py      — препятствия выше 1 м: ОДИН слой, рез по рельефу
 #   render      render-objects.py all — Blender-рендер камней и растительности
 #   gate        check-orientation-gate.py — гейт ориентации splat (диагностика, вне плана)
 #   verify-bin  verify-terrain-bin.py — сверка .bin с эталоном Unity (нужен --ref-bin)
@@ -491,6 +492,31 @@ class SWalls(Step):
         return a
 
 
+class SObstacles(Step):
+    """Слой 7: препятствия выше 1 м, ОДИН слой, рез по рельефу (земля + 1 м).
+
+    Карта высот здесь не «желательна», а обязательна: без неё поверхности реза не существует,
+    и скрипт откажется — поэтому height в жёстких зависимостях, а не в мягких.
+    """
+
+    def inputs(self, c):
+        return [(c.client, True), (c.manifest, True), (c.height_npy, True),
+                (c.frame_json, False), (c.zone_mask, False)]
+
+    def outputs(self, c):
+        o = c.d('obstacles')
+        return [os.path.join(o, '%s-obstacles.png' % c.map),
+                os.path.join(o, '%s-obstacles.svg' % c.map),
+                os.path.join(o, '%s-obstacles.json' % c.map)]
+
+    def argv(self, c):
+        a = py('eft-map-layers/cut-obstacles.py', c.client, c.map, c.manifest, c.d('obstacles'),
+               '--height', c.height_npy)
+        if os.path.exists(c.zone_mask):
+            a += ['--zone', c.zone_mask]
+        return a
+
+
 class SRender(Step):
     def inputs(self, c):
         ins = [(c.frame_json, True), (c.manifest, True), (c.blender, True)]
@@ -565,6 +591,8 @@ STEPS = collections.OrderedDict((s.name, s) for s in [
     SRoads('roads', 'дорожное полотно', deps=['frame'], soft_deps=['zone']),
     SStones('stones', 'камни и скалы', deps=['manifest'], soft_deps=['frame']),
     SWalls('walls', 'стены зданий по этажам', deps=['manifest'], soft_deps=['frame', 'height']),
+    SObstacles('obstacles', 'препятствия выше 1 м (один слой, рез по рельефу)',
+               deps=['manifest', 'height'], soft_deps=['frame', 'zone']),
     SRender('render', 'Blender-рендер объектов', deps=['frame', 'stones', 'vegetation']),
     SGate('gate', 'гейт ориентации splat (диагностика)', in_plan=False),
     SVerifyBin('verify-bin', 'сверка .bin с эталоном Unity', soft_deps=['terrain'], in_plan=False),
