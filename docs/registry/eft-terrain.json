@@ -1,0 +1,639 @@
+{
+  "_": "Реестр Unity-террейнов карт EFT: карта ↔ sharedassetsN ↔ слайсы ↔ мировые позиции ↔ слои материала. Раньше это знание жило только в untracked .tmp-customs/terrain-inventory.json. Позиции читаются из иерархии сцены levelN дампером scripts/eft-terrain/dump-terrain.py; поле positionsRead честно говорит, читались они на самом деле или в записи только инвентаризация.",
+  "generated": "2026-09-03",
+  "source": {
+    "client": "D:/Games/Escape from Tarkov/EscapeFromTarkov_Data/",
+    "inventory": ".tmp-customs/terrain-inventory.json (untracked, скан всех 714 sharedassets)",
+    "scenes": "docs/registry/eft-scenes.json (levelN ↔ имя сцены)",
+    "pipeline": "scripts/eft-terrain/ (dump-terrain.py → build-heightmap.py / build-material.py / extract-vegetation.py)"
+  },
+  "grid": {
+    "_": "Слайсы EFT лежат на ОДНОЙ мировой сетке 700 м — она общая для всех карт, поэтому сцена карты видит соседние слайсы, физически лежащие в чужих sharedassetsN (D08).",
+    "sliceSizeMeters": [
+      700.0,
+      180.0,
+      700.0
+    ],
+    "heightmapRes": 1025,
+    "stepMeters": 0.68359375,
+    "naming": "Slice_<ряд>_<колонка>",
+    "checkFormula": "x = (C-1)*700 + корень, z = (R-1)*700 + корень — только КОНТРОЛЬ, боевые позиции берутся из иерархии сцены",
+    "heightNormalizationDivisor": 32766,
+    "heightNormalizationNote": "У Леса сырые m_Heights приходят в [2673, 32767] и в делитель 32766 не лезут — делитель является свойством карты/версии импорта, а не константой формата (D12).",
+    "evalScales": [
+      384,
+      512,
+      768,
+      1536
+    ],
+    "evalScalesNote": "Точки масштабов verify-alignment.py выводятся из карты, а не зашиты: шаг = sizeX/(res−1) по самому грубому слайсу, предел = span/шаг, точки = предел ÷ 4, 3, 2, 1. Для слайса 700 м при res 1025 (шаг 0.684 м) → 384/512/768/1536."
+  },
+  "materialLayers": {
+    "_": "Имя слоя — это имя diffuse-текстуры (Grass_summer_D), а НЕ m_Name у TerrainLayer (там microsplat_layer_Grass_summer_D_0). Порядок слоёв у Таможни и Маяка совпал слово в слово; отображение в 7 семейств палитры — LAYER2FAM в build-material.py.",
+    "canonical12": [
+      "Grass_summer_D",
+      "Ground_summer_D",
+      "Gravel_Road_A_summer_D",
+      "Forest_Ground_summer_D",
+      "Stone_Ground_summer_D",
+      "Rock_Ground_summer_D",
+      "Gravel_Road_B_summer_D",
+      "Gravel_summer_D",
+      "Grassy_Ground_summer_D",
+      "Sand_summer_D",
+      "Pebbles_Ground_summer_D",
+      "Soil_Grass_summer_D"
+    ],
+    "families": {
+      "Grass_summer_D": "soil",
+      "Grassy_Ground_summer_D": "soil",
+      "Forest_Ground_summer_D": "soil",
+      "Soil_Grass_summer_D": "soil",
+      "Ground_summer_D": "dirt",
+      "Gravel_Road_A_summer_D": "gravel-sand",
+      "Gravel_Road_B_summer_D": "gravel-sand",
+      "Gravel_summer_D": "gravel-sand",
+      "Sand_summer_D": "gravel-sand",
+      "Pebbles_Ground_summer_D": "gravel-sand",
+      "Stone_Ground_summer_D": "rock",
+      "Rock_Ground_summer_D": "rock"
+    }
+  },
+  "maps": {
+    "customs": {
+      "nameRu": "Таможня",
+      "scene": "custom_Terrain",
+      "level": 17,
+      "sharedassets": "sharedassets17.assets",
+      "status": "done",
+      "doneOn": "2026-09-03",
+      "positionsRead": true,
+      "manifest": "D:/Games/raster/customs/manifest.json",
+      "manifestNote": "Брать манифест с диска, не EFT_MAP_CONFIG.customs.bounds: после промоута на тайлы там canvas [[0,0],[256,256]], а не метры (D03).",
+      "slices": [
+        {
+          "name": "Slice_3_2",
+          "res": 1025,
+          "pos": [
+            -552.699951171875,
+            -103.676025390625,
+            -359.121337890625
+          ],
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layers": [
+            "Grass_summer_D",
+            "Ground_summer_D",
+            "Gravel_Road_A_summer_D",
+            "Forest_Ground_summer_D",
+            "Stone_Ground_summer_D",
+            "Rock_Ground_summer_D",
+            "Gravel_Road_B_summer_D",
+            "Gravel_summer_D",
+            "Grassy_Ground_summer_D",
+            "Sand_summer_D",
+            "Pebbles_Ground_summer_D",
+            "Soil_Grass_summer_D"
+          ]
+        },
+        {
+          "name": "Slice_3_3",
+          "res": 1025,
+          "pos": [
+            147.300048828125,
+            -103.676025390625,
+            -359.121337890625
+          ],
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layers": [
+            "Grass_summer_D",
+            "Ground_summer_D",
+            "Gravel_Road_A_summer_D",
+            "Forest_Ground_summer_D",
+            "Stone_Ground_summer_D",
+            "Rock_Ground_summer_D",
+            "Gravel_Road_B_summer_D",
+            "Gravel_summer_D",
+            "Grassy_Ground_summer_D",
+            "Sand_summer_D",
+            "Pebbles_Ground_summer_D",
+            "Soil_Grass_summer_D"
+          ]
+        }
+      ],
+      "results": {
+        "frameCoveragePct": 100.0,
+        "heightRangeMeters": [
+          -26.7,
+          26.3
+        ],
+        "heightSpanMeters": 53.0,
+        "materialPctOfFrame": {
+          "soil": 59.5,
+          "gravel-sand": 28.0,
+          "rock": 6.3,
+          "dirt": 6.2
+        },
+        "vegetationInFrame": 7237,
+        "vegetationGroups": {
+          "conifer": 2106,
+          "broadleaf": 2238,
+          "bush": 1626,
+          "grass": 1166,
+          "other": 101
+        },
+        "vegetationUnresolved": 0,
+        "alignment": {
+          "hypothesis": "как есть (после исправления coordinateRotation:180 = отражение по X)",
+          "method": "verify-alignment.py, gradient, эталон-растр z6",
+          "scores": {
+            "384": 0.147,
+            "512": 0.137,
+            "768": 0.105,
+            "1536": 0.083
+          },
+          "residualShiftMeters": {
+            "dx": 6,
+            "dz": 0
+          },
+          "runnersUp": {
+            "поворот 180°": [
+              0.054,
+              0.051,
+              0.049,
+              0.053
+            ],
+            "зеркало X": [
+              0.044,
+              0.048,
+              0.052,
+              0.056
+            ],
+            "зеркало Z": [
+              0.035,
+              0.031,
+              0.027,
+              0.03
+            ]
+          },
+          "marginNote": "У предела диапазона метрика слабеет: на 1536 px отрыв 1.5× (0.083 против 0.056 у зеркала X) вместо 3× на 384 px. Вердикт держится во всех четырёх точках, но доказательством служит Маяк и наложение глазами, а не величина корреляции Таможни.",
+          "shiftCompensation": "Только на одном масштабе: 768 px, 0.070 без сдвига → 0.105 со сдвигом. Смешивать с 0.147 (384 px) нельзя."
+        },
+        "note": "После исправления зеркала (D10) числа НЕ изменились — сменилась только укладка px/py. Именно поэтому ошибку и не замечали: все контрольные цифры сходились.",
+        "vegetationTotalExtracted": 8805,
+        "vegetationTotalExtractedNote": "Всего извлечено из TreeInstances двух слайсов; за рамкой 1568. Все разбивки — по 7237 в рамке.",
+        "vegetationTopKinds": {
+          "_": "Счётчики по 7237 экземплярам в рамке.",
+          "pine01": 1239,
+          "grass_dry3": 1166,
+          "plant_wolf02": 627,
+          "filbert_big01": 479,
+          "brush_dry01": 448
+        }
+      }
+    },
+    "lighthouse": {
+      "nameRu": "Маяк",
+      "scene": "Lighthouse_Terrain",
+      "level": 200,
+      "sharedassets": "sharedassets200.assets",
+      "status": "done",
+      "doneOn": "2026-09-03",
+      "positionsRead": true,
+      "manifest": "D:/Games/raster/lighthouse/manifest.json",
+      "manifestNote": "Синтезирован make-manifest.py из EFT_MAP_CONFIG (тайлового растра Маяка у the-hideout не существует, D04). synthetic:true; синтетический crop влияет ТОЛЬКО на пиксельные px/py растительности.",
+      "slices": [
+        {
+          "name": "Slice_3_5",
+          "res": 1025,
+          "pos": [
+            -177.69989013671875,
+            -38.029029846191406,
+            -1400.12109375
+          ],
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layers": [
+            "Grass_summer_D",
+            "Ground_summer_D",
+            "Gravel_Road_A_summer_D",
+            "Forest_Ground_summer_D",
+            "Stone_Ground_summer_D",
+            "Rock_Ground_summer_D",
+            "Gravel_Road_B_summer_D",
+            "Gravel_summer_D",
+            "Grassy_Ground_summer_D",
+            "Sand_summer_D",
+            "Pebbles_Ground_summer_D",
+            "Soil_Grass_summer_D"
+          ]
+        },
+        {
+          "name": "Slice_4_5",
+          "res": 1025,
+          "pos": [
+            -177.69989013671875,
+            -38.029029846191406,
+            -700.12109375
+          ],
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layers": [
+            "Grass_summer_D",
+            "Ground_summer_D",
+            "Gravel_Road_A_summer_D",
+            "Forest_Ground_summer_D",
+            "Stone_Ground_summer_D",
+            "Rock_Ground_summer_D",
+            "Gravel_Road_B_summer_D",
+            "Gravel_summer_D",
+            "Grassy_Ground_summer_D",
+            "Sand_summer_D",
+            "Pebbles_Ground_summer_D",
+            "Soil_Grass_summer_D"
+          ]
+        },
+        {
+          "name": "Slice_5_5",
+          "res": 1025,
+          "pos": [
+            -177.69989013671875,
+            -38.029029846191406,
+            -0.12109375
+          ],
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layers": [
+            "Grass_summer_D",
+            "Ground_summer_D",
+            "Gravel_Road_A_summer_D",
+            "Forest_Ground_summer_D",
+            "Stone_Ground_summer_D",
+            "Rock_Ground_summer_D",
+            "Gravel_Road_B_summer_D",
+            "Gravel_summer_D",
+            "Grassy_Ground_summer_D",
+            "Sand_summer_D",
+            "Pebbles_Ground_summer_D",
+            "Soil_Grass_summer_D"
+          ]
+        }
+      ],
+      "missingSlices": {
+        "_": "Западная колонка сетки. Лежит в ЧУЖИХ sharedassets (общая мировая сетка EFT, D08) и достижима тем же дампером — resolve() уже ходит в externals. В объём прогона не входила: бриф сказал «(3 слайса)». Дозакрытие — A02 → R07.",
+        "names": [
+          "Slice_3_4",
+          "Slice_4_4",
+          "Slice_5_4"
+        ],
+        "where": {
+          "Slice_3_4": "sharedassets140.assets",
+          "Slice_4_4": "sharedassets25.assets",
+          "Slice_5_4": "sharedassets25.assets"
+        },
+        "wouldAddPctOfFrame": 35.6
+      },
+      "results": {
+        "frameCoveragePct": 64.4,
+        "frameCoverageNote": "Предел трёх слайсов, а не недоделка. Геометрия предсказала независимо: X 700/1060 = 65.3 % × Z 1723/1723 = 98.5 % → 64.3 %, измерено 64.39 %.",
+        "heightRangeMeters": [
+          -29.03,
+          62.52
+        ],
+        "heightSpanMeters": 91.55,
+        "materialPctOfFrame": {
+          "soil": 46.4,
+          "gravel-sand": 13.9,
+          "rock": 2.5,
+          "dirt": 1.5
+        },
+        "materialPctInsideDataRange": {
+          "soil": [
+            71.0,
+            77.0
+          ],
+          "gravel-sand": [
+            19.5,
+            20.6
+          ],
+          "rock": [
+            0.6,
+            4.9
+          ],
+          "dirt": [
+            1.4,
+            3.4
+          ]
+        },
+        "vegetationInFrame": 8077,
+        "vegetationGroups": {
+          "conifer": 3677,
+          "broadleaf": 3573,
+          "bush": 795,
+          "other": 32,
+          "grass": 0
+        },
+        "vegetationUnresolved": 0,
+        "vegetationTopKinds": {
+          "_": "Счётчики по 8077 экземплярам в рамке — тот же домен, что и vegetationGroups.",
+          "filbert_big01": 1525,
+          "pine01": 810,
+          "plant_wolf01": 795,
+          "pine02": 663,
+          "filbert_small01": 538,
+          "pine04": 526,
+          "filbert_big02": 508,
+          "pine05": 500
+        },
+        "newMaterialLayers": [],
+        "newMaterialLayersNote": "12 слоёв совпали с Таможней слово в слово — ни одного нового слоя, LAYER2FAM не расширялся.",
+        "alignment": {
+          "hypothesis": "как есть (после исправления coordinateRotation:180 = отражение по X)",
+          "method": "verify-alignment.py, landsea, эталон-вектор map-exports/lighthouse.svg",
+          "scores": {
+            "384": 0.78,
+            "512": 0.78,
+            "768": 0.782,
+            "1536": 0.782
+          },
+          "runnersUp": {
+            "зеркало X": 0.731,
+            "поворот 180°": 0.686,
+            "зеркало Z": 0.666
+          },
+          "landSeaAgreementPct": 94.0,
+          "landIoUPct": 87.5,
+          "residualShiftMeters": {
+            "dx": 0,
+            "dz": 0
+          },
+          "note": "Согласие/IoU сняты на 768 px по домену данных. Это решающее доказательство ориентации: другая метрика, другой эталон, разрыв в разы."
+        },
+        "vegetationTotalExtracted": 8596,
+        "vegetationTotalExtractedNote": "Всего извлечено из TreeInstances трёх слайсов; 519 экземпляров лежат за рамкой карты. Все разбивки ниже — по 8077 в рамке."
+      }
+    },
+    "shoreline": {
+      "nameRu": "Берег",
+      "scene": "shoreline_Terrain",
+      "level": 25,
+      "sharedassets": "sharedassets25.assets",
+      "status": "pending",
+      "positionsRead": false,
+      "positionsNote": "Позиции слайсов ещё не читались — ниже только инвентаризация (имя / res / число слоёв). Имена слоёв не читались: инвентаризация даёт лишь их количество.",
+      "slices": [
+        {
+          "name": "Slice_4_3",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_4_4",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_5_2",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_5_3",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_5_4",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        }
+      ],
+      "blockers": [
+        "D13 — контроль сетки промахивается опорной точкой на 2852.1 м, сдвиг ОДИНАКОВ для всех слайсов карты (−2187.7, −2852.1): сетка внутренне консистентна, неверна опорная точка формулы.",
+        "D14 — Slice_5_4 даёт содержательный вердикт «зеркало по X» с запасом 1.25× при пороге 1.2× (0.1472 против 0.1838). Пограничный, глазами по растру не сверялся — за доказанную зеркальность не принимать."
+      ]
+    },
+    "woods": {
+      "nameRu": "Лес",
+      "scene": "woods_terrain",
+      "level": 165,
+      "sharedassets": "sharedassets165.assets",
+      "status": "pending",
+      "positionsRead": false,
+      "positionsNote": "Позиции слайсов ещё не читались — ниже только инвентаризация. Имена слоёв не читались.",
+      "slices": [
+        {
+          "name": "Slice_1_3",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_1_4",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_2_3",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_2_4",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        }
+      ],
+      "blockers": [
+        "D12 — падает на нормализации высот: сырые m_Heights в диапазоне [2673, 32767] не лезут в делитель 32766."
+      ]
+    },
+    "interchange": {
+      "nameRu": "Развязка",
+      "scene": "Shopping_Mall_Terrain",
+      "level": 63,
+      "sharedassets": "sharedassets63.assets",
+      "status": "pending",
+      "positionsRead": false,
+      "positionsNote": "Позиции слайсов ещё не читались — ниже только инвентаризация. Имена слоёв не читались.",
+      "slices": [
+        {
+          "name": "Slice_1_1",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_1_2",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_2_1",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        },
+        {
+          "name": "Slice_2_2",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        }
+      ],
+      "blockers": [],
+      "blockersNote": "Дампер проходит (exit 0) после починки шумового гейта — Slice_1_1 давал −0.0224 против 0.0041 и падал по шуму. Следующая карта-кандидат: манифеста и прогона потребителей ещё не было."
+    },
+    "reserve": {
+      "nameRu": "Резерв",
+      "scene": "Reserve_Base_Terrain",
+      "level": 140,
+      "sharedassets": "sharedassets140.assets",
+      "status": "pending",
+      "positionsRead": false,
+      "positionsNote": "Позиции слайсов ещё не читались — ниже только инвентаризация. Имена слоёв не читались.",
+      "slices": [
+        {
+          "name": "Slice_3_4",
+          "res": 1025,
+          "pos": null,
+          "size": [
+            700.0,
+            180.0,
+            700.0
+          ],
+          "layerCount": 12,
+          "layers": null
+        }
+      ],
+      "blockers": [
+        "D13 — контроль сетки промахивается опорной точкой: у единственного слайса Резерва расхождение 1759.1 м. Воспроизведённость одинакового сдвига по слайсам показана на Береге (пять слайсов, −2187.7 / −2852.1), у Резерва сравнивать не с чем."
+      ],
+      "blockersNote": "Единственный слайс Резерва, Slice_3_4, — он же западный сосед Маяка (общая мировая сетка, D08)."
+    }
+  },
+  "noTerrain": {
+    "_": "Unity-террейна нет: интерьеры и городская застройка целиком на мешах. Высоты — ортографический depth-рендер, материал — генерация по плиткам.",
+    "maps": [
+      "factory",
+      "the-lab",
+      "labyrinth",
+      "terminal",
+      "icebreaker",
+      "ground-zero",
+      "streets"
+    ]
+  },
+  "aiTerrains": {
+    "_": "Навигационные дубли для ботов: те же высоты, 0 слоёв материала. Отсев по маркеру AI на границах _/начала/конца имени плюс страховка layers == 0. Шаблон плана *_AI*/AI_* реальные имена не ловит (AITerrainGrass_2_4, TerrainGrassAI_Wood_1_3) — D06.",
+    "files": [
+      "sharedassets4.assets",
+      "sharedassets24.assets",
+      "sharedassets42.assets",
+      "sharedassets136.assets"
+    ]
+  }
+}
