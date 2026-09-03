@@ -138,3 +138,7 @@ desktop.ini
 # Бэкап-архив редундантных картинок, переехавших на R2 (achievements/quests/bosses/
 # seasons/battlepass/character). На диске как офлайн-копия, в репо НЕ нужны — раздаёт R2.
 /image-archive/
+
+# Python-байткод скриптов извлечения (scripts/eft-*)
+__pycache__/
+*.pyc
