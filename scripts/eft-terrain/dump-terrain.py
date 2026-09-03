@@ -184,7 +184,13 @@ objs, _ = load_assets(shared_path)
 
 def resolve(pptr, owner, what):
     """PPtr → объект, сквозь внешние файлы. owner — basename файла, в котором лежит сам PPtr.
-    Внешние .assets EFT лежат в одном каталоге с sharedassets, ищем там."""
+    Внешние .assets EFT лежат в одном каталоге с sharedassets, ищем там.
+
+    ⚠️ ВТОРАЯ КОПИЯ ЭТОГО ПРАВИЛА — `proto_name()` в `extract-vegetation.py` (виды
+    растительности у Маяка лежат в чужих sharedassets). Правишь разбор `m_FileID`/externals
+    или политику отказа здесь — открой и её: расхождение копий уже стоило одного бага
+    (виды схлопывались в `proto_<pathID>`). В общий модуль не сводим осознанно: это пачка
+    автономных скриптов, а не библиотека; поводом станет третий потребитель."""
     if not pptr or pptr.get('m_PathID', 0) == 0:
         raise Fatal(f'{what}: пустая ссылка')
     o_objs, o_ext = _files[owner]

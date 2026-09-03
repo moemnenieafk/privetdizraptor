@@ -69,11 +69,14 @@ if not fill.any():
     sys.exit('нет данных')
 print(f'высоты: {OUT[fill].min():.1f} .. {OUT[fill].max():.1f} м (перепад {OUT[fill].max() - OUT[fill].min():.1f} м)')
 
-# ориентация растра карты: coordinateRotation=180 → разворот обеих осей
+# Ориентация растра карты. coordinateRotation=180 — это ОТРАЖЕНИЕ по оси X, а не поворот:
+# Unity левосторонняя, и вид сверху на игровые координаты даёт зеркало. Разворачиваем только
+# колонки (X); строки (Z) остаются как есть. Раньше здесь стоял [::-1, ::-1] — подложка ложилась
+# зеркально по Z (доказано наложением на вектор Маяка и на растр z6 Таможни).
 rot = man.get('coordinateRotation', 0)
 if rot == 180:
-    OUT = OUT[::-1, ::-1]
-    print('применён разворот 180° (coordinateRotation)')
+    OUT = OUT[:, ::-1]
+    print('применено отражение по X (coordinateRotation=180)')
 
 np.save(f'{outdir}/{map_id}-height-meters.npy', OUT)
 

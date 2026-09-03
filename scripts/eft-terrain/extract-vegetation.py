@@ -1,18 +1,24 @@
 # Растительность карты EFT из Unity TerrainData: деревья/кусты поштучно + плотность травы.
 # Читает sharedassetsN.assets напрямую (UnityPy) — Unity и AssetRipper не нужны.
 #
-# Запуск: python scripts/eft-terrain/extract-vegetation.py <sharedassets> <terrainbin> <manifest> <outdir> <map>
+# Запуск: python scripts/eft-terrain/extract-vegetation.py <sharedassets> <terrainbin> <manifest> <outdir> <map> [allow-unresolved]
 #
 # Выход:
 #   <map>-vegetation.json  — экземпляры: мировые X/Z, пиксели растра, вид, поворот, масштаб
 #   <map>-vegetation.csv   — то же плоско (для Figma/скриптов)
 #   <map>-veg-density.png  — растровая плотность (для скаттера/подложки)
+#
+# ОТКАЗ (как в dump-terrain.py): если хоть один вид не резолвится в имя, файлы НЕ пишутся и
+# exit != 0 — полуфабрикат с заглушками proto_* до потребителей не доезжает. Шестой аргумент
+# `allow-unresolved` снимает отказ осознанно: файлы пишутся, заглушки остаются, их счётчик
+# уходит в JSON полем `unresolved`.
 
 import sys, os, json, struct, math, zlib
 import numpy as np
 import UnityPy
 
 shared, terrbin, man_path, outdir, map_id = sys.argv[1:6]
+ALLOW_UNRESOLVED = len(sys.argv) > 6 and sys.argv[6] == 'allow-unresolved'
 os.makedirs(outdir, exist_ok=True)
 
 # --- позиции террейнов (из TerrainExporter .bin) -----------------------------
@@ -34,22 +40,83 @@ ZMIN, ZMAX = min(az, bz), max(az, bz)
 ROT = man.get('coordinateRotation', 0)
 RW, RH = man['crop']['width'], man['crop']['height']
 
-env = UnityPy.load(shared)
-objs = {o.path_id: o for o in env.objects}
+shared_dir = os.path.dirname(os.path.abspath(shared))
+shared_base = os.path.basename(shared)
+_files = {}     # basename файла ассетов -> (индекс объектов по pathID, список externals)
 
-def proto_name(path_id):
-    """pathID префаба → человеческое имя (GameObject/Mesh в том же файле)."""
+
+def load_assets(path):
+    """Файл ассетов → (объекты по pathID, имена внешних файлов). Кэш: файлы тяжёлые."""
+    base = os.path.basename(path)
+    if base not in _files:
+        e = UnityPy.load(path)
+        f = next(iter(e.files.values()))
+        _files[base] = ({o.path_id: o for o in e.objects},
+                        [os.path.basename(x.path) for x in f.externals])
+    return _files[base]
+
+
+env = UnityPy.load(shared)
+_files[shared_base] = ({o.path_id: o for o in env.objects},
+                       [os.path.basename(x.path) for x in next(iter(env.files.values())).externals])
+
+
+UNRESOLVED = {}     # имя-заглушка -> причина, почему вид не получил настоящего имени
+
+
+def fail(stub, why):
+    """Вид не резолвится: запоминаем заглушку с причиной и возвращаем её."""
+    if stub not in UNRESOLVED:
+        print(f'  ⚠ вид не резолвится → {stub}: {why}')
+    UNRESOLVED[stub] = why
+    return stub
+
+
+def proto_name(pptr):
+    """PPtr на префаб вида → человеческое имя. m_FileID != 0 — ссылка НАРУЖУ, в соседний
+    sharedassetsN.assets (externals[m_FileID-1], лежит в том же каталоге клиента). Игнорировать
+    m_FileID нельзя: у Маяка все прототипы внешние, и по одному pathID виды схлопывались
+    в proto_<pathID>.
+
+    ⚠️ ВТОРАЯ КОПИЯ ЭТОГО ПРАВИЛА — `resolve()` в `dump-terrain.py`, там оно решено первым.
+    Правишь разбор `m_FileID`/externals или политику отказа здесь — открой и её; ссылка стоит
+    с обеих сторон нарочно. В общий модуль не сводим осознанно: это пачка автономных скриптов,
+    а не библиотека; поводом станет третий потребитель.
+
+    Политика отказа — та же, что у дампера: имя-заглушка не растворяется среди групп, а
+    записывается в UNRESOLVED и в конце роняет прогон."""
+    if not pptr:
+        return fail('proto_?', 'пустой PPtr прототипа')
+    path_id = pptr.get('m_PathID', 0)
+    fid = pptr.get('m_FileID', 0)
+    if path_id == 0:
+        return fail('proto_0', 'm_PathID = 0')
+    objs, ext = _files[shared_base]
+    fname = shared_base
+    if fid:
+        i = fid - 1
+        if not (0 <= i < len(ext)):
+            return fail(f'proto_{fid}_{path_id}',
+                        f'm_FileID={fid}, а в {shared_base} externals только {len(ext)}')
+        fname = ext[i]
+        path = os.path.join(shared_dir, fname)
+        if not os.path.exists(path):
+            return fail(f'proto_{fid}_{path_id}',
+                        f'нужен внешний файл ассетов {fname}, рядом с {shared_base} его нет')
+        if fname not in _files:
+            print(f'  подгружен внешний файл ассетов: {fname} (за ним ушли виды растительности)')
+        objs, _ = load_assets(path)
     o = objs.get(path_id)
     if o is None:
-        return f'proto_{path_id}'
+        return fail(f'proto_{path_id}', f'объект pathID={path_id} не найден в {fname}')
     try:
         t = o.read_typetree()
         n = t.get('m_Name')
         if n:
             return n
-    except Exception:
-        pass
-    return f'{o.type.name}_{path_id}'
+    except Exception as e:
+        return fail(f'{o.type.name}_{path_id}', f'typetree не читается ({type(e).__name__})')
+    return fail(f'{o.type.name}_{path_id}', f'у объекта из {fname} нет m_Name')
 
 def group_of(name):
     """Группа для скаттера. Имена — реальные из клиента EFT (pine01, filbert_big01, brush_dry01…)."""
@@ -77,7 +144,7 @@ for o in env.objects:
     P = pos_by_name[tname]; (px, py, pz) = P['pos']; (sx, sy, sz) = P['size']
     dd = d.get('m_DetailDatabase', {})
     protos = dd.get('m_TreePrototypes') or []
-    names = [proto_name(p.get('prefab', {}).get('m_PathID')) for p in protos]
+    names = [proto_name(p.get('prefab')) for p in protos]
     trees = dd.get('m_TreeInstances') or []
     print(f'{tname}: деревьев {len(trees)}, видов {len(protos)}')
     for t in trees:
@@ -86,7 +153,8 @@ for o in env.objects:
         wz = pz + p['z'] * sz
         wy = py + p['y'] * sy
         idx = t.get('index', 0)
-        nm = names[idx] if idx < len(names) else f'proto_{idx}'
+        nm = (names[idx] if idx < len(names)
+              else fail(f'proto_idx{idx}', f'{tname}: index={idx}, а прототипов {len(names)}'))
         instances.append(dict(
             slice=tname, kind=nm, group=group_of(nm),
             x=round(wx, 2), z=round(wz, 2), y=round(wy, 2),
@@ -104,8 +172,10 @@ print(f'внутри границ карты: {len(inzone)}')
 for i in inzone:
     u = (i['x'] - XMIN) / (XMAX - XMIN)
     v = (i['z'] - ZMIN) / (ZMAX - ZMIN)
+    # coordinateRotation=180 — отражение по оси X, а не поворот (см. build-heightmap.py):
+    # Unity левосторонняя, вид сверху даёт зеркало. Разворачивается только X.
     if ROT == 180:
-        u, v = 1 - u, 1 - v
+        u = 1 - u
     i['px'] = round(u * RW)
     i['py'] = round(v * RH)
 
@@ -115,8 +185,22 @@ for i in inzone:
 print(f'по группам: {groups}')
 print('топ видов:', sorted(summary.items(), key=lambda x: -x[1])[:10])
 
+# --- нерезолвенные виды: отдельный счётчик и код возврата ---------------------
+# Заглушка proto_* внешне неотличима от настоящего вида: она получает группу (обычно 'other'),
+# попадает в разбивку и уезжает в JSON. Поэтому считаем её отдельно от групп и роняем прогон.
+unres_kinds = {k: summary.get(k, 0) for k in UNRESOLVED}
+unres_inzone = sum(1 for i in inzone if i['kind'] in UNRESOLVED)
+print(f'нерезолвенных видов: {len(UNRESOLVED)} '
+      f'({sum(unres_kinds.values())} экз., из них в границах карты {unres_inzone})')
+for k, why in UNRESOLVED.items():
+    print(f'  {k}: {unres_kinds[k]} экз. — {why}')
+if UNRESOLVED and not ALLOW_UNRESOLVED:
+    sys.exit('ОТКАЗ: виды не резолвятся, файлы не записаны — заглушки proto_* до потребителей '
+             'не доезжают. Осознанно принять их: шестой аргумент allow-unresolved')
+
 json.dump(dict(map=map_id, bounds=[XMIN, XMAX, ZMIN, ZMAX], raster=[RW, RH],
-               groups=groups, kinds=summary, instances=inzone),
+               groups=groups, kinds=summary, instances=inzone,
+               unresolved={k: dict(count=unres_kinds[k], why=UNRESOLVED[k]) for k in UNRESOLVED}),
           open(f'{outdir}/{map_id}-vegetation.json', 'w', encoding='utf-8'), ensure_ascii=False)
 
 with open(f'{outdir}/{map_id}-vegetation.csv', 'w', encoding='utf-8') as f:
@@ -132,7 +216,7 @@ dens = np.zeros((H, W), np.float32)
 for i in inzone:
     u = (i['x'] - XMIN) / (XMAX - XMIN); v = (i['z'] - ZMIN) / (ZMAX - ZMIN)
     if ROT == 180:
-        u, v = 1 - u, 1 - v
+        u = 1 - u
     xx = min(W - 1, max(0, int(u * (W - 1)))); yy = min(H - 1, max(0, int(v * (H - 1))))
     dens[yy, xx] += 1.0
 

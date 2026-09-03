@@ -78,19 +78,22 @@ for f in sorted(glob.glob(f'{splatdir}/splat_*.bin')):
     ah, aw, al = a.shape
     # веса слоёв → индекс нашего семейства
     fam_idx = np.array([ORDER.index(LAYER2FAM.get(n, 'dirt')) for n in names], np.int16)
-    # неизвестный слой молча уезжает в dirt — печатаем его с долей площади,
-    # чтобы было видно, промах это на 0.2 % или на четверть слайса
-    unknown = [(l, n) for l, n in enumerate(names) if n not in LAYER2FAM]
-    if unknown:
-        raw_dom = a.argmax(2)
-        for l, n in unknown:
-            sh = 100 * float((raw_dom == l).mean())
-            print(f'  ⚠ слой не в LAYER2FAM → dirt: {n} ({sh:.1f}% площади слайса)')
     # суммируем веса по семействам, берём максимум
     acc = np.zeros((ah, aw, len(ORDER)), np.float32)
     for l in range(al):
         acc[:, :, fam_idx[l]] += a[:, :, l]
     dom = acc.argmax(2).astype(np.int16)
+    # Неизвестный слой молча уезжает в dirt. Меряем не «где он доминирует» (слой с ровным весом
+    # 0.2 не доминирует нигде, но своей добавкой к dirt переворачивает исход там, где soil
+    # выигрывал с малым отрывом), а ВЛИЯНИЕ НА ИТОГ: доля ячеек, где семейство меняется,
+    # если слой выбросить.
+    unknown = [(l, n) for l, n in enumerate(names) if n not in LAYER2FAM]
+    for l, n in unknown:
+        acc_wo = acc.copy()
+        acc_wo[:, :, fam_idx[l]] -= a[:, :, l]
+        flip = 100 * float((acc_wo.argmax(2).astype(np.int16) != dom).mean())
+        print(f'  ⚠ слой не в LAYER2FAM → dirt: {n} '
+              f'(меняет семейство на {flip:.1f}% ячеек слайса)')
 
     u = (GX - px) / sx * (aw - 1)
     v = (GZ - pz) / sz * (ah - 1)
@@ -108,9 +111,11 @@ print(f'\nпокрытие: {100 * fill.mean():.1f}%')
 tot = {ORDER[i]: round(100 * float((IDX == i).mean()), 1) for i in range(len(ORDER)) if (IDX == i).any()}
 print(f'материалы по карте: {tot}')
 
+# coordinateRotation=180 — отражение по оси X, а не поворот (см. build-heightmap.py):
+# Unity левосторонняя, вид сверху даёт зеркало. Разворачиваем только колонки (X).
 if man.get('coordinateRotation', 0) == 180:
-    IDX = IDX[::-1, ::-1]
-    print('разворот 180°')
+    IDX = IDX[:, ::-1]
+    print('отражение по X (coordinateRotation=180)')
 
 np.save(f'{outdir}/{map_id}-material-index.npy', IDX)
 
