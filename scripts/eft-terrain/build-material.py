@@ -78,9 +78,14 @@ for f in sorted(glob.glob(f'{splatdir}/splat_*.bin')):
     ah, aw, al = a.shape
     # веса слоёв → индекс нашего семейства
     fam_idx = np.array([ORDER.index(LAYER2FAM.get(n, 'dirt')) for n in names], np.int16)
-    unknown = [n for n in names if n not in LAYER2FAM]
+    # неизвестный слой молча уезжает в dirt — печатаем его с долей площади,
+    # чтобы было видно, промах это на 0.2 % или на четверть слайса
+    unknown = [(l, n) for l, n in enumerate(names) if n not in LAYER2FAM]
     if unknown:
-        print(f'  ⚠ неизвестные слои → dirt: {unknown}')
+        raw_dom = a.argmax(2)
+        for l, n in unknown:
+            sh = 100 * float((raw_dom == l).mean())
+            print(f'  ⚠ слой не в LAYER2FAM → dirt: {n} ({sh:.1f}% площади слайса)')
     # суммируем веса по семействам, берём максимум
     acc = np.zeros((ah, aw, len(ORDER)), np.float32)
     for l in range(al):
