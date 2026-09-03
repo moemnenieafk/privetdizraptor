@@ -310,56 +310,38 @@
         "wouldAddPctOfFrame": 35.6
       },
       "results": {
-        "frameCoveragePct": 64.4,
-        "frameCoverageNote": "Предел трёх слайсов, а не недоделка. Геометрия предсказала независимо: X 700/1060 = 65.3 % × Z 1723/1723 = 98.5 % → 64.3 %, измерено 64.39 %.",
+        "frameCoveragePct": 98.53,
+        "frameCoverageNote": "Шестью слайсами: тремя своими Маяк закрывал 64.4 % (X 700/1060 = 65.3 % × Z 98.5 %), остаток добран флагом with-neighbours из sharedassets140/25 — позиции берутся из иерархии level200. Предсказано 98.54 % ДО прогона, измерено 98.53 %. Шов колонок max|d| 0.011 м = 2 кванта 16-битной высоты. ⚠️ Рамка карты шире её арта: вектор Shebuka = 82.6 % рамки, 42 % добранного лежит за краем арта (грунт соседних локаций в углах кадра). Покрытие самого арта: 74.4 % → 98.4 %.",
         "heightRangeMeters": [
           -29.03,
-          62.52
+          63.75
         ],
-        "heightSpanMeters": 91.55,
+        "heightSpanMeters": 92.78,
         "materialPctOfFrame": {
-          "soil": 46.4,
-          "gravel-sand": 13.9,
-          "rock": 2.5,
-          "dirt": 1.5
+          "soil": 66.6,
+          "gravel-sand": 22.5,
+          "rock": 7.0,
+          "dirt": 2.4
         },
-        "materialPctInsideDataRange": {
-          "soil": [
-            71.0,
-            77.0
-          ],
-          "gravel-sand": [
-            19.5,
-            20.6
-          ],
-          "rock": [
-            0.6,
-            4.9
-          ],
-          "dirt": [
-            1.4,
-            3.4
-          ]
-        },
-        "vegetationInFrame": 8077,
+        "vegetationInFrame": 14164,
         "vegetationGroups": {
-          "conifer": 3677,
-          "broadleaf": 3573,
-          "bush": 795,
-          "other": 32,
+          "conifer": 6521,
+          "broadleaf": 5555,
+          "bush": 1929,
+          "other": 159,
           "grass": 0
         },
         "vegetationUnresolved": 0,
         "vegetationTopKinds": {
-          "_": "Счётчики по 8077 экземплярам в рамке — тот же домен, что и vegetationGroups.",
-          "filbert_big01": 1525,
-          "pine01": 810,
-          "plant_wolf01": 795,
-          "pine02": 663,
-          "filbert_small01": 538,
-          "pine04": 526,
-          "filbert_big02": 508,
-          "pine05": 500
+          "_": "Счётчики по 14164 экземплярам в рамке — тот же домен, что и vegetationGroups.",
+          "filbert_big01": 2459,
+          "pine01": 1351,
+          "plant_wolf01": 1330,
+          "pine02": 1058,
+          "pine05": 1055,
+          "pine02_big": 914,
+          "filbert_big02": 819,
+          "pine04": 807
         },
         "newMaterialLayers": [],
         "newMaterialLayersNote": "12 слоёв совпали с Таможней слово в слово — ни одного нового слоя, LAYER2FAM не расширялся.",
@@ -367,10 +349,10 @@
           "hypothesis": "как есть (после исправления coordinateRotation:180 = отражение по X)",
           "method": "verify-alignment.py, landsea, эталон-вектор map-exports/lighthouse.svg",
           "scores": {
-            "384": 0.78,
-            "512": 0.78,
-            "768": 0.782,
-            "1536": 0.782
+            "384": 0.942,
+            "512": 0.943,
+            "768": 0.943,
+            "1536": 0.944
           },
           "runnersUp": {
             "зеркало X": 0.731,
@@ -383,10 +365,29 @@
             "dx": 0,
             "dz": 0
           },
-          "note": "Согласие/IoU сняты на 768 px по домену данных. Это решающее доказательство ориентации: другая метрика, другой эталон, разрыв в разы."
+          "note": "Согласие/IoU сняты на 768 px по домену данных. Это решающее доказательство ориентации: другая метрика, другой эталон, разрыв в разы.",
+          "onDataDomain": {
+            "agreementPct": 94.2,
+            "iou": 89.5,
+            "scale": 768
+          }
         },
-        "vegetationTotalExtracted": 8596,
-        "vegetationTotalExtractedNote": "Всего извлечено из TreeInstances трёх слайсов; 519 экземпляров лежат за рамкой карты. Все разбивки ниже — по 8077 в рамке."
+        "vegetationTotalExtracted": 20525,
+        "vegetationTotalExtractedNote": "Всего извлечено из TreeInstances трёх слайсов; 519 экземпляров лежат за рамкой карты. Все разбивки ниже — по 8077 в рамке.",
+        "materialNoDataPct": 1.5
+      },
+      "neighbourSlices": {
+        "_": "Соседняя колонка общей мировой сетки: данные в чужих sharedassets, позиции — из иерархии level200. Берутся флагом with-neighbours.",
+        "names": [
+          "Slice_3_4",
+          "Slice_4_4",
+          "Slice_5_4"
+        ],
+        "dataIn": [
+          "sharedassets140.assets",
+          "sharedassets25.assets"
+        ],
+        "gridCheckMeters": 0.0
       }
     },
     "shoreline": {
