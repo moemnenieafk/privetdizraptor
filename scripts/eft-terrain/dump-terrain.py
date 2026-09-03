@@ -5,9 +5,16 @@
 # Выход: <outdir>/<map>-terrain.bin  — имя, мировая позиция, size, res, высоты 0..1 [row=Z][col=X]
 #        <outdir>/splat_<terrain>.bin — aw/ah/al, имена слоёв, веса 0..1 [row][col][layer]
 #
-# Запуск: python scripts/eft-terrain/dump-terrain.py <sharedassets> <level> <outdir> <map> [orient-override]
-#         пятый аргумент — литерал orient-override: снимает отказ по «зеркало ложится лучше»
-#         (проверка ориентации статистическая; сверили с растром глазами — можно продавить).
+# Запуск: python scripts/eft-terrain/dump-terrain.py <sharedassets> <level> <outdir> <map> [флаги...]
+#         orient-override  — снимает отказ по «зеркало ложится лучше»
+#                            (проверка ориентации статистическая; сверили с растром глазами —
+#                            можно продавить).
+#         with-neighbours  — забрать и соседние слайсы общей мировой сетки EFT: ноды, чей
+#                            TerrainData лежит в ЧУЖОМ sharedassets (у Маяка — 140 и 25).
+#                            Позиции всё равно берутся из иерархии поданного levelN, поэтому
+#                            контроль сетки остаётся тем же. Без флага такие ноды, как и
+#                            раньше, только печатаются строкой лога — поведение по умолчанию
+#                            не меняется байт-в-байт (D08).
 #
 # Код возврата 0 — только если каждая террейн-нода этого файла ассетов учтена, привязка сошлась
 # с сеткой 700 м, имена слоёв прочитаны и ориентация splat не опровергнута. Иначе ненулевой код:
@@ -25,7 +32,14 @@ except Exception:
     pass
 
 shared_path, level_path, outdir, map_id = sys.argv[1:5]
-orient_override = len(sys.argv) > 5 and sys.argv[5] == 'orient-override'
+FLAGS = {'orient-override', 'with-neighbours'}
+flags = set(sys.argv[5:])
+unknown = flags - FLAGS
+if unknown:
+    sys.exit(f'ОТКАЗ: неизвестные флаги {", ".join(sorted(unknown))}; '
+             f'допустимы {", ".join(sorted(FLAGS))}')
+orient_override = 'orient-override' in flags
+with_neighbours = 'with-neighbours' in flags
 os.makedirs(outdir, exist_ok=True)
 
 # Unity нормализует 16-битные высоты террейна на 32766 (не 32767 и не 32768) —
@@ -214,14 +228,16 @@ def resolve(pptr, owner, what):
     return obj, fname
 
 
-def layer_names(layer_ptrs, tname):
+def layer_names(layer_ptrs, tname, owner):
     """Имя слоя = имя diffuse-текстуры (как в TerrainExporter.cs).
     build-material.py сопоставляет семейства палитры ПО ИМЕНАМ — заглушку '?' в шов не пишем,
-    а подстановку имени TerrainLayer (microsplat_layer_…) считаем и выносим в итог."""
+    а подстановку имени TerrainLayer (microsplat_layer_…) считаем и выносим в итог.
+    `owner` — файл, В КОТОРОМ лежит сам TerrainData: у соседнего слайса это не поданный
+    sharedassets, и его m_FileID считаются по ЕГО таблице externals, а не по нашей."""
     out = []
     for i, p in enumerate(layer_ptrs):
         what = f'{tname}: слой {i}'
-        lo, lfile = resolve(p, shared_base, what)
+        lo, lfile = resolve(p, owner, what)
         lt = lo.read_typetree()
         dif = lt.get('m_DiffuseTexture') or {}
         if dif.get('m_PathID', 0):
@@ -258,7 +274,7 @@ def heights01(hm, res, tname):
     return h.reshape(res, res)
 
 
-def alphamaps(tex_ptrs, al, tname):
+def alphamaps(tex_ptrs, al, tname, owner):
     """RGBA-текстуры → веса float32 (ah, aw, al). Текстура i, канал c → слой i*4+c.
     Unity хранит строки снизу вверх, UnityPy отдаёт картинку сверху вниз → разворот."""
     need = -(-al // 4)
@@ -267,7 +283,7 @@ def alphamaps(tex_ptrs, al, tname):
                     f'в m_AlphaTextures их {len(tex_ptrs)}')
     planes = []
     for i in range(need):
-        o, _ = resolve(tex_ptrs[i], shared_base, f'{tname}: alpha-текстура {i}')
+        o, _ = resolve(tex_ptrs[i], owner, f'{tname}: alpha-текстура {i}')
         planes.append(np.array(o.read().image.convert('RGBA'))[::-1])
     ah, aw = planes[0].shape[:2]
     for i, pl in enumerate(planes):
@@ -382,12 +398,41 @@ def orientation_note(a, h, tname):
             'weak', rival_key)
 
 
+# --- очередь дампа: свой файл, при флаге — плюс соседи общей сетки ---------------
+# Задание — пара (объект TerrainData, файл-владелец). Владелец нужен дальше: m_FileID внутри
+# TerrainData считаются по таблице externals ЕГО файла, а не поданного sharedassets.
+jobs = [(o, shared_base)
+        for o in sorted((x for x in objs.values() if x.type.name == 'TerrainData'),
+                        key=lambda x: x.path_id)]
+neighbour_refs = sorted({n['ref'] for n in nodes if n['ref'][0] != shared_base})
+if with_neighbours:
+    for fname, pid in neighbour_refs:
+        p = os.path.join(shared_dir, fname)
+        if not os.path.exists(p):
+            sys.exit(f'ОТКАЗ: соседний слайс просит {fname}, рядом с {shared_base} его нет')
+        if fname not in _files:
+            print(f'  подгружен внешний файл ассетов: {fname} (соседние слайсы общей сетки)')
+        f_objs, _ = load_assets(p)
+        fo = f_objs.get(pid)
+        if fo is None:
+            sys.exit(f'ОТКАЗ: соседний слайс {nodes_by_ref[(fname, pid)]["name"]}: '
+                     f'TerrainData pathID={pid} не найден в {fname}')
+        if fo.type.name != 'TerrainData':
+            sys.exit(f'ОТКАЗ: {fname}#{pid} — не TerrainData, а {fo.type.name}')
+        jobs.append((fo, fname))
+    print(f'флаг with-neighbours: добрано соседних слайсов {len(neighbour_refs)} '
+          f'из {", ".join(sorted({f for f, _ in neighbour_refs}))}')
+elif neighbour_refs:
+    print(f'соседних слайсов общей сетки в сцене {len(neighbour_refs)} — пропущены '
+          f'(добрать: пятым аргументом with-neighbours)')
+
 # --- дамп ---------------------------------------------------------------------
 terrain_path = f'{outdir}/{map_id}-terrain.bin'
 accounted_refs, made_splats = set(), []
+neighbours_written = 0
 out = open(terrain_path, 'wb')
 try:
-    for o in sorted((x for x in objs.values() if x.type.name == 'TerrainData'), key=lambda x: x.path_id):
+    for o, owner in jobs:
         d = o.read_typetree()
         name = d.get('m_Name') or f'TerrainData_{o.path_id}'
         hm = d['m_Heightmap']
@@ -396,12 +441,12 @@ try:
 
         # сперва привязка к сцене: имя ноды и имя TerrainData совпадают не всегда
         # (у Леса нода TerrainGrass_2_4 указывает на TerrainData AITerrainGrass_2_4)
-        node = nodes_by_ref.get((shared_base, o.path_id))
+        node = nodes_by_ref.get((owner, o.path_id))
         if node is not None:
-            bind = f'привязка=по ссылке {shared_base}#{o.path_id}'
+            bind = f'привязка=по ссылке {owner}#{o.path_id}'
         else:
             node = nodes_by_name.get(name)
-            bind = (f'привязка=ПО ИМЕНИ (ссылки на {shared_base}#{o.path_id} '
+            bind = (f'привязка=ПО ИМЕНИ (ссылки на {owner}#{o.path_id} '
                     f'в сцене нет — externals сцены другие)')
         if node is None:
             print(f'  отброшен {name}: нет ноды в сцене {os.path.basename(level_path)}')
@@ -430,8 +475,8 @@ try:
         # всё, что может отказать, считаем ДО записи: полуфабрикат в шов не попадёт
         h = heights01(hm, res, node['name'])
         al = len(layer_ptrs)
-        names = layer_names(layer_ptrs, node['name'])
-        a, aw, ah = alphamaps(sd.get('m_AlphaTextures') or [], al, node['name'])
+        names = layer_names(layer_ptrs, node['name'], owner)
+        a, aw, ah = alphamaps(sd.get('m_AlphaTextures') or [], al, node['name'], owner)
         orient, verdict, orient_axis = orientation_note(a, h, node['name'])
         if verdict == 'weak':
             weak_orient += 1
@@ -474,6 +519,10 @@ try:
               f'высоты=[{py + h.min() * sy:.1f},{py + h.max() * sy:.1f}] м шаг={sx / (res - 1):.2f} м')
         print(f'  {bind}; {grid_note}; {orient}')
         print(f'  SPLAT {node["name"]}: {aw}x{ah} слоёв={al} [{", ".join(names)}] -> {sp}')
+        if owner != shared_base:
+            print(f'  соседний слайс общей сетки: данные из {owner}, позиция из '
+                  f'{os.path.basename(level_path)}')
+            neighbours_written += 1
         accounted_refs.add(node['ref'])
         written += 1
 except Fatal as e:
@@ -503,8 +552,8 @@ for node in nodes:
           f'подан на вход, но в дамп не попал')
     errors += 1
 
-print(f'\nготово: {written} террейнов; нод сцены {len(nodes)}, из них в чужих файлах {foreign} '
-      f'-> {terrain_path}')
+print(f'\nготово: {written} террейнов (из них соседних слайсов {neighbours_written}); '
+      f'нод сцены {len(nodes)}, из них в чужих файлах пропущено {foreign} -> {terrain_path}')
 print(f'отброшено: по AI-имени {drop_name}, по layers == 0 {drop_layers}, '
       f'без ноды в сцене {drop_nonode} (одна запись может попасть в оба первых счётчика)')
 if layer_fallbacks:

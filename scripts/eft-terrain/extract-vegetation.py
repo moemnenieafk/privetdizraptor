@@ -3,6 +3,12 @@
 #
 # Запуск: python scripts/eft-terrain/extract-vegetation.py <sharedassets> <terrainbin> <manifest> <outdir> <map> [allow-unresolved]
 #
+# <sharedassets> — один файл ассетов ИЛИ несколько через запятую. Несколько нужны там, где
+# в .bin попали соседние слайсы общей мировой сетки EFT: их TerrainData (а значит и деревья)
+# лежат в ЧУЖИХ sharedassets — у Маяка это 140 и 25 (dump-terrain.py … with-neighbours).
+# Позиции всё равно берутся из .bin, так что порядок файлов ни на что не влияет; TerrainData,
+# которых нет в .bin, пропускаются как раньше. Один путь без запятой = прежнее поведение.
+#
 # Выход:
 #   <map>-vegetation.json  — экземпляры: мировые X/Z, пиксели растра, вид, поворот, масштаб
 #   <map>-vegetation.csv   — то же плоско (для Figma/скриптов)
@@ -17,7 +23,11 @@ import sys, os, json, struct, math, zlib
 import numpy as np
 import UnityPy
 
-shared, terrbin, man_path, outdir, map_id = sys.argv[1:6]
+shared_arg, terrbin, man_path, outdir, map_id = sys.argv[1:6]
+shared_paths = [p for p in shared_arg.split(',') if p.strip()]
+if not shared_paths:
+    sys.exit('ОТКАЗ: не задан ни один файл ассетов')
+shared = shared_paths[0]
 ALLOW_UNRESOLVED = len(sys.argv) > 6 and sys.argv[6] == 'allow-unresolved'
 os.makedirs(outdir, exist_ok=True)
 
@@ -56,9 +66,15 @@ def load_assets(path):
     return _files[base]
 
 
-env = UnityPy.load(shared)
-_files[shared_base] = ({o.path_id: o for o in env.objects},
-                       [os.path.basename(x.path) for x in next(iter(env.files.values())).externals])
+envs = []       # (basename файла, объекты) — в порядке, как их подали
+for p in shared_paths:
+    base = os.path.basename(p)
+    e = UnityPy.load(p)
+    _files[base] = ({o.path_id: o for o in e.objects},
+                    [os.path.basename(x.path) for x in next(iter(e.files.values())).externals])
+    envs.append((base, list(e.objects)))
+if len(envs) > 1:
+    print(f'файлов ассетов: {len(envs)} ({", ".join(b for b, _ in envs)})')
 
 
 UNRESOLVED = {}     # имя-заглушка -> причина, почему вид не получил настоящего имени
@@ -72,8 +88,10 @@ def fail(stub, why):
     return stub
 
 
-def proto_name(pptr):
-    """PPtr на префаб вида → человеческое имя. m_FileID != 0 — ссылка НАРУЖУ, в соседний
+def proto_name(pptr, owner):
+    """PPtr на префаб вида → человеческое имя. `owner` — файл, В КОТОРОМ лежит сам PPtr:
+    m_FileID считается по ЕГО таблице externals, у соседнего слайса она своя.
+    m_FileID != 0 — ссылка НАРУЖУ, в соседний
     sharedassetsN.assets (externals[m_FileID-1], лежит в том же каталоге клиента). Игнорировать
     m_FileID нельзя: у Маяка все прототипы внешние, и по одному pathID виды схлопывались
     в proto_<pathID>.
@@ -91,18 +109,18 @@ def proto_name(pptr):
     fid = pptr.get('m_FileID', 0)
     if path_id == 0:
         return fail('proto_0', 'm_PathID = 0')
-    objs, ext = _files[shared_base]
-    fname = shared_base
+    objs, ext = _files[owner]
+    fname = owner
     if fid:
         i = fid - 1
         if not (0 <= i < len(ext)):
             return fail(f'proto_{fid}_{path_id}',
-                        f'm_FileID={fid}, а в {shared_base} externals только {len(ext)}')
+                        f'm_FileID={fid}, а в {owner} externals только {len(ext)}')
         fname = ext[i]
         path = os.path.join(shared_dir, fname)
         if not os.path.exists(path):
             return fail(f'proto_{fid}_{path_id}',
-                        f'нужен внешний файл ассетов {fname}, рядом с {shared_base} его нет')
+                        f'нужен внешний файл ассетов {fname}, рядом с {owner} его нет')
         if fname not in _files:
             print(f'  подгружен внешний файл ассетов: {fname} (за ним ушли виды растительности)')
         objs, _ = load_assets(path)
@@ -117,6 +135,7 @@ def proto_name(pptr):
     except Exception as e:
         return fail(f'{o.type.name}_{path_id}', f'typetree не читается ({type(e).__name__})')
     return fail(f'{o.type.name}_{path_id}', f'у объекта из {fname} нет m_Name')
+
 
 def group_of(name):
     """Группа для скаттера. Имена — реальные из клиента EFT (pine01, filbert_big01, brush_dry01…)."""
@@ -134,35 +153,41 @@ def group_of(name):
 
 instances = []
 summary = {}
-for o in env.objects:
-    if o.type.name != 'TerrainData':
-        continue
-    d = o.read_typetree()
-    tname = d.get('m_Name')
-    if tname not in pos_by_name:
-        print(f'  {tname}: нет позиции в .bin, пропуск'); continue
-    P = pos_by_name[tname]; (px, py, pz) = P['pos']; (sx, sy, sz) = P['size']
-    dd = d.get('m_DetailDatabase', {})
-    protos = dd.get('m_TreePrototypes') or []
-    names = [proto_name(p.get('prefab')) for p in protos]
-    trees = dd.get('m_TreeInstances') or []
-    print(f'{tname}: деревьев {len(trees)}, видов {len(protos)}')
-    for t in trees:
-        p = t['position']
-        wx = px + p['x'] * sx
-        wz = pz + p['z'] * sz
-        wy = py + p['y'] * sy
-        idx = t.get('index', 0)
-        nm = (names[idx] if idx < len(names)
-              else fail(f'proto_idx{idx}', f'{tname}: index={idx}, а прототипов {len(names)}'))
-        instances.append(dict(
-            slice=tname, kind=nm, group=group_of(nm),
-            x=round(wx, 2), z=round(wz, 2), y=round(wy, 2),
-            rot=round(math.degrees(t.get('rotation', 0.0)) % 360, 1),
-            scaleW=round(t.get('widthScale', 1.0), 3),
-            scaleH=round(t.get('heightScale', 1.0), 3),
-        ))
-        summary[nm] = summary.get(nm, 0) + 1
+done = set()        # один и тот же слайс не должен посчитаться дважды из двух поданных файлов
+for owner, objects in envs:
+    for o in objects:
+        if o.type.name != 'TerrainData':
+            continue
+        d = o.read_typetree()
+        tname = d.get('m_Name')
+        if tname not in pos_by_name:
+            print(f'  {tname}: нет позиции в .bin, пропуск'); continue
+        if tname in done:
+            print(f'  {tname}: уже посчитан из другого файла ассетов, пропуск'); continue
+        done.add(tname)
+        P = pos_by_name[tname]; (px, py, pz) = P['pos']; (sx, sy, sz) = P['size']
+        dd = d.get('m_DetailDatabase', {})
+        protos = dd.get('m_TreePrototypes') or []
+        names = [proto_name(p.get('prefab'), owner) for p in protos]
+        trees = dd.get('m_TreeInstances') or []
+        print(f'{tname}: деревьев {len(trees)}, видов {len(protos)}'
+              + (f' (из {owner})' if len(envs) > 1 else ''))
+        for t in trees:
+            p = t['position']
+            wx = px + p['x'] * sx
+            wz = pz + p['z'] * sz
+            wy = py + p['y'] * sy
+            idx = t.get('index', 0)
+            nm = (names[idx] if idx < len(names)
+                  else fail(f'proto_idx{idx}', f'{tname}: index={idx}, а прототипов {len(names)}'))
+            instances.append(dict(
+                slice=tname, kind=nm, group=group_of(nm),
+                x=round(wx, 2), z=round(wz, 2), y=round(wy, 2),
+                rot=round(math.degrees(t.get('rotation', 0.0)) % 360, 1),
+                scaleW=round(t.get('widthScale', 1.0), 3),
+                scaleH=round(t.get('heightScale', 1.0), 3),
+            ))
+            summary[nm] = summary.get(nm, 0) + 1
 
 print(f'\nвсего экземпляров: {len(instances)}')
 inzone = [i for i in instances if XMIN <= i['x'] <= XMAX and ZMIN <= i['z'] <= ZMAX]
