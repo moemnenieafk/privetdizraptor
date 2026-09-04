@@ -315,6 +315,53 @@ if os.path.exists(path):
         sys.exit(f'ОТКАЗ: {path} уже существует и не помечен "synthetic": true — это эталон, '
                  f'собранный из настоящего растра. Перезапись запрещена. Ничего не записано.')
 
+# ─────────────────────────────────────────── ЭТАЖИ из конфига
+# Раньше сюда писался пустой layers[] — «структурная заглушка». Из-за этого у карт
+# с синтетическим манифестом (Улицы, Терминал, Маяк) не было ЭТАЖНОСТИ: слой комнат
+# и слой стен умеют резать по полосам `layers[].heights`, но полос им не давали.
+# А в конфиге они есть: у Улиц шесть (подземелье, земля, 2-5 этажи).
+# Главная полоса — `heightRange` самой карты (наземный уровень), остальные — `layers[]`.
+def _slug(name, svg_layer, idx):
+    """Короткий id этажа: из svgLayer (Second_Floor -> 2nd) или из имени, иначе floorN."""
+    src_txt = (svg_layer or name or '').lower()
+    for pat, sid in (('under', 'underground'), ('ground', 'main'), ('first', 'main'),
+                     ('second', '2nd'), ('third', '3rd'), ('fourth', '4th'), ('fifth', '5th'),
+                     ('technical', 'technical'), ('tunnel', 'tunnels'), ('garage', 'garage')):
+        if pat in src_txt:
+            return sid
+    m = re.search(r'(\d+)', src_txt)
+    return f'{m.group(1)}th' if m else f'floor{idx}'
+
+
+layers = []
+hr = fields.get('heightRange')
+main_h = None
+if hr and hr.strip() != 'null':
+    try:
+        main_h = json.loads(re.sub(r',\s*([\]\}])', r'\1', hr))
+    except Exception:
+        main_h = None
+main_svg = (fields.get('svgLayer') or '').strip().strip('"').strip("'")
+layers.append(dict(id=_slug('', main_svg, 0) if main_svg else 'main',
+                   name='Наземный уровень', heights=main_h, isMain=True))
+ltxt = fields.get('layers')
+if ltxt and ltxt.strip().startswith('['):
+    for idx, blk in enumerate(re.findall(r'\{[^{}]*\}', ltxt), start=1):
+        nm = (re.search(r'name:\s*"([^"]*)"', blk) or [None, ''])[1]
+        sv = (re.search(r'svgLayer:\s*"([^"]*)"', blk) or [None, ''])[1]
+        hh = re.search(r'height:\s*(\[[^\]]*\])', blk)
+        heights = json.loads(hh.group(1)) if hh else None
+        layers.append(dict(id=_slug(nm, sv, idx), name=nm or f'этаж {idx}',
+                           heights=heights, isMain=False))
+seen_ids = {}
+for L in layers:                      # id должны быть уникальны: по ним пишутся имена файлов
+    if L['id'] in seen_ids:
+        seen_ids[L['id']] += 1
+        L['id'] = f"{L['id']}-{seen_ids[L['id']]}"
+    else:
+        seen_ids[L['id']] = 1
+print('этажи из конфига: ' + ', '.join(f"{L['id']}{L['heights'] or ''}" for L in layers))
+
 manifest = {
     'map': map_id,
     'zoom': zoom,
@@ -328,10 +375,12 @@ manifest = {
     'note': 'Растра НЕ СУЩЕСТВУЕТ: у карты нет тайлов в maps.json the-hideout, fetch-tiles.mjs её '
             'не собирает. Границы и поворот взяты из src/data/eft-map-config.ts, crop синтезирован '
             'по соотношению сторон границ. Поля zoom, tileSize и layers — структурная заглушка для '
-            'совместимости с форматом fetch-tiles.mjs: ни тайлов, ни слоёв за ними нет. '
+            'совместимости с форматом fetch-tiles.mjs: тайлов за ними нет. Полосы высот в layers[] '
+            'НАСТОЯЩИЕ — из heightRange и layers[].height конфига; по ним режут этажи '
+            'слой комнат и слой стен. '
             'Terrain-скрипты читают отсюда только boundsFromConfig, coordinateRotation, '
             'crop.width и crop.height.',
-    'layers': [],
+    'layers': layers,
 }
 
 os.makedirs(os.path.dirname(path), exist_ok=True)

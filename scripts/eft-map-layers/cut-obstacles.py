@@ -80,6 +80,10 @@ def opt(flag, default=None):
 HEIGHT_ARG = opt('--height')
 ZONE_ARG = opt('--zone')
 CUT = float(opt('--cut', '1.0'))
+WANT_FLOORS = True
+if '--no-floors' in argv:                 # одна карта вместо поэтажной раскладки
+    WANT_FLOORS = False
+    argv.remove('--no-floors')
 WANT_FILL = True
 if '--no-fill' in argv:
     WANT_FILL = False
@@ -87,7 +91,7 @@ if '--no-fill' in argv:
 if len(argv) < 4:
     sys.exit('использование: python scripts/eft-map-layers/cut-obstacles.py '
              '<EscapeFromTarkov_Data> <map> <manifest> <outdir> '
-             '[--height <npy>] [--zone <png>] [--cut 1.0] [--no-fill]')
+             '[--height <npy>] [--zone <png>] [--cut 1.0] [--no-fill] [--no-floors]')
 
 DATA, MAP_ID, MAN_PATH, OUTDIR = argv[0], argv[1], argv[2], argv[3]
 os.makedirs(OUTDIR, exist_ok=True)
@@ -104,13 +108,16 @@ MIN_LEN = 0.25        # м: открытые цепи короче — оско�
 MIN_AREA = 0.02       # м²: замкнутые контуры мельче (14x14 см) — тоже осколки
 
 # Классы. Порядок = приоритет отрисовки в растре: следующий перекрывает предыдущий.
-CLASSES = ['props', 'stone', 'fence', 'openings', 'building']
+# `plant` стоит ПЕРВЫМ (самый низкий приоритет отрисовки): на верхних этажах кроны высоких
+# деревьев пересекают плоскость реза и лезут «звёздочками» поверх планировки. Отдельный
+# класс даёт их выключить одним кликом, не теряя данные.
+CLASSES = ['plant', 'props', 'stone', 'fence', 'openings', 'building']
 CID = {c: i + 1 for i, c in enumerate(CLASSES)}
 COLORS = {'building': (255, 255, 255), 'openings': (0, 208, 255), 'fence': (124, 255, 90),
-          'props': (255, 59, 107), 'stone': (255, 176, 32)}
+          'props': (255, 59, 107), 'stone': (255, 176, 32), 'plant': (86, 160, 74)}
 TITLES = {'building': 'стены и колонны', 'openings': 'полотна дверей и рамы окон',
           'fence': 'заборы и бетонные блоки', 'props': 'реквизит: машины, контейнеры, стеллажи',
-          'stone': 'камни и скалы'}
+          'stone': 'камни и скалы', 'plant': 'растительность: кроны и кусты'}
 FILL_ALPHA = 110      # прозрачность заливки силуэта; контур рисуется непрозрачным
 # Предохранитель от протечки заливки на НОВОЙ карте, где словарь имён другой: один экземпляр
 # не может быть препятствием размером в полтора процента карты. Купол неба на Таможне давал
@@ -147,6 +154,11 @@ BRANCH_RULES = [(re.compile(rx, re.I), cls) for rx, cls in BRANCH_RULES]
 # Камни: словарь ИМЁН из dump-stones.py (там он выверен на двух картах), а не веток.
 STONE_RX = re.compile(r'stone|rock|kamen|boulder|cliff', re.I)
 STONE_NOT_RX = re.compile(r'rocket|rockwool|tombstone', re.I)
+# Растительность: словарь тот же, что в dump-vegetation-objects.py.
+PLANT_RX = re.compile(r'(?<![A-Za-z])(tree|bush|pine|spruce|birch|oak|maple|fir|shrub|foliage|'
+                      r'leaf|leaves|vetk|kust|derev|palm|reed|fern|hedge|plant|nettle|burdock|'
+                      r'wolf|sapling)(?![A-Za-z])', re.I)
+PLANT_NOT_RX = re.compile(r'(planter|plantation|plant_pot|power_?plant|plant_station)', re.I)
 
 SKIP_SCENE = re.compile(r'(terrain|sound|culling|background)', re.I)
 
@@ -168,6 +180,8 @@ def classify(path, name):
         if rx.search(path):
             DROPPED[rx.pattern] += 1
             return None
+    if PLANT_RX.search(name) and not PLANT_NOT_RX.search(path):
+        return 'plant'
     if STONE_RX.search(name) and not STONE_NOT_RX.search(name):
         return 'stone'
     for rx, cls in BRANCH_RULES:
@@ -266,32 +280,88 @@ if True:
     log(f'пол оценён в {FLOOR:.2f} м ({note}); плоский рез = {FLAT:.2f} м' +
         ('' if GROUND is None else ' — запасной уровень там, где террейна под объектом нет'))
 
-# земля под габаритом берётся диапазоном (мин/макс по сетке 3x3): на склоне порог внутри
-# одного объекта гуляет, и одна точка в центре отсекла бы лишнее
-cand = []
-n_nan_ground = 0
-for i in range(len(inst)):
-    if not ok_box[i]:
-        cand.append(i)                      # габарита нет — решит само сечение
-        continue
-    if GROUND is None:
-        if boxes[i, 1] <= FLAT <= boxes[i, 4]:
-            cand.append(i)
-        continue
+# ─────────────────────────────────────────── ЭТАЖИ: полосы высот и правило реза
+
+# Слой 7 умеет два режима, и различие в том, ОТКУДА берётся уровень пола:
+#   • одна карта («земля + 1 м») — рез следует рельефу, порог считается повершинно;
+#   • ПОЭТАЖНО — на каждую полосу `layers[].heights` манифеста своя плоскость.
+# Полоса — это НЕ пол: у Улиц наземная полоса [-6, 10] описывает диапазон для фильтра
+# маркеров, а пол там около 3.5 м. Поэтому уровень пола каждого этажа ОЦЕНИВАЕТСЯ по
+# данным: мода низов геометрии, попадающей в полосу. Ровно тот же приём, которым слой
+# стен угадывает пол подземки, — и он печатается вслух как оценка, а не как факт.
+BANDS = []
+for L in FR.layers():
+    h = L.get('heights') or [-1e9, 1e9]
+    BANDS.append(dict(id=L['id'], name=L.get('name') or L['id'],
+                      lo=float(h[0]), hi=float(h[1]), main=bool(L.get('isMain'))))
+if not BANDS:
+    BANDS = [dict(id='all', name='вся карта', lo=-1e9, hi=1e9, main=True)]
+if not WANT_FLOORS:
+    BANDS = [b for b in BANDS if b['main']] or BANDS[:1]
+
+for b in BANDS:
+    sel = ok_box & (boxes[:, 1] >= b['lo']) & (boxes[:, 1] <= b['hi'])
+    vals = boxes[sel, 1]
+    if b['main'] and GROUND is not None:
+        b['cut'] = None                      # рез по рельефу, плоскости нет
+        b['rule'] = 'земля под вершиной + рез (билинейно по карте высот)'
+    elif len(vals) >= 50:
+        lo_edge = max(b['lo'], -300.0)
+        hi_edge = min(b['hi'], 300.0)
+        hist, edges = np.histogram(vals, bins=np.arange(lo_edge, hi_edge + 0.5, 0.5))
+        floor = float(edges[int(np.argmax(hist))])
+        b['cut'] = floor + CUT
+        b['rule'] = (f'ОЦЕНКА: мода низов {fmt(len(vals))} мешей в полосе '
+                     f'[{b["lo"]:.0f}, {b["hi"]:.0f}] -> пол {floor:.2f} + {CUT} м')
+    else:
+        b['cut'] = (FLOOR if b['main'] else b['lo']) + CUT
+        b['rule'] = (f'мешей в полосе всего {len(vals)} — пол взят '
+                     + ('из общей моды низов' if b['main'] else 'от низа полосы'))
+    b['floorM'] = None if b['cut'] is None else round(b['cut'] - CUT, 2)
+
+print()
+log('ЭТАЖИ И ВЫСОТЫ РЕЗА:')
+for b in BANDS:
+    cut = 'рельеф+%.1f' % CUT if b['cut'] is None else '%.2f м' % b['cut']
+    log(f'  {b["id"]:12s} полоса [{b["lo"]:.0f}, {b["hi"]:.0f}]  рез {cut:>12s}   [{b["rule"]}]')
+print()
+
+# ─────────────────────────────────────────── что резать и на какой высоте
+
+def band_h(b, i):
+    """Высота плоскости реза для экземпляра i в полосе b; None — рез по рельефу."""
+    if b['cut'] is not None:
+        return b['cut']
     glo, ghi = GROUND.box_range(boxes[i, 0], boxes[i, 2], boxes[i, 3], boxes[i, 5])
-    if np.isnan(glo):
-        n_nan_ground += 1
-        glo = ghi = FLOOR             # террейн сюда не достаёт — берём плоский пол
-    if boxes[i, 1] <= ghi + CUT and boxes[i, 4] >= glo + CUT:
-        cand.append(i)
-cand = np.array(cand, dtype=np.int64)
-cand_cls = collections.Counter(inst[int(i)][5] for i in cand)
-log(f'кандидатов {fmt(len(cand))}: ' + ', '.join(f'{k}={fmt(v)}' for k, v in sorted(cand_cls.items()))
+    return None if not np.isnan(glo) else FLOOR + CUT
+
+
+tasks = collections.defaultdict(list)        # (src,pid) -> [(индекс экземпляра, id полосы)]
+n_nan_ground = 0
+per_band_cand = collections.Counter()
+for i in range(len(inst)):
+    for b in BANDS:
+        if ok_box[i]:
+            if b['cut'] is not None:
+                if not (boxes[i, 1] <= b['cut'] <= boxes[i, 4]):
+                    continue
+            else:
+                glo, ghi = GROUND.box_range(boxes[i, 0], boxes[i, 2], boxes[i, 3], boxes[i, 5])
+                if np.isnan(glo):
+                    n_nan_ground += 1
+                    glo = ghi = FLOOR
+                if not (boxes[i, 1] <= ghi + CUT and boxes[i, 4] >= glo + CUT):
+                    continue
+        tasks[(inst[i][0], inst[i][1])].append((i, b['id']))
+        per_band_cand[b['id']] += 1
+n_tasks = sum(len(v) for v in tasks.values())
+log(f'резов запланировано {fmt(n_tasks)} на {fmt(len(tasks))} уникальных мешей: '
+    + ', '.join(f'{k}={fmt(v)}' for k, v in per_band_cand.items())
     + (f'; без земли под габаритом {n_nan_ground}' if n_nan_ground else ''))
 
 # ─────────────────────────────────────────── сечение поверхностью «земля + рез»
 
-def cut_instance(V, F, i):
+def cut_instance(V, F, i, plane=None):
     """Экземпляр -> ([замкнутые контуры], [открытые цепи]) в МИРОВЫХ метрах.
 
     Поле реза считается ПОВЕРШИННО: D = y вершины − (земля под ней + рез). Поэтому
@@ -300,7 +370,9 @@ def cut_instance(V, F, i):
     """
     src, pid, pos, rot, sc, cls, name, br = inst[int(i)]
     wx, wy, wz = mg.world_xyz(V, pos, rot, sc)
-    if GROUND is None:
+    if plane is not None:
+        h = plane                             # поэтажный рез: плоскость этажа
+    elif GROUND is None:
         h = FLAT                              # карта без террейна: пол плоский
     else:
         g = GROUND.sample(wx, wz).astype(np.float64)
@@ -331,7 +403,6 @@ def cut_instance(V, F, i):
 
 # ─────────────────────────────────────────── растр силуэтов
 
-CLS = np.zeros((RH, RW), dtype=np.uint8) if WANT_FILL else None
 MAX_FILL_PX = MAX_FILL_FRAC * RW * RH
 
 
@@ -372,7 +443,7 @@ def fill_even_odd(loops, ox, oy, w, h):
     return (np.cumsum(acc[:, :w], axis=1) & 1).astype(bool)
 
 
-def stamp(closed_px, open_px, cid):
+def stamp(closed_px, open_px, cid, CLS):
     """Силуэт экземпляра в общий растр классов. Приоритет = номер класса (np.maximum)."""
     pts = closed_px + open_px
     xs = np.concatenate([p[:, 0] for p in pts])
@@ -404,36 +475,30 @@ def stamp(closed_px, open_px, cid):
     return n
 
 
-# ─────────────────────────────────────────── прогон
+# ─────────────────────────────────────────── прогон: меш читается ОДИН раз на все этажи
 
-paths = {c: {'in': [], 'out': []} for c in CLASSES}    # экземпляры: списки (закрытые, открытые)
-stat = {c: dict(instances=0, loops=0, chains=0, lengthM=0.0, outside=0) for c in CLASSES}
+BY = {b['id']: b for b in BANDS}
+paths = {b['id']: {c: {'in': [], 'out': []} for c in CLASSES} for b in BANDS}
+stat = {b['id']: {c: dict(instances=0, loops=0, chains=0, lengthM=0.0, outside=0) for c in CLASSES}
+        for b in BANDS}
+big, oversized = [], []
 n_hit = n_miss = n_fail = 0
-big = []          # самые крупные силуэты: диагностика протечек заливки
-oversized = []    # выброшенные предохранителем — печатаются вслух и идут в JSON
-n_flat = [0]      # сколько экземпляров срезано по запасному плоскому уровню
 tri_total = 0
-# Экземпляры группируются по МЕШУ: одну бочку игра ставит сотнями, и парсить её меш заново
-# на каждый экземпляр — самая дорогая ошибка этого скрипта. Порядок — по файлу мешей:
-# шаренные .assets весят сотни МБ, перечитывать их накладно.
-tasks = collections.defaultdict(list)
-for i in cand.tolist():
-    tasks[(inst[i][0], inst[i][1])].append(i)
+n_flat = [0]
 order = sorted(tasks.items(), key=lambda kv: (kv[0][0], kv[0][1]))
-log(f'уникальных мешей к чтению {fmt(len(order))} на {fmt(len(cand))} экземпляров')
 t_cut = time.time()
 done = 0
-for k, (key, idxs) in enumerate(order):
+for k, (key, jobs) in enumerate(order):
     m = MESHES.mesh(key[0], key[1])
     if m is None:
-        n_fail += len(idxs)
+        n_fail += len(jobs)
         MESHES.evict(key[0])
         continue
     V, F = m
-    for i in idxs:
+    for i, bid in jobs:
         done += 1
         cls = inst[i][5]
-        closed, opens = cut_instance(V, F, i)
+        closed, opens = cut_instance(V, F, i, band_h(BY[bid], i))
         tri_total += len(F)
         if not closed and not opens:
             n_miss += 1
@@ -441,15 +506,6 @@ for k, (key, idxs) in enumerate(order):
         n_hit += 1
         cpx = [FR.to_px(P) for P in closed]
         opx = [FR.to_px(P) for P in opens]
-        if WANT_FILL:
-            npx = stamp(cpx, opx, CID[cls])
-            a_m2 = abs(npx) * FR.mpp ** 2
-            if npx < 0:
-                oversized.append((round(a_m2), cls, inst[i][6], '/'.join(inst[i][7])))
-                continue              # экземпляр целиком мимо слоя: ни растра, ни вектора
-            if a_m2 > 200:
-                big.append((a_m2, cls, inst[i][6], '/'.join(inst[i][7]),
-                            len(closed), len(opens)))
         cx = float(np.mean([p[:, 0].mean() for p in (cpx + opx)]))
         cy = float(np.mean([p[:, 1].mean() for p in (cpx + opx)]))
         where = 'in'
@@ -457,225 +513,219 @@ for k, (key, idxs) in enumerate(order):
             r, c = int(round(cy)), int(round(cx))
             if not (0 <= r < RH and 0 <= c < RW and ZONE[r, c]):
                 where = 'out'
-                stat[cls]['outside'] += 1
-        paths[cls][where].append((cpx, opx))
-        stat[cls]['instances'] += 1
-        stat[cls]['loops'] += len(closed)
-        stat[cls]['chains'] += len(opens)
-        stat[cls]['lengthM'] += sum(mg.plen(P) for P in closed) + sum(mg.plen(P) for P in opens)
+                stat[bid][cls]['outside'] += 1
+        paths[bid][cls][where].append((cpx, opx))
+        s = stat[bid][cls]
+        s['instances'] += 1
+        s['loops'] += len(closed)
+        s['chains'] += len(opens)
+        s['lengthM'] += sum(mg.plen(P) for P in closed) + sum(mg.plen(P) for P in opens)
     if k and k % 250 == 0:
-        log(f'  сечение {fmt(done)} / {fmt(len(cand))} экземпляров, пересекли {fmt(n_hit)} '
+        log(f'  сечение {fmt(done)} / {fmt(n_tasks)}, пересекли {fmt(n_hit)} '
             f'[{time.time() - t_cut:.0f}s]')
     MESHES.evict(key[0])
 if n_flat[0]:
-    log(f'запасной плоский уровень {FLOOR:.2f} м применён к {fmt(n_flat[0])} экземплярам — '
+    log(f'запасной плоский уровень применён к {fmt(n_flat[0])} экземплярам — '
         f'террейн под ними не покрывает рамку')
-log(f'сечение готово за {time.time() - t_cut:.0f}s: пересекли поверхность {fmt(n_hit)}, '
-    f'мимо {fmt(n_miss)}, меш не прочитан {n_fail}; треугольников {fmt(tri_total)}')
-for c in CLASSES:
-    s = stat[c]
-    log(f'  {c:9s} экземпляров {fmt(s["instances"]):>7s} | контуров {fmt(s["loops"]):>7s} | '
-        f'открытых цепей {fmt(s["chains"]):>6s} | длина {fmt(s["lengthM"]):>9s} м' +
-        (f' | снаружи зоны {fmt(s["outside"])}' if ZONE is not None else ''))
+log(f'сечение готово за {time.time() - t_cut:.0f}s: пересекли {fmt(n_hit)}, мимо {fmt(n_miss)}, '
+    f'меш не прочитан {n_fail}; треугольников {fmt(tri_total)}')
 
-# ─────────────────────────────────────────── самопроверки слоями
+# ─────────────────────────────────────────── растр, запись и самопроверки — ПО ЭТАЖАМ
 
-checks = {}
-STONE_TALL_M = 4.5    # измеренная слоем 9 граница «декор / препятствие», не выбранная на глаз
-
-stones_json = os.path.join(GEN, 'stones', f'{MAP_ID}-stones.json')
-if WANT_FILL and os.path.exists(stones_json):
-    # ⚠️ Проверять «центр камня попал в силуэт» НЕЛЬЗЯ: валун сужается кверху, и его pivot
-    # на высоте метра лежит МИМО собственного сечения (на Таможне так промахивается больше
-    # половины). Проверяется перекрытие с ГАБАРИТОМ ОБВОДКИ камня (hullPx слоя 9).
-    # И порог по высоте нужен настоящий: 387 из 823 валунов Таможни ниже реза целиком —
-    # это камни по колено, им в слое препятствий делать нечего.
-    st = json.load(open(stones_json, encoding='utf-8'))['instances']
-    tall = [s for s in st if s.get('inGameZone') and s.get('height', 0) > STONE_TALL_M
-            and SKIP_SCENE.search(s.get('level', '')) is None and s.get('hullPx')]
-    hit = 0
-    for s in tall:
-        xs = [p[0] for p in s['hullPx']]
-        ys = [p[1] for p in s['hullPx']]
-        c0, c1 = max(0, int(min(xs))), min(RW, int(max(xs)) + 1)
-        r0, r1 = max(0, int(min(ys))), min(RH, int(max(ys)) + 1)
-        if r0 < r1 and c0 < c1 and (CLS[r0:r1, c0:c1] > 0).mean() > 0.02:
-            hit += 1
-    checks['stonesCovered'] = dict(total=len(tall), hit=hit, minHeightM=STONE_TALL_M,
-                                   _=f'камни слоя 9 выше {STONE_TALL_M} м в игровой зоне: '
-                                     f'под габаритом обводки есть силуэт слоя 7 '
-                                     f'(центр камня для этого не годится — pivot мимо сечения)')
-    log(f'самопроверка камнями: под {hit} из {len(tall)} камней выше {STONE_TALL_M} м есть силуэт')
-
-if oversized:
-    log(f'ПРЕДОХРАНИТЕЛЬ: выброшено {len(oversized)} экземпляров крупнее '
-        f'{MAX_FILL_FRAC * 100:.1f} % рамки — это не препятствия:')
-    for a, c, nm, br in sorted(oversized, reverse=True)[:10]:
-        log(f'  {a:12,d} м²  {c:9s} {nm[:44]:44s} {br}')
-
-if big:
-    big.sort(reverse=True)
-    log(f'самые крупные силуэты ({len(big)} шт. крупнее 200 м²), топ-15:')
-    for a, c, nm, br, nc, no in big[:15]:
-        log(f'  {a:12,.0f} м²  {c:9s} контуров {nc:4d} цепей {no:4d}  {nm[:44]:44s} {br}')
-
-if WANT_FILL:
-    area = {c: float((CLS == CID[c]).sum()) * FR.mpp ** 2 for c in CLASSES}
-    covered = float((CLS > 0).sum())
-    checks['areaM2'] = {c: round(area[c], 1) for c in CLASSES}
-    checks['coverPercent'] = round(covered / (RW * RH) * 100, 3)
-    log('площадь силуэтов: ' + ', '.join(f'{c}={fmt(area[c])} м²' for c in CLASSES) +
-        f'; покрытие рамки {checks["coverPercent"]:.2f} %')
-
-    # ⚠️ Слой может пересечь тысячи мешей и при этом лечь ЦЕЛИКОМ МИМО РАМКИ: так вышло на
-    # Терминале, где синтетический манифест описывает X[-1605,-675], а комнаты карты стоят
-    # в X≈195. Счётчики при этом бодрые (30 188 пересечений, 29 640 контуров), пустой только
-    # растр — то есть без этой проверки «карта собрана» было бы неправдой.
-    if n_hit > 100 and covered < 0.0001 * RW * RH:
-        gx = [p[:, 0] for c in CLASSES for it in paths[c].values() for cp, op in it for p in cp + op]
-        gy = [p[:, 1] for c in CLASSES for it in paths[c].values() for cp, op in it for p in cp + op]
-        bb = (float(min(a.min() for a in gx)), float(min(a.min() for a in gy)),
-              float(max(a.max() for a in gx)), float(max(a.max() for a in gy))) if gx else None
-        checks['outsideFrame'] = dict(coverPercent=checks['coverPercent'], geometryBBoxPx=bb,
-                                      framePx=[0, 0, RW, RH])
-        log(f'⚠️ СЛОЙ ЛЁГ МИМО РАМКИ: пересечений {fmt(n_hit)}, а закрашено {covered:.0f} px.')
-        log(f'   геометрия в пикселях {bb}, рамка [0, 0, {RW}, {RH}] — привязка карты не та, '
-            f'что описывает манифест (у синтетического манифеста это значит неверные '
-            f'boundsFromConfig в EFT_MAP_CONFIG).')
-
-# ─────────────────────────────────────────── запись PNG
-
+# Растр держится по ОДНОМУ за раз: у Улиц рамка 11946x16384 = 196 Мпикс, шесть этажей
+# одновременно съели бы больше гигабайта только на масках классов.
 files = []
-if WANT_FILL:
-    log('крашу растр…')
-    rgba = np.zeros((RH, RW, 4), dtype=np.uint8)
-    # контур = граница силуэта класса: 4-соседство по тому же классу
-    for c in CLASSES:
-        cid = CID[c]
-        m = CLS == cid
-        if not m.any():
-            continue
-        e = np.zeros_like(m)
-        e[1:, :] |= m[1:, :] & ~m[:-1, :]
-        e[:-1, :] |= m[:-1, :] & ~m[1:, :]
-        e[:, 1:] |= m[:, 1:] & ~m[:, :-1]
-        e[:, :-1] |= m[:, :-1] & ~m[:, 1:]
-        col = COLORS[c]
-        for ch in range(3):
-            rgba[..., ch][m] = col[ch]
-        rgba[..., 3][m] = FILL_ALPHA
-        rgba[..., 3][e] = 255
-        del m, e
-    p_png = os.path.join(OUTDIR, f'{MAP_ID}-obstacles.png')
-    Image.fromarray(rgba, 'RGBA').save(p_png, optimize=False)
-    files.append(p_png)
-    log(f'  {p_png} ({os.path.getsize(p_png) / 1e6:.1f} МБ)')
-    del rgba
+summary = {}
+checks = {}
+STONE_TALL_M = 4.5
+stones_json = os.path.join(GEN, 'stones', f'{MAP_ID}-stones.json')
+stones_tall = []
+if os.path.exists(stones_json):
+    st = json.load(open(stones_json, encoding='utf-8'))['instances']
+    stones_tall = [s for s in st if s.get('inGameZone') and s.get('height', 0) > STONE_TALL_M
+                   and SKIP_SCENE.search(s.get('level', '')) is None and s.get('hullPx')]
 
-# ─────────────────────────────────────────── запись SVG
-
-log('пишу SVG…')
-parts = ['<?xml version="1.0" encoding="UTF-8"?>',
-         f'<svg xmlns="http://www.w3.org/2000/svg" width="{RW}" height="{RH}" '
-         f'viewBox="0 0 {RW} {RH}">',
-         f'<title>{MAP_ID}: препятствия выше {CUT:.1f} м (рез по рельефу: земля + {CUT:.1f} м)</title>']
-for c in CLASSES:
-    col = '#%02x%02x%02x' % COLORS[c]
-    for where in ('in', 'out'):
-        items = paths[c][where]
-        if not items:
-            continue
-        gid = c if where == 'in' else f'{c}-outside'
-        parts.append(f'<g id="{gid}" data-title="{TITLES[c]}" fill="{col}" fill-opacity="0.35" '
-                     f'fill-rule="evenodd" stroke="{col}" stroke-width="1.5" '
-                     f'stroke-linejoin="round" stroke-linecap="round"'
-                     + (' opacity="0.4"' if where == 'out' else '') + '>')
-        for cpx, opx in items:
-            if cpx:
-                d = ' '.join('M' + ' L'.join(f'{x:.1f},{y:.1f}' for x, y in P) + ' Z' for P in cpx)
-                parts.append(f'<path d="{d}"/>')
-            if opx:
-                d = ' '.join('M' + ' L'.join(f'{x:.1f},{y:.1f}' for x, y in P) for P in opx)
-                parts.append(f'<path fill="none" d="{d}"/>')
-        parts.append('</g>')
-parts.append('</svg>')
-p_svg = os.path.join(OUTDIR, f'{MAP_ID}-obstacles.svg')
-open(p_svg, 'w', encoding='utf-8').write('\n'.join(parts))
-files.append(p_svg)
-log(f'  {p_svg} ({os.path.getsize(p_svg) / 1e6:.1f} МБ)')
-del parts
-
-# ─────────────────────────────────────────── наложение на арт
-
-# Имя файла подложки берётся ИЗ МАНИФЕСТА, а не собирается из «-main-»: у Леса главный слой
-# называется `main_0.16`, у Берега и Ground Zero — `main_summer`, у Ледокола главного слоя нет
-# вовсе. Зашитое «-main-» молча оставляло эти карты без картинки для сверки.
 _rast = os.path.dirname(MAN_PATH)
 _main = (next((L for L in FR.layers() if L.get('isMain')), None)
          or (FR.layers()[0] if FR.layers() else None))
-ART = []
-for _f in ((_main or {}).get('files') or {}).values():
-    ART.append(os.path.join(_rast, _f))
-ART += [f'{_rast}/{MAP_ID}-main-8192.webp', f'{_rast}/{MAP_ID}-main-z6.png']
-art = next((t for t in ART if os.path.exists(t)), None)
-if WANT_FILL and not art:
-    log(f'! подложки для сверки нет ({", ".join(os.path.basename(a) for a in ART[:3])}) — '
-        f'check.jpg не будет, только PNG и SVG')
-if WANT_FILL and art:
-    base = Image.open(art).convert('RGBA')
-    bw, bh = base.size
-    small = np.array(Image.fromarray(CLS, 'L').resize((bw, bh), Image.NEAREST))
-    ov = np.zeros((bh, bw, 4), dtype=np.uint8)
+
+
+def art_for(bid):
+    """Подложка этажа: файл слоя из манифеста, иначе главный слой, иначе шаблон «-main-»."""
+    cand = []
+    for L in FR.layers():
+        if L.get('id') == bid:
+            cand += list((L.get('files') or {}).values())
+    cand += list(((_main or {}).get('files') or {}).values())
+    cand += [f'{MAP_ID}-{bid}-8192.webp', f'{MAP_ID}-main-8192.webp', f'{MAP_ID}-main-z6.png']
+    for f in cand:
+        p = f if os.path.isabs(f) else os.path.join(_rast, f)
+        if os.path.exists(p):
+            return p
+    return None
+
+
+for b in BANDS:
+    bid = b['id']
+    sfx = '' if len(BANDS) == 1 else f'-{bid}'
+    R = paths[bid]
+    n_inst = sum(stat[bid][c]['instances'] for c in CLASSES)
+    if not n_inst:
+        log(f'{bid}: ни одного силуэта — файлы не пишутся')
+        summary[bid] = dict(band=[b['lo'], b['hi']], cutMeters=b['cut'], floorMeters=b['floorM'],
+                            cutRule=b['rule'], classes={c: dict(stat[bid][c]) for c in CLASSES},
+                            instances=0)
+        continue
+
+    area = {}
+    cover = 0.0
+    if WANT_FILL:
+        CLS = np.zeros((RH, RW), dtype=np.uint8)
+        drop = 0
+        for c in CLASSES:
+            for where in ('in', 'out'):
+                for cpx, opx in R[c][where]:
+                    npx = stamp(cpx, opx, CID[c], CLS)
+                    if npx < 0:
+                        drop += 1
+                        oversized.append((round(abs(npx) * FR.mpp ** 2), bid, c))
+                    elif abs(npx) * FR.mpp ** 2 > 200:
+                        big.append((abs(npx) * FR.mpp ** 2, bid, c))
+        area = {c: round(float((CLS == CID[c]).sum()) * FR.mpp ** 2, 1) for c in CLASSES}
+        covered = float((CLS > 0).sum())
+        cover = round(covered / (RW * RH) * 100, 3)
+        if drop:
+            log(f'  {bid}: предохранитель выбросил {drop} экземпляров крупнее '
+                f'{MAX_FILL_FRAC * 100:.1f} % рамки')
+        if n_hit > 100 and covered < 0.0001 * RW * RH and b['main']:
+            log(f'  ⚠️ {bid}: СЛОЙ ЛЁГ МИМО РАМКИ — силуэтов {n_inst}, закрашено {covered:.0f} px')
+            checks['outsideFrame'] = dict(band=bid, coverPercent=cover)
+        if stones_tall and b['main']:
+            hit = 0
+            for s in stones_tall:
+                xs = [p[0] for p in s['hullPx']]; ys = [p[1] for p in s['hullPx']]
+                c0, c1 = max(0, int(min(xs))), min(RW, int(max(xs)) + 1)
+                r0, r1 = max(0, int(min(ys))), min(RH, int(max(ys)) + 1)
+                if r0 < r1 and c0 < c1 and (CLS[r0:r1, c0:c1] > 0).mean() > 0.02:
+                    hit += 1
+            checks['stonesCovered'] = dict(total=len(stones_tall), hit=hit, minHeightM=STONE_TALL_M,
+                                           _='камни слоя 9 выше порога: под габаритом обводки есть '
+                                             'силуэт наземного этажа (центр камня не годится — '
+                                             'pivot лежит мимо сечения)')
+            log(f'  самопроверка камнями: под {hit} из {len(stones_tall)} камней есть силуэт')
+
+        rgba = np.zeros((RH, RW, 4), dtype=np.uint8)
+        for c in CLASSES:
+            mk = CLS == CID[c]
+            if not mk.any():
+                continue
+            e = np.zeros_like(mk)
+            e[1:, :] |= mk[1:, :] & ~mk[:-1, :]
+            e[:-1, :] |= mk[:-1, :] & ~mk[1:, :]
+            e[:, 1:] |= mk[:, 1:] & ~mk[:, :-1]
+            e[:, :-1] |= mk[:, :-1] & ~mk[:, 1:]
+            col = COLORS[c]
+            for ch in range(3):
+                rgba[..., ch][mk] = col[ch]
+            rgba[..., 3][mk] = FILL_ALPHA
+            rgba[..., 3][e] = 255
+            del mk, e
+        p_png = os.path.join(OUTDIR, f'{MAP_ID}-obstacles{sfx}.png')
+        Image.fromarray(rgba, 'RGBA').save(p_png)
+        files.append(p_png)
+        del rgba
+
+        art = art_for(bid)
+        if art:
+            base = Image.open(art).convert('RGBA')
+            bw, bh = base.size
+            small = np.array(Image.fromarray(CLS, 'L').resize((bw, bh), Image.NEAREST))
+            ov = np.zeros((bh, bw, 4), dtype=np.uint8)
+            for c in CLASSES:
+                mk = small == CID[c]
+                if not mk.any():
+                    continue
+                col = COLORS[c]
+                for ch in range(3):
+                    ov[..., ch][mk] = col[ch]
+                ov[..., 3][mk] = 150
+            p_jpg = os.path.join(OUTDIR, f'{MAP_ID}-obstacles{sfx}-check.jpg')
+            Image.alpha_composite(base, Image.fromarray(ov, 'RGBA')).convert('RGB').save(
+                p_jpg, quality=88)
+            files.append(p_jpg)
+            del base, ov, small
+        del CLS
+
+    parts = ['<?xml version="1.0" encoding="UTF-8"?>',
+             f'<svg xmlns="http://www.w3.org/2000/svg" width="{RW}" height="{RH}" '
+             f'viewBox="0 0 {RW} {RH}">',
+             f'<title>{MAP_ID}: препятствия выше {CUT:.1f} м, этаж «{b["name"]}» '
+             f'({"рельеф" if b["cut"] is None else "%.2f м" % b["cut"]})</title>']
     for c in CLASSES:
-        m = small == CID[c]
-        if not m.any():
-            continue
-        col = COLORS[c]
-        for ch in range(3):
-            ov[..., ch][m] = col[ch]
-        ov[..., 3][m] = 150       # арт должен читаться ПОД заливкой: сверяют смещения, а не цвет
-    p_jpg = os.path.join(OUTDIR, f'{MAP_ID}-obstacles-check.jpg')
-    Image.alpha_composite(base, Image.fromarray(ov, 'RGBA')).convert('RGB').save(p_jpg, quality=88)
-    files.append(p_jpg)
-    log(f'  {p_jpg}')
-    del base, ov, small
+        col = '#%02x%02x%02x' % COLORS[c]
+        for where in ('in', 'out'):
+            items = R[c][where]
+            if not items:
+                continue
+            gid = c if where == 'in' else f'{c}-outside'
+            parts.append(f'<g id="{gid}" data-title="{TITLES[c]}" fill="{col}" fill-opacity="0.35" '
+                         f'fill-rule="evenodd" stroke="{col}" stroke-width="1.5" '
+                         f'stroke-linejoin="round" stroke-linecap="round"'
+                         + (' opacity="0.4"' if where == 'out' else '') + '>')
+            for cpx, opx in items:
+                if cpx:
+                    d = ' '.join('M' + ' L'.join(f'{x:.1f},{y:.1f}' for x, y in P) + ' Z'
+                                 for P in cpx)
+                    parts.append(f'<path d="{d}"/>')
+                if opx:
+                    d = ' '.join('M' + ' L'.join(f'{x:.1f},{y:.1f}' for x, y in P) for P in opx)
+                    parts.append(f'<path fill="none" d="{d}"/>')
+            parts.append('</g>')
+    parts.append('</svg>')
+    p_svg = os.path.join(OUTDIR, f'{MAP_ID}-obstacles{sfx}.svg')
+    open(p_svg, 'w', encoding='utf-8').write('\n'.join(parts))
+    files.append(p_svg)
+    del parts
+
+    summary[bid] = dict(band=[b['lo'], b['hi']], cutMeters=b['cut'], floorMeters=b['floorM'],
+                        cutRule=b['rule'], instances=n_inst,
+                        classes={c: dict(stat[bid][c], lengthM=round(stat[bid][c]['lengthM'], 1))
+                                 for c in CLASSES},
+                        areaM2=area, coverPercent=cover)
+    log(f'{bid}: экземпляров {fmt(n_inst)}, покрытие {cover:.2f} % -> '
+        f'{os.path.basename(p_svg)}')
 
 # ─────────────────────────────────────────── сводка
 
 noise = collections.Counter()
-for i in cand.tolist():
+for i in range(len(inst)):
     if inst[i][5] == 'props':
         noise['/'.join(inst[i][7])] += 1
 
 doc = dict(
-    _='Слой 7 «препятствия выше 1 м» карты EFT: ОДИН слой, сечение геометрии ПОВЕРХНОСТЬЮ '
-      '«земля + рез» (порог считается повершинно по карте высот, поэтому рез следует рельефу). '
-      'Ничего ниже реза сюда не попадает по построению. Заливка — правило чёт-нечет '
-      'поэкземплярно (полости вычитаются), объединение экземпляров по ИЛИ. '
+    _='Слой 7 «препятствия выше 1 м» карты EFT: сечение геометрии на метре над полом. '
+      'На карте с террейном наземный этаж режется ПОВЕРХНОСТЬЮ «земля + рез» (порог '
+      'повершинно, рез следует рельефу); остальные этажи — плоскостью, уровень пола каждого '
+      'ОЦЕНИВАЕТСЯ модой низов геометрии в полосе высот (полоса из манифеста — это диапазон '
+      'для фильтра, а не пол). Ничего ниже реза не попадает по построению. Заливка — правило '
+      'чёт-нечет поэкземплярно (полости вычитаются), объединение экземпляров по ИЛИ. '
       'В пиксель растра: px = frame.affine.px_from_x[0] + [1]*X, py = ...py_from_z...',
     map=MAP_ID, generated=time.strftime('%Y-%m-%d'),
     source=dict(client=DATA, registry='docs/registry/eft-scenes.json',
-                skippedScenes=skipped_scenes, manifest=MAN_PATH.replace('\\', '/'),
-                heightMap=HEIGHT_NPY.replace('\\', '/') if GROUND is not None else None,
-                zoneMask=ZONE_PNG.replace('\\', '/') if ZONE is not None else None),
+                skippedScenes=skipped_scenes, manifest=MAN_PATH.replace(chr(92), '/'),
+                heightMap=HEIGHT_NPY.replace(chr(92), '/') if GROUND is not None else None,
+                zoneMask=ZONE_PNG.replace(chr(92), '/') if ZONE is not None else None),
     frame=dict(width=RW, height=RH, affine=FR.affine, metersPerPixel=FR.mpp,
                coordinateRotation=FR.man.get('coordinateRotation', 0), mirrorX=FR.mirror_x),
-    method=dict(cutMeters=CUT,
-                cutRule=('земля под вершиной + рез (билинейно по карте высот)' if GROUND is not None
-                         else f'ПЛОСКОСТЬ {FLAT:.2f} м: террейна у карты нет, пол оценён модой низов'),
-                flatCutMeters=None if GROUND is not None else round(FLAT, 3),
+    method=dict(cutMeters=CUT, floors=WANT_FLOORS, flatFloorEstimateM=round(FLOOR, 2),
                 weld=WELD, simplify=SIMPLIFY, minLen=MIN_LEN, minAreaM2=MIN_AREA,
                 meshReader='UnityPy MeshHandler (Mesh.export() НЕ используется: зеркалит X)',
                 lodPolicy='свой MeshFilter = LOD0; иначе только дети lod[0]; '
                           'отсев _LOD1/2/3, SHADOW, BALLISTIC, COLLIDER',
                 dropped={rx.pattern: DROPPED.get(rx.pattern, 0) for rx in DROP_RULES}),
     instances={c: int(by_cls.get(c, 0)) for c in CLASSES},
-    candidates={c: int(cand_cls.get(c, 0)) for c in CLASSES},
-    classes={c: dict(stat[c], lengthM=round(stat[c]['lengthM'], 1), title=TITLES[c])
-             for c in CLASSES},
+    floors=summary,
     meshesCrossed=n_hit, meshesMissed=n_miss, meshesFailed=n_fail,
-    flatFallbackFloor=round(FLOOR, 3), flatFallbackInstances=n_flat[0],
-    noGroundUnderBox=n_nan_ground,
     trianglesProcessed=int(tri_total),
     checks=checks, oversizedDropped=sorted(oversized, reverse=True)[:20],
     propBranches=noise.most_common(40),
@@ -686,22 +736,18 @@ files.append(p_json)
 
 print()
 print(f'=== ПРЕПЯТСТВИЯ ВЫШЕ {CUT:.1f} М — {MAP_ID} ' + '=' * 34)
-print('  рез: земля + %.1f м, поверхность следует рельефу (карта высот %s)' % (CUT, GROUND.G.shape)
-      if GROUND is not None else
-      '  рез: ПЛОСКОСТЬ %.2f м (террейна у карты нет, пол оценён по низам геометрии)' % FLAT)
-for c in CLASSES:
-    s = stat[c]
-    line = (f'  {c:9s} {TITLES[c]:38s} экземпляров {fmt(s["instances"]):>7s} | '
-            f'контуров {fmt(s["loops"]):>7s}')
-    if WANT_FILL:
-        line += f' | площадь {fmt(checks["areaM2"][c]):>8s} м²'
+for b in BANDS:
+    sm = summary.get(b['id']) or {}
+    cut = 'рельеф' if b['cut'] is None else '%.2f м' % b['cut']
+    line = (f'  {b["id"]:12s} {b["name"][:22]:22s} рез {cut:>9s} | '
+            f'экземпляров {fmt(sm.get("instances", 0)):>7s}')
+    if sm.get('coverPercent') is not None:
+        line += f' | покрытие {sm["coverPercent"]:5.2f} %'
     print(line)
-print(f'  до реза не достают {fmt(len(inst) - len(cand))} из {fmt(len(inst))} экземпляров — '
-      f'это и есть фильтр «выше {CUT:.0f} м», он же построение, а не порог')
 if 'stonesCovered' in checks:
     k = checks['stonesCovered']
-    print(f'  самопроверка слоем камней: под {k["hit"]} из {k["total"]} камней выше '
+    print(f'  самопроверка камнями: под {k["hit"]} из {k["total"]} камней выше '
           f'{k["minHeightM"]} м есть силуэт')
-print('  файлы:')
+print(f'  файлов записано: {len(files)}')
 for f in files:
     print('   ', f)
