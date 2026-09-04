@@ -73,8 +73,11 @@ probe_ip () {
   t80=$(powershell -NoProfile -Command "(Test-NetConnection -ComputerName '$ip' -Port 80 -InformationLevel Quiet -WarningAction SilentlyContinue)" 2>/dev/null | tr -d '\r ')
   printf "tcp443=%-5s tcp80=%-5s " "${t443:-?}" "${t80:-?}"
   local r
-  r=$(curl -s -o /dev/null --max-time 12 \
-        -w "http=%{http_code} tls=%{time_appconnect}s total=%{time_total}s" \
+  # --compressed ОБЯЗАТЕЛЕН: без него сервер шлёт несжатый HTML (220 КБ вместо 21 КБ),
+  # и время передачи раздувается вдесятеро — измеряли бы не то, что видит браузер.
+  # ttfb отделён от total намеренно: ttfb = задержка/фильтрация, (total-ttfb) = скорость канала.
+  r=$(curl -s -o /dev/null --compressed --max-time 30 \
+        -w "http=%{http_code} tls=%{time_appconnect}s ttfb=%{time_starttransfer}s total=%{time_total}s size=%{size_download}B" \
         --resolve "${host}:443:${ip}" "https://${host}${path}" 2>&1)
   case "$r" in
     *http=000*|*"error"*|"") echo "HTTPS: ПРОВАЛ ($r)";;
@@ -115,9 +118,11 @@ for ip in "$SITE_IP" "$CDN_IP"; do
   echo
   echo "  ── через адрес $ip:"
   printf "     имя cta.quest    -> "
-  curl -s -o /dev/null --max-time 12 -w "http=%{http_code} tls=%{time_appconnect}s\n" --resolve "cta.quest:443:$ip" "https://cta.quest/eft" 2>&1 | tail -1
+  curl -s -o /dev/null --compressed --max-time 30 -w "http=%{http_code} tls=%{time_appconnect}s ttfb=%{time_starttransfer}s total=%{time_total}s
+" --resolve "cta.quest:443:$ip" "https://cta.quest/eft" 2>&1 | tail -1
   printf "     имя $CDN -> "
-  curl -s -o /dev/null --max-time 12 -w "http=%{http_code} tls=%{time_appconnect}s\n" --resolve "${CDN}:443:$ip" "https://${CDN}${ICON}" 2>&1 | tail -1
+  curl -s -o /dev/null --compressed --max-time 30 -w "http=%{http_code} tls=%{time_appconnect}s ttfb=%{time_starttransfer}s total=%{time_total}s
+" --resolve "${CDN}:443:$ip" "https://${CDN}${ICON}" 2>&1 | tail -1
 done
 
 # ── 5. Где рвётся маршрут ─────────────────────────────────────────────
@@ -138,7 +143,8 @@ echo
 echo "### 6. КОНТРОЛЬНАЯ ГРУППА (для сравнения)"
 for u in "https://ya.ru/" "https://www.cloudflare.com/" "https://github.com/"; do
   printf "     %-32s " "$u"
-  curl -s -o /dev/null --max-time 10 -w "http=%{http_code} total=%{time_total}s\n" "$u" 2>&1 | tail -1
+  curl -s -o /dev/null --compressed --max-time 15 -w "http=%{http_code} ttfb=%{time_starttransfer}s total=%{time_total}s
+" "$u" 2>&1 | tail -1
 done
 
 echo
