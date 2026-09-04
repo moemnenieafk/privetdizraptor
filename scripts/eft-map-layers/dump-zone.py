@@ -779,8 +779,23 @@ for h in holes:
     md.polygon(ring_px(h), fill=0)
 mask.save(base_out + '-mask.png', optimize=True)
 
+# ⚠️ ГАРДА ПРАВДОПОДОБИЯ. Панели границы не обязаны образовывать замкнутое кольцо, и тогда
+# заливка находит не игровую зону, а СЛУЧАЙНЫЙ КАРМАН внутри неё: у Леса вышло 2.45 га при
+# карте примерно в 200 га, у Резерва 0.32 га. Формально всё честно — полигон замкнут, площадь
+# посчитана, JSON валиден; неправда видна только в отношении к рамке. Порог 5 % выбран по
+# известным правильным замерам: Таможня 54 % рамки, Ледокол (корабль) 8 %.
+FRAME_M2 = (XMAX - XMIN) * (ZMAX - ZMIN)
+zone_share = AREA / FRAME_M2 if FRAME_M2 > 0 else 0.0
+zone_doubt = zone_share < 0.05
+if zone_doubt:
+    print(f'\n⚠️ ЗОНА ПОДОЗРИТЕЛЬНО МАЛА: {AREA / 1e4:.2f} га = {zone_share * 100:.1f} % рамки '
+          f'({FRAME_M2 / 1e4:.0f} га). Панели границы, скорее всего, не образуют замкнутого '
+          f'кольца, и заливка нашла карман внутри карты, а не игровую зону. Маску такой зоны '
+          f'НЕЛЬЗЯ использовать для клипа соседних слоёв — она отрежет живое.')
+
 json.dump(dict(
     map=MAP_ID, layer='zone', generated=STAMP,
+    plausible=not zone_doubt, frameSharePercent=round(zone_share * 100, 2),
     source=dict(scene=SCRIPTS_NAME, level=SCRIPTS_LEVEL, root=ROOT,
                 panelsTotal=len(panels) + len(drop_plate), panelsUsed=len(kept),
                 panelsDroppedPlate=len(drop_plate), panelsDroppedOffGround=len(dropped),
