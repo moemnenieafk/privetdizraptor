@@ -446,6 +446,9 @@ elif neighbour_refs:
 # --- дамп ---------------------------------------------------------------------
 terrain_path = f'{outdir}/{map_id}-terrain.bin'
 accounted_refs, made_splats = set(), []
+# Слайс -> файл ассетов, откуда взяты его ДАННЫЕ. Нужно потребителям: растительность лежит
+# внутри TerrainData, и читать её надо из ТЕХ ЖЕ файлов, что дали слайсы.
+slice_sources = {}
 neighbours_written = 0
 out = open(terrain_path, 'wb')
 try:
@@ -544,6 +547,7 @@ try:
                   f'{os.path.basename(level_path)}')
             neighbours_written += 1
         accounted_refs.add(node['ref'])
+        slice_sources[node['name']] = owner
         written += 1
 except Fatal as e:
     out.close()
@@ -571,6 +575,20 @@ for node in nodes:
     print(f'  ОШИБКА: нода сцены {node["name"]} не записана — её TerrainData {src} '
           f'подан на вход, но в дамп не попал')
     errors += 1
+
+_src_path = f'{outdir}/{map_id}-terrain-sources.json'
+import json as _json
+_json.dump(dict(
+    _='Файлы ассетов, из которых взяты ДАННЫЕ слайсов этой карты. Потребители (растительность, '
+      'материал) обязаны читать ВСЕ перечисленные, а не только «свой»: слайс из чужого '
+      'sharedassets — такая же часть террейна карты. У Резерва три слайса из четырёх лежат '
+      'в файлах Таможни и Берега, и без этого списка деревья извлекались только из своего '
+      'файла: 679 растений в углу рамки вместо всей карты.',
+    map=map_id, level=os.path.basename(level_path), own=shared_base,
+    sources=sorted(set(slice_sources.values())), slices=slice_sources),
+    open(_src_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+print(f'источники слайсов -> {os.path.basename(_src_path)}: '
+      f'{", ".join(sorted(set(slice_sources.values())))}')
 
 print(f'\nготово: {written} террейнов (из них соседних слайсов {neighbours_written}); '
       f'нод сцены {len(nodes)}, из них в чужих файлах пропущено {foreign} -> {terrain_path}')

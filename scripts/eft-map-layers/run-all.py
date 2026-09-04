@@ -264,14 +264,29 @@ class Ctx:
 
     @property
     def shared_assets_all(self):
-        """Свой файл ассетов + чужие, откуда пришли соседние слайсы (для растительности)."""
+        """Все файлы ассетов, откуда пришли слайсы террейна (для растительности и материала).
+
+        Источник правды — сайдкар `<map>-terrain-sources.json`, который пишет дампер по ФАКТУ
+        прогона. Признак в реестре тут не годится: у Резерва его не было, и растительность
+        извлеклась только из своего файла — 679 растений в углу рамки вместо всей карты,
+        при том что три слайса из четырёх лежат в файлах Таможни и Берега.
+        """
         paths = []
         own = self.shared_assets
         if own:
             paths.append(own)
-        for fn in (self.terr.get('neighbourSlices', {}) or {}).get('dataIn', []):
+        src = os.path.join(self.work, '%s-terrain-sources.json' % self.map)
+        names = []
+        if os.path.exists(src):
+            try:
+                names = json.load(open(src, encoding='utf-8')).get('sources') or []
+            except Exception:
+                names = []
+        if not names:
+            names = (self.terr.get('neighbourSlices', {}) or {}).get('dataIn', []) or []
+        for fn in names:
             p = os.path.join(self.client, fn)
-            if p not in paths:
+            if p not in paths and os.path.exists(p):
                 paths.append(p)
         return paths
 
