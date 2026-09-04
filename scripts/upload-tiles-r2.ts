@@ -11,9 +11,10 @@
 // После прогона: задать NEXT_PUBLIC_MAP_TILE_BASE_URL (или общую NEXT_PUBLIC_MAP_BASE_URL,
 // когда SVG-подложки тоже переедут на R2) = R2-base → тайлы отдаются с R2.
 //
-// Запуск:  npx tsx scripts/upload-tiles-r2.ts [map=factory] [--skip-existing]
+// Запуск:  npx tsx scripts/upload-tiles-r2.ts [map=factory] [--skip-existing] [--floor=ground]
 //          (или npm run db:upload-tiles-r2)
 //   --skip-existing: HEAD перед PUT, уже залитые пропускать (дёшевый resume прерванного прогона).
+//   --floor=<folder>: залить только один этаж (пересобрали его мастер — не гонять всю карту).
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
@@ -24,8 +25,10 @@ import { S3Client, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s
 
 const MAP = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "factory";
 const SKIP_EXISTING = process.argv.includes("--skip-existing");
+// --floor=ground: залить только пирамиду одного этажа (пересобрали один мастер — не гонять всю карту).
+const FLOOR = process.argv.find((a) => a.startsWith("--floor="))?.slice("--floor=".length);
 const PUBLIC_DIR = "public";
-const TILES_DIR = path.join(PUBLIC_DIR, "maps", MAP, "tiles");
+const TILES_DIR = path.join(PUBLIC_DIR, "maps", MAP, "tiles", ...(FLOOR ? [FLOOR] : []));
 const CACHE_CONTROL = "public, max-age=31536000, immutable";
 const CONCURRENCY = 64;
 const CONTENT_TYPE: Record<string, string> = {
@@ -83,7 +86,7 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `карта: ${MAP} · тайлов: ${files.length} · bucket: ${R2_BUCKET}${SKIP_EXISTING ? " · режим: skip-existing" : ""}`,
+    `карта: ${MAP}${FLOOR ? ` · этаж: ${FLOOR}` : ""} · тайлов: ${files.length} · bucket: ${R2_BUCKET}${SKIP_EXISTING ? " · режим: skip-existing" : ""}`,
   );
 
   const total = files.length;
