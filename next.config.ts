@@ -101,8 +101,19 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        // Зеркало иконок предметов (Cloudflare R2). Нужно, чтобы гнать иконки через
-        // /_next/image (same-origin) в канвас-игру аркады — иначе CORS/taint ломает WebGL-CRT.
+        // Зеркало иконок предметов (Cloudflare R2) через КАСТОМНЫЙ домен. Нужно, чтобы гнать
+        // иконки через /_next/image (same-origin) в канвас-игру аркады — иначе CORS/taint
+        // ломает WebGL-CRT. ⚠️ Публичный `*.r2.dev` режется ТСПУ по SNI (см. ниже) — канон
+        // отдачи ассетов теперь этот хост.
+        protocol: 'https',
+        hostname: 'cdn.cta.quest',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        // ⚠️ Старый публичный адрес бакета. Оставлен ТОЛЬКО как путь отката (вернуть
+        // NEXT_PUBLIC_ICON_BASE_URL на pub-….r2.dev и пересобрать). Для RU-аудитории мёртв:
+        // ТСПУ блокирует домен `r2.dev` по SNI, как и `*.workers.dev`.
         protocol: 'https',
         hostname: '**.r2.dev',
         port: '',

@@ -1491,6 +1491,11 @@ export function MapViewerClient({
 
   // ── Read-only инфо-карточка (замок→ключ / требования выхода) — один поповер за раз, НАД меткой. ──
   const [infoMarker, setInfoMarker] = useState<MapViewMarker | null>(null);
+  // Тайлы не доехали (провайдер режет CDN, офлайн, битый префикс). Без этого карта просто
+  // молча пустая и юзер думает, что сломан раздел. Порог, а не первая ошибка: одиночный
+  // промах на краю пирамиды — норма.
+  const [tilesBlocked, setTilesBlocked] = useState(false);
+  const tileErrCountRef = useRef(0);
   const infoCardRef = useRef<HTMLDivElement | null>(null);
   const openInfoCardRef = useRef<(m: MapViewMarker) => void>(() => {});
   useEffect(() => {
@@ -1999,12 +2004,22 @@ export function MapViewerClient({
         noWrap: true,
         bounds: imgBounds,
         keepBuffer: 4,
-        // Не дёргать тайлы во время зум-анимации и панорамы — грузим по остановке. На rate-limited
-        // r2.dev это убирает шквал промежуточных запросов, которые всё равно тут же отбрасываются.
+        // Не дёргать тайлы во время зум-анимации и панорамы — грузим по остановке: убирает
+        // шквал промежуточных запросов, которые всё равно тут же отбрасываются. Заводилось
+        // против rate-limit `r2.dev`; на кастомном домене лимита нет, но выигрыш по трафику
+        // остаётся — оставлено осознанно.
         updateWhenZooming: false,
         updateWhenIdle: true,
         className: 'cta-map-tiles',
       }).addTo(map);
+      // Тайлы могут не доехать целиком (провайдер режет CDN по SNI — так было с `r2.dev`
+      // у RU-аудитории). Без сигнала карта выглядит просто пустой.
+      tileErrCountRef.current = 0;
+      tileLayerRef.current.on('tileerror', () => {
+        tileErrCountRef.current += 1;
+        if (tileErrCountRef.current >= 4) setTilesBlocked(true);
+      });
+      tileLayerRef.current.on('tileload', () => setTilesBlocked(false));
       // 2) SVG-оверлеи поверх тайлов (вектор-геометрия и/или слой маркеров) — каждый по флагу.
       // Тот же холст 16384² → ложатся 1:1. Снимаем непрозрачный фон #141416 у оверлея,
       // иначе он перекроет тайлы. Гонка async-fetch закрыта токеном на слой.
@@ -2647,6 +2662,16 @@ export function MapViewerClient({
   return (
     <div className={rootCls}>
       <div ref={containerRef} className="absolute inset-0 z-0" />
+
+      {/* Подложка карты не доехала. Раньше это выглядело как «раздел сломан»: пустой холст
+          без единого намёка. Частая причина у RU-аудитории — провайдер режет CDN по SNI. */}
+      {tilesBlocked && (
+        <div className="pointer-events-none absolute left-1/2 top-4 z-[530] -translate-x-1/2">
+          <div className="rounded-xs border border-lines-hover bg-card-menu px-4 py-2 font-blender-medium text-type-micro uppercase tracking-widest text-text-secondary">
+            Подложка карты не загрузилась — вероятно, провайдер блокирует CDN
+          </div>
+        </div>
+      )}
 
       {/* Карточка редакторского маркера — popup НАД каплей (позиция ставится эффектом).
           activeMarker = черновик (pending, без id) ЛИБО открытый сохранённый маркер. */}
