@@ -122,8 +122,8 @@ if missing:
 # --- ОПЫТ 1: предикат mirror обязан краснеть на заведомо зеркальном входе ---------------
 # Вход переворачивается по Z ПЕРЕД проверкой; сам код проверки не трогается.
 # Ожидаемые числа — из постановки таска 05, а не из этого файла: 0.0289 против 0.0636.
-MIRROR = [("orient, verdict, orient_axis = orientation_note(a, h, node['name'])",
-           "orient, verdict, orient_axis = orientation_note(a[::-1], h, node['name'])")]
+MIRROR = [("orient, verdict, orient_axis, orient_scores = orientation_note(a, h, node['name'])",
+           "orient, verdict, orient_axis, orient_scores = orientation_note(a[::-1], h, node['name'])")]
 
 code, log, outdir = patched_run('mirror', MIRROR,
                                 customs + [os.path.join(WORK, 'mirror'), 'customs'])

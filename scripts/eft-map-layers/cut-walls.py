@@ -224,7 +224,8 @@ def ground_at(x, z):
 cls_arr = np.array([g[5] for g in inst])
 LAYERS = []
 for L in man['layers']:
-    lo, hi = L['heights']
+    # heights: null (Развязка) = полоса не задана = «всё», а не отказ разбора
+    lo, hi = L.get('heights') or [-1000, 1000]
     LAYERS.append(dict(id=L['id'], lo=float(lo), hi=float(hi)))
 
 cut_note = {}

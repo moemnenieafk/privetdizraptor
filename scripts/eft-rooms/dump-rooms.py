@@ -60,6 +60,7 @@ MAP2GROUP = {
     'ground-zero': 'Sandbox',
     'labyrinth': 'Labyrinth',
     'terminal': 'Terminal',
+    'icebreaker': 'Icebreaker',
 }
 
 # Эталонные счётчики. Расхождение = формат поехал (или сцены поехали) — падаем с кодом 1.

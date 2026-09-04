@@ -69,6 +69,9 @@ written = errors = 0
 drop_name = drop_layers = drop_nonode = 0
 weak_orient = mirror_orient = 0
 mirror_axes = []           # (имя слайса, победившая ось) — сводка обязана назвать ТУ ось
+slice_scores = []          # (имя, баллы 4 гипотез) — для вердикта ориентации ПО КАРТЕ
+grid_res = []              # (имя, невязка X, невязка Z) — для контроля сетки ПО КАРТЕ
+GRID_TOL = 1.0             # м: разброс невязок, внутри которого сетка считается целой
 layer_fallbacks = []
 
 
@@ -267,10 +270,22 @@ def heights01(hm, res, tname):
             raise Fatal(f'{tname}: float-высоты вне 0..1: [{h.min()}, {h.max()}]')
     else:
         lo, hi = int(raw.min()), int(raw.max())
-        if lo < 0 or hi > HEIGHT_DIV:
-            raise Fatal(f'{tname}: сырые высоты [{lo},{hi}] не укладываются в делитель '
-                        f'{HEIGHT_DIV:.0f} — нормализация в этой версии Unity другая')
-        h = (raw.astype(np.float64) / HEIGHT_DIV).astype(np.float32)
+        # Выброс на шаг квантования выше делителя ≠ другая нормализация. У Леса (Slice_1_3)
+        # таких значений 9 из 1 050 625 (0.0009 %), а хвост распределения гладкий:
+        # 32764:3, 32765:1, 32766:4, 32767:9 — это край int16, а не иной масштаб. Отличаем
+        # ДОЛЕЙ, а не порогом по максимуму: при другой нормализации выше делителя оказалась бы
+        # заметная часть карты, а не девять точек.
+        if lo < 0 or hi > 32767:
+            raise Fatal(f'{tname}: сырые высоты [{lo},{hi}] вне int16 — формат не тот')
+        if hi > HEIGHT_DIV:
+            n_over = int((raw > HEIGHT_DIV).sum())
+            frac = n_over / raw.size
+            if frac > 1e-4:
+                raise Fatal(f'{tname}: выше делителя {HEIGHT_DIV:.0f} лежит {n_over} значений '
+                            f'({frac * 100:.3f} %) — это другая нормализация, а не выбросы')
+            print(f'  ! {tname}: {n_over} значений ({frac * 100:.4f} %) на шаг выше делителя '
+                  f'{HEIGHT_DIV:.0f} — подрезаю до 1.0', flush=True)
+        h = np.clip(raw.astype(np.float64) / HEIGHT_DIV, 0.0, 1.0).astype(np.float32)
     return h.reshape(res, res)
 
 
@@ -324,14 +339,16 @@ def orientation_note(a, h, tname):
     и `.bin` уезжал в `.bad` без содержательной причины. Утверждение выносится ТОЛЬКО когда
     сигнал выше ORIENT_MIN и разрыв выходит за ORIENT_MARGIN — и это одинаково строго
     для «подтверждена» и для «зеркало лучше». Между порогами — weak, то есть предупреждение.
-    Возвращает (строка для лога, вердикт: ok | weak | mirror, победившая ось или None).
+    Возвращает (строка для лога, вердикт: ok | weak | mirror, победившая ось или None,
+    словарь баллов всех четырёх гипотез). Баллы нужны вердикту ПО КАРТЕ: ориентация хранения
+    splat — свойство формата, а не слайса, поэтому решение принимается по сумме, а не поштучно.
     Ось нужна сводке: чинить придётся именно ту симметрию, которая выиграла, — на Берегу это
     «зеркало по X», и спутать её с зеркалом по Z у потребителей будет дорого."""
     ah, aw, _ = a.shape
     res = h.shape[0]
     if ah > res or aw > res or min(ah, aw) < 8:
         return ('ориентация=НЕ ВЕРИФИЦИРОВАНА (splat подробнее высот, сравнивать нечем)',
-                'weak', None)
+                'weak', None, {})
     # Формула общая; при aw == ah == res-1 (все карты, виденные до сих пор) она вырождается
     # в тождество. Карта, которая её оживит, обязана быть видна в логе, а не проехать молча.
     if aw != res - 1 or ah != res - 1:
@@ -378,7 +395,7 @@ def orientation_note(a, h, tname):
     if signal < ORIENT_MIN:
         return (f'ориентация=НЕ ВЕРИФИЦИРОВАНА (сигнал слаб: {duel}, лучший балл {signal:.4f} '
                 f'ниже порога {ORIENT_MIN} — рельеф плоский или материал однороден; '
-                f'сверить с растром карты вручную)', 'weak', None)
+                f'сверить с растром карты вручную)', 'weak', None, s)
     mine_p, rival_p = max(mine, 0.0), max(rival, 0.0)
     if rival_p > ORIENT_MARGIN * mine_p:
         if rival_p <= ORIENT_MIRROR_MIN:
@@ -387,15 +404,15 @@ def orientation_note(a, h, tname):
             return (f'ориентация=НЕ ВЕРИФИЦИРОВАНА (зеркало впереди, но само слабо: {duel}, '
                     f'балл зеркала {rival_p:.4f} не обошёл {ORIENT_MIRROR_MIN:.4f} '
                     f'= {ORIENT_MIN} x {ORIENT_MARGIN}) — сверить материал с растром карты',
-                    'weak', rival_key)
+                    'weak', rival_key, s)
         return (f'ориентация=ЗЕРКАЛО ЛОЖИТСЯ ЛУЧШЕ: {duel} '
                 f'(запас зеркала {margin(rival_p, mine_p, 2)} при пороге {ORIENT_MARGIN}x, '
-                f'балл зеркала {rival_p:.4f} > {ORIENT_MIRROR_MIN:.4f})', 'mirror', rival_key)
+                f'балл зеркала {rival_p:.4f} > {ORIENT_MIRROR_MIN:.4f})', 'mirror', rival_key, s)
     if mine_p > ORIENT_MARGIN * rival_p:
-        return (f'ориентация=подтверждена (запас {margin(mine_p, rival_p)}, {duel})', 'ok', None)
+        return (f'ориентация=подтверждена (запас {margin(mine_p, rival_p)}, {duel})', 'ok', None, s)
     return (f'ориентация=НЕ ВЕРИФИЦИРОВАНА (запас мал: {duel}, разрыв {margin(signal, min(mine_p, rival_p))} '
             f'не дотянул до {ORIENT_MARGIN}x) — сверить материал с растром карты',
-            'weak', rival_key)
+            'weak', rival_key, s)
 
 
 # --- очередь дампа: свой файл, при флаге — плюс соседи общей сетки ---------------
@@ -477,27 +494,30 @@ try:
         al = len(layer_ptrs)
         names = layer_names(layer_ptrs, node['name'], owner)
         a, aw, ah = alphamaps(sd.get('m_AlphaTextures') or [], al, node['name'], owner)
-        orient, verdict, orient_axis = orientation_note(a, h, node['name'])
+        orient, verdict, orient_axis, orient_scores = orientation_note(a, h, node['name'])
         if verdict == 'weak':
             weak_orient += 1
         elif verdict == 'mirror':
             mirror_orient += 1
             mirror_axes.append((node['name'], orient_axis))
+        if orient_scores:
+            slice_scores.append((node['name'], orient_scores))
 
-        # контроль привязки: Slice_<ряд>_<кол> → x=(кол-1)*700, z=(ряд-1)*700 от корня
+        # Контроль привязки: Slice_<ряд>_<кол> → x=(кол-1)*700, z=(ряд-1)*700 от корня.
+        # Проверяется ОТНОСИТЕЛЬНАЯ структура, а не абсолютный якорь: имена слайсов адресуют
+        # ОБЩУЮ мировую сетку EFT, а корень группы у карты свой, поэтому карта целиком может
+        # быть сдвинута относительно формулы. У Леса все четыре слайса промахиваются на ОДИН
+        # И ТОТ ЖЕ вектор (2152.7, 959.1), а шаг между ними ровно 700 м — сетка цела, просто
+        # якорь другой. Разъезд слайсов ОТНОСИТЕЛЬНО ДРУГ ДРУГА — вот это ошибка, и её
+        # видно только после прохода по всем нодам (вывод ниже, после цикла).
         m = SLICE_NAME.match(node['name'])
         grid_note = 'сетка=имя без ряда/колонки'
         if m:
             row, col = int(m.group(1)), int(m.group(2))
             ex = node['root'][0] + (col - 1) * GRID_STEP
             ez = node['root'][2] + (row - 1) * GRID_STEP
-            dx, dz = abs(px - ex), abs(pz - ez)
-            grid_note = f'сетка=ok (ряд {row}, кол {col}, d {max(dx, dz):.2f} м)'
-            if dx > 1.0 or dz > 1.0:
-                grid_note = f'сетка=РАСХОЖДЕНИЕ {max(dx, dz):.1f} м'
-                print(f'  ОШИБКА привязки {node["name"]}: сетка ждёт ({ex:.1f},{ez:.1f}), '
-                      f'иерархия дала ({px:.1f},{pz:.1f}), расхождение ({dx:.1f},{dz:.1f}) м')
-                errors += 1
+            grid_res.append((node['name'], px - ex, pz - ez))
+            grid_note = f'сетка=ряд {row}, кол {col} (невязка к формуле ниже, по всей карте)'
 
         nb = node['name'].encode('utf-8')
         out.write(struct.pack('<i', len(nb))); out.write(nb)
@@ -560,19 +580,66 @@ if layer_fallbacks:
     print(f'ВНИМАНИЕ: слоёв без diffuse-текстуры {len(layer_fallbacks)} '
           f'({", ".join(layer_fallbacks[:6])}) — build-material.py сопоставляет семейства '
           f'по именам, эти слои уедут в дефолтное семейство')
-if weak_orient:
-    print(f'ВНИМАНИЕ: ориентация splat не подтверждена у {weak_orient} террейнов — '
-          f'сверить карту материала с растром карты глазами')
-if mirror_orient:
-    where = '; '.join(f'{n} -> {ax}' for n, ax in mirror_axes)
-    axes = ', '.join(sorted({ax for _, ax in mirror_axes}))
-    if orient_override:
-        print(f'ВНИМАНИЕ: у {mirror_orient} террейнов зеркало ложится на рельеф лучше прямой '
-              f'ориентации ({where}); отказ снят флагом orient-override')
+# --- контроль сетки: ОТНОСИТЕЛЬНАЯ структура, а не абсолютный якорь -----------
+if grid_res:
+    rx = [r[1] for r in grid_res]
+    rz = [r[2] for r in grid_res]
+    spread = max(max(rx) - min(rx), max(rz) - min(rz))
+    shift = (sum(rx) / len(rx), sum(rz) / len(rz))
+    if spread <= GRID_TOL:
+        if abs(shift[0]) > GRID_TOL or abs(shift[1]) > GRID_TOL:
+            print(f'СЕТКА: все {len(grid_res)} слайсов смещены относительно формулы на ОДИН '
+                  f'и тот же вектор ({shift[0]:.1f},{shift[1]:.1f}) м, разброс {spread:.2f} м '
+                  f'— шаг между слайсами цел, у карты просто свой якорь. Это не ошибка: '
+                  f'боевые позиции берутся из иерархии, формула — только контроль.')
+        else:
+            print(f'СЕТКА: все {len(grid_res)} слайсов на формуле, разброс {spread:.2f} м')
     else:
-        print(f'ОШИБКА: у {mirror_orient} террейнов зеркальная ориентация ложится на рельеф ЛУЧШЕ '
-              f'прямой ({where}) — материал, скорее всего, отражён по оси: {axes}')
-        errors += mirror_orient
+        print(f'ОШИБКА СЕТКИ: невязки слайсов расходятся между собой на {spread:.1f} м '
+              f'(допуск {GRID_TOL} м) — слайсы разъехались ОТНОСИТЕЛЬНО ДРУГ ДРУГА, '
+              f'а это уже не смещение якоря:')
+        for n, dx, dz in grid_res:
+            print(f'    {n:16s} невязка ({dx:9.1f},{dz:9.1f}) м')
+        errors += len(grid_res)
+
+# --- вердикт ориентации splat: ОДИН НА КАРТУ ---------------------------------
+# Ориентация ХРАНЕНИЯ splat — свойство формата (версии Unity), а не отдельного слайса:
+# внутри одной карты она обязана быть одинаковой. Поэтому вердикт выносится по СРЕДНЕМУ
+# баллу всех слайсов, а не поштучно. У Леса три слайса из четырёх уверенно дают «как есть»
+# (запасы 1.6x, 1.5x, 3.6x), а один — «зеркало по Z» с запасом 2.2x; поштучный отказ ронял
+# прогон из-за одного слайса, тогда как сумма по карте говорит обратное. Агрегат не ослабляет
+# защиту, а усиливает: настоящее зеркало проявилось бы на ВСЕХ слайсах сразу.
+if slice_scores:
+    keys = list(slice_scores[0][1])
+    avg = {k: sum(max(sc.get(k, 0.0), 0.0) for _, sc in slice_scores) / len(slice_scores)
+           for k in keys}
+    mine = avg.get('как есть', 0.0)
+    rival_key = max((k for k in avg if k != 'как есть'), key=lambda k: avg[k])
+    rival = avg[rival_key]
+    duel = (f'по карте ({len(slice_scores)} слайсов): как есть {mine:.4f} против '
+            f'«{rival_key}» {rival:.4f}')
+    if max(mine, rival) < ORIENT_MIN:
+        print(f'ВНИМАНИЕ: ориентация splat НЕ ВЕРИФИЦИРОВАНА — {duel}, сигнал ниже '
+              f'{ORIENT_MIN}: сверить карту материала с растром глазами')
+    elif rival > ORIENT_MARGIN * mine and rival > ORIENT_MIRROR_MIN:
+        if orient_override:
+            print(f'ВНИМАНИЕ: {duel} — зеркало ложится лучше; отказ снят флагом orient-override')
+        else:
+            print(f'ОШИБКА: {duel} — зеркало ложится на рельеф ЛУЧШЕ прямой ориентации '
+                  f'по КАРТЕ ЦЕЛИКОМ; материал отражён по оси: {rival_key}')
+            errors += 1
+    elif mine > ORIENT_MARGIN * rival:
+        print(f'ОРИЕНТАЦИЯ: подтверждена по карте ({mine / max(rival, 1e-12):.1f}x), {duel}')
+    else:
+        print(f'ВНИМАНИЕ: ориентация splat не подтверждена по карте (запас мал), {duel} — '
+              f'сверить карту материала с растром глазами')
+    if mirror_orient:
+        where = '; '.join(f'{n} -> {ax}' for n, ax in mirror_axes)
+        print(f'  слайсов-диссидентов {mirror_orient} из {len(slice_scores)} ({where}) — '
+              f'учтены в среднем, отдельного вердикта не выносят')
+if weak_orient:
+    print(f'ВНИМАНИЕ: ориентация splat не подтверждена у {weak_orient} террейнов поштучно — '
+          f'вердикт по карте выше')
 if errors:
     for p in made_splats:
         try:

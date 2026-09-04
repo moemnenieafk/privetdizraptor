@@ -99,7 +99,7 @@ MAP2GROUP = {
     'customs': 'Custom', 'factory': 'Factory', 'woods': 'Woods', 'shoreline': 'shorline',
     'lighthouse': 'Lighthouse', 'interchange': 'Shopping_Mall', 'reserve': 'Reserve_Base',
     'the-lab': 'Laboratory', 'streets-of-tarkov': 'City', 'ground-zero': 'Sandbox',
-    'labyrinth': 'Labyrinth', 'terminal': 'Terminal',
+    'labyrinth': 'Labyrinth', 'terminal': 'Terminal', 'icebreaker': 'Icebreaker',
 }
 # Карты, которые ЯВНО описаны в dump-roads.py (у остальных там GENERIC-профиль вслепую).
 ROADS_TUNED = ('customs', 'lighthouse')
@@ -175,9 +175,13 @@ class Ctx:
         self.group = MAP2GROUP.get(self.map)
         self.scenes = self._scenes()
         self.terr = self._terrain_registry()
-        if not self.terrain_flags and self.terr.get('neighbourSlices'):
-            # У карты есть слайсы в чужих sharedassets (общая мировая сетка EFT, D08) —
-            # без флага дампер их только напечатает строкой лога, и покрытие просядет.
+        if not self.terrain_flags:
+            # `with-neighbours` теперь ДЕФОЛТ, а не признак из реестра. Слайс, на который
+            # ссылается СЦЕНА САМОЙ КАРТЫ, — часть её террейна независимо от того, в каком
+            # .assets он физически лежит (общая мировая сетка EFT, D08). У Резерва запись
+            # реестра про соседей молчала, и из четырёх слайсов сцены брался один: земли
+            # не оказалось под 78 411 объектами из 88 715, слой препятствий собрал 0.23 %
+            # рамки вместо реального покрытия. Лишние слайсы безвредны — рамка их обрежет.
             self.terrain_flags = ['with-neighbours']
 
     # ── реестры
@@ -495,12 +499,14 @@ class SWalls(Step):
 class SObstacles(Step):
     """Слой 7: препятствия выше 1 м, ОДИН слой, рез по рельефу (земля + 1 м).
 
-    Карта высот здесь не «желательна», а обязательна: без неё поверхности реза не существует,
-    и скрипт откажется — поэтому height в жёстких зависимостях, а не в мягких.
+    Карта высот ЖЕЛАТЕЛЬНА, но не обязательна: с ней рез следует рельефу, без неё (Завод,
+    Лаборатория, Лабиринт, Терминал, Ледокол — карты вообще без террейна) земля считается
+    плоской, а уровень пола оценивается по низам геометрии и печатается вслух. Жёсткая
+    зависимость здесь означала бы «на карте без террейна слоя не будет», хотя он собирается.
     """
 
     def inputs(self, c):
-        return [(c.client, True), (c.manifest, True), (c.height_npy, True),
+        return [(c.client, True), (c.manifest, True), (c.height_npy, False),
                 (c.frame_json, False), (c.zone_mask, False)]
 
     def outputs(self, c):
@@ -510,8 +516,9 @@ class SObstacles(Step):
                 os.path.join(o, '%s-obstacles.json' % c.map)]
 
     def argv(self, c):
-        a = py('eft-map-layers/cut-obstacles.py', c.client, c.map, c.manifest, c.d('obstacles'),
-               '--height', c.height_npy)
+        a = py('eft-map-layers/cut-obstacles.py', c.client, c.map, c.manifest, c.d('obstacles'))
+        if os.path.exists(c.height_npy):
+            a += ['--height', c.height_npy]
         if os.path.exists(c.zone_mask):
             a += ['--zone', c.zone_mask]
         return a
@@ -592,7 +599,7 @@ STEPS = collections.OrderedDict((s.name, s) for s in [
     SStones('stones', 'камни и скалы', deps=['manifest'], soft_deps=['frame']),
     SWalls('walls', 'стены зданий по этажам', deps=['manifest'], soft_deps=['frame', 'height']),
     SObstacles('obstacles', 'препятствия выше 1 м (один слой, рез по рельефу)',
-               deps=['manifest', 'height'], soft_deps=['frame', 'zone']),
+               deps=['manifest'], soft_deps=['frame', 'zone', 'height']),
     SRender('render', 'Blender-рендер объектов', deps=['frame', 'stones', 'vegetation']),
     SGate('gate', 'гейт ориентации splat (диагностика)', in_plan=False),
     SVerifyBin('verify-bin', 'сверка .bin с эталоном Unity', soft_deps=['terrain'], in_plan=False),

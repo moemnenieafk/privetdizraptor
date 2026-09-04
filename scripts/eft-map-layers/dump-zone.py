@@ -78,7 +78,7 @@ MAP2GROUP = {
     'customs': 'Custom', 'factory': 'Factory', 'woods': 'Woods', 'shoreline': 'shorline',
     'lighthouse': 'Lighthouse', 'interchange': 'Shopping_Mall', 'reserve': 'Reserve_Base',
     'the-lab': 'Laboratory', 'streets-of-tarkov': 'City', 'ground-zero': 'Sandbox',
-    'labyrinth': 'Labyrinth', 'terminal': 'Terminal',
+    'labyrinth': 'Labyrinth', 'terminal': 'Terminal', 'icebreaker': 'Icebreaker',
 }
 
 # ─────────────────────────────────────────── настройки алгоритма

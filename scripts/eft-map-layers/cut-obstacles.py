@@ -184,12 +184,18 @@ log(f'рамка {MAP_ID}: {RW}x{RH} px, {FR.mpp * 100:.2f} см/px, отраж�
     f'{"да" if FR.mirror_x else "нет"}')
 log('  ' + FR.verify(os.path.join(GEN, 'rooms', f'{MAP_ID}-rooms-frame.json')))
 
+# ЗЕМЛЯ. На карте с террейном рез следует рельефу. У Завода, Лаборатории, Лабиринта, Терминала
+# и Ледокола террейна НЕТ вообще — там «земля» это ПОЛ, и он плоский. Отказываться на таких
+# картах значит не собрать слой там, где он собирается тривиально; поэтому вместо отказа —
+# честная плоскость с оценкой уровня пола, и об оценке говорится вслух.
 HEIGHT_NPY = HEIGHT_ARG or os.path.join(GEN, 'ground', f'{MAP_ID}-height-meters.npy')
-if not os.path.exists(HEIGHT_NPY):
-    sys.exit(f'нет карты высот {HEIGHT_NPY} — рез «1 м от земли» без неё не существует; '
-             f'сначала шаг height')
-GROUND = mg.Ground(HEIGHT_NPY, FR)
-log(f'земля: {GROUND}; рез = земля + {CUT:.2f} м')
+GROUND = mg.Ground(HEIGHT_NPY, FR) if os.path.exists(HEIGHT_NPY) else None
+FLAT = None                   # уровень пола, если карты высот нет (метры игрового мира)
+if GROUND is not None:
+    log(f'земля: {GROUND}; рез = земля + {CUT:.2f} м')
+else:
+    log(f'! карты высот {os.path.basename(HEIGHT_NPY)} нет — карта без террейна, '
+        f'земля будет ПЛОСКОЙ (уровень оценится по низам геометрии)')
 
 ZONE_PNG = ZONE_ARG or os.path.join(GEN, 'zone', f'{MAP_ID}-zone-mask.png')
 ZONE = None
@@ -240,6 +246,26 @@ for i, (src, pid, pos, rot, sc, cls, name, br) in enumerate(inst):
 ok_box = ~np.isnan(boxes[:, 0])
 log(f'габариты есть у {fmt(int(ok_box.sum()))} из {fmt(len(inst))}')
 
+# Пол оценивается ВСЕГДА, даже когда террейн есть: у Резерва слайсы покрывают лишь часть
+# рамки, и под 78 411 объектами из 88 715 земли не было — без запасного уровня они просто
+# выпадали из слоя. Оценка — МОДА низов геометрии: плиты пола кластеризуются на одном уровне,
+# и это самый населённый полуметровый бин. Не медиана — медиану утаскивают этажи и подвалы.
+if True:
+    lows = boxes[ok_box, 1]
+    lows = lows[(lows > -200) & (lows < 200)]
+    hist, edges = np.histogram(lows, bins=np.arange(-200, 200.5, 0.5))
+    FLOOR = float(edges[int(np.argmax(hist))])
+    FLAT = FLOOR + CUT
+    band = next((L for L in FR.layers() if L.get('isMain') and L.get('heights')), None)
+    note = f'мода низов {fmt(len(lows))} мешей'
+    if band and band['heights'][0] > -900:
+        d = abs(band['heights'][0] - FLOOR)
+        note += f'; полоса «{band["id"]}» манифеста даёт {band["heights"][0]:.1f} м (расхождение {d:.1f} м)'
+        if d > 2.0:
+            log(f'  ⚠ оценка пола расходится с манифестом на {d:.1f} м — проверить глазами')
+    log(f'пол оценён в {FLOOR:.2f} м ({note}); плоский рез = {FLAT:.2f} м' +
+        ('' if GROUND is None else ' — запасной уровень там, где террейна под объектом нет'))
+
 # земля под габаритом берётся диапазоном (мин/макс по сетке 3x3): на склоне порог внутри
 # одного объекта гуляет, и одна точка в центре отсекла бы лишнее
 cand = []
@@ -248,10 +274,14 @@ for i in range(len(inst)):
     if not ok_box[i]:
         cand.append(i)                      # габарита нет — решит само сечение
         continue
+    if GROUND is None:
+        if boxes[i, 1] <= FLAT <= boxes[i, 4]:
+            cand.append(i)
+        continue
     glo, ghi = GROUND.box_range(boxes[i, 0], boxes[i, 2], boxes[i, 3], boxes[i, 5])
     if np.isnan(glo):
         n_nan_ground += 1
-        continue
+        glo = ghi = FLOOR             # террейн сюда не достаёт — берём плоский пол
     if boxes[i, 1] <= ghi + CUT and boxes[i, 4] >= glo + CUT:
         cand.append(i)
 cand = np.array(cand, dtype=np.int64)
@@ -270,14 +300,20 @@ def cut_instance(V, F, i):
     """
     src, pid, pos, rot, sc, cls, name, br = inst[int(i)]
     wx, wy, wz = mg.world_xyz(V, pos, rot, sc)
-    g = GROUND.sample(wx, wz).astype(np.float64)
-    if np.isnan(g).any():
-        med = np.nanmedian(g)
-        if np.isnan(med):
-            return None, None
-        g = np.where(np.isnan(g), med, g)
+    if GROUND is None:
+        h = FLAT                              # карта без террейна: пол плоский
+    else:
+        g = GROUND.sample(wx, wz).astype(np.float64)
+        if np.isnan(g).any():
+            med = np.nanmedian(g)
+            if np.isnan(med):
+                n_flat[0] += 1        # террейна под объектом нет вовсе — плоский пол
+                g = np.full(g.shape, FLOOR)
+            else:
+                g = np.where(np.isnan(g), med, g)
+        h = g + CUT
     # float64 сознательно: в float32 вершина, лежащая ровно на резе, схлопывается в 0
-    S = mg.slice_field(wx, wz, np.asarray(wy, dtype=np.float64) - (g + CUT), F)
+    S = mg.slice_field(wx, wz, np.asarray(wy, dtype=np.float64) - h, F)
     if S is None:
         return None, None
     closed, opens = [], []
@@ -375,6 +411,7 @@ stat = {c: dict(instances=0, loops=0, chains=0, lengthM=0.0, outside=0) for c in
 n_hit = n_miss = n_fail = 0
 big = []          # самые крупные силуэты: диагностика протечек заливки
 oversized = []    # выброшенные предохранителем — печатаются вслух и идут в JSON
+n_flat = [0]      # сколько экземпляров срезано по запасному плоскому уровню
 tri_total = 0
 # Экземпляры группируются по МЕШУ: одну бочку игра ставит сотнями, и парсить её меш заново
 # на каждый экземпляр — самая дорогая ошибка этого скрипта. Порядок — по файлу мешей:
@@ -430,6 +467,9 @@ for k, (key, idxs) in enumerate(order):
         log(f'  сечение {fmt(done)} / {fmt(len(cand))} экземпляров, пересекли {fmt(n_hit)} '
             f'[{time.time() - t_cut:.0f}s]')
     MESHES.evict(key[0])
+if n_flat[0]:
+    log(f'запасной плоский уровень {FLOOR:.2f} м применён к {fmt(n_flat[0])} экземплярам — '
+        f'террейн под ними не покрывает рамку')
 log(f'сечение готово за {time.time() - t_cut:.0f}s: пересекли поверхность {fmt(n_hit)}, '
     f'мимо {fmt(n_miss)}, меш не прочитан {n_fail}; треугольников {fmt(tri_total)}')
 for c in CLASSES:
@@ -486,6 +526,22 @@ if WANT_FILL:
     checks['coverPercent'] = round(covered / (RW * RH) * 100, 3)
     log('площадь силуэтов: ' + ', '.join(f'{c}={fmt(area[c])} м²' for c in CLASSES) +
         f'; покрытие рамки {checks["coverPercent"]:.2f} %')
+
+    # ⚠️ Слой может пересечь тысячи мешей и при этом лечь ЦЕЛИКОМ МИМО РАМКИ: так вышло на
+    # Терминале, где синтетический манифест описывает X[-1605,-675], а комнаты карты стоят
+    # в X≈195. Счётчики при этом бодрые (30 188 пересечений, 29 640 контуров), пустой только
+    # растр — то есть без этой проверки «карта собрана» было бы неправдой.
+    if n_hit > 100 and covered < 0.0001 * RW * RH:
+        gx = [p[:, 0] for c in CLASSES for it in paths[c].values() for cp, op in it for p in cp + op]
+        gy = [p[:, 1] for c in CLASSES for it in paths[c].values() for cp, op in it for p in cp + op]
+        bb = (float(min(a.min() for a in gx)), float(min(a.min() for a in gy)),
+              float(max(a.max() for a in gx)), float(max(a.max() for a in gy))) if gx else None
+        checks['outsideFrame'] = dict(coverPercent=checks['coverPercent'], geometryBBoxPx=bb,
+                                      framePx=[0, 0, RW, RH])
+        log(f'⚠️ СЛОЙ ЛЁГ МИМО РАМКИ: пересечений {fmt(n_hit)}, а закрашено {covered:.0f} px.')
+        log(f'   геометрия в пикселях {bb}, рамка [0, 0, {RW}, {RH}] — привязка карты не та, '
+            f'что описывает манифест (у синтетического манифеста это значит неверные '
+            f'boundsFromConfig в EFT_MAP_CONFIG).')
 
 # ─────────────────────────────────────────── запись PNG
 
@@ -551,9 +607,20 @@ del parts
 
 # ─────────────────────────────────────────── наложение на арт
 
-ART = [f'D:/Games/raster/{MAP_ID}/{MAP_ID}-main-8192.webp',
-       f'D:/Games/raster/{MAP_ID}/{MAP_ID}-main-z6.png']
+# Имя файла подложки берётся ИЗ МАНИФЕСТА, а не собирается из «-main-»: у Леса главный слой
+# называется `main_0.16`, у Берега и Ground Zero — `main_summer`, у Ледокола главного слоя нет
+# вовсе. Зашитое «-main-» молча оставляло эти карты без картинки для сверки.
+_rast = os.path.dirname(MAN_PATH)
+_main = (next((L for L in FR.layers() if L.get('isMain')), None)
+         or (FR.layers()[0] if FR.layers() else None))
+ART = []
+for _f in ((_main or {}).get('files') or {}).values():
+    ART.append(os.path.join(_rast, _f))
+ART += [f'{_rast}/{MAP_ID}-main-8192.webp', f'{_rast}/{MAP_ID}-main-z6.png']
 art = next((t for t in ART if os.path.exists(t)), None)
+if WANT_FILL and not art:
+    log(f'! подложки для сверки нет ({", ".join(os.path.basename(a) for a in ART[:3])}) — '
+        f'check.jpg не будет, только PNG и SVG')
 if WANT_FILL and art:
     base = Image.open(art).convert('RGBA')
     bw, bh = base.size
@@ -589,11 +656,14 @@ doc = dict(
     map=MAP_ID, generated=time.strftime('%Y-%m-%d'),
     source=dict(client=DATA, registry='docs/registry/eft-scenes.json',
                 skippedScenes=skipped_scenes, manifest=MAN_PATH.replace('\\', '/'),
-                heightMap=HEIGHT_NPY.replace('\\', '/'),
+                heightMap=HEIGHT_NPY.replace('\\', '/') if GROUND is not None else None,
                 zoneMask=ZONE_PNG.replace('\\', '/') if ZONE is not None else None),
     frame=dict(width=RW, height=RH, affine=FR.affine, metersPerPixel=FR.mpp,
                coordinateRotation=FR.man.get('coordinateRotation', 0), mirrorX=FR.mirror_x),
-    method=dict(cutMeters=CUT, cutRule='земля под вершиной + рез (билинейно по карте высот)',
+    method=dict(cutMeters=CUT,
+                cutRule=('земля под вершиной + рез (билинейно по карте высот)' if GROUND is not None
+                         else f'ПЛОСКОСТЬ {FLAT:.2f} м: террейна у карты нет, пол оценён модой низов'),
+                flatCutMeters=None if GROUND is not None else round(FLAT, 3),
                 weld=WELD, simplify=SIMPLIFY, minLen=MIN_LEN, minAreaM2=MIN_AREA,
                 meshReader='UnityPy MeshHandler (Mesh.export() НЕ используется: зеркалит X)',
                 lodPolicy='свой MeshFilter = LOD0; иначе только дети lod[0]; '
@@ -604,6 +674,8 @@ doc = dict(
     classes={c: dict(stat[c], lengthM=round(stat[c]['lengthM'], 1), title=TITLES[c])
              for c in CLASSES},
     meshesCrossed=n_hit, meshesMissed=n_miss, meshesFailed=n_fail,
+    flatFallbackFloor=round(FLOOR, 3), flatFallbackInstances=n_flat[0],
+    noGroundUnderBox=n_nan_ground,
     trianglesProcessed=int(tri_total),
     checks=checks, oversizedDropped=sorted(oversized, reverse=True)[:20],
     propBranches=noise.most_common(40),
@@ -614,7 +686,9 @@ files.append(p_json)
 
 print()
 print(f'=== ПРЕПЯТСТВИЯ ВЫШЕ {CUT:.1f} М — {MAP_ID} ' + '=' * 34)
-print(f'  рез: земля + {CUT:.1f} м, поверхность следует рельефу (карта высот {GROUND.G.shape})')
+print('  рез: земля + %.1f м, поверхность следует рельефу (карта высот %s)' % (CUT, GROUND.G.shape)
+      if GROUND is not None else
+      '  рез: ПЛОСКОСТЬ %.2f м (террейна у карты нет, пол оценён по низам геометрии)' % FLAT)
 for c in CLASSES:
     s = stat[c]
     line = (f'  {c:9s} {TITLES[c]:38s} экземпляров {fmt(s["instances"]):>7s} | '

@@ -78,17 +78,11 @@ DROP_RX = re.compile(r'SHADOW|COLLIDER|BALLISTIC|_LOD[1-9]|rocket|rockwool|tombs
 INST_RX = re.compile(r'(?:\s*\(\d+\)|\(Clone\))+\s*$')   # «Stone_03 (17)», «Rock_01(Clone)»
 LOD0_RX = re.compile(r'_LOD0$', re.I)
 
-# id карты портала -> папка локации в Assets/Content/Locations/<...>/
-MAP_LOCATION = {
-    'customs': 'Custom',
-    'lighthouse': 'Lighthouse',
-    'woods': 'Woods',
-    'shoreline': 'shorline',
-    'interchange': 'Shopping_Mall',
-    'reserve': 'Reserve_Base',
-    'factory': 'Factory',
-    'the-lab': 'Laboratory',
-}
+# id карты портала -> папка локации в Assets/Content/Locations/<...>/. Это ТА ЖЕ таблица, что
+# группа сцен в реестре (значения совпадали во всех восьми записях), поэтому копия убрана:
+# четвёртая копия одного словаря — это четыре места, где забудут добавить новую карту.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mapgeom import MAP2GROUP as MAP_LOCATION
 
 CLASS_ORDER = ['cliff', 'obstacle', 'decor']
 CLASS_STYLE = {                       # svg-заливка/обводка и индекс палитры png

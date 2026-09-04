@@ -110,7 +110,10 @@ else:
 
 # ─────────────────────────────────────────── этажи из манифеста
 
-layers = [dict(id=l['id'], name=l.get('name', l['id']), lo=l['heights'][0], hi=l['heights'][1],
+# heights: null в манифесте (Развязка) означает «полоса не задана» = весь диапазон, а не отказ.
+# Такой слой ведёт себя как `main` с полосой [-1000, 1000]: этаж один, гейта по высоте нет.
+layers = [dict(id=l['id'], name=l.get('name', l['id']),
+               lo=(l.get('heights') or [-1000, 1000])[0], hi=(l.get('heights') or [-1000, 1000])[1],
                art=(l.get('files') or {}).get('8192') or (l.get('files') or {}).get('z6'))
           for l in man.get('layers', [])] or [dict(id='all', name='All', lo=-1e9, hi=1e9, art=None)]
 
