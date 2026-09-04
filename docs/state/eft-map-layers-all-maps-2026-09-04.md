@@ -4,6 +4,7 @@ topic: слои карт EFT из клиента — прогон по всем 
 date: 2026-09-04
 canon: docs/decisions/eft-map-layers.md · docs/decisions/eft-map-layers-runbook.md
 skill: .claude/skills/game-asset-extraction/SKILL.md (раздел «ГЕОМЕТРИЯ КАРТ ЕСТЬ В КЛИЕНТЕ»)
+handoff: docs/state/HANDOFF-eft-map-layers-next.md — с чего продолжать в новом чате
 branch: feat/lighthouse-terrain — НЕ запушена
 ---
 
