@@ -2083,7 +2083,11 @@ export function MapViewerClient({
     const multiFloorMap = isTiled || floors.length > 1;
     roomOverlayMultiFloorRef.current = multiFloorMap;
     if (wantsRoomOverlay && imgBounds) {
-      fetch(`/images/maps/eft/marked-rooms/${data.slug}.svg`)
+      // Cache-bust тем же tileVersion, что и тайлы: оверлей живёт в canvas-px ТОГО ЖЕ арта и
+      // при его перерисовке обязан обновиться вместе с ним. Без ?v= статика отдаётся с
+      // Cache-Control max-age=14400 → браузер держит старый файл до 4 часов, и контуры комнат
+      // разъезжаются с артом, хотя на сервере уже лежит новый (поймано на сдвиге Таможни 04.09).
+      fetch(`/images/maps/eft/marked-rooms/${data.slug}.svg${cfg.tileVersion ? `?v=${cfg.tileVersion}` : ''}`)
         .then((r) => (r.ok ? r.text() : Promise.reject(new Error('нет меченок'))))
         .then((txt) => {
           if (cancelledSvg || !mapRef.current) return;
