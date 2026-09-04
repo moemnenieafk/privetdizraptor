@@ -96,6 +96,15 @@ GENERIC = dict(
     lot          = r'(parking|bus_ring|trailer_park|square_kotelnaya|fuel_road|garage0)',
     sidewalk     = r'(sidewalk|side_walk|troto)',
     drop         = r'(puddle|_water(\b|$|\d|\s))',
+    # Реквизит «у дороги», который отбор по ИМЕНАМ тянет вместе с полотном (нужен там,
+    # где у карты нет ветки OO/ROAD). У Маяка это дало 437 барьеров, отбойников и конусов
+    # в классе «полотно».
+    # ⚠️ ГРАНИЦЫ СЛОВ ЗДЕСЬ ОБЯЗАТЕЛЬНЫ: `` не годится, потому что подчёркивание —
+    # словесный символ, и `barrier` не поймает `Road_barrier_concrete`. А наивное
+    # вхождение `light` совпало с `Lighthouse` в пути КАЖДОГО узла карты и выкосило слой
+    # целиком. Отсюда явные границы «не буква слева и не буква справа».
+    furniture    = (r'(?<![A-Za-z])(barrier|cone|rail|railing|sign|light|lamp|pillar|bump\w*|'
+                    r'fence|curb|kerb|trash|wire|bollard|delineator)(?![A-Za-z])'),
     border_scene = r'scripts',
     border_root  = r'LevelBorders',
 )
@@ -109,11 +118,15 @@ MAPS = {
     'lighthouse': dict(GENERIC,
         group='Lighthouse',
         road_scene=r'^Lighthouse_Roads$',
-        # У Маяка нет узла OO/ROAD — в сцене лежит всё подряд (12 369 GO: контейнеры,
-        # коллайдеры, тени). Отбор по ИМЕНАМ полотна: Lighthouse_main_road_*,
-        # serpentine_road_*, Road_to_*. Порог отбора ещё не проверен глазами — при
-        # первом прогоне Маяка сверить и уточнить, как это сделано для Таможни.
-        road_root=r'(road|serpentine|asphalt)',
+        # У Маяка ветка называется OO/ROADS (во множественном числе), а не OO/ROAD.
+        # Отбор по ИМЕНАМ, стоявший здесь раньше, матчил ПУТЬ — а путь у каждого узла
+        # начинается с `SBG_Lighthouse_Roads`, поэтому в «полотно» попадало всё подряд:
+        # 1 285 сущностей, из них 512 теней, 437 барьеров/конусов/отбойников и коробки
+        # с поддонами. Настоящее полотно — двенадцать мешей под OO/ROADS, они держат
+        # 90 % площади: Lighthouse_main_road_01..04, serpentine_road_01/02, Road_to_Reserve.
+        # Точный сегмент пути (ROAD или ROADS целиком) не задевает соседние ветки
+        # Roads_Exit и Main_Road_Props, где лежит реквизит.
+        road_root=r'(^|/)ROADS?(/|$)',
         border_scene=r'Scripts',
         border_root=r'LevelBorders'),
     'woods':             dict(GENERIC, group='Woods'),
@@ -335,6 +348,15 @@ RE_MARK = re.compile(CFG['marking'], re.I)
 RE_LOT  = re.compile(CFG['lot'], re.I)
 RE_SW   = re.compile(CFG['sidewalk'], re.I)
 RE_DROP = re.compile(CFG['drop'], re.I)
+# ⚠️ ПРОКСИ-ГЕОМЕТРИЯ отсеивается БЕЗУСЛОВНО — та же гоча, что в остальных слоях
+# (mapgeom.SKIP_MESH_RX). Здесь её не было, и у Маяка 512 узлов из 1 285 оказались
+# тенями `*_SHADOW_LOD0`: сорок процентов «дорожного полотна» — прокси для теней.
+# `COLL?IDER` — не описка: у BSG узел называется `colider` с одной «л» (четвёртый случай
+# после `_Aldebo`, `balistic` и `shorline`). Вместо границы слова стоит `(?![0-9])`:
+# написать её escape-ом в этот файл уже стоило дефекта — в исходник попал РЕАЛЬНЫЙ символ
+# backspace, и фильтр молча пропускал все `_LOD1/2/3` (130 узлов из 525 у Маяка).
+RE_PROXY = re.compile(r'(_LOD[123](?![0-9])|SHADOW|BALL?ISTIC|COLL?IDER)', re.I)
+RE_FURNITURE = re.compile(CFG['furniture'], re.I) if CFG.get('furniture') else None
 
 
 def classify(row):
@@ -440,8 +462,16 @@ for lv in extra_levels:
 
 # отсев дублей поверх полотна (лужи/вода) и полных клонов по геометрии
 dropped_name, dropped_clone, kept = [], [], []
+dropped_proxy, dropped_furniture = [], []
 seen = set()
 for r in rows:
+    if RE_PROXY.search(r['name']) or RE_PROXY.search(r['path']):
+        dropped_proxy.append(r['name'])
+        continue
+    if RE_FURNITURE is not None and (RE_FURNITURE.search(r['name'])
+                                     or RE_FURNITURE.search(r['path'])):
+        dropped_furniture.append(r['name'])
+        continue
     if RE_DROP.search(r['name']) or RE_DROP.search(r['path']):
         dropped_name.append(r['name'])
         continue
@@ -452,7 +482,7 @@ for r in rows:
         continue
     seen.add(sig)
     kept.append(r)
-log(f'узлов {len(rows)} -> {len(kept)} (дубли по имени {len(dropped_name)}, клоны по геометрии {len(dropped_clone)})')
+log(f'узлов {len(rows)} -> {len(kept)} (прокси-геометрия {len(dropped_proxy)}, реквизит у дороги {len(dropped_furniture)}, дубли по имени {len(dropped_name)}, клоны по геометрии {len(dropped_clone)})')
 
 # ───────────────────────────── геометрия в плане ─────────────────────────────
 log('читаю меши…')
@@ -880,7 +910,8 @@ doc = dict(
               areaM2=round(float(zone.sum())*PX_AREA, 1) if zone is not None else None),
     rules=dict(
         lodPolicy='свой MeshFilter = LOD0; иначе только дети lod[0]',
-        dropped=dict(byName=sorted(set(dropped_name)), byGeometry=sorted(set(dropped_clone))),
+        dropped=dict(byName=sorted(set(dropped_name)), byGeometry=sorted(set(dropped_clone)),
+             proxy=len(dropped_proxy), furniture=sorted(set(dropped_furniture))[:40]),
         lotSplit=dict(minWidthM=LOT_MIN_WIDTH, maxAspect=LOT_MAX_ASPECT,
                       reclassified=[dict(name=n, effWidthM=w, lengthM=l) for n, w, l in regeom])),
     stats=dict(
