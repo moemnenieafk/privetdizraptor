@@ -97,7 +97,14 @@ group = MAP2GROUP.get(MAP_ID)
 if group is None or group not in groups:
     sys.exit(f'карта {MAP_ID}: нет группы сцен в {SCENES_JSON} (известны {sorted(MAP2GROUP)})')
 
-scenes = [(f"level{e['level']}", e['scene']) for e in groups[group]]
+# ⚠️ ОДНА СЦЕНА МОЖЕТ БЫТЬ В BuildSettings ДВАЖДЫ. У Терминала клиент везёт КАЖДУЮ
+# из 36 сцен в двух копиях (level600-635 и level651-686, +51): имена и содержимое
+# совпадают, объекты стоят в тех же координатах. Без отсева по имени всё удваивается —
+# 208 «комнат» вместо 104, силуэты ложатся друг на друга, работа делается дважды.
+# Картинка при этом выглядит правильной, врут только счётчики.
+_seen = set()
+scenes = [(f"level{e['level']}", e['scene']) for e in groups[group]
+          if not (e['scene'] in _seen or _seen.add(e['scene']))]
 scenes = [(lvl, nm) for lvl, nm in scenes if os.path.exists(os.path.join(DATA, lvl))]
 if not scenes:
     sys.exit(f'карта {MAP_ID}: ни одного levelN не нашлось в {DATA}')

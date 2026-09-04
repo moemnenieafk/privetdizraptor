@@ -309,12 +309,17 @@ def collect_meshes(scene, classify, skip_mesh=SKIP_MESH_RX):
 
 
 def scene_list(registry_json, map_id, data_dir, skip_scene=None):
-    """Сцены карты из реестра: ([(level, имя)], [отсеянные])."""
+    """Сцены карты из реестра: ([(level, имя)], [отсеянные]).
+
+    Сцены с ОДИНАКОВЫМ именем берутся один раз: у Терминала клиент везёт каждую из
+    36 сцен дважды (level600-635 и level651-686), содержимое совпадает, и без отсева
+    всё удваивалось бы — 208 «комнат» вместо 104, силуэты друг на друге.
+    """
     groups = json.load(open(registry_json, encoding='utf-8'))
     group = MAP2GROUP.get(map_id)
     if group is None or group not in groups:
         raise SystemExit(f'карта {map_id}: группы сцен нет в {registry_json}')
-    keep, skipped = [], []
+    keep, skipped, seen = [], [], set()
     for e in groups[group]:
         lvl, nm = f"level{e['level']}", e['scene']
         if not os.path.exists(os.path.join(data_dir, lvl)):
@@ -322,6 +327,10 @@ def scene_list(registry_json, map_id, data_dir, skip_scene=None):
         if skip_scene is not None and skip_scene.search(nm):
             skipped.append(f'{lvl} ({nm})')
             continue
+        if nm in seen:
+            skipped.append(f'{lvl} ({nm}) — копия уже взятой сцены')
+            continue
+        seen.add(nm)
         keep.append((lvl, nm))
     return keep, skipped
 

@@ -207,12 +207,16 @@ def map_levels(data_dir, map_id):
     if not scenes:
         die('BuildSettings без списка сцен — клиент нестандартный')
     pref = 'assets/content/locations/%s/' % loc.lower()
-    out = []
+    out, seen = [], set()
     for i, s in enumerate(scenes):
         if s.lower().startswith(pref):
             p = os.path.join(data_dir, 'level%d' % i)
-            if os.path.exists(p):
-                out.append((i, os.path.basename(s)[:-6], p))
+            nm = os.path.basename(s)[:-6]
+            # одна сцена может быть в BuildSettings дважды (Терминал: 36 сцен в двух копиях,
+            # level600-635 и level651-686) — иначе каждый камень посчитался бы дважды
+            if os.path.exists(p) and nm not in seen:
+                seen.add(nm)
+                out.append((i, nm, p))
     if not out:
         die('для «%s» (папка %s) не нашлось ни одного levelN' % (map_id, loc))
     return out
