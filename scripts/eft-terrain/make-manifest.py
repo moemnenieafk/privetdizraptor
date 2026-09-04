@@ -28,9 +28,22 @@ from datetime import datetime, timezone
 if len(sys.argv) < 3:
     sys.exit('использование: python scripts/eft-terrain/make-manifest.py <map> <outdir> [longSide=16384]')
 
-map_id = sys.argv[1]
-outroot = sys.argv[2]
-LONG_SIDE = int(sys.argv[3]) if len(sys.argv) > 3 else 16384
+argv = sys.argv[1:]
+# --from-rooms <rooms.json>: строить границы по ГЕОМЕТРИИ КЛИЕНТА, а не по конфигу.
+# Нужен там, где bounds конфига не описывают карту: у Терминала они откалиброваны по
+# спавнам зеркала (X[-1472,-808], Z[480,1306]), а комнаты клиента стоят в X[-368,448],
+# Z[-511,380] — пересечения НОЛЬ, и все слои ложились мимо рамки при бодрых счётчиках
+# (30 188 пересечений, 29 640 контуров, 0 закрашенных пикселей).
+ROOMS = None
+if '--from-rooms' in argv:
+    i = argv.index('--from-rooms')
+    ROOMS = argv[i + 1]
+    del argv[i:i + 2]
+MARGIN = 0.08          # доля запаса вокруг габарита геометрии
+
+map_id = argv[0]
+outroot = argv[1]
+LONG_SIDE = int(argv[2]) if len(argv) > 2 else 16384
 
 # Путь к конфигу — от корня репозитория (скрипт лежит в scripts/eft-terrain/).
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -183,6 +196,37 @@ ok = (isinstance(bounds, list) and len(bounds) == 2
               for p in bounds))
 if not ok:
     raise SystemExit(f'bounds карты "{map_id}" = {bounds!r} — ожидалось [[x,z],[x,z]]')
+bounds_source = 'EFT_MAP_CONFIG'
+(cfg_ax, cfg_az), (cfg_bx, cfg_bz) = bounds     # границы конфига до подмены
+if ROOMS:
+    # Габарит СОДЕРЖИМОГО карты: комнаты (центр ± полуразмер), двери, выходы, проёмы.
+    # Берём union, потому что двери и выходы регулярно выступают за коробки комнат.
+    rd = json.load(open(ROOMS, encoding='utf-8'))
+    xs, zs = [], []
+    for r in rd.get('rooms') or []:
+        c = r.get('center') or [0, 0, 0]
+        e = r.get('extent') or [0, 0, 0]
+        xs += [c[0] - e[0], c[0] + e[0]]
+        zs += [c[2] - e[2], c[2] + e[2]]
+    for key in ('doors', 'exits', 'portals'):
+        for o in rd.get(key) or []:
+            pt = o.get('pos') or o.get('center') or o.get('c')
+            if pt:
+                xs.append(pt[0]); zs.append(pt[2])
+    if not xs:
+        raise SystemExit(f'ОТКАЗ: в {ROOMS} нет ни комнат, ни дверей — границы строить не из чего')
+    mx = (max(xs) - min(xs)) * MARGIN
+    mz = (max(zs) - min(zs)) * MARGIN
+    geo = [[round(min(xs) - mx, 1), round(min(zs) - mz, 1)],
+           [round(max(xs) + mx, 1), round(max(zs) + mz, 1)]]
+    ov_x = min(max(cfg_ax, cfg_bx), geo[1][0]) - max(min(cfg_ax, cfg_bx), geo[0][0])
+    ov_z = min(max(cfg_az, cfg_bz), geo[1][1]) - max(min(cfg_az, cfg_bz), geo[0][1])
+    print(f'границы из ГЕОМЕТРИИ: {geo} (комнат {len(rd.get("rooms") or [])}, запас {MARGIN:.0%})')
+    print(f'  границы конфига: {bounds}; перекрытие с геометрией по X {ov_x:.0f} м, по Z {ov_z:.0f} м'
+          + ('  ⚠️ КОНФИГ НЕ ОПИСЫВАЕТ КАРТУ' if ov_x <= 0 or ov_z <= 0 else ''))
+    bounds = geo
+    bounds_source = f'ГЕОМЕТРИЯ КЛИЕНТА ({os.path.basename(ROOMS)})'
+
 (ax, az), (bx, bz) = bounds
 
 rot = int(literal_number('coordinateRotation', 0))
@@ -230,7 +274,7 @@ if zero_origin:
 if compact:
     signals.append(f'границы неотрицательны и компактны (X={span_x:g}, Z={span_z:g} ≤ 1024)')
 
-if promoted or zero_origin:
+if (promoted or zero_origin) and not ROOMS:
     sys.exit(f'ОТКАЗ: bounds карты "{map_id}" = {bounds} — не игровые метры. '
              + ' | '.join(signals)
              + '. Для terrain-конвейера нужен растровый манифест от fetch-tiles.mjs, '
@@ -280,7 +324,7 @@ manifest = {
     'crop': {'x0': 0, 'y0': 0, 'x1': width, 'y1': height, 'width': width, 'height': height},
     'generated': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
     'synthetic': True,
-    'source': 'EFT_MAP_CONFIG',
+    'source': bounds_source,
     'note': 'Растра НЕ СУЩЕСТВУЕТ: у карты нет тайлов в maps.json the-hideout, fetch-tiles.mjs её '
             'не собирает. Границы и поворот взяты из src/data/eft-map-config.ts, crop синтезирован '
             'по соотношению сторон границ. Поля zoom, tileSize и layers — структурная заглушка для '
@@ -293,7 +337,7 @@ manifest = {
 os.makedirs(os.path.dirname(path), exist_ok=True)
 json.dump(manifest, open(path, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 
-print(f'{map_id}: bounds={bounds} rotation={rot} zoom={zoom}')
+print(f'{map_id}: bounds={bounds} rotation={rot} zoom={zoom} (источник: {bounds_source})')
 print(f'  игровые метры: X {min(ax, bx):.0f}..{max(ax, bx):.0f} ({span_x:g} м), '
       f'Z {min(az, bz):.0f}..{max(az, bz):.0f} ({span_z:g} м)')
 print(f'  crop {width}x{height} px  ({span_x / width:.4f} м/px по X, {span_z / height:.4f} м/px по Z)')
