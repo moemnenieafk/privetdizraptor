@@ -21,8 +21,17 @@ $R2   = 'pub-0969d515fb064d119680c2d311607c29.r2.dev'
 $ICON = '/items/eft/512/5449016a4bdc2d6f028b456f.webp'
 
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$out   = Join-Path ([Environment]::GetFolderPath('Desktop')) "diag-cta-$stamp.txt"
 $lines = New-Object System.Collections.Generic.List[string]
+
+# Куда писать отчёт. Рабочий стол бывает перенесён в OneDrive или недоступен на запись,
+# поэтому кандидатов несколько и берётся первый, куда реально удалось записать файл.
+# Молчаливая потеря отчёта — худший исход: человек потратил время впустую.
+$candidates = @(
+    [Environment]::GetFolderPath('Desktop'),
+    [Environment]::GetFolderPath('MyDocuments'),
+    (Split-Path -Parent $MyInvocation.MyCommand.Path),
+    $env:TEMP
+) | Where-Object { $_ -and (Test-Path $_) }
 
 function Say($t) { Write-Host $t; $lines.Add($t) | Out-Null }
 
@@ -138,9 +147,28 @@ Say '=================================================================='
 Say ' ГОТОВО'
 Say '=================================================================='
 
-$lines -join "`r`n" | Out-File -FilePath $out -Encoding utf8
+$saved = $null
+foreach ($dir in $candidates) {
+    try {
+        $try = Join-Path $dir "diag-cta-$stamp.txt"
+        $lines -join "`r`n" | Out-File -FilePath $try -Encoding utf8 -ErrorAction Stop
+        if (Test-Path $try) { $saved = $try; break }
+    } catch { }
+}
+
 Write-Host ''
-Write-Host "Отчёт сохранён на рабочий стол: $out" -ForegroundColor Green
-Write-Host 'Пришлите этот файл.' -ForegroundColor Green
+if ($saved) {
+    Write-Host '=== ОТЧЁТ СОХРАНЁН ===' -ForegroundColor Green
+    Write-Host $saved -ForegroundColor Yellow
+    Write-Host 'Пришлите этот файл.' -ForegroundColor Green
+    try { Start-Process explorer.exe "/select,`"$saved`"" } catch { }
+} else {
+    # Записать не удалось никуда — печатаем отчёт прямо в окно, чтобы его
+    # можно было выделить и скопировать. Пустых рук у человека остаться не должно.
+    Write-Host '=== ФАЙЛ СОХРАНИТЬ НЕ УДАЛОСЬ ===' -ForegroundColor Red
+    Write-Host 'Выделите весь текст ниже мышью, скопируйте (Ctrl+C) и пришлите:' -ForegroundColor Yellow
+    Write-Host ''
+    Write-Host ($lines -join "`r`n")
+}
 Write-Host ''
 Read-Host 'Нажмите Enter, чтобы закрыть'
