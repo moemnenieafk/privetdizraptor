@@ -204,9 +204,18 @@ def _pairs(seq):
 # Имена свойств текстур. Игра на IL2CPP, шейдеры кастомные, единого «_MainTex» НЕТ: у камня
 # Rock_01 диффуз лежит в `_Aldebo` (опечатка BSG в слове Albedo), нормаль — в `_Normalmap`.
 # Порядок = приоритет, берётся первое НЕПУСТОЕ свойство.
+# ⚠️ У камней семейств AM_Rock_* и Arid_rock_* (Лес, Берег, Маяк, Развязка) материал —
+# ШЕЙДЕР СМЕШИВАНИЯ СО МХОМ, и словарь свойств у него СВОЙ: диффуз камня лежит в
+# `_BaseAlbedoASmoothness`, мох — в `_TopAlbedoASmoothness`, нормали в `_BaseNormalMap`/
+# `_TopNormalMap`. Ни одно из привычных имён там не заполнено, поэтому 12 прототипов из 28
+# на Лесу рендерились белыми. Base идёт РАНЬШЕ Top: нам нужен камень, а не мох поверх него.
+# В альфе этих карт лежит ГЛАДКОСТЬ, а не прозрачность — она не используется, потому что
+# alphaClip включается только очередью рендера (у них она -1).
 BASE_PROPS = ('_MainTex', '_Aldebo', '_Albedo', '_AlbedoMap', '_BaseMap', '_BaseColorMap',
-              '_Diffuse', '_DiffuseMap', '_DiffuseTex', '_Tex')
-NORMAL_PROPS = ('_BumpMap', '_Normalmap', '_NormalMap', '_Normal', '_NormalTex', '_NormalMapTex')
+              '_Diffuse', '_DiffuseMap', '_DiffuseTex', '_Tex',
+              '_BaseAlbedoASmoothness', '_TopAlbedoASmoothness', '_DetailAlbedo')
+NORMAL_PROPS = ('_BumpMap', '_Normalmap', '_NormalMap', '_Normal', '_NormalTex', '_NormalMapTex',
+                '_BaseNormalMap', '_TopNormalMap', '_DetailNormalMap')
 
 
 def tex_prop(md, keys):
