@@ -270,7 +270,8 @@ tiles = JOB['tiles']
 t0 = time.time()
 for n, t in enumerate(tiles):
     scene.render.resolution_x = int(t['w'])
-    scene.render.resolution_y = int(t['h'])
+    # высота РЕНДЕРА, а не высота плитки в рамке: пиксель квадратный, растянет сшивка
+    scene.render.resolution_y = int(t.get('resY') or t['h'])
     cam_data.ortho_scale = float(t['orthoW'])
     cam.location = (float(t['camX']), float(t['camY']), 2500.0)
     scene.render.filepath = os.path.join(tiledir, t['file'])

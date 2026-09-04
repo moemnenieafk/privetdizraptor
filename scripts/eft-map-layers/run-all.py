@@ -284,7 +284,17 @@ class Ctx:
 
     @property
     def base_art(self):
-        return os.path.join(self.raster_root, self.map, '%s-main-8192.webp' % self.map)
+        """Подложка для превью — ИЗ МАНИФЕСТА, а не по шаблону «<карта>-main-8192.webp».
+        Главный слой у Леса называется `main_0.16`, у Берега и Ground Zero — `main_summer`:
+        по шаблону файл не находился, и рендер уезжал на дефолтную подложку (арт Таможни)."""
+        d = os.path.join(self.raster_root, self.map)
+        lays = self.manifest_layers()
+        main = next((L for L in lays if L.get('isMain')), None) or (lays[0] if lays else None)
+        for f in ((main or {}).get('files') or {}).values():
+            p = os.path.join(d, f)
+            if os.path.exists(p) and p.endswith(('.webp', '.png', '.jpg')):
+                return p
+        return os.path.join(d, '%s-main-8192.webp' % self.map)
 
     def manifest_layers(self):
         try:

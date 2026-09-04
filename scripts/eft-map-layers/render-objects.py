@@ -553,6 +553,15 @@ def build_job(fr, protos, instances, cfg, layer):
     ppm_x, ppm_y = -fr['B'], fr['D']
     tiles = []
     tw, th = cfg['tile']
+    # ⚠️ ПИКСЕЛЬ РАМКИ НЕКВАДРАТНЫЙ (ppm по X и Z разные), и раньше это отдавалось Blender'у
+    # через `pixel_aspect_y`. Blender считает вертикальный охват камеры не так, как здесь
+    # предполагалось: внутри каждой плитки вертикальный масштаб уезжал на 1.6 % (объект у
+    # верхнего края смещён на +7 px, у нижнего на −6.5 px, за высоту плитки набегает 33 px),
+    # и на КАЖДОЙ границе рядов плиток получался шов с повтором содержимого.
+    # Теперь неквадратного пикселя нет вовсе: плитка рендерится КВАДРАТНЫМИ пикселями в
+    # разрешении (w, h*ppm_x/ppm_y), где вертикальный охват камеры выводится однозначно
+    # (ortho * res_y/res_x), а сшивка растягивает плитку до её высоты в рамке. Один явный
+    # ресэмпл вместо неявной семантики движка.
     for j in range(0, fr['H'], th):
         for i in range(0, fr['W'], tw):
             w = min(tw, fr['W'] - i)
@@ -560,11 +569,12 @@ def build_job(fr, protos, instances, cfg, layer):
             cx_px, cy_px = i + w / 2.0, j + h / 2.0
             tiles.append(dict(
                 file='%s-%05d-%05d.png' % (layer, j, i), x=i, y=j, w=w, h=h,
+                resY=max(1, int(round(h * ppm_x / ppm_y))),   # высота РЕНДЕРА, квадратный пиксель
                 camX=(cx_px - fr['A']) / fr['B'],        # мировой gx центра плитки
                 camY=(cy_px - fr['C']) / fr['D'],        # мировой gz центра плитки
                 orthoW=w / ppm_x))
     return dict(layer=layer, protos=protos, instances=instances, tiles=tiles,
-                pixelAspectY=ppm_x / ppm_y, engine=cfg['engine'], samples=cfg['samples'],
+                pixelAspectY=1.0, engine=cfg['engine'], samples=cfg['samples'],
                 sunAzimuth=315.0, sunElevation=45.0, sunEnergy=cfg['sun'],
                 ambient=cfg['ambient'], tiledir=cfg['tiledir'])
 
@@ -583,16 +593,22 @@ def run_blender(blender, job_path):
     return p.stdout
 
 
-def stitch(tiledir, layer, W, H, out_png):
+def stitch(tiledir, layer, W, H, out_png, tiles=None):
+    """Плитки -> холст рамки. Плитка рендерится квадратными пикселями (высота res_y), а в
+    рамке её высота h — поэтому перед вклейкой она растягивается по вертикали."""
     canvas = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     n = 0
     pref = layer + '-'
+    want = {(t['y'], t['x']): t for t in (tiles or [])}
     for fn in sorted(os.listdir(tiledir)):
         if not fn.startswith(pref) or not fn.endswith('.png'):
             continue
         j = int(fn[len(pref):len(pref) + 5])
         i = int(fn[len(pref) + 6:len(pref) + 11])
         t = Image.open(os.path.join(tiledir, fn)).convert('RGBA')
+        spec = want.get((j, i))
+        if spec and t.size != (spec['w'], spec['h']):
+            t = t.resize((spec['w'], spec['h']), Image.LANCZOS)
         canvas.alpha_composite(t, (i, j))
         n += 1
     canvas.save(out_png, optimize=False)
@@ -742,7 +758,7 @@ def cmd_render(a):
         print('  плиток: %d по %dx%d' % (len(job['tiles']), a.tile, a.tile_h))
         run_blender(a.blender, jp)
         out_png = os.path.join(a.out, '%s-%s-render.png' % (a.map, layer))
-        canvas = stitch(tiledir, layer, fr['W'], fr['H'], out_png)
+        canvas = stitch(tiledir, layer, fr['W'], fr['H'], out_png, job['tiles'])
         preview(canvas, a.base_art, out_png[:-4] + '-preview.jpg')
 
 
@@ -761,7 +777,10 @@ def main():
     ap.add_argument('--veg-assets', default='sharedassets17.assets')
     ap.add_argument('--work', default='D:/eft-export/render-objects')
     ap.add_argument('--out', default='map-exports/OBJECTS-MAPS/gen/customs/render')
-    ap.add_argument('--base-art', default='D:/Games/raster/customs/customs-main-8192.webp')
+    # ⚠️ Дефолта-карты здесь быть НЕ ДОЛЖНО. Пока тут стоял арт Таможни, превью Леса
+    # композилось поверх ЧУЖОЙ картинки и выходило в пропорциях Таможни (8192x4138 при
+    # рамке 16174x16384) — рендер был верным, а превью врало. Нет подложки — плашка.
+    ap.add_argument('--base-art', default='')
     ap.add_argument('--blender',
                     default=r'C:/Program Files/Blender Foundation/Blender 5.1/blender.exe')
     ap.add_argument('--engine', default='eevee', choices=['eevee', 'cycles'])
