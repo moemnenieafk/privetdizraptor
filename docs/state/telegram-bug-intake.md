@@ -110,8 +110,8 @@ curl -s "https://api.telegram.org/bot${TELEGRAM_BUG_BOT_TOKEN}/getUpdates?offset
 - fixes / ideas / chat — id уточнятся с первым сообщением в них
 
 ## Watermark
-- last_update_id: `386171823` (offset для следующего чтения = `386171824`)
-- last_processed_at: `2026-08-28T12:00Z`
+- last_update_id: `386171831` (offset для следующего чтения = `386171832`)
+- last_processed_at: `2026-09-02T21:40Z`
 
 ## Лог обработанных багов
 <!-- дата | update_id | краткое описание | → карточка -->
@@ -125,3 +125,5 @@ curl -s "https://api.telegram.org/bot${TELEGRAM_BUG_BOT_TOKEN}/getUpdates?offset
 - 2026-08-23 | msgs 361-363 (thread 140) — идеи (биткоин-ферма/воронка бартер-крафт), НЕ баги; ждут ideas-бота (offset 794642021).
 - 2026-08-28 | upd 386171821-822 / msg 369+370 (дубль, 370 с #баг) | Конструктор перков: сломана кнопка «Поделиться» (permalink) + хотелка соц-элементов | → [[bugs/2026-08-28-1148--perks-constructor-share-broken.md]] | бот-ответ msg 371
 - 2026-08-28 | upd 386171823 / msg 372 | Конструктор перков: не грузятся hero-изображения билдов (та же страница) | → [[bugs/2026-08-28-1158--perks-constructor-hero-images.md]] | бот-ответ msg 373
+- 2026-09-02 | upd 386171831 / msg 380 | 🚨 БЛОКЕР Ассеты: у RU-пользователей не грузятся карты и картинки (Cloudflare R2) | → [[bugs/2026-09-02-2137--assets-r2-blocked-in-russia.md]] | бот-ответ msg 381
+- прим.: upd 386171824-830 не пришли — протухли (>24ч между прогонами 28.08→02.09), потерь по ветке 134 нет.
