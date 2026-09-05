@@ -259,13 +259,19 @@ class Scene:
 LOD_RE = re.compile(r'^(?:\w+\[(\d+)\]\s+)?lod\[(\d+)\]$', re.I)
 
 
-def collect_meshes(scene, classify, skip_mesh=SKIP_MESH_RX):
+def collect_meshes(scene, classify, skip_mesh=SKIP_MESH_RX, with_go=False):
     """Меш-узлы сцены после разбора LOD -> экземпляры
-    (src, pid, pos, rot, scale, cls, name, branch).
+    (src, pid, pos, rot, scale, cls, name, branch) — плюс path_id узла при `with_go`.
 
     `classify(path, name)` -> класс или None (None = выбросить).
     LOD-политика: у сущности со СВОИМ MeshFilter дети `lod[*]` лишние (иначе тройные контуры),
     `lod[0]` берётся только там, где своего меша нет.
+
+    `with_go=True` добавляет ДЕВЯТЫМ элементом path_id самого GameObject в файле сцены.
+    Он нужен рендеру объектов: по паре (levelN, path_id) прототип вида достаётся ТОЧНО —
+    вместе с MeshFilter и MeshRenderer, то есть с материалами, — без поиска по имени.
+    Параметр опционален СПЕЦИАЛЬНО: у cut-obstacles.py и cut-walls.py распаковка на восемь
+    имён, и молчаливое расширение кортежа сломало бы оба слоя.
     """
     own = {}
     for go in scene.go_name:
@@ -304,7 +310,8 @@ def collect_meshes(scene, classify, skip_mesh=SKIP_MESH_RX):
             continue
         pos, rot, sc = scene.trs(trp)
         src, pid = own[go]
-        out.append((src, pid, pos, rot, sc, cls, name, p.split('/')[1:3]))
+        rec = (src, pid, pos, rot, sc, cls, name, p.split('/')[1:3])
+        out.append(rec + (go,) if with_go else rec)
     return out
 
 

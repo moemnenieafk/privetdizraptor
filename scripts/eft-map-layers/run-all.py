@@ -542,6 +542,8 @@ class SObstacles(Step):
 
     def argv(self, c):
         a = py('eft-map-layers/cut-obstacles.py', c.client, c.map, c.manifest, c.d('obstacles'))
+        if os.path.exists(c.rooms_json):
+            a += ['--rooms', c.rooms_json]      # для полос с roomsFilter (маска по комнатам клиента)
         if os.path.exists(c.height_npy):
             a += ['--height', c.height_npy]
         if os.path.exists(c.zone_mask):

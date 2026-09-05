@@ -322,7 +322,21 @@ if os.path.exists(path):
 # А в конфиге они есть: у Улиц шесть (подземелье, земля, 2-5 этажи).
 # Главная полоса — `heightRange` самой карты (наземный уровень), остальные — `layers[]`.
 def _slug(name, svg_layer, idx):
-    """Короткий id этажа: из svgLayer (Second_Floor -> 2nd) или из имени, иначе floorN."""
+    """Короткий id этажа: из РУССКОГО имени («2-й этаж» -> 2nd), иначе из svgLayer, иначе floorN.
+
+    ⚠️ Имя идёт ПЕРВЫМ намеренно. У BSG английский `svgLayer` сдвинут на единицу:
+    `First_Floor` — это наш ВТОРОЙ этаж. Пока приоритет был у svgLayer, «2-й этаж» Развязки
+    получал id `main` (по слову `first`), конфликтовал с наземным и становился `main-2`,
+    а «3-й этаж» забирал себе `2nd`. Файлы слоёв называются по id — путаница уезжала в артефакты.
+    """
+    m_ru = re.search(r'(\d+)\s*-?\s*(?:й|я|е)?\s*этаж', (name or ''), re.I)
+    if m_ru:
+        n = int(m_ru.group(1))
+        return {1: 'main', 2: '2nd', 3: '3rd', 4: '4th', 5: '5th'}.get(n, f'{n}th')
+    if re.search(r'(подзем|бункер|гараж|парковк)', (name or ''), re.I):
+        return {'подзем': 'underground', 'бункер': 'bunkers',
+                'гараж': 'garage', 'парковк': 'parking'}[
+            re.search(r'(подзем|бункер|гараж|парковк)', name, re.I).group(1).lower()]
     src_txt = (svg_layer or name or '').lower()
     for pat, sid in (('under', 'underground'), ('ground', 'main'), ('first', 'main'),
                      ('second', '2nd'), ('third', '3rd'), ('fourth', '4th'), ('fifth', '5th'),

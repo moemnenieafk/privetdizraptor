@@ -211,11 +211,22 @@ def _pairs(seq):
 # на Лесу рендерились белыми. Base идёт РАНЬШЕ Top: нам нужен камень, а не мох поверх него.
 # В альфе этих карт лежит ГЛАДКОСТЬ, а не прозрачность — она не используется, потому что
 # alphaClip включается только очередью рендера (у них она -1).
+# ⚠️ ЧЕТВЁРТЫЙ словарь — ШЕЙДЕР ВЕРШИННОЙ ПОКРАСКИ (`City_Vertex_Paint_Ground_Grass`,
+# `…_Grass_2`) у городских газонов Улиц Таркова. Слоты там ИНДЕКСИРОВАННЫЕ: `_MainTex0`
+# (City_Grass_03_D), `_MainTex1` (City_Grass_02_D), `_MainTex2` (City_Asphalt_Ground_01_D),
+# нормали — `_BumpMap0..2`. Обычного `_MainTex` нет вовсе, поэтому 7 прототипов `stone_lawn_*`
+# и лестница рендерились БЕЛЫМИ — 37 экземпляров из 126, самое заметное пятно слоя.
+# Берём слой 0, и это не догадка: вершинные краски меша — не цвет, а ВЕСА смешивания
+# (0..255 по каналам), и на газонном сабмеше они дают R 0.76 / G 0.21 / B 0.03, то есть
+# 76 % площади это слой 0 — трава. Индексы идут ПОСЛЕ обычных имён: там, где есть `_MainTex`,
+# приоритет остаётся за ним.
 BASE_PROPS = ('_MainTex', '_Aldebo', '_Albedo', '_AlbedoMap', '_BaseMap', '_BaseColorMap',
               '_Diffuse', '_DiffuseMap', '_DiffuseTex', '_Tex',
-              '_BaseAlbedoASmoothness', '_TopAlbedoASmoothness', '_DetailAlbedo')
+              '_BaseAlbedoASmoothness', '_TopAlbedoASmoothness', '_DetailAlbedo',
+              '_MainTex0', '_MainTex1', '_MainTex2')
 NORMAL_PROPS = ('_BumpMap', '_Normalmap', '_NormalMap', '_Normal', '_NormalTex', '_NormalMapTex',
-                '_BaseNormalMap', '_TopNormalMap', '_DetailNormalMap')
+                '_BaseNormalMap', '_TopNormalMap', '_DetailNormalMap',
+                '_BumpMap0', '_BumpMap1', '_BumpMap2')
 
 
 def tex_prop(md, keys):
@@ -424,6 +435,47 @@ def veg_prototypes(client, assets_bases, kinds, protodir, bank):
     for nm in sorted(kinds):
         if nm not in out:
             print('  ! вид %s: прототип не разрешился' % nm)
+    return out
+
+
+def veg_prototypes_scene(client, veg_instances, kinds, protodir, bank):
+    """Прототипы видов ПРЯМО ИЗ СЦЕНЫ — для карт, у которых террейна нет вовсе.
+
+    У Улиц Таркова, Терминала, Завода, Лаборатории и Ледокола нет ни одной terrain-ноды,
+    а значит нет и `m_TreePrototypes`: `veg_prototypes()` возвращает по ним ПУСТО, и слой
+    растительности рендерится в ноль объектов. Здесь вид берётся у собственного узла первого
+    попавшегося экземпляра — `dump-vegetation-objects.py` пишет пару (`level`, `go`), то есть
+    файл сцены и path_id GameObject. Поиска по имени НЕТ: пара адресует узел однозначно,
+    вместе с его MeshFilter и MeshRenderer, то есть с материалами.
+
+    Локальная матрица здесь не нужна (в отличие от префаба из TerrainData): узел сцены уже
+    несёт свой мировой TRS, и он приходит в экземпляре.
+    """
+    want = {}
+    for r in veg_instances:
+        k = r.get('kind')
+        if k in kinds and k not in want and r.get('level') and r.get('go'):
+            want[k] = (r['level'], int(r['go']))
+    if not want:
+        return {}
+    out = {}
+    for nm in sorted(want):
+        base, gopid = want[nm]
+        objs, _ = client.load(base)
+        go = objs.get(gopid)
+        if go is None or go.type.name != 'GameObject':
+            print('  ! вид %-24s узел %d в %s не найден' % (nm, gopid, base))
+            continue
+        cs = client.components(go, base)
+        if 'MeshFilter' not in cs or 'MeshRenderer' not in cs:
+            print('  ! вид %-24s узел без MeshFilter/MeshRenderer' % nm)
+            continue
+        rec = extract_renderer(client, cs, base, nm, protodir, bank, None)
+        if rec:
+            rec['source'] = base
+            out[nm] = rec
+            print('  вид    %-24s меш %-22s v=%-6d submesh=%d  (сцена %s)'
+                  % (nm, rec['mesh'], rec['verts'], len(rec['materials']), base))
     return out
 
 
@@ -661,6 +713,11 @@ def cmd_extract(a):
     print('прототипы растительности (%d видов):' % len(kinds))
     vp = veg_prototypes(client, [b for b in a.veg_assets.split(',') if b], set(kinds),
                         protodir, bank)
+    # Карты без террейна: m_TreePrototypes нет вовсе, вид достаётся у своего узла сцены.
+    left = set(kinds) - set(vp)
+    if left:
+        print('  осталось нерешённых видов %d — добираю из сцен:' % len(left))
+        vp.update(veg_prototypes_scene(client, veg['instances'], left, protodir, bank))
 
     pj = os.path.join(a.work, 'prototypes.json')
     json.dump(dict(map=a.map, stones=sp, veg=vp, frame=fr, texMax=a.tex_max),
@@ -693,9 +750,19 @@ def instances_for(key, a, fr, protos):
             if r['kind'] not in protos['veg']:
                 skipped += 1
                 continue
-            ang = math.radians(r['rot'])
-            q = (0.0, math.sin(ang / 2), 0.0, math.cos(ang / 2))
-            m = trs_unity((r['x'], r['y'], r['z']), q, (r['scaleW'], r['scaleH'], r['scaleW']))
+            if r.get('quat') and r.get('scale') is not None:
+                # Объект сцены: настоящий TRS и ПИВОТ. Центр габарита (x/z) сюда не годится —
+                # он смещён на вылет кроны, а поворот из `rot` у таких карт всегда нулевой.
+                pos = (r['ox'], r['oy'], r['oz'])
+                q = tuple(r['quat'])
+                sc = tuple(r['scale'])
+            else:
+                # Экземпляр из TerrainData: только рыскание и единый масштаб.
+                ang = math.radians(r['rot'])
+                pos = (r['x'], r['y'], r['z'])
+                q = (0.0, math.sin(ang / 2), 0.0, math.cos(ang / 2))
+                sc = (r['scaleW'], r['scaleH'], r['scaleW'])
+            m = trs_unity(pos, q, sc)
             out.append(dict(p=r['kind'], m=[round(v, 6) for v in to_blender(m).ravel().tolist()]))
     return out, skipped
 

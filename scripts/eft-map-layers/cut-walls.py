@@ -126,8 +126,12 @@ BRANCH_RULES = [(re.compile(rx, re.I), cls) for rx, cls in BRANCH_RULES]
 SKIP_MESH = re.compile(r'(_LOD[123]\b|SHADOW|BALLISTIC|COLLIDER)', re.I)
 SKIP_SCENE = re.compile(r'(terrain|sound|culling|background)', re.I)
 
-COLORS = {'walls-outer': '#ffffff', 'walls-inner': '#ff8a00',
-          'openings': '#00d0ff', 'fence': '#7cff5a', 'props': '#ff3b6b'}
+# Палитра — из `hd-map-palette.json` (макет V4DYA, нода Figma 3465-10453), раздел
+# `assignments.walls`. Наружные и внутренние стены нарочно из ОДНОГО семейства (бетон),
+# внутренние тише: в Figma это читается как один материал с разной ролью.
+_PAL = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   'hd-map-palette.json'), encoding='utf-8'))
+COLORS = {c: v['hex'] for c, v in _PAL['assignments']['walls'].items()}
 GROUP_ORDER = ['props', 'fence', 'openings', 'walls-inner', 'walls-outer']
 
 t_start = time.time()

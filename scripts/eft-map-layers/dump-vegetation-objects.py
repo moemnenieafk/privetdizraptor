@@ -15,6 +15,12 @@
 # меша (`m_LocalAABB` в мировом TRS). Поэтому куст и сосна на карте отличаются размером,
 # и по кругам можно обводить настоящие пятна крон, а не ставить точки одного размера.
 #
+# ⚠️ ПОВОРОТ И МАСШТАБ ПИШУТСЯ НАСТОЯЩИЕ (`quat`, `scale`, пивот `ox/oy/oz`). Поля
+# `rot/scaleW/scaleH` формата террейна остаются нулевыми — они описывают ТОЛЬКО рыскание и
+# единый масштаб, а объекту сцены этого мало. Без настоящих величин рендер клал бы 750+
+# живых изгородей Улиц (`privet_hedge`, `fibert_hedge_*`) поперёк улиц вместо вдоль, а
+# позиция уезжала бы на смещение пивота от центра габарита.
+#
 # ⚠️ ГОЧА: у карты может не быть ни одного дерева в НЕПРОПУЩЕННЫХ сценах, зато сотни в
 # `*_Background` — сцене декораций горизонта, которую все слои пропускают. У Терминала там
 # 13 124 узла из 20 600. Скрипт считает их отдельно и печатает вслух, а не молчит.
@@ -71,6 +77,18 @@ VEG_RX = re.compile(r'(?<![A-Za-z])(tree|bush|pine|spruce|birch|oak|maple|fir|sh
 # `plant_wolf*` у BSG — куст (лопух), `grass_*` — трава-карточка; оба ловятся словарём выше.
 VEG_NOT_RX = re.compile(r'(planter|plantation|plant_pot|grassland_decal|treeh?ouse|'
                         r'plant_station|power_?plant)', re.I)
+# ⚠️ Отдельный словарь ПО ИМЕНИ узла, а не по пути. Дописать эти слова в VEG_NOT_RX выше
+# НЕЛЬЗЯ: он проверяется по ПУТИ, и `door` выкосил бы всё в ветках `*_indoor_*`/`*_outdoor_*`.
+#
+# Что ловим (замерено на Улицах, 532 экземпляра из 3 492 — 15 %):
+#  • `leaf` у BSG — это СТВОРКА окна и раздвижной двери, а не лист: `Window_wood_03-…_leaf_
+#    glass_A`, `TD_Klimova_sliding_door_01_leaf_left`. 164 штуки, медиана высоты 2.11 м —
+#    вертикальные плоскости в проёмах, на карте кроны рисовать нечем.
+#  • Декали: `palm_plant_01_ground_decal`, `Ground_Decal_2_leaves_corner_*`. 173 штуки,
+#    медиана высоты 0.00 м — пыль и тень под пальмой, плоскость на земле.
+#  • `Scattered_Leaves_*` — опавшая листва, в том числе НА МАШИНАХ (`…_Car_Cruze_Glass`).
+#    195 штук, медиана высоты 0.01 м. Это подстилка, а не растение с кроной.
+VEG_NOT_NAME_RX = re.compile(r'(window|sliding_door|decal|scattered_leaves)', re.I)
 GROUP_RX = [
     (re.compile(r'(pine|spruce|fir|conifer|ель|сосн)', re.I), 'conifer'),
     (re.compile(r'(birch|oak|maple|filbert|tree|derev|palm)', re.I), 'broadleaf'),
@@ -80,6 +98,10 @@ GROUP_COLORS = {'conifer': '#2f7d4f', 'broadleaf': '#63a83a', 'bush': '#8fbf5a',
 SKIP_SCENE = re.compile(r'(terrain|sound|culling|background)', re.I)
 MIN_R = 0.25          # м: меньше — трава-карточка, в карту крон не идёт
 MAX_R = 25.0          # м: больше — не дерево, а декорация горизонта
+# Гарда на ПЛОСКОЕ. Порогом высоты одни декали не отсечь — они дотягиваются до 0.64 м, а
+# настоящий `ash_bush01` начинается с 0.25 м, диапазоны пересекаются. Поэтому здесь только
+# заведомо плоское (медиана декалей 0.00 м), а точную работу делает VEG_NOT_NAME_RX.
+MIN_H = 0.2           # м
 
 t0 = time.time()
 
@@ -99,7 +121,7 @@ def group_of(name):
 
 
 def classify(path, name):
-    if VEG_NOT_RX.search(path):
+    if VEG_NOT_RX.search(path) or VEG_NOT_NAME_RX.search(name):
         return None
     return 'veg' if VEG_RX.search(name) else None
 
@@ -124,21 +146,26 @@ for lvl, nm in SCENES:
     except Exception as ex:
         log(f'  {lvl} ({nm}): ОШИБКА чтения — {ex}')
         continue
-    got = mg.collect_meshes(sc, classify)
-    for src, pid, pos, rot, scl, cls, name, br in got:
+    got = mg.collect_meshes(sc, classify, with_go=True)
+    for src, pid, pos, rot, scl, cls, name, br, go in got:
         a = MESHES.aabb(src, pid)
         if a is None:
             continue
         b = mg.world_box(a, pos, rot, scl)
         r = max(b[3] - b[0], b[5] - b[2]) / 2.0
-        if r < MIN_R or r > MAX_R:
+        if r < MIN_R or r > MAX_R or (b[4] - b[1]) < MIN_H:
             continue
         kind = re.sub(r'(\s*\(\d+\)|\(Clone\))+\s*$', '', name).strip()
         kind = re.sub(r'_LOD0$', '', kind, flags=re.I)
         rows.append(dict(scene=nm, kind=kind, group=group_of(kind),
                          x=round((b[0] + b[3]) / 2, 2), z=round((b[2] + b[5]) / 2, 2),
                          y=round(b[1], 2), height=round(b[4] - b[1], 2), radius=round(r, 2),
-                         rot=0.0, scaleW=1.0, scaleH=1.0))
+                         rot=0.0, scaleW=1.0, scaleH=1.0,
+                         # НАСТОЯЩИЙ мировой TRS узла — для рендера, см. блок ниже.
+                         ox=round(pos[0], 3), oy=round(pos[1], 3), oz=round(pos[2], 3),
+                         quat=[round(v, 5) for v in rot],
+                         scale=[round(v, 4) for v in scl],
+                         level=lvl, go=int(go)))
     per_scene[nm] += len(got)
     del sc
     MESHES.evict()
@@ -167,10 +194,15 @@ if not ALL_SCENES:
 
 base = os.path.join(OUTDIR, f'{MAP_ID}-vegetation')
 json.dump(dict(
-    _='Растительность из ОБЪЕКТОВ СЦЕНЫ (у карты нет террейна). Формат совпадает с '
-      'extract-vegetation.py, поэтому рендер объектов читает его без правок. radius — '
+    _='Растительность из ОБЪЕКТОВ СЦЕНЫ (у карты нет террейна). Формат НАДМНОЖЕСТВО '
+      'extract-vegetation.py: те же поля плюс настоящий TRS и ссылка на прототип. radius — '
       'половина большей горизонтальной стороны мирового габарита меша, то есть настоящий '
       'размер кроны, а не константа.',
+    fields='x/z — ЦЕНТР ГАБАРИТА (для кругов крон в SVG и плотности), ox/oy/oz — ПИВОТ узла; '
+           'rot/scaleW/scaleH оставлены нулевыми ради совместимости формата, настоящие '
+           'поворот и масштаб лежат в quat (x,y,z,w) и scale (три оси). level+go — файл сцены '
+           'и path_id узла: по этой паре рендер достаёт прототип вида ТОЧНО, вместе с '
+           'материалами. У карт с террейном этих полей нет, и рендер откатывается на rot/scaleW.',
     map=MAP_ID, generated=time.strftime('%Y-%m-%d'), source='объекты сцен клиента',
     bounds=[FR.XMIN, FR.XMAX, FR.ZMIN, FR.ZMAX], raster=[RW, RH],
     scenes=[nm for _, nm in SCENES], skippedScenes=skipped,

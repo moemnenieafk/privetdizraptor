@@ -79,6 +79,7 @@ def opt(flag, default=None):
 
 HEIGHT_ARG = opt('--height')
 ZONE_ARG = opt('--zone')
+ROOMS_ARG = opt('--rooms')     # JSON комнат клиента — для полос с roomsFilter
 CUT = float(opt('--cut', '1.0'))
 WANT_FLOORS = True
 if '--no-floors' in argv:                 # одна карта вместо поэтажной раскладки
@@ -113,8 +114,15 @@ MIN_AREA = 0.02       # м²: замкнутые контуры мельче (14
 # класс даёт их выключить одним кликом, не теряя данные.
 CLASSES = ['plant', 'props', 'stone', 'fence', 'openings', 'building']
 CID = {c: i + 1 for i, c in enumerate(CLASSES)}
-COLORS = {'building': (255, 255, 255), 'openings': (0, 208, 255), 'fence': (124, 255, 90),
-          'props': (255, 59, 107), 'stone': (255, 176, 32), 'plant': (86, 160, 74)}
+# Цвета групп берутся из ПАЛИТРЫ HD-карт (`hd-map-palette.json`, снята из макета V4DYA,
+# нода Figma 3465-10453). Соответствие класс -> цвет лежит там же, в разделе `assignments`,
+# и назначено ПО МАТЕРИАЛУ объекта: бетон держит конструкцию, металл — заборы и реквизит,
+# земля — камни, трава — зелень, сигнальный жёлтый — только проёмы. Хексы в коде не держим:
+# V4DYA собирает карту в Figma и Photoshop, палитра должна совпадать с макетом побайтно.
+_PAL = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   'hd-map-palette.json'), encoding='utf-8'))
+COLORS = {c: tuple(int(v['hex'][i:i + 2], 16) for i in (1, 3, 5))
+          for c, v in _PAL['assignments']['obstacles'].items()}
 TITLES = {'building': 'стены и колонны', 'openings': 'полотна дверей и рамы окон',
           'fence': 'заборы и бетонные блоки', 'props': 'реквизит: машины, контейнеры, стеллажи',
           'stone': 'камни и скалы', 'plant': 'растительность: кроны и кусты'}
@@ -289,18 +297,156 @@ if True:
 # маркеров, а пол там около 3.5 м. Поэтому уровень пола каждого этажа ОЦЕНИВАЕТСЯ по
 # данным: мода низов геометрии, попадающей в полосу. Ровно тот же приём, которым слой
 # стен угадывает пол подземки, — и он печатается вслух как оценка, а не как факт.
+# Классы, которых не бывает НА ЭТАЖЕ — ни на каком.
+#
+# `stone` — природная скала. Её попадание в полосу значит лишь, что плоскость реза прошла
+# сквозь склон. Замер на Резерве: в полосе «5th» камней 71 экземпляр из 1 522, но они дают
+# **98.8 % залитой площади слоя** (в полосе «2nd» — 99.5 %); в бункерах 74 камня давали слою
+# 8.17 % рамки при 85.5 % пересечения с наземным. Считать надо по ПЛОЩАДИ, а не по счёту:
+# по счёту камни теряются на фоне деревьев и выглядят безобидно.
+#
+# `plant` — только под землёй: дерево не растёт в бункере. На верхних этажах крона реальное
+# препятствие (гоча 32), и класс заведён ровно чтобы её гасить группой; по площади это 0.1 %.
+FLOOR_DROP = ('stone',)
+UNDERGROUND_DROP = ('plant', 'stone')
+
 BANDS = []
 for L in FR.layers():
     h = L.get('heights') or [-1e9, 1e9]
     BANDS.append(dict(id=L['id'], name=L.get('name') or L['id'],
-                      lo=float(h[0]), hi=float(h[1]), main=bool(L.get('isMain'))))
+                      lo=float(h[0]), hi=float(h[1]), main=bool(L.get('isMain')),
+                      minAbove=float(L.get('minAboveGround') or 0.0),
+                      drop=L.get('dropClasses'), roomsFilter=L.get('roomsFilter')))
 if not BANDS:
-    BANDS = [dict(id='all', name='вся карта', lo=-1e9, hi=1e9, main=True)]
+    BANDS = [dict(id='all', name='вся карта', lo=-1e9, hi=1e9, main=True, minAbove=0.0)]
 if not WANT_FLOORS:
     BANDS = [b for b in BANDS if b['main']] or BANDS[:1]
 
+# Полоса, лежащая ЦЕЛИКОМ ниже наземной, считается подземной. Явный `dropClasses`
+# в манифесте перебивает автоматику (в том числе пустым списком — «ничего не выбрасывать»).
+_main_lo = next((b['lo'] for b in BANDS if b['main']), -1e9)
 for b in BANDS:
-    sel = ok_box & (boxes[:, 1] >= b['lo']) & (boxes[:, 1] <= b['hi'])
+    if b['drop'] is None:
+        if b['main']:
+            b['drop'] = []
+        elif b['hi'] <= _main_lo:
+            b['drop'] = list(UNDERGROUND_DROP)
+        else:
+            b['drop'] = list(FLOOR_DROP)
+    b['drop'] = set(b['drop'])
+    if b['drop']:
+        log('  полоса %s -> классы %s не берутся' % (b['id'], ', '.join(sorted(b['drop']))))
+
+# ─────────────── ГАРДА «ВЫШЕ РЕЛЬЕФА»: полоса высот сама по себе НЕ признак этажа
+#
+# У Развязки рельеф доходит до 39.3 м, а полоса «2-й этаж» из конфига — [25, 34].
+# Замер: из 11 941 экземпляра растительности 2 963 (24.8 %) попадают в эту полосу, и все
+# они стоят НА ЗЕМЛЕ — медиана превышения над рельефом 0.00 м. Без гарды четверть наземного
+# хлама с возвышенностей уехала бы в «этаж» и была бы срезана плоскостью не на своей высоте.
+# Хуже: отравилась бы сама ОЦЕНКА пола — мода низов в полосе считалась бы по этому хламу,
+# а не по перекрытию ТЦ.
+#
+# Разделитель — вторая координата: высота основания над МЕСТНЫМ рельефом. Коридор чистый:
+# наземные объекты в полосе дают p95 = 0.02 м, комнаты ТЦ с меткой уровня — минимум 5.75 м.
+# Любой порог внутри коридора отсеивает 97 % земли при 0 % потерь этажей; берётся из
+# `layers[].minAboveGround` манифеста. Гарда работает только там, где ЕСТЬ террейн, и только
+# на НЕ-главных полосах: наземный слой обязан покрывать всю карту без потолка.
+if GROUND is not None and any(b['minAbove'] > 0 for b in BANDS if not b['main']):
+    _n = len(boxes)
+    _t = np.linspace(0.0, 1.0, 3)
+    _XX = boxes[:, 0:1] + (boxes[:, 3:4] - boxes[:, 0:1]) * _t[None, :]
+    _ZZ = boxes[:, 2:3] + (boxes[:, 5:6] - boxes[:, 2:3]) * _t[None, :]
+    _gx = np.repeat(_XX, 3, axis=1).ravel()
+    _gz = np.tile(_ZZ, (1, 3)).ravel()
+    _bad = ~np.isfinite(_gx) | ~np.isfinite(_gz)
+    _gg = GROUND.sample(np.where(_bad, 0.0, _gx), np.where(_bad, 0.0, _gz))
+    _gg = np.where(_bad, np.nan, _gg).reshape(_n, 9)
+    _hi = np.nanmax(np.where(np.isnan(_gg), -np.inf, _gg), axis=1)
+    G_HI = np.where(np.isfinite(_hi), _hi, np.nan)
+    G_HI[~ok_box] = np.nan
+    ABOVE = boxes[:, 1] - G_HI          # превышение основания над рельефом под габаритом
+else:
+    ABOVE = None
+
+
+# ─────────────── МАСКА ПО КОМНАТАМ КЛИЕНТА
+#
+# Полоса высот отделяет этаж только там, где он отличается по ВЫСОТЕ. У парковки ТЦ Развязки
+# это не так: её пол 21.3 м, а рельеф снаружи 20.7 — по абсолютной высоте она НЕ ниже земли,
+# и полоса [18,27] давала 46.9 % пересечения с наземным слоем, то есть дубль наземки.
+# Отделяет её только ПОЛОЖЕНИЕ: парковка размечена в клиенте 43 звуковыми комнатами
+# `MALL_ZONE_ALL/PARKING`. `roomsFilter` — регэксп по путям комнат; объект попадает в полосу,
+# только если его габарит пересекается с габаритом хотя бы одной такой комнаты.
+# Габарит комнаты берётся ЧЕСТНО, с поворотом (mg.world_box), а не как c±h: парковки повёрнуты.
+ROOMS = None
+if ROOMS_ARG and os.path.exists(ROOMS_ARG):
+    try:
+        ROOMS = json.load(open(ROOMS_ARG, encoding='utf-8')).get('rooms') or []
+        log('комнаты клиента: %s, %d шт. — доступен roomsFilter' % (os.path.basename(ROOMS_ARG), len(ROOMS)))
+    except Exception as ex:
+        log('! комнаты %s не прочитались (%s) — roomsFilter недоступен' % (ROOMS_ARG, type(ex).__name__))
+
+
+def rooms_boxes(rx):
+    """Мировые габариты комнат, чьи пути матчат регэксп rx."""
+    pat = re.compile(rx, re.I)
+    out = []
+    for r in (ROOMS or []):
+        if not pat.search(r.get('path') or ''):
+            continue
+        for bx in (r.get('boxes') or [dict(c=r['center'], q=[0, 0, 0, 1], h=r['extent'])]):
+            c, q, h = bx['c'], bx.get('q') or [0, 0, 0, 1], bx['h']
+            out.append(mg.world_box(((0.0, 0.0, 0.0), tuple(h)), tuple(c), tuple(q), (1.0, 1.0, 1.0)))
+    return np.array(out, dtype=np.float64) if out else np.zeros((0, 6))
+
+
+def rooms_mask(rx):
+    """Маска экземпляров, чей габарит пересекается хотя бы с одной комнатой фильтра."""
+    R = rooms_boxes(rx)
+    if not len(R):
+        log('  ! roomsFilter «%s» не нашёл ни одной комнаты — полоса останется без маски' % rx)
+        return np.ones(len(boxes), dtype=bool)
+    m = np.zeros(len(boxes), dtype=bool)
+    for r in R:                       # комнат десятки, экземпляров десятки тысяч — цикл по комнатам
+        m |= (boxes[:, 0] <= r[3]) & (boxes[:, 3] >= r[0]) &              (boxes[:, 2] <= r[5]) & (boxes[:, 5] >= r[2]) &              (boxes[:, 1] <= r[4]) & (boxes[:, 4] >= r[1])
+    log('  roomsFilter «%s»: комнат %d, объектов внутри %s из %s' % (rx, len(R), fmt(int(m.sum())), fmt(len(m))))
+    return m
+
+
+def guard_ok(b):
+    """Гарда «не сидит на грунте». NaN превышения = террейна под объектом нет, судить нечем."""
+    if ABOVE is None or b['main'] or b['minAbove'] <= 0:
+        return ok_box.copy()
+    return ok_box & (np.isnan(ABOVE) | (ABOVE >= b['minAbove']))
+
+
+def band_ok(b):
+    """Маска для ОЦЕНКИ ПОЛА: основание внутри полосы плюс гарда.
+
+    ⚠️ Только для оценки. Для отбора НА РЕЗ фильтр по основанию применять НЕЛЬЗЯ:
+    полоса высот описывает, где находится ПОЛ этажа, а не где начинается объект.
+    Стена санатория Берега идёт от фундамента до крыши, её основание лежит в наземной
+    полосе — и с фильтром по основанию она не попадала ни на 2-й, ни на 3-й этаж:
+    планы этажей выходили из одной мебели, без стен. Признак объекта на этаже один —
+    он ПЕРЕСЕКАЕТ плоскость реза этого этажа.
+    """
+    m = guard_ok(b) & (boxes[:, 1] >= b['lo']) & (boxes[:, 1] <= b['hi'])
+    return m & b['roomsMask'] if b.get('roomsMask') is not None else m
+
+
+# Маски по комнатам считаются ЗДЕСЬ: rooms_mask объявлена выше, а BANDS уже собраны.
+for b in BANDS:
+    b['roomsMask'] = rooms_mask(b['roomsFilter']) if b.get('roomsFilter') else None
+
+for b in BANDS:
+    sel = band_ok(b)
+    b['mask'] = guard_ok(b)          # на рез: ТОЛЬКО гарда, без фильтра по основанию
+    if b.get('roomsMask') is not None:
+        b['mask'] = b['mask'] & b['roomsMask']
+    if not b['main'] and b['minAbove'] > 0 and ABOVE is not None:
+        raw = int((ok_box & (boxes[:, 1] >= b['lo']) & (boxes[:, 1] <= b['hi'])).sum())
+        log(f'  гарда «выше рельефа на {b['minAbove']:.1f} м» в полосе {b['id']}: '
+            f'{raw} кандидатов -> {int(sel.sum())} (отсеяно {raw - int(sel.sum())} наземных)')
     vals = boxes[sel, 1]
     if b['main'] and GROUND is not None:
         b['cut'] = None                      # рез по рельефу, плоскости нет
@@ -342,7 +488,11 @@ per_band_cand = collections.Counter()
 for i in range(len(inst)):
     for b in BANDS:
         if ok_box[i]:
+            if b['drop'] and inst[i][5] in b['drop']:
+                continue              # класс не бывает на этом этаже, см. UNDERGROUND_DROP
             if b['cut'] is not None:
+                if not b['mask'][i]:
+                    continue          # гарда «выше рельефа», см. блок выше
                 if not (boxes[i, 1] <= b['cut'] <= boxes[i, 4]):
                     continue
             else:

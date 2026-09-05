@@ -1,0 +1,154 @@
+{
+ "_": "Палитра материалов HD-карт CTA. Источник — макет V4DYA в Figma, нода 3465-10453 «HD-map Material Palette». Снята 2026-09-05 через Figma MCP (get_metadata), хексы взяты из подписей нод, а не считаны с картинки. Используется слоями карт (cut-obstacles.py, cut-walls.py) для раскраски групп в SVG, чтобы V4DYA собирал карту в Figma и Photoshop без перекраски.",
+ "source": {
+  "file": "Проект Портала Платформы",
+  "url": "https://www.figma.com/design/Z1c9wK3AtqBrBhSwNt8qZz/?node-id=3465-10453",
+  "node": "3465:10453",
+  "captured": "2026-09-05"
+ },
+ "_extend": "Не хватает цвета под новую категорию — добавлять СЮДА, в раздел \"extra\", с именем и назначением, и синхронизировать с макетом. Не хардкодить хексы в скриптах.",
+ "groups": {
+  "Asphalt / Road": {
+   "Dark Asphalt": "#212121",
+   "Asphalt": "#333333",
+   "Worn Asphalt": "#404040",
+   "Light Asphalt": "#505050",
+   "Concrete Road": "#666666",
+   "Sidewalk": "#8C8C8C"
+  },
+  "Concrete / Structure": {
+   "Dark Concrete": "#4D4D4D",
+   "Concrete": "#797979",
+   "Light Concrete": "#9A9A9A",
+   "Pale Concrete": "#B4B4B4",
+   "White Concrete": "#D9D9D9",
+   "Plaster": "#CCCCCC"
+  },
+  "Brick / Terracotta": {
+   "Dark Brick": "#5B2222",
+   "Old Brick": "#813E34",
+   "Red Brick": "#A73939",
+   "Terracotta": "#C24339",
+   "Weathered Brick": "#AB584A",
+   "Sandy Brick": "#BB8668"
+  },
+  "Earth / Dirt": {
+   "Dark Soil": "#2D241D",
+   "Rich Earth": "#352219",
+   "Dirt Path": "#534031",
+   "Dry Earth": "#665242",
+   "Sandy Dirt": "#816752",
+   "Light Sand": "#A59480"
+  },
+  "Wood / Warm Surface": {
+   "Dark Wood": "#3E2A18",
+   "Timber": "#5B4130",
+   "Medium Wood": "#7A5230",
+   "Warm Wood": "#82543E",
+   "Amber Wood": "#B5651D",
+   "Light Wood": "#C0A98A"
+  },
+  "Vegetation": {
+   "Dark Grass": "#3E4D30",
+   "Grass": "#535539",
+   "Dry Grass": "#747754",
+   "Moss": "#4E4F46"
+  },
+  "Water": {
+   "Deep Water": "#0B273B",
+   "Lake": "#173C43",
+   "Shallow Water": "#2B5877",
+   "Puddle": "#3A4E5E"
+  },
+  "Metal / Industrial": {
+   "Dark Steel": "#2D3236",
+   "Steel": "#474E54",
+   "Zinc": "#636B6F",
+   "Galvanized": "#8B9193",
+   "Aluminum": "#B8BDC4",
+   "Light Metal": "#D6DBE0"
+  },
+  "Markings / Signals": {
+   "White Line": "#FFFFFF",
+   "Yellow Line": "#FFCF00",
+   "Red Signal": "#E3433F",
+   "Orange Sign": "#E68E25"
+  }
+ },
+ "extra": {
+  "_": "Цвета, добавленные нами сверх макета. Пусто — значит хватило палитры."
+ },
+ "assignments": {
+  "obstacles": {
+   "building": {
+    "group": "Concrete / Structure",
+    "color": "White Concrete",
+    "hex": "#D9D9D9",
+    "why": "стены и колонны — бетон/штукатурка"
+   },
+   "openings": {
+    "group": "Markings / Signals",
+    "color": "Yellow Line",
+    "hex": "#FFCF00",
+    "why": "проёмы — сигнальный, чтобы видеть входы"
+   },
+   "fence": {
+    "group": "Metal / Industrial",
+    "color": "Aluminum",
+    "hex": "#B8BDC4",
+    "why": "заборы — тот же металл, светлее реквизита: это тонкие линии, им нужен контраст"
+   },
+   "props": {
+    "group": "Metal / Industrial",
+    "color": "Zinc",
+    "hex": "#636B6F",
+    "why": "реквизит: машины, контейнеры, стеллажи — металл, средний тон"
+   },
+   "stone": {
+    "group": "Earth / Dirt",
+    "color": "Sandy Dirt",
+    "hex": "#816752",
+    "why": "камни и скалы — порода"
+   },
+   "plant": {
+    "group": "Vegetation",
+    "color": "Dry Grass",
+    "hex": "#747754",
+    "why": "растительность — та же зелень, светлее для читаемости"
+   }
+  },
+  "walls": {
+   "walls-outer": {
+    "group": "Concrete / Structure",
+    "color": "White Concrete",
+    "hex": "#D9D9D9",
+    "why": "наружные стены"
+   },
+   "walls-inner": {
+    "group": "Concrete / Structure",
+    "color": "Pale Concrete",
+    "hex": "#B4B4B4",
+    "why": "внутренние стены — тот же материал, тише"
+   },
+   "openings": {
+    "group": "Markings / Signals",
+    "color": "Yellow Line",
+    "hex": "#FFCF00",
+    "why": "проёмы"
+   },
+   "fence": {
+    "group": "Metal / Industrial",
+    "color": "Aluminum",
+    "hex": "#B8BDC4",
+    "why": "заборы — тот же металл, светлее реквизита: это тонкие линии, им нужен контраст"
+   },
+   "props": {
+    "group": "Metal / Industrial",
+    "color": "Zinc",
+    "hex": "#636B6F",
+    "why": "реквизит: машины, контейнеры, стеллажи — металл, средний тон"
+   }
+  }
+ },
+ "_contrast": "Цвета подобраны так, чтобы КАЖДЫЙ класс читался на тёмном фоне: минимальная яркость 42 % (Sandy Dirt). Первый заход держал props на Steel (30 %) и plant на Grass (33 %) — семантика была верна, но слой уходил в чёрный, а props это основная масса объектов (на Развязке 8 333 из 8 479). Заменено на более светлых представителей ТЕХ ЖЕ семейств."
+}
