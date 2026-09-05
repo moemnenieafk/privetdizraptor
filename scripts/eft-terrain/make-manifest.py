@@ -202,8 +202,29 @@ if ROOMS:
     # Габарит СОДЕРЖИМОГО карты: комнаты (центр ± полуразмер), двери, выходы, проёмы.
     # Берём union, потому что двери и выходы регулярно выступают за коробки комнат.
     rd = json.load(open(ROOMS, encoding='utf-8'))
+    # ⚠️ ОБЪЁМЫ-ОБЁРТКИ. У части карт есть звуковая зона размером со всю сцену: у Ледокола
+    # `Icebreaker_outdoor` с полуразмером 789x949 м, у Развязки `OUTDOOR` объёмом 3.25e8.
+    # Это не помещение, а «всё снаружи», и по ним рамка раздувается в разы: Ледокол выходил
+    # 1831x2201 м вместо настоящих 33x133. Отсекаем по медиане: комната крупнее 20 медиан —
+    # обёртка, а не помещение. Порог с большим запасом, реальные ангары медиану так не рвут.
+    rooms_all = rd.get('rooms') or []
+    half = sorted(max(abs((r.get('extent') or [0, 0, 0])[0]),
+                      abs((r.get('extent') or [0, 0, 0])[2])) for r in rooms_all)
+    med = half[len(half) // 2] if half else 0.0
+    lim = med * 20 if med > 0 else float('inf')
+    rooms, dropped = [], []
+    for r in rooms_all:
+        e = r.get('extent') or [0, 0, 0]
+        (dropped if max(abs(e[0]), abs(e[2])) > lim else rooms).append(r)
+    if dropped:
+        print('  отсеяно объёмов-обёрток: %d (медиана полуразмера %.1f м, порог %.1f м)'
+              % (len(dropped), med, lim))
+        for r in dropped[:5]:
+            e = r.get('extent') or [0, 0, 0]
+            print('    %-52s полуразмер %.0fx%.0f м' % (str(r.get('path'))[:52], abs(e[0]), abs(e[2])))
+
     xs, zs = [], []
-    for r in rd.get('rooms') or []:
+    for r in rooms:
         c = r.get('center') or [0, 0, 0]
         e = r.get('extent') or [0, 0, 0]
         xs += [c[0] - e[0], c[0] + e[0]]
@@ -221,7 +242,7 @@ if ROOMS:
            [round(max(xs) + mx, 1), round(max(zs) + mz, 1)]]
     ov_x = min(max(cfg_ax, cfg_bx), geo[1][0]) - max(min(cfg_ax, cfg_bx), geo[0][0])
     ov_z = min(max(cfg_az, cfg_bz), geo[1][1]) - max(min(cfg_az, cfg_bz), geo[0][1])
-    print(f'границы из ГЕОМЕТРИИ: {geo} (комнат {len(rd.get("rooms") or [])}, запас {MARGIN:.0%})')
+    print(f'границы из ГЕОМЕТРИИ: {geo} (комнат {len(rooms)} из {len(rooms_all)}, запас {MARGIN:.0%})')
     print(f'  границы конфига: {bounds}; перекрытие с геометрией по X {ov_x:.0f} м, по Z {ov_z:.0f} м'
           + ('  ⚠️ КОНФИГ НЕ ОПИСЫВАЕТ КАРТУ' if ov_x <= 0 or ov_z <= 0 else ''))
     bounds = geo
