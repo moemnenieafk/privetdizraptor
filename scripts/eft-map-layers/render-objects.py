@@ -609,6 +609,110 @@ def hull_hits(r, fr, pad=64):
                 or max(ys) < -pad or min(ys) > fr['H'] + pad)
 
 
+# --- земля в кадре -----------------------------------------------------------
+def build_ground(fr, a):
+    """Описание поверхности для Blender: сетка высот или плоскость на уровне пола.
+
+    Сетка высот лежит в ориентации растра (то же отражение по X, что и у рамки), поэтому
+    узел (r, c) переводится в мир той же нормировкой, что `mapgeom.Ground._uv` — обратно.
+    Текстура берётся по индексам сетки, а не по миру: карта материалов и карта высот
+    индексируются одинаково, и отражение сокращается само.
+    """
+    spec = (a.ground or 'none').strip()
+    if spec in ('', 'none'):
+        return None
+    gen = os.path.dirname(os.path.dirname(os.path.abspath(a.frame)))   # …/gen/<map>
+    npy = level = None
+    if spec == 'auto':
+        cand = os.path.join(gen, 'ground', '%s-height-meters.npy' % a.map)
+        if os.path.exists(cand):
+            npy = cand
+        else:
+            obst = os.path.join(gen, 'obstacles', '%s-obstacles.json' % a.map)
+            for p in (obst, os.path.join(gen, 'obstacles', '%s-obstacles-main.json' % a.map)):
+                if os.path.exists(p):
+                    fl = (json.load(open(p, encoding='utf-8')).get('floors') or {})
+                    main = fl.get('main') or (list(fl.values())[0] if fl else None)
+                    if main and main.get('floorMeters') is not None:
+                        level = float(main['floorMeters'])
+                        print('  земля: карты высот нет — ПЛОСКОСТЬ по floorMeters=%.2f м '
+                              'из слоя препятствий (оценка, не замер)' % level)
+                        break
+            if level is None:
+                die('--ground auto: ни карты высот, ни floorMeters в слое препятствий. '
+                    'Задать явно: --ground flat:<метры>')
+    elif spec.startswith('flat:'):
+        level = float(spec.split(':', 1)[1])
+    else:
+        npy = spec
+        if not os.path.exists(npy):
+            die('карты высот нет: %s' % npy)
+
+    mat = (a.ground_material or 'auto').strip()
+    if mat == 'auto':
+        cand = os.path.join(gen, 'ground', '%s-material.png' % a.map)
+        mat = cand if os.path.exists(cand) else ''
+    elif mat == 'none':
+        mat = ''
+    if mat and not os.path.exists(mat):
+        die('карты материалов нет: %s' % mat)
+
+    col = [float(v) for v in a.ground_color.split(',')]
+    sub = 1
+    if npy:
+        gh, gw = np.load(npy, mmap_mode='r').shape
+        if str(a.ground_subdiv) == 'auto':
+            sub = max(1, int(round(fr['W'] / float(gw))))
+        else:
+            sub = max(1, int(a.ground_subdiv))
+        print('  уплотнение сетки высот: x%d (сетка %dx%d против рамки %dx%d)'
+              % (sub, gw, gh, fr['W'], fr['H']))
+    g = dict(npy=npy, level=level, material=mat or None, color=col, mode=a.ground_mode,
+             subdiv=sub,
+             xmin=fr['XMIN'], xmax=fr['XMAX'], zmin=fr['ZMIN'], zmax=fr['ZMAX'],
+             mirrorX=True)
+    if npy:
+        G = np.load(npy)
+        print('  земля: %s %s, %.1f..%.1f м%s'
+              % (os.path.basename(npy), G.shape, float(np.nanmin(G)), float(np.nanmax(G)),
+                 ', материал ' + os.path.basename(mat) if mat else ', без текстуры'))
+    else:
+        print('  земля: плоскость %.2f м%s'
+              % (level, ', материал ' + os.path.basename(mat) if mat else ', без текстуры'))
+    return g
+
+
+def build_occluders(fr, a):
+    """Режущая геометрия из dump-occluders.py: прототипы + экземпляры в осях Blender."""
+    spec = (a.occluders or 'none').strip()
+    if spec in ('', 'none'):
+        return None, None
+    if spec == 'auto':
+        gen = os.path.dirname(os.path.dirname(os.path.abspath(a.frame)))
+        for cand in (os.path.join(a.work, '%s-occluders.json' % a.map),
+                     os.path.join(gen, 'occluders', '%s-occluders.json' % a.map)):
+            if os.path.exists(cand):
+                spec = cand
+                break
+        else:
+            die('--occluders auto: файла нет. Сперва dump-occluders.py')
+    if not os.path.exists(spec):
+        die('файла режущей геометрии нет: %s' % spec)
+    d = json.load(open(spec, encoding='utf-8'))
+    protos = d['protos']
+    inst = []
+    for r in d['instances']:
+        if r['mesh'] not in protos:
+            continue
+        m = trs_unity((r['x'], r['y'], r['z']), r['quat'], r['scale'])
+        inst.append(dict(p=r['mesh'], m=[round(v, 6) for v in to_blender(m).ravel().tolist()]))
+    tv = sum(p.get('verts', 0) for p in protos.values())
+    print('  резак: прототипов %d (%s вершин), экземпляров %d%s'
+          % (len(protos), format(tv, ',').replace(',', ' '), len(inst),
+             ', гигантов отсеяно %d' % len(d['giantsDropped']) if d.get('giantsDropped') else ''))
+    return protos, inst
+
+
 # --- задание для Blender -----------------------------------------------------
 def build_job(fr, protos, instances, cfg, layer):
     ppm_x, ppm_y = -fr['B'], fr['D']
@@ -637,7 +741,8 @@ def build_job(fr, protos, instances, cfg, layer):
     return dict(layer=layer, protos=protos, instances=instances, tiles=tiles,
                 pixelAspectY=1.0, engine=cfg['engine'], samples=cfg['samples'],
                 sunAzimuth=315.0, sunElevation=45.0, sunEnergy=cfg['sun'],
-                ambient=cfg['ambient'], tiledir=cfg['tiledir'])
+                ambient=cfg['ambient'], tiledir=cfg['tiledir'], ground=cfg.get('ground'),
+                occlProtos=cfg.get('occlProtos'), occlInstances=cfg.get('occlInstances'))
 
 
 def run_blender(blender, job_path):
@@ -821,14 +926,26 @@ def cmd_render(a):
     os.makedirs(tiledir, exist_ok=True)
     cfg = dict(tile=(a.tile, a.tile_h), engine=a.engine, samples=a.samples,
                sun=a.sun, ambient=a.ambient, tiledir=tiledir)
+    cfg['ground'] = build_ground(fr, a)
+    cfg['occlProtos'], cfg['occlInstances'] = build_occluders(fr, a)
     for layer in [s for s in a.layers.split(',') if s]:
-        key = 'stones' if layer == 'stones' else 'veg'
-        inst, skipped = instances_for(key, a, fr, protos)
+        # scene — камни и растительность в ОДНОМ кадре (имеет смысл вместе с землёй:
+        # объекты стоят на поверхности, закопанное скрыто, тени общие)
+        if layer == 'scene':
+            si, sk1 = instances_for('stones', a, fr, protos)
+            vi, sk2 = instances_for('veg', a, fr, protos)
+            inst, skipped = si + vi, sk1 + sk2
+            layer_protos = dict(protos['stones'])
+            layer_protos.update(protos['veg'])
+        else:
+            key = 'stones' if layer == 'stones' else 'veg'
+            inst, skipped = instances_for(key, a, fr, protos)
+            layer_protos = protos[key]
         print('слой %s: экземпляров %d (пропущено без прототипа %d)' % (layer, len(inst), skipped))
         for fn in os.listdir(tiledir):
             if fn.startswith(layer + '-'):
                 os.remove(os.path.join(tiledir, fn))
-        job = build_job(fr, protos[key], inst, cfg, layer)
+        job = build_job(fr, layer_protos, inst, cfg, layer)
         jp = os.path.join(a.work, 'job-%s.json' % layer)
         json.dump(job, open(jp, 'w', encoding='utf-8'), ensure_ascii=False)
         print('  плиток: %d по %dx%d' % (len(job['tiles']), a.tile, a.tile_h))
@@ -867,6 +984,30 @@ def main():
     ap.add_argument('--tile', type=int, default=2048)
     ap.add_argument('--tile-h', type=int, default=2069)
     ap.add_argument('--layers', default='stones,vegetation')
+    # ЗЕМЛЯ В КАДРЕ. Без неё объекты висят каждый на своей высоте и закопанную часть
+    # приходится срезать руками. С ней Blender сам прячет то, что ниже поверхности,
+    # и кладёт тени на рельеф. auto = карта высот слоя ground, а если её нет (карта без
+    # террейна) — честная плоскость по floorMeters из слоя препятствий.
+    ap.add_argument('--ground', default='none',
+                    help='auto | none | <путь к height-meters.npy> | flat:<метры>')
+    ap.add_argument('--ground-material', default='auto',
+                    help='auto | none | <путь к material.png> — текстура поверхности')
+    ap.add_argument('--ground-color', default='0.32,0.33,0.30',
+                    help='цвет земли, если текстуры нет')
+    # holdout — земля НЕ рисуется, но срезает всё, что ниже неё; фон остаётся прозрачным.
+    # visible — земля видна (получается единая картинка «поверхность + объекты»).
+    ap.add_argument('--ground-mode', default='holdout', choices=['holdout', 'visible'])
+    # Во сколько раз уплотнить сетку высот. auto = до шага кадра.
+    # ⚠️ ЗАМЕРЕНО НА ЛЕСУ 05.09: уплотнение НИЧЕГО НЕ ДАЁТ. x1 и x4 (сетка 4096 против
+    # рамки 16384) дали 5.298 % против 5.297 % непрозрачных — разница в тысячную долю,
+    # картинки неотличимы. При этом x4 стоил 6.1 ГБ памяти Blender вместо 0.5 и 13.5 с
+    # на плитку вместо 4.5. Рваный низ валунов — НЕ ступенька сетки, камни там правда
+    # закопаны. Поэтому умолчание 1; поднимать только если найдётся случай, где видно.
+    ap.add_argument('--ground-subdiv', default='1')
+    # ГЕОМЕТРИЯ-РЕЗАК: здания и реквизит невидимы, но прячут то, что под ними.
+    # Без неё камень рисуется поверх крыши — при сборке карты это первое, что бросается.
+    ap.add_argument('--occluders', default='none',
+                    help='auto | none | <путь к <map>-occluders.json>')
     ap.add_argument('--probe-stone', default='Stone_03_LOD0')
     ap.add_argument('--probe-tree', default='pine01')
     a = ap.parse_args()

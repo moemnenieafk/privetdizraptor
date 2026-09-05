@@ -198,6 +198,207 @@ for k, inst in enumerate(JOB['instances']):
     placed += 1
 log('экземпляров размещено: %d за %.1f с' % (placed, time.time() - t0))
 
+# --- земля --------------------------------------------------------------------
+# Поверхность нужна не для красоты: она ПРЯЧЕТ закопанную часть объектов и принимает тени.
+# Строится по плитке, а не на всю карту: сетка высот бывает 4096x3448, целиком это ~14 млн
+# вершин на кадр, а на плитку приходится пара сотен тысяч.
+GROUND = JOB.get('ground')
+_ground_mat = None
+
+
+_holdout_mat = None
+
+
+def holdout_material():
+    """Материал-резак: объект не виден и не даёт цвета, но ПРЯЧЕТ всё, что за ним.
+
+    Именно нода Holdout, а не object.is_holdout: свойство объекта живёт в Cycles,
+    а нода работает и в EEVEE, и в Cycles — движок тут переключается флагом.
+    Фон при этом остаётся прозрачным (film_transparent), то есть слой камней
+    по-прежнему выходит на прозрачном, просто без закопанных и накрытых частей.
+    """
+    global _holdout_mat
+    if _holdout_mat is not None:
+        return _holdout_mat
+    mat = bpy.data.materials.new('holdout')
+    mat.use_nodes = True
+    nt = mat.node_tree
+    for n in list(nt.nodes):
+        if n.type != 'OUTPUT_MATERIAL':
+            nt.nodes.remove(n)
+    out = nt.nodes['Material Output']
+    ho = nt.nodes.new('ShaderNodeHoldout')
+    ho.location = (-220, 0)
+    nt.links.new(out.inputs['Surface'], ho.outputs['Holdout'])
+    _holdout_mat = mat
+    return mat
+
+
+def ground_material():
+    global _ground_mat
+    if _ground_mat is not None:
+        return _ground_mat
+    if (GROUND or {}).get('mode') == 'holdout':
+        _ground_mat = holdout_material()
+        return _ground_mat
+    mat = bpy.data.materials.new('ground')
+    mat.use_nodes = True
+    nt = mat.node_tree
+    bsdf = nt.nodes['Principled BSDF']
+    bsdf.inputs['Roughness'].default_value = 1.0
+    try:
+        bsdf.inputs['Specular IOR Level'].default_value = 0.0
+    except KeyError:
+        pass
+    if GROUND.get('material'):
+        img = load_image(GROUND['material'], False)
+        if img is not None:
+            tex = nt.nodes.new('ShaderNodeTexImage')
+            tex.image = img
+            tex.interpolation = 'Closest'      # материал — классы, а не градиент: не мылить
+            tex.location = (-600, 0)
+            nt.links.new(bsdf.inputs['Base Color'], tex.outputs['Color'])
+            _ground_mat = mat
+            return mat
+    c = GROUND.get('color') or [0.32, 0.33, 0.30]
+    bsdf.inputs['Base Color'].default_value = (c[0], c[1], c[2], 1.0)
+    _ground_mat = mat
+    return mat
+
+
+_G = None
+if GROUND and GROUND.get('npy'):
+    _G = np.load(GROUND['npy'])
+    log('земля: сетка высот %s, %.1f..%.1f м'
+        % (_G.shape, float(np.nanmin(_G)), float(np.nanmax(_G))))
+elif GROUND:
+    log('земля: плоскость %.2f м' % GROUND['level'])
+
+
+def build_ground_tile(t):
+    """Кусок поверхности под плитку. Возвращает объект или None."""
+    if not GROUND:
+        return None
+    half_w = float(t['orthoW']) / 2.0
+    half_h = half_w * float(t.get('resY') or t['h']) / float(t['w'])
+    x0, x1 = float(t['camX']) - half_w, float(t['camX']) + half_w
+    z0, z1 = float(t['camY']) - half_h, float(t['camY']) + half_h
+    me = bpy.data.meshes.new('ground_tile')
+
+    if _G is None:                                    # плоскость: два треугольника
+        lv = float(GROUND['level'])
+        V = np.array([[x0, z0, lv], [x1, z0, lv], [x1, z1, lv], [x0, z1, lv]], dtype=np.float32)
+        F = np.array([[0, 1, 2], [0, 2, 3]], dtype=np.int32)
+        UV = np.array([[0, 0], [1, 0], [1, 1], [0, 1]], dtype=np.float32)
+    else:
+        gh, gw = _G.shape
+        XMIN, XMAX = GROUND['xmin'], GROUND['xmax']
+        ZMIN, ZMAX = GROUND['zmin'], GROUND['zmax']
+        # мир -> индекс сетки (та же нормировка, что в mapgeom.Ground._uv, с отражением по X)
+        def col_of(x):
+            u = (x - XMIN) / (XMAX - XMIN) * (gw - 1)
+            return (gw - 1) - u if GROUND.get('mirrorX') else u
+        c_a, c_b = sorted((col_of(x0), col_of(x1)))
+        r_a = (z0 - ZMIN) / (ZMAX - ZMIN) * (gh - 1)
+        r_b = (z1 - ZMIN) / (ZMAX - ZMIN) * (gh - 1)
+        c0 = max(0, int(math.floor(c_a)) - 2); c1 = min(gw - 1, int(math.ceil(c_b)) + 2)
+        r0 = max(0, int(math.floor(min(r_a, r_b))) - 2)
+        r1 = min(gh - 1, int(math.ceil(max(r_a, r_b))) + 2)
+        if c1 <= c0 or r1 <= r0:
+            return None
+        # УПЛОТНЕНИЕ. Сетка высот вчетверо грубее кадра (4096 против 16384 у Леса), и на
+        # таком шаге поверхность режет камни ступеньками — низ валуна выходит рваным.
+        # Билинейно уплотняем ДО шага кадра: сетка не становится точнее как данные,
+        # но перестаёт вносить свою ступеньку поверх честной геометрии.
+        sub = max(1, int(GROUND.get('subdiv') or 1))
+        cc = np.linspace(c0, c1, (c1 - c0) * sub + 1)
+        rr = np.linspace(r0, r1, (r1 - r0) * sub + 1)
+        uc = (gw - 1) - cc if GROUND.get('mirrorX') else cc
+        xs = XMIN + uc / (gw - 1.0) * (XMAX - XMIN)
+        zs = ZMIN + rr / (gh - 1.0) * (ZMAX - ZMIN)
+        if sub == 1:
+            Hp = _G[r0:r1 + 1, c0:c1 + 1].astype(np.float32)
+        else:
+            ri = np.clip(np.floor(rr).astype(np.int32), 0, gh - 2)
+            ci = np.clip(np.floor(cc).astype(np.int32), 0, gw - 2)
+            dr = (rr - ri)[:, None].astype(np.float32)
+            dc = (cc - ci)[None, :].astype(np.float32)
+            g00 = _G[np.ix_(ri, ci)].astype(np.float32)
+            g01 = _G[np.ix_(ri, ci + 1)].astype(np.float32)
+            g10 = _G[np.ix_(ri + 1, ci)].astype(np.float32)
+            g11 = _G[np.ix_(ri + 1, ci + 1)].astype(np.float32)
+            Hp = ((g00 * (1 - dc) + g01 * dc) * (1 - dr)
+                  + (g10 * (1 - dc) + g11 * dc) * dr)
+        if np.isnan(Hp).any():                        # дыры сетки — на уровень медианы
+            Hp = np.where(np.isnan(Hp), np.nanmedian(Hp), Hp)
+        nx, nz = len(cc), len(rr)
+        XX = np.repeat(xs[None, :], nz, axis=0)
+        ZZ = np.repeat(zs[:, None], nx, axis=1)
+        V = np.stack([XX.ravel(), ZZ.ravel(), Hp.ravel()], axis=1).astype(np.float32)
+        idx = np.arange(nz * nx).reshape(nz, nx)
+        a_ = idx[:-1, :-1].ravel(); b_ = idx[:-1, 1:].ravel()
+        c_ = idx[1:, 1:].ravel();   d_ = idx[1:, :-1].ravel()
+        F = np.concatenate([np.stack([a_, b_, c_], axis=1),
+                            np.stack([a_, c_, d_], axis=1)]).astype(np.int32)
+        # UV по индексам сетки: карта материалов индексируется так же, отражение сокращается
+        U = np.repeat((cc / (gw - 1.0))[None, :], nz, axis=0)
+        Vv = np.repeat((1.0 - rr / (gh - 1.0))[:, None], nx, axis=1)
+        UV = np.stack([U.ravel(), Vv.ravel()], axis=1).astype(np.float32)
+
+    me.vertices.add(len(V))
+    me.vertices.foreach_set('co', V.ravel())
+    me.loops.add(len(F) * 3)
+    me.loops.foreach_set('vertex_index', F.ravel())
+    me.polygons.add(len(F))
+    me.polygons.foreach_set('loop_start', np.arange(len(F), dtype=np.int32) * 3)
+    me.update(calc_edges=True)
+    me.uv_layers.new(name='UVMap')
+    me.uv_layers[0].data.foreach_set('uv', UV[F.ravel()].ravel())
+    me.validate(clean_customdata=False)
+    me.update()
+    me.materials.append(ground_material())
+    ob = bpy.data.objects.new('ground_tile', me)
+    scene.collection.objects.link(ob)
+    return ob
+
+
+# --- режущая геометрия (невидимая) ---------------------------------------------
+OCCL_P = JOB.get('occlProtos') or {}
+OCCL_I = JOB.get('occlInstances') or []
+if OCCL_I:
+    t0 = time.time()
+    hm = holdout_material()
+    occl_meshes = {}
+    for nm, spec in OCCL_P.items():
+        d = np.load(spec['npz'])
+        V = d['v'].astype(np.float32)
+        F = d['t0']
+        if not len(V) or not len(F):
+            continue
+        me = bpy.data.meshes.new('o_' + nm)
+        me.vertices.add(len(V))
+        me.vertices.foreach_set('co', V.ravel())
+        me.loops.add(len(F) * 3)
+        me.loops.foreach_set('vertex_index', F.ravel())
+        me.polygons.add(len(F))
+        me.polygons.foreach_set('loop_start', np.arange(len(F), dtype=np.int32) * 3)
+        me.update(calc_edges=True)
+        me.validate(clean_customdata=False)
+        me.materials.append(hm)
+        occl_meshes[nm] = me
+    n_occl = 0
+    for k, r in enumerate(OCCL_I):
+        me = occl_meshes.get(r['p'])
+        if me is None:
+            continue
+        ob = bpy.data.objects.new('o%06d' % k, me)
+        m = r['m']
+        ob.matrix_world = Matrix((m[0:4], m[4:8], m[8:12], m[12:16]))
+        coll.objects.link(ob)
+        n_occl += 1
+    log('РЕЗАК: мешей %d, экземпляров размещено %d за %.1f с'
+        % (len(occl_meshes), n_occl, time.time() - t0))
+
 # --- свет и мир ---------------------------------------------------------------
 az = math.radians(JOB.get('sunAzimuth', 315.0))
 el = math.radians(JOB.get('sunElevation', 45.0))
@@ -276,7 +477,12 @@ for n, t in enumerate(tiles):
     cam.location = (float(t['camX']), float(t['camY']), 2500.0)
     scene.render.filepath = os.path.join(tiledir, t['file'])
     ts = time.time()
+    gob = build_ground_tile(t)
     bpy.ops.render.render(write_still=True)
+    if gob is not None:                      # кусок земли живёт ровно одну плитку
+        gme = gob.data
+        bpy.data.objects.remove(gob, do_unlink=True)
+        bpy.data.meshes.remove(gme)
     log('плитка %d/%d %s %dx%d за %.1f с'
         % (n + 1, len(tiles), t['file'], t['w'], t['h'], time.time() - ts))
 log('ГОТОВО: плиток %d за %.1f с' % (len(tiles), time.time() - t0))
