@@ -1205,7 +1205,9 @@ function BillingPanel({
 }) {
   // Имя тира берём из витрины (живые данные БД), иначе — из дефолтного каталога.
   // Архивный тир в витрину не попадает, но у пользователя остаться может — тогда tierMeta.
-  const tierName = showcase.find((t) => t.slug === tier)?.name ?? tierMeta(tier).name;
+  const nameOfTier = (slug: string) =>
+    showcase.find((t) => t.slug === slug)?.name ?? tierMeta(slug).name;
+  const tierName = nameOfTier(tier);
   const price = showcase.find((t) => t.slug === tier)?.price ?? 0;
   const until = validUntil ? new Date(validUntil).toLocaleDateString('ru-RU') : null;
   const isPaid = tier !== 'free';
@@ -1257,7 +1259,9 @@ function BillingPanel({
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="font-blender-medium text-xs text-text-secondary">
                       {BILLING_TYPE_LABEL[h.type] ?? h.type}
-                      {h.tier ? ` — ${showcase.find((t) => t.slug === h.tier)?.name ?? h.tier}` : ''}
+                      {/* Тот же фолбэк, что у заголовка: архивный тир выпал из витрины,
+                          но показывать сырой слаг «veteran» вместо «Ветеран» нельзя. */}
+                      {h.tier ? ` — ${nameOfTier(h.tier)}` : ''}
                     </span>
                     <span className="font-blender-book text-type-micro text-text-muted">
                       {new Date(h.createdAt).toLocaleDateString('ru-RU')}
