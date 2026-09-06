@@ -8,11 +8,14 @@ import { billingEvents, profiles } from "@/db/schema";
 import { getAdmin } from "@/lib/auth/admin";
 import { getTiersFromDb, getGatesFromDb } from "@/db/billing";
 import { allGateDefs } from "@/data/gate-registry";
+import { getPreviewTierSlug } from "@/lib/gating/preview";
 import { isProtectedTier } from "@/lib/gating/tiers";
 import { GateMatrixClient, type GateRow, type TierOption } from "./GateMatrixClient";
 import { TierEditorClient, type EditableTier } from "./TierEditorClient";
 import { UserSubsClient } from "./UserSubsClient";
 import { LedgerTable, type LedgerRow } from "./LedgerTable";
+import { SystemTogglesClient, type SystemToggle } from "./SystemTogglesClient";
+import { TierPreviewClient } from "./TierPreviewClient";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,9 +44,10 @@ function SectionHead({ title, hint }: { title: string; hint?: string }) {
 export default async function AdminBillingPage() {
   if (!(await getAdmin())) redirect("/admin");
 
-  const [tierRows, gateRows, events] = await Promise.all([
+  const [tierRows, gateRows, previewTier, events] = await Promise.all([
     getTiersFromDb(),
     getGatesFromDb(),
+    getPreviewTierSlug(),
     db
       .select({
         id: billingEvents.id,
@@ -83,17 +87,38 @@ export default async function AdminBillingPage() {
 
   // Карта гейтов: дефолт реестра ⊕ оверрайд из БД (строка БД перебивает дефолт).
   const overrides = new Map(gateRows.map((g) => [g.featureKey, g]));
-  const matrix: GateRow[] = allGateDefs().map((def) => {
-    const ov = overrides.get(def.key);
-    return {
-      key: def.key,
-      label: def.label,
-      category: def.category,
-      minTier: ov?.minTier ?? def.defaultMinTier,
-      behavior: ov?.behavior ?? def.defaultBehavior,
-      enabled: ov?.enabled ?? true,
-    };
-  });
+  const allDefs = allGateDefs();
+
+  // ⚠️ Дефолт enabled берём из определения, а НЕ хардкодим true: системные переключатели
+  // приезжают выключенными, и матрица иначе показывала бы включённым то, что выключено.
+  const matrix: GateRow[] = allDefs
+    .filter((def) => def.kind !== "system")
+    .map((def) => {
+      const ov = overrides.get(def.key);
+      return {
+        key: def.key,
+        label: def.label,
+        category: def.category,
+        minTier: ov?.minTier ?? def.defaultMinTier,
+        behavior: ov?.behavior ?? def.defaultBehavior,
+        enabled: ov?.enabled ?? def.defaultEnabled ?? true,
+      };
+    });
+
+  // Системные переключатели — свой блок: у них нет порога, значение несёт только вкл/выкл.
+  const toggles: SystemToggle[] = allDefs
+    .filter((def) => def.kind === "system")
+    .map((def) => {
+      const ov = overrides.get(def.key);
+      return {
+        key: def.key,
+        label: def.label,
+        description: def.description,
+        enabled: ov?.enabled ?? def.defaultEnabled ?? true,
+        minTier: ov?.minTier ?? def.defaultMinTier,
+        behavior: ov?.behavior ?? def.defaultBehavior,
+      };
+    });
 
   const ledger: LedgerRow[] = events.map((e) => ({
     id: e.id,
@@ -133,6 +158,22 @@ export default async function AdminBillingPage() {
           hint="Выдать, продлить или снять тир по username. Пишется в леджер начислений."
         />
         <UserSubsClient tiers={tierOptions} />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <SectionHead
+          title="Переключатели"
+          hint="Системные тумблеры портала. Витрину цен включать только после того, как заполнена публичная оферта."
+        />
+        <SystemTogglesClient toggles={toggles} />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <SectionHead
+          title="Просмотр от лица тира"
+          hint="Понизить свой видимый уровень доступа, чтобы проверить замки и апселлы на живом сайте."
+        />
+        <TierPreviewClient tiers={tierOptions} active={previewTier} />
       </section>
 
       <section className="flex flex-col gap-4">

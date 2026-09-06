@@ -5,7 +5,8 @@ import { getEftAchievements, getEftMaps, getEftTraders } from '@/db/landing';
 import { getHideoutNeeds, getHideoutStations } from '@/db/hideout';
 import { resolveAchievementHint, type AchievementHint } from '@/lib/achievement-hints';
 import { buildQuestsDigest } from '@/lib/tracking-digest';
-import { getSubscription } from '@/lib/subscription.server';
+import { getSubscription, getBillingHistory } from '@/lib/subscription.server';
+import { getTierShowcase, isPricingPublished } from '@/lib/gating/showcase';
 import { AccountCenter } from './AccountCenter';
 
 export const metadata: Metadata = {
@@ -20,9 +21,23 @@ export default async function AccountPage() {
   // Server-гард: кабинет только для залогиненных.
   const me = await getMe();
   if (!me) redirect('/login?next=/account');
-  const [stats, sub, achievements, maps, traders, hideoutNeeds, hideoutStations] = await Promise.all([
+  const [
+    stats,
+    sub,
+    billingHistory,
+    showcase,
+    pricingPublished,
+    achievements,
+    maps,
+    traders,
+    hideoutNeeds,
+    hideoutStations,
+  ] = await Promise.all([
     getAccountStats(me.id),
     getSubscription(me.id),
+    getBillingHistory(me.id),
+    getTierShowcase(),
+    isPricingPublished(),
     getEftAchievements(),
     getEftMaps(),
     getEftTraders(),
@@ -49,6 +64,10 @@ export default async function AccountPage() {
       me={me}
       tier={sub.tier}
       validUntil={sub.validUntil}
+      subSource={sub.source}
+      billingHistory={billingHistory}
+      showcase={showcase}
+      pricingPublished={pricingPublished}
       stats={stats}
       achievements={achievements}
       hints={hints}

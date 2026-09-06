@@ -5,6 +5,21 @@ export interface SubscriptionInfo {
   tier: TierId;
   /** ISO; null — бессрочно / нет данных. */
   validUntil: string | null;
+  /** Откуда подписка: manual | yookassa | … Показывается в кабинете. */
+  source: string | null;
+}
+
+/** Запись леджера начислений для вкладки «Платежи» (own-строки через RLS). */
+export interface BillingHistoryEntry {
+  id: string;
+  type: string;
+  provider: string;
+  tier: string | null;
+  /** ₽. null — суммы нет (напр. ручная выдача админом). */
+  amount: number | null;
+  currency: string | null;
+  status: string | null;
+  createdAt: string;
 }
 
 /**
@@ -14,7 +29,7 @@ export interface SubscriptionInfo {
  * select('*') — чтобы отсутствие колонки valid_until не роняло весь запрос в ошибку.
  */
 export async function getSubscription(userId: string | null): Promise<SubscriptionInfo> {
-  if (!userId) return { tier: 'free', validUntil: null };
+  if (!userId) return { tier: 'free', validUntil: null, source: null };
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -22,16 +37,55 @@ export async function getSubscription(userId: string | null): Promise<Subscripti
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
-    if (error || !data) return { tier: 'free', validUntil: null };
-    const row = data as { tier?: unknown; valid_until?: unknown };
+    if (error || !data) return { tier: 'free', validUntil: null, source: null };
+    const row = data as { tier?: unknown; valid_until?: unknown; source?: unknown };
     const validUntil = typeof row.valid_until === 'string' ? row.valid_until : null;
     const expired = validUntil !== null && new Date(validUntil).getTime() < Date.now();
     // Пропускаем ЛЮБОЙ непустой строковый slug (динамические, админ-созданные тиры тоже):
     // ранг посчитает снимок tiers. Сужение до базовых трёх занижало платника до free.
     const slug = typeof row.tier === 'string' ? row.tier.trim() : '';
     const tier: TierId = !expired && slug !== '' ? slug : 'free';
-    return { tier, validUntil };
+    const source = typeof row.source === 'string' && row.source.trim() !== '' ? row.source : null;
+    return { tier, validUntil, source };
   } catch {
-    return { tier: 'free', validUntil: null };
+    return { tier: 'free', validUntil: null, source: null };
+  }
+}
+
+/**
+ * История начислений пользователя для вкладки «Платежи». Читаем СВОИ строки через
+ * server-клиент Supabase (политика billing_events_read_own), а НЕ owner-клиентом Drizzle:
+ * кабинет не должен уметь смотреть чужой леджер даже теоретически.
+ *
+ * Fail-safe: нет таблицы/строк/доступа → пустой список, вкладка покажет пустое состояние,
+ * а не ошибку.
+ */
+export async function getBillingHistory(
+  userId: string | null,
+  limit = 20,
+): Promise<BillingHistoryEntry[]> {
+  if (!userId) return [];
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('billing_events')
+      .select('id, type, provider, tier, amount, currency, status, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error || !data) return [];
+    return (data as Record<string, unknown>[]).map((r) => ({
+      id: String(r.id),
+      type: typeof r.type === 'string' ? r.type : 'unknown',
+      provider: typeof r.provider === 'string' ? r.provider : 'manual',
+      tier: typeof r.tier === 'string' ? r.tier : null,
+      // numeric приезжает строкой — приводим и отбрасываем нечисловое.
+      amount: r.amount === null || r.amount === undefined ? null : Number(r.amount),
+      currency: typeof r.currency === 'string' ? r.currency : null,
+      status: typeof r.status === 'string' ? r.status : null,
+      createdAt: typeof r.created_at === 'string' ? r.created_at : new Date().toISOString(),
+    }));
+  } catch {
+    return [];
   }
 }

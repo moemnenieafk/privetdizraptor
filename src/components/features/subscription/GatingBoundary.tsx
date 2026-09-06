@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { serverEntitlementsSnapshot } from '@/lib/gating/resolve';
 import { GatingProvider } from './GatingProvider';
+import { TierPreviewBadge } from './TierPreviewBadge';
 
 /**
  * Серверная обёртка: собирает снимок прав текущего юзера (serverEntitlementsSnapshot,
@@ -10,5 +11,11 @@ import { GatingProvider } from './GatingProvider';
  */
 export async function GatingBoundary({ children }: { children: ReactNode }) {
   const snap = await serverEntitlementsSnapshot();
-  return <GatingProvider {...snap}>{children}</GatingProvider>;
+  return (
+    <GatingProvider {...snap}>
+      {children}
+      {/* Ничего не рисует, пока админ не включил «просмотр от лица тира». */}
+      <TierPreviewBadge />
+    </GatingProvider>
+  );
 }

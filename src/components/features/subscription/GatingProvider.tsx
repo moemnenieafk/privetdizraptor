@@ -13,6 +13,10 @@ export interface GatingSnapshot {
   rank: number;
   tiers: TierSnapshot[];
   gates: GateMap;
+  /** Витрина цен опубликована — иначе клиент не печатает ни одной цифры цены. */
+  pricingPublished: boolean;
+  /** Админ смотрит от лица тира (плашка-индикатор). null — обычный просмотр. */
+  previewTier: string | null;
 }
 
 const GatingContext = createContext<GatingSnapshot | null>(null);
@@ -27,9 +31,19 @@ interface GatingProviderProps extends GatingSnapshot {
  *   <GatingProvider {...snap}>{children}</GatingProvider>
  * Отсутствие провайдера НЕ ломает клиент — потребители деградируют на дефолты.
  */
-export function GatingProvider({ children, tier, rank, tiers, gates }: GatingProviderProps) {
+export function GatingProvider({
+  children,
+  tier,
+  rank,
+  tiers,
+  gates,
+  pricingPublished,
+  previewTier,
+}: GatingProviderProps) {
   return (
-    <GatingContext.Provider value={{ tier, rank, tiers, gates }}>
+    <GatingContext.Provider
+      value={{ tier, rank, tiers, gates, pricingPublished, previewTier }}
+    >
       {children}
     </GatingContext.Provider>
   );

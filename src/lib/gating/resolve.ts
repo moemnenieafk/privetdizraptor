@@ -14,7 +14,13 @@ import 'server-only';
 import { unstable_cache, revalidateTag } from 'next/cache';
 import { notFound } from 'next/navigation';
 import { getTiersFromDb, getGatesFromDb } from '@/db/billing';
-import { allGateDefs, defaultGate, type GateBehavior } from '@/data/gate-registry';
+import {
+  allGateDefs,
+  defaultGate,
+  PRICING_GATE_KEY,
+  type GateBehavior,
+} from '@/data/gate-registry';
+import { getPreviewTierSlug } from '@/lib/gating/preview';
 import { TIERS, TIER_ORDER } from '@/data/subscription-tiers';
 import { effectiveRank, tierRankOf, type TierLike, type GateLike } from '@/lib/gating/tiers';
 import { getSubscription } from '@/lib/subscription.server';
@@ -34,6 +40,8 @@ export interface TierSnapshot {
   rank: number;
   gameId: string | null;
   archived: boolean;
+  /** Editorial-буллеты витрины (правятся в админке). Авто-состав считается отдельно. */
+  perks: string[] | null;
 }
 
 /** Разрешённая запись гейта в карте: порог + поведение замка. */
@@ -51,6 +59,14 @@ export interface Entitlements {
   rank: number;
   tiers: TierSnapshot[];
   gates: GateMap;
+  /**
+   * Опубликована ли витрина цен (системный переключатель sys:pricing-published).
+   * Едет в снимке, потому что цену печатает и клиентский PaywallLock — иначе он остался бы
+   * единственным местом, где цифра утекает при выключенной витрине.
+   */
+  pricingPublished: boolean;
+  /** Выбранный админом тир-превью (для плашки-индикатора). null — обычный просмотр. */
+  previewTier: string | null;
 }
 
 /* ───────────────── дефолт-лестница (fail-safe при пустой БД) ───────────────── */
@@ -63,6 +79,7 @@ const DEFAULT_TIERS: TierSnapshot[] = TIER_ORDER.map((id) => ({
   rank: TIERS[id].rank,
   gameId: null,
   archived: false,
+  perks: null,
 }));
 
 /* ───────────────── кешированные снимки ───────────────── */
@@ -82,6 +99,7 @@ export const getTiers = unstable_cache(
       rank: r.rank,
       gameId: r.gameId ?? null,
       archived: r.archived,
+      perks: r.perks ?? null,
     }));
   },
   ['billing-tiers'],
@@ -104,7 +122,9 @@ export const getGateMap = unstable_cache(
       map[def.key] = {
         minTier: def.defaultMinTier,
         behavior: def.defaultBehavior,
-        enabled: true,
+        // Системные переключатели приезжают выключенными (defaultEnabled), обычные гейты —
+        // включёнными. Без этого витрина цен считалась бы опубликованной до строки в БД.
+        enabled: def.defaultEnabled ?? true,
       };
     }
     // 2. Оверрайды из БД поверх дефолтов.
@@ -167,10 +187,11 @@ export async function resolveEntitlements(
   userId: string | null,
   game: string = 'eft',
 ): Promise<Entitlements> {
-  const [tiers, gates, subs] = await Promise.all([
+  const [tiers, gates, subs, previewTier] = await Promise.all([
     getTiers(),
     getGateMap(),
     activeSubscriptions(userId),
+    getPreviewTierSlug(),
   ]);
   const tierLikes: TierLike[] = tiers.map((t) => ({
     slug: t.slug,
@@ -178,12 +199,20 @@ export async function resolveEntitlements(
     gameId: t.gameId,
     archived: t.archived,
   }));
-  const rank = effectiveRank(subs, game, tierLikes);
+  const realRank = effectiveRank(subs, game, tierLikes);
   // Слаг эффективного тира — тот из применимых подписок, чей ранг == rank; иначе free.
   const applicable = subs.filter((s) => s.scopeGameId === null || s.scopeGameId === game);
-  const top = applicable.find((s) => tierRankOf(s.tier, tierLikes) === rank && rank > 0);
-  const tier = top?.tier ?? 'free';
-  return { tier, rank, tiers, gates };
+  const top = applicable.find((s) => tierRankOf(s.tier, tierLikes) === realRank && realRank > 0);
+  const realTier = top?.tier ?? 'free';
+
+  // Превью админа: ТОЛЬКО понижение (min). Выбор тира выше своего ничего не даёт — это и
+  // есть защита от эскалации прав через куку, см. lib/gating/preview.ts.
+  const lowered = previewTier !== null && tierRankOf(previewTier, tierLikes) < realRank;
+  const rank = lowered ? tierRankOf(previewTier as string, tierLikes) : realRank;
+  const tier = lowered ? (previewTier as string) : realTier;
+
+  const pricingPublished = gates[PRICING_GATE_KEY]?.enabled ?? false;
+  return { tier, rank, tiers, gates, pricingPublished, previewTier };
 }
 
 /* ───────────────── серверный энфорсмент ───────────────── */

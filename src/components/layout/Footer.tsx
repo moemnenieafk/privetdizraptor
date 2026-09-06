@@ -21,7 +21,7 @@ const BUILD_VERSION = "v0.2.0-beta";
 type PingState = "idle" | "ok" | "err";
 type ChannelInfo = { isLive: boolean; avatar?: string };
 
-export default function Footer() {
+export default function Footer({ pricingLink = null }: { pricingLink?: React.ReactNode }) {
   const [ping, setPing] = useState<number | null>(null);
   const [pingState, setPingState] = useState<PingState>("idle");
   const [channels, setChannels] = useState<Record<string, ChannelInfo>>({});
@@ -132,8 +132,10 @@ export default function Footer() {
           <div className="flex shrink-0 flex-col items-center gap-5 xl:w-44 xl:items-start">
             <SupportButton />
 
-            {ADDITIONAL_LINKS.length > 0 && (
+            {(ADDITIONAL_LINKS.length > 0 || pricingLink) && (
               <div className="flex flex-col items-center gap-3.5 xl:items-start">
+                {/* Серверный слот: «Тарифы», пока витрина не опубликована — null. */}
+                {pricingLink}
                 {ADDITIONAL_LINKS.map(({ label, href }) => (
                   <Link
                     key={label}

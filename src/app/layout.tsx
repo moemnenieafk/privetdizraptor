@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense, ViewTransition } from "react";
 import "./globals.css";
 import { GatingBoundary } from "@/components/features/subscription/GatingBoundary";
+import { PricingFooterLink } from "@/components/layout/PricingFooterLink";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ProgressSync } from "@/components/providers/ProgressSync";
 import { AchievementSync } from "@/components/providers/AchievementSync";
@@ -91,7 +92,16 @@ export default function RootLayout({
             <BattlePassSync />
             <RoleAutoWire />
             <FeedbackProvider>
-              <ConditionalLayout>
+              {/* Ссылка «Тарифы» — серверный слот под Suspense, а НЕ await в теле
+                  корневого layout: любое ожидание здесь ломает пререндер страниц
+                  (ловили на /eft/quests/side-quests) и тормозит каждый рендер портала. */}
+              <ConditionalLayout
+                pricingLink={
+                  <Suspense fallback={null}>
+                    <PricingFooterLink />
+                  </Suspense>
+                }
+              >
                 <Suspense fallback={<ViewTransition>{children}</ViewTransition>}>
                   <GatingBoundary>
                     <ViewTransition>{children}</ViewTransition>

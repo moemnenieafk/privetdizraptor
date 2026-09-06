@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useEntitlements } from '@/components/features/subscription/GatingProvider';
@@ -47,21 +48,36 @@ export function Paywall({ gate, feature, children, fallback }: PaywallProps) {
   // fallback учитывается ТОЛЬКО для teaser; lock всегда рисует апселл-карточку.
   if (behavior === 'teaser' && fallback !== undefined) return <>{fallback}</>;
 
-  return <PaywallLock need={need} needTier={snapshot?.tiers.find((t) => t.slug === need)} />;
+  return (
+    <PaywallLock
+      need={need}
+      needTier={snapshot?.tiers.find((t) => t.slug === need)}
+      pricingPublished={snapshot?.pricingPublished ?? false}
+    />
+  );
 }
 
-/** Апселл-карточка нужного тира. need — slug; имя/цена берём из снимка карты тиров
- *  (если провайдер смонтирован), иначе из дефолтного каталога TIERS, иначе — сам slug. */
+/**
+ * Апселл-карточка нужного тира. need — slug; имя/цена берём из снимка карты тиров
+ * (если провайдер смонтирован), иначе из дефолтного каталога TIERS, иначе — сам slug.
+ *
+ * Цена печатается ТОЛЬКО при опубликованной витрине: до включения тумблера ни одна цифра
+ * не показывается нигде на портале (публичная оферта ещё черновик). Тон — сухая
+ * констатация без продающего нажима, решение V4DYA 06.09.
+ */
 function PaywallLock({
   need,
   needTier,
+  pricingPublished,
 }: {
   need: string;
   needTier?: { name: string; price: number };
+  pricingPublished: boolean;
 }) {
   const known = need in TIERS ? TIERS[need as keyof typeof TIERS] : null;
   const name = needTier?.name ?? known?.name ?? need;
   const price = needTier?.price ?? known?.price ?? 0;
+  const showPrice = pricingPublished && price > 0;
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-md border border-(--primary)/30 bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] px-6 py-10 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-md border border-(--primary)/40">
@@ -71,9 +87,17 @@ function PaywallLock({
         Тир «{name}»
       </h3>
       <p className="max-w-xs text-sm text-text-secondary font-blender-book">
-        Функция доступна по подписке «{name}»
-        {price > 0 ? ` — ${price} ₽/мес` : ''}. Ядро сайта остаётся бесплатным.
+        Доступ по подписке «{name}»{showPrice ? ` — ${price} ₽/мес` : ''}. Ядро сайта
+        остаётся бесплатным.
       </p>
+      {pricingPublished ? (
+        <Link
+          href="/pricing"
+          className="font-blender-medium text-type-micro uppercase tracking-widest text-(--primary) underline-offset-4 hover:underline"
+        >
+          Сравнить тарифы
+        </Link>
+      ) : null}
     </div>
   );
 }

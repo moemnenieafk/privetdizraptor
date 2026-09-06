@@ -3,11 +3,17 @@
  * feature_gates в БД оверрайдит эти дефолты (что живьём рулит админ из матрицы); при
  * отсутствии строки/таблицы система деградирует на дефолты отсюда (R09i.1).
  *
- * Два рода ключей:
+ * Три рода ключей:
  *  - kind:'feature' — точечные фичи, оборачиваемые <Paywall gate="…"> / requireTier('…').
  *    Добавление нового гейта = одна строка сюда + оборачивание точки.
  *  - kind:'section' — разделы портала, генерятся ДЕТЕРМИНИРОВАННО из HEADER_DICTIONARY:
  *    любой узел меню с `path` даёт section-ключ `sec:<game>:<path>` (см. sectionGatesFromHeader).
+ *  - kind:'system' — ПЕРЕКЛЮЧАТЕЛИ портала, а не права доступа. Ранг/behavior у них
+ *    бессмысленны: значение несёт только `enabled`. ⚠️ Через requireTier их гонять НЕЛЬЗЯ —
+ *    там enabled=false означает «гейт снят, открыто всем», то есть ОБРАТНОЕ нашему смыслу.
+ *    Читаются точечными хелперами (см. isPricingPublished в lib/gating/showcase.ts).
+ *    В матрицу доступа админки не попадают (buildGateTree их не строит) — рисуются
+ *    отдельным блоком «Переключатели».
  *
  * Чистые данные/функции без БД — реестр читают и сервер (resolve.ts), и билдер миграции.
  */
@@ -15,7 +21,7 @@
 import { HEADER_DICTIONARY, type MenuItem } from './headerConfig';
 import { FEATURE_MIN_TIER } from './subscription-tiers';
 
-export type GateKind = 'section' | 'feature';
+export type GateKind = 'section' | 'feature' | 'system';
 export type GateBehavior = 'lock' | 'hide' | 'teaser';
 
 export interface GateDef {
@@ -25,6 +31,10 @@ export interface GateDef {
   kind: GateKind;
   defaultMinTier: string;
   defaultBehavior: GateBehavior;
+  /** Дефолт `enabled` при отсутствии строки в БД. Не задан → true (гейт применяется). */
+  defaultEnabled?: boolean;
+  /** Пояснение для админки (у системных переключателей смысл неочевиден из ключа). */
+  description?: string;
 }
 
 /** Ключ гейта — string (slug фичи или sec:<game>:<path>). */
@@ -59,6 +69,32 @@ export const GATE_REGISTRY: GateDef[] = (
   defaultMinTier: FEATURE_MIN_TIER[key],
   defaultBehavior: 'lock' as const,
 }));
+
+/**
+ * Ключ переключателя «витрина тарифов опубликована». `enabled=true` → /pricing доступна,
+ * цены рисуются везде (карточки тарифов, PaywallLock, кабинет). `enabled=false` → страницы
+ * нет (404), цифры цены не показываются нигде.
+ *
+ * Дефолт — ВЫКЛЮЧЕНО: пока строки в БД нет, цены не утекают. Это предусмотрено — публичная
+ * оферта (/legal/offer) до сих пор черновик «не имеет юридической силы», а платить нечем
+ * (адаптер провайдера не подключён). Включается тумблером в /admin/billing, без деплоя.
+ */
+export const PRICING_GATE_KEY = 'sys:pricing-published';
+
+/** Системные переключатели портала (kind:'system'). Мимо requireTier — см. шапку файла. */
+export const SYSTEM_GATES: GateDef[] = [
+  {
+    key: PRICING_GATE_KEY,
+    label: 'Витрина тарифов опубликована',
+    description:
+      'Включает страницу /pricing и показ цен по всему порталу. Включать только после того, как заполнена публичная оферта.',
+    category: 'Переключатели',
+    kind: 'system',
+    defaultMinTier: 'free',
+    defaultBehavior: 'lock',
+    defaultEnabled: false,
+  },
+];
 
 /** Игры, чьи разделы гейтятся из коробки. Пока EFT (эталон); расширяется по мере игр. */
 const GATED_GAMES: readonly string[] = ['eft'];
@@ -113,7 +149,7 @@ let cachedByKey: Map<string, GateDef> | null = null;
 /** Все определения гейтов: фичи + секции. Собирается один раз, дальше из кеша. */
 export function allGateDefs(): GateDef[] {
   if (!cachedDefs) {
-    cachedDefs = [...GATE_REGISTRY, ...sectionGatesFromHeader()];
+    cachedDefs = [...GATE_REGISTRY, ...sectionGatesFromHeader(), ...SYSTEM_GATES];
   }
   return cachedDefs;
 }
@@ -125,9 +161,22 @@ function gateDefByKey(): Map<string, GateDef> {
   return cachedByKey;
 }
 
-/** Быстрый доступ к дефолту по ключу (feature + секции), O(1) из мемо-Map. */
+/** Быстрый доступ к дефолту по ключу (feature + секции + системные), O(1) из мемо-Map. */
 export function defaultGate(key: string): { minTier: string; behavior: GateBehavior; enabled: boolean } {
   const def = gateDefByKey().get(key);
   if (!def) return { minTier: 'free', behavior: 'lock', enabled: true };
-  return { minTier: def.defaultMinTier, behavior: def.defaultBehavior, enabled: true };
+  return {
+    minTier: def.defaultMinTier,
+    behavior: def.defaultBehavior,
+    enabled: def.defaultEnabled ?? true,
+  };
+}
+
+/**
+ * Человекочитаемая подпись гейта — ЕДИНЫЙ источник для админки и витрины тарифов.
+ * Лейблы уже лежат в GateDef (у фич — из FEATURE_LABELS, у секций — заголовок узла меню),
+ * поэтому витрине не нужен свой словарь: расходиться нечему. Неизвестный ключ → сам ключ.
+ */
+export function gateLabel(key: string): string {
+  return gateDefByKey().get(key)?.label ?? key;
 }

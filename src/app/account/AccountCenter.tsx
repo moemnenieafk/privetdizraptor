@@ -17,6 +17,9 @@ import { PROGRESS_KEYS } from '@/lib/progress-storage';
 import { EDITIONS } from '@/components/layout/header-modules/ProfileSettingsModal';
 import { TrackingPanel } from './TrackingPanel';
 import { tierMeta, type TierId } from '@/data/subscription-tiers';
+import type { ShowcaseTier } from '@/lib/gating/showcase';
+import type { BillingHistoryEntry } from '@/lib/subscription.server';
+import { TierCard, TierCtaPending } from '@/components/features/subscription/TierCard';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // зеркалит серверный EMAIL_RE
@@ -854,16 +857,50 @@ function TwoFAView({ onBack }: { onBack: () => void }) {
   );
 }
 
-function PlanView({ onBack }: { onBack: () => void }) {
+/**
+ * Экран смены тарифа. Состав карточек считается из матрицы гейтов (lib/gating/showcase),
+ * поэтому совпадает с тем, что реально закрывает пейвол, и меняется из админки без деплоя.
+ * Кнопка оплаты неактивна: платёжный адаптер — отдельная задача, а рисовать экран заранее
+ * дешевле, чем верстать его в момент интеграции.
+ */
+function PlanView({
+  onBack,
+  showcase,
+  currentTier,
+  pricingPublished,
+}: {
+  onBack: () => void;
+  showcase: ShowcaseTier[];
+  currentTier: TierId;
+  pricingPublished: boolean;
+}) {
   return (
     <div className="flex flex-col">
       <BackBtn onClick={onBack} />
-      <div className="flex flex-col items-center gap-4 py-8 text-center">
+      <div className="flex flex-col gap-1 pb-5">
         <SubTitle>Выбранный тариф</SubTitle>
-        <p className="font-blender-book text-xs leading-relaxed text-text-muted max-w-xs">
-          Управление тарифными планами будет доступно после запуска платёжного модуля.
+        <p className="font-blender-book text-xs leading-relaxed text-text-muted">
+          Ядро портала остаётся бесплатным. Подписка открывает удобства.
         </p>
       </div>
+
+      {showcase.length === 0 ? (
+        <p className="font-blender-book text-xs text-text-muted">Тарифы пока не настроены.</p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {showcase.map((t) => (
+            <TierCard
+              key={t.slug}
+              tier={t}
+              pricingPublished={pricingPublished}
+              isCurrent={t.slug === currentTier}
+              action={
+                t.rank > 0 && t.slug !== currentTier ? <TierCtaPending tierName={t.name} /> : undefined
+              }
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1123,15 +1160,108 @@ function LinkingPanel({ me, onNavigate }: { me: Me; onNavigate: (v: ViewId) => v
   );
 }
 
-function BillingPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
+/** Как подписался пользователь — человекочитаемо. */
+const SOURCE_LABEL: Record<string, string> = {
+  manual: 'Выдана администратором',
+  yookassa: 'ЮKassa',
+  boosty: 'Boosty',
+};
+
+/** Типы записей леджера. Ручная выдача — БЕЗ суммы: иначе юзер видит «платёж 0 ₽». */
+const BILLING_TYPE_LABEL: Record<string, string> = {
+  grant: 'Выдано администратором',
+  payment: 'Оплата',
+  renewal: 'Продление',
+  refund: 'Возврат',
+  downgrade: 'Понижение тарифа',
+};
+
+function BillingPanel({
+  onNavigate,
+  tier,
+  validUntil,
+  source,
+  history,
+  showcase,
+  pricingPublished,
+}: {
+  onNavigate: (v: ViewId) => void;
+  tier: TierId;
+  validUntil: string | null;
+  source: string | null;
+  history: BillingHistoryEntry[];
+  showcase: ShowcaseTier[];
+  pricingPublished: boolean;
+}) {
+  // Имя тира берём из витрины (живые данные БД), иначе — из дефолтного каталога.
+  // Архивный тир в витрину не попадает, но у пользователя остаться может — тогда tierMeta.
+  const tierName = showcase.find((t) => t.slug === tier)?.name ?? tierMeta(tier).name;
+  const price = showcase.find((t) => t.slug === tier)?.price ?? 0;
+  const until = validUntil ? new Date(validUntil).toLocaleDateString('ru-RU') : null;
+  const isPaid = tier !== 'free';
+
   return (
-    <div className="rounded border border-lines-hover bg-card-menu px-6">
-      <FlatRow
-        label="Выбранный тариф"
-        action={<RowBtn onClick={() => onNavigate('plan')} />}
-      >
-        <span className="font-blender-medium text-xs text-text-muted">Не настроено</span>
-      </FlatRow>
+    <div className="flex flex-col gap-4">
+      <div className="rounded border border-lines-hover bg-card-menu px-6">
+        <FlatRow label="Выбранный тариф" action={<RowBtn onClick={() => onNavigate('plan')} />}>
+          <span className="font-blender-medium text-xs text-text-primary">{tierName}</span>
+          {isPaid && pricingPublished && price > 0 ? (
+            <span className="font-blender-medium text-xs text-text-muted">{price} ₽/мес</span>
+          ) : null}
+        </FlatRow>
+
+        <FlatRow label="Срок действия">
+          <span className="font-blender-medium text-xs text-text-muted">
+            {!isPaid ? 'Бессрочно' : until ? `Активен до ${until}` : 'Бессрочно'}
+          </span>
+        </FlatRow>
+
+        {isPaid ? (
+          <FlatRow label="Способ подключения">
+            <span className="font-blender-medium text-xs text-text-muted">
+              {source ? (SOURCE_LABEL[source] ?? source) : '—'}
+            </span>
+          </FlatRow>
+        ) : null}
+      </div>
+
+      {/* История начислений — свои строки леджера (RLS). Пусто ≠ ошибка. */}
+      <div className="rounded border border-lines-hover bg-card-menu px-6 py-5">
+        <h2 className="font-blender-medium text-sm uppercase tracking-widest text-text-primary">
+          История платежей
+        </h2>
+        {history.length === 0 ? (
+          <p className="mt-2 font-blender-book text-xs text-text-muted">
+            Операций пока не было.
+          </p>
+        ) : (
+          <div className="mt-4 flex flex-col">
+            {history.map((h) => {
+              // Ручную выдачу суммой не подписываем — денег не было.
+              const showAmount = h.type !== 'grant' && h.amount !== null && h.amount > 0;
+              return (
+                <div
+                  key={h.id}
+                  className="flex items-center justify-between gap-4 border-b border-lines-hover py-3 last:border-b-0"
+                >
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="font-blender-medium text-xs text-text-secondary">
+                      {BILLING_TYPE_LABEL[h.type] ?? h.type}
+                      {h.tier ? ` — ${showcase.find((t) => t.slug === h.tier)?.name ?? h.tier}` : ''}
+                    </span>
+                    <span className="font-blender-book text-type-micro text-text-muted">
+                      {new Date(h.createdAt).toLocaleDateString('ru-RU')}
+                    </span>
+                  </div>
+                  <span className="shrink-0 font-blender-medium text-xs text-text-muted">
+                    {showAmount ? `${h.amount} ${h.currency ?? 'RUB'}` : '—'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1140,14 +1270,23 @@ function ProStatusPanel({
   tier,
   validUntil,
   onNavigate,
+  showcase,
 }: {
   tier: TierId;
   validUntil: string | null;
   onNavigate: (v: ViewId) => void;
+  showcase: ShowcaseTier[];
 }) {
   const isPro = tier !== 'free';
-  const tierName = tierMeta(tier).name;
+  // Имя — из живой витрины; tierMeta остаётся запасным для архивных тиров, которых в
+  // витрине нет, но у пользователя остаться могут.
+  const tierName = showcase.find((t) => t.slug === tier)?.name ?? tierMeta(tier).name;
   const until = validUntil ? new Date(validUntil).toLocaleDateString('ru-RU') : null;
+
+  // Что даёт подписка — берём из витрины, а не из текста в разметке: иначе список
+  // разъедется с матрицей гейтов при первой же правке порога в админке.
+  const firstPaid = showcase.find((t) => t.rank > 0);
+  const sample = firstPaid?.features.slice(0, 3).map((f) => f.label.toLowerCase()) ?? [];
 
   if (!isPro) {
     return (
@@ -1160,8 +1299,9 @@ function ProStatusPanel({
             {tierName}
           </span>
           <p className="max-w-xs font-blender-book text-sm leading-relaxed text-text-muted">
-            У вас стандартный доступ. PRO-подписка открывает избранное, облачную синхронизацию
-            сборок, сравнение цен барахолки и расширенную аналитику.
+            {sample.length > 0 && firstPaid
+              ? `У вас стандартный доступ. Подписка «${firstPaid.name}» открывает ${sample.join(', ')} и другие удобства.`
+              : 'У вас стандартный доступ. Ядро портала бесплатно; подписка открывает дополнительные удобства.'}
           </p>
           <button
             onClick={() => onNavigate('plan')}
@@ -1292,10 +1432,18 @@ export function AccountCenter({
   hideoutStations,
   tier,
   validUntil,
+  subSource,
+  billingHistory,
+  showcase,
+  pricingPublished,
 }: {
   me: Me;
   tier: TierId;
   validUntil: string | null;
+  subSource: string | null;
+  billingHistory: BillingHistoryEntry[];
+  showcase: ShowcaseTier[];
+  pricingPublished: boolean;
   stats: AccountStats;
   achievements: AchievementView[];
   hints: Record<string, AchievementHint>;
@@ -1327,7 +1475,7 @@ export function AccountCenter({
     if (activeView === 'subscription')  return <SubscriptionView onBack={goBack} me={me} />;
     if (activeView === 'password')      return <PasswordView onBack={goBack} />;
     if (activeView === '2fa')           return <TwoFAView onBack={goBack} />;
-    if (activeView === 'plan')          return <PlanView onBack={goBack} />;
+    if (activeView === 'plan')          return <PlanView onBack={goBack} showcase={showcase} currentTier={tier} pricingPublished={pricingPublished} />;
     if (activeView === 'social')        return <SocialView onBack={goBack} me={me} />;
 
     switch (activeTab) {
@@ -1335,8 +1483,8 @@ export function AccountCenter({
       case 'tracking':  return <TrackingPanel achievements={achievements} hints={hints} questsDigest={questsDigest} hideoutNeeds={hideoutNeeds} hideoutStations={hideoutStations} />;
       case 'security':  return <SecurityPanel onNavigate={navigate} />;
       case 'linking':   return <LinkingPanel onNavigate={navigate} me={me} />;
-      case 'billing':   return <BillingPanel onNavigate={navigate} />;
-      case 'prostatus': return <ProStatusPanel tier={tier} validUntil={validUntil} onNavigate={navigate} />;
+      case 'billing':   return <BillingPanel onNavigate={navigate} tier={tier} validUntil={validUntil} source={subSource} history={billingHistory} showcase={showcase} pricingPublished={pricingPublished} />;
+      case 'prostatus': return <ProStatusPanel tier={tier} validUntil={validUntil} onNavigate={navigate} showcase={showcase} />;
     }
   };
 
