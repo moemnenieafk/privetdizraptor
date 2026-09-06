@@ -2,6 +2,7 @@
 // Паттерн и грабли — в skill map-stitch. Использование:
 //   npm run tiles:factory            (шорткат из package.json)
 //   node scripts/build-map-tiles.mjs factory
+//   node scripts/build-map-tiles.mjs customs ground   (только один этаж — обновился его мастер)
 //
 // Что делает: валидирует мастера (квадрат 16384²!), чистит старые тайлы, режет каждый
 // этаж в {z}/{y}/{x}.jpg (google-layout), бампает tileVersion в eft-map-config.ts (cache-bust).
@@ -91,10 +92,18 @@ async function main() {
   const spec = SPECS[map];
   if (!spec) die(`нет карты "${map}" в реестре SPECS. Известные: ${Object.keys(SPECS).join(', ')}`);
 
-  console.log(`\n🗺  Сборка тайлов: ${map}\n`);
+  // Опц. 2-й аргумент — folder этажа: пересобрать ТОЛЬКО его (обновился один мастер — не гонять всю пирамиду).
+  const onlyFloor = process.argv[3];
+  const allFolders = spec.floors.map((f) => f.folder);
+  if (onlyFloor && !allFolders.includes(onlyFloor)) {
+    die(`нет этажа "${onlyFloor}" у карты ${map}. Известные: ${allFolders.join(', ')}`);
+  }
+  const floors = onlyFloor ? spec.floors.filter((f) => f.folder === onlyFloor) : spec.floors;
+
+  console.log(`\n🗺  Сборка тайлов: ${map}${onlyFloor ? ` · только этаж «${onlyFloor}»` : ''}\n`);
 
   // 1) Валидация мастеров (существование + квадрат ожидаемого размера)
-  for (const fl of spec.floors) {
+  for (const fl of floors) {
     const p = `${spec.src}/${fl.file}`;
     if (!existsSync(p)) die(`нет мастера: ${p}`);
     const meta = await sharp(p, { limitInputPixels: false }).metadata();
@@ -105,12 +114,12 @@ async function main() {
     }
   }
 
-  // 2) Чистая перенарезка (удаляем весь корень пирамиды — режем все этажи заново)
-  await rm(spec.out, { recursive: true, force: true });
+  // 2) Чистая перенарезка: сносим ровно то, что режем заново (весь корень или один этаж).
+  await rm(onlyFloor ? `${spec.out}/${onlyFloor}` : spec.out, { recursive: true, force: true });
 
   let total = 0;
   const t0 = Date.now();
-  for (const fl of spec.floors) {
+  for (const fl of floors) {
     const s = Date.now();
     const info = await sharp(`${spec.src}/${fl.file}`, { limitInputPixels: false })
       .jpeg({ quality: spec.quality, mozjpeg: true })

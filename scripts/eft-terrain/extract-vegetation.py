@@ -48,6 +48,10 @@ man = json.load(open(man_path, encoding='utf-8'))
 XMIN, XMAX = min(ax, bx), max(ax, bx)
 ZMIN, ZMAX = min(az, bz), max(az, bz)
 ROT = man.get('coordinateRotation', 0)
+# Отражение задаётся ЯВНЫМ `mirrorX`; поворот — запасной признак. У Таможни
+# coordinateRotation=0, но зеркало живёт в worldTransform тайловой карты
+# (сверка по 129 постройкам: корреляция −1.0000 по X). См. mapgeom.Frame.
+MIRROR_X_EFF = bool(man.get('mirrorX', ROT == 180))
 RW, RH = man['crop']['width'], man['crop']['height']
 
 shared_dir = os.path.dirname(os.path.abspath(shared))
@@ -199,7 +203,7 @@ for i in inzone:
     v = (i['z'] - ZMIN) / (ZMAX - ZMIN)
     # coordinateRotation=180 — отражение по оси X, а не поворот (см. build-heightmap.py):
     # Unity левосторонняя, вид сверху даёт зеркало. Разворачивается только X.
-    if ROT == 180:
+    if MIRROR_X_EFF:
         u = 1 - u
     i['px'] = round(u * RW)
     i['py'] = round(v * RH)
@@ -240,7 +244,7 @@ H = int(round(W * (ZMAX - ZMIN) / (XMAX - XMIN)))
 dens = np.zeros((H, W), np.float32)
 for i in inzone:
     u = (i['x'] - XMIN) / (XMAX - XMIN); v = (i['z'] - ZMIN) / (ZMAX - ZMIN)
-    if ROT == 180:
+    if MIRROR_X_EFF:
         u = 1 - u
     xx = min(W - 1, max(0, int(u * (W - 1)))); yy = min(H - 1, max(0, int(v * (H - 1))))
     dens[yy, xx] += 1.0

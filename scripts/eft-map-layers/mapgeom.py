@@ -57,7 +57,14 @@ class Frame:
         self.W = man['crop']['width']
         self.H = man['crop']['height']
         # `coordinateRotation: 180` у BSG — это ОТРАЖЕНИЕ по X (a1 < 0), а не поворот на 180.
-        self.mirror_x = (man.get('coordinateRotation', 0) == 180)
+        # ⚠️ ОТРАЖЕНИЕ ЗАДАЁТСЯ ЯВНО, а `coordinateRotation` — только запасной признак.
+        # У Таможни в конфиге стоит `coordinateRotation: 0`, но карта промоутнута
+        # на тайлы, и настоящая привязка живёт в `worldTransform`: калибровка по пяти
+        # замкам даёт canvasX = 10673.5 − 15.313·gx, то есть ОТРАЖЕНИЕ по X.
+        # Замер 06.09 по 129 постройкам: корреляция нашей px с тайловой canvasX
+        # была −1.0000 при +1.0000 по Z — идеальное зеркало по одной оси.
+        # Поэтому у тайловых карт `mirrorX` проставляется явно, а не выводится из поворота.
+        self.mirror_x = bool(man.get('mirrorX', man.get('coordinateRotation', 0) == 180))
         sx = (self.W - 1) / (self.XMAX - self.XMIN)
         sz = (self.H - 1) / (self.ZMAX - self.ZMIN)
         self.affine = dict(

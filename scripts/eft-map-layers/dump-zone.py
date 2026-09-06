@@ -115,7 +115,10 @@ ZMIN, ZMAX = min(_az, _bz), max(_az, _bz)
 FW = man['crop']['width']
 FH = man['crop']['height']
 ROT = man.get('coordinateRotation', 0)
-MIRROR_X = (ROT == 180)
+# Отражение задаётся ЯВНЫМ `mirrorX`; поворот — запасной признак. У Таможни
+# coordinateRotation=0, но зеркало живёт в worldTransform тайловой карты
+# (сверка по 129 постройкам: корреляция −1.0000 по X). См. mapgeom.Frame.
+MIRROR_X = bool(man.get('mirrorX', ROT == 180))
 SX = (FW - 1) / (XMAX - XMIN)
 SZ = (FH - 1) / (ZMAX - ZMIN)
 AFF = dict(px_from_x=[(FW - 1) + XMIN * SX, -SX] if MIRROR_X else [-XMIN * SX, SX],

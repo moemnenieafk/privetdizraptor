@@ -35,17 +35,38 @@
 компоненты (каждая ступень отдельным куском), у россыпи 187. Нормировка на число
 треугольников тоже не разделяет: 0.23 против 0.31.
 
-usage: python find-stairs.py <карта> [--out <файл>] [--gap 2.0]
+ЭТО ВТОРОЙ ИСТОЧНИК, НЕ ЕДИНСТВЕННЫЙ. В проекте уже есть `dump-stairs.py` —
+он берёт лестницы ПО ИМЕНАМ из клиента (там имена есть, обезличен только дамп
+окклюдеров) и даёт больше: имя, высоту, связь `fromFloor → toFloor`. Наружную
+лестницу общаги-1 он находит как `Lod0_ladder2`.
+
+Поэтому финальный набор — ОБЪЕДИНЕНИЕ, а не замена. Замер по Таможне: имена
+дают 352 записи, геометрия 197, пересечение всего 45. Инструменты ловят разное:
+имена берут то, что названо (включая дубли LOD и коллайдеры), геометрия — то,
+что похоже на марш (включая безымянное, но и пандусы заодно).
+
+Склейка ТОЧНАЯ, не по расстоянию: ключ прототипа в дампе окклюдеров собирается
+как `occl_<файл без расширения>_<pid>`, а слой имён отдаёт ровно `src` и `pid`.
+Проверено: все 284 меш-записи находят свой прототип.
+
+usage: python find-stairs.py <карта> [--out <файл>] [--gap 2.0] [--no-names]
 """
 import json
 import os
+import re
 import sys
 import time
 
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(os.path.dirname(HERE))
+GEN = os.path.join(REPO, 'map-exports', 'OBJECTS-MAPS', 'gen')
 EXPORT = os.environ.get('EFT_EXPORT', r'D:\eft-export')
+
+# Не рендерим: коллайдеры (физика, не геометрия) и промежуточные LOD — это те же
+# лестницы в упрощённом виде, они дали бы дубли поверх Lod0.
+SKIP_NAME = re.compile(r'colider|collider|lod[123](?![0-9])', re.I)
 
 # Форма марша. Границы широкие намеренно: отсев делает наклон, а форма только
 # отбрасывает заведомо не-лестницы, чтобы не читать 6.5 тыс. файлов зря.
@@ -170,11 +191,62 @@ def main():
             blds.append((b['name'], b['min'], b['max']))
     log('построек для проверки примыкания: %d' % len(blds))
 
-    out, attached = [], 0
+    # ── 2а. слой ИМЁН: что уже нашёл dump-stairs.py ───────────────────────────
+    # Читаем ЕГО выход, сам файл не трогаем. Ключ склейки точный: прототип в
+    # дампе окклюдеров зовётся occl_<файл>_<pid>, а слой имён отдаёт src и pid.
+    named, named_meta = set(), {}
+    np_path = os.path.join(GEN, m, 'stairs', '%s-stairs.json' % m)
+    if '--no-names' not in sys.argv and os.path.exists(np_path):
+        nd = json.load(open(np_path, encoding='utf-8'))
+        items = nd.get('items') or []
+        skipped = {'коллайдер/LOD': 0, 'без меша': 0}
+        for it in items:
+            nm = it.get('name') or ''
+            if SKIP_NAME.search(nm):
+                skipped['коллайдер/LOD'] += 1
+                continue
+            if not it.get('src') or it.get('pid') is None:
+                # запись-КОМНАТА: лестничная клетка целиком, меша у неё нет.
+                # Как место она полезна, но отрендерить её нечем.
+                skipped['без меша'] += 1
+                continue
+            k = 'occl_%s_%s' % (os.path.splitext(it['src'])[0], it['pid'])
+            named.add(k)
+            named_meta.setdefault(k, dict(name=nm, fromFloor=it.get('fromFloor'),
+                                          toFloor=it.get('toFloor')))
+        log('слой имён: %d записей → %d прототипов к рендеру '
+            '(отсев: коллайдеры и LOD %d, комнаты без меша %d)'
+            % (len(items), len(named), skipped['коллайдер/LOD'],
+               skipped['без меша']))
+        miss = sum(1 for k in named if k not in protos)
+        if miss:
+            log('  ⚠ прототипов из слоя имён нет в дампе окклюдеров: %d' % miss)
+    elif '--no-names' not in sys.argv:
+        log('⚠ слоя имён нет (%s) — набор будет только геометрический' % np_path)
+
+    # ── 2б. ОБЪЕДИНЕНИЕ ───────────────────────────────────────────────────────
+    # Берём экземпляр, если его прототип опознан ЛЮБЫМ из двух способов.
+    # Источник помечаем: он говорит, чему верить при разборе спорных случаев.
+    keep_protos = set(stairs) | named
+    log('прототипов в наборе: %d (геометрия %d, имена %d, общих %d)'
+        % (len(keep_protos), len(stairs), len(named), len(set(stairs) & named)))
+
+    out, attached, by_src = [], 0, {'оба': 0, 'имя': 0, 'геометрия': 0}
     for it in inst:
         k = it['mesh']
-        if k not in stairs:
+        if k not in keep_protos:
             continue
+        if k not in stairs:
+            # прототип пришёл только из имён — габарит для проверки примыкания
+            # берём из его же меша
+            try:
+                v = np.load(protos[k]['npz'])['v'].astype(np.float64)
+            except Exception:
+                continue
+            stairs[k] = dict(size=[round(float(x), 2) for x in
+                                   (v.max(0) - v.min(0))[[0, 2, 1]]],
+                             shelves=None, ramp=None, tris=int(protos[k]['tris']),
+                             aabb=[v.min(0).tolist(), v.max(0).tolist()])
         mn, mx = (np.array(x) for x in stairs[k]['aabb'])
         R = quat_matrix(it['quat'])
         sc = np.array(it.get('scale', [1, 1, 1]), dtype=np.float64)
@@ -192,17 +264,27 @@ def main():
                 best, best_name = d, name
         near = best <= gap
         attached += 1 if near else 0
+        in_geo, in_name = k in stairs and stairs[k].get('ramp') is not None, k in named
+        src = 'оба' if (in_geo and in_name) else ('имя' if in_name else 'геометрия')
+        by_src[src] += 1
         out.append(dict(mesh=k, x=it['x'], y=it['y'], z=it['z'],
                         quat=it['quat'], scale=it.get('scale', [1, 1, 1]),
                         attached=bool(near), building=best_name,
-                        gap=round(float(best), 2)))
+                        gap=round(float(best), 2), src=src,
+                        name=named_meta.get(k, {}).get('name')))
     log('экземпляров-маршей %d, из них примыкают к застройке (зазор ≤ %.1f м): %d'
         % (len(out), gap, attached))
+    log('по источнику: оба %d, только имя %d, только геометрия %d'
+        % (by_src['оба'], by_src['имя'], by_src['геометрия']))
 
+    # ⚠️ Имя намеренно НЕ `<карта>-stairs.json`: так называется выход
+    # dump-stairs.py в gen/<карта>/stairs/. Два разных файла с одним именем в
+    # соседних каталогах — заготовка для чужой ошибки.
     op = opt('--out', os.path.join(EXPORT, m, 'render-objects',
-                                   '%s-stairs.json' % m))
+                                   '%s-stairs-set.json' % m))
     json.dump(dict(map=m, generated=time.strftime('%Y-%m-%dT%H:%M:%S'),
-                   source='find-stairs.py — марши по форме+ступеням+наклону',
+                   source='find-stairs.py — объединение: имена (dump-stairs.py) '
+                          '+ геометрия (форма/ступени/наклон)',
                    thresholds=dict(len=[MIN_LEN, MAX_LEN], wid=[MIN_WID, MAX_WID],
                                    hgt=[MIN_HGT, MAX_HGT],
                                    shelves=MIN_SHELVES, ramp=MIN_RAMP, gap=gap),
@@ -212,12 +294,19 @@ def main():
         % (op, os.path.getsize(op) / 1e6, time.time() - t0))
 
     # короткая сводка, чтобы не открывать файл ради проверки
-    for k, d in sorted(stairs.items(), key=lambda kv: -kv[1]['ramp'])[:12]:
-        n = sum(1 for o in out if o['mesh'] == k)
+    # У прототипов, пришедших ТОЛЬКО из имён, наклона нет — их никто не мерил.
+    # Сортируем по числу экземпляров: так наверх всплывает то, что реально
+    # весит в кадре, а не то, что удачно прошло детектор.
+    cnt = {}
+    for o in out:
+        cnt[o['mesh']] = cnt.get(o['mesh'], 0) + 1
+    for k in sorted(cnt, key=lambda k: -cnt[k])[:12]:
+        d = stairs[k]
         na = sum(1 for o in out if o['mesh'] == k and o['attached'])
-        log('  %-28s %.1f×%.1f×%.1f м  ступ.%2d  наклон %.2f  экз.%3d (примык.%3d)'
-            % (k, d['size'][0], d['size'][1], d['size'][2], d['shelves'],
-               d['ramp'], n, na))
+        nm = next((o['name'] for o in out if o['mesh'] == k and o.get('name')), '—')
+        r = '%.2f' % d['ramp'] if d.get('ramp') is not None else ' — '
+        log('  %-26s %.1f×%.1f×%.1f м  наклон %s  экз.%3d (примык.%3d)  %s'
+            % (k, d['size'][0], d['size'][1], d['size'][2], r, cnt[k], na, nm))
 
 
 if __name__ == '__main__':

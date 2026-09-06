@@ -51,7 +51,7 @@ async function generate(prompt: string, jpeg: Buffer): Promise<Buffer> {
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env('GEMINI_API_KEY') },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: 'image/jpeg', data: jpeg.toString('base64') } }] }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], imageConfig: { aspectRatio: '1:1', imageSize: '2K' } },
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], maxOutputTokens: 4096, imageConfig: { aspectRatio: '1:1', imageSize: '2K' } },
     }),
   });
   if (res.status === 429 || res.status === 402) throw new BillingStop(`${res.status}: ${(await res.text()).slice(0, 200)}`);

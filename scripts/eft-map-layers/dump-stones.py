@@ -385,9 +385,18 @@ def main():
     ZMIN, ZMAX = min(az, bz), max(az, bz)
     W, H = man['crop']['width'], man['crop']['height']
     ROT = man.get('coordinateRotation', 0)
-    if ROT != 180:
-        die('coordinateRotation=%s не проверен; для 180 это ОТРАЖЕНИЕ по X '
-            '(см. рамку комнат)' % ROT)
+    # Отражение задаётся ЯВНЫМ `mirrorX`; поворот — запасной признак. У Таможни
+    # coordinateRotation=0, но карта промоутнута на тайлы и зеркало живёт
+    # в worldTransform: сверка по 129 постройкам дала корреляцию −1.0000 по X.
+    MIRROR = man.get('mirrorX')
+    if MIRROR is None:
+        if ROT != 180:
+            die('coordinateRotation=%s и mirrorX не задан — ориентация не проверена. '
+                'Для тайловой карты сверить с worldTransform и проставить mirrorX '
+                'в манифесте (см. Таможню)' % ROT)
+        MIRROR = True
+    if not MIRROR:
+        die('mirrorX=false пока не поддержан: все проверенные карты отражены по X')
 
     # Аффина: та же, что у слоя комнат. Выводим из manifest, но если рядом лежит ПРОВЕРЕННАЯ
     # рамка комнат (двери клиента сошлись с замками 33/34 в пределах 5 см) — канон её числа,

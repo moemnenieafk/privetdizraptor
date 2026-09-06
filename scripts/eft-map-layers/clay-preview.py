@@ -243,10 +243,13 @@ def stair_meshes(m, near=None, radius=60.0, attached_only=True):
     часть C существует.
 
     `attached_only` — требование V4DYA: в набор идут лестницы, примыкающие к
-    зданию и стенам. На Таможне это 33 экземпляра из 100; остальные стоят
+    зданию и стенам. На Таможне это 335 экземпляров из 470; остальные стоят
     отдельно (эстакады, стремянки у контейнеров) и в клэй-карту не просятся.
+
+    Набор ОБЪЕДИНЁННЫЙ: имена из `dump-stairs.py` + геометрия из `find-stairs.py`.
+    У каждого экземпляра поле `src` говорит, кто его нашёл.
     """
-    sp = os.path.join(EXPORT, m, 'render-objects', '%s-stairs.json' % m)
+    sp = os.path.join(EXPORT, m, 'render-objects', '%s-stairs-set.json' % m)
     if not os.path.exists(sp):
         log('нет сайдкара маршей — сперва: python find-stairs.py %s' % m)
         return None
@@ -260,9 +263,11 @@ def stair_meshes(m, near=None, radius=60.0, attached_only=True):
         nx, nz = near
         items = [i for i in items
                  if abs(i['x'] - nx) <= radius and abs(i['z'] - nz) <= radius]
-    log('маршей к сборке: %d (примыкающих всего %d из %d)'
+    import collections as _c
+    bysrc = _c.Counter(i.get('src', '?') for i in items)
+    log('маршей к сборке: %d (примыкающих всего %d из %d) — по источнику: %s'
         % (len(items), sum(1 for i in d['instances'] if i['attached']),
-           len(d['instances'])))
+           len(d['instances']), dict(bysrc)))
     if not items:
         return None
     import numpy as np

@@ -565,9 +565,15 @@ def load_frame(manifest, frame_path):
     XMIN, XMAX = min(ax, bx), max(ax, bx)
     ZMIN, ZMAX = min(az, bz), max(az, bz)
     W, H = man['crop']['width'], man['crop']['height']
-    if man.get('coordinateRotation', 0) != 180:
-        die('coordinateRotation=%s не проверен (для 180 это ролл камеры на 180 градусов)'
-            % man.get('coordinateRotation'))
+    _mir = man.get('mirrorX')
+    if _mir is None:
+        _mir = man.get('coordinateRotation', 0) == 180
+        if not _mir:
+            die('coordinateRotation=%s и mirrorX не задан — ориентация не проверена. '
+                'Сверить с worldTransform и проставить mirrorX (см. Таможню)'
+                % man.get('coordinateRotation'))
+    if not _mir:
+        die('mirrorX=false пока не поддержан: ролл камеры рассчитан на отражение по X')
     fr = json.load(open(frame_path, encoding='utf-8'))
     A, B = fr['affine']['px_from_x']
     C, D = fr['affine']['py_from_z']

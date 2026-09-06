@@ -113,7 +113,10 @@ print(f'материалы по карте: {tot}')
 
 # coordinateRotation=180 — отражение по оси X, а не поворот (см. build-heightmap.py):
 # Unity левосторонняя, вид сверху даёт зеркало. Разворачиваем только колонки (X).
-if man.get('coordinateRotation', 0) == 180:
+# Отражение задаётся ЯВНЫМ `mirrorX`; поворот — запасной признак. У Таможни
+# coordinateRotation=0, но зеркало живёт в worldTransform тайловой карты
+# (сверка по 129 постройкам: корреляция −1.0000 по X). См. mapgeom.Frame.
+if bool(man.get('mirrorX', man.get('coordinateRotation', 0) == 180)):
     IDX = IDX[:, ::-1]
     print('отражение по X (coordinateRotation=180)')
 

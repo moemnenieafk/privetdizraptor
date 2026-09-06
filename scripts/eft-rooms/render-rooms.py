@@ -56,9 +56,13 @@ man = json.load(open(man_path, encoding='utf-8'))
 XMIN, XMAX = min(ax, bx), max(ax, bx)
 ZMIN, ZMAX = min(az, bz), max(az, bz)
 ROT = man.get('coordinateRotation', 0)
+# ⚠️ Отражение задаётся ЯВНЫМ полем `mirrorX`, а поворот — лишь запасной признак.
+# У Таможни в конфиге coordinateRotation=0, но карта промоутнута на тайлы и настоящая
+# привязка живёт в worldTransform: сверка с ней по 129 постройкам дала корреляцию
+# −1.0000 по X, то есть зеркало. См. mapgeom.Frame и манифест карты.
 W = man['crop']['width']
 H = man['crop']['height']
-MIRROR_X = (ROT == 180)
+MIRROR_X = bool(man.get('mirrorX', ROT == 180))
 
 SX = (W - 1) / (XMAX - XMIN)
 SZ = (H - 1) / (ZMAX - ZMIN)
