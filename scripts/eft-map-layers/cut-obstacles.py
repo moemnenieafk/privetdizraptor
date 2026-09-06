@@ -78,6 +78,7 @@ def opt(flag, default=None):
 
 
 HEIGHT_ARG = opt('--height')
+ROOM_FLOORS_ARG = opt('--room-floors')
 ZONE_ARG = opt('--zone')
 ROOMS_ARG = opt('--rooms')     # JSON комнат клиента — для полос с roomsFilter
 CUT = float(opt('--cut', '1.0'))
@@ -329,7 +330,8 @@ for L in FR.layers():
                       # Reserve_Base_basement_*, Reserve_Base_Bunkers, Rezerv_Base_Bunkers2:
                       # 5 468 объектов против 918, которые набирали полосы по высоте.
                       # Тот же урок, что roomsFilter на парковке Развязки.
-                      scenesFilter=L.get('scenesFilter')))
+                      scenesFilter=L.get('scenesFilter'),
+                      roomsFloor=L.get('roomsFloor')))
 if not BANDS:
     BANDS = [dict(id='all', name='вся карта', lo=-1e9, hi=1e9, main=True, minAbove=0.0)]
 if not WANT_FLOORS:
@@ -456,11 +458,58 @@ def band_ok(b):
         m = m & b['roomsMask']
     if b.get('scenesMask') is not None:
         m = m & b['scenesMask']
+    if b.get('roomsFloorMask') is not None:
+        m = m & b['roomsFloorMask']
     return m
 
 
 # Маски по комнатам считаются ЗДЕСЬ: rooms_mask объявлена выше, а BANDS уже собраны.
 SCN = np.asarray(inst_scene, dtype=object)
+
+# ─────────────── ПОЛ БЕРЁТСЯ У КОМНАТЫ, А НЕ У КАРТЫ
+#
+# Полоса высот не разделяет этажи, если здания стоят на разной отметке: у Маяка пол
+# `_f1` гуляет от 0.1 до 36.6 м, а `_f2` от 4.6 до 41.4 — первый этаж одного дома НИЖЕ
+# второго у соседнего. У Резерва 182 комнаты `basement` размазаны на 22 м по глубине.
+# Поэтому экземпляр относится к комнате (ориентированный бокс из разметки клиента),
+# и плоскость реза считается от ПОЛА ЭТОЙ КОМНАТЫ. Слой = метка этажа и собирает
+# комнаты с РАЗНЫХ абсолютных высот — это и есть «каждое здание и каждый этаж».
+RF_PATH = ROOM_FLOORS_ARG or os.path.join(
+    REPO, 'map-exports', 'OBJECTS-MAPS', '_floors', f'{MAP_ID}-room-floors.json')
+RF_LABEL = np.full(len(inst), None, dtype=object)
+RF_FLOOR = np.full(len(inst), np.nan, dtype=np.float64)
+if os.path.exists(RF_PATH):
+    _rf = json.load(open(RF_PATH, encoding='utf-8'))
+    _rooms = _rf.get('rooms') or []
+    cx = (boxes[:, 0] + boxes[:, 3]) * 0.5
+    cy = boxes[:, 1]                       # низ объекта: этаж определяется опорой
+    cz = (boxes[:, 2] + boxes[:, 5]) * 0.5
+    # от крупных комнат к мелким: тесная комната вернее и переписывает общую
+    _order = sorted(_rooms, key=lambda r: -(r['extent'][0] * r['extent'][1] * r['extent'][2]))
+    _hit = 0
+    for r in _order:
+        for b in (r.get('boxes') or [{'c': r['center'], 'q': [0, 0, 0, 1], 'h': r['extent']}]):
+            c, q, h = b['c'], b.get('q') or [0, 0, 0, 1], b['h']
+            dx, dy, dz = cx - c[0], cy - c[1], cz - c[2]
+            qx, qy, qz, qw = q
+            # поворот вектора обратным кватернионом (комнаты повёрнуты, как парковки ТЦ)
+            tx = 2 * (-qy * dz + qz * dy)
+            ty = 2 * (-qz * dx + qx * dz)
+            tz = 2 * (-qx * dy + qy * dx)
+            lx = dx + qw * tx + (-qy * tz + qz * ty)
+            ly = dy + qw * ty + (-qz * tx + qx * tz)
+            lz = dz + qw * tz + (-qx * ty + qy * tx)
+            m = ((np.abs(lx) <= h[0]) & (np.abs(ly) <= h[1] + 0.5) & (np.abs(lz) <= h[2]))
+            if m.any():
+                RF_LABEL[m] = r['label']
+                RF_FLOOR[m] = r['floor']
+    _hit = int((RF_LABEL != None).sum())          # noqa: E711
+    log(f'пол по комнатам: {os.path.basename(RF_PATH)}, комнат {len(_rooms)}, '
+        f'экземпляров с комнатой {fmt(_hit)} из {fmt(len(inst))}')
+    _by = collections.Counter(x for x in RF_LABEL if x)
+    log('  по этажам: ' + ', '.join(f'{k}={fmt(v)}' for k, v in _by.most_common(12)))
+else:
+    log(f'! разметки комнат нет ({os.path.basename(RF_PATH)}) — полосы roomsFloor работать не будут')
 
 
 def scenes_mask(rx):
@@ -476,6 +525,12 @@ def scenes_mask(rx):
 for b in BANDS:
     b['roomsMask'] = rooms_mask(b['roomsFilter']) if b.get('roomsFilter') else None
     b['scenesMask'] = scenes_mask(b['scenesFilter']) if b.get('scenesFilter') else None
+    if b.get('roomsFloor'):
+        want = b['roomsFloor'] if isinstance(b['roomsFloor'], list) else [b['roomsFloor']]
+        b['roomsFloorMask'] = np.array([x in want for x in RF_LABEL], dtype=bool)
+        log('  roomsFloor %s: экземпляров %s' % (want, fmt(int(b['roomsFloorMask'].sum()))))
+    else:
+        b['roomsFloorMask'] = None
 
 for b in BANDS:
     sel = band_ok(b)
@@ -484,13 +539,25 @@ for b in BANDS:
         b['mask'] = b['mask'] & b['roomsMask']
     if b.get('scenesMask') is not None:
         b['mask'] = b['mask'] & b['scenesMask']
+    if b.get('roomsFloorMask') is not None:
+        b['mask'] = b['mask'] & b['roomsFloorMask']
     if not b['main'] and b['minAbove'] > 0 and ABOVE is not None:
         raw = int((ok_box & (boxes[:, 1] >= b['lo']) & (boxes[:, 1] <= b['hi'])).sum())
         log(f'  гарда «выше рельефа на {b['minAbove']:.1f} м» в полосе {b['id']}: '
             f'{raw} кандидатов -> {int(sel.sum())} (отсеяно {raw - int(sel.sum())} наземных)')
     vals = (ABOVE if b['relative'] else boxes[:, 1])[sel]
     vals = vals[~np.isnan(vals)]
-    if b['main'] and GROUND is not None:
+    if b.get('roomsFloor'):
+        b['cut'] = None
+        b['relCut'] = None
+        b['byRoom'] = True
+        n = int(b['roomsFloorMask'].sum())
+        fl = RF_FLOOR[b['roomsFloorMask']]
+        fl = fl[~np.isnan(fl)]
+        b['rule'] = ('ПО КОМНАТАМ: %s объектов, пол каждого от СВОЕЙ комнаты '
+                     '(%.1f…%.1f м)' % (fmt(n), fl.min(), fl.max()) if len(fl)
+                     else 'ПО КОМНАТАМ: ни одного объекта')
+    elif b['main'] and GROUND is not None:
         # ⚠️ НАЗЕМНАЯ ПОЛОСА ВСЕГДА СЛЕДУЕТ РЕЛЬЕФУ, даже если помечена относительной.
         # Замер 06.09: перевод main на одну плоскость «земля+1 м» уронил самопроверку
         # камнями Маяка с 877/903 до 513/903 — на склоне плоскость по МАКСИМУМУ земли
@@ -523,12 +590,15 @@ for b in BANDS:
         b['rule'] = (f'мешей в полосе всего {len(vals)} — пол взят '
                      + ('из общей моды низов' if b['main'] else 'от низа полосы'))
     b.setdefault('relCut', None)
+    b.setdefault('byRoom', False)
     b['floorM'] = None if b['cut'] is None else round(b['cut'] - CUT, 2)
 
 print()
 log('ЭТАЖИ И ВЫСОТЫ РЕЗА:')
 for b in BANDS:
-    if b.get('relCut') is not None:
+    if b.get('byRoom'):
+        cut = 'пол комнаты'
+    elif b.get('relCut') is not None:
         cut = 'земля%+.2f' % b['relCut']
     else:
         cut = 'рельеф+%.1f' % CUT if b['cut'] is None else '%.2f м' % b['cut']
@@ -539,6 +609,9 @@ print()
 
 def band_h(b, i):
     """Высота плоскости реза для экземпляра i в полосе b; None — рез по рельефу."""
+    if b.get('byRoom'):
+        f = RF_FLOOR[i]
+        return None if np.isnan(f) else f + CUT
     if b.get('relCut') is not None:
         g = boxes[i, 1] - ABOVE[i]          # земля под объектом = низ минус превышение
         return None if np.isnan(g) else g + b['relCut']
@@ -560,6 +633,18 @@ for i in range(len(inst)):
                 if not b['mask'][i]:
                     continue          # гарда «выше рельефа», см. блок выше
                 if not (boxes[i, 1] <= b['cut'] <= boxes[i, 4]):
+                    continue
+            elif b.get('byRoom'):
+                # ⚠️ Маска полосы применяется ТОЛЬКО в ветке с фиксированной плоскостью.
+                # Полосы по комнатам плоскости не имеют, попадали в ветку «рез по рельефу»
+                # и маску теряли — все этажи Резерва выходили ОДИНАКОВЫМИ (3 133 объекта
+                # и 0.42 % в каждом). Здесь у каждого объекта своя плоскость: пол его комнаты.
+                if not b['mask'][i]:
+                    continue
+                f = RF_FLOOR[i]
+                if np.isnan(f):
+                    continue
+                if not (boxes[i, 1] <= f + CUT <= boxes[i, 4]):
                     continue
             else:
                 glo, ghi = GROUND.box_range(boxes[i, 0], boxes[i, 2], boxes[i, 3], boxes[i, 5])
