@@ -235,6 +235,7 @@ else:
 
 SCENES, skipped_scenes = mg.scene_list(SCENES_JSON, MAP_ID, DATA, SKIP_SCENE)
 inst = []
+inst_scene = []          # имя сцены клиента на каждый экземпляр — см. scenesFilter
 for lvl, nm in SCENES:
     try:
         sc = mg.Scene(DATA, lvl)
@@ -243,6 +244,7 @@ for lvl, nm in SCENES:
         continue
     got = mg.collect_meshes(sc, classify)
     inst += got
+    inst_scene += [nm] * len(got)
     by = collections.Counter(g[5] for g in got)
     log(f'  {lvl:9s} {nm:48s} экземпляров {len(got):6d}  ' +
         ' '.join(f'{k}={v}' for k, v in sorted(by.items())))
@@ -316,7 +318,18 @@ for L in FR.layers():
     BANDS.append(dict(id=L['id'], name=L.get('name') or L['id'],
                       lo=float(h[0]), hi=float(h[1]), main=bool(L.get('isMain')),
                       minAbove=float(L.get('minAboveGround') or 0.0),
-                      drop=L.get('dropClasses'), roomsFilter=L.get('roomsFilter')))
+                      # ОТНОСИТЕЛЬНАЯ ПОЛОСА: границы отсчитываются от МЕСТНОЙ земли,
+                      # а не от нуля мира. На карте с рельефом абсолютная высота этаж
+                      # не определяет: у Маяка перепад 92.8 м, и дом на отметке 5 м даёт
+                      # первый этаж там же, где соседний на отметке 20 м даёт подвал.
+                      relative=bool(L.get('relativeToGround')),
+                      drop=L.get('dropClasses'), roomsFilter=L.get('roomsFilter'),
+                      # ⚠️ ОТБОР ПО ИМЕНИ СЦЕНЫ. Где клиент сам разметил помещения,
+                      # высота — плохой признак. У Резерва бункеры лежат в сценах
+                      # Reserve_Base_basement_*, Reserve_Base_Bunkers, Rezerv_Base_Bunkers2:
+                      # 5 468 объектов против 918, которые набирали полосы по высоте.
+                      # Тот же урок, что roomsFilter на парковке Развязки.
+                      scenesFilter=L.get('scenesFilter')))
 if not BANDS:
     BANDS = [dict(id='all', name='вся карта', lo=-1e9, hi=1e9, main=True, minAbove=0.0)]
 if not WANT_FLOORS:
@@ -351,7 +364,9 @@ for b in BANDS:
 # Любой порог внутри коридора отсеивает 97 % земли при 0 % потерь этажей; берётся из
 # `layers[].minAboveGround` манифеста. Гарда работает только там, где ЕСТЬ террейн, и только
 # на НЕ-главных полосах: наземный слой обязан покрывать всю карту без потолка.
-if GROUND is not None and any(b['minAbove'] > 0 for b in BANDS if not b['main']):
+_need_above = (any(b['minAbove'] > 0 for b in BANDS if not b['main'])
+               or any(b['relative'] for b in BANDS))
+if GROUND is not None and _need_above:
     _n = len(boxes)
     _t = np.linspace(0.0, 1.0, 3)
     _XX = boxes[:, 0:1] + (boxes[:, 3:4] - boxes[:, 0:1]) * _t[None, :]
@@ -368,6 +383,10 @@ if GROUND is not None and any(b['minAbove'] > 0 for b in BANDS if not b['main'])
 else:
     ABOVE = None
 
+
+if any(b['relative'] for b in BANDS) and ABOVE is None:
+    raise SystemExit('ОТКАЗ: относительные полосы (relativeToGround) просят карту высот, '
+                     'а её нет. На карте без террейна пол плоский — полосы задаются в абсолюте.')
 
 # ─────────────── МАСКА ПО КОМНАТАМ КЛИЕНТА
 #
@@ -430,27 +449,67 @@ def band_ok(b):
     планы этажей выходили из одной мебели, без стен. Признак объекта на этаже один —
     он ПЕРЕСЕКАЕТ плоскость реза этого этажа.
     """
-    m = guard_ok(b) & (boxes[:, 1] >= b['lo']) & (boxes[:, 1] <= b['hi'])
-    return m & b['roomsMask'] if b.get('roomsMask') is not None else m
+    base = ABOVE if b['relative'] else boxes[:, 1]
+    with np.errstate(invalid='ignore'):
+        m = guard_ok(b) & (base >= b['lo']) & (base <= b['hi'])
+    if b.get('roomsMask') is not None:
+        m = m & b['roomsMask']
+    if b.get('scenesMask') is not None:
+        m = m & b['scenesMask']
+    return m
 
 
 # Маски по комнатам считаются ЗДЕСЬ: rooms_mask объявлена выше, а BANDS уже собраны.
+SCN = np.asarray(inst_scene, dtype=object)
+
+
+def scenes_mask(rx):
+    m = np.array([bool(re.search(rx, x, re.I)) for x in SCN], dtype=bool)
+    hit = sorted({x for x in SCN[m]})
+    log('  scenesFilter «%s»: сцен %d (%s), экземпляров %s'
+        % (rx, len(hit), ', '.join(hit[:4]) + ('…' if len(hit) > 4 else ''), fmt(int(m.sum()))))
+    if not m.any():
+        log('  ! scenesFilter «%s» не нашёл ни одной сцены — полоса останется пустой' % rx)
+    return m
+
+
 for b in BANDS:
     b['roomsMask'] = rooms_mask(b['roomsFilter']) if b.get('roomsFilter') else None
+    b['scenesMask'] = scenes_mask(b['scenesFilter']) if b.get('scenesFilter') else None
 
 for b in BANDS:
     sel = band_ok(b)
     b['mask'] = guard_ok(b)          # на рез: ТОЛЬКО гарда, без фильтра по основанию
     if b.get('roomsMask') is not None:
         b['mask'] = b['mask'] & b['roomsMask']
+    if b.get('scenesMask') is not None:
+        b['mask'] = b['mask'] & b['scenesMask']
     if not b['main'] and b['minAbove'] > 0 and ABOVE is not None:
         raw = int((ok_box & (boxes[:, 1] >= b['lo']) & (boxes[:, 1] <= b['hi'])).sum())
         log(f'  гарда «выше рельефа на {b['minAbove']:.1f} м» в полосе {b['id']}: '
             f'{raw} кандидатов -> {int(sel.sum())} (отсеяно {raw - int(sel.sum())} наземных)')
-    vals = boxes[sel, 1]
+    vals = (ABOVE if b['relative'] else boxes[:, 1])[sel]
+    vals = vals[~np.isnan(vals)]
     if b['main'] and GROUND is not None:
-        b['cut'] = None                      # рез по рельефу, плоскости нет
+        # ⚠️ НАЗЕМНАЯ ПОЛОСА ВСЕГДА СЛЕДУЕТ РЕЛЬЕФУ, даже если помечена относительной.
+        # Замер 06.09: перевод main на одну плоскость «земля+1 м» уронил самопроверку
+        # камнями Маяка с 877/903 до 513/903 — на склоне плоскость по МАКСИМУМУ земли
+        # под габаритом проходит выше основания камня и срезает его целиком.
+        # Билинейный рез под каждой вершиной такой ошибки не даёт.
+        b['cut'] = None
+        b['relCut'] = None
         b['rule'] = 'земля под вершиной + рез (билинейно по карте высот)'
+    elif b['relative']:
+        # мода превышений в полосе -> пол НАД ЗЕМЛЁЙ; сама плоскость считается на объект
+        if len(vals) >= 50:
+            hist, edges = np.histogram(vals, bins=np.arange(b['lo'], b['hi'] + 0.5, 0.5))
+            rel_floor = float(edges[int(np.argmax(hist))])
+        else:
+            rel_floor = b['lo']
+        b['cut'] = None
+        b['relCut'] = rel_floor + CUT
+        b['rule'] = (f'ОТНОСИТЕЛЬНАЯ: мода превышений {fmt(len(vals))} мешей -> пол '
+                     f'{rel_floor:+.2f} м над землёй, рез земля{rel_floor + CUT:+.2f} м')
     elif len(vals) >= 50:
         lo_edge = max(b['lo'], -300.0)
         hi_edge = min(b['hi'], 300.0)
@@ -463,12 +522,16 @@ for b in BANDS:
         b['cut'] = (FLOOR if b['main'] else b['lo']) + CUT
         b['rule'] = (f'мешей в полосе всего {len(vals)} — пол взят '
                      + ('из общей моды низов' if b['main'] else 'от низа полосы'))
+    b.setdefault('relCut', None)
     b['floorM'] = None if b['cut'] is None else round(b['cut'] - CUT, 2)
 
 print()
 log('ЭТАЖИ И ВЫСОТЫ РЕЗА:')
 for b in BANDS:
-    cut = 'рельеф+%.1f' % CUT if b['cut'] is None else '%.2f м' % b['cut']
+    if b.get('relCut') is not None:
+        cut = 'земля%+.2f' % b['relCut']
+    else:
+        cut = 'рельеф+%.1f' % CUT if b['cut'] is None else '%.2f м' % b['cut']
     log(f'  {b["id"]:12s} полоса [{b["lo"]:.0f}, {b["hi"]:.0f}]  рез {cut:>12s}   [{b["rule"]}]')
 print()
 
@@ -476,6 +539,9 @@ print()
 
 def band_h(b, i):
     """Высота плоскости реза для экземпляра i в полосе b; None — рез по рельефу."""
+    if b.get('relCut') is not None:
+        g = boxes[i, 1] - ABOVE[i]          # земля под объектом = низ минус превышение
+        return None if np.isnan(g) else g + b['relCut']
     if b['cut'] is not None:
         return b['cut']
     glo, ghi = GROUND.box_range(boxes[i, 0], boxes[i, 2], boxes[i, 3], boxes[i, 5])

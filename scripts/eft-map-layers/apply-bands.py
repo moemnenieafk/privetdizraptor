@@ -70,6 +70,18 @@ if not spec:
         print('   %-14s %-30s heights=%s' % (L['id'], str(L.get('name'))[:30], L.get('heights')))
     sys.exit(0)
 
+# `replace` — выбросить полосы манифеста и поставить свои. Нужен там, где старые полосы
+# не дополняются, а ОТМЕНЯЮТСЯ: у Резерва единственная полоса бункеров [-10000, -7.27]
+# стояла не на том уровне и её надо убрать, а не дополнить (иначе она осталась бы
+# и продолжала тянуть помещения в наземный слой).
+if spec.get('replace'):
+    layers[:] = [{k: v for k, v in b.items() if not k.startswith('_')}
+                 for b in spec['replace']]
+    by_id.clear()
+    by_id.update({L['id']: L for L in layers})
+    changed.append('ПОЛОСЫ ЗАМЕНЕНЫ ЦЕЛИКОМ (%d шт: %s)'
+                   % (len(layers), ', '.join(L['id'] for L in layers)))
+
 main = next((L for L in layers if L.get('isMain')), None)
 if 'main' in spec and main is not None:
     for k, v in spec['main'].items():
