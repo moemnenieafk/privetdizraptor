@@ -119,7 +119,7 @@ def building_masses(m, layer, aff):
     return out
 
 
-def client_meshes(m, name_rx, pad=0.6):
+def client_meshes(m, name_rx, pad=0.6, near=None, radius=60.0, ball=None):
     """Настоящая геометрия клиента для объектов, чьё имя подходит под маску.
 
     Зачем. Замечание V4DYA: «металлических лестниц не видно». Причина не в пороге
@@ -137,12 +137,66 @@ def client_meshes(m, name_rx, pad=0.6):
     oj = os.path.join(EXPORT, m, 'render-objects', '%s-occluders.json' % m)
     if not (os.path.exists(rj) and os.path.exists(oj)):
         return None
-    blds = [b for b in json.load(open(rj, encoding='utf-8')).get('buildings') or []
-            if rx.search(b['name'])]
-    if not blds:
+    # Явный шар вокруг точки — обход именованного отбора целиком.
+    # Зачем: коробки комнат крошечные (extent 1-3 м), и крупная конструкция
+    # в них не помещается. Чтобы отличить «в дампе нет» от «выборка не добрала»,
+    # нужен способ взять ВСЁ в радиусе и посмотреть глазами.
+    if ball is not None:
+        bx, bz, br = ball
+        boxes = [(bx - br, -1e9, bz - br, bx + br, 1e9, bz + br)]
+        names = ['ball(%.0f,%.0f,r=%.0f)' % (bx, bz, br)]
+        doc = None
+    else:
+        doc = json.load(open(rj, encoding='utf-8'))
+        blds = [b for b in doc.get('buildings') or [] if rx.search(b['name'])]
+        boxes = [(b['min'][0] - pad, b['min'][1] - pad, b['min'][2] - pad,
+                  b['max'][0] + pad, b['max'][1] + pad, b['max'][2] + pad)
+                 for b in blds]
+        names = [b['name'] for b in blds]
+
+    # 🔴 ПОЧЕМУ НЕ ТОЛЬКО ПОСТРОЙКИ. Маска по `buildings` — тупик: на Таможне
+    # их 129 и они грубые, это наборы уровня Hostel_01_indoor_set и
+    # Construction_factory. Под маску лестниц подходит РОВНО ОДНА постройка,
+    # а все железные лестницы общаг спрятаны внутри наборов и по имени постройки
+    # недостижимы. Имена самих мешей не спасают: в occl-meshes они обезличены
+    # (occl_level14_101.npz, 6564 файла).
+    # Настоящий handle — КОМНАТЫ: 398 на Таможне, имена от BSG подробные и несут
+    # этаж прямо в себе (obsh_2_stairs_f1, lab_stairs_f2, basement_stairs).
+    # По той же маске: 1 попадание по постройкам против 68 по комнатам,
+    # 13 отдельных лестничных мест на карте вместо одного.
+    # Комнаты с нулевым extent — точечные аудио-маркеры (28 из 68), у них нет
+    # объёма: берём вокруг них куб в `point_pad` метров, иначе они дают пустоту.
+        point_pad = 2.5
+        for r in doc.get('rooms') or []:
+            if not rx.search(r.get('name', '')):
+                continue
+            c, e = r.get('center'), r.get('extent')
+            if not c:
+                continue
+            ex = [max(float(v), point_pad) if e else point_pad
+                  for v in (e or [0, 0, 0])]
+            boxes.append((c[0] - ex[0] - pad, c[1] - ex[1] - pad, c[2] - ex[2] - pad,
+                          c[0] + ex[0] + pad, c[1] + ex[1] + pad, c[2] + ex[2] + pad))
+            names.append(r['name'])
+    # 🔴 ОГРАНИЧЕНИЕ ПО МЕСТУ. Переход с построек на комнаты поднял число
+    # попаданий с 1 до 68 — и сбор мешей взорвался: маска ловит ВСЕ лестничные
+    # места карты, а не то, что в кадре. Замер: job вырос 7.6 МБ → 96 МБ,
+    # Blender съел 8 ГБ и не досчитал. Поэтому при заданном центре берём только
+    # коробки в радиусе кадра. Без центра собираем всё, но честно предупреждаем.
+    if near is not None and ball is None:
+        nx, nz = near
+        sel = [(b, n) for b, n in zip(boxes, names)
+               if abs((b[0] + b[3]) / 2 - nx) <= radius
+               and abs((b[2] + b[5]) / 2 - nz) <= radius]
+        log('коробки мешей: %d из %d в радиусе %.0f м от (%.0f, %.0f)'
+            % (len(sel), len(boxes), radius, nx, nz))
+        boxes = [b for b, _ in sel]
+        names = [n for _, n in sel]
+    elif len(boxes) > 8:
+        log('⚠ коробок мешей %d по всей карте, центр не задан — сбор будет тяжёлым'
+            % len(boxes))
+    if not boxes:
         return None
-    boxes = [(b['min'][0] - pad, b['min'][1] - pad, b['min'][2] - pad,
-              b['max'][0] + pad, b['max'][1] + pad, b['max'][2] + pad) for b in blds]
     occ = json.load(open(oj, encoding='utf-8'))
     protos, cache = occ['protos'], {}
     V, T, off, kept = [], [], 0, 0
@@ -177,7 +231,7 @@ def client_meshes(m, name_rx, pad=0.6):
     T = np.vstack(T)
     return {'tag': 'clientmesh', 'floor': 'meshes', 'z0': 0.0, 'height': 0.0,
             'verts': V.tolist(), 'tris': T.tolist(),
-            'names': [b['name'] for b in blds], 'instances': kept}
+            'names': names, 'instances': kept}
 
 
 def _span(pts):
@@ -212,6 +266,21 @@ def load_buildings(m):
     for b in d.get('buildings') or []:
         mn, mx = b['min'], b['max']
         out.append((mn[0], mn[2], mx[0], mx[2]))
+    return out
+
+
+def building_boxes_3d(m):
+    """bbox построек вместе с высотой — нужен, чтобы класть плиту пола только
+    на те этажи, которые у здания реально есть. Иначе на одноэтажном сарае
+    появляется пол четвёртого этажа."""
+    path = os.path.join(EXPORT, m, '%s-rooms.json' % m)
+    if not os.path.exists(path):
+        return []
+    d = json.load(open(path, encoding='utf-8'))
+    out = []
+    for b in d.get('buildings') or []:
+        mn, mx = b['min'], b['max']
+        out.append((mn[0], mn[1], mn[2], mx[0], mx[1], mx[2]))
     return out
 
 
@@ -383,9 +452,42 @@ def main():
         log('%-12s стены %5d→%4d (%.0f м²)   предметы %4d'
             % (name, len(wc), len(builds), sum(a for _, a in builds), len(props)))
 
+    # ⬜ РЕЖИМ РЕНТГЕНА (заказ V4DYA): стены полупрозрачные, пол — непрозрачный.
+    # Зачем: марши лестниц физически есть в сцене, но их закрывает собственная
+    # застройка. Прозрачные стены показывают начинку, непрозрачный пол не даёт
+    # зданию превратиться в стеклянный аквариум, где не читаются уровни.
+    # Плита кладётся ПОД отметкой этажа и только тем зданиям, чья высота этот
+    # этаж покрывает.
+    if '--xray' in sys.argv:
+        b3 = building_boxes_3d(m)
+        for name, level in FLOORS:
+            z0 = level * STOREY
+            plates = []
+            for x0, y0, zz0, x1, y1, zz1 in b3:
+                if not (y0 - 1.0 <= z0 <= y1 + 0.5):
+                    continue
+                if x1 < bx0 or x0 > bx1 or zz1 < bz0 or zz0 > bz1:
+                    continue
+                plates.append([[x0, zz0], [x1, zz0], [x1, zz1], [x0, zz1]])
+            if plates:
+                groups.append({
+                    'tag': 'plate', 'floor': name, 'level': level,
+                    'z0': z0 - 0.18, 'height': 0.18, 'focus_on': focus_name,
+                    'polys': plates,
+                })
+        log('рентген: плит пола %d'
+            % sum(len(g['polys']) for g in groups if g['tag'] == 'plate'))
+
     mesh_rx = opt('--meshes')
+    ball_opt = opt('--mesh-ball')
+    ball = tuple(float(v) for v in ball_opt.split(',')) if ball_opt else None
+    if ball:
+        mesh_rx = mesh_rx or '.'
     if mesh_rx:
-        g = client_meshes(m, mesh_rx)
+        ctr = opt('--center')
+        near = tuple(float(v) for v in ctr.split(',')) if ctr else None
+        g = client_meshes(m, mesh_rx, near=near, ball=ball,
+                          radius=float(opt('--mesh-radius', '60')))
         if g:
             log('геометрия клиента по маске %r: объектов %d, экземпляров %d, '
                 'треугольников %d'
@@ -405,6 +507,7 @@ def main():
         log('демо-маршрут: %d узлов' % len(route))
 
     job = {'out': out, 'px': px, 'groups': groups, 'route': route,
+           'xray': '--xray' in sys.argv,
            'map': m, 'layer': layer, 'zoom': float(opt('--zoom', '1.0')),
            'az': float(opt('--az', '315')), 'el': float(opt('--el', '52')),
            'focus': opt('--focus'),

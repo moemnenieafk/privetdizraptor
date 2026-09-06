@@ -80,6 +80,20 @@ for i, r in enumerate(rooms):
                     extent=[round(float(v), 3) for v in e],
                     boxes=r.get('boxes') or [], building=None))
 
+# ── ОБЪЁМЫ-ОБЁРТКИ ───────────────────────────────────────────────────────────
+# ⚠️ Среди «комнат» BSG есть зоны «всё снаружи»: у Маяка OUTDOOR_ZONE_1/2/3
+# с полугабаритом 1001x808 м. Они сцепляют все комнаты в один кластер (291 комната
+# слипалась в «постройку» 2755x3396 м) и подменяют собой настоящую комнату при
+# назначении этажа. Третий случай той же ловушки после купола неба в резаке
+# и Icebreaker_outdoor в рамке: большой объём съедает карту молча.
+WRAP = 120.0                     # м: полугабарит, выше которого это не комната
+wrapped = [r for r in out if r['extent'][0] > WRAP or r['extent'][2] > WRAP]
+if wrapped:
+    print('ОТСЕЯНЫ объёмы-обёртки (полугабарит > %.0f м): %d — %s'
+          % (WRAP, len(wrapped), ', '.join('%s (%.0fx%.0f)'
+             % (r['name'][:28], r['extent'][0], r['extent'][2]) for r in wrapped[:5])))
+    out = [r for r in out if not (r['extent'][0] > WRAP or r['extent'][2] > WRAP)]
+
 # ── привязка комнат к постройкам (по центру внутри габарита) ──────────────────
 for b in builds:
     b['_lo'], b['_hi'] = b['min'], b['max']
@@ -99,7 +113,9 @@ for r in out:
 # близости — дом это связная группа комнат, стоящих друг на друге и рядом.
 if not builds:
     print('построек в дампе нет — сшиваю комнаты в группы по близости')
-    R = 12.0                     # м: радиус связности по горизонтали
+    # ⚠️ 12 м слепляли почти всю карту в один ком: у Маяка выходила ОДНА «постройка»
+    # и крыша с полом 139.5 м, то есть накрывающая всё. Связность держим тесной.
+    R = 4.0                      # м: радиус связности по горизонтали
     parent = list(range(len(out)))
 
     def find(a):
@@ -113,13 +129,14 @@ if not builds:
         if ra != rb:
             parent[rb] = ra
 
-    pts = [(r['center'][0], r['center'][2],
-            max(r['extent'][0], r['extent'][2])) for r in out]
+    # ⚠️ Габарит берётся ПООСЕВО. С max(extent.x, extent.z) длинный ангар сцеплял всё
+    # подряд, и 291 комната Маяка слипалась в одну «постройку» размером 2755x3396 м.
+    pts = [(r['center'][0], r['center'][2], r['extent'][0], r['extent'][2]) for r in out]
     for a in range(len(out)):
-        xa, za, ea = pts[a]
+        xa, za, exa, eza = pts[a]
         for b in range(a + 1, len(out)):
-            xb, zb, eb = pts[b]
-            if abs(xa - xb) <= ea + eb + R and abs(za - zb) <= ea + eb + R:
+            xb, zb, exb, ezb = pts[b]
+            if abs(xa - xb) <= exa + exb + R and abs(za - zb) <= eza + ezb + R:
                 union(a, b)
     groups = {}
     for i in range(len(out)):
@@ -178,6 +195,50 @@ for bid, rs in by_b.items():
         r['label'] = 'lvl%d' % k
         r['labelSource'] = 'порядок уровня внутри постройки'
         derived += 1
+
+# ── КРЫШИ: их в разметке BSG почти нет ────────────────────────────────────────
+# Аудио-комнаты клиента существуют только ВНУТРИ помещений, поэтому крыш они не
+# описывают: у Маяка меткой `roof` помечено 5 комнат, у Резерва ни одной. А игрок
+# на крышах стоит, и позиции там нужны (V4DYA: база Отступников, корпуса Резерва).
+# Строим крышу геометрией: ПЕРЕКРЫТИЕ верхнего этажа постройки и есть пол крыши.
+# Верх комнаты (`center.y + extent.y`) — это её потолок, у самой высокой комнаты
+# постройки он и будет уровнем крыши.
+ROOF_H = 3.5                     # м: сколько над перекрытием считаем «на крыше»
+roofs = 0
+for bid, rs in by_b.items():
+    if bid is None or not rs:
+        continue
+    top = max(r['top'] for r in rs)
+    base = min(r['floor'] for r in rs)
+    # Одноуровневый объём — не здание с крышей, а отдельная комната.
+    if top - base < 2.5:
+        continue
+    xs = [r['center'][0] for r in rs]
+    zs = [r['center'][2] for r in rs]
+    ex = max(r['extent'][0] for r in rs)
+    ez = max(r['extent'][2] for r in rs)
+    hx = (max(xs) - min(xs)) / 2.0 + ex
+    hz = (max(zs) - min(zs)) / 2.0 + ez
+    if hx < 1.0 or hz < 1.0:
+        continue
+    # ⚠️ ГАРДА РАЗМЕРА. Если «постройка» шире 150 м, это не здание, а слипшийся кластер —
+    # крыша от него накрыла бы полкарты и втянула наземные объекты.
+    if hx * 2 > 150.0 or hz * 2 > 150.0:
+        print('  крыша постройки %d пропущена: габарит %.0fx%.0f м — это не здание'
+              % (bid, hx * 2, hz * 2))
+        continue
+    out.append(dict(idx=-1 - bid, name='roof_of_building_%d' % bid,
+                    path='(выведено: перекрытие верхнего этажа постройки)',
+                    label='roof', floor=round(top, 3), top=round(top + ROOF_H, 3),
+                    center=[round((max(xs) + min(xs)) / 2, 3), round(top + ROOF_H / 2, 3),
+                            round((max(zs) + min(zs)) / 2, 3)],
+                    extent=[round(hx, 3), round(ROOF_H / 2, 3), round(hz, 3)],
+                    boxes=[{'c': [(max(xs) + min(xs)) / 2, top + ROOF_H / 2,
+                                  (max(zs) + min(zs)) / 2],
+                            'q': [0.0, 0.0, 0.0, 1.0], 'h': [hx, ROOF_H / 2, hz]}],
+                    building=bid, labelSource='выведено: перекрытие верхнего этажа'))
+    roofs += 1
+print('крыш выведено по постройкам: %d' % roofs)
 
 for r in out:
     if not r['label']:
