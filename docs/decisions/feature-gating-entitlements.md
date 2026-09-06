@@ -1,10 +1,21 @@
 ---
-status: 🟡 дизайн-спринт (V4DYA 2026-07-23) — единая система включаемых фич по уровням пользователя
+status: ⛔ ОТМЕНЕНО — модель не реализована, победила лестница рангов (см. superseded_by). Читать как историю решения, НЕ как план
 affects: architecture, entitlements, feature-flags, subscriptions, roles, karma, ssr, monetization
 date: 2026-07-23
 owner: "[[monetization-subscriptions]]"
+superseded_by: "[[billing-subscription-management]]"
 ---
 # Спринт: включаемые фичи по уровням пользователя (Entitlements + Feature Flags)
+
+> ⛔ **ЗАМЕТКА ОТМЕНЕНА (06.09.2026).** Описанная здесь модель — матрица прав по пяти осям,
+> `getEntitlements`/`can()`, реестр `src/lib/features/registry.ts`, ключи вида
+> `item.barterHint` — **в коде не существует и не появится**. Реализация пошла другим путём:
+> лестница рангов (`доступ = rank(userTier) >= rank(gateTier)`), `src/lib/gating/*`,
+> `src/data/gate-registry.ts`, ключи `favorites` / `sec:<game>:<path>`. Канон — [[billing-subscription-management]].
+>
+> Найдено при разведке под [[account-billing-tier-showcase]]: заметка не была помечена и
+> продолжала читаться как живой план (ссылка на неё висит и в [[release-readiness-2026-08-19]] §5).
+> Ниже — исходный текст, полезен только как история развилки.
 
 ## Проблема
 Гейтинг фич сейчас **разбросан и ad-hoc**: комменты чекают тир инлайн (`canWriteComments`), роли — свои предикаты (`canModerate`…), companion — свои. Нет единого места, где видно «какая фича кому доступна». А впереди — много **включаемых фишек** (напр. «выгодный бартер на карточке предмета», расширенные фильтры, история цен…), которые надо консистентно показывать/прятать/заманивать по уровню пользователя.
