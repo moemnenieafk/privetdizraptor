@@ -60,6 +60,21 @@ HEIGHT_NPY = opt('--height')
 MANIFEST = opt('--manifest')
 
 SKIP_SCENE = re.compile(r'(terrain|sound|culling|background)', re.I)
+
+# ⚠️ ПОЛ — ЭТО ТО, НА ЧЁМ СТОИТ ПЕРСОНАЖ (правило V4DYA, 06.09).
+# Низы ВСЕХ мешей дают ложные уровни: лампы, вентиляция и потолочные модули висят
+# и кластеризуются на своей высоте. У Лаборатории так получились «этажи» -1.62 и -0.88 —
+# это `lab_lamp_lum_ceiling` и `Ventilation_grate`, то есть ПОТОЛКИ.
+# Подвесное из опоры на пол исключаем.
+HANGING_RX = re.compile(
+    r'(lamp|light|chandelier|downlight|luminaire|armstrong|ceiling|potolok|'
+    r'vent(ilation)?|air_cond|grate|duct|pipe_holder|cable|wire|banner|sign_|'
+    r'smoke_detector|sprinkler|projector)', re.I)
+# Мебель и тара — надёжные свидетели пола: они физически на нём стоят.
+STANDING_RX = re.compile(
+    r'(table|desk|chair|stool|shelf|rack|cabinet|locker|box\d|box_|crate|pallete|pallet|'
+    r'barrel|container|bed|sofa|couch|safe|toolbox|folder|card_file|stove|fridge|'
+    r'washstand|sink|wardrobe|nightstand)', re.I)
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SCENES_JSON = os.path.join(REPO, 'docs', 'registry', 'eft-scenes.json')
 
@@ -77,6 +92,7 @@ log('сцен к разбору: %d' % len(SCENES))
 MESHES = mg.MeshCache(DATA, keep=3)
 bottoms, areas, tops, names = [], [], [], []
 cxs, czs = [], []
+kinds, thick = [], []      # 0 = подвесное, 1 = прочее, 2 = стоящее на полу
 per_scene = defaultdict(int)
 for lvl, nm in SCENES:
     try:
@@ -97,6 +113,8 @@ for lvl, nm in SCENES:
             continue
         bottoms.append(b[1])
         tops.append(b[4])
+        kinds.append(2 if STANDING_RX.search(name) else (0 if HANGING_RX.search(name) else 1))
+        thick.append(b[4] - b[1])
         cxs.append((b[0] + b[3]) / 2.0)
         czs.append((b[2] + b[5]) / 2.0)
         areas.append(min(dx * dz, 10000.0))
@@ -136,14 +154,16 @@ if HEIGHT_NPY and MANIFEST:
     log('земля: %s; под сеткой оказалось %d из %d мешей'
         % (os.path.basename(HEIGHT_NPY), int(inside.sum()), len(B)))
     NM = np.asarray(names, dtype=object)[inside]
+    K = np.asarray(kinds)[inside]
+    TH = np.asarray(thick)[inside]
     B = (B - G)[inside]
     A = A[inside]
-    T = T[inside]
+    T = (T - G)[inside]
     REL = True
     log('режим ПРЕВЫШЕНИЕ НАД ЗЕМЛЁЙ: %.1f..%.1f м' % (B.min(), B.max()))
     # хвосты по краям карты и мусор режем, иначе гистограмма растянута на километр
     keep = (B > -60) & (B < 80)
-    B, A, T, NM = B[keep], A[keep], T[keep], NM[keep]
+    B, A, T, NM, K, TH = B[keep], A[keep], T[keep], NM[keep], K[keep], TH[keep]
     log('в рабочем окне [-60, 80] м осталось %d мешей' % len(B))
 
 lo, hi = np.floor(B.min() / BIN) * BIN, np.ceil(B.max() / BIN) * BIN
@@ -169,32 +189,48 @@ def peaks(w, min_share):
 
 if not REL:
     NM = np.asarray(names, dtype=object)
+    K = np.asarray(kinds)
+    TH = np.asarray(thick)
+
+# СИГНАЛ 1: верх плиты — поверхность, по которой ходят (большая площадь, малая толщина).
+slab = (A >= 8.0) & (TH <= 1.2)
+cnt_slab, _ = np.histogram(T[slab], bins=edges)
+ar_slab, _ = np.histogram(T[slab], bins=edges, weights=A[slab])
+# СИГНАЛ 2: низ мебели и тары — они физически стоят на полу.
+stand = (K == 2)
+cnt_stand, _ = np.histogram(B[stand], bins=edges)
+log('плит (площадь>=8 м², толщина<=1.2 м): %d; стоящей мебели и тары: %d; подвесного: %d'
+    % (int(slab.sum()), int(stand.sum()), int((K == 0).sum())))
 
 pk_cnt = peaks(cnt.astype(float), MIN_SHARE)
-pk_area = peaks(ar, MIN_SHARE)
+pk_area = peaks(ar_slab, MIN_SHARE)
+pk_stand = peaks(cnt_stand.astype(float), MIN_SHARE)
 set_area = set(pk_area)
+set_stand = set(pk_stand)
 
 print('\n=== КАНДИДАТЫ В ЭТАЖИ — %s (шаг %.2f м) ===' % (MAP_ID, BIN))
-print('%9s %9s %7s %11s %7s  %s' % ('высота', 'мешей', 'доля', 'площадь м²', 'доля', 'признак'))
+print('%9s %9s %9s %11s  %-14s %s'
+      % ('высота', 'плит', 'мебели', 'площадь м²', 'признак', 'что там'))
 rows = []
-for i in sorted(set(pk_cnt) | set_area, key=lambda i: centers[i]):
+for i in sorted(set_area | set_stand, key=lambda i: centers[i]):
     share_c = 100.0 * cnt[i] / len(B)
     share_a = 100.0 * ar[i] / (ar.sum() or 1)
     tag = []
     if i in set_area:
-        tag.append('ПЛИТА')
-    if i in pk_cnt:
-        tag.append('населён')
+        tag.append('ПОЛ')
+    if i in set_stand:
+        tag.append('мебель')
     sel = (B >= edges[i]) & (B < edges[i + 1])
     from collections import Counter
     top = Counter(NM[sel]).most_common(4)
     who = ', '.join('%s x%d' % (n[:26], c) for n, c in top)
-    print('%9.2f %9d %6.2f %% %11.0f %6.2f %%  %-16s %s'
-          % (centers[i], cnt[i], share_c, ar[i], share_a, '+'.join(tag), who))
+    print('%9.2f %9d %9d %11.0f  %-14s %s'
+          % (centers[i], cnt_slab[i], cnt_stand[i], ar_slab[i], '+'.join(tag), who))
     rows.append(dict(height=round(float(centers[i]), 2), meshes=int(cnt[i]),
                      shareMeshes=round(share_c, 3), area=round(float(ar[i]), 1),
                      shareArea=round(share_a, 3), slab=i in set_area,
-                     populated=i in pk_cnt, top=[[n, int(c)] for n, c in top]))
+                     slabs=int(cnt_slab[i]), standing=int(cnt_stand[i]),
+                     populated=i in set_stand, top=[[n, int(c)] for n, c in top]))
 
 under = [r for r in rows if r['height'] < 0]
 print('\nиз них НИЖЕ нуля: %d' % len(under))
