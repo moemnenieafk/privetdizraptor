@@ -1090,22 +1090,39 @@ function ProfilePanel({ onNavigate, me, stats, tier }: { onNavigate: (v: ViewId)
   );
 }
 
-function SecurityPanel({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
+function SecurityPanel({
+  onNavigate,
+  twoFactorEnabled,
+}: {
+  onNavigate: (v: ViewId) => void;
+  twoFactorEnabled: boolean;
+}) {
   return (
     <div className="rounded border border-lines-hover bg-card-menu px-6">
-      <FlatRow
-        label="Пароль"
-        action={<RowBtn onClick={() => onNavigate('password')} />}
-      >
-        <span className="font-blender-book text-type-caption text-text-muted">Последнее изменение:</span>
-        <span className="font-blender-medium text-xs text-text-muted">—</span>
-      </FlatRow>
+      {/* Даты последней смены пароля у нас нет: Supabase её не отдаёт, своей колонки нет.
+          Строку-заглушку «Последнее изменение: —» убрали — она изображала данные. */}
+      <FlatRow label="Пароль" action={<RowBtn onClick={() => onNavigate('password')} />} />
 
+      {/* Статус приходит с сервера (hasVerifiedTotp). Раньше здесь был хардкод
+          «Не настроено», из-за которого юзер с включённым 2FA видел, что его нет. */}
       <FlatRow
         label="Двухфакторная аутентификация"
-        action={<RowBtn onClick={() => onNavigate('2fa')} />}
+        action={
+          <RowBtn
+            onClick={() => onNavigate('2fa')}
+            label={twoFactorEnabled ? 'Управлять' : 'Настроить'}
+            variant={twoFactorEnabled ? 'active' : 'default'}
+          />
+        }
       >
-        <span className="font-blender-medium text-xs text-text-muted">Не настроено</span>
+        {twoFactorEnabled ? (
+          <span className="inline-flex items-center gap-1.5 font-blender-medium text-xs text-nvg-green">
+            <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+            Включена
+          </span>
+        ) : (
+          <span className="font-blender-medium text-xs text-text-muted">Не настроено</span>
+        )}
       </FlatRow>
     </div>
   );
@@ -1452,6 +1469,7 @@ export function AccountCenter({
   pricingPublished,
   currentRank,
   effectiveTier,
+  twoFactorEnabled,
 }: {
   me: Me;
   tier: TierId;
@@ -1468,6 +1486,8 @@ export function AccountCenter({
    * говорить о ФАКТИЧЕСКОМ доступе, иначе плитка «Активен» спорит с замками в матрице.
    */
   effectiveTier: TierId;
+  /** Есть ли подтверждённый TOTP — вкладка «Безопасность» должна говорить правду. */
+  twoFactorEnabled: boolean;
   stats: AccountStats;
   achievements: AchievementView[];
   hints: Record<string, AchievementHint>;
@@ -1505,7 +1525,7 @@ export function AccountCenter({
     switch (activeTab) {
       case 'profile':   return <ProfilePanel onNavigate={navigate} me={me} stats={stats} tier={tier} />;
       case 'tracking':  return <TrackingPanel achievements={achievements} hints={hints} questsDigest={questsDigest} hideoutNeeds={hideoutNeeds} hideoutStations={hideoutStations} />;
-      case 'security':  return <SecurityPanel onNavigate={navigate} />;
+      case 'security':  return <SecurityPanel onNavigate={navigate} twoFactorEnabled={twoFactorEnabled} />;
       case 'linking':   return <LinkingPanel onNavigate={navigate} me={me} />;
       case 'billing':   return <BillingPanel onNavigate={navigate} tier={tier} validUntil={validUntil} source={subSource} history={billingHistory} showcase={showcase} pricingPublished={pricingPublished} />;
       case 'prostatus': return <ProStatusPanel tier={tier} validUntil={validUntil} onNavigate={navigate} showcase={showcase} />;

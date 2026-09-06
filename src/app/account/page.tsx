@@ -8,6 +8,7 @@ import { buildQuestsDigest } from '@/lib/tracking-digest';
 import { getSubscription, getBillingHistory } from '@/lib/subscription.server';
 import { getTierShowcase, isPricingPublished } from '@/lib/gating/showcase';
 import { resolveEntitlements } from '@/lib/gating/resolve';
+import { hasVerifiedTotp } from '@/lib/auth/mfa';
 import { AccountCenter } from './AccountCenter';
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default async function AccountPage() {
     showcase,
     pricingPublished,
     entitlements,
+    twoFactorEnabled,
     achievements,
     maps,
     traders,
@@ -41,6 +43,7 @@ export default async function AccountPage() {
     getTierShowcase(),
     isPricingPublished(),
     resolveEntitlements(me.id),
+    hasVerifiedTotp(),
     getEftAchievements(),
     getEftMaps(),
     getEftTraders(),
@@ -73,6 +76,7 @@ export default async function AccountPage() {
       pricingPublished={pricingPublished}
       currentRank={entitlements.rank}
       effectiveTier={entitlements.tier}
+      twoFactorEnabled={twoFactorEnabled}
       stats={stats}
       achievements={achievements}
       hints={hints}

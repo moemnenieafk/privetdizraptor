@@ -17,3 +17,24 @@ export async function mfaSatisfied(): Promise<boolean> {
   if (data.nextLevel === "aal2") return data.currentLevel === "aal2";
   return true;
 }
+
+/**
+ * Привязан ли у пользователя подтверждённый TOTP-фактор.
+ *
+ * Нужно кабинету, чтобы строка «Двухфакторная аутентификация» говорила правду: раньше
+ * она хардкодила «Не настроено» и врала юзеру с включённым 2FA. Считается на сервере,
+ * чтобы вкладка «Безопасность» не мигала состоянием после гидрации.
+ *
+ * Ошибка провайдера → false: честнее предложить настроить (внутри мастера статус
+ * перепроверяется), чем показать «включено» там, где мы не уверены.
+ */
+export async function hasVerifiedTotp(): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    if (error || !data) return false;
+    return (data.totp ?? []).some((f) => f.status === "verified");
+  } catch {
+    return false;
+  }
+}
