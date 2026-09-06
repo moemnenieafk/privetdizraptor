@@ -93,7 +93,22 @@ for lvl, nm in SCENES:
                           box=[round(float(v), 2) for v in b], source='mesh'))
         kinds[name] += 1
     del sc
-log('лестничных мешей: %d экземпляров, %d уникальных имён' % (len(items), len(kinds)))
+# ⚠️ ДУБЛИ. Одна и та же лестница приходит из НЕСКОЛЬКИХ сцен клиента — тот же
+# случай, что удвоение Терминала (каждая сцена лежит дважды). Замер до отсева:
+# Эпицентр 38 % дублей, Ледокол 26 %, Терминал 24 %, Улицы 20 %. Считаем по позиции
+# и имени: разные экземпляры одной модели стоят в разных точках и не схлопываются.
+_seen, _uniq = set(), []
+for it in items:
+    k = (round(it['x'], 1), round(it['y'], 1), round(it['z'], 1), it['name'])
+    if k in _seen:
+        continue
+    _seen.add(k)
+    _uniq.append(it)
+_dups = len(items) - len(_uniq)
+items = _uniq
+kinds = Counter(it['name'] for it in items)
+log('лестничных мешей: %d экземпляров (отсеяно дублей %d), %d уникальных имён'
+    % (len(items), _dups, len(kinds)))
 
 # ── лестничные КОМНАТЫ ────────────────────────────────────────────────────────
 n_rooms = 0
@@ -127,12 +142,49 @@ for it, (px, py) in zip(items, P):
     inside += it['inFrame']
 log('в рамке: %d из %d' % (inside, len(items)))
 
+# ── КУДА ВЕДЁТ: связка этажей ────────────────────────────────────────────────
+# Слой «здесь лестница» для отрисовки половинчатый: важно, с какого этажа на какой.
+# У метки есть низ и верх, у карты — полы всех комнат (derive-room-floors.py).
+# Этаж низа и этаж верха ищем как БЛИЖАЙШИЙ снизу пол среди комнат, накрывающих
+# лестницу по горизонтали. Комнаты-обёртки («всё снаружи») уже отсеяны в том шаге.
+RF = 'map-exports/OBJECTS-MAPS/_floors/%s-room-floors.json' % MAP_ID
+linked = 0
+if os.path.exists(RF):
+    rf = json.load(open(RF, encoding='utf-8'))['rooms']
+    RX_ = np.array([r['center'][0] for r in rf])
+    RZ_ = np.array([r['center'][2] for r in rf])
+    REX = np.array([r['extent'][0] for r in rf])
+    REZ = np.array([r['extent'][2] for r in rf])
+    RFL = np.array([r['floor'] for r in rf])
+    RLB = [r['label'] for r in rf]
+
+    def floor_at(x, z, y):
+        m = (np.abs(RX_ - x) <= REX + 1.5) & (np.abs(RZ_ - z) <= REZ + 1.5)
+        if not m.any():
+            return None, None
+        idx = np.where(m)[0]
+        below = idx[RFL[idx] <= y + 0.8]
+        pick = below[np.argmax(RFL[below])] if len(below) else idx[np.argmin(RFL[idx])]
+        return RLB[pick], float(RFL[pick])
+
+    for it in items:
+        lo_lab, lo_h = floor_at(it['x'], it['z'], it['y'])
+        hi_lab, hi_h = floor_at(it['x'], it['z'], it['y'] + it['height'])
+        it['fromFloor'], it['fromH'] = lo_lab, lo_h
+        it['toFloor'], it['toH'] = hi_lab, hi_h
+        it['connects'] = bool(lo_lab and hi_lab and lo_lab != hi_lab)
+        linked += it['connects']
+    log('связка этажей: у %d лестниц низ и верх на РАЗНЫХ этажах' % linked)
+else:
+    log('! разметки этажей нет (%s) — связка не считалась' % os.path.basename(RF))
+
 os.makedirs(OUT, exist_ok=True)
 jp = os.path.join(OUT, '%s-stairs.json' % MAP_ID)
 json.dump(dict(map=MAP_ID, generated=time.strftime('%Y-%m-%dT%H:%M:%S'),
                source='dump-stairs.py — меши с лестничными именами + лестничные комнаты BSG',
                frame=dict(W=FR.W, H=FR.H), counts=dict(mesh=len(items) - n_rooms,
-               room=n_rooms, inFrame=inside), kinds=kinds.most_common(40), items=items),
+               room=n_rooms, inFrame=inside, connects=linked),
+               kinds=kinds.most_common(40), items=items),
           open(jp, 'w', encoding='utf-8'), ensure_ascii=False)
 
 sp = os.path.join(OUT, '%s-stairs.svg' % MAP_ID)

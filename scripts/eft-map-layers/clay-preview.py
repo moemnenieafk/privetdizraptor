@@ -234,6 +234,68 @@ def client_meshes(m, name_rx, pad=0.6, near=None, radius=60.0, ball=None):
             'names': names, 'instances': kept}
 
 
+def stair_meshes(m, near=None, radius=60.0, attached_only=True):
+    """Марши из сайдкара `find-stairs.py` — часть C гибрида «как правило».
+
+    Отличие от `client_meshes`: там мы ищем геометрию по ИМЕНИ места (постройки
+    или комнаты) и получаем всё, что в этом месте лежит, — двери, окна, бумажки.
+    Здесь берётся заранее опознанный СПИСОК маршей, то есть ровно то, ради чего
+    часть C существует.
+
+    `attached_only` — требование V4DYA: в набор идут лестницы, примыкающие к
+    зданию и стенам. На Таможне это 33 экземпляра из 100; остальные стоят
+    отдельно (эстакады, стремянки у контейнеров) и в клэй-карту не просятся.
+    """
+    sp = os.path.join(EXPORT, m, 'render-objects', '%s-stairs.json' % m)
+    if not os.path.exists(sp):
+        log('нет сайдкара маршей — сперва: python find-stairs.py %s' % m)
+        return None
+    d = json.load(open(sp, encoding='utf-8'))
+    protos_meta = d['protos']
+    occ = json.load(open(os.path.join(
+        EXPORT, m, 'render-objects', '%s-occluders.json' % m), encoding='utf-8'))
+    protos = occ['protos']
+    items = [i for i in d['instances'] if i['attached'] or not attached_only]
+    if near is not None:
+        nx, nz = near
+        items = [i for i in items
+                 if abs(i['x'] - nx) <= radius and abs(i['z'] - nz) <= radius]
+    log('маршей к сборке: %d (примыкающих всего %d из %d)'
+        % (len(items), sum(1 for i in d['instances'] if i['attached']),
+           len(d['instances'])))
+    if not items:
+        return None
+    import numpy as np
+    V, T, off, cache = [], [], 0, {}
+    for it in items:
+        k = it['mesh']
+        if k not in cache:
+            z = np.load(protos[k]['npz'])
+            cache[k] = (z['v'].astype(np.float64), z['t0'].astype(np.int64))
+        v, t = cache[k]
+        q = it['quat']
+        n2 = sum(c * c for c in q) or 1.0
+        sx, sy, sz_, w = q
+        s2 = 2.0 / n2
+        xx, yy, zz = sx * sx * s2, sy * sy * s2, sz_ * sz_ * s2
+        xy, xz, yz = sx * sy * s2, sx * sz_ * s2, sy * sz_ * s2
+        wx, wy, wz = w * sx * s2, w * sy * s2, w * sz_ * s2
+        R = np.array([[1 - (yy + zz), xy - wz, xz + wy],
+                      [xy + wz, 1 - (xx + zz), yz - wx],
+                      [xz - wy, yz + wx, 1 - (xx + yy)]])
+        sc = np.array(it.get('scale', [1, 1, 1]), dtype=np.float64)
+        V.append((v * sc) @ R.T + np.array([it['x'], it['y'], it['z']]))
+        T.append(t + off)
+        off += len(v)
+    V, T = np.vstack(V), np.vstack(T)
+    log('геометрия маршей: %d треугольников, прототипов в наборе %d'
+        % (len(T), len(protos_meta)))
+    return {'tag': 'clientmesh', 'floor': 'stairs', 'z0': 0.0, 'height': 0.0,
+            'verts': V.tolist(), 'tris': T.tolist(),
+            'names': sorted({i['building'] for i in items if i['building']}),
+            'instances': len(items)}
+
+
 def _span(pts):
     """Максимальный габарит контура в метрах — длина по большей стороне bbox."""
     xs = [p[0] for p in pts]
@@ -267,6 +329,44 @@ def load_buildings(m):
         mn, mx = b['min'], b['max']
         out.append((mn[0], mn[2], mx[0], mx[2]))
     return out
+
+
+def drop_envelopes(rc, min_area=500.0, min_nested=20, ratio=10.0):
+    """Выбросить полигоны-ОБЁРТКИ из слоя комнат.
+
+    Находка: среди «комнат» наземного этажа Таможни лежит прямоугольник
+    5 527 м² (93×76 м, ЧЕТЫРЕ вершины) с центром внутри `obshezhitie_1`.
+    Это не помещение — это габаритная обёртка всего комплекса общаг, и она
+    больше самого здания (71×60 м). В рентгене она давала светлую плоскость,
+    накрывающую половину кадра.
+
+    Признак обёртки — она ПОЛНОСТЬЮ содержит чужие габариты и кратно их больше.
+    Просто «много центроидов внутри» не годится: у лестничной клетки лежат
+    десятки дублирующих полигонов в одной точке, и крошка 20 м² насчитывала
+    85 «вложенных». Поэтому требуем полное вложение bbox и кратность площади.
+
+    Замер по Таможне: отсеивает РОВНО ОДИН полигон на `main` и ни одного на
+    остальных четырёх этажах. Настоящие залы (склад 1 580 м²) остаются.
+    """
+    bx = []
+    for pts, a, _, _ in rc:
+        xs = [p[0] for p in pts]
+        zs = [p[1] for p in pts]
+        bx.append((min(xs), max(xs), min(zs), max(zs), a))
+    keep, dropped = [], []
+    for i, (x0, x1, z0, z1, a) in enumerate(bx):
+        if a >= min_area:
+            n = sum(1 for j, (o0, o1, p0, p1, oa) in enumerate(bx)
+                    if j != i and oa * ratio <= a
+                    and x0 <= o0 and o1 <= x1 and z0 <= p0 and p1 <= z1)
+            if n >= min_nested:
+                dropped.append((a, n))
+                continue
+        keep.append(rc[i])
+    if dropped:
+        log('  ⚠ обёрток отсеяно %d: %s'
+            % (len(dropped), ', '.join('%.0f м² (вложено %d)' % d for d in dropped)))
+    return keep
 
 
 def building_boxes_3d(m):
@@ -459,17 +559,39 @@ def main():
     # Плита кладётся ПОД отметкой этажа и только тем зданиям, чья высота этот
     # этаж покрывает.
     if '--xray' in sys.argv:
+        # 🔴 ПЛИТА СТРОИТСЯ ПО КОНТУРУ ЭТАЖА, А НЕ ПО ГАБАРИТУ ПОСТРОЙКИ.
+        # Первая версия брала bbox из `buildings` — прямоугольник. На общем плане
+        # такая плита накрывала ровно то, ради чего рентген и делался: здания
+        # сложного плана превращались в сплошные слэбы, вылезающие за корпус.
+        # Контур даёт слой `rooms` того же этажа — полигоны помещений.
+        #
+        # Зазоры между комнатами (толщина стены) закрываются раздутием: это тот
+        # самый приём, которым чинились «дыры в зданиях», и функция `inflate`
+        # писалась ровно под него. Честная альтернатива — булев union полигонов,
+        # но он тянет геометрическую библиотеку ради превью.
+        infl = float(opt('--plate-inflate', '0.25'))
         b3 = building_boxes_3d(m)
         for name, level in FLOORS:
             z0 = level * STOREY
-            plates = []
-            for x0, y0, zz0, x1, y1, zz1 in b3:
-                if not (y0 - 1.0 <= z0 <= y1 + 0.5):
-                    continue
-                if x1 < bx0 or x0 > bx1 or zz1 < bz0 or zz0 > bz1:
-                    continue
-                plates.append([[x0, zz0], [x1, zz0], [x1, zz1], [x0, zz1]])
+            rc = room_polygons(m, name, aff)
+            rc = drop_envelopes(rc)
+            plates = [inflate(INV._rdp(p, 0.2), infl) for p, a, _, _ in rc
+                      if a >= 1.0 and _inside(p)]
+            src = 'контур'
+            if not plates:
+                # Резерв: у этажа нет слоя комнат — лучше грубая плита, чем дыра,
+                # но об этом надо сказать вслух, а не подсунуть молча.
+                src = 'ГАБАРИТ (нет контуров комнат)'
+                for x0, y0, zz0, x1, y1, zz1 in b3:
+                    if not (y0 - 1.0 <= z0 <= y1 + 0.5):
+                        continue
+                    if x1 < bx0 or x0 > bx1 or zz1 < bz0 or zz0 > bz1:
+                        continue
+                    plates.append([[x0, zz0], [x1, zz0], [x1, zz1], [x0, zz1]])
             if plates:
+                area = sum(a for p, a, _, _ in rc
+                           if a >= 1.0 and _inside(p)) if rc else 0.0
+                log('  плита %-12s %s: %4d шт, %6.0f м²' % (name, src, len(plates), area))
                 groups.append({
                     'tag': 'plate', 'floor': name, 'level': level,
                     'z0': z0 - 0.18, 'height': 0.18, 'focus_on': focus_name,
@@ -477,6 +599,14 @@ def main():
                 })
         log('рентген: плит пола %d'
             % sum(len(g['polys']) for g in groups if g['tag'] == 'plate'))
+
+    if '--stairs' in sys.argv:
+        ctr0 = opt('--center')
+        g = stair_meshes(m, near=tuple(float(v) for v in ctr0.split(',')) if ctr0 else None,
+                         radius=float(opt('--mesh-radius', '60')),
+                         attached_only='--all-stairs' not in sys.argv)
+        if g:
+            groups.append(g)
 
     mesh_rx = opt('--meshes')
     ball_opt = opt('--mesh-ball')
