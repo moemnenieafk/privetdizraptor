@@ -921,6 +921,15 @@ def cmd_probe(a):
 def cmd_render(a):
     protos = json.load(open(os.path.join(a.work, 'prototypes.json'), encoding='utf-8'))
     fr = protos['frame']
+    # ⚠️ РАМКА ПРОТОТИПОВ ПРОТУХАЕТ. `render` берёт рамку из prototypes.json, а не из
+    # манифеста: там же лежат вершины, уже пересчитанные под неё. Если рамку карты
+    # пересобрали, а extract не перезапускали, слой молча уедет в СТАРУЮ рамку —
+    # так 05.09 Таможня вышла 16384x8276 вместо 16384x10628 и легла мимо всех соседей.
+    _c = json.load(open(a.manifest, encoding='utf-8'))['crop']
+    if (fr['W'], fr['H']) != (_c['width'], _c['height']):
+        die('рамка prototypes.json %dx%d не та, что в манифесте %dx%d — рамку карты '
+            'пересобрали, а прототипы остались старыми. Перезапустить шаг extract.'
+            % (fr['W'], fr['H'], _c['width'], _c['height']))
     os.makedirs(a.out, exist_ok=True)
     tiledir = os.path.join(a.work, 'tiles')
     os.makedirs(tiledir, exist_ok=True)
