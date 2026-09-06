@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Switch } from "@/components/ui/Switch";
 
 /**
  * Системные переключатели портала (kind:'system'). Отдельный блок, а НЕ строка в матрице
@@ -74,25 +75,12 @@ export function SystemTogglesClient({ toggles }: { toggles: SystemToggle[] }) {
             )}
           </div>
 
-          <button
-            type="button"
-            role="switch"
-            aria-checked={row.enabled}
-            aria-label={row.label}
+          <Switch
+            checked={row.enabled}
+            onChange={() => toggle(row)}
             disabled={savingKey === row.key}
-            onClick={() => toggle(row)}
-            className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors disabled:opacity-50 ${
-              row.enabled
-                ? "border-(--primary) bg-[color-mix(in_srgb,var(--primary)_35%,transparent)]"
-                : "border-lines-hover bg-(--color-base)"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-4.5 w-4.5 rounded-full transition-all ${
-                row.enabled ? "left-5.5 bg-(--primary)" : "left-0.5 bg-text-muted"
-              }`}
-            />
-          </button>
+            label={row.label}
+          />
         </div>
       ))}
     </div>

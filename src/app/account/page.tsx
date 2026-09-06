@@ -71,6 +71,7 @@ export default async function AccountPage() {
       tier={sub.tier}
       validUntil={sub.validUntil}
       subSource={sub.source}
+      autoRenew={sub.autoRenew}
       billingHistory={billingHistory}
       showcase={showcase}
       pricingPublished={pricingPublished}

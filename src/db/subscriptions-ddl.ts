@@ -2,6 +2,14 @@
 // /api/cron/migrate-subscriptions (db:push с телефона недоступен, паттерн weapons-ddl).
 // Все стейтменты идемпотентны, повторный прогон безопасен.
 //
+// ⚠️ ВЛАДЕЛЕЦ ТАБЛИЦЫ — supabase_admin, а приложение ходит ролью postgres. Значит ЛЮБОЙ
+// ALTER отсюда падает с `must be owner of table subscriptions` (42501): роль postgres
+// НЕ входит в supabase_admin. То же у public.profiles; tiers/feature_gates/billing_events
+// принадлежат postgres и меняются свободно.
+// → Изменения СХЕМЫ этой таблицы применяются вручную в SQL-редакторе Supabase Studio
+//   (там сессия supabase_admin), а не этим роутом. Роут остаётся полезен для policy/сида.
+//   Найдено 06.09.2026 при добавлении auto_renew.
+//
 // Тир читают getSubscription (server) и fetchTier (client) через Supabase-клиент;
 // пишет owner-роль (вебхук платёжки или ручной /api/cron/set-tier). До появления
 // этой таблицы читалки деградировали в 'free' — то есть весь пэйвол был закрыт для
@@ -25,6 +33,14 @@ export const SUBSCRIPTIONS_DDL: string[] = [
   // игре, портальная (null) — везде. На запуске всегда null. Additive, идемпотентно.
   `alter table public.subscriptions
      add column if not exists scope_game_id uuid references public.games(id)`,
+
+  // Автопродление. У ЮKassa рекуррент ИНИЦИИРУЕТ ПРОДАВЕЦ: следующее списание делаем мы
+  // сами по сохранённому методу. Значит «отключить автопродление» — это НАШ флаг, по
+  // которому мы просто не списываем дальше, а не запрос к провайдеру. Дефолт true:
+  // подписка, оформленная как регулярная, продлевается, пока её не отключили.
+  // Ручные выдачи (source='manual') не списываются вовсе — для них флаг не применяется.
+  `alter table public.subscriptions
+     add column if not exists auto_renew boolean not null default true`,
 
   `alter table public.subscriptions enable row level security`,
   `drop policy if exists subscriptions_read on public.subscriptions`,

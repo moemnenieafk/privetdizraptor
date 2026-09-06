@@ -7,6 +7,12 @@ export interface SubscriptionInfo {
   validUntil: string | null;
   /** Откуда подписка: manual | yookassa | … Показывается в кабинете. */
   source: string | null;
+  /**
+   * Продлевать ли подписку дальше. `null` — колонки `auto_renew` в БД ещё нет
+   * (её накатывают правами supabase_admin, см. спеку): кабинет тогда строку не рисует,
+   * а не показывает выдуманное состояние. Появится колонка — строка появится сама.
+   */
+  autoRenew: boolean | null;
 }
 
 /** Запись леджера начислений для вкладки «Платежи» (own-строки через RLS). */
@@ -29,7 +35,7 @@ export interface BillingHistoryEntry {
  * select('*') — чтобы отсутствие колонки valid_until не роняло весь запрос в ошибку.
  */
 export async function getSubscription(userId: string | null): Promise<SubscriptionInfo> {
-  if (!userId) return { tier: 'free', validUntil: null, source: null };
+  if (!userId) return { tier: 'free', validUntil: null, source: null, autoRenew: null };
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -37,8 +43,13 @@ export async function getSubscription(userId: string | null): Promise<Subscripti
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
-    if (error || !data) return { tier: 'free', validUntil: null, source: null };
-    const row = data as { tier?: unknown; valid_until?: unknown; source?: unknown };
+    if (error || !data) return { tier: 'free', validUntil: null, source: null, autoRenew: null };
+    const row = data as {
+      tier?: unknown;
+      valid_until?: unknown;
+      source?: unknown;
+      auto_renew?: unknown;
+    };
     const validUntil = typeof row.valid_until === 'string' ? row.valid_until : null;
     const expired = validUntil !== null && new Date(validUntil).getTime() < Date.now();
     // Пропускаем ЛЮБОЙ непустой строковый slug (динамические, админ-созданные тиры тоже):
@@ -46,9 +57,11 @@ export async function getSubscription(userId: string | null): Promise<Subscripti
     const slug = typeof row.tier === 'string' ? row.tier.trim() : '';
     const tier: TierId = !expired && slug !== '' ? slug : 'free';
     const source = typeof row.source === 'string' && row.source.trim() !== '' ? row.source : null;
-    return { tier, validUntil, source };
+    // select('*') отдаёт колонку, только если она есть в таблице — отсюда null-ветка.
+    const autoRenew = typeof row.auto_renew === 'boolean' ? row.auto_renew : null;
+    return { tier, validUntil, source, autoRenew };
   } catch {
-    return { tier: 'free', validUntil: null, source: null };
+    return { tier: 'free', validUntil: null, source: null, autoRenew: null };
   }
 }
 

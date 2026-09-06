@@ -20,6 +20,7 @@ import { tierMeta, type TierId } from '@/data/subscription-tiers';
 import type { ShowcaseTier } from '@/lib/gating/showcase';
 import type { BillingHistoryEntry } from '@/lib/subscription.server';
 import { TierCard, TierCtaPending } from '@/components/features/subscription/TierCard';
+import { Switch } from '@/components/ui/Switch';
 import { AccessMatrix } from '@/components/features/subscription/AccessMatrix';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
@@ -1187,6 +1188,64 @@ function LinkingPanel({ me, onNavigate }: { me: Me; onNavigate: (v: ViewId) => v
   );
 }
 
+/**
+ * Строка «Автопродление». Оптимистичный тумблер: состояние переключается сразу, при
+ * ошибке откатывается — так же, как в админ-матрице гейтов.
+ *
+ * Для ручной выдачи (`manual`) тумблера нет: такую подписку никто не списывает, и
+ * предлагать «отключить продление» значило бы обещать управление тем, чего не происходит.
+ */
+function AutoRenewRow({ initial, manual }: { initial: boolean; manual: boolean }) {
+  const [on, setOn] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
+
+  const toggle = async (next: boolean) => {
+    const prev = on;
+    setOn(next);
+    setBusy(true);
+    setError(false);
+    const res = await fetch('/api/account/auto-renew', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: next }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      setOn(prev);
+      setError(true);
+    }
+  };
+
+  if (manual) {
+    return (
+      <FlatRow label="Автопродление">
+        <span className="font-blender-medium text-xs text-text-muted">
+          Не применяется — доступ выдан администратором
+        </span>
+      </FlatRow>
+    );
+  }
+
+  return (
+    <FlatRow
+      label="Автопродление"
+      action={
+        <Switch checked={on} onChange={toggle} disabled={busy} label="Автопродление подписки" />
+      }
+    >
+      <span className="font-blender-medium text-xs text-text-muted">
+        {on
+          ? 'Подписка продлится автоматически в конце периода'
+          : 'Продления не будет — доступ сохранится до конца оплаченного периода'}
+      </span>
+      {error && (
+        <span className="font-blender-medium text-xs text-danger">Не сохранилось, попробуйте ещё раз</span>
+      )}
+    </FlatRow>
+  );
+}
+
 /** Как подписался пользователь — человекочитаемо. */
 const SOURCE_LABEL: Record<string, string> = {
   manual: 'Выдана администратором',
@@ -1208,6 +1267,7 @@ function BillingPanel({
   tier,
   validUntil,
   source,
+  autoRenew,
   history,
   showcase,
   pricingPublished,
@@ -1216,6 +1276,7 @@ function BillingPanel({
   tier: TierId;
   validUntil: string | null;
   source: string | null;
+  autoRenew: boolean | null;
   history: BillingHistoryEntry[];
   showcase: ShowcaseTier[];
   pricingPublished: boolean;
@@ -1251,6 +1312,14 @@ function BillingPanel({
               {source ? (SOURCE_LABEL[source] ?? source) : '—'}
             </span>
           </FlatRow>
+        ) : null}
+
+        {/* Автопродление. Не рисуем вовсе, если: тариф бесплатный (продлевать нечего)
+            или колонки auto_renew ещё нет в БД (autoRenew === null) — лучше промолчать,
+            чем показать выдуманное состояние. Ручная выдача не списывается → тумблера
+            нет, только пояснение. */}
+        {isPaid && autoRenew !== null ? (
+          <AutoRenewRow initial={autoRenew} manual={source === 'manual'} />
         ) : null}
       </div>
 
@@ -1464,6 +1533,7 @@ export function AccountCenter({
   tier,
   validUntil,
   subSource,
+  autoRenew,
   billingHistory,
   showcase,
   pricingPublished,
@@ -1475,6 +1545,8 @@ export function AccountCenter({
   tier: TierId;
   validUntil: string | null;
   subSource: string | null;
+  /** null — колонки auto_renew ещё нет в БД; строка автопродления не рисуется. */
+  autoRenew: boolean | null;
   billingHistory: BillingHistoryEntry[];
   showcase: ShowcaseTier[];
   pricingPublished: boolean;
@@ -1527,7 +1599,7 @@ export function AccountCenter({
       case 'tracking':  return <TrackingPanel achievements={achievements} hints={hints} questsDigest={questsDigest} hideoutNeeds={hideoutNeeds} hideoutStations={hideoutStations} />;
       case 'security':  return <SecurityPanel onNavigate={navigate} twoFactorEnabled={twoFactorEnabled} />;
       case 'linking':   return <LinkingPanel onNavigate={navigate} me={me} />;
-      case 'billing':   return <BillingPanel onNavigate={navigate} tier={tier} validUntil={validUntil} source={subSource} history={billingHistory} showcase={showcase} pricingPublished={pricingPublished} />;
+      case 'billing':   return <BillingPanel onNavigate={navigate} tier={tier} validUntil={validUntil} source={subSource} autoRenew={autoRenew} history={billingHistory} showcase={showcase} pricingPublished={pricingPublished} />;
       case 'prostatus': return <ProStatusPanel tier={tier} validUntil={validUntil} onNavigate={navigate} showcase={showcase} />;
     }
   };

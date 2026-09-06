@@ -1361,6 +1361,9 @@ export const subscriptions = pgTable("subscriptions", {
   // Задел per-game (billing-subscription-mgmt): игровая подписка применима только к своей
   // игре, портальная (null) — везде. На запуске всегда null. Additive через migrate-billing.
   scopeGameId: uuid("scope_game_id").references(() => games.id),
+  // Продлевать ли подписку дальше. Рекуррент у ЮKassa merchant-initiated → это НАШ флаг,
+  // а не состояние на стороне провайдера. К ручным выдачам не применяется.
+  autoRenew: boolean("auto_renew").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
