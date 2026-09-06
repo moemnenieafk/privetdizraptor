@@ -13,6 +13,8 @@ import 'server-only';
  * Доменная логика живёт тут, а не в JSX (CLAUDE.md §4.7).
  */
 
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { allGateDefs, gateLabel, PRICING_GATE_KEY } from '@/data/gate-registry';
 import { getTiers, getGateMap, type GateMap, type TierSnapshot } from '@/lib/gating/resolve';
 import { tierRankOf, type TierLike } from '@/lib/gating/tiers';
@@ -36,6 +38,33 @@ export interface ShowcaseTier {
   perks: string[];
   /** Имя тира рангом ниже — для строки «Всё из ‹…›». null у нижнего платного и у free. */
   inheritsFrom: string | null;
+  /**
+   * URL арта плитки или null. Наличие файла проверяется НА СЕРВЕРЕ: тиры динамические
+   * (админ заводит новый формой, без деплоя), поэтому отсутствие арта — штатный случай,
+   * а не ошибка. Отдавать битый <Image> в вёрстку нельзя — плитка сама решает, рисовать
+   * картинку или процедурный фон.
+   */
+  artUrl: string | null;
+}
+
+/**
+ * Есть ли арт под слаг. Проверка файловой системы мемоизирована на процесс: она зовётся
+ * на каждый рендер витрины, а набор файлов между деплоями не меняется.
+ */
+const artCache = new Map<string, string | null>();
+
+function resolveArt(slug: string): string | null {
+  const cached = artCache.get(slug);
+  if (cached !== undefined) return cached;
+  // Слаг приходит из БД — пускаем только безопасные символы, чтобы не собрать путь наружу.
+  const safe = /^[a-z0-9_-]+$/i.test(slug);
+  let url: string | null = null;
+  if (safe) {
+    const rel = `images/pricing/${slug}.webp`;
+    url = existsSync(join(process.cwd(), 'public', rel)) ? `/${rel}` : null;
+  }
+  artCache.set(slug, url);
+  return url;
 }
 
 /** Ключи системных переключателей — не права доступа, в витрине им не место. */
@@ -95,6 +124,7 @@ export function buildTierShowcase(tiers: TierSnapshot[], gates: GateMap): Showca
       perks: t.perks ?? [],
       // «Всё из ‹Боец›» бессмысленно — каскад показываем только поверх платного тира.
       inheritsFrom: prev && prev.rank > 0 ? prev.name : null,
+      artUrl: resolveArt(t.slug),
     };
   });
 }

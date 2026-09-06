@@ -7,6 +7,7 @@ import { resolveAchievementHint, type AchievementHint } from '@/lib/achievement-
 import { buildQuestsDigest } from '@/lib/tracking-digest';
 import { getSubscription, getBillingHistory } from '@/lib/subscription.server';
 import { getTierShowcase, isPricingPublished } from '@/lib/gating/showcase';
+import { resolveEntitlements } from '@/lib/gating/resolve';
 import { AccountCenter } from './AccountCenter';
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default async function AccountPage() {
     billingHistory,
     showcase,
     pricingPublished,
+    entitlements,
     achievements,
     maps,
     traders,
@@ -38,6 +40,7 @@ export default async function AccountPage() {
     getBillingHistory(me.id),
     getTierShowcase(),
     isPricingPublished(),
+    resolveEntitlements(me.id),
     getEftAchievements(),
     getEftMaps(),
     getEftTraders(),
@@ -68,6 +71,8 @@ export default async function AccountPage() {
       billingHistory={billingHistory}
       showcase={showcase}
       pricingPublished={pricingPublished}
+      currentRank={entitlements.rank}
+      effectiveTier={entitlements.tier}
       stats={stats}
       achievements={achievements}
       hints={hints}

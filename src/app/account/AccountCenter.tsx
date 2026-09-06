@@ -20,6 +20,7 @@ import { tierMeta, type TierId } from '@/data/subscription-tiers';
 import type { ShowcaseTier } from '@/lib/gating/showcase';
 import type { BillingHistoryEntry } from '@/lib/subscription.server';
 import { TierCard, TierCtaPending } from '@/components/features/subscription/TierCard';
+import { AccessMatrix } from '@/components/features/subscription/AccessMatrix';
 
 const USERNAME_RE = /^[A-Za-z0-9_-]{3,15}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // зеркалит серверный EMAIL_RE
@@ -867,19 +868,23 @@ function PlanView({
   onBack,
   showcase,
   currentTier,
+  currentRank,
   pricingPublished,
+  validUntil,
 }: {
   onBack: () => void;
   showcase: ShowcaseTier[];
   currentTier: TierId;
+  currentRank: number;
   pricingPublished: boolean;
+  validUntil: string | null;
 }) {
   return (
     <div className="flex flex-col">
       <BackBtn onClick={onBack} />
       <div className="flex flex-col gap-1 pb-5">
-        <SubTitle>Выбранный тариф</SubTitle>
-        <p className="font-blender-book text-xs leading-relaxed text-text-muted">
+        <SubTitle>Уровень допуска</SubTitle>
+        <p className="text-center font-blender-book text-xs leading-relaxed text-text-muted">
           Ядро портала остаётся бесплатным. Подписка открывает удобства.
         </p>
       </div>
@@ -887,18 +892,23 @@ function PlanView({
       {showcase.length === 0 ? (
         <p className="font-blender-book text-xs text-text-muted">Тарифы пока не настроены.</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {showcase.map((t) => (
-            <TierCard
-              key={t.slug}
-              tier={t}
-              pricingPublished={pricingPublished}
-              isCurrent={t.slug === currentTier}
-              action={
-                t.rank > 0 && t.slug !== currentTier ? <TierCtaPending tierName={t.name} /> : undefined
-              }
-            />
-          ))}
+        <div className="flex flex-col gap-8">
+          {/* Те же плитки, что на /pricing — компонент один на оба места. */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            {showcase.map((t) => (
+              <TierCard
+                key={t.slug}
+                tier={t}
+                pricingPublished={pricingPublished}
+                isCurrent={t.slug === currentTier}
+                validUntil={t.slug === currentTier ? validUntil : null}
+                action={
+                  t.rank > 0 && t.slug !== currentTier ? <TierCtaPending tierName={t.name} /> : undefined
+                }
+              />
+            ))}
+          </div>
+          <AccessMatrix showcase={showcase} currentRank={currentRank} />
         </div>
       )}
     </div>
@@ -1436,6 +1446,8 @@ export function AccountCenter({
   billingHistory,
   showcase,
   pricingPublished,
+  currentRank,
+  effectiveTier,
 }: {
   me: Me;
   tier: TierId;
@@ -1444,6 +1456,14 @@ export function AccountCenter({
   billingHistory: BillingHistoryEntry[];
   showcase: ShowcaseTier[];
   pricingPublished: boolean;
+  /** Эффективный ранг пользователя — по нему матрица решает, что открыто. */
+  currentRank: number;
+  /**
+   * Эффективный тир. От `tier` отличается только под админским превью: `tier` — запись
+   * биллинга (её показывают «Платежи» и PRO-статус), а экран выбора и матрица должны
+   * говорить о ФАКТИЧЕСКОМ доступе, иначе плитка «Активен» спорит с замками в матрице.
+   */
+  effectiveTier: TierId;
   stats: AccountStats;
   achievements: AchievementView[];
   hints: Record<string, AchievementHint>;
@@ -1475,7 +1495,7 @@ export function AccountCenter({
     if (activeView === 'subscription')  return <SubscriptionView onBack={goBack} me={me} />;
     if (activeView === 'password')      return <PasswordView onBack={goBack} />;
     if (activeView === '2fa')           return <TwoFAView onBack={goBack} />;
-    if (activeView === 'plan')          return <PlanView onBack={goBack} showcase={showcase} currentTier={tier} pricingPublished={pricingPublished} />;
+    if (activeView === 'plan')          return <PlanView onBack={goBack} showcase={showcase} currentTier={effectiveTier} currentRank={currentRank} pricingPublished={pricingPublished} validUntil={effectiveTier === tier ? validUntil : null} />;
     if (activeView === 'social')        return <SocialView onBack={goBack} me={me} />;
 
     switch (activeTab) {

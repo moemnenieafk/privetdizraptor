@@ -6,6 +6,7 @@ import { getTierShowcase, isPricingPublished } from '@/lib/gating/showcase';
 import { resolveEntitlements } from '@/lib/gating/resolve';
 import { getMe } from '@/lib/auth/me';
 import { TierCard, TierCtaPending } from '@/components/features/subscription/TierCard';
+import { AccessMatrix } from '@/components/features/subscription/AccessMatrix';
 
 export const metadata: Metadata = {
   title: 'Тарифы — ЦТА',
@@ -16,9 +17,10 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 /**
- * Публичная витрина тарифов. Доступна анониму (RLS-политика tiers_read открыта для anon
- * ровно под этот случай), но только при включённом тумблере sys:pricing-published —
- * иначе 404. Тумблер живёт в /admin/billing и включается без деплоя.
+ * Публичная витрина тарифов — «экран допуска» в жанре портала, а не прайс-лист.
+ * Доступна анониму (RLS-политика tiers_read открыта для anon ровно под этот случай),
+ * но только при включённом тумблере sys:pricing-published — иначе 404. Тумблер живёт
+ * в /admin/billing и включается без деплоя.
  *
  * Состав тарифов НЕ захардкожен: считается из матрицы гейтов (lib/gating/showcase.ts),
  * поэтому страница всегда совпадает с тем, что реально закрывает пейвол.
@@ -35,7 +37,7 @@ export default async function PricingPage() {
 
   return (
     <main className="flex w-full flex-col items-center pt-7 pb-14 animate-[fade-in_0.5s_ease-out_both]">
-      <div className="w-full max-w-5xl px-4">
+      <div className="w-full max-w-275 px-4 xl:px-0">
         <Link
           href="/"
           className="mb-8 inline-flex items-center gap-1.5 font-blender-medium text-type-caption uppercase tracking-widest text-text-muted transition-colors hover:text-(--primary)"
@@ -45,7 +47,7 @@ export default async function PricingPage() {
         </Link>
 
         <h1 className="font-blender-medium text-type-h2 uppercase tracking-widest text-text-primary">
-          Тарифы
+          Уровни допуска
         </h1>
         <p className="mt-2 max-w-2xl font-blender-book text-type-body text-text-secondary">
           Ядро портала — карты, задания, предметы, кодекс, видео и связь — остаётся
@@ -53,13 +55,15 @@ export default async function PricingPage() {
           и аналитику.
         </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        {/* Плитки тарифов. */}
+        <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {showcase.map((tier) => (
             <TierCard
               key={tier.slug}
               tier={tier}
               pricingPublished
               isCurrent={tier.slug === entitlements.tier}
+              validUntil={null}
               action={
                 tier.rank > 0 && tier.slug !== entitlements.tier ? (
                   <TierCtaPending tierName={tier.name} />
@@ -67,6 +71,11 @@ export default async function PricingPage() {
               }
             />
           ))}
+        </div>
+
+        {/* Единая матрица доступа под плитками. */}
+        <div className="mt-10">
+          <AccessMatrix showcase={showcase} currentRank={entitlements.rank} />
         </div>
 
         <p className="mt-8 font-blender-book text-type-caption text-text-muted">
