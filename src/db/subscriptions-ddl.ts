@@ -6,8 +6,11 @@
 // ALTER отсюда падает с `must be owner of table subscriptions` (42501): роль postgres
 // НЕ входит в supabase_admin. То же у public.profiles; tiers/feature_gates/billing_events
 // принадлежат postgres и меняются свободно.
-// → Изменения СХЕМЫ этой таблицы применяются вручную в SQL-редакторе Supabase Studio
-//   (там сессия supabase_admin), а не этим роутом. Роут остаётся полезен для policy/сида.
+// → Изменения СХЕМЫ этой таблицы применяются НЕ этим роутом, а суперпользователем внутри
+//   контейнера БД. Рабочий рецепт (им накатана auto_renew 07.09.2026):
+//     ssh -i ~/.ssh/cta_hetzner_ed25519 root@201.51.20.217 //       "docker exec supabase-db-ebq1smxegyuwgj6j7tgqhdjq //        psql -U supabase_admin -d postgres -c '<DDL>'"
+//   (supabase_admin — единственный суперпользователь в этой инсталляции).
+//   Роут остаётся полезен для policy/сида — там прав postgres хватает.
 //   Найдено 06.09.2026 при добавлении auto_renew.
 //
 // Тир читают getSubscription (server) и fetchTier (client) через Supabase-клиент;
