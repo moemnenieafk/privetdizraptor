@@ -34,7 +34,7 @@ export default async function ClayMapPage({ params }: Props) {
             Таможня — объём
           </h1>
           <p className="font-blender-book text-sm text-text-muted">
-            Район общаг. Этажи переключаются, верхние уровни просвечивают.
+            Район общаг. Выберите этаж — всё, что выше, скрывается.
           </p>
         </div>
         <Link

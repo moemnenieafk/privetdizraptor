@@ -160,17 +160,35 @@ export function parseStairBin(buf: ArrayBuffer): {
  * здесь через `compose`. Матрицей его слать нельзя: порядок хранения элементов
  * пришлось бы держать в голове на двух языках сразу.
  */
+export interface StairMesh {
+  /** Уровень, на котором СТОИТ марш: по нему решается видимость при срезе. */
+  level: number;
+  mesh: THREE.InstancedMesh;
+}
+
 export function buildStairs(
   stairs: ClayStairs,
   bin: ArrayBuffer,
-): THREE.InstancedMesh[] {
+  storey: number,
+): StairMesh[] {
   const { positions, indices } = parseStairBin(bin);
-  const out: THREE.InstancedMesh[] = [];
+  const out: StairMesh[] = [];
   const material = new THREE.MeshLambertMaterial({ color: 0x3a3a40 });
 
+  // Уровень марша считаем по его отметке. Нужен, чтобы при показе первого
+  // этажа лестницы верхних уровней не висели в воздухе над срезом.
+  const levelOf = (y: number) => Math.round(y / storey);
+
   stairs.protos.forEach((proto, pi) => {
-    const items = stairs.instances.filter((i) => i.p === pi);
-    if (!items.length) return;
+    const byLevel = new Map<number, typeof stairs.instances>();
+    for (const it of stairs.instances) {
+      if (it.p !== pi) continue;
+      const lv = levelOf(it.t[1]);
+      const bucket = byLevel.get(lv);
+      if (bucket) bucket.push(it);
+      else byLevel.set(lv, [it]);
+    }
+    if (!byLevel.size) return;
 
     // Индексы прототипа локальны для его же блока вершин — сдвигаем.
     const idx = new Uint32Array(proto.idxCount);
@@ -187,20 +205,22 @@ export function buildStairs(
     geo.setIndex(new THREE.Uint32BufferAttribute(idx, 1));
     geo.computeVertexNormals();
 
-    const mesh = new THREE.InstancedMesh(geo, material, items.length);
     const m = new THREE.Matrix4();
     const p = new THREE.Vector3();
     const q = new THREE.Quaternion();
-    const s = new THREE.Vector3();
-    items.forEach((it, n) => {
-      p.set(it.t[0], it.t[1], it.t[2]);
-      q.set(it.q[0], it.q[1], it.q[2], it.q[3]);
-      s.set(it.s[0], it.s[1], it.s[2]);
-      mesh.setMatrixAt(n, m.compose(p, q, s));
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.name = `stairs:${proto.key}`;
-    out.push(mesh);
+    const sc = new THREE.Vector3();
+    for (const [level, items] of byLevel) {
+      const mesh = new THREE.InstancedMesh(geo, material, items.length);
+      items.forEach((it, n) => {
+        p.set(it.t[0], it.t[1], it.t[2]);
+        q.set(it.q[0], it.q[1], it.q[2], it.q[3]);
+        sc.set(it.s[0], it.s[1], it.s[2]);
+        mesh.setMatrixAt(n, m.compose(p, q, sc));
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.name = `stairs:${proto.key}:${level}`;
+      out.push({ level, mesh });
+    }
   });
 
   return out;

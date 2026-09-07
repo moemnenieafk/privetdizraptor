@@ -116,12 +116,6 @@ export function ClayMap3D({ base }: { base: string }) {
         const matEdge = new THREE.LineBasicMaterial({
           color: edgeCol, transparent: true, opacity: 0.55,
         });
-        // Рентген (решение V4DYA): стены полупрозрачные, пол ПЛОТНЫЙ. Сплошное
-        // стекло превращает здание в аквариум, где не читаются уровни.
-        const matXray = new THREE.MeshLambertMaterial({
-          color: solid, transparent: true, opacity: 0.2, depthWrite: false,
-        });
-
         const res = await fetch(`${base}/district-dorms.json`);
         if (!res.ok) throw new Error(`геометрия района: HTTP ${res.status}`);
         const doc = (await res.json()) as ClayDistrict;
@@ -137,14 +131,22 @@ export function ClayMap3D({ base }: { base: string }) {
         const edgesOf = (g: THREE_T.BufferGeometry) =>
           new THREE.EdgesGeometry(BGU.mergeVertices(g, 1e-4), 24);
 
-        const wallMeshes = new Map<string, THREE_T.Mesh>();
-        const edgeLines = new Map<string, THREE_T.LineSegments>();
+        // Всё, что принадлежит уровню, складываем в один реестр: срез по этажу
+        // гасит уровень ЦЕЛИКОМ — стены, пол, контуры и лестницы разом.
+        const byLevel = new Map<number, THREE_T.Object3D[]>();
+        const put = (level: number, o: THREE_T.Object3D) => {
+          const b = byLevel.get(level);
+          if (b) b.push(o);
+          else byLevel.set(level, [o]);
+        };
+
         for (const b of geom.buildFloors(doc.floors)) {
           if (b.plate) {
             const m = new THREE.Mesh(b.plate, matPlate);
             m.name = `plate:${b.floor.name}`;
             m.receiveShadow = true;
             scene.add(m);
+            put(b.floor.level, m);
           }
           if (b.walls) {
             const m = new THREE.Mesh(b.walls, matSolid);
@@ -152,12 +154,12 @@ export function ClayMap3D({ base }: { base: string }) {
             m.castShadow = true;
             m.receiveShadow = true;
             scene.add(m);
-            wallMeshes.set(b.floor.name, m);
+            put(b.floor.level, m);
 
             const l = new THREE.LineSegments(edgesOf(b.walls), matEdge);
             l.name = `edges:${b.floor.name}`;
             scene.add(l);
-            edgeLines.set(b.floor.name, l);
+            put(b.floor.level, l);
           }
         }
 
@@ -166,21 +168,27 @@ export function ClayMap3D({ base }: { base: string }) {
           if (!binRes.ok) throw new Error(`лестницы: HTTP ${binRes.status}`);
           const bin = await binRes.arrayBuffer();
           if (disposed) return;
-          for (const mesh of geom.buildStairs(doc.stairs, bin)) {
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            scene.add(mesh);
+          for (const st of geom.buildStairs(doc.stairs, bin, doc.storey)) {
+            st.mesh.castShadow = true;
+            st.mesh.receiveShadow = true;
+            scene.add(st.mesh);
+            put(st.level, st.mesh);
           }
         }
 
+        // 🔴 СРЕЗ ПО ЭТАЖУ, А НЕ РЕНТГЕН (решение V4DYA 07.09, отменяет прежнее).
+        // Камера смотрит сверху вниз, поэтому верхние этажи просто закрывают
+        // обзор — полупрозрачность их не спасала, она добавляла шума. Выбран
+        // этаж N → видно всё до N включительно, всё выше СКРЫТО целиком.
+        // Накопительно, а не «только N»: нижние уровни дают контекст, и здание
+        // не повисает в воздухе.
+        const levelByName = new Map(doc.floors.map((f) => [f.name, f.level]));
         applyFloorRef.current = (name: string) => {
-          for (const [fname, mesh] of wallMeshes) {
-            mesh.material = fname === name ? matSolid : matXray;
-          }
-          // Контуры призрачных этажей приглушаем, иначе рёбра всех уровней
-          // накладываются и планировка активного этажа тонет в сетке.
-          for (const [fname, line] of edgeLines) {
-            line.visible = fname === name;
+          const top = levelByName.get(name);
+          if (top === undefined) return;
+          for (const [level, objects] of byLevel) {
+            const visible = level <= top;
+            for (const o of objects) o.visible = visible;
           }
         };
 
@@ -300,7 +308,6 @@ export function ClayMap3D({ base }: { base: string }) {
           });
           matSolid.dispose();
           matPlate.dispose();
-          matXray.dispose();
           renderer.dispose();
           renderer.domElement.remove();
         };
