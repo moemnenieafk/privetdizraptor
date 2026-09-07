@@ -15,7 +15,11 @@ canon: docs/decisions/done/hosting-autonomy-migration.md
 ## Что где живёт
 - **`https://cta.quest`** — портал ЦТА, полностью на **своём VPS**. Внешних зависимостей нет, кроме R2 (тот же CF-аккаунт).
 - **Стек:** Timeweb VPS (Амстердам, `201.51.20.217`) + Cloudflare (CDN/DNS/SSL/WAF) + Coolify (панель/деплой) + self-hosted Supabase (Postgres 15 + GoTrue-Auth + PostgREST + Realtime + Storage/MinIO + Kong) + Next.js 16.
-- **Ассеты:** Cloudflare R2 (иконки `pub-…r2.dev`, тайлы карт, приватный бакет бэкапов `cta-db-backups`).
+- **Ассеты:** Cloudflare R2, бакет `cta-media`, отдача через **кастомный домен `cdn.cta.quest`**
+  (иконки, тайлы карт, CMS-медиа) + приватный бакет бэкапов `cta-db-backups`. Публичный
+  `pub-…r2.dev` остаётся включённым как путь отката. Смена базы = `NEXT_PUBLIC_ICON_BASE_URL`
+  и `NEXT_PUBLIC_MAP_TILE_BASE_URL` в Coolify + **полная пересборка** (`NEXT_PUBLIC_*`
+  вшивается в бандл на билде). Переезд 2026-09-04, разбор: `bugs/done/2026-09-02-2137--assets-r2-blocked-in-russia.md`.
 - **Резерв ПОГАШЕН:** Vercel-проект на паузе, облачный Supabase (`swcjyvztljokdycpviio`) УДАЛЁН (холодный архив в R2 `archive/`), обе PRO-подписки сняты + карты отвязаны. Автономность — 100%.
 
 ## Деплой
@@ -33,6 +37,12 @@ canon: docs/decisions/done/hosting-autonomy-migration.md
 - **SSH — только по ключу** (`PasswordAuthentication no`, root `prohibit-password`, fail2ban).
 - **Timeweb-firewall** `cta-prod-fw` (белый список): вход TCP 22/80/443; выход TCP/UDP+TCP6/UDP6 все порты. Прочее вход закрыто → **8000 (админка Coolify), 6001, 5432, 10050 — недоступны снаружи**. Админка Coolify — через SSH-туннель (`ssh -N -L 8000:localhost:8000`).
 - SSL Cloudflare Full (strict); origin-cert wildcard `*.cta.quest` (CF Origin CA) на Traefik.
+- ⚠️ **Делегирование `cta.quest` — ТОЛЬКО два NS Cloudflare** (`carol`/`rommy.ns.cloudflare.com`).
+  До 2026-09-04 в реестре висело шесть: четыре хвоста Timeweb уводили часть пользователей на
+  чужой хост (409), а зона из-за смешанного делегирования не активировалась в CF — что блокировало
+  привязку любого кастомного домена. Проверять только по реестру:
+  `curl https://rdap.centralnic.com/quest/domain/cta.quest` — `nslookup -type=NS` спрашивает саму
+  зону и показывает лишь CF-серверы. Почта на домене НЕ требует переноса домена: это MX-записи в CF DNS.
 - **www→apex** — CF Redirect Rule (301, путь+query сохр.).
 - Урок: Timeweb-firewall фильтрует, ЕСЛИ порт НЕ в разрешающем списке (docker-published порты host-iptables/ufw НЕ ловят).
 
