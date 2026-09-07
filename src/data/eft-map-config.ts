@@ -124,10 +124,13 @@ export const EFT_MAP_CONFIG: Record<string, EftMapConfig> = {
     groundTile: "ground",
     tilePixelSize: [16384, 16384], // квадрат: чистая сетка 64×64; bounds через unproject во вьюере
     tileExt: "jpg", // непрозрачные JPG (сплошной фон) — как у Завода
-    tileVersion: 1, // cache-bust: бампать при каждой перенарезке тех же URL
-    // game→canvas(16384) калибровка (5 замков, ошибка 0.5–2 м): canvasX=10803.5−15.313·gx, canvasY=8723.5+15.171·gz.
+    tileVersion: 5, // cache-bust: бампать при каждой перенарезке тех же URL
+    // game→canvas(16384) калибровка (5 замков, ошибка 0.5–2 м): canvasX=10673.5−15.313·gx, canvasY=8723.5+15.171·gz.
     // worldTransform = game→latlng (canvas/64 при maxZoom=6): lng=canvasX/64, lat=−canvasY/64. Проверено.
-    worldTransform: [-0.23927, 0, 168.8, 0, -0.23705, -136.3],
+    // 2026-09-04: арт перерисован со сдвигом на 130 canvas-px ВЛЕВО → сдвиг офсета X: 10803.5→10673.5,
+    // т.е. c = 168.8 − 130/64 = 166.76875. Масштаб/поворот не трогали. Тем же сдвигом двинут оверлей
+    // меченых комнат (public/images/maps/eft/marked-rooms/customs.svg) — он в canvas-px, мимо аффина.
+    worldTransform: [-0.23927, 0, 166.76875, 0, -0.23705, -136.3],
     displayName: "Таможня",
     groundName: "1-й этаж (земля)",
     author: SHEBUKA,

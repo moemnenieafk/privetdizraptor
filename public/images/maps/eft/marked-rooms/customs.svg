@@ -1,4 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16384 16384" fill="none">
+  <!-- 2026-09-04: арт Таможни перерисован со сдвигом на 130 canvas-px ВЛЕВО. Оверлей живёт в
+       canvas-px (viewBox 16384², L.svgOverlay по imgBounds) и НЕ проходит через worldTransform,
+       поэтому сдвиг применён здесь обёрткой. Синканные/editorial-метки двинуты офсетом аффина
+       в src/data/eft-map-config.ts (c: 168.8 → 166.76875). Правишь одно — правь и второе. -->
+  <g transform="translate(-130 0)">
   <g data-room="neizvestnyy-klyuch" data-floor="0" class="cta-room">
     <rect fill="none" stroke="#BDA550" stroke-opacity="0.6" stroke-width="3" x="5140.32" y="7907.86" width="42" height="96" transform="rotate(7.55303 5140.32 7907.86)"/>
   </g>
@@ -94,5 +99,6 @@
   </g>
   <g data-room="kabineta-direktora-predpriyatiya" data-floor="3" class="cta-room">
     <path fill="none" stroke="#BDA550" stroke-opacity="0.6" stroke-width="3" d="M9321.46 7815.12L9417.27 7794.76L9440.33 7903.22L9444 7920.49L9348.19 7940.85L9321.46 7815.12Z"/>
+  </g>
   </g>
 </svg>
