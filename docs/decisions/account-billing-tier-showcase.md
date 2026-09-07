@@ -1,5 +1,5 @@
 ---
-status: ✅ исполнено полностью (ветка feat/billing-tier-showcase, live-verify пройден, Ш0 проведён 06.09). Осталось вне кода: §2 публичной оферты + включение тумблера + пуш ветки
+status: ✅ исполнено и запушено (ветка feat/billing-tier-showcase, live-verify пройден, Ш0 + грант + auto_renew накатаны на прод). Осталось вне кода: §2 публичной оферты → включение тумблера; E5 (адаптер оплаты)
 affects: account, billing, monetization, admin, pricing, gating
 date: 2026-09-06
 parent: billing-subscription-management
